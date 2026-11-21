@@ -11,6 +11,7 @@ from Script.Modules.domains import abilities, achievement, economy, flags
 from Script.Modules.domains import inventory, kitchen, roster
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
+from Script.Modules.domains import relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -677,25 +678,24 @@ def find_character_birthplace_restaurant(character_id: int) -> int:
     Return arguments:
     int -- 餐厅id
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     # 莱茵生命的选哥伦比亚咖啡馆，其他哥伦比亚的选约翰老妈汉堡店
-    if character_data.relationship.birthplace == 4:
-        if character_data.relationship.nation == 42:
+    if relations.birthplace(character_id) == 4:
+        if relations.nation(character_id) == 42:
             return 2
         return 4
     # 维多利亚的选七城风情餐厅
-    elif character_data.relationship.birthplace == 13:
+    elif relations.birthplace(character_id) == 13:
         return 3
     # 龙门的选龙门食坊，其他炎国的选山城茶馆
-    elif character_data.relationship.birthplace == 17:
-        if character_data.relationship.nation in [13, 14, 15]:
+    elif relations.birthplace(character_id) == 17:
+        if relations.nation(character_id) in [13, 14, 15]:
             return 6
         return 1
     # 拉特兰的选瓦莱丽蛋糕店
-    elif character_data.relationship.birthplace == 7:
+    elif relations.birthplace(character_id) == 7:
         return 0
     # 叙拉古的选快捷连锁披萨店
-    elif character_data.relationship.birthplace == 16:
+    elif relations.birthplace(character_id) == 16:
         return 7
     return -1
 

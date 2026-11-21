@@ -224,6 +224,8 @@ class ZeroMinutePanelsTest(SlowTestCase):
 
     def test_setting_edits_commit_one_edit(self) -> None:
         """新游戏里改一项AI设置与一项干员设置：各是一个 0 分钟 Edit，AI设置之后每项都有值"""
+        from Script.Modules.domains import chara_profile
+
         game_config = importlib.import_module("Script.Config.game_config")
         chat_ai = importlib.import_module("Script.UI.Panel.chat_ai_setting")
         chara = importlib.import_module("Script.UI.Panel.character_setting")
@@ -243,13 +245,11 @@ class ZeroMinutePanelsTest(SlowTestCase):
 
         cid = sorted(kernel_data.domain("roster").active())[0]
         setting = sorted(game_config.config_chara_setting)[0]
-        before = self.cache.character_data[cid].chara_setting.get(setting, 0)
+        before = chara_profile.chara_setting(cid).get(setting, 0)
         self.run_edit(
             "chara setting",
             lambda: chara.CharacterSetting(cid, 120, 1).change_setting(
                 setting, len(game_config.config_chara_setting_option[setting])
             ),
         )
-        self.assertNotEqual(
-            self.cache.character_data[cid].chara_setting[setting], before
-        )
+        self.assertNotEqual(chara_profile.chara_setting(cid)[setting], before)

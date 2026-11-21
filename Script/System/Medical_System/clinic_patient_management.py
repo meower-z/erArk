@@ -13,11 +13,12 @@ from typing import Any, Iterable
 from types import FunctionType
 
 from Script.Config import config_def, game_config
-from Script.Core import cache_control, game_type, get_text, value_handle
+from Script.Core import game_type, get_text, value_handle
 from Script.Design import handle_ability
 from Script.Modules.domains import abilities, economy, medical, medical_patient
 from Script.System.Medical_System import medical_constant, medical_core
 from Script.Modules.domains import warehouse
+from Script.Modules.domains import chara_life
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -550,8 +551,7 @@ def advance_diagnose(
         return
 
     # 将医生与当前病人绑定，便于后续查询
-    if hasattr(doctor_character, "work"):
-        doctor_character.work.medical_patient_id = patient.patient_id
+    chara_life.medical_patient_id.set(doctor_character.cid, patient.patient_id)
 
     # 检查病人状态是否仍需要诊疗，若已进入后续流程则解除绑定
     if patient.state in (
@@ -564,8 +564,7 @@ def advance_diagnose(
         if getattr(patient, "assigned_doctor_id", 0) == doctor_character.cid:
             patient.assigned_doctor_id = 0
         # 解除医生与病人绑定
-        if hasattr(doctor_character, "work"):
-            doctor_character.work.medical_patient_id = 0
+        chara_life.medical_patient_id.set(doctor_character.cid, 0)
         return
 
     # 读取病情配置，若缺失则终止诊疗并清理状态
@@ -573,8 +572,7 @@ def advance_diagnose(
         patient.severity_level
     )
     if severity_config is None:
-        if hasattr(doctor_character, "work"):
-            doctor_character.work.medical_patient_id = 0
+        chara_life.medical_patient_id.set(doctor_character.cid, 0)
         patient.assigned_doctor_id = 0
         return
 
@@ -648,8 +646,7 @@ def finalize_patient_after_diagnose(
 
     # 解除医生与病人绑定
     doctor_chara_id = patient.assigned_doctor_id
-    doctor_character_data = cache_control.cache.character_data[doctor_chara_id]
-    doctor_character_data.work.medical_patient_id = 0
+    chara_life.medical_patient_id.set(doctor_chara_id, 0)
     patient.assigned_doctor_id = 0
 
     # 诊疗收入结算

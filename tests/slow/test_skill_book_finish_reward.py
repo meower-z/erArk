@@ -30,6 +30,7 @@ class SkillBookFinishRewardTest(SlowTestCase):
         Return arguments:
         int -- 这本书对应经验的增加量
         """
+        from Script.Modules.domains import chara_life
         from Script.Design import game_time
 
         from Script.Config import game_config
@@ -42,7 +43,12 @@ class SkillBookFinishRewardTest(SlowTestCase):
             game_config.config_book[book_id].type
         ].exp_id
         character_data.behavior.book_id = book_id
-        character_data.entertainment.read_book_progress[book_id] = progress
+        kernel_data.put(
+            chara_life.read_book_progress.set_item,
+            character_id,
+            book_id,
+            progress,
+        )
         before = experience.get(exp_id, 0)
         kernel_data.written(
             default.handle_read_add_adjust,
@@ -55,6 +61,7 @@ class SkillBookFinishRewardTest(SlowTestCase):
 
     def test_finish_reward_by_difficulty(self) -> None:
         """每本技能书读完时加的对应经验，等于它的难度在 FINISH_REWARD 里的值"""
+        from Script.Modules.domains import chara_life
         from Script.Config import game_config
 
         character_id = min(
@@ -62,20 +69,19 @@ class SkillBookFinishRewardTest(SlowTestCase):
         )
         character_data = self.cache.character_data[character_id]
         character_data.target_character_id = character_id
-        progress_dict = character_data.entertainment.read_book_progress
         reward_dict: dict[int, set[int]] = {}
         for book_id, book_data in sorted(game_config.config_book.items()):
             if not game_config.config_book_type[book_data.type].exp_id:
                 continue
             read_gain = self.read_once(character_id, book_id, 0)
             self.assertLess(
-                progress_dict[book_id],
+                chara_life.read_book_progress(character_id)[book_id],
                 100,
                 f"书 {book_id} 从进度 0 读一次没读完",
             )
             finish_gain = self.read_once(character_id, book_id, 99)
             self.assertEqual(
-                progress_dict[book_id],
+                chara_life.read_book_progress(character_id)[book_id],
                 100,
                 f"书 {book_id} 从进度 99 读一次读完了",
             )

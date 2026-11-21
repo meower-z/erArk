@@ -17,6 +17,7 @@ from Script.Modules.domains import warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import chara_life
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -272,7 +273,7 @@ def check_officeroom_reference_valid() -> list[CheckFailure]:
     scene_data = getattr(cache, "scene_data", {}) or {}
     failures = []
     for cid, c in character_data.items():
-        officeroom = getattr(c, "officeroom", None)
+        officeroom = chara_life.officeroom(cid)
         if not officeroom:
             continue
         if not (

@@ -15,7 +15,7 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, pregnancy, roster
+from Script.Modules.domains import abilities, pregnancy, roster, relations
 
 panel_info_data: dict[str, object] = {}
 
@@ -302,9 +302,9 @@ class Born_Panel:
                     ).format(
                         child_character_data.name,
                         pl_character_data.name,
-                        len(pl_character_data.relationship.child_id_list),
+                        len(relations.child_id_list(0)),
                         mom_character_data.name,
-                        len(mom_character_data.relationship.child_id_list),
+                        len(relations.child_id_list(mom_character_data.cid)),
                     )
                     info_draw.draw()
                     line_feed.draw()

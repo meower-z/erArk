@@ -1,23 +1,22 @@
-"""孩子日常日程的模板读写与每日改写（Plan 22 二期 §3.6）
-
+"""
+孩子日常日程的模板读写与每日改写
+================================
 日程与课表是**两层不同粒度**的东西，本模块只管前者：
 
-    课表 —— 按 45 分钟的**节次**排（一期，见 schedule_handle），管的是"上什么课"
+    课表 —— 按 45 分钟的**节次**排（见 schedule_handle），管的是"上什么课"
     日程 —— 按上午/下午/晚上三个**时段**排（本模块），管的是"没课的时候干什么"
 
-所以日程的执行方式不是另造一条 AI 链，而是改写既有的 `entertainment.entertainment_type`
-这三个槽位——既有的娱乐 AI 链会照着它去做事，一行新 AI 都不用写。
+日程不另造一条 AI 链，只改写角色键 `life.entertainment_type` 的三个槽位。娱乐 AI 链照着这三个槽位做事。
 
-**改写必须发生在每日娱乐刷新之后**（`past_day_settle` 里 `get_chara_entertainment` 的下一行），
-否则当天写进去的值立刻被随机值冲掉，症状是"日程时灵时不灵"，极难查。挂点照抄
-`egg_handle.replace_entertainment_for_eggs`。
+**改写必须在每日娱乐刷新之后**：`past_day_settle` 先调用 `get_chara_entertainment` 与
+`egg_handle.replace_entertainment_for_eggs`，再调用 `apply_schedule_for_child`。
+顺序颠倒时，当天写进去的值会被随机值冲掉。
 
-**优先级是节次级别的**（2026-09-10，二期方案 §9.2.9）：有课的节次由工作链里学生岗的上课目标行先接管
-（target.csv 组 08，Plan 24 起；此前是 class_ai 的上课判定），没课的节次工作链没有行命中，才轮到槽位里的活动，
-所以改写时不避让有课的时段。明确排了活动就去做活动；学生岗白天也算娱乐时间
-（handle_premise_time._judge_free_daytime），否则周一~周六的白天根本走不到娱乐链。
+**优先级按节次算**：有课的节次由工作链里学生岗的上课目标先接管。
+没课的节次工作链没有行命中，才轮到槽位里的活动，所以改写时不避让有课的时段。
+学生岗白天也算娱乐时间（handle_premise_time._judge_free_daytime），否则周一到周六的白天走不到娱乐链。
 
-数据分两层存（口径 4「操作量不随孩子数翻倍」的落点）：
+数据分两层存，孩子再多，改日程的操作量也不翻倍：
 
     模板本体  base.child_schedule_template（经 education 读写）  全局共享一份
     孩子身上  CHILD_GROWTH.schedule_template_id       只存模板编号
@@ -29,7 +28,7 @@
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
-from Script.Modules.domains import education, growth
+from Script.Modules.domains import education, growth, chara_life, relations
 from Script.System.Education_System import (
     education_constant,
     schedule_handle,
@@ -319,7 +318,6 @@ def apply_schedule_for_child(character_id: int) -> None:
     Return arguments:
     无
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     growth_data = growth.of(character_id)
     # 没有养成数据、或没套用任何模板且没有任何覆盖的，不改写
     if growth_data is None:
@@ -330,32 +328,31 @@ def apply_schedule_for_child(character_id: int) -> None:
     ):
         return
     if (
-        character_data.relationship.father_id != 0
-        and character_data.work.work_type
+        relations.father_id(character_id) != 0
+        and chara_life.work_type(character_id)
         != education_constant.STUDENT_WORK_TYPE
     ):
         return
-    for slot in range(education_constant.SLOT_COUNT):
-        entertainment_id = get_child_slot_activity(character_id, slot)
-        if not entertainment_id:
-            continue
-        if entertainment_id not in game_config.config_entertainment:
-            continue
-        # 持卵钩子今天换上的照料卵不覆盖：照料卵只有钩子会写（随机池与日程候选都排除它），槽位里是它就是今天换上的
-        if not judge_activity_schedulable(
-            character_data.entertainment.entertainment_type[slot]
-        ):
-            continue
-        # 不可排进日程的（旧档里已排上的照料卵）跳过，退回自由选择
-        if not judge_activity_schedulable(entertainment_id):
-            continue
-        # 不满足该娱乐 need 条件的孩子跳过这一格，留着当天的随机娱乐比空转强
-        if not judge_activity_need_pass(character_id, entertainment_id):
-            continue
-        # 地点还没开放的同样跳过（Plan 27 §3.1）：写进去孩子会走到门口，一分钟一分钟地空转一整个时段
-        if not judge_activity_place_open(entertainment_id):
-            continue
-        character_data.entertainment.entertainment_type[slot] = entertainment_id
+    with chara_life.entertainment_type.editing(character_id) as slots:
+        for slot in range(education_constant.SLOT_COUNT):
+            entertainment_id = get_child_slot_activity(character_id, slot)
+            if not entertainment_id:
+                continue
+            if entertainment_id not in game_config.config_entertainment:
+                continue
+            # 持卵钩子今天换上的照料卵不覆盖：照料卵只有钩子会写（随机池与日程候选都排除它），槽位里是它就是今天换上的
+            if not judge_activity_schedulable(slots[slot]):
+                continue
+            # 不可排进日程的（旧档里已排上的照料卵）跳过，退回自由选择
+            if not judge_activity_schedulable(entertainment_id):
+                continue
+            # 不满足该娱乐 need 条件的孩子跳过这一格，留着当天的随机娱乐比空转强
+            if not judge_activity_need_pass(character_id, entertainment_id):
+                continue
+            # 地点还没开放的活动也跳过。写进去的话，角色会在门口一分钟一分钟地空转一整个时段
+            if not judge_activity_place_open(entertainment_id):
+                continue
+            slots[slot] = entertainment_id
 
 
 def get_child_schedule_text(character_id: int) -> str:

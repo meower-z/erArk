@@ -47,8 +47,9 @@ from Script.Core import cache_control, game_type, constant
 from Script.Design import attr_calculation, game_time, map_handle
 from Script.System.Education_System import education_constant, schedule_handle
 from typing import TYPE_CHECKING
-from Script.Modules.domains import flags, growth, hypnosis, modes, needs
-from Script.Modules.domains import roster, status
+from Script.Modules.domains import flags, growth, hypnosis, modes, needs, roster
+from Script.Modules.domains import status, chara_life, relations
+from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 
 if TYPE_CHECKING:
     import datetime
@@ -142,15 +143,14 @@ def judge_teacher_available(teacher_id: int, classroom: str = "") -> bool:
     # 已经不在岛上 / 换了岗：课表里还挂着她，但她的 AI 不会再来上课
     if (
         not roster.has(teacher_id)
-        or teacher_data.work.work_type != education_constant.TEACHER_WORK_TYPE
+        or chara_life.work_type(teacher_id)
+        != education_constant.TEACHER_WORK_TYPE
     ):
         return False
     # 睡着的、离线的都来不了
     if flags.get(teacher_id, "sleep"):
         return False
-    if not handle_premise.handle_normal_7(teacher_id):
-        return False
-    return True
+    return bool(handle_premise.handle_normal_7(teacher_id))
 
 
 def judge_course_teacher_available(student_id: int, course: dict) -> bool:
@@ -193,10 +193,10 @@ def get_teacher_duty(character_id: int) -> tuple[int, str]:
     功能: 本节有课（任何星期都算，周日是玩家特意排的）优先；本节没课再看 20 分钟内开始的下一节（到岗时间 / 课间）。
           课表查的是全局课表反查，含当天临时实操课的覆盖层：被临时课顶掉的那一格查不到，教师就回办公室待命
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     if (
         character_id == 0
-        or character_data.work.work_type != education_constant.TEACHER_WORK_TYPE
+        or chara_life.work_type(character_id)
+        != education_constant.TEACHER_WORK_TYPE
     ):
         return education_constant.TEACHER_DUTY_NONE, ""
     teaching = schedule_handle.get_now_teaching(character_id)
@@ -371,7 +371,7 @@ def get_pending_sex_classroom(character_id: int) -> str:
     str -- 教室场景名，不是学生岗或没有待赴的实操课时为空字符串
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return ""
     now_time = character_data.behavior.start_time or game_time.now()
     return get_next_sex_class(character_id, now_time)[1]
@@ -395,7 +395,7 @@ def get_course_stage(character_id: int) -> int:
              而判 NONE（Plan 31 §3.5）——开课那一刻她照样判翘课，去教室门口等一趟再掉头走是白跑，与截短规则 B 同口径
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return education_constant.COURSE_STAGE_NONE
     now_time = character_data.behavior.start_time or game_time.now()
     # 预到岗优先于本节的一切（原 find_character_target 里排在上课判定之前）
@@ -524,7 +524,7 @@ def judge_attend_running_sex_class_here(character_id: int) -> bool:
     if not modes.sex_class():
         return False
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return False
     running_class = sex_class_handle.get_running_class()
     if running_class is None:
@@ -655,7 +655,7 @@ def judge_student_pullable(student_id: int) -> bool:
         return False
     character_data: game_type.Character = cache.character_data[student_id]
     if (
-        character_data.work.work_type != education_constant.STUDENT_WORK_TYPE
+        chara_life.work_type(student_id) != STUDENT_WORK_TYPE
         or character_data.dead
     ):
         return False
@@ -764,7 +764,7 @@ def get_student_leave_time(character_id: int) -> datetime.datetime | None:
     if character_id == 0 or character_id not in cache.character_data:
         return None
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return None
     if flags.get(character_id, "is_h") or flags.get(character_id, "sleep"):
         return None
@@ -874,8 +874,7 @@ def judge_mother_available(character_id: int) -> int:
     Return arguments:
     int -- 有效的母亲角色id，无效则为-1
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    mother_id = character_data.relationship.mother_id
+    mother_id = relations.mother_id(character_id)
     # 没有母亲，或母亲已不在角色表里（旧档 / 数据损坏）
     if mother_id == -1 or mother_id not in cache.character_data:
         return -1

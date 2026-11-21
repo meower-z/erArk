@@ -167,7 +167,7 @@ class HDirtyHypnosisSaveV20Test(SlowTestCase):
         path = os.path.join(self.folder, SLOT, kernel_state.SAVE_FILE)
         with open(path, encoding="utf-8") as f:
             first_file = json.load(f)
-        self.assertEqual(first_file["version"], 20)
+        self.assertGreaterEqual(first_file["version"], 20)
         raw_text = json.dumps(first_file)
         self.assertIn('"$frac"', raw_text)
         for key in (

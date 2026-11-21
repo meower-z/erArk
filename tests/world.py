@@ -209,10 +209,8 @@ def _mute_ui() -> list:
     for cls_name in dir(draw):
         cls = getattr(draw, cls_name)
         if isinstance(cls, type) and hasattr(cls, "draw"):
-            try:
+            with contextlib.suppress(AttributeError, TypeError):
                 cls.draw = lambda self, *args, **kwargs: None
-            except (AttributeError, TypeError):
-                pass
     setattr(draw.WaitDraw, "draw", record_wait_draw)
     flow_handle.askfor_all = lambda return_list, *args, **kwargs: (
         return_list[0] if return_list else ""
@@ -458,6 +456,7 @@ class MinimalWorld:
             naked=True 的角色当场核对：全裸；NPC 还须只有位4异常（玩家的异常位恒为正常）。
             不符合时把她从 cache.character_data 里删掉，再抛 FixtureError。这时她还没登记进 npc_id_got 和场景。
         """
+        from Script.Modules.domains import chara_life, relations
         from Script.Core import game_type
         from Script.Design import attr_calculation, game_time, map_handle
 
@@ -477,13 +476,13 @@ class MinimalWorld:
         cd.sex = 1
         cd.race = race
         cd.second_behavior = attr_calculation.get_second_behavior_zero({})
-        cd.assistant_services = attr_calculation.get_assistant_services_zero()
-        cd.favorability = {0: 0}
+        services = attr_calculation.get_assistant_services_zero()
+        kernel_data.put(relations.assistant_services.set, cid, services)
+        kernel_data.put(relations.favorability.set, cid, {0: 0})
         ca.zero_tables(cid)
         ca.talent(cid)[121] = 1
-        cd.dormitory = map_handle.get_map_system_path_str_for_list(
-            DEFAULT_SCENE
-        )
+        dormitory = map_handle.get_map_system_path_str_for_list(DEFAULT_SCENE)
+        kernel_data.put(chara_life.dormitory.set, cid, dormitory)
         cd.behavior.start_time = game_time.now()
         cd.position = position
         cache.character_data[cid] = cd

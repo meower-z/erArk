@@ -19,7 +19,7 @@ from Script.Kernel import core
 from Script.Modules.domains import plan
 from Script.Modules.gameplay_resolution import actions, intent
 
-FIELD_ROOTS = frozenset({"behavior", "sp_flag", "action_info", "work"})
+FIELD_ROOTS = frozenset({"behavior", "sp_flag", "action_info", "life"})
 """ Intent.fields 的路径可以用的根 """
 
 type Queued = tuple[str, intent.Intent]

@@ -7,6 +7,7 @@ from _bootstrap import game_config, game_time, growth_handle, make_character
 from _bootstrap import period_time, remove_character, section, semester_handle
 from _bootstrap import set_time
 from tests import chara_abilities as ca
+from Script.Modules.domains import chara_life
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -209,7 +210,7 @@ set_time(datetime.datetime(2026, 12, 7, 9, 0))
 g.report_card_history = []
 g.last_attend_period = []
 semester_handle.reset_semester_baseline(201, [2026, 12])
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 check(
     "settle_course_attend：记上一节、同一节再记不重复",
     growth_handle.settle_course_attend(201)
@@ -238,7 +239,7 @@ check(
     card,
 )
 g.absent_count -= 1
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 card = semester_handle.build_report_card(201)
 check(
     "改岗（岗位 21）的萝莉：照按改岗前上过的课评档，快照带不全的理由、写明改任的岗位",
@@ -250,12 +251,12 @@ check(
 )
 text = semester_handle.get_report_card_text(201, card, True)
 check("成绩单正文写出理由", "※ " in text and card["reason"] in text, text)
-student.work.work_type = 0
+chara_life.work_type.set(student.cid, 0)
 check(
     "岗位为无：理由写「不再担任学生」",
     "不再担任学生" in semester_handle.build_report_card(201)["reason"],
 )
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 set_time(datetime.datetime(2027, 3, 1, 9, 0))
 report_list = semester_handle.settle_semester_change()
 check(
@@ -266,7 +267,7 @@ check(
     == E.REPORT_GRADE_GOOD,
     semester_handle.get_last_report_card(201),
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 check(
     "Plan 30：学期初在岗位 21、此刻回到学生岗 → 理由写「中途回到了学生岗」（此前改回学生岗就当没改过，不写理由）",
     "中途回到了学生岗" in semester_handle.build_report_card(201)["reason"],
@@ -332,7 +333,7 @@ def reason_of(
     str -- 理由文本
     """
     g.semester_base_work_type = base_work_type
-    student.work.work_type = now_work_type
+    chara_life.work_type.set(student.cid, now_work_type)
     g.semester_base_attend = g.attend_class_count - (1 if have_record else 0)
     g.semester_base_absent = g.absent_count
     return semester_handle.get_report_incomplete_reason(201)
@@ -400,7 +401,7 @@ grown_student = make_character(
     born_days=500,
 )
 set_time(datetime.datetime(2027, 6, 1, 9, 0))
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 semester_handle.reset_semester_baseline(201, [2027, 6])
 g.report_card_flag = False
 check(
@@ -443,7 +444,7 @@ check(
 )
 child_growth(208).report_card_flag = False
 child_growth(208).attend_class_count += 2
-grown_student.work.work_type = 21
+chara_life.work_type.set(grown_student.cid, 21)
 set_time(datetime.datetime(2027, 12, 1, 9, 0))
 report_list = semester_handle.settle_semester_change()
 _last_208 = semester_handle.get_last_report_card(208)
@@ -478,8 +479,7 @@ check(
     and len(child_growth(208).report_card_history) == 2,
     report_list,
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 remove_character(207)
 remove_character(208)
-
 finish()

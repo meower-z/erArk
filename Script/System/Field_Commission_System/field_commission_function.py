@@ -7,6 +7,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
 from Script.Modules.domains import abilities, achievement, commission, country
 from Script.Modules.domains import flags, location, recruit, roster, warehouse
+from Script.Modules.domains import relations
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -120,8 +121,7 @@ def get_commission_demand_and_reward(
                     now_time=game_time.now(),
                 )
 
-    return_list = (satify_flag, type_text, full_text)
-    return return_list
+    return (satify_flag, type_text, full_text)
 
 
 def process_commission_text(
@@ -305,7 +305,7 @@ def process_commission_text(
         item_id = character.get_character_id_from_adv(item_id)
         character_id = item_id
         item_name = cache.character_data[character_id].name + item_name
-        now_have_item_num = cache.character_data[character_id].favorability[0]
+        now_have_item_num = relations.favorability(character_id)[0]
     # 信赖
     elif text_list[0] == "信赖":
         item_name = _("信赖")
@@ -313,7 +313,7 @@ def process_commission_text(
         item_id = character.get_character_id_from_adv(item_id)
         character_id = item_id
         item_name = cache.character_data[character_id].name + item_name
-        now_have_item_num = cache.character_data[character_id].trust
+        now_have_item_num = relations.trust(character_id)
     # 攻略
     elif text_list[0] == "攻略":
         item_name = _("攻略程度")
@@ -405,10 +405,12 @@ def process_commission_text(
                 country.add_reputation(item_id, item_num)
             # 好感
             elif text_list[0] == "好感":
-                cache.character_data[item_id].favorability[0] += int(item_num)
+                with relations.favorability.editing(item_id) as favorability:
+                    favorability[0] += int(item_num)
             # 信赖
             elif text_list[0] == "信赖":
-                cache.character_data[item_id].trust += item_num
+                trust = relations.trust(item_id) + item_num
+                relations.trust.set(item_id, trust)
 
     # 添加类型文本
     if item_type not in type_text:
@@ -533,12 +535,10 @@ def settle_recruit_new_chara(commision_id: int) -> str:
         wait_id_list = []
         # 只能招募到当地的干员
         for chara_id in recruitable_npc_id_list:
-            character_data = cache.character_data[chara_id]
             # 筛选出出生地是当前罗德岛所在地的角色
-            if character_data.relationship.birthplace != location.country():
+            if relations.birthplace(chara_id) != location.country():
                 continue
-            else:
-                wait_id_list.append(chara_id)
+            wait_id_list.append(chara_id)
         # 如果有符合条件的干员，随机招募一个
         if len(wait_id_list):
             choice_id = random.choice(wait_id_list)

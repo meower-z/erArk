@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 数值范围域检查
-覆盖 NUM-01…NUM-30，校验角色对象上的 favorability、角色的状态值（status.of）与 GameState 里的能力、经验、宝珠、
-素质表的键集完整性、当前值/上限值的合法范围，以及基地资源、仓库容量等全局数值。检查均为一次快照内的纯读取，无历史依赖。
+覆盖 NUM-01…NUM-30，校验 GameState 里角色的状态值（status.of）、能力/经验/宝珠/素质表（abilities）与
+好感（relations.favorability）的键集完整性、当前值/上限值的合法范围，以及基地资源、仓库容量等全局数值。均为纯读取。
 
-执行顺序说明：NUM-01（字段存在且为dict）概念上必须先于其余检查，但框架按注册顺序、每个检查项独立try/except调用，
-不存在"NUM-01失败则跳过后续检查"的机制。读角色对象上数值字典、性别、上限等结构的检查先用getattr/.get
-加默认值或_dict_field_ok复核，结构不满足前置条件时报出或跳过。状态值经status读，能力、经验、宝珠与素质表经abilities读。
+执行顺序说明：框架按注册顺序、每个检查项独立 try/except 调用。_NUMERIC_DICT_FIELDS 为空元组，角色对象上没有
+待查的数值字典字段，NUM-01 无项可查。读角色对象字段的检查用 getattr 加默认值；状态值经 status.of 读，
+能力、经验、宝珠与素质表经 abilities 读，好感经 relations.favorability 读，缺少该项时返回空表。
 
-配表访问一律走 Script.Config.game_config，检查函数只在执行时才引用配表字典（模块顶层不校验config_xxx是否存在）。
+配表访问一律走 Script.Config.game_config，检查函数只在执行时才引用配表字典（模块顶层不校验 config_xxx 是否存在）。
 某个配表字段本身缺失时，对应检查退化为跳过（返回空列表），不影响其余检查项。
 """
 
@@ -25,7 +25,7 @@ from Script.Modules.domains import hypnosis as hypnosis_domain, needs
 from Script.Modules.domains import player_ability, playthrough, status
 from Script.Modules.domains import warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, relations
 
 
 def _exact(value: object) -> TypeGuard[int | Fraction]:
@@ -39,8 +39,8 @@ def _exact(value: object) -> TypeGuard[int | Fraction]:
     return type(value) is int or type(value) is Fraction
 
 
-# NUM-01 检查的角色对象上的数值容器字段。状态值与能力、经验、宝珠、素质表在 GameState 里，不在此列
-_NUMERIC_DICT_FIELDS = ("favorability",)
+# NUM-01 检查的角色对象数值容器字段（为空）；状态值经 status.of、四张表经 abilities、好感经 relations.favorability 读
+_NUMERIC_DICT_FIELDS: tuple[str, ...] = ()
 
 
 def _is_finite_number(v: object) -> bool:
@@ -91,10 +91,9 @@ def check_num_01_numeric_dict_fields_exist() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验数值字典字段favorability在每个角色对象上都存在且类型为dict。存档走pickle反序列化，
-        pickle不执行__init__，旧存档缺失的实例属性没有类属性兜底，getattr(..., None)会返回None，本检查旨在捕获
-        这类"旧存档字段缺失"而非单纯的类型损坏。读这个字段的检查先用_dict_field_ok复核，跳过字段坏的角色。
-        状态值与能力、经验、宝珠、素质表在GameState里，不归本检查。
+        校验 _NUMERIC_DICT_FIELDS 列出的数值容器字段在每个角色对象上存在且类型为 dict。
+        _NUMERIC_DICT_FIELDS 为空元组，角色对象上没有纳入检查的数值字典字段，本检查返回空列表。
+        状态值经 status.of 读，能力、经验、宝珠与素质表经 abilities 读，好感经 relations.favorability 读。
     """
     cache = cache_control.cache
     failures = []
@@ -625,28 +624,23 @@ def check_num_15_favorability_keys() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        本域唯一方向为"角色⊆全局"的键集检查：校验chara.favorability的每个目标id都必须是cache.character_data
-        中现存角色，且必须含键0（玩家）——能力升级需求F<n>与事件通道均裸取/裸写favorability[0]。键类型均为
-        精确int。未招募角色的历史好感不构成假阳性（每个模板NPC都建有character_data条目）；真正会命中的是存档
-        迁移的悬空引用。
+        本域唯一方向为"角色⊆全局"的键集检查：校验角色键 social.favorability 的每个目标id都必须是cache.character_data
+        中现存角色，且必须含键0（玩家）——能力升级需求F<n>与事件通道均裸取/裸写favorability[0]。
+        未招募角色的好感不构成假阳性（每个模板NPC都建有character_data条目）。真正会命中的是存档迁移的悬空引用。
     """
     cache = cache_control.cache
     failures = []
     valid_cids = set(cache.character_data)
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "favorability"):
-            continue
-        favorability = chara.favorability
+        favorability = relations.favorability(cid)
         dangling = set(favorability) - valid_cids
-        bad_key_type = not all(type(k) is int for k in favorability)
         has_player = 0 in favorability
-        if dangling or bad_key_type or not has_player:
+        if dangling or not has_player:
             failures.append(
                 make_failure(
                     "NUM-15",
                     "好感键有效且必含玩家",
-                    f"角色cid={cid} name={_chara_name(chara)} 悬空目标id={dangling} 非int键存在={bad_key_type} "
-                    f"含玩家键0={has_player}",
+                    f"角色cid={cid} name={_chara_name(chara)} 悬空目标id={dangling} 含玩家键0={has_player}",
                     [cid],
                 )
             )
@@ -670,9 +664,7 @@ def check_num_16_favorability_type() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "favorability"):
-            continue
-        favorability = chara.favorability
+        favorability = relations.favorability(cid)
         bad = {k: v for k, v in favorability.items() if type(v) is not int}
         if bad:
             observe_over = {
@@ -710,7 +702,7 @@ def check_num_17_trust_hypnosis_finite() -> list[CheckFailure]:
     cache = cache_control.cache
     failures = []
     for cid, chara in cache.character_data.items():
-        trust = getattr(chara, "trust", None)
+        trust = relations.trust(cid)
         hypnosis_degree = hypnosis_domain.degree(cid)
         if not (
             _is_finite_number(trust) and _is_finite_number(hypnosis_degree)

@@ -44,7 +44,7 @@ class OldSaveIntsTest(FastTestCase):
     def test_defaults_keep_int_and_fraction(self) -> None:
         """存档里的 int 与 Fraction 补齐字段后值与类型不变，缺的字段取默认值 0"""
         loaded = game_type.Character()
-        loaded.trust = 7
+        loaded.adv = 7
         vars(loaded)["cid"] = Fraction(10, 3)
         del loaded.sex
         save_handle.update_dict_with_default(
@@ -53,7 +53,7 @@ class OldSaveIntsTest(FastTestCase):
         got = [
             (type(v), v)
             for v in (
-                loaded.trust,
+                loaded.adv,
                 loaded.cid,
                 loaded.sex,
             )

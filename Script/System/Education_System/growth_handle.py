@@ -23,13 +23,9 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
-from Script.Modules.domains import (
-    abilities,
-    facility,
-    growth,
-    pregnancy,
-    roster,
-)
+from Script.Modules.domains import abilities, facility, growth, pregnancy
+from Script.Modules.domains import roster, chara_life, relations
+from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -104,11 +100,7 @@ def get_course_candidate_list() -> list[int]:
     for character_id in list(roster.active_sorted()):
         if character_id not in cache.character_data:
             continue
-        character_data: game_type.Character = cache.character_data[character_id]
-        if (
-            character_data.work.work_type
-            == education_constant.STUDENT_WORK_TYPE
-        ):
+        if chara_life.work_type(character_id) == STUDENT_WORK_TYPE:
             result.append(character_id)
     return result
 
@@ -394,8 +386,7 @@ def judge_selected_cell_real(
 
     if character_id not in cache.character_data:
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return False
     course = schedule_handle.get_selected_course(character_id, week_day, period)
     if course is None:
@@ -458,9 +449,8 @@ def settle_course_attend(character_id: int) -> bool:
         return False
     character_data: game_type.Character = cache.character_data[character_id]
     if (
-        character_data.relationship.father_id != 0
-        and character_data.work.work_type
-        != education_constant.STUDENT_WORK_TYPE
+        relations.father_id(character_id) != 0
+        and chara_life.work_type(character_id) != STUDENT_WORK_TYPE
     ):
         return False
     period = game_time.get_class_period(character_id)

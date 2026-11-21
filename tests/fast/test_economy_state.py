@@ -32,6 +32,8 @@ from Script.System.Medical_System import medical_core
 from Script.Test.Static_Check.check_registry import get_all_checks
 from Script.UI.Panel import resource_exchange_panel as trade
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import chara_life
+from tests import kernel_data
 
 
 def _tradable() -> int:
@@ -171,7 +173,11 @@ class EconomyStateTest(FastTestCase):
 
     def test_traders_follow_work(self) -> None:
         """干员甲是交易员，干员乙不是。刷新岗位后交易员名单是 [甲]，乙与不存在的角色 9999 的主交易员位置改为空缺"""
-        self.world.chara(1, "干员甲").work.work_type = economy.TRADER_WORK
+        kernel_data.put(
+            chara_life.work_type.set,
+            self.world.chara(1, "干员甲").cid,
+            economy.TRADER_WORK,
+        )
         self.world.chara(2, "干员乙")
         roster.set_active({1, 2})
         economy.set_main_trader("甲类", 1)
@@ -256,7 +262,11 @@ class EconomyStateTest(FastTestCase):
 
     def test_island_checks(self) -> None:
         """ISLAND-15、ISLAND-24、ISLAND-32 各试一个合法值与一个违规值：合法值不报，违规值报"""
-        self.world.chara(1, "干员甲").work.work_type = economy.TRADER_WORK
+        kernel_data.put(
+            chara_life.work_type.set,
+            self.world.chara(1, "干员甲").cid,
+            economy.TRADER_WORK,
+        )
         economy.set_main_trader("甲类", 1)
         self.assertFalse(self.flagged("ISLAND-15"))
         economy.set_main_trader("甲类", 9999)

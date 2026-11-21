@@ -12,8 +12,8 @@ from Script.Config import game_config, normal_config
 from typing import TYPE_CHECKING
 from Script.Modules.domains import abilities, achievement, commission, dirty
 from Script.Modules.domains import flags, h_state, inventory, needs
-from Script.Modules.domains import player_collection
-from Script.Modules.domains import playthrough, prison, roster, warehouse
+from Script.Modules.domains import player_collection, playthrough, prison
+from Script.Modules.domains import roster, warehouse, chara_life, relations
 
 if TYPE_CHECKING:
     from typing import Any
@@ -63,7 +63,6 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
     - achievement_id: int，强制成功的成就ID（默认为0）\n
     功能：根据类型结算成就并绘制获得提示
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
     pl_needs = needs.of(0)
     # 成就类型与结算函数的映射字典
     func = None
@@ -99,11 +98,8 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
             vehicles_count += owned
     # 统计读书进度
     elif achievement_type == _("读书"):
-        for book_id in pl_character_data.entertainment.read_book_progress:
-            if (
-                pl_character_data.entertainment.read_book_progress[book_id]
-                >= 100
-            ):
+        for book_id in chara_life.read_book_progress(0):
+            if chara_life.read_book_progress(0)[book_id] >= 100:
                 read_book_count += 1
     # 成就类型与结算值的映射字典
     achievement_type_value_dict: dict[str, list[Any]] = {
@@ -130,7 +126,7 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
         ],
         _("时停"): [achievement.get("time_stop_duration"), [601, 602, 603]],
         _("生育"): [
-            len(pl_character_data.relationship.child_id_list),
+            len(relations.child_id_list(0)),
             [701, 702, 703],
         ],
         _("生产"): [achievement.get("production_count"), [801, 802, 803]],
@@ -339,23 +335,21 @@ def settle_chara_assistant() -> list[int]:
     - return_list: 成就列表，包含已达成的成就ID
     """
     return_list: list[int] = []
-    pl_character_data: game_type.Character = cache.character_data[0]
-    assistant_chara_id = pl_character_data.assistant_character_id
+    assistant_chara_id = relations.assistant_character_id(0)
     # 如果没有助理则返回空列表
     if assistant_chara_id == 0:
         return return_list
-    assistant_chara_data = cache.character_data[assistant_chara_id]
     # 132号成就的特殊标志
     flag_132 = 1
     for service_id in [4, 5, 6, 7]:
-        if assistant_chara_data.assistant_services[service_id] == 0:
+        if relations.assistant_services(assistant_chara_id)[service_id] == 0:
             flag_132 = 0
     # 136号成就的特殊标志
     flag_136 = 0
     if (
-        assistant_chara_data.favorability[0]
+        relations.favorability(assistant_chara_id)[0]
         >= game_config.config_favorability_level[8].Favorability_point
-        and assistant_chara_data.trust
+        and relations.trust(assistant_chara_id)
         >= game_config.config_trust_level[8].Trust_point
     ):
         flag_136 = 1
@@ -523,7 +517,7 @@ def settle_chara_group_sex() -> list[int]:
         # 如果是女儿
         if handle_premise.handle_self_is_player_daughter(chara_id):
             # 获取该角色的母亲ID
-            mother_id = cache.character_data[chara_id].relationship.mother_id
+            mother_id = relations.mother_id(chara_id)
             # 如果母亲也在场且也在H中
             if (
                 mother_id in scene_data.character_list

@@ -3,6 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
+from Script.Modules.domains import relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -34,11 +35,10 @@ def get_valid_parent(character_id: int, parent_type: str) -> int:
     """
     if character_id not in cache.character_data:
         return -1
-    relationship = cache.character_data[character_id].relationship
     parent_id = (
-        relationship.father_id
+        relations.father_id(character_id)
         if parent_type == "father"
-        else relationship.mother_id
+        else relations.mother_id(character_id)
     )
     if parent_id == -1 or parent_id not in cache.character_data:
         return -1
@@ -83,9 +83,7 @@ def get_valid_children(character_id: int) -> list:
     if character_id not in cache.character_data:
         return []
     result = []
-    for child_id in cache.character_data[
-        character_id
-    ].relationship.child_id_list:
+    for child_id in relations.child_id_list(character_id):
         if child_id in cache.character_data and child_id not in result:
             result.append(child_id)
     return result
@@ -100,11 +98,9 @@ def _get_other_parent(child_id: int, parent_id: int) -> int:
     Return arguments:
     int -- 另一位家长id，无效或与已知家长相同时返回-1
     """
-    relationship = cache.character_data[child_id].relationship
+    father_id = relations.father_id(child_id)
     other_id = (
-        relationship.mother_id
-        if relationship.father_id == parent_id
-        else relationship.father_id
+        relations.mother_id(child_id) if father_id == parent_id else father_id
     )
     if (
         other_id == parent_id

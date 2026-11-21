@@ -12,6 +12,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.Modules.domains import abilities, action_info, entertainment, flags
 from Script.Modules.domains import h_state, needs, player_ability, status
+from Script.Modules.domains import relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -97,13 +98,15 @@ def calculation_instuct_judege(
 
     # 好感判定#
     __, judge_favorability = attr_calculation.get_favorability_level(
-        target_data.favorability[0]
+        relations.favorability(target_character_id)[0]
     )
     calculation_text += _("好感修正(") + str(judge_favorability) + ")"
     judge += judge_favorability
 
     # 信赖判定#
-    __, judge_trust = attr_calculation.get_trust_level(target_data.trust)
+    __, judge_trust = attr_calculation.get_trust_level(
+        relations.trust(target_character_id)
+    )
     judge += judge_trust
     calculation_text += _("+信赖修正(") + str(judge_trust) + ")"
 
@@ -326,15 +329,12 @@ def calculation_instuct_judege(
             )
 
         # 助理助攻修正
+        assistant_id = relations.assistant_character_id(character_id)
         if (
-            character_data.assistant_character_id != target_character_id
-            and character_data.assistant_character_id
-            in scene_data.character_list
+            assistant_id != target_character_id
+            and assistant_id in scene_data.character_list
         ):
-            assistant_character_data = cache.character_data[
-                character_data.assistant_character_id
-            ]
-            if assistant_character_data.assistant_services[8]:
+            if relations.assistant_services(assistant_id)[8]:
                 judge += 50
                 calculation_text += _("+助理助攻(+50)")
 

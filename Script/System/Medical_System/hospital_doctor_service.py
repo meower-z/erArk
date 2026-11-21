@@ -17,6 +17,7 @@ from Script.Design import handle_ability
 from Script.System.Medical_System import medical_constant, medical_core
 from Script.Design import game_time
 from Script.Modules.domains import medical, medical_patient, warehouse
+from Script.Modules.domains import chara_life
 
 
 @dataclass
@@ -68,18 +69,11 @@ def _acquire_hospital_patient_for_doctor(
     # 读取当前住院病人列表。
     patient_table = medical.state().hospitalized
     if not patient_table:
-        work_data = getattr(doctor_character, "work", None)
-        if work_data is not None:
-            work_data.medical_patient_id = 0
+        chara_life.medical_patient_id.set(doctor_character.cid, 0)
         return None
 
     # 优先检查医生是否已有绑定病人。
-    work_data = getattr(doctor_character, "work", None)
-    assigned_id = (
-        getattr(work_data, "medical_patient_id", 0)
-        if work_data is not None
-        else 0
-    )
+    assigned_id = chara_life.medical_patient_id(doctor_character.cid)
     if assigned_id:
         patient = patient_table.get(assigned_id)
         if (
@@ -93,8 +87,7 @@ def _acquire_hospital_patient_for_doctor(
         ):
             patient.assigned_hospital_doctor_id = doctor_character.cid
             return patient
-        if work_data is not None:
-            work_data.medical_patient_id = 0
+        chara_life.medical_patient_id.set(doctor_character.cid, 0)
 
     # 遍历住院列表，筛选符合条件的病人候选。
     candidates = []
@@ -112,8 +105,7 @@ def _acquire_hospital_patient_for_doctor(
 
     # 没有满足条件的病人时清理绑定。
     if not candidates:
-        if work_data is not None:
-            work_data.medical_patient_id = 0
+        chara_life.medical_patient_id.set(doctor_character.cid, 0)
         return None
 
     def _hospital_priority(
@@ -128,8 +120,7 @@ def _acquire_hospital_patient_for_doctor(
     # 选择优先级最高的病人并记录绑定关系。
     patient = min(candidates, key=_hospital_priority)
     patient.assigned_hospital_doctor_id = doctor_character.cid
-    if work_data is not None:
-        work_data.medical_patient_id = patient.patient_id
+    chara_life.medical_patient_id.set(doctor_character.cid, patient.patient_id)
     return patient
 
 
@@ -358,9 +349,7 @@ def conduct_ward_round(
         doctor_character, rhodes_island, require_surgery=False
     )
     if patient is None:
-        work_data: game_type.CHARA_WORK | None = doctor_character.work
-        if work_data is not None:
-            work_data.medical_patient_id = 0
+        chara_life.medical_patient_id.set(doctor_character.cid, 0)
         return {"handled": False, "patient": None, "result": "no_candidate"}
 
     def _consume(target_patient: medical_patient.MedicalPatient) -> bool:
@@ -382,9 +371,7 @@ def conduct_ward_round(
     # 病人离开住院状态时解除医生绑定。
     if patient.state != medical_constant.MedicalPatientState.HOSPITALIZED:
         patient.assigned_hospital_doctor_id = 0
-        work_data = getattr(doctor_character, "work", None)
-        if work_data is not None:
-            work_data.medical_patient_id = 0
+        chara_life.medical_patient_id.set(doctor_character.cid, 0)
 
     return outcome
 

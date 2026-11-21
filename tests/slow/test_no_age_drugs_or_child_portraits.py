@@ -86,6 +86,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
     def test_portrait_lookup_never_child_variant(self) -> None:
         """image 目录与图片索引里没有「_小」差分；
         带素质 102、103 的干员、母亲是 MOTHER_NAME 的女儿，查找结果都不含「_小」段"""
+        from Script.Modules.domains import relations
         from Script.Core import era_image
         from Script.Design import character_image
 
@@ -133,8 +134,8 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
         daughter = self.world.chara(
             max(self.cache.character_data) + 1, "测试女儿"
         )
-        daughter.relationship.father_id = 0
-        daughter.relationship.mother_id = mother_id
+        kernel_data.put(relations.father_id.set, daughter.cid, 0)
+        kernel_data.put(relations.mother_id.set, daughter.cid, mother_id)
         self.assertIsNone(
             CHILD_SEGMENT.search(
                 character_image.find_character_image_name(daughter.cid)
@@ -143,6 +144,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
 
     def test_daughter_without_art_has_no_portrait(self) -> None:
         """母亲的种族没有女儿图时，女儿的立绘查找结果不在图片索引里"""
+        from Script.Modules.domains import relations
         from Script.Core import era_image
         from Script.Design import character_image
 
@@ -165,8 +167,8 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
             "测试女儿",
             race=self.cache.character_data[mother_id].race,
         )
-        daughter.relationship.father_id = 0
-        daughter.relationship.mother_id = mother_id
+        kernel_data.put(relations.father_id.set, daughter.cid, 0)
+        kernel_data.put(relations.mother_id.set, daughter.cid, mother_id)
         image_name = character_image.find_character_image_name(daughter.cid)
         self.assertEqual(
             [

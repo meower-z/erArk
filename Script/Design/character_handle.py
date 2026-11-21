@@ -19,7 +19,8 @@ from Script.Design import (
 from Script.Config import game_config, character_config, normal_config
 from Script.Modules.domains import abilities, facility, flags, needs
 from Script.Modules.domains import player_collection, playthrough, roster
-from Script.Modules.domains import tallies, visitor, wardrobe
+from Script.Modules.domains import tallies, visitor, wardrobe, chara_key
+from Script.Modules.domains import chara_life, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -57,6 +58,7 @@ def init_character(
     # print("character_id=",character_id)
     now_character = game_type.Character()
     now_character.cid = character_id
+    chara_key.reset(character_id)
     now_character.name = character_tem.Name
     # 检测基础干员并加入已有干员列表
     if register_roster:
@@ -66,16 +68,16 @@ def init_character(
     now_character.sex = character_tem.Sex
     now_character.profession = character_tem.Profession
     now_character.race = character_tem.Race
-    now_character.relationship.nation = character_tem.Nation
-    now_character.relationship.birthplace = character_tem.Birthplace
+    relations.nation.set(now_character.cid, character_tem.Nation)
+    relations.birthplace.set(now_character.cid, character_tem.Birthplace)
     # 如果有母亲的话则加上亲子关系
     if character_tem.Mother_id:
-        now_character.relationship.father_id = 0
-        now_character.relationship.mother_id = character_tem.Mother_id
+        relations.father_id.set(now_character.cid, 0)
+        relations.mother_id.set(now_character.cid, character_tem.Mother_id)
     now_character.adv = character_tem.AdvNpc
     now_character.target_character_id = character_id
-    now_character.favorability = {0: 0}
-    now_character.trust = 0
+    relations.favorability.set(now_character.cid, {0: 0})
+    relations.trust.set(now_character.cid, 0)
     abilities.ability(character_id).replace(character_tem.Ability)
     abilities.experience(character_id).replace(character_tem.Experience)
     abilities.talent(character_id).replace(character_tem.Talent)
@@ -83,7 +85,7 @@ def init_character(
     needs.set(
         now_character.cid, hit_max=character_tem.Hp, mana_max=character_tem.Mp
     )
-    now_character.dormitory = character_tem.Dormitory
+    chara_life.dormitory.set(now_character.cid, character_tem.Dormitory)
     now_character.token_text = character_tem.Token
     # if character_tem.Chest:
     #     now_character.chest_tem = character_tem.Chest
@@ -119,13 +121,13 @@ def first_NPC_work() -> None:
         character_data = cache.character_data[character_id]
         # 按干员编号认人：角色名随语言翻译
         if character_data.adv in {7}:  # 可露希尔
-            character_data.work.work_type = 21
+            chara_life.work_type.set(character_id, 21)
         elif character_data.adv in {3, 171}:  # 凯尔希、华法琳
-            character_data.work.work_type = 61
+            chara_life.work_type.set(character_id, 61)
         elif character_data.adv in {56}:  # 特蕾西娅
-            character_data.work.work_type = 71
+            chara_life.work_type.set(character_id, 71)
         elif character_data.adv in {130}:  # 杜宾
-            character_data.work.work_type = 91
+            chara_life.work_type.set(character_id, 91)
     basement.update_work_people()
 
 
@@ -204,8 +206,11 @@ def born_new_character(mother_id: int, child_name: str) -> int:
     now_id = now_tem.AdvNpc  # 使用adv作为id
     cache.npc_tem_data[now_id] = now_tem
     # 给父母加上该孩子的社会关系
-    cache.character_data[0].relationship.child_id_list.append(now_id)
-    mom_character_data.relationship.child_id_list.append(now_id)
+    child_id_list = relations.child_id_list(0)
+    child_id_list.append(now_id)
+    relations.child_id_list.set(0, child_id_list)
+    with relations.child_id_list.editing(mother_id) as child_id_list:
+        child_id_list.append(now_id)
     # 记录特殊履历：第一次分娩（附记孩子的名字，地点即母亲分娩时所在位置）
     from Script.System.First_Record_System import first_record_handle
 
@@ -221,7 +226,7 @@ def init_character_position() -> None:
     roster.add(0)
     for character_id in roster.active():
         character_position = cache.character_data[character_id].position
-        character_dormitory = cache.character_data[character_id].dormitory
+        character_dormitory = chara_life.dormitory(character_id)
         character_dormitory_str = map_handle.get_map_system_path_for_str(
             character_dormitory
         )
@@ -356,10 +361,13 @@ def add_favorability(
     无
     功能: 两个记录对象在函数体里都判了None，母女见学好感一类不走玩家结算链的调用可以只传其中一个
     """
-    target_data: game_type.Character = cache.character_data[target_id]
-    target_data.favorability.setdefault(character_id, 0)
+    favorability = relations.favorability(target_id)
+    favorability.setdefault(character_id, 0)
+    relations.favorability.set(target_id, favorability)
     character_data: game_type.Character = cache.character_data[character_id]
-    character_data.favorability.setdefault(target_id, 0)
+    favorability = relations.favorability(character_id)
+    favorability.setdefault(target_id, 0)
+    relations.favorability.set(character_id, favorability)
     if target_change is not None:
         target_change.status_data.setdefault(12, 0)
     # if 12 in target_data.status:
@@ -385,20 +393,18 @@ def add_favorability(
 
     # NPC对玩家
     if (character_id != 0) and (character_data.target_character_id == 0):
-        character_data.favorability[target_id] += now_add_favorability
-        character_data.favorability[target_id] = min(
-            100000, character_data.favorability[target_id]
-        )
+        with relations.favorability.editing(character_id) as favorability:
+            favorability[target_id] += now_add_favorability
+            favorability[target_id] = min(100000, favorability[target_id])
         # print(f"debug change_data = {change_data}")
         if change_data is not None:
             change_data.favorability += now_add_favorability
 
     # 对NPC
     if character_data.target_character_id != 0:
-        target_data.favorability[character_id] += now_add_favorability
-        target_data.favorability[character_id] = min(
-            100000, target_data.favorability[character_id]
-        )
+        with relations.favorability.editing(target_id) as favorability:
+            favorability[character_id] += now_add_favorability
+            favorability[character_id] = min(100000, favorability[character_id])
         if target_change is not None:
             target_change.favorability += now_add_favorability
     # target_data.social_contact_last_cut_down_time[character_id] = now_time

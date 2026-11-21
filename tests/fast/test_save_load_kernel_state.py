@@ -33,6 +33,8 @@ from Script.Modules.domains import abilities, body_manage, country, facility
 from Script.Modules.domains import inventory, medical, physical_exam
 from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import roster, status, wardrobe, warehouse
+from Script.Modules.domains import chara_key, chara_profile, relations
+from Script.Design import attr_calculation
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
 from Script.System.Pregnancy_System import pregnancy_constant
@@ -49,10 +51,11 @@ _serial = itertools.count()
 def game(clock: int, ends: dict[str, int]) -> core.GameState:
     """
     一个 GameState：每个角色一个带行动数据的 Idle，在 ends 给出的分钟结束。角色与全局数据里有各种 JSON 值。
+    每个角色的 profile.chara_setting 与 social.assistant_services 各项齐全，读档补全设置时不改它们。
     全局数据里的 base.stock、本周目设定与势力和国家取自当前状态，换上这个 GameState 后它们不变
     Keyword arguments:
     clock -- 时钟
-    ends -- 角色键到他的行动结束的分钟
+    ends -- 角色（如 "1"）到其行动结束的分钟
     Return arguments:
     GameState -- 冻结的 GameState
     """
@@ -65,7 +68,18 @@ def game(clock: int, ends: dict[str, int]) -> core.GameState:
                 clock,
                 end - clock,
             ),
-            {"flag": True, "note": "博士", "ratio": 0.5, "none": None},
+            {
+                "flag": True,
+                "note": "博士",
+                "ratio": 0.5,
+                "none": None,
+                chara_profile.chara_setting.key: chara_key.int_table(
+                    attr_calculation.get_chara_setting_zero()
+                ),
+                relations.assistant_services.key: chara_key.int_table(
+                    attr_calculation.get_assistant_services_zero()
+                ),
+            },
         )
         for who, end in ends.items()
     }

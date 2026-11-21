@@ -16,7 +16,7 @@ from Script.Modules.domains import economy, kitchen
 from Script.Modules.domains import maintenance as engineering
 from Script.Modules.gameplay_resolution import intent, starts
 from Script.Modules.domains import medical, medical_patient, physical_exam
-from Script.Modules.domains import inventory
+from Script.Modules.domains import inventory, chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -57,7 +57,7 @@ def assign_dormitory(who: int, data: intent.Intent) -> None:
     """还没有宿舍的干员分到一间宿舍"""
     from Script.System.Dormitory_System import common as dormitory_common
 
-    if cache.character_data[who].dormitory == "无":
+    if chara_life.dormitory(who) == "无":
         dormitory_common.new_character_get_dormitory(who)
 
 
@@ -257,7 +257,7 @@ def schedule_surgery(who: int, data: intent.Intent) -> None:
         patient.last_surgery_result = "scheduled"
         patient.surgery_blocked_resource = None
         patient.surgery_blocked = False
-    cache.character_data[who].work.surgery_patient_id = patient.patient_id
+    chara_life.surgery_patient_id.set(who, patient.patient_id)
 
 
 @starts.starter("teach")

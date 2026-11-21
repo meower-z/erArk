@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import flags
+from Script.Modules.domains import flags, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -23,8 +23,7 @@ def handle_is_assistant(character_id: int) -> int:
     # 玩家自己不能是助理
     if character_id == 0:
         return 0
-    pl_character_data: game_type.Character = cache.character_data[0]
-    return pl_character_data.assistant_character_id == character_id
+    return relations.assistant_character_id(0) == character_id
 
 
 @add_premise(constant_promise.Premise.NOT_ASSISTANT)
@@ -74,8 +73,7 @@ def handle_assistant_help_work_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[3]:
+    if relations.assistant_services(character_id)[3]:
         return 1
     return 0
 
@@ -89,8 +87,7 @@ def handle_assistant_follow_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services.get(2, 0):
+    if relations.assistant_services(character_id).get(2, 0):
         return 1
     return 0
 
@@ -104,8 +101,7 @@ def handle_assistant_help_work_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[3]:
+    if relations.assistant_services(character_id)[3]:
         return 0
     return 1
 
@@ -119,8 +115,7 @@ def handle_assistant_send_food_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[4]:
+    if relations.assistant_services(character_id)[4]:
         return 0
     return 1
 
@@ -134,8 +129,7 @@ def handle_assistant_send_food_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[4] == 1:
+    if relations.assistant_services(character_id)[4] == 1:
         return 1
     return 0
 
@@ -149,8 +143,7 @@ def handle_assistant_send_food_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[4] == 2:
+    if relations.assistant_services(character_id)[4] == 2:
         return 1
     return 0
 
@@ -164,8 +157,7 @@ def handle_assistant_send_food_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[4] == 3:
+    if relations.assistant_services(character_id)[4] == 3:
         return 1
     return 0
 
@@ -180,9 +172,9 @@ def handle_assistant_send_food_of_ai_disable(character_id: int) -> int:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if not character_data.assistant_services[4]:
+    if not relations.assistant_services(character_id)[4]:
         return 1
-    if character_data.assistant_services[4] in {
+    if relations.assistant_services(character_id)[4] in {
         1,
         2,
     } and character_data.behavior.start_time.hour in {7, 8, 18, 19}:
@@ -201,7 +193,7 @@ def handle_assistant_send_food_1_able(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     if (
-        character_data.assistant_services[4] == 1
+        relations.assistant_services(character_id)[4] == 1
         and flags.get(character_id, "help_buy_food") == 0
         and character_data.behavior.start_time.hour in {12, 13}
     ):
@@ -221,7 +213,7 @@ def handle_assistant_send_food_2_able(character_id: int) -> int:
     character_data: game_type.Character = cache.character_data[character_id]
     if flags.get(character_id, "help_make_food") != 0:
         return 0
-    service = character_data.assistant_services[4]
+    service = relations.assistant_services(character_id)[4]
     if service == 3 or (
         service == 2 and character_data.behavior.start_time.hour in {12, 13}
     ):
@@ -238,8 +230,7 @@ def handle_assistant_morning_salutation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[5]:
+    if relations.assistant_services(character_id)[5]:
         return 0
     return 1
 
@@ -253,8 +244,7 @@ def handle_assistant_morning_salutation_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[5]:
+    if relations.assistant_services(character_id)[5]:
         return 1
     return 0
 
@@ -268,8 +258,7 @@ def handle_assistant_morning_salutation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[5] == 1:
+    if relations.assistant_services(character_id)[5] == 1:
         return 1
     return 0
 
@@ -283,8 +272,7 @@ def handle_assistant_morning_salutation_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[5] == 2:
+    if relations.assistant_services(character_id)[5] == 2:
         return 1
     return 0
 
@@ -298,8 +286,7 @@ def handle_assistant_morning_salutation_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[5] == 3:
+    if relations.assistant_services(character_id)[5] == 3:
         return 1
     return 0
 
@@ -313,8 +300,7 @@ def handle_assistant_night_salutation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[6]:
+    if relations.assistant_services(character_id)[6]:
         return 0
     return 1
 
@@ -328,8 +314,7 @@ def handle_assistant_night_salutation_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[6]:
+    if relations.assistant_services(character_id)[6]:
         return 1
     return 0
 
@@ -343,8 +328,7 @@ def handle_assistant_night_salutation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[6] == 1:
+    if relations.assistant_services(character_id)[6] == 1:
         return 1
     return 0
 
@@ -358,8 +342,7 @@ def handle_assistant_night_salutation_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[6] == 2:
+    if relations.assistant_services(character_id)[6] == 2:
         return 1
     return 0
 
@@ -373,8 +356,7 @@ def handle_assistant_night_salutation_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.assistant_services[6] == 3:
+    if relations.assistant_services(character_id)[6] == 3:
         return 1
     return 0
 
@@ -428,8 +410,7 @@ def handle_assistant_live_together_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.assistant_services[7] == 1
+    return relations.assistant_services(character_id)[7] == 1
 
 
 @add_premise(constant_promise.Premise.ASSISTANT_LIVE_TOGETHER_OFF)
@@ -498,13 +479,9 @@ def handle_pl_assistant_change_every_week_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
-    assistant_chara_id = pl_character_data.assistant_character_id
+    assistant_chara_id = relations.assistant_character_id(0)
     if assistant_chara_id == 0:
         return 0
-    assistant_character_data: game_type.Character = cache.character_data[
-        assistant_chara_id
-    ]
-    if assistant_character_data.assistant_services.get(10, 0) == 1:
+    if relations.assistant_services(assistant_chara_id).get(10, 0) == 1:
         return 1
     return 0

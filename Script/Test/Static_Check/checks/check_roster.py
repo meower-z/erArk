@@ -21,7 +21,8 @@ from Script.Config import game_config
 from Script.Core import cache_control
 from Script.Modules.domains import abilities, commission, diplomacy, facility
 from Script.Modules.domains import flags, location, modes, playthrough, prison
-from Script.Modules.domains import recruit, roster, visitor, work
+from Script.Modules.domains import recruit, roster, visitor, work, chara_life
+from Script.Modules.domains import relations
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -350,7 +351,7 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
                 (
                     f"{warn}角色cid={cid} name={c.name!r} sp_flag.imprisonment为True，"
                     f"但既不在base.prisoners也不escaping；"
-                    f"position={c.position}，dormitory={c.dormitory!r}，permanent_dormitory={c.permanent_dormitory!r}"
+                    f"position={c.position}，dormitory={chara_life.dormitory(c.cid)!r}，permanent_dormitory={chara_life.permanent_dormitory(c.cid)!r}"
                 ),
                 [cid],
             )
@@ -376,7 +377,7 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
                 "ROSTER-05",
                 "监禁flag的来源分区完整",
                 f"{warn}角色cid={cid} name={c.name!r} 同时在base.prisoners囚犯名册与escaping逃跑者集合中(应互斥)；"
-                f"position={c.position}，dormitory={c.dormitory!r}",
+                f"position={c.position}，dormitory={chara_life.dormitory(c.cid)!r}",
                 [cid],
             )
         )
@@ -468,7 +469,7 @@ def check_prisoner_dormitory_uniqueness() -> list[CheckFailure]:
     for cid in prisoners:
         if cid not in cd:
             continue
-        d = cd[cid].dormitory
+        d = chara_life.dormitory(cid)
         dorm_to_cids.setdefault(d, []).append(cid)
     for d, cids in dorm_to_cids.items():
         if d not in prison_dorms:
@@ -479,7 +480,7 @@ def check_prisoner_dormitory_uniqueness() -> list[CheckFailure]:
                         "ROSTER-07",
                         "囚犯宿舍是互不重复的合法牢房",
                         f"{warn}囚犯cid={cid} name={c.name!r} 的宿舍dormitory={d!r}不在合法牢房集合PRISON_DORMS中；"
-                        f"position={c.position}，permanent_dormitory={c.permanent_dormitory!r}，PRISON_DORMS={sorted(prison_dorms)}",
+                        f"position={c.position}，permanent_dormitory={chara_life.permanent_dormitory(c.cid)!r}，PRISON_DORMS={sorted(prison_dorms)}",
                         [cid],
                     )
                 )
@@ -530,7 +531,7 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
                     "囚犯留在关押区且不得同时被装袋",
                     (
                         f"{warn}囚犯cid={cid} name={c.name!r} {'; '.join(problems)}；position={c.position}，"
-                        f"dormitory={c.dormitory!r}，"
+                        f"dormitory={chara_life.dormitory(cid)!r}，"
                         f"is_h={flags.get(c.cid, "is_h")}，玩家position={getattr(player, 'position', None)}"
                     ),
                     [cid],
@@ -649,10 +650,10 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
     wardens = {
         cid
         for cid in roster.active()
-        if cid != 0 and cid in cd and cd[cid].work.work_type == 191
+        if cid != 0 and cid in cd and chara_life.work_type(cid) == 191
     }
     if len(wardens) > 1:
-        details = [(cid, cd[cid].name, cd[cid].dormitory) for cid in wardens]
+        details = [(c, cd[c].name, chara_life.dormitory(c)) for c in wardens]
         failures.append(
             make_failure(
                 "ROSTER-11",
@@ -710,11 +711,11 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
     problems = []
     if not roster.has(wid):
         problems.append("不在npc_id_got在编名册中")
-    if w.work.work_type != 191:
-        problems.append(f"work.work_type={w.work.work_type}不是191")
-    if w.dormitory != warden_dorm:
+    if chara_life.work_type(wid) != 191:
+        problems.append(f"work.work_type={chara_life.work_type(wid)}不是191")
+    if chara_life.dormitory(wid) != warden_dorm:
         problems.append(
-            f"dormitory={w.dormitory!r}不是关押/休息室({warden_dorm!r})"
+            f"dormitory={chara_life.dormitory(wid)!r}不是关押/休息室({warden_dorm!r})"
         )
     if prison.is_prisoner(wid):
         problems.append("是当前囚犯(在base.prisoners中)")
@@ -734,7 +735,7 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
                 "监狱长身份软约束",
                 (
                     f"{warn}监狱长wid={wid} name={w.name!r} 偏离期望状态: {'; '.join(problems)}；"
-                    f"permanent_dormitory={w.permanent_dormitory!r}，"
+                    f"permanent_dormitory={chara_life.permanent_dormitory(wid)!r}，"
                     f"玩家bagging_chara_id={flags.get(0, 'bagging_chara_id') if player is not None else None}"
                 ),
                 [wid],
@@ -826,7 +827,7 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
                 "访客名册与访客flag完全等价",
                 (
                     f"{warn}cid={cid} name={c.name!r} sp_flag.vistor==1，但不在访客名册中，"
-                    f"dormitory={c.dormitory!r}"
+                    f"dormitory={chara_life.dormitory(c.cid)!r}"
                 ),
                 [cid],
             )
@@ -871,7 +872,7 @@ def check_visitor_room_uniqueness() -> list[CheckFailure]:
             )
             continue
         c = cd[cid]
-        d = c.dormitory
+        d = chara_life.dormitory(c.cid)
         room_to_cids.setdefault(d, []).append(cid)
         if d not in guest_rooms:
             open_2000 = {
@@ -1251,8 +1252,9 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
         else:
             if cid not in work.roster(work.HR_WORK):
                 problems.append("不在招聘专员名单work.roster(71)中")
-            if c.work.work_type != 71:
-                problems.append(f"work.work_type={c.work.work_type}不是71")
+            work_type = chara_life.work_type(c.cid)
+            if work_type != 71:
+                problems.append(f"work.work_type={work_type}不是71")
         if problems:
             failures.append(
                 make_failure(
@@ -1296,8 +1298,8 @@ def check_hr_operator_list_integrity() -> list[CheckFailure]:
         c = cd.get(cid)
         if cid == 0 or c is None:
             problems.append("为0号玩家或不存在于character_data")
-        elif c.work.work_type != 71:
-            problems.append(f"work.work_type={c.work.work_type}不是71")
+        elif (work_type := chara_life.work_type(c.cid)) != 71:
+            problems.append(f"work.work_type={work_type}不是71")
         if problems:
             failures.append(
                 make_failure(
@@ -1310,7 +1312,7 @@ def check_hr_operator_list_integrity() -> list[CheckFailure]:
     work71 = {
         cid
         for cid in roster.active()
-        if cid != 0 and cid in cd and cd[cid].work.work_type == 71
+        if cid != 0 and cid in cd and chara_life.work_type(cid) == 71
     }
     for cid in work71 - set(hr):
         c = cd[cid]
@@ -1451,11 +1453,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
             commission_of.setdefault(cid, mid)
     t = _invite_target()
     player = cd.get(0)
-    assistant = (
-        getattr(player, "assistant_character_id", 0)
-        if player is not None
-        else 0
-    )
+    assistant = relations.assistant_character_id(0) if player is not None else 0
     forbidden = {
         "访客(base.visitor)": set(visitor.visitors()),
         "待确认招募(recruited_id)": recruit.pending(),
@@ -1478,9 +1476,9 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
                     (
                         f"{warn}外勤中cid={cid} name={getattr(c, 'name', '?')!r}(委托mid={commission_of.get(cid)}) "
                         f"同时命中身份集合: {hit}；"
-                        f"work.work_type={getattr(getattr(c, 'work', None), 'work_type', None)}，"
+                        f"work.work_type={chara_life.work_type(cid) if c is not None else None}，"
                         f"work.warden()={work.warden()}，"
-                        f"assistant_character_id={assistant}，dormitory={getattr(c, 'dormitory', None)}"
+                        f"assistant_character_id={assistant}，dormitory={chara_life.dormitory(cid) if c else None}"
                     ),
                     [cid],
                 )
@@ -1666,7 +1664,7 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
                     "ROSTER-30",
                     "外交官表与角色外派flag双向一致",
                     f"{warn}国家{country}外交官did={did} name={c.name!r} {'; '.join(problems)}；"
-                    f"work.work_type={c.work.work_type}，所在国家={current_country}，position={c.position}",
+                    f"work.work_type={chara_life.work_type(c.cid)}，所在国家={current_country}，position={c.position}",
                     [did],
                 )
             )
@@ -1703,7 +1701,7 @@ def check_assistant_identity_exclusion() -> list[CheckFailure]:
     player = cd.get(0)
     if player is None:
         return failures
-    a = getattr(player, "assistant_character_id", 0)
+    a = relations.assistant_character_id(0)
     if type(a) is not int:
         failures.append(
             make_failure(

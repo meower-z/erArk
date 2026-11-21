@@ -3,6 +3,7 @@
 from Script.Core import cache_control, constant_promise, game_type
 from Script.Design import game_time, map_handle
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -17,7 +18,6 @@ def handle_entertainment_is_read(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -25,7 +25,7 @@ def handle_entertainment_is_read(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 101
+    return chara_life.entertainment_type(character_id)[i] == 101
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_SING)
@@ -37,7 +37,6 @@ def handle_entertainment_is_sing(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -45,7 +44,7 @@ def handle_entertainment_is_sing(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 51
+    return chara_life.entertainment_type(character_id)[i] == 51
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_PLAY_CLASSIC_INSTRUMENT)
@@ -57,7 +56,6 @@ def handle_entertainment_is_play_classic_instrument(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -65,7 +63,7 @@ def handle_entertainment_is_play_classic_instrument(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 53
+    return chara_life.entertainment_type(character_id)[i] == 53
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_PLAY_MODEN_INSTRUMENT)
@@ -77,7 +75,6 @@ def handle_ENTERTAINMENT_IS_PLAY_MODEN_INSTRUMENT(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -85,7 +82,7 @@ def handle_ENTERTAINMENT_IS_PLAY_MODEN_INSTRUMENT(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 54
+    return chara_life.entertainment_type(character_id)[i] == 54
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_WATCH_MOVIE)
@@ -97,7 +94,6 @@ def handle_entertainment_is_watch_movie(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -105,7 +101,7 @@ def handle_entertainment_is_watch_movie(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 55
+    return chara_life.entertainment_type(character_id)[i] == 55
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_PHOTOGRAPHY)
@@ -117,7 +113,6 @@ def handle_entertainment_is_photography(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -125,7 +120,7 @@ def handle_entertainment_is_photography(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 56
+    return chara_life.entertainment_type(character_id)[i] == 56
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_PLAY_WATER)
@@ -137,7 +132,6 @@ def handle_entertainment_is_play_water(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -145,7 +139,7 @@ def handle_entertainment_is_play_water(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 57
+    return chara_life.entertainment_type(character_id)[i] == 57
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_PLAY_CHESS)
@@ -157,7 +151,6 @@ def handle_entertainment_is_play_chess(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -165,7 +158,7 @@ def handle_entertainment_is_play_chess(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 58
+    return chara_life.entertainment_type(character_id)[i] == 58
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_PLAY_MAHJONG)
@@ -177,7 +170,6 @@ def handle_entertainment_is_play_mahjong(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -185,7 +177,7 @@ def handle_entertainment_is_play_mahjong(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 59
+    return chara_life.entertainment_type(character_id)[i] == 59
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_PLAY_CARDS)
@@ -197,7 +189,6 @@ def handle_entertainment_is_play_cards(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -205,7 +196,7 @@ def handle_entertainment_is_play_cards(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 60
+    return chara_life.entertainment_type(character_id)[i] == 60
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_REHEARSE_DANCE)
@@ -217,7 +208,6 @@ def handle_entertainment_is_rehearse_dance(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -225,7 +215,7 @@ def handle_entertainment_is_rehearse_dance(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 61
+    return chara_life.entertainment_type(character_id)[i] == 61
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_PLAY_ARCADE_GAME)
@@ -237,7 +227,6 @@ def handle_entertainment_is_play_arcade_game(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -245,7 +234,7 @@ def handle_entertainment_is_play_arcade_game(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 111
+    return chara_life.entertainment_type(character_id)[i] == 111
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_SWIMMING)
@@ -257,7 +246,6 @@ def handle_entertainment_is_swimming(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -265,7 +253,7 @@ def handle_entertainment_is_swimming(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 91
+    return chara_life.entertainment_type(character_id)[i] == 91
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_TASTE_WINE)
@@ -277,7 +265,6 @@ def handle_entertainment_is_taste_wine(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -285,7 +272,7 @@ def handle_entertainment_is_taste_wine(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 62
+    return chara_life.entertainment_type(character_id)[i] == 62
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_TASTE_TEA)
@@ -297,7 +284,6 @@ def handle_entertainment_is_taste_tea(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -305,7 +291,7 @@ def handle_entertainment_is_taste_tea(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 112
+    return chara_life.entertainment_type(character_id)[i] == 112
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_TASTE_COFFEE)
@@ -317,7 +303,6 @@ def handle_entertainment_is_taste_coffee(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -325,7 +310,7 @@ def handle_entertainment_is_taste_coffee(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 113
+    return chara_life.entertainment_type(character_id)[i] == 113
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_TASTE_DESSERT)
@@ -337,7 +322,6 @@ def handle_entertainment_is_taste_dessert(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -345,7 +329,7 @@ def handle_entertainment_is_taste_dessert(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 114
+    return chara_life.entertainment_type(character_id)[i] == 114
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_TASTE_FOOD)
@@ -357,7 +341,6 @@ def handle_entertainment_is_taste_food(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -365,7 +348,7 @@ def handle_entertainment_is_taste_food(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 115
+    return chara_life.entertainment_type(character_id)[i] == 115
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_STYLE_HAIR)
@@ -377,7 +360,6 @@ def handle_entertainment_is_style_hair(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -385,7 +367,7 @@ def handle_entertainment_is_style_hair(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 116
+    return chara_life.entertainment_type(character_id)[i] == 116
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_FULL_BODY_STYLING)
@@ -397,7 +379,6 @@ def handle_entertainment_is_full_body_styling(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -405,7 +386,7 @@ def handle_entertainment_is_full_body_styling(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 117
+    return chara_life.entertainment_type(character_id)[i] == 117
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_BATHHOUSE_TYPE)
@@ -417,7 +398,6 @@ def handle_entertainment_is_bathhouse_type(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -426,7 +406,7 @@ def handle_entertainment_is_bathhouse_type(character_id: int) -> int:
         return 0
 
     for cid in {171, 172, 173, 174}:
-        if character_data.entertainment.entertainment_type[i] == cid:
+        if chara_life.entertainment_type(character_id)[i] == cid:
             return 1
 
     return 0
@@ -457,9 +437,6 @@ def handle_scene_someone_entertainment_is_bathhouse_type(
         for chara_id in scene_data.character_list:
             # 遍历非自己的角色
             if chara_id != character_id:
-                other_character_data: game_type.Character = (
-                    cache.character_data[chara_id]
-                )
 
                 # 开始判定
                 i = game_time.judge_entertainment_time(character_id)
@@ -469,10 +446,7 @@ def handle_scene_someone_entertainment_is_bathhouse_type(
                     continue
 
                 for cid in {171, 172, 173, 174}:
-                    if (
-                        other_character_data.entertainment.entertainment_type[i]
-                        == cid
-                    ):
+                    if chara_life.entertainment_type(chara_id)[i] == cid:
                         return 1
 
     return 0
@@ -491,7 +465,6 @@ def handle_entertainment_is_bathhouse_shower_cloth_type(
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -500,7 +473,7 @@ def handle_entertainment_is_bathhouse_shower_cloth_type(
         return 0
 
     for cid in {172, 173, 174}:
-        if character_data.entertainment.entertainment_type[i] == cid:
+        if chara_life.entertainment_type(character_id)[i] == cid:
             return 1
 
     return 0
@@ -515,7 +488,6 @@ def handle_entertainment_is_soak_feet(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -523,7 +495,7 @@ def handle_entertainment_is_soak_feet(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 171
+    return chara_life.entertainment_type(character_id)[i] == 171
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_STEAM_SAUNA)
@@ -535,7 +507,6 @@ def handle_entertainment_is_steam_sauna(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -543,7 +514,7 @@ def handle_entertainment_is_steam_sauna(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 172
+    return chara_life.entertainment_type(character_id)[i] == 172
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_HYDROTHERAPY_TREATMENT)
@@ -555,7 +526,6 @@ def handle_entertainment_is_hydrotherapy_treatment(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -563,7 +533,7 @@ def handle_entertainment_is_hydrotherapy_treatment(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 173
+    return chara_life.entertainment_type(character_id)[i] == 173
 
 
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_ONSEN_BATH)
@@ -575,7 +545,6 @@ def handle_entertainment_is_onsen_bath(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     i = game_time.judge_entertainment_time(character_id)
     if i:
@@ -583,4 +552,4 @@ def handle_entertainment_is_onsen_bath(character_id: int) -> int:
     else:
         return 0
 
-    return character_data.entertainment.entertainment_type[i] == 174
+    return chara_life.entertainment_type(character_id)[i] == 174

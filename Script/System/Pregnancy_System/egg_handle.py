@@ -10,7 +10,7 @@ from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import abilities, entertainment, flags
 from Script.Modules.domains import player_collection, playthrough, pregnancy
-from Script.Modules.domains import roster
+from Script.Modules.domains import roster, chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -145,7 +145,6 @@ def clear_birth_type_data(birth_type: int) -> str:
             continue
         if get_race_birth_type(character_id) != birth_type:
             continue
-        character_data: game_type.Character = cache.character_data[character_id]
         with pregnancy.editing(character_id) as pregnancy_data:
             # 多胎胎生：把正在进行的多胎孕程重置为单胎
             if birth_type == pregnancy_constant.BIRTH_TYPE_MULTIPLE:
@@ -165,7 +164,7 @@ def clear_birth_type_data(birth_type: int) -> str:
         # 重掷当日被替换为照料卵的娱乐时段，避免角色空转执行孵化卵行为
         if (
             pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID
-            in character_data.entertainment.entertainment_type
+            in chara_life.entertainment_type(character_id)
         ):
             handle_npc_ai.get_chara_entertainment(character_id)
     # 博士已拿走的卵索引：值为(角色id, 卵编号)，按母亲的原始生育方式过滤
@@ -424,11 +423,8 @@ def nursery_worker_on_duty_in_scene(character_id: int) -> bool:
     for chara_id in scene_data.character_list:
         if chara_id == 0 or chara_id == character_id:
             continue
-        other_character_data: game_type.Character = cache.character_data[
-            chara_id
-        ]
         if (
-            other_character_data.work.work_type
+            chara_life.work_type(chara_id)
             != pregnancy_constant.NURSERY_WORKER_WORK_ID
         ):
             continue
@@ -648,7 +644,6 @@ def replace_entertainment_for_eggs(character_id: int) -> None:
     # 带壳与无壳卵生都需要照料卵（无壳卵生只有孵化中的卵，没有待鉴定卵）
     if not is_egg_layer(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 监禁中的角色跳过（其未鉴定卵由玩家指令代办）
     if flags.get(character_id, "imprisonment"):
         return
@@ -663,6 +658,8 @@ def replace_entertainment_for_eggs(character_id: int) -> None:
     if not have_need_tend_eggs(character_id):
         return
     now_time_slot = random.randint(0, 2)
-    character_data.entertainment.entertainment_type[now_time_slot] = (
-        pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID
+    chara_life.entertainment_type.set_item(
+        character_id,
+        now_time_slot,
+        pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID,
     )

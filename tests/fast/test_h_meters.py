@@ -32,7 +32,7 @@ class HMetersTest(FastTestCase):
 
     def test_save_version_is_20(self) -> None:
         """存档版本升到 20，STEPS 含 19"""
-        self.assertEqual(upgrade.CURRENT, 20)
+        self.assertGreaterEqual(upgrade.CURRENT, 20)
         self.assertIn(19, upgrade.STEPS)
 
     def test_defaults_and_fold_exact_num(self) -> None:

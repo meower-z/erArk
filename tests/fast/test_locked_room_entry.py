@@ -14,7 +14,7 @@ from Script.Config import game_config
 from Script.Design import map_handle
 from tests.fast.base import FastTestCase
 from tests import kernel_data
-from Script.Modules.domains import flags
+from Script.Modules.domains import flags, relations
 
 ROOM = ["中枢", "会议室"]
 OTHER_ROOM = ["中枢", "茶水间"]
@@ -45,7 +45,7 @@ class LockedRoomEntryTest(FastTestCase):
         self.pl = self.world.chara(0, "博士", position=CORRIDOR)
         self.assistant = self.world.chara(1, "助理", position=CORRIDOR)
         self.other = self.world.chara(2, "干员", position=CORRIDOR)
-        self.pl.assistant_character_id = 1
+        kernel_data.put(relations.assistant_character_id.set, self.pl.cid, 1)
 
     def lock(self, path: list) -> None:
         """

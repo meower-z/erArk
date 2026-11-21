@@ -29,6 +29,7 @@ from Script.Modules.domains import roster, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import chara_life, relations
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -90,22 +91,6 @@ def _live_ids(cache: game_type.Cache) -> set:
         计算"在图角色"域，供多条以LIVE为迭代范围的检查复用；npc_id_got缺失时按空集处理
     """
     return roster.active() | {0}
-
-
-def _permanent_dormitory(chara: object) -> str:
-    """
-    参数:
-        chara: 角色对象
-    返回值:
-        str: 角色「登记宿舍」字段的当前值（临时住进客房/监牢/博士房间/舍管房/关押区休息室等特殊房间期间
-        记录其原普通宿舍，住普通宿舍时恒为空）
-    功能:
-        读取角色的登记宿舍；兼容历史对象上可能残留的旧属性名 pre_dormitory。
-        供 PLACE-28/PLACE-29 复用
-    """
-    return getattr(
-        chara, "permanent_dormitory", getattr(chara, "pre_dormitory", "")
-    )
 
 
 def _offline_flags(cid: int) -> bool:
@@ -709,10 +694,9 @@ def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
         c = character_data.get(cid)
         if c is None:
             continue
-        dormitory = getattr(c, "dormitory", "")
+        dormitory = chara_life.dormitory(cid)
         if dormitory in ("", "无") or dormitory in scene_data:
             continue
-        work = getattr(c, "work", None)
         failures.append(
             make_failure(
                 "PLACE-15",
@@ -720,9 +704,9 @@ def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
                 (
                     f"角色id={cid} name={getattr(c, 'name', '')}的dormitory={dormitory!r}既不是合法场景键也不是哨兵值('"
                     f"' / '无')；"
-                    f"permanent_dormitory={getattr(c, 'permanent_dormitory', None)!r}，"
+                    f"permanent_dormitory={chara_life.permanent_dormitory(cid)!r}，"
                     f"position={getattr(c, 'position', None)}，"
-                    f"work_type={getattr(work, 'work_type', None)}，是否为访客={visitor.is_visitor(cid)}"
+                    f"work_type={chara_life.work_type(cid)}，是否为访客={visitor.is_visitor(cid)}"
                 ),
                 [cid],
             )
@@ -828,13 +812,11 @@ def check_assistant_field_only_for_player() -> list[CheckFailure]:
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     pl = character_data.get(0)
-    pl_aid = (
-        getattr(pl, "assistant_character_id", None) if pl is not None else None
-    )
+    pl_aid = relations.assistant_character_id(0) if pl is not None else None
     for cid, c in character_data.items():
         if cid == 0:
             continue
-        aid = getattr(c, "assistant_character_id", 0)
+        aid = relations.assistant_character_id(cid)
         if aid != 0:
             failures.append(
                 make_failure(
@@ -867,7 +849,7 @@ def check_current_assistant_valid_and_online() -> list[CheckFailure]:
     pl = character_data.get(0)
     if pl is None:
         return failures
-    aid = getattr(pl, "assistant_character_id", 0)
+    aid = relations.assistant_character_id(0)
     if aid == 0:
         return failures
     assistant = character_data.get(aid)
@@ -919,13 +901,9 @@ def check_assistant_services_value_range() -> list[CheckFailure]:
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     pl = character_data.get(0)
-    pl_aid = (
-        getattr(pl, "assistant_character_id", None) if pl is not None else None
-    )
+    pl_aid = relations.assistant_character_id(0) if pl is not None else None
     for cid, c in character_data.items():
-        services = getattr(c, "assistant_services", None)
-        if not isinstance(services, dict):
-            continue
+        services = relations.assistant_services(cid)
         out_of_range = {
             k: v
             for k, v in services.items()
@@ -962,9 +940,7 @@ def check_assistant_services_key_set_complete() -> list[CheckFailure]:
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     for cid, c in character_data.items():
-        services = getattr(c, "assistant_services", None)
-        if not isinstance(services, dict):
-            continue
+        services = relations.assistant_services(cid)
         keys = set(services.keys())
         if keys != _ASSISTANT_SERVICE_KEYS:
             failures.append(
@@ -999,20 +975,19 @@ def check_cohabitation_service_matches_dormitory() -> list[CheckFailure]:
     pl = character_data.get(0)
     if pl is None:
         return failures
-    aid = getattr(pl, "assistant_character_id", 0)
+    aid = relations.assistant_character_id(0)
     if aid == 0:
         return failures
     assistant = character_data.get(aid)
     if assistant is None:
         return failures  # 助理id本身无效由PLACE-19负责报告，本条不重复报
-    services = getattr(assistant, "assistant_services", None) or {}
+    services = relations.assistant_services(aid)
     if services.get(7, 0) != 1:
         return failures
-    chara_work = getattr(assistant, "work", None)
-    if getattr(chara_work, "work_type", None) == 191:
+    if chara_life.work_type(aid) == 191:
         return failures  # 豁免监狱长：任命为监狱长会改宿舍但不清同居服务位，是合法且持久的状态
     expected_dormitory = P(["中枢", "博士房间"])
-    dormitory = getattr(assistant, "dormitory", None)
+    dormitory = chara_life.dormitory(aid)
     if dormitory != expected_dormitory:
         failures.append(
             make_failure(
@@ -1022,8 +997,8 @@ def check_cohabitation_service_matches_dormitory() -> list[CheckFailure]:
                     f"[warning] 当前助理id={aid} name={getattr(assistant, 'name', '')}已开启同居服务(assistant_services"
                     f"[7]=1)，"
                     f"但dormitory={dormitory}（期望{expected_dormitory}），"
-                    f"permanent_dormitory={getattr(assistant, 'permanent_dormitory', None)}，"
-                    f"work_type={getattr(chara_work, 'work_type', None)}，"
+                    f"permanent_dormitory={chara_life.permanent_dormitory(aid)}，"
+                    f"work_type={chara_life.work_type(aid)}，"
                     f"work.warden()={work.warden()}"
                 ),
                 [aid],
@@ -1047,12 +1022,12 @@ def check_follow_mode_value_valid() -> list[CheckFailure]:
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     pl = character_data.get(0)
-    pl_aid = getattr(pl, "assistant_character_id", 0) if pl is not None else 0
+    pl_aid = relations.assistant_character_id(0) if pl is not None else 0
     for cid, c in character_data.items():
         is_follow = flags.get(cid, "is_follow")
         if is_follow not in (0, 1, 2, 3, 4):
             behavior = getattr(c, "behavior", None)
-            services = getattr(c, "assistant_services", None) or {}
+            services = relations.assistant_services(cid)
             failures.append(
                 make_failure(
                     "PLACE-23",
@@ -1275,11 +1250,11 @@ def check_permanent_dormitory_not_equal_to_dormitory() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验LIVE域内角色的「登记宿舍」（双名兼容：permanent_dormitory/pre_dormitory）非空时不得等于
-        当前dormitory。该字段语义是"临时住进客房/监牢/博士房间/舍管房/关押区休息室期间记录其原普通宿舍"，
-        住普通宿舍时恒为空；健康存档里该字段只在"正住在特殊房间"这一瞬间与dormitory不同，一旦离开特殊房间
-        就应被game既有的四处恢复点写回dormitory并清空自身，因此健康存档里它不会停留在与dormitory相同的值。
-        级别为warning：触发源仅为历史旧档残留值
+        校验LIVE域内角色的「登记宿舍」（角色键 life.permanent_dormitory）非空时不等于当前宿舍（life.dormitory）。
+        角色临时住进客房、监牢、博士房间、舍管房或关押区休息室期间，登记宿舍记着原来的普通宿舍。
+        角色住在普通宿舍时登记宿舍为空。
+        离开特殊房间时，restore_character_dormitory 清空登记宿舍。登记宿舍等于当前宿舍，说明离开时没有清空。
+        级别为warning
     """
     cache = cache_control.cache
     failures = []
@@ -1288,14 +1263,14 @@ def check_permanent_dormitory_not_equal_to_dormitory() -> list[CheckFailure]:
         c = character_data.get(cid)
         if c is None:
             continue
-        permanent = _permanent_dormitory(c)
-        dormitory = getattr(c, "dormitory", "")
+        permanent = chara_life.permanent_dormitory(cid)
+        dormitory = chara_life.dormitory(cid)
         if permanent != "" and permanent == dormitory:
             failures.append(
                 make_failure(
                     "PLACE-28",
                     "登记宿舍不得停留在与当前宿舍相同的值",
-                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的登记宿舍(permanent_dormitory/pre_dormitory)"
+                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的登记宿舍(permanent_dormitory)"
                     f"={permanent!r}与当前dormitory相同，说明离开特殊房间时的恢复点未清空该字段；"
                     f"position={getattr(c, 'position', None)}",
                     [cid],
@@ -1310,13 +1285,12 @@ def check_permanent_dormitory_is_valid_normal_room() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验LIVE域内角色的「登记宿舍」（双名兼容）非空且不等于当前dormitory时（与PLACE-28互斥的另一种
-        失败模式），其值必须是一间真实的、当前开放的普通宿舍房间——用
-        Script/System/Dormitory_System/common.py的get_open_dormitory_room_occupancy()（函数级导入，避免
-        加载顺序问题）取得的开放宿舍占用表判定，不接受特殊房间（客房/监牢/博士房间/舍管房/关押区休息室）。
-        健康存档里该字段只在角色临时住进特殊房间前，由register_permanent_dormitory()从其原本的普通宿舍写入，
-        因此恒落在开放宿舍池内；级别为warning：触发源仅为历史旧档残留值。若某普通宿舍房间在写入之后被玩家
-        降级宿舍区等级而关闭，也会落入本条（占用表只统计当前开放房间），这是可接受的边缘噪声，不构成放宽检查的理由
+        校验LIVE域内角色的「登记宿舍」（角色键 life.permanent_dormitory）非空且不等于当前宿舍时，是一间开放的普通宿舍。
+        这是与PLACE-28互斥的另一种失败模式。
+        开放的普通宿舍取自 Script/System/Dormitory_System/common.py 的 get_open_dormitory_room_occupancy()，
+        函数级导入以避开加载顺序问题。特殊房间（客房、监牢、博士房间、舍管房、关押区休息室）不算普通宿舍。
+        register_permanent_dormitory() 写入的登记宿舍是角色当时住的开放普通宿舍。
+        写入之后那间宿舍关闭时，这条也会报（占用表只统计当前开放的房间），这是可接受的噪声。级别为warning
     """
     cache = cache_control.cache
     failures = []
@@ -1328,8 +1302,8 @@ def check_permanent_dormitory_is_valid_normal_room() -> list[CheckFailure]:
         c = character_data.get(cid)
         if c is None:
             continue
-        permanent = _permanent_dormitory(c)
-        dormitory = getattr(c, "dormitory", "")
+        permanent = chara_life.permanent_dormitory(cid)
+        dormitory = chara_life.dormitory(cid)
         if permanent == "" or permanent == dormitory:
             continue
         if permanent not in normal_rooms:
@@ -1337,7 +1311,7 @@ def check_permanent_dormitory_is_valid_normal_room() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-29",
                     "登记宿舍非空时必须是合法的普通宿舍房间",
-                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的登记宿舍(permanent_dormitory/pre_dormitory)"
+                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的登记宿舍(permanent_dormitory)"
                     f"={permanent!r}不在开放普通宿舍房间池中(len={len(normal_rooms)})，当前dormitory={dormitory!r}，"
                     f"position={getattr(c, 'position', None)}",
                     [cid],

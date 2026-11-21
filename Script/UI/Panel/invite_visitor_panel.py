@@ -17,7 +17,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import manage_basement_panel, recruit_panel
 import random
 from Script.Modules.domains import abilities, facility, flags, location, roster
-from Script.Modules.domains import visitor
+from Script.Modules.domains import visitor, chara_life, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -48,14 +48,13 @@ def get_empty_guest_room_id() -> int | bool:
         have_visitor_flag = False
         for chara_id in visitor.visitors():
             # 如果该房间已经有访客，则跳过
-            if cache.character_data[chara_id].dormitory == room_name:
+            if chara_life.dormitory(chara_id) == room_name:
                 have_visitor_flag = True
                 break
         if have_visitor_flag:
             continue
         # 发现没有人住的房间，返回客房id
-        else:
-            return room_id
+        return room_id
     # 如果没有空闲客房，则返回False
     return False
 
@@ -154,10 +153,7 @@ def settle_visitor_arrivals(visitor_id: int = 0) -> int:
             now_country_npc_id_list = []
             # 开始筛选
             for npc_id in not_recruit_npc_id_list:
-                if (
-                    cache.character_data[npc_id].relationship.birthplace
-                    == now_country_id
-                ):
+                if relations.birthplace(npc_id) == now_country_id:
                     now_country_npc_id_list.append(npc_id)
             # 随机抽取一名访客
             if len(now_country_npc_id_list):
@@ -342,7 +338,9 @@ class Invite_Visitor_Panel:
                     character_data: game_type.Character = cache.character_data[
                         chara_id
                     ]
-                    live_room = character_data.dormitory.split(os.sep)[-1]
+                    live_room = chara_life.dormitory(character_data.cid).split(
+                        os.sep
+                    )[-1]
                     leav_time = game_time.get_date_until_day(leave_time)
                     now_text += _(" [{0}]{1}，居住房间：{2}，离开{3}\n").format(
                         str(character_data.adv).rjust(4, "0"),
@@ -383,7 +381,7 @@ class Invite_Visitor_Panel:
                 for chara_id in id_list:
                     character_data = cache.character_data[chara_id]
                     # 找到职业是外交官的
-                    if character_data.work.work_type == 131:
+                    if chara_life.work_type(character_data.cid) == 131:
                         character_data = cache.character_data[chara_id]
                         character_effect = (
                             5
@@ -528,21 +526,22 @@ class Invite_Visitor_Panel:
                 if now_level == 2:
                     character_data = cache.character_data[chara_id]
                     # 出生地是当前所在地的角色
-                    if character_data.relationship.birthplace != now_country_id:
+                    if (
+                        relations.birthplace(character_data.cid)
+                        != now_country_id
+                    ):
                         continue
-                    else:
-                        target_id_list.append(chara_id)
+                    target_id_list.append(chara_id)
                 # 临近
                 elif now_level == 3:
                     character_data = cache.character_data[chara_id]
                     # 出生地在地点列表中的角色
                     if (
-                        character_data.relationship.birthplace
+                        relations.birthplace(character_data.cid)
                         not in all_country_id_list
                     ):
                         continue
-                    else:
-                        target_id_list.append(chara_id)
+                    target_id_list.append(chara_id)
                 # 全泰拉招募
                 elif now_level >= 4:
                     target_id_list.append(chara_id)

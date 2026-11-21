@@ -11,6 +11,8 @@
   这些属性与 collection_character 从对象上删掉。对象上没有这些属性时什么也不写。
 - 读档补全设置与助理服务时，值写在给出的角色id下，不用对象上的 cid。
 - lift：角色对象上没有这些属性时，角色键的值按旧属性路径写到对象上。对象带着这些属性时不动。
+- 读档修正角色编号：fix_wrong_character 移动角色前调 lift，随后的 adopt_old_save 把角色键写到新槽位，原槽位重置。
+- 读档补空白模板：update_tem_character 补 Mother_id 时，带 favorability 且无 relationship 保持 0，两者均无时读角色键。
 - 读档的 Reset：project 给花名册角色新建空数据之后，修补步骤读到的角色键是装存档时写下的值。
 - 快照的角色投影记下这些键，不记 nick_name 与 nick_name_to_pl。
 """
@@ -237,6 +239,59 @@ class CharaKeysStateTest(FastTestCase):
         self.assertEqual(current.work.work_type, 21)
         self.assertEqual(current.nick_name, "")
         self.assertEqual(vars(old), {"trust": 3})
+
+    def test_id_fix_moves_keys_with_the_character(self) -> None:
+        """fix_wrong_character 把角色移到目标槽位后，adopt_old_save 把角色键写到新槽位，原槽位重置"""
+        relations.trust.set(1, 8)
+        chara_life.work_type.set(1, 21)
+        chara_profile.nick_name.set(1, "甲")
+        name = old_chara_to_new._("阿玛雅")
+        moved = types.SimpleNamespace(cid=1, adv=450, name=name)
+        rebuilt = types.SimpleNamespace(cid=1)
+
+        def rebuild(cid: int, *_args: object, **_kwargs: object) -> object:
+            chara_key.reset(cid)
+            return rebuilt
+
+        loaded: dict[str, Any] = {
+            "character_data": {
+                1: moved,
+                2: types.SimpleNamespace(cid=2, adv=448, name=""),
+            },
+            "npc_tem_data": {1: object()},
+        }
+        with mock.patch.object(
+            old_chara_to_new.character_handle, "init_character", rebuild
+        ):
+            self.assertEqual(old_chara_to_new.fix_wrong_character(loaded), 1)
+        relations.adopt_old_save(loaded)
+        chara_life.adopt_old_save(loaded)
+        chara_profile.adopt_old_save(loaded)
+        self.assertIs(loaded["character_data"][2], moved)
+        self.assertEqual(relations.trust(2), 8)
+        self.assertEqual(chara_life.work_type(2), 21)
+        self.assertEqual(chara_profile.nick_name(2), "甲")
+        self.assertEqual(relations.trust(1), 0)
+
+    def test_template_fill_reads_mother_by_save_shape(self) -> None:
+        """update_tem_character 补模板：带 favorability 且无 relationship 时保持 Mother_id 为 0，两者都无时读角色键"""
+        relations.mother_id.set(6, 3)
+        oldest = types.SimpleNamespace(cid=5, adv=905, name="乙", trust=0)
+        oldest.favorability = {0: 0}
+        current = types.SimpleNamespace(cid=6, adv=906, name="丙")
+        loaded: dict[str, Any] = {
+            "character_data": {5: oldest, 6: current},
+            "npc_tem_data": {},
+        }
+        with (
+            mock.patch.object(old_chara_to_new.cache, "npc_tem_data", {}),
+            mock.patch.object(
+                old_chara_to_new, "update_new_character", return_value=0
+            ),
+        ):
+            old_chara_to_new.update_tem_character(loaded)
+        self.assertEqual(loaded["npc_tem_data"][905].Mother_id, 0)
+        self.assertEqual(loaded["npc_tem_data"][906].Mother_id, 3)
 
     def test_current_character_keeps_state(self) -> None:
         """当前存档的角色对象：什么也不写"""

@@ -21,6 +21,7 @@ from Script.Modules.domains import action_info, flags, modes, wardrobe
 from Script.Modules.domains import physical_exam as exam
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
+from Script.Modules.domains import relations
 
 SAMPLES = 4000
 """ 随机状态的组数 """
@@ -187,7 +188,11 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
             operator.cid,
             is_follow=rng.choice([1, 2, 3, 4]) if rng.random() < 0.15 else 0,
         )
-        self.player.assistant_character_id = 1 if rng.random() < 0.15 else 0
+        kernel_data.put(
+            relations.assistant_character_id.set,
+            self.player.cid,
+            1 if rng.random() < 0.15 else 0,
+        )
         kernel_data.put(
             action_info.set,
             operator.cid,

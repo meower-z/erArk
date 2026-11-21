@@ -18,6 +18,7 @@ import os
 import re
 from typing import Any, Callable, Iterable, TypedDict
 from Script.Modules.domains import abilities, flags, hypnosis, needs, wardrobe
+from Script.Modules.domains import chara_life, chara_profile, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -307,20 +308,20 @@ def build_user_prompt(
     age_text = attr_text.get_age_talent_text(npc_character_id)
     race_name = game_config.config_race[npc_character_data.race].name
     birthplace_name = game_config.config_birthplace[
-        npc_character_data.relationship.birthplace
+        relations.birthplace(npc_character_data.cid)
     ].name
     nation_name = game_config.config_nation[
-        npc_character_data.relationship.nation
+        relations.nation(npc_character_data.cid)
     ].name
 
     # 关系
     ave_text: int | str = 0
     if tem_send_data_flags[11]:
-        favorability = npc_character_data.favorability[0]
+        favorability = relations.favorability(npc_character_data.cid)[0]
         favorability_lv, __ = attr_calculation.get_favorability_level(
             favorability
         )
-        trust = npc_character_data.trust
+        trust = relations.trust(npc_character_data.cid)
         trust_lv, __ = attr_calculation.get_trust_level(trust)
         ave_lv = int((favorability_lv + trust_lv) / 2)
         ave_text = str(ave_lv)
@@ -363,16 +364,16 @@ def build_user_prompt(
     # 工作
     work_name, work_description = "", ""
     if tem_send_data_flags[53]:
-        work_type = npc_character_data.work.work_type
+        work_type = chara_life.work_type(npc_character_data.cid)
         work_data = game_config.config_work_type[work_type]
         work_name = work_data.name
         work_description = work_data.describe
     # 称呼
     nick_name, nick_name_to_pl = "", ""
     if handle_premise.handle_self_have_nick_name_to_self(npc_character_id):
-        nick_name = npc_character_data.nick_name
+        nick_name = chara_profile.nick_name(npc_character_data.cid)
     if handle_premise.handle_self_have_nick_name_to_pl(npc_character_id):
-        nick_name_to_pl = npc_character_data.nick_name_to_pl
+        nick_name_to_pl = chara_profile.nick_name_to_pl(npc_character_data.cid)
     # 催眠
     hypnosis_name, hypnosis_effect = "", ""
     if tem_send_data_flags[61]:
@@ -1012,7 +1013,6 @@ def process_stream_response(
             # 非直接对话模式下直接显示文本
             else:
                 now_draw.text = chunk_text
-                # now_draw.width = 1
                 now_draw.draw()
     except Exception as e:
         print(f"处理流式响应出错: {e}", flush=True)

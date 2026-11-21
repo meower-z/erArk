@@ -42,7 +42,7 @@ game_config.init()
 character_config.init_character_tem_data()
 map_config.init_map_data()
 from Script.Kernel import core
-from Script.Modules.domains import roster
+from Script.Modules.domains import chara_life, roster
 from Script.Modules.gameplay_resolution import working
 from Script.System.Dormitory_System import common
 
@@ -51,20 +51,19 @@ with working.based_on(core.state()):
   for adv_id, tem in character_config.character_tem_list.items():
     if tem.Dormitory != "无":
       cache.character_data[adv_id] = game_type.Character()
-      cache.character_data[adv_id].dormitory = tem.Dormitory
+      chara_life.dormitory.set(adv_id, tem.Dormitory)
       roster.add(adv_id)
   common.init_character_dormitory()
-  active_ids = sorted(roster.active())
-print(json.dumps({
-    "language": get_text.now_language,
-    "dormitory": {
-        str(chara_id): [
-            cache.character_data[chara_id].dormitory,
-            cache.character_data[chara_id].dormitory in cache.scene_data,
-        ]
-        for chara_id in active_ids
-    },
-}))
+  print(json.dumps({
+      "language": get_text.now_language,
+      "dormitory": {
+          str(chara_id): [
+              chara_life.dormitory(chara_id),
+              chara_life.dormitory(chara_id) in cache.scene_data,
+          ]
+          for chara_id in sorted(roster.active())
+      },
+  }))
 """
 """ argv[1] 是仓库根目录，argv[2] 是游戏语言。打印生效语言与分房结果的 JSON """
 

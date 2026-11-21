@@ -18,8 +18,8 @@ from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
 from Script.Kernel import core
 from Script.Modules.domains import achievement, action_info, flags, hypnosis
-from Script.Modules.domains import library, modes
-from Script.Modules.domains import physical_exam as px, plan
+from Script.Modules.domains import library, modes, physical_exam as px, plan
+from Script.Modules.domains import chara_life, relations
 from tests import chara_abilities as ca, kernel_data, world
 
 if TYPE_CHECKING:
@@ -272,9 +272,9 @@ teacher.dead = True
 check("死亡不可用", not teacher_available())
 teacher.dead = False
 # 第五轮补全：这些情况下教师这节确定来不了，学生必须降级自习而不是空等一整节
-teacher.work.work_type = 21
+chara_life.work_type.set(teacher.cid, 21)
 check("换了岗不可用", not teacher_available())
-teacher.work.work_type = 151
+chara_life.work_type.set(teacher.cid, 151)
 kernel_data.put(flags.set, teacher.cid, is_follow=1)
 check("跟随玩家中不可用（normal_3）", not teacher_available())
 kernel_data.put(flags.set, teacher.cid, is_follow=0)
@@ -297,9 +297,9 @@ ca.talent(teacher)[22] = 0
 ca.talent(teacher)[23] = 1
 check("产后不可用（normal_2）", not teacher_available())
 ca.talent(teacher)[23] = 0
-pl.assistant_character_id = 101
+relations.assistant_character_id.set(pl.cid, 101)
 check("当助理不可用（normal_3）", not teacher_available())
-pl.assistant_character_id = 0
+relations.assistant_character_id.set(pl.cid, 0)
 kernel_data.put(px.add, px.WAITING, 101)
 check("在体检链中不可用（normal_3）", not teacher_available())
 kernel_data.put(px.discard, px.WAITING, 101)
@@ -435,12 +435,12 @@ check(
     class_ai.get_course_stage(101) == E.COURSE_STAGE_NONE,
 )
 schedule_handle.clear_selected_course(101, 0, 0)
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 check(
     "非学生岗恒为 NONE：改了岗的女儿课表还在也不算（口径 1）",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_NONE,
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 adult = make_character(301, "成年学生", 152)
 for _premise in [
     name
@@ -471,7 +471,7 @@ for _cid in (101, 102, 201, 202):
     prepare_ai(_cid)
 move_to(101, classroom_path(ROOM1))
 move_to(201, SCENE_DORM)
-student.entertainment.entertainment_type = [TEND] * 3
+chara_life.entertainment_type.set(student.cid, [TEND] * 3)
 # clear_schedules 只清全局课表与临时课，个人课表要自己清（上一段给 201 排的那节理论课还挂着）
 schedule_handle.clear_selected_course(201, 0, 0)
 sm = dispatch(201)
@@ -696,7 +696,7 @@ for _cid in _interest_list:
         )
     # 读书：借到的那本要写进 behavior（Plan 29 §3.2）
     if _expect_behavior == constant.Behavior.READ_BOOK and (
-        student.behavior.book_id not in student.entertainment.borrow_book_id_set
+        student.behavior.book_id not in chara_life.borrow_book_id_set(201)
         or student.behavior.book_name
         != game_config.config_book[student.behavior.book_id].name
     ):
@@ -718,9 +718,9 @@ check(
     _interest_bad,
 )
 # 逐项时借的书还回去，别带进后面的用例
-for _book_id in list(student.entertainment.borrow_book_id_set):
+for _book_id in list(chara_life.borrow_book_id_set(student.cid)):
     kernel_data.put(library.set_holder, _book_id, -1)
-    student.entertainment.borrow_book_id_set.discard(_book_id)
+chara_life.borrow_book_id_set.set(student.cid, set())
 student.behavior.book_id = 0
 student.behavior.book_name = ""
 
@@ -853,9 +853,9 @@ kernel_data.put(flags.set, mother.cid, imprisonment=False)
 mother.dead = True
 check("母亲死亡 → 无效", class_ai.judge_mother_available(202) == -1)
 mother.dead = False
-cache.character_data[202].relationship.mother_id = -1
+relations.mother_id.set(202, -1)
 check("没有母亲 → 无效", class_ai.judge_mother_available(202) == -1)
-cache.character_data[202].relationship.mother_id = 102
+relations.mother_id.set(202, 102)
 
 section("没课节次的去向（2026-09-10 §9.2.9）")
 set_time(period_time(0))
@@ -879,13 +879,13 @@ check(
 set_time(period_time(0))
 clear_schedules()
 move_to(201, SCENE_DORM)
-student.entertainment.entertainment_type = [TEND, 0, 0]
+chara_life.entertainment_type.set(student.cid, [TEND, 0, 0])
 check(
     "学员周一上午没课、日程排了照料卵 → 工作链没有行命中，去育儿室",
     dispatch(201) == SM.MOVE_TO_NURSERY,
 )
 move_to(201, SCENE_DORM)
-student.entertainment.entertainment_type = [E.ENTERTAINMENT_SELF_STUDY, 0, 0]
+chara_life.entertainment_type.set(201, [E.ENTERTAINMENT_SELF_STUDY, 0, 0])
 check(
     "排了上课（无课时自习）、人在宿舍 → 去教室",
     dispatch(201) == SM.MOVE_TO_CLASS_ROOM,
@@ -893,7 +893,7 @@ check(
 move_to(201, classroom_path(ROOM1))
 check("到了教室 → 自习", dispatch(201) == SM.EDUCATION_SELF_STUDY)
 move_to(201, SCENE_DORM)
-student.entertainment.entertainment_type = [0, 0, 0]
+chara_life.entertainment_type.set(student.cid, [0, 0, 0])
 section("整链派发：教师按课表走班（210700 ~ 220710）")
 clear_schedules()
 office_path = map_handle.get_map_system_path_for_str(
@@ -975,7 +975,7 @@ clear_schedules()
 section("整链派发：学生到岗时间先去第一节课（210810 / 220830）")
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
-student.entertainment.entertainment_type = [TEND] * 3
+chara_life.entertainment_type.set(student.cid, [TEND] * 3)
 move_to(201, SCENE_DORM)
 check(
     "开课前 30 分钟 → 还不动身",
@@ -1091,7 +1091,7 @@ for _name, _toggle in (
     ("产后", lambda on: ca.talent(teacher).__setitem__(23, 1 if on else 0)),
     (
         "当助理",
-        lambda on: setattr(pl, "assistant_character_id", 101 if on else 0),
+        lambda on: relations.assistant_character_id.set(0, 101 if on else 0),
     ),
     ("体检中", lambda on: kernel_data.put(_put[on], px.WAITING, 101)),
 ):
@@ -1170,7 +1170,7 @@ schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 sm = dispatch(201)
 check(
     "女儿改成 21 岗：有课表也不派任何上课行，按新岗位上班",
@@ -1181,7 +1181,7 @@ check(
     "改岗后不在个人课表名单",
     201 not in growth_handle.get_course_candidate_list(),
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 move_to(201, classroom_path(ROOM1))
 check(
     "改回学生岗：课表恢复生效、回到名单",
@@ -1544,9 +1544,9 @@ kernel_data.set_needs(student.cid, hit=100)
 class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check("本节掷中翘课的学生不拉", not teach_pull(201))
 class_ai.roll_skip_class = _orig_roll
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 check("课表有残留、已改岗的人不拉（口径 1）", not teach_pull(201))
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 sex_class_handle.set_temp_class(
     period_time(0).date().toordinal(), 0, ROOM1, 70, must_attend=[201]
 )
@@ -1629,7 +1629,7 @@ set_time(period_time(0))
 pool = _("游泳池")
 pool_open_cid = game_config.config_facility_open_name_to_cid[pool]
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PE, pool)
-student.entertainment.entertainment_type = [TEND] * 3
+chara_life.entertainment_type.set(student.cid, [TEND] * 3)
 move_to(201, SCENE_DORM)
 kernel_data.set_room_open(pool_open_cid, False)
 check(
@@ -1775,7 +1775,7 @@ clear_schedules()
 set_time(period_time(0))
 prepare_ai(201)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
-student.entertainment.entertainment_type = [TEND] * 3
+chara_life.entertainment_type.set(student.cid, [TEND] * 3)
 move_to(201, classroom_path(ROOM1))
 check(
     "全局课表那一格空着：当前课程为 None、上课状态 NONE",
@@ -1905,7 +1905,7 @@ ca.talent(student)[104] = 1
 schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_INTEREST, NO_ENTERTAINMENT
 )
-student.entertainment.entertainment_type = [TEND] * 3
+chara_life.entertainment_type.set(student.cid, [TEND] * 3)
 child_growth(201).skip_class_flag = False
 check(
     "排着不存在的兴趣课：当前课程为 None、上课状态 NONE（此前是 ATTEND，两道闸照样按有课判）",
@@ -2025,8 +2025,8 @@ check(
     "到场 → 716 派读书、先借了一本、behavior 写的是借到的那本（此前不借书、一律读 0 号书《天灾详解》、书名为空）",
     sm == SM.EDUCATION_DO_COURSE
     and student.behavior.behavior_id == constant.Behavior.READ_BOOK
-    and len(student.entertainment.borrow_book_id_set) == 1
-    and student.behavior.book_id in student.entertainment.borrow_book_id_set
+    and len(chara_life.borrow_book_id_set(student.cid)) == 1
+    and student.behavior.book_id in chara_life.borrow_book_id_set(student.cid)
     and student.behavior.book_id != 0
     and student.behavior.book_name
     == game_config.config_book[student.behavior.book_id].name
@@ -2035,7 +2035,7 @@ check(
         sm,
         student.behavior.book_id,
         student.behavior.book_name,
-        student.entertainment.borrow_book_id_set,
+        chara_life.borrow_book_id_set(student.cid),
     ),
 )
 check(
@@ -2052,18 +2052,18 @@ child_growth(201).last_attend_period = []
 dispatch(201)
 check(
     "手上已有书：再派不另借，读的还是那本",
-    student.entertainment.borrow_book_id_set == {_held_book}
+    chara_life.borrow_book_id_set(student.cid) == {_held_book}
     and student.behavior.book_id == _held_book,
 )
 kernel_data.put(library.set_holder, _held_book, -1)
-student.entertainment.borrow_book_id_set.discard(_held_book)
+chara_life.borrow_book_id_set.set(201, set())
 _saved_borrow = library.holders()
 kernel_data.put(library.put_holders, dict.fromkeys(_saved_borrow, 999))
 check(
     "书库里借不到书：这一节视为没课（get_now_course 为 None、上课状态 NONE，判定只读）",
     schedule_handle.get_now_course(201) is None
     and class_ai.get_course_stage(201) == E.COURSE_STAGE_NONE
-    and not student.entertainment.borrow_book_id_set,
+    and not chara_life.borrow_book_id_set(student.cid),
 )
 _attend = child_growth(201).attend_class_count
 sm = dispatch(201)
@@ -2095,8 +2095,8 @@ check(
     "对照：娱乐读书（401）借到书、写入 book_id 与书名、行为 read_book、时长 30",
     reader.behavior.behavior_id == constant.Behavior.READ_BOOK
     and reader.behavior.duration == 30
-    and len(reader.entertainment.borrow_book_id_set) == 1
-    and reader.behavior.book_id in reader.entertainment.borrow_book_id_set
+    and len(chara_life.borrow_book_id_set(reader.cid)) == 1
+    and reader.behavior.book_id in chara_life.borrow_book_id_set(reader.cid)
     and reader.behavior.book_name
     == game_config.config_book[reader.behavior.book_id].name
     and reader.state == constant.CharacterStatus.STATUS_READ_BOOK,
@@ -2106,9 +2106,9 @@ check(
         reader.behavior.book_id,
     ),
 )
-for _book_id in list(reader.entertainment.borrow_book_id_set):
+for _book_id in list(chara_life.borrow_book_id_set(reader.cid)):
     kernel_data.put(library.set_holder, _book_id, -1)
-    reader.entertainment.borrow_book_id_set.discard(_book_id)
+chara_life.borrow_book_id_set.set(reader.cid, set())
 kernel_data.put(library.put_holders, dict.fromkeys(_saved_borrow, 999))
 start_sm(SM.ENTERTAIN_READ, 402)
 check(
@@ -2742,7 +2742,7 @@ def setup_h1(third_room: str) -> None:
         schedule_handle.set_selected_course(
             201, 0, period, E.COURSE_TYPE_THEORY, room
         )
-    student.entertainment.entertainment_type = [TEND] * 3
+    chara_life.entertainment_type.set(student.cid, [TEND] * 3)
     move_to(0, SCENE_DORM)
     move_to(101, classroom_path(ROOM1))
     move_to(201, classroom_path(ROOM2))
@@ -2925,8 +2925,6 @@ set_time(DEFAULT_TIME)
 class_ai.get_skip_class_rate = lambda character_id: 0.0
 g32 = child_growth(201)
 """ 学生 201 的养成数据（与 g31 是同一个对象） """
-T_MON_10 = DEFAULT_TIME.replace(hour=10)
-""" 周一 10:00：第 2 节中段，学生这一节没课，工作岗在上班时间 """
 T830 = period_time(0) - datetime.timedelta(minutes=30)
 """ 8:30：第 1 节（9:00）开课前 30 分钟 """
 T930 = period_time(0) + datetime.timedelta(minutes=30)
@@ -2938,8 +2936,8 @@ prepare_ai(201)
 clear_need(201)
 move_to(102, SCENE_EDU_ENTRY)
 kernel_data.put(flags.set, mother.cid, is_h=False)
-student.work.work_type = E.STUDENT_WORK_TYPE
-student.entertainment.entertainment_type = [TEND] * 3
+chara_life.work_type.set(student.cid, E.STUDENT_WORK_TYPE)
+chara_life.entertainment_type.set(student.cid, [TEND] * 3)
 move_to(201, SCENE_DORM)
 
 RT32_LOG: list[tuple[int, str, datetime.datetime, int, int]] = []
@@ -3540,7 +3538,7 @@ def setup_ghost() -> dict:
     schedule_handle.set_selected_course(
         201, 0, 0, E.COURSE_TYPE_PRACTICE, ROOM_P
     )
-    student.entertainment.entertainment_type = [TEND] * 3
+    chara_life.entertainment_type.set(student.cid, [TEND] * 3)
     move_to(0, SCENE_DORM)
     move_to(201, classroom_path(ROOM_P))
     move_to(202, SCENE_DORM)

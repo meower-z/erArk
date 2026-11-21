@@ -11,6 +11,7 @@ from Script.Core import cache_control, game_type, get_text, constant
 from Script.Design import handle_state_machine, map_handle, handle_premise
 from Script.Modules.domains import abilities, dormitory, inventory
 from Script.System.Dormitory_System import common
+from Script.Modules.domains import chara_life
 
 if TYPE_CHECKING:
     from Script.Modules.npc_action_choice import choice
@@ -30,8 +31,7 @@ def get_dormitory_layer_by_character(character_id: int) -> int:
     """
     if character_id not in cache.character_data:
         return 0
-    character_data = cache.character_data[character_id]
-    dormitory_path = character_data.dormitory
+    dormitory_path = chara_life.dormitory(character_id)
     dormitory_layer = common.get_layer_by_dormitory_path(dormitory_path)
     return dormitory_layer
 
@@ -72,10 +72,9 @@ def _get_target_room(character_id: int) -> str:
     读取宿舍管理员当前目标宿舍
     输入类型: character_id(int)
     输出类型: str
-    功能: 从 CHARA_WORK 读取目标宿舍字段，未初始化时返回空字符串
+    功能: 读角色键 life.dormitory_admin_target_room，没有时为空字符串
     """
-    work_data = cache.character_data[character_id].work
-    return str(getattr(work_data, "dormitory_admin_target_room", ""))
+    return chara_life.dormitory_admin_target_room(character_id)
 
 
 def _plan_target_room(plan: choice.Plan, room_path: str) -> None:
@@ -83,9 +82,9 @@ def _plan_target_room(plan: choice.Plan, room_path: str) -> None:
     在计划里记下宿舍管理员的目标宿舍
     输入类型: plan(Plan), room_path(str)
     输出类型: 无
-    功能: 行动开始时在 CHARA_WORK 中记录目标宿舍路径
+    功能: 行动开始时在角色键 life.dormitory_admin_target_room 里记录目标宿舍路径
     """
-    plan.set("work.dormitory_admin_target_room", room_path)
+    plan.set(chara_life.dormitory_admin_target_room.key, room_path)
 
 
 def _plan_wait(plan: choice.Plan, minute: int) -> None:

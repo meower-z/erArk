@@ -59,14 +59,17 @@ class BridgeInterruptsTest(FastTestCase):
         """
         GameState 换成 roster_ids 里的角色各做一件 START 开始、120 分钟长的事。
         随后给这些角色写下置零的服装、状态值与身体管理，并穿上 STANDARD_OUTFIT
+        这些角色的数据取自当前状态里的角色数据或 roster.offstage
         Keyword arguments:
         roster_ids -- 角色键
         ticked -- 上一次 Tick 结算到的时钟
         """
+        game = core.state()
+        kept = {who: chara.data for who, chara in game.characters.items()}
         characters = {
             who: core.Character(
                 core.Action(who, core.idle.name, None, START, 120),
-                MappingProxyType({}),
+                MappingProxyType(dict(kept.get(who, {}))),
             )
             for who in roster_ids
         }

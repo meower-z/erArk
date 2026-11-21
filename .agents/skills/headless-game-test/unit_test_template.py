@@ -90,6 +90,7 @@ from Script.Core import (
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
 
+from Script.Modules.domains import relations
 from Script.Modules.save_load import kernel_state
 from Script.Modules.domains import abilities, status
 from tests import chara_data, kernel_data
@@ -166,7 +167,9 @@ def new_chara(
     cd.adv = adv
     cd.sex = 1
     cd.second_behavior = attr_calculation.get_second_behavior_zero({})
-    cd.favorability = {0: 0}  # 好感/信赖类前提会直接取 [0]
+    kernel_data.put(
+        relations.favorability.set, cd.cid, {0: 0}
+    )  # 一些前提直接读 favorability[0]，表里要有键 0
     cd.position = list(SCENE)
     cd.race = race
     cache.character_data[cid] = cd

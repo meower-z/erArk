@@ -12,7 +12,7 @@ from Script.Config import normal_config
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import character_move, map_handle
 from Script.Kernel import core
-from Script.Modules.domains import action_info, flags
+from Script.Modules.domains import action_info, flags, chara_key
 from Script.Modules.gameplay_resolution import intent
 
 cache: game_type.Cache = cache_control.cache
@@ -20,8 +20,8 @@ cache: game_type.Cache = cache_control.cache
 _ = get_text._
 """ 翻译api """
 
-FIELD_ROOTS = ("behavior", "sp_flag", "action_info", "work")
-""" Plan.set 能写的角色数据的根 """
+FIELD_ROOTS = ("behavior", "sp_flag", "action_info", "life")
+""" Plan.set 能写的角色数据的根；life 下是 chara_life 的角色键 """
 
 
 def to_json(value: object) -> core.JSON:
@@ -61,8 +61,9 @@ class Plan:
         """
         记下行动开始时写在自己身上的一个值
         Keyword arguments:
-        path -- 属性路径："target_character_id"、"state"，或以 behavior、sp_flag、action_info、work 开头，
-            如 "behavior.duration"
+        path -- 写哪一项："target_character_id"、"state"，
+            以 behavior、sp_flag 或 action_info 开头的属性路径（如 "behavior.duration"），
+            或 chara_life 的角色键名（如 "life.dormitory_admin_target_room"）
         value -- 要写的 JSON 值
         """
         data = to_json(value)
@@ -143,6 +144,8 @@ class Plan:
         """
         if path in self._shadow:
             return self._shadow[path]
+        if path in chara_key.BY_KEY:
+            return chara_key.BY_KEY[path](self.character_id)
         root, *rest = path.split(".")
         if root == "sp_flag" and len(rest) == 1:
             return flags.get(self.character_id, rest[0])

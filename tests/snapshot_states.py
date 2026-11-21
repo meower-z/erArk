@@ -274,13 +274,14 @@ def give_birth(world: FullWorld, mother_id: int, name: str) -> list:
         pregnancy_constant,
         pregnancy_handle,
     )
+    from Script.Modules.domains import relations
 
     mother = world.cache.character_data[mother_id]
     with days_passed(pregnancy_constant.PREGNANCY_DAY):
         pregnancy_handle.check_pregnancy(mother_id)
     with days_passed(pregnancy_constant.PARTURIENT_DAY):
         pregnancy_handle.check_near_born(mother_id)
-    before = list(mother.relationship.child_id_list)
+    before = list(relations.child_id_list(mother.cid))
     world.player.press("焦急等待")
     for index in range(max(1, pregnancy.of(mother_id).fetus_count)):
         world.player.type(f"{name}{index + 1}")
@@ -290,9 +291,7 @@ def give_birth(world: FullWorld, mother_id: int, name: str) -> list:
     world.player.check_done()
     with days_passed(pregnancy_constant.POSTPARTUM_REST_DAY):
         pregnancy_handle.check_rearing(mother_id)
-    return [
-        cid for cid in mother.relationship.child_id_list if cid not in before
-    ]
+    return [c for c in relations.child_id_list(mother_id) if c not in before]
 
 
 def build_family_commission(world: FullWorld) -> None:

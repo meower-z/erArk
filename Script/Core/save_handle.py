@@ -26,15 +26,15 @@ from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info
 from Script.Modules.domains import body_manage, commission, country, diplomacy
 from Script.Modules.domains import dirty, dormitory, education, entertainment
-from Script.Modules.domains import facility, first_record, flags, fridge
-from Script.Modules.domains import growth, h_meters, h_state, history, hypnosis
-from Script.Modules.domains import inventory
-from Script.Modules.domains import kitchen, library, location, maintenance
-from Script.Modules.domains import medical, modes, needs, official
+from Script.Modules.domains import facility, first_record, flags, fridge, growth
+from Script.Modules.domains import h_meters, h_state, history, hypnosis
+from Script.Modules.domains import inventory, kitchen, library, location
+from Script.Modules.domains import maintenance, medical, modes, needs, official
 from Script.Modules.domains import physical_exam, plan, player_ability
 from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import prison, production, recruit, roster, status
 from Script.Modules.domains import tallies, visitor, wardrobe, warehouse
+from Script.Modules.domains import chara_life, chara_profile, relations
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -248,22 +248,19 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
         library.put_holders(books)
         library.set_recommended(types)
     now_time = game_time.now()
-    for character in loaded_dict["character_data"].values():
-        entertainment = character.entertainment
-        for book_id in [
-            book_id
-            for book_id in entertainment.borrow_book_id_set
-            if book_id not in game_config.config_book
-        ]:
-            entertainment.borrow_book_id_set.discard(book_id)
-            count += 1
-        for record in getattr(entertainment, "borrow_book_history", []):
-            if (
-                record.get("book_id") not in game_config.config_book
-                and record.get("return_time") is None
-            ):
-                record["return_time"] = now_time
-                count += 1
+    for cid, character in loaded_dict["character_data"].items():
+        with chara_life.borrow_book_id_set.editing(cid) as borrowed:
+            unknown = borrowed - game_config.config_book.keys()
+            borrowed.difference_update(unknown)
+            count += len(unknown)
+        with chara_life.borrow_book_history.editing(cid) as history:
+            for record in history:
+                if (
+                    record.get("book_id") not in game_config.config_book
+                    and record.get("return_time") is None
+                ):
+                    record["return_time"] = now_time
+                    count += 1
         behavior = character.behavior
         if behavior.book_id and behavior.book_id not in game_config.config_book:
             behavior.book_id = 0
@@ -284,6 +281,20 @@ def _normalize_save_path(path_text: Any) -> Any:
     if isinstance(path_text, str) and foreign_sep in path_text:
         return path_text.replace(foreign_sep, os.sep)
     return path_text
+
+
+def _normalize_life(loaded_dict: dict[str, Any]) -> None:
+    """
+    读档时整理角色键里的场景路径与娱乐编号。在角色数据搬进 GameState 之后调用
+    chara_life.PATHS 里的场景路径换成本系统的路径分隔符。当天三个娱乐时段的编号经 _migrate_entertainment_cid 换算
+    Keyword arguments:
+    loaded_dict -- 存档缓存的属性表
+    """
+    for cid in loaded_dict["character_data"]:
+        for key in chara_life.PATHS:
+            key.set(cid, _normalize_save_path(key(cid)))
+        with chara_life.entertainment_type.editing(cid) as slots:
+            slots[:] = [_migrate_entertainment_cid(one) for one in slots]
 
 
 def _normalize_save_path_keys(path_dict: Any) -> Any:
@@ -479,23 +490,13 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
     character_data = getattr(loaded_cache, "character_data", None)
     if isinstance(character_data, dict):
         for character in character_data.values():
-            if hasattr(character, "dormitory"):
-                character.dormitory = _normalize_save_path(character.dormitory)
-            # 此处在 old_chara_to_new 迁移之前运行，可能遇到旧存档的 pre_dormitory 或新存档的 permanent_dormitory
-            if hasattr(character, "permanent_dormitory"):
-                character.permanent_dormitory = _normalize_save_path(
-                    character.permanent_dormitory
-                )
-            elif hasattr(character, "pre_dormitory"):
+            # 这里早于 old_chara_to_new 的迁移运行。旧存档的角色对象上可能有 pre_dormitory。
+            # chara_life.PATHS 里的场景路径由 _normalize_life 整理
+            if not hasattr(character, "permanent_dormitory") and hasattr(
+                character, "pre_dormitory"
+            ):
                 character.pre_dormitory = _normalize_save_path(
                     character.pre_dormitory
-                )
-            work_data = getattr(character, "work", None)
-            if work_data is not None and hasattr(
-                work_data, "dormitory_admin_target_room"
-            ):
-                work_data.dormitory_admin_target_room = _normalize_save_path(
-                    work_data.dormitory_admin_target_room
                 )
             ability_data = getattr(character, "pl_ability", None)
             if ability_data is not None and hasattr(
@@ -551,16 +552,6 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
                 ) as kernel_growth:
                     if kernel_growth is not None:
                         growth.normalize_legacy(kernel_growth)
-            # 教育区娱乐改编号（2026-09-09）：当天三个娱乐槽位里的旧编号也换掉，
-            # 免得读档当天照料卵 / 见学 / 自习的判定对不上号
-            entertainment_data = getattr(character, "entertainment", None)
-            if entertainment_data is not None and isinstance(
-                getattr(entertainment_data, "entertainment_type", None), list
-            ):
-                entertainment_data.entertainment_type = [
-                    _migrate_entertainment_cid(one)
-                    for one in entertainment_data.entertainment_type
-                ]
             _clear_soft_egg_race_pregnancy(character, soft_egg_enabled)
             if pl_collection is not None and not hasattr(
                 pl_collection, "held_eggs"
@@ -659,11 +650,11 @@ def input_load_save(save_id: str) -> None:
 
 def install_save(save_id: str, version: int) -> None:
     """
-    读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
-    版本 0 先补齐生理需求与供电策略属性。随后二十三个 adopt 函数搬走罗德岛对象的属性，其中十八个的条数计入跨版本更新。
-    ID 迁移后四个角色域搬走标记、行动记录与玩家数据。修正编号后、角色替换前，五个模块的 adopt_old_save
-    搬走角色的四张表与道具等五项，去掉的素质项数计入跨版本更新。重建角色后 adopt_pickled 搬走角色的数值属性。
-    补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
+    读档的 Reset 步骤：装入文件 "1" 并修补旧存档。版本 0 补生理需求与供电策略，23 个 adopt 搬罗德岛属性（18 个计数）。
+    ID 迁移后 flags、action_info、player_ability、player_collection 搬标记等四项；修编号后、替换前 abilities 与
+    inventory、wardrobe、body_manage、status 搬四张表及道具、食物、服装、身体管理与状态值（abilities 计数）；替换先调
+    chara_key.lift，重建前 relations、chara_life、chara_profile 搬进角色键；重建后 adopt_pickled、pregnancy、growth 搬
+    数值、妊娠与养成，h_meters、h_state、dirty、hypnosis、first_record 与 roster、周目等七模块均计数；最后收尾会话。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -775,6 +766,11 @@ def install_save(save_id: str, version: int) -> None:
     for field_name in CLOCK_FIELDS:
         loaded_dict.pop(field_name, None)
 
+    # 把版本 21 之前存档的角色对象上的社会关系、住处、工作、娱乐与称呼等属性搬进角色键
+    for domain in (relations, chara_life, chara_profile):
+        domain.adopt_old_save(loaded_dict)
+    _normalize_life(loaded_dict)
+
     # 遍历更新全角色属性
     cloth_update_count = 0
     color_update_count = 0
@@ -783,7 +779,7 @@ def install_save(save_id: str, version: int) -> None:
         recursive_update(new_character_data, value)
         # 角色素质、经验、宝珠、能力、设置的更新
         update_count += old_chara_to_new.update_character_config_data(
-            new_character_data
+            new_character_data, key
         )
         # 当前角色模板数据（使用Dict方式访问，兼容新旧存档）
         tem_character = loaded_dict["npc_tem_data"].get(
@@ -835,18 +831,15 @@ def install_save(save_id: str, version: int) -> None:
         # 更新角色势力与出身地
         if (
             new_character_data.cid != 0
-            and tem_character.Nation != new_character_data.relationship.nation
+            and tem_character.Nation != relations.nation(key)
         ):
-            new_character_data.relationship.nation = tem_character.Nation
+            relations.nation.set(key, tem_character.Nation)
             update_count += 1
         if (
             new_character_data.cid != 0
-            and tem_character.Birthplace
-            != new_character_data.relationship.birthplace
+            and tem_character.Birthplace != relations.birthplace(key)
         ):
-            new_character_data.relationship.birthplace = (
-                tem_character.Birthplace
-            )
+            relations.birthplace.set(key, tem_character.Birthplace)
             update_count += 1
         # 更新到玩家收藏品列表
         if new_character_data.cid != 0 and player_collection.ensure_npc(
@@ -1164,9 +1157,7 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
     character_text_version = (
         attr_calculation.get_system_setting_zero().character_text_version
     )
-    for daughter_cid in loaded_dict["character_data"][
-        0
-    ].relationship.child_id_list:
+    for daughter_cid in relations.child_id_list(0):
         character_text_version.setdefault(daughter_cid, 1)
     global_text_version = normal_config.system_setting.character_text_version
     missing = character_text_version.keys() - global_text_version.keys()

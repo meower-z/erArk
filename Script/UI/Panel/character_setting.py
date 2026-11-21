@@ -5,6 +5,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
+from Script.Modules.domains import chara_profile
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -83,7 +84,9 @@ class CharacterSetting:
                 button_draw.draw()
                 self.return_list.append(button_draw.return_text)
 
-                now_setting_flag = character_data.chara_setting.get(
+                now_setting_flag = chara_profile.chara_setting(
+                    character_data.cid
+                ).get(
                     cid, 0
                 )  # 当前设置的值
                 option_len = len(
@@ -94,9 +97,11 @@ class CharacterSetting:
                 button_text = f" {game_config.config_chara_setting_option[cid][now_setting_flag]} "
                 # 如果是称呼，则显示称呼
                 if cid == 3 and now_setting_flag == 1:
-                    button_text += f"：{character_data.nick_name_to_pl} "
+                    button_text += f"：{chara_profile.nick_name_to_pl(character_data.cid)} "
                 elif cid == 4 and now_setting_flag == 1:
-                    button_text += f"：{character_data.nick_name} "
+                    button_text += (
+                        f"：{chara_profile.nick_name(character_data.cid)} "
+                    )
 
                 # 判断是否符合条件
                 require_text = game_config.config_chara_setting[cid].require
@@ -154,24 +159,40 @@ class CharacterSetting:
         from Script.Design import character
 
         character_data = cache.character_data[self.character_id]
-        character_data.chara_setting.setdefault(cid, 0)
-        if character_data.chara_setting[cid] < option_len - 1:
-            character_data.chara_setting[cid] += 1
+        with chara_profile.chara_setting.editing(
+            character_data.cid
+        ) as chara_setting:
+            chara_setting.setdefault(cid, 0)
+        if (
+            chara_profile.chara_setting(character_data.cid)[cid]
+            < option_len - 1
+        ):
+            chara_profile.chara_setting.set_item(
+                character_data.cid,
+                cid,
+                chara_profile.chara_setting(character_data.cid)[cid] + 1,
+            )
         else:
-            character_data.chara_setting[cid] = 0
+            chara_profile.chara_setting.set_item(character_data.cid, cid, 0)
         # 修改角色对玩家的称呼
         if cid == 3:
-            if character_data.chara_setting[cid] == 1:
-                character_data.nick_name_to_pl = character.input_name_func(
-                    _("请输入该角色对玩家的专属称呼")
+            if chara_profile.chara_setting(character_data.cid)[cid] == 1:
+                chara_profile.nick_name_to_pl.set(
+                    character_data.cid,
+                    character.input_name_func(
+                        _("请输入该角色对玩家的专属称呼")
+                    ),
                 )
             else:
-                character_data.nick_name_to_pl = ""
+                chara_profile.nick_name_to_pl.set(character_data.cid, "")
         # 修改玩家对角色的称呼
         if cid == 4:
-            if character_data.chara_setting[cid] == 1:
-                character_data.nick_name = character.input_name_func(
-                    _("请输入玩家对该角色的专属称呼")
+            if chara_profile.chara_setting(character_data.cid)[cid] == 1:
+                chara_profile.nick_name.set(
+                    character_data.cid,
+                    character.input_name_func(
+                        _("请输入玩家对该角色的专属称呼")
+                    ),
                 )
             else:
-                character_data.nick_name = ""
+                chara_profile.nick_name.set(character_data.cid, "")

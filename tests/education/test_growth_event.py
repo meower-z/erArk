@@ -16,7 +16,7 @@ import inspect
 from Script.Design import talk
 from Script.Settle import past_day_settle
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import h_state, official
+from Script.Modules.domains import h_state, official, chara_life, relations
 from collections.abc import Callable
 import _bootstrap as _boot
 from Script.UI.Moudle import draw as _draw_module
@@ -42,8 +42,8 @@ baby = make_character(
     204, "婴儿", 152, daughter=True, stage=101, mother_id=103, born_days=5
 )
 stranger = make_character(205, "别人家的孩子", 152, stage=103)
-stranger.relationship.father_id = 50
-stranger.relationship.mother_id = 51
+relations.father_id.set(stranger.cid, 50)
+relations.mother_id.set(stranger.cid, 51)
 adult = make_character(301, "成年干员", 21)
 E = education_constant
 
@@ -490,12 +490,12 @@ check(
     ),
 )
 kernel_data.put(official.set_queue, [])
-loli.work.work_type = 21
+chara_life.work_type.set(loli.cid, 21)
 check(
     "改了岗（岗位 21）的萝莉：学期结束照推期末事件",
     push_semester_for([201]) == 1 and official.queue()[0]["chara_id"] == 201,
 )
-loli.work.work_type = 152
+chara_life.work_type.set(loli.cid, 152)
 kernel_data.put(official.set_queue, [])
 
 section(
@@ -507,7 +507,7 @@ check(
     203 in growth_event_handle.get_classmate_list(201)
     and 201 in growth_event_handle.get_classmate_list(203),
 )
-half_sib.work.work_type = 21
+chara_life.work_type.set(half_sib.cid, 21)
 check(
     "她改了岗（课表残留）：不再是同学，自己也没有同学，self_have_any_course 不成立（此前三者都成立）",
     203 not in growth_event_handle.get_classmate_list(201)
@@ -527,7 +527,7 @@ check(
     not _class_uid,
     _class_uid[:5],
 )
-half_sib.work.work_type = 152
+chara_life.work_type.set(half_sib.cid, 152)
 check(
     "改回学生岗恢复",
     203 in growth_event_handle.get_classmate_list(201)
@@ -1519,8 +1519,8 @@ check(
 )
 # 置灰的选项照旧写不能选的原因（那是条件，不是后果）
 _gray_uid = "期末17"
-loli.favorability[0] = 0
-loli.trust = 0
+relations.favorability.set_item(loli.cid, 0, 0)
+relations.trust.set(loli.cid, 0)
 _gray_option = official_event_handle.get_option_list(_gray_uid, 201, 0)
 _gray_off = [one for one in _gray_option if not one["can_use"]]
 _boot.drawn_text.clear()

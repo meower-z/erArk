@@ -42,6 +42,7 @@ from tests.education._bootstrap import pregnancy as pregnancy
 from tests.education._bootstrap import random as random
 from tests.education._bootstrap import remove_character as remove_character
 from tests.education._bootstrap import ROOT as ROOT
+from tests.education._bootstrap import relations as relations
 from tests.education._bootstrap import roster as roster
 from tests.education._bootstrap import save_handle as save_handle
 from tests.education._bootstrap import SCENE_DORM as SCENE_DORM

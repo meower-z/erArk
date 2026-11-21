@@ -11,7 +11,7 @@ from _bootstrap import open_all_classroom, period_time, pl, remove_character
 from _bootstrap import schedule_handle, schedule_template_handle, section
 from _bootstrap import set_time, settle_behavior, sex_class_handle
 from Script.Design import handle_ability, second_behavior
-from Script.Modules.domains import flags, hypnosis, modes
+from Script.Modules.domains import flags, hypnosis, modes, chara_life, relations
 from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
@@ -499,7 +499,7 @@ section(
 )
 clear_schedules()
 set_time(period_time(0))
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 child_growth(201).selected_course = {}
 schedule_handle.set_selected_course(201, 1, 2, E.COURSE_TYPE_THEORY, ROOM1)
 check(
@@ -508,9 +508,9 @@ check(
 )
 schedule_handle.set_class_cell(ROOM1, 1, 2, 45, 101)
 check("每周课表排上：成立", HP(P.SELF_HAVE_ANY_COURSE, 201) == 1)
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 check("改了岗：课表还在也不成立", HP(P.SELF_HAVE_ANY_COURSE, 201) == 0)
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 schedule_handle.clear_selected_course(201, 1, 2)
 clear_schedules()
 child_growth(201).skip_count = 3
@@ -547,17 +547,17 @@ check(
     all(HP(token, 0) for token in report_tokens),
 )
 child_growth(206).report_card_flag = False
-grown.work.work_type = 152
+chara_life.work_type.set(grown.cid, 152)
 check(
     "成年后仍在学生岗的女儿：成立", all(HP(token, 0) for token in report_tokens)
 )
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 pl.target_character_id = 201
 check(
     "改了岗的萝莉女儿：照旧成立（照出成绩单，Plan 29）",
     all(HP(token, 0) for token in report_tokens),
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 other_student = make_character(302, "不是女儿的成年学生", 152)
 pl.target_character_id = 302
 check(
@@ -646,13 +646,13 @@ check(
     course_type_hit(201) == sorted(set(_type_premise) - {E.COURSE_TYPE_THEORY}),
     course_type_hit(201),
 )
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 check(
     "L11 改了岗：课表残留不算，五个都不成立",
     course_type_hit(201) == [],
     course_type_hit(201),
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 check(
     "L11 前提只读：没有养成数据的干员五个都不成立，也不被惰性创建养成数据",
     growth.of(adult.cid) is None
@@ -768,7 +768,7 @@ check(
     and HP("CVP_A1_CourseType|5_E_1", 201) == 1,
     _tip,
 )
-student.work.work_type = intern_work
+chara_life.work_type.set(student.cid, intern_work)
 _tip = character_info_head.get_now_class_tip(201)
 check(
     "L4 改任这个岗位、本人就在岗：不亮 <课>，CVP CourseType / Course 都不成立（此前按残留课表显示在上实习课）",
@@ -777,7 +777,7 @@ check(
     and HP("CVP_A1_Course|43_G_0", 201) == 0,
     _tip,
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 check(
     "L4 改回学生岗：恢复",
     character_info_head.get_now_class_tip(201) is not None,
@@ -812,14 +812,14 @@ check(
     HP("CVP_A1_CourseType|0_E_1", 101) == 1
     and HP("CVP_A1_Course|43_G_0", 101) == 1,
 )
-teacher.work.work_type = 152
+chara_life.work_type.set(teacher.cid, 152)
 check(
     "L6 改当学生：CourseType 读她自己的体育课，旧授课格的理论课与科目 43 都不成立（此前读成旧授课格）",
     HP("CVP_A1_CourseType|3_E_1", 101) == 1
     and HP("CVP_A1_CourseType|0_E_1", 101) == 0
     and HP("CVP_A1_Course|43_G_0", 101) == 0,
 )
-teacher.work.work_type = 151
+chara_life.work_type.set(teacher.cid, 151)
 schedule_handle.clear_selected_course(101, 0, 0)
 clear_schedules()
 
@@ -917,9 +917,9 @@ check(
     "L26 每周课表排上公开课（没排教师也算）：成立",
     HP(P.SELF_HAVE_PUBLIC_COURSE, 201) == 1,
 )
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 check("L26 改了岗：课表还在也不成立", HP(P.SELF_HAVE_PUBLIC_COURSE, 201) == 0)
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 _adult_growth = growth.of(adult.cid)
 check(
     "L26 没有养成数据的干员：不成立，也不被惰性创建养成数据",
@@ -1126,7 +1126,7 @@ check(
 )
 for _cid in (207, 208):
     remove_character(_cid)
-    if _cid in mother.relationship.child_id_list:
-        mother.relationship.child_id_list.remove(_cid)
+with relations.child_id_list.editing(mother.cid) as _children:
+    _children[:] = [c for c in _children if c not in (207, 208)]
 
 finish()

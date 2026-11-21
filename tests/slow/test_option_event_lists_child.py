@@ -46,6 +46,7 @@ class OptionEventListsChildTest(SlowTestCase):
         Return arguments:
         game_type.Character -- 星熊的角色数据
         """
+        from Script.Modules.domains import relations
         from Script.Design import handle_premise
         from Script.Modules.domains import roster
         from tests import kernel_data
@@ -60,8 +61,10 @@ class OptionEventListsChildTest(SlowTestCase):
         kernel_data.put(roster.add, npc_id)
         self.world.move(npc_id, player.position)
         ca.talent(npc_id)[FALL_3_TALENT] = 1
-        npc.favorability[0] = FAVORABILITY
-        npc.trust = TRUST
+        kernel_data.put(
+            relations.favorability.set_item, npc_id, 0, FAVORABILITY
+        )
+        kernel_data.put(relations.trust.set, npc_id, TRUST)
         player.target_character_id = npc_id
         self.assertTrue(
             handle_premise.handle_premise(

@@ -66,11 +66,12 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         Return arguments:
         int -- 角色id
         """
+        from Script.Modules.domains import relations
+
         return min(
             cid
             for cid in kernel_data.domain("roster").active()
-            if cid != 0
-            and self.cache.character_data[cid].relationship.father_id != 0
+            if cid != 0 and relations.father_id(cid) != 0
         )
 
     def _daughter(self, name: str, stage: int) -> int:

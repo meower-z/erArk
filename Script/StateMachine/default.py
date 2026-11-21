@@ -20,7 +20,7 @@ from Script.Core import get_text, cache_control, game_type, constant
 from Script.Modules.domains import abilities, action_info, economy, h_state
 from Script.Modules.domains import kitchen, maintenance, modes, production
 from Script.UI.Moudle import draw
-from Script.Modules.domains import body_manage, inventory
+from Script.Modules.domains import body_manage, inventory, chara_life, relations
 
 if TYPE_CHECKING:
     from Script.Modules.npc_action_choice import choice
@@ -208,9 +208,8 @@ def character_move_to_dormitory(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     # 还没有宿舍时先原地等1分钟，开始时分配宿舍，下一次再走过去
-    if character_data.dormitory == "无":
+    if chara_life.dormitory(character_id) == "无":
         plan.kind("assign_dormitory")
         plan.set("target_character_id", character_id)
         plan.set("behavior.behavior_id", constant.Behavior.WAIT)
@@ -218,7 +217,7 @@ def character_move_to_dormitory(character_id: int) -> choice.Plan:
         plan.set("state", constant.CharacterStatus.STATUS_WAIT)
         return plan
     target_scene = map_handle.get_map_system_path_for_str(
-        character_data.dormitory
+        chara_life.dormitory(character_id)
     )
     plan.move(target_scene)
     return plan
@@ -387,7 +386,7 @@ def character_move_to_toilet(character_id: int) -> choice.Plan:
             else:
                 if handle_premise.handle_in_dormitory_zone(character_id):
                     to_toilet = map_handle.get_map_system_path_for_str(
-                        character_data.dormitory
+                        chara_life.dormitory(character_id)
                     )
                     find_flag = True
                 # 如果还是没找到的话就随机选择一个女厕所
@@ -1314,11 +1313,11 @@ def character_move_to_rest_room(character_id: int) -> choice.Plan:
     character_data: game_type.Character = cache.character_data[character_id]
     special_rest_room_list = []
     # 首先检测角色所属的势力与出身地是否有专属休息室
-    chara_nation = character_data.relationship.nation
+    chara_nation = relations.nation(character_id)
     nation_rest_room_tag = "Nation_" + str(chara_nation)
     if nation_rest_room_tag in constant.place_data:
         special_rest_room_list.extend(constant.place_data[nation_rest_room_tag])
-    chara_birthplace = character_data.relationship.birthplace
+    chara_birthplace = relations.birthplace(character_id)
     birthplace_rest_room_tag = "Birthplace_" + str(chara_birthplace)
     if birthplace_rest_room_tag in constant.place_data:
         special_rest_room_list.extend(
@@ -2155,13 +2154,12 @@ def character_tend_eggs(character_id: int) -> choice.Plan:
     from Script.System.Pregnancy_System import egg_handle
     from Script.System.Pregnancy_System import pregnancy_constant
 
-    character_data: game_type.Character = cache.character_data[character_id]
     plan.set("target_character_id", character_id)
     # 鉴定优先级高于孵化，鉴定完成后同一时段的后续行动自然落入孵化行为
     if len(egg_handle.get_identifiable_eggs(character_id)):
         # 自己就是保育员时直接自己鉴定
         if (
-            character_data.work.work_type
+            chara_life.work_type(character_id)
             == pregnancy_constant.NURSERY_WORKER_WORK_ID
         ):
             plan.set("behavior.duration", 30)
@@ -3418,7 +3416,7 @@ def character_education_skip_class(character_id: int) -> choice.Plan:
         for tag in education_constant.CLASSROOM_TAG_BY_COURSE_TYPE.values()
     ):
         to_dormitory = map_handle.get_map_system_path_for_str(
-            character_data.dormitory
+            chara_life.dormitory(character_id)
         )
         plan.move(to_dormitory)
         return plan
@@ -4129,11 +4127,8 @@ def character_work_massage(character_id: int) -> choice.Plan:
             # 跳过自己
             if chara_id == character_id:
                 continue
-            other_character_data: game_type.Character = cache.character_data[
-                chara_id
-            ]
             # 跳过也是按摩师的角色
-            if other_character_data.work.work_type != 171:
+            if chara_life.work_type(chara_id) != 171:
                 continue
             plan.set("target_character_id", chara_id)
             break

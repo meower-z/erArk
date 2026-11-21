@@ -14,7 +14,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
 from Script.Modules.save_load import settings
-from Script.Modules.domains import playthrough, roster
+from Script.Modules.domains import playthrough, roster, chara_profile
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -48,8 +48,6 @@ class System_Setting_Panel:
         """初始化绘制对象"""
         self.width: int = width
         """ 绘制的最大宽度 """
-        # self.now_panel = _("系统设置")
-        # """ 当前绘制的页面 """
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的文本列表 """
         self.pl_character_data = cache.character_data[0]
@@ -341,9 +339,10 @@ class System_Setting_Panel:
             # 全角色是否使用通用文本
             if cid == 2:
                 for character_id in cache.character_data:
-                    character_data = cache.character_data[character_id]
-                    character_data.chara_setting[1] = (
-                        normal_config.system_setting.draw_setting[cid]
+                    chara_profile.chara_setting.set_item(
+                        character_id,
+                        1,
+                        normal_config.system_setting.draw_setting[cid],
                     )
             elif cid == 11:
                 line_feed.draw()

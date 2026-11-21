@@ -18,7 +18,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
 from Script.Modules.domains import abilities, flags, growth, history, needs
-from Script.Modules.domains import pregnancy, roster, tallies
+from Script.Modules.domains import pregnancy, roster, tallies, relations
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -109,12 +109,12 @@ def update_new_day() -> None:
             # 清零助理服务的flag
             if (
                 flags.get(character_data.cid, "morning_salutation") == 2
-                or character_data.assistant_services[5] == 0
+                or relations.assistant_services(character_id)[5] == 0
             ):
                 flags.set(character_data.cid, morning_salutation=0)
             if (
                 flags.get(character_data.cid, "night_salutation") == 2
-                or character_data.assistant_services[6] == 0
+                or relations.assistant_services(character_id)[6] == 0
             ):
                 flags.set(character_data.cid, night_salutation=0)
             # 清零食物不对劲的flag

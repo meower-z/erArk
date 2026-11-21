@@ -69,6 +69,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.Modules.domains import relations
         from Script.Core import constant
 
         chara = self.cache.character_data[chara_id]
@@ -81,8 +82,8 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         )
         self.assertTrue(arrived, f"{chara.name} 走到了博士身边")
         # 好感与信赖的上限，日常互动能攒到，够邀请群交的判定
-        chara.favorability[0] = 100000
-        chara.trust = 300
+        kernel_data.put(relations.favorability.set_item, chara_id, 0, 100000)
+        kernel_data.put(relations.trust.set, chara_id, 300)
 
     def break_parts(self, behavior_id: str) -> set:
         """

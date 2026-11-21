@@ -19,7 +19,7 @@ from typing import cast
 from Script.Core import cache_control, constant, game_type
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import action_info, flags
+from Script.Modules.domains import action_info, flags, chara_key
 from Script.Modules.gameplay_resolution import (
     actions,
     draft,
@@ -37,8 +37,8 @@ type Extra = Callable[[int, intent.Intent], None]
 type Check = Callable[[int, intent.Intent], core.Action | None]
 """ 一种行动开始前的复查：角色id、意图；交回换上的行动，照旧开始时交回 None """
 
-FIELD_ROOTS = ("behavior", "sp_flag", "action_info", "work")
-""" Intent.fields 的路径可以用的根：角色自己身上的这几个对象 """
+FIELD_ROOTS = ("behavior", "sp_flag", "action_info", "life")
+""" Intent.fields 的路径可以用的根：角色自己身上的这几个对象，life 下是 chara_life 的角色键 """
 OPEN_MAP = "open_map"
 """ Intent.args 的键：玩家这一段移动开始后仍打开地图面板 """
 
@@ -128,6 +128,9 @@ def write_field(who: int, path: str, value: core.JSON) -> None:
     root, *names = path.split(".")
     if root not in FIELD_ROOTS or not names:
         raise ValueError(f"Intent.fields 不能写 {path}")
+    if path in chara_key.BY_KEY:
+        chara_key.BY_KEY[path].set(who, plain(value))
+        return
     if root == "sp_flag" and len(names) == 1:
         name = names[0]
         if name not in flags.DEFAULTS:

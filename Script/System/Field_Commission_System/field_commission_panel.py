@@ -16,7 +16,7 @@ from Script.System.Field_Commission_System.field_commission_function import (
     process_commission_text,
 )
 from Script.Modules.domains import abilities, commission, facility, flags
-from Script.Modules.domains import location, roster
+from Script.Modules.domains import location, roster, chara_life, chara_profile
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -992,8 +992,7 @@ class CommissionDraw:
                         0
                         if (
                             sort_collection_first
-                            and cache.character_data[x].chara_setting.get(2, 0)
-                            == 1
+                            and chara_profile.chara_setting(x).get(2, 0) == 1
                         )
                         else 1
                     ),
@@ -1002,11 +1001,7 @@ class CommissionDraw:
                         if sort_skill_id != 0
                         else 0
                     ),
-                    (
-                        cache.character_data[x].work.work_type
-                        if sort_work_toggle
-                        else 0
-                    ),
+                    (chara_life.work_type(x) if sort_work_toggle else 0),
                     x,
                 )
             )
@@ -1033,7 +1028,10 @@ class CommissionDraw:
 
                 # 勾选框、星号与名字
                 check_mark = "√" if npc_id in self.send_npc_list else " "
-                is_collected = character_data.chara_setting.get(2, 0) == 1
+                is_collected = (
+                    chara_profile.chara_setting(character_data.cid).get(2, 0)
+                    == 1
+                )
                 star_str = "⭐" if is_collected else "  "
 
                 name_str = f"[{check_mark}][{id_str}]{star_str}{name}"
@@ -1092,7 +1090,7 @@ class CommissionDraw:
                 bar_draw.draw()
 
                 # 渲染当前工作
-                work_type_id = character_data.work.work_type
+                work_type_id = chara_life.work_type(character_data.cid)
                 work_name = game_config.config_work_type[work_type_id].name
                 work_draw = draw.NormalDraw()
                 work_draw.text = f"{work_name}"

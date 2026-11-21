@@ -14,7 +14,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import see_item_info_panel
 from Script.Modules.domains import achievement, facility, warehouse
-from Script.Modules.domains import inventory
+from Script.Modules.domains import inventory, chara_profile
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -374,7 +374,7 @@ class BuyItemByItemNameDraw:
             )
             warehouse.add(4, -now_price)
             now_text = _("{0}花费了{1}粉红凭证，购买了{2}个{3}").format(
-                self.character_data.nick_name,
+                chara_profile.nick_name(self.character_data.cid),
                 now_price,
                 number,
                 item_config.name,

@@ -8,6 +8,7 @@ from collections import defaultdict
 from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
 from Script.Modules.domains import facility, inventory, roster, visitor
+from Script.Modules.domains import chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -190,7 +191,7 @@ def get_open_dormitory_room_occupancy() -> dict[str, int]:
         for _room_name, room_path in open_rooms_by_layer[layer]:
             room_occupancy[room_path] = 0
     for resident_id in get_dormitory_resident_id_set():
-        resident_dormitory = cache.character_data[resident_id].dormitory
+        resident_dormitory = chara_life.dormitory(resident_id)
         if resident_dormitory in room_occupancy:
             room_occupancy[resident_dormitory] += 1
     return room_occupancy
@@ -252,9 +253,13 @@ def register_permanent_dormitory(character_id: int) -> None:
     功能: 角色即将迁入特殊房间时调用；
     当前住在开放普通宿舍时把该宿舍记为登记宿舍，否则不改动（避免把特殊房间写入登记字段）
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dormitory in get_open_dormitory_room_occupancy():
-        character_data.permanent_dormitory = character_data.dormitory
+    if (
+        chara_life.dormitory(character_id)
+        in get_open_dormitory_room_occupancy()
+    ):
+        chara_life.permanent_dormitory.set(
+            character_id, chara_life.dormitory(character_id)
+        )
 
 
 def restore_character_dormitory(character_id: int) -> str:
@@ -265,15 +270,17 @@ def restore_character_dormitory(character_id: int) -> str:
     功能: 确保角色住回开放普通宿舍：已住在开放普通宿舍则保持不变；否则按登记宿舍优先分配（登记宿舍有空床则回住，
     无则按新入住规则挑选）。随后清空 permanent_dormitory（角色住在普通宿舍时该字段恒为空），返回最终宿舍路径
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     room_occupancy = get_open_dormitory_room_occupancy()
     # 已住在开放普通宿舍则无需重新分配；否则按登记宿舍优先挑选新房
-    if character_data.dormitory not in room_occupancy:
-        character_data.dormitory = pick_dormitory_room(
-            room_occupancy, character_data.permanent_dormitory
+    if chara_life.dormitory(character_id) not in room_occupancy:
+        chara_life.dormitory.set(
+            character_id,
+            pick_dormitory_room(
+                room_occupancy, chara_life.permanent_dormitory(character_id)
+            ),
         )
-    character_data.permanent_dormitory = ""
-    return character_data.dormitory
+    chara_life.permanent_dormitory.set(character_id, "")
+    return chara_life.dormitory(character_id)
 
 
 def get_dormitory_occupants_text() -> str:
@@ -304,7 +311,7 @@ def get_dormitory_occupants_text() -> str:
         # 遍历角色id
         dormitory_npc_name = ""
         for npc_id in live_npc_id_set:
-            live_dormitory = cache.character_data[npc_id].dormitory
+            live_dormitory = chara_life.dormitory(npc_id)
             # 如果该角色住在该宿舍，则在text中加入名字信息
             if live_dormitory == dormitory_place:
                 chara_name = cache.character_data[npc_id].name
@@ -404,50 +411,42 @@ def init_character_dormitory() -> None:
     npc_count = 0
     roster.discard(0)
     for character_id in roster.active():
-        character_data = cache.character_data[character_id]
-        # print(f"{character_data.name}：{character_data.dormitory}")
         # 普通干员每两个人住一个房间
-        if character_data.dormitory == "无":
+        if chara_life.dormitory(character_id) == "无":
             room_index = npc_count // 2
-            # print(f"debug room_index :{room_index}, len(dormitory) :{len(dormitory)}")
             now_room = list(dormitory.keys())[room_index]
-            # print(f"debug now_room = {now_room}")
-            character_data.dormitory = now_room
+            chara_life.dormitory.set(character_id, now_room)
             npc_count += 1
         # 有单独宿舍的干员住在对应宿舍
         else:
             # scene_name 是场景名的译文，所以模板的中文场景名也先经过 _ 再比较
-            template_scene_name = _(character_data.dormitory)
+            template_scene_name = _(chara_life.dormitory(character_id))
             for n in list(dormitory.keys()):
                 if cache.scene_data[n].scene_name == template_scene_name:
                     # 如果要住宿舍的话，那先检测宿舍是否已经有人住了
-                    if "宿舍" in character_data.dormitory:
+                    if "宿舍" in chara_life.dormitory(character_id):
                         already_live = False
                         for now_character_id in roster.active():
                             if now_character_id == character_id:
                                 continue
-                            now_character_data = cache.character_data[
-                                now_character_id
-                            ]
                             # 如果已经有人住了，则置flag为true，跳出循环
-                            if (
-                                now_character_data.dormitory
-                                == character_data.dormitory
-                            ):
+                            if chara_life.dormitory(
+                                now_character_id
+                            ) == chara_life.dormitory(character_id):
                                 already_live = True
                                 break
                         # 如果已经有人住了，则换成普通宿舍，重新分配
                         if already_live:
-                            character_data.dormitory = "无"
+                            chara_life.dormitory.set(character_id, "无")
                             init_character_dormitory()
                             break
                         else:
-                            character_data.dormitory = n
+                            chara_life.dormitory.set(character_id, n)
                             # print(f"debug n :{n}")
                             break
                     # 非宿舍的话直接住
                     else:
-                        character_data.dormitory = n
+                        chara_life.dormitory.set(character_id, n)
                         # print(f"debug n :{n}")
                         break
 
@@ -499,22 +498,23 @@ def new_character_get_dormitory(character_id: int) -> None:
             for now_character_id in visitor.visitors():
                 if now_character_id == character_id:
                     continue
-                now_character_data = cache.character_data[now_character_id]
-                if now_character_data.dormitory == room_path:
+                if chara_life.dormitory(now_character_id) == room_path:
                     room_occupied = True
                     break
             # 如果房间未被占用，则分配给当前角色
             if not room_occupied:
-                character_data.dormitory = room_path
+                chara_life.dormitory.set(character_id, room_path)
                 return
 
         # 如果所有客房都满了，则分配到列表之外（这种情况理论上不应该发生）
         if len(final_room_list) > 0:
-            character_data.dormitory = final_room_list[0]
+            chara_life.dormitory.set(character_id, final_room_list[0])
             print(
                 f"警告：所有客房都已满，{character_data.name}被分配到{final_room_list[0]}。请检查访客区设施。"
             )
     else:
         # 按层序查找有空床的开放宿舍分配；全部住满时分入人数最少的开放房
         room_occupancy = get_open_dormitory_room_occupancy()
-        character_data.dormitory = pick_dormitory_room(room_occupancy)
+        chara_life.dormitory.set(
+            character_id, pick_dormitory_room(room_occupancy)
+        )

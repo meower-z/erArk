@@ -23,6 +23,7 @@ from Script.Modules.domains import (
     warehouse,
     work,
 )
+from Script.Modules.domains import chara_life, chara_profile, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -170,7 +171,6 @@ class Manage_Basement_Panel:
 
             # 罗德岛资源总览
             if self.now_panel == _("罗德岛资源总览"):
-
                 self.resouce_list = [
                     _("货币"),
                     _("材料"),
@@ -189,7 +189,6 @@ class Manage_Basement_Panel:
 
                 # 遍历全资源类型
                 for resouce in self.resouce_list:
-
                     # 判断是否显示该类型的资源
                     if self.show_resource_type_dict[resouce]:
                         draw_text = f" ▼[{resouce}]"
@@ -227,7 +226,6 @@ class Manage_Basement_Panel:
 
             # 各部门工作概况
             elif self.now_panel == _("各部门工作概况"):
-
                 # 遍历全部门
                 department_text_list = []
                 for all_cid in game_config.config_facility:
@@ -740,13 +738,12 @@ class Manage_Basement_Panel:
                         nid_ability = abilities.ability(nid)
                         if key == _("无"):
                             return 0
-                        c = cache.character_data[nid]
                         if key == _("默认ID"):
                             return nid
                         if key == _("好感"):
-                            return c.favorability.get(0, 0)
+                            return relations.favorability(nid).get(0, 0)
                         if key == _("信赖"):
-                            return c.trust
+                            return relations.trust(nid)
                         if key == _("体力"):
                             return needs.of(nid)["hit"]
                         if key == _("最大体力"):
@@ -758,7 +755,7 @@ class Manage_Basement_Panel:
                         if key == _("催眠深度"):
                             return hypnosis.degree(nid)
                         if key == _("工作"):
-                            return c.work.work_type
+                            return chara_life.work_type(nid)
                         if key == _("装备"):
                             if handle_premise.handle_self_equipment_maintenance_ge_2(
                                 nid
@@ -782,9 +779,7 @@ class Manage_Basement_Panel:
                                 0
                                 if (
                                     self.sort_collection_first
-                                    and cache.character_data[
-                                        x
-                                    ].chara_setting.get(2, 0)
+                                    and chara_profile.chara_setting(x).get(2, 0)
                                     == 1
                                 )
                                 else 1
@@ -821,7 +816,8 @@ class Manage_Basement_Panel:
 
                         # 收藏判定与对齐：使用全形空格（字元數=1，顯示寬度=2），確保與"★"的底層計算一致
                         is_collected = (
-                            character_data.chara_setting.get(2, 0) == 1
+                            chara_profile.chara_setting(character_id).get(2, 0)
+                            == 1
                         )
                         star_str = "⭐" if is_collected else "  "
 
@@ -894,8 +890,10 @@ class Manage_Basement_Panel:
                                 status_draw.draw()
 
                         elif current_category == _("【好感信赖】"):
-                            favor = character_data.favorability.get(0, 0)
-                            trust = character_data.trust
+                            favor = relations.favorability(character_id).get(
+                                0, 0
+                            )
+                            trust = relations.trust(character_id)
                             hypnosis_val = hypnosis.degree(character_data.cid)
 
                             # 判定现在位置
@@ -998,7 +996,9 @@ class Manage_Basement_Panel:
                                 bar_draw.draw()
 
                                 # 渲染当前工作
-                                work_type_id = character_data.work.work_type
+                                work_type_id = chara_life.work_type(
+                                    character_id
+                                )
                                 work_name = game_config.config_work_type[
                                     work_type_id
                                 ].name
@@ -1494,7 +1494,7 @@ class Change_Npc_Work_Panel:
                 if not handle_premise.handle_normal_7(npc_id):
                     continue
                 npc_data = cache.character_data[npc_id]
-                work_type_id = npc_data.work.work_type
+                work_type_id = chara_life.work_type(npc_data.cid)
                 if work_type_id in self.work_type_npc_dict:
                     self.work_type_npc_dict[work_type_id].append(npc_id)
 
@@ -1627,7 +1627,8 @@ class Change_Npc_Work_Panel:
                 character_id
             ]
             info_text = _("{0}的当前工作为：").format(target_data.name)
-            work_data = game_config.config_work_type[target_data.work.work_type]
+            work_type_id = chara_life.work_type(character_id)
+            work_data = game_config.config_work_type[work_type_id]
             info_text += f"{work_data.name}({work_data.department})"
             info_text += _("\n可指派的工作有：\n")
             info_draw.text = info_text
@@ -1763,36 +1764,33 @@ class Change_Npc_Work_Panel:
 
     def select_new_work(self, work_id: int, character_id: int) -> None:
         """赋予新的工作id"""
-        target_data: game_type.Character = cache.character_data[character_id]
         # 如果原工作是性爱练习生的话，则重置性爱练习
-        if target_data.work.work_type == 193:
+        if chara_life.work_type(character_id) == 193:
             body_manage.clear(character_id, range(30, 40))
         from Script.System.Dormitory_System import common
 
         # 如果旧的工作是监狱长，则解除监狱长身份，并重置宿舍
         if handle_premise.handle_work_is_warden(character_id):
-            target_data.work.work_type = 0
+            chara_life.work_type.set(character_id, 0)
             common.restore_character_dormitory(character_id)
             work.set_warden(0)
         # 赋予新工作
-        target_data.work.work_type = work_id
+        chara_life.work_type.set(character_id, work_id)
         # 如果当前工作是监狱长
         if handle_premise.handle_work_is_warden(character_id):
             from Script.Design import map_handle
 
             # 如果有其他干员是监狱长，则解除其监狱长身份，并重置宿舍
             if work.warden() != 0 and work.warden() != character_id:
-                old_warden_data: game_type.Character = cache.character_data[
-                    work.warden()
-                ]
-                old_warden_data.work.work_type = 0
+                chara_life.work_type.set(work.warden(), 0)
                 common.restore_character_dormitory(work.warden())
             # 更新监狱长id
             work.set_warden(character_id)
             # 更新监狱长的宿舍
             common.register_permanent_dormitory(character_id)
-            target_data.dormitory = map_handle.get_map_system_path_str_for_list(
+            dorm = map_handle.get_map_system_path_str_for_list(
                 ["关押", "休息室"]
             )
+            chara_life.dormitory.set(character_id, dorm)
         # 更新罗德岛的工作人员及状态
         basement.update_work_people()

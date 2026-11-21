@@ -29,10 +29,10 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import abilities, action_info, dirty, entertainment
-from Script.Modules.domains import facility, flags, h_meters, h_state, hypnosis
-from Script.Modules.domains import needs, physical_exam, pregnancy, recruit
-from Script.Modules.domains import roster, status, warehouse
+from Script.Modules.domains import action_info, entertainment, physical_exam
+from Script.Modules.domains import abilities, chara_life, dirty, h_state, roster
+from Script.Modules.domains import flags, needs, pregnancy, relations, warehouse
+from Script.Modules.domains import facility, h_meters, hypnosis, recruit, status
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -120,7 +120,6 @@ def build_csv_config(
                 continue
             for k in now_type_data:
                 now_type = now_type_data[k]
-                # print(f"debug row = {row}")
                 if not len(row[k]):
                     del row[k]
                     continue
@@ -136,13 +135,11 @@ def build_csv_config(
                     row[k] = float(row[k])
                 if k == "cid":
                     # if "-" in file_id:
-                    #     print(f"debug file_id = {file_id}")
                     row[k] = file_id + row[k]
             # 设置版本号，默认为1
             row["version"] = 1
             # 如果口上的文件名中存在下划线标记的版本号，则将最后一个下划线之后的数字记录为版本号
             if int(row["adv_id"]) != 0 and file_id.count("_") == 3:
-                # print(f"debug file_id = {file_id}")
                 row["version"] = int(file_id.rsplit("_", 1)[-1])
             # 记录口上数据
             character_talk_data[type_text]["data"].append(row)
@@ -761,7 +758,6 @@ class TALK_QUICK_TEST:
 
     def nothing(self) -> None:
         """[002] 与 [003] 两个测试按钮的点击回调，不做任何事"""
-        pass
 
 
 class Debug_Panel:
@@ -936,8 +932,6 @@ class Debug_Panel:
                 npc_count = 0
 
                 for NPC_id in id_list:
-                    # if NPC_id not in cache.character_data:
-                    #     continue
                     target_data: game_type.Character = cache.character_data[
                         NPC_id
                     ]
@@ -1109,7 +1103,6 @@ class Debug_Panel:
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    # print(f"debug value_index = {value_index},new_value = {new_value}")
 
                     # 根据第几项更改对应值
                     if len(value_index) == 1:
@@ -1381,12 +1374,15 @@ class Debug_Panel:
                     for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
                         # 将字符串中的"01区"替换为"1区"
-                        character_data.dormitory = (
-                            character_data.dormitory.replace("01区", "1区")
+                        chara_life.dormitory.set(
+                            character_data.cid,
+                            chara_life.dormitory(character_data.cid).replace(
+                                "01区", "1区"
+                            ),
                         )
                         character_data.position = (
                             map_handle.get_map_system_path_for_str(
-                                character_data.dormitory
+                                chara_life.dormitory(character_data.cid)
                             )
                         )
                 # 重置文职部的招募数据
@@ -1434,13 +1430,6 @@ class Debug_Panel:
                         handle_npc_ai.get_chara_entertainment(chara_id)
 
             line_feed.draw()
-            # back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            # back_draw.draw()
-            # line_feed.draw()
-            # return_list.append(back_draw.return_text)
-            # yrn = flow_handle.askfor_all(return_list)
-            # if yrn == back_draw.return_text:
-            #     break
             break
 
     def change_target_value(self, key_index: int) -> None:
@@ -1509,9 +1498,11 @@ class Debug_Panel:
                     f"[016]:射精槽：{num.shown(h_meters.of(target_data.cid)['eja'])}"
                 )
                 draw_text_list.append(
-                    f"[017]:对玩家的好感度：{target_data.favorability[0]}"
+                    f"[017]:对玩家的好感度：{relations.favorability(target_data.cid)[0]}"
                 )
-                draw_text_list.append(f"[018]:信赖度：{target_data.trust}")
+                draw_text_list.append(
+                    f"[018]:信赖度：{relations.trust(target_data.cid)}"
+                )
                 draw_text_list.append(
                     f"[019]:乳汁量：{num.shown(needs.of(target_data.cid)['milk'])}"
                 )
@@ -1583,9 +1574,11 @@ class Debug_Panel:
                     elif value_index == 16:
                         h_meters.set(target_data.cid, eja=new_value)
                     elif value_index == 17:
-                        target_data.favorability[0] = new_value
+                        relations.favorability.set_item(
+                            target_data.cid, 0, new_value
+                        )
                     elif value_index == 18:
-                        target_data.trust = new_value
+                        relations.trust.set(target_data.cid, new_value)
                     elif value_index == 19:
                         needs.set(target_data.cid, milk=new_value)
                     elif value_index == 20:
@@ -2043,11 +2036,9 @@ class Debug_Panel:
             elif key_index == 14:
                 draw_text_list = []
                 info_text = "\n"
-                for cid in target_data.assistant_services:
+                for cid in relations.assistant_services(target_data.cid):
                     name = game_config.config_assistant_services[cid].name
-                    info_text += (
-                        f"{cid}:{name}={target_data.assistant_services[cid]} "
-                    )
+                    info_text += f"{cid}:{name}={relations.assistant_services(target_data.cid)[cid]} "
                 draw_text_list.append(f"[000]:服务列表：\n{info_text}")
 
                 # 进行显示
@@ -2075,7 +2066,9 @@ class Debug_Panel:
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
 
-                    target_data.assistant_services[value_index] = new_value
+                    relations.assistant_services.set_item(
+                        target_data.cid, value_index, new_value
+                    )
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False
@@ -2083,11 +2076,11 @@ class Debug_Panel:
 
             # 娱乐数据
             elif key_index == 17:
-                info_text = f"[000]:娱乐活动的类型：{target_data.entertainment.entertainment_type}\n"
-                info_text += f"[001]:借的书的id：{target_data.entertainment.borrow_book_id_set}\n"
+                info_text = f"[000]:娱乐活动的类型：{chara_life.entertainment_type(target_data.cid)}\n"
+                info_text += f"[001]:借的书的id：{chara_life.borrow_book_id_set(target_data.cid)}\n"
                 info_text += (
                     f"[002]:归还当前阅读书籍的可能性比例："
-                    f"{target_data.entertainment.book_return_possibility}"
+                    f"{chara_life.book_return_possibility(target_data.cid)}"
                     f"\n"
                 )
                 info_draw.text = info_text
@@ -2109,23 +2102,28 @@ class Debug_Panel:
                     else:
                         value_index = int(value_index)
                     if value_index[0] == 0:
-                        target_data.entertainment.entertainment_type = [
-                            value_index[1],
-                            value_index[2],
-                            value_index[3],
-                        ]
+                        chara_life.entertainment_type.set(
+                            target_data.cid,
+                            [
+                                value_index[1],
+                                value_index[2],
+                                value_index[3],
+                            ],
+                        )
                     elif value_index[0] == 1:
                         if value_index[1] == 1:
-                            target_data.entertainment.borrow_book_id_set.add(
-                                value_index[2]
-                            )
+                            with chara_life.borrow_book_id_set.editing(
+                                target_data.cid
+                            ) as borrow_book_id_set:
+                                borrow_book_id_set.add(value_index[2])
                         else:
-                            target_data.entertainment.borrow_book_id_set.remove(
-                                value_index[2]
-                            )
+                            with chara_life.borrow_book_id_set.editing(
+                                target_data.cid
+                            ) as borrow_book_id_set:
+                                borrow_book_id_set.remove(value_index[2])
                     elif value_index[0] == 2:
-                        target_data.entertainment.book_return_possibility = (
-                            value_index[1]
+                        chara_life.book_return_possibility.set(
+                            target_data.cid, value_index[1]
                         )
 
                     # 接着刷新一遍显示新内容
@@ -2214,7 +2212,7 @@ class Debug_Panel:
                             ),
                         )
                     elif value_index == 6:
-                        child_id = target_data.relationship.child_id_list[-1]
+                        child_id = relations.child_id_list(target_data.cid)[-1]
                         with pregnancy.editing(child_id) as child_preg:
                             child_preg.born_time = child_preg.born_time.replace(
                                 year=child_preg.born_time.year - 1
@@ -2276,12 +2274,12 @@ class Debug_Panel:
             # 社会关系数据
             elif key_index == 19:
                 info_text = (
-                    f"[000]:父亲id：{target_data.relationship.father_id}\n"
+                    f"[000]:父亲id：{relations.father_id(target_data.cid)}\n"
                 )
                 info_text += (
-                    f"[001]:母亲id：{target_data.relationship.mother_id}\n"
+                    f"[001]:母亲id：{relations.mother_id(target_data.cid)}\n"
                 )
-                info_text += f"[002]:孩子id列表：{target_data.relationship.child_id_list}\n"
+                info_text += f"[002]:孩子id列表：{relations.child_id_list(target_data.cid)}\n"
                 info_draw.text = info_text
                 info_draw.draw()
                 line_feed.draw()
@@ -2301,18 +2299,20 @@ class Debug_Panel:
                     else:
                         value_index = int(value_index)
                     if value_index[0] == 0:
-                        target_data.relationship.father_id = value_index[1]
+                        relations.father_id.set(target_data.cid, value_index[1])
                     elif value_index[0] == 1:
-                        target_data.relationship.mother_id = value_index[1]
+                        relations.mother_id.set(target_data.cid, value_index[1])
                     elif value_index[0] == 2:
                         if value_index[1] == 1:
-                            target_data.relationship.child_id_list.append(
-                                value_index[2]
-                            )
+                            with relations.child_id_list.editing(
+                                target_data.cid
+                            ) as child_id_list:
+                                child_id_list.append(value_index[2])
                         else:
-                            target_data.relationship.child_id_list.remove(
-                                value_index[2]
-                            )
+                            with relations.child_id_list.editing(
+                                target_data.cid
+                            ) as child_id_list:
+                                child_id_list.remove(value_index[2])
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False
@@ -2632,11 +2632,11 @@ class ChangeWorkButtonList:
 
             target_data: game_type.Character = cache.character_data[self.NPC_id]
             info_text = f"{target_data.name}的当前工作为："
-            if target_data.work.work_type == 61:
+            if chara_life.work_type(target_data.cid) == 61:
                 info_text += "坐诊(玩家属性)"
-            elif target_data.work.work_type == 71:
+            elif chara_life.work_type(target_data.cid) == 71:
                 info_text += "招募(NPC角色)"
-            elif target_data.work.work_type == 101:
+            elif chara_life.work_type(target_data.cid) == 101:
                 info_text += "图书馆管理员(图书馆)"
             else:
                 info_text += "无"
@@ -2679,5 +2679,5 @@ class ChangeWorkButtonList:
     def select_new_work(self, work_id: int) -> None:
         """赋予新的工作id"""
         target_data: game_type.Character = cache.character_data[self.NPC_id]
-        target_data.work.work_type = work_id
+        chara_life.work_type.set(target_data.cid, work_id)
         basement.update_work_people()

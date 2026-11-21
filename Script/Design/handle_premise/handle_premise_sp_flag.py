@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import flags, location, needs
+from Script.Modules.domains import flags, location, needs, chara_profile
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -2601,8 +2601,7 @@ def handle_find_self_is_favorite(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.chara_setting.get(2, 0) == 1
+    return chara_profile.chara_setting(character_id).get(2, 0) == 1
 
 
 @add_premise(constant_promise.Premise.TARGET_IS_FAVORITE)

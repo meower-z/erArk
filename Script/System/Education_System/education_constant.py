@@ -224,7 +224,7 @@ AUTO_SCHEDULE_WEEK_DAY_MAX = 5
 
 # ==== 5. 日程模板与时段 ====
 SLOT_COUNT = 3
-""" 日程时段数：0上午 / 1下午 / 2晚上，与 entertainment.entertainment_type 的三个槽位一一对应 """
+""" 日程时段数：0上午 / 1下午 / 2晚上，与角色键 life.entertainment_type 的三个槽位一一对应 """
 SLOT_NAME = {0: _("上午"), 1: _("下午"), 2: _("晚上")}
 """ 时段编号到显示名 """
 ENTERTAINMENT_SELF_STUDY = 155

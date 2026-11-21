@@ -12,7 +12,7 @@ from Script.Core import (
 from Script.Design import map_handle, handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import flags, roster, visitor
+from Script.Modules.domains import flags, roster, visitor, chara_profile
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -189,7 +189,7 @@ class All_Npc_Position_Panel:
                         # 收藏筛选
                         if (
                             self.select_type == 1
-                            and character_data.chara_setting[2] != 1
+                            and chara_profile.chara_setting(npc_id)[2] != 1
                         ):
                             continue
                         # 访客筛选

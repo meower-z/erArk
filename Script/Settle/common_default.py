@@ -15,7 +15,7 @@ import random
 from Script.Modules.domains import abilities, dirty, first_record, flags
 from Script.Modules.domains import h_meters, h_state, history, hypnosis, modes
 from Script.Modules.domains import needs, player_ability, player_collection
-from Script.Modules.domains import playthrough, status
+from Script.Modules.domains import playthrough, status, relations
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -880,12 +880,12 @@ def base_chara_favorability_and_trust_common_settle(
             # 结算最终值
             add_trust *= final_adjust
             if character_id == 0 and character_data.target_character_id != 0:
-                target_data.trust += add_trust
-                target_data.trust = min(300, target_data.trust)
+                trust = min(300, relations.trust(target_data.cid) + add_trust)
+                relations.trust.set(target_data.cid, trust)
                 target_change.trust += add_trust
             else:
-                character_data.trust += add_trust
-                character_data.trust = min(300, character_data.trust)
+                trust = min(300, relations.trust(character_id) + add_trust)
+                relations.trust.set(character_id, trust)
                 if change_data is not None:
                     change_data.trust += add_trust
 
@@ -986,8 +986,7 @@ def calculation_favorability(
         character_id, "air_hypnosis_position"
     ):
         fix = 0
-    favorability = int(fix * favorability)
-    return favorability
+    return int(fix * favorability)
 
 
 def calculation_trust(giver_id: int, receiver_id: int, add_time: int) -> float:

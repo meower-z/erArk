@@ -21,7 +21,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import abilities, action_info, first_record, flags
 from Script.Modules.domains import h_meters, h_state, needs, plan
-from Script.Modules.domains import player_ability, roster, status
+from Script.Modules.domains import player_ability, roster, status, relations
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -62,7 +62,7 @@ def update_sleep() -> None:
             sanity_point_grow()  # 玩家理智成长
             h_meters.set(0, eja=0)  # 清零射精槽
             action_info.set(character_data.cid, "day_first_shoot_semen", True)
-            assistant_id = character_data.assistant_character_id
+            assistant_id = relations.assistant_character_id(character_id)
             # 对玩家助理结算
             if assistant_id > 0:
                 # 如果助理的早安问候已开启，则清零助理早安问候

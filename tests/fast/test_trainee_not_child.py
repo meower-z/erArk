@@ -16,7 +16,8 @@ from Script.Modules.domains import needs
 from Script.Modules.gameplay_resolution import working
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
+from Script.Modules.domains import relations
 
 CHILD = 102
 """ 幼女素质 """
@@ -48,7 +49,7 @@ class TraineeNotChildTest(FastTestCase):
         super().setUp()
         self.pl = self.world.chara(0, "博士")
         self.daughter = self.world.chara(1, "女儿")
-        self.daughter.relationship.father_id = 0
+        kernel_data.put(relations.father_id.set, self.daughter.cid, 0)
         self.enterContext(working.based_on(core.state()))
         needs.set(1, hunger=HUNGRY_POINT)
         self.pl.target_character_id = 1

@@ -13,6 +13,7 @@ from _bootstrap import sex_class_handle, sync
 from Script.Design import handle_npc_ai, instuct_judege
 from Script.Settle import common_default
 from Script.Modules.domains import flags, modes, player_ability, status
+from Script.Modules.domains import chara_life, relations
 from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
@@ -193,12 +194,12 @@ check(
     "选修名单：这一节选了这间教室的人",
     sex_class_handle.get_selected_student_list(ROOM_P, weekday, 2) == [201],
 )
-student_a.work.work_type = 21
+chara_life.work_type.set(student_a.cid, 21)
 check(
     "选修名单只收学生岗：改了岗的女儿课表里还留着这一格，也不算「会来」（Plan 28 §3.4）",
     sex_class_handle.get_selected_student_list(ROOM_P, weekday, 2) == [],
 )
-student_a.work.work_type = 152
+chara_life.work_type.set(student_a.cid, 152)
 check("在实践教室 → 可开课场所", sex_class_handle.judge_in_sex_class_place(0))
 move_to(0, SCENE_DORM)
 check("在宿舍 → 不是", not sex_class_handle.judge_in_sex_class_place(0))
@@ -545,7 +546,7 @@ sex_class_handle.end_sex_class()
 move_to(0, classroom_path(ROOM_P))
 
 section("Plan 26 §3.10：课堂 H 只收学生岗")
-student_b.work.work_type = 51
+chara_life.work_type.set(student_b.cid, 51)
 check(
     "改了岗的女儿：点名必修也不能参加",
     not sex_class_handle.judge_can_join_sex_class(202, check_course=False),
@@ -554,7 +555,7 @@ check(
     "改了岗的女儿不进场景学生名单",
     202 not in sex_class_handle.get_scene_student_list(),
 )
-student_b.work.work_type = 152
+chara_life.work_type.set(student_b.cid, 152)
 check("改回学生岗恢复", sex_class_handle.judge_can_join_sex_class(202))
 
 section("Plan 26 L8：开课前半小时的提醒写实")
@@ -653,9 +654,9 @@ kernel_data.put(player_ability.set, pl.cid, today_sanity_point_cost=0)
 ca.talent(pl)[332] = 0
 check(
     "M1 前置：成年非女儿的学生岗、排过性技教室课、好感为 0；玩家没有中级催眠时实行值不足，进不了课堂",
-    hypno.relationship.father_id != 0
+    relations.father_id(hypno.cid) != 0
     and sex_class_handle.judge_has_sex_skill_course(305)
-    and hypno.favorability.get(0, 0) == 0
+    and relations.favorability(hypno.cid).get(0, 0) == 0
     and not sex_class_handle.judge_can_join_sex_class(305),
 )
 # 中级催眠：对深层催眠的目标，实行值不足的部分由理智折算补上
@@ -1200,9 +1201,7 @@ section(
 move_to(0, classroom_path(ROOM_P))
 move_to(204, classroom_path(ROOM_P))
 kernel_data.put(flags.set, newbie.cid, is_h=False)
-_l8_class = sex_class_handle.set_temp_class(
-    today, 7, ROOM_P, 72, must_attend=[204]
-)
+sex_class_handle.set_temp_class(today, 7, ROOM_P, 72, must_attend=[204])
 set_time(period_time(7) + datetime.timedelta(minutes=5))
 check(
     "L8 前置：第一次开课前，按教室取的必修名单与场景学生名单都含这名没修过性技课的必修生",

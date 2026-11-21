@@ -25,6 +25,7 @@ from Script.Test.Static_Check.check_registry import get_all_checks
 from Script.UI.Panel import manage_assembly_line_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import chara_life
 
 HERB_GARDEN = 41
 """ 药田的设施id """
@@ -50,9 +51,9 @@ class ProductionStateTest(FastTestCase):
         """
         for cid in cids:
             self.world.chara(cid, f"干员{cid}")
-            self.cache.character_data[cid].work.work_type = production.KINDS[
-                kind
-            ]
+            kernel_data.put(
+                chara_life.work_type.set, cid, production.KINDS[kind]
+            )
         production.set_workers(kind, cids)
 
     def flagged(self, check_id: str) -> bool:
@@ -109,7 +110,7 @@ class ProductionStateTest(FastTestCase):
         self.workers("green_house", 2)
         production.appoint("assembly", 0, 3)
         production.appoint("green_house", 0, 2)
-        self.cache.character_data[3].work.work_type = 0
+        kernel_data.put(chara_life.work_type.set, 3, 0)
         roster.set_active({1, 2, 3})
         basement.update_work_people()
         self.assertEqual(production.workers("assembly"), [1])

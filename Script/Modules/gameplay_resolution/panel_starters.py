@@ -34,7 +34,7 @@ from Script.UI.Panel import (
     confinement_and_training,
 )
 from Script.Modules.domains import kitchen, needs, warehouse
-from Script.Modules.domains import inventory, wardrobe
+from Script.Modules.domains import inventory, wardrobe, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -264,7 +264,7 @@ def start_sleep(who: int, chosen: intent.Intent) -> None:
         game_time.get_sub_date(minute=chosen["minutes"], old_date=now),
     )
     player_ability.set(who, visual=False)
-    _assistant_goes_to_sleep(character_data.assistant_character_id)
+    _assistant_goes_to_sleep(relations.assistant_character_id(who))
 
 
 def _assistant_goes_to_sleep(assistant_id: int) -> None:

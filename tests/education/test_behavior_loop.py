@@ -15,7 +15,7 @@ from Script.Kernel import core
 from Script.Settle import past_day_settle, realtime_settle
 from Script.UI.Panel import character_info_head
 from tests import kernel_data, world
-from Script.Modules.domains import action_info, flags
+from Script.Modules.domains import action_info, flags, chara_life, relations
 
 E = education_constant
 
@@ -61,7 +61,7 @@ all_daughter_list = growth_handle.get_student_candidate_list()
 daughter_list = [
     cid
     for cid in all_daughter_list
-    if cache.character_data[cid].work.work_type == E.STUDENT_WORK_TYPE
+    if chara_life.work_type(cid) == E.STUDENT_WORK_TYPE
 ]
 if not daughter_list:
     mother_id = next(
@@ -85,7 +85,7 @@ if not daughter_list:
     daughter_list = [
         cid
         for cid in all_daughter_list
-        if cache.character_data[cid].work.work_type == E.STUDENT_WORK_TYPE
+        if chara_life.work_type(cid) == E.STUDENT_WORK_TYPE
     ]
 check(
     "有在学的学生岗女儿",
@@ -129,10 +129,10 @@ if len(teacher_list) < 2:
             or cd.dead
             or handle_premise.handle_self_is_player_daughter(cid)
             or not handle_premise.handle_normal_2(cid)
-            or cd.work.work_type in (E.TEACHER_WORK_TYPE,)
+            or chara_life.work_type(cd.cid) in (E.TEACHER_WORK_TYPE,)
         ):
             continue
-        cd.work.work_type = E.TEACHER_WORK_TYPE
+        chara_life.work_type.set(cd.cid, E.TEACHER_WORK_TYPE)
         if len(schedule_handle.get_teacher_candidate_list()) >= 3:
             break
 teacher_list = schedule_handle.get_teacher_candidate_list()
@@ -371,11 +371,10 @@ L4_RT_LOG: list[tuple[str, datetime.datetime, int, int]] = []
 """ 挑出的那名女儿的实时结算记录：(行为id, 行为开始时刻, 行为时长, 这次结算的分钟数) """
 _orig_true_add = realtime_settle.get_true_add_time
 
-
 l4_id = -1
 """ 挑出的学生岗女儿：不是助理、清掉需求后 normal_all 成立（截短规则要求上课行的门槛成立） """
 for cid in daughter_list:
-    if cid == cache.character_data[0].assistant_character_id:
+    if cid == relations.assistant_character_id(0):
         continue
     kernel_data.put(flags.set, cid, is_follow=0)
     clear_need(cid)
@@ -495,7 +494,7 @@ l4_week_day = game_time.now().weekday()
 l4_home: list[str] = []
 """ 她过家家的地点：她宿舍的场景路径，宿舍不在场景表里时用教育区入口 """
 if l4_id != -1 and l4_room:
-    l4_dorm = cache.character_data[l4_id].dormitory
+    l4_dorm = chara_life.dormitory(l4_id)
     l4_home = (
         map_handle.get_map_system_path_for_str(l4_dorm)
         if l4_dorm in cache.scene_data

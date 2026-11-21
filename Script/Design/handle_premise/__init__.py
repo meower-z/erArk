@@ -30,7 +30,8 @@ from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import abilities, action_info, dirty, flags, growth
 from Script.Modules.domains import h_state, history, hypnosis, needs
-from Script.Modules.domains import physical_exam, roster, status
+from Script.Modules.domains import physical_exam, roster, status, chara_profile
+from Script.Modules.domains import relations
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -518,15 +519,13 @@ def handle_comprehensive_value_premise(
         final_value = status.of(final_character_id).get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "F":
         if "Flag" in premise_all_value_list[1]:
-            final_value = (
-                final_character_data.author_flag.chara_int_flag_dict.get(
-                    type_son_id, 0
-                )
-            )
+            final_value = chara_profile.author_flag(
+                final_character_data.cid
+            ).get(type_son_id, 0)
         else:
-            final_value = final_character_data.favorability[0]
+            final_value = relations.favorability(final_character_data.cid)[0]
     elif premise_all_value_list[1][0] == "X":
-        final_value = final_character_data.trust
+        final_value = relations.trust(final_character_data.cid)
     elif premise_all_value_list[1][0] == "D":
         if "Dirty" in premise_all_value_list[1]:
             b2_value = premise_all_value_list[1].split("Dirty|")[1]
@@ -609,19 +608,16 @@ def handle_comprehensive_value_premise(
                 ]
             relation_type = premise_all_value_list[2]
             if relation_type == "父亲":
-                return (
-                    final_character_id
-                    == target_character_data.relationship.father_id
+                return final_character_id == relations.father_id(
+                    target_character_data.cid
                 )
             elif relation_type == "母亲":
-                return (
-                    final_character_id
-                    == target_character_data.relationship.mother_id
+                return final_character_id == relations.mother_id(
+                    target_character_data.cid
                 )
             elif relation_type == "女儿":
-                return (
-                    final_character_id
-                    in target_character_data.relationship.child_id_list
+                return final_character_id in relations.child_id_list(
+                    target_character_data.cid
                 )
 
     elif premise_all_value_list[1][0] == "P":

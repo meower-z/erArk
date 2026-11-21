@@ -19,7 +19,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 from Script.UI.Moudle import view
 import inspect
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import flags, library
+from Script.Modules.domains import flags, library, chara_life, relations
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -422,14 +422,14 @@ check(
     any("停滞" in t and "不会推进" in t for t in drawn_text),
 )
 ca.talent(201)[E.GROWTH_STOP_TALENT_ID] = 0
-cache.character_data[201].relationship.mother_id = -1
+relations.mother_id.set(201, -1)
 drawn_text.clear()
 gp.draw_page([])
 check(
     "没有母亲时显示未知",
     any(_("未知") in t and "母亲" in t for t in drawn_text),
 )
-cache.character_data[201].relationship.mother_id = 102
+relations.mother_id.set(201, 102)
 g = child_growth(201)
 for index in range(3):
     semester_handle.push_report_card(
@@ -989,7 +989,7 @@ _l6_day = game_time.now().weekday()
 schedule_handle.set_class_cell(ROOM1, _l6_day, 0, 45, 103)
 schedule_handle.set_class_cell(ROOM1, _l6_day, 1, 45, 104)
 schedule_handle.set_class_cell(ROOM1, _l6_day, 2, 45, 105)
-teacher_b.work.work_type = 21  # 教师乙改了岗
+chara_life.work_type.set(teacher_b.cid, 21)  # 教师乙改了岗
 roster.discard(104)  # 教师丙不在岛上（外勤等离线时移出 npc_id_got）
 _button_log: list[tuple[str, str, str]] = []
 _orig_center_draw = draw.CenterButton.draw
@@ -1119,7 +1119,7 @@ check(
 teacher_b.name = _l6_saved_name
 setattr(draw.CenterButton, "draw", _orig_center_draw)
 setattr(draw.LeftButton, "draw", _orig_left_draw)
-teacher_b.work.work_type = 151
+chara_life.work_type.set(teacher_b.cid, 151)
 roster.add(104)
 clear_schedules()
 
@@ -1179,12 +1179,12 @@ check(
     not _l21_too_wide,
     _l21_too_wide,
 )
-teacher_b.work.work_type = 21
+chara_life.work_type.set(teacher_b.cid, 21)
 check(
     "L21 同时改了岗：标「已离岗」（改了岗的人放出来也不会再授课，排在监禁之前）",
     class_schedule_panel.get_teacher_absent_mark(103) == _("（已离岗）"),
 )
-teacher_b.work.work_type = 151
+chara_life.work_type.set(teacher_b.cid, 151)
 roster.discard(103)
 check(
     "L21 被监禁、又不在 npc_id_got：标「被监禁」（排在「不在岛上」之前）",

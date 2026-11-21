@@ -14,7 +14,7 @@ from Script.Modules.gameplay_resolution import edits
 from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import ejaculation_panel
-from Script.Modules.domains import roster, wardrobe
+from Script.Modules.domains import roster, wardrobe, chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -74,7 +74,9 @@ class Check_locker_Panel:
                 for npc_id in roster.active():
                     if npc_id:
                         character_data = cache.character_data[npc_id]
-                        if map_path_str == character_data.dormitory:
+                        if map_path_str == chara_life.dormitory(
+                            character_data.cid
+                        ):
                             for (
                                 clothing_type
                             ) in game_config.config_clothing_type:
@@ -494,7 +496,6 @@ class FindDraw:
                 cloth_list = self.now_locker[clothing_type]
                 if len(cloth_list):
                     cloth_type_list.append([clothing_type, self.npc_id])
-            # print(f"debug cloth_type_list = {cloth_type_list}")
 
             # 绘制面板本体
             shoot_in_cloth_panel.text_list = cloth_type_list
@@ -570,7 +571,6 @@ class Ejaculation_NameDraw:
                 f" {game_config.config_clothing_tem[cloth_id].name}"
             )
         now_text += cloth_name_text
-        # print(f"debug text = {text}, self.text = {self.text}")
 
         # 绘制按钮
         if is_button:

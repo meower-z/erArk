@@ -12,8 +12,8 @@ from Script.UI.Moudle import view
 from Script.Modules.domains import abilities, action_info, facility, flags
 from Script.Modules.domains import growth, history, modes, needs, physical_exam
 from Script.Modules.domains import player_ability, player_collection, pregnancy
-from Script.Modules.domains import status
-from Script.Modules.domains import visitor
+from Script.Modules.domains import status, visitor, chara_life, chara_profile
+from Script.Modules.domains import relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1182,8 +1182,7 @@ def handle_self_is_player_daughter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.relationship.father_id == 0
+    return relations.father_id(character_id) == 0
 
 
 @add_premise(constant_promise.Premise.SELF_NOT_PLAYER_DAUGHTER)
@@ -1696,12 +1695,11 @@ def handle_entertainment_is_tend_eggs(character_id: int) -> int:
     from Script.Design import game_time
     from Script.System.Pregnancy_System import pregnancy_constant
 
-    character_data = cache.character_data[character_id]
     now_time_slot = game_time.judge_entertainment_time(character_id)
     if now_time_slot == 0:
         return 0
     return (
-        character_data.entertainment.entertainment_type[now_time_slot - 1]
+        chara_life.entertainment_type(character_id)[now_time_slot - 1]
         == pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID
     )
 
@@ -1909,11 +1907,11 @@ def handle_favorability_le_2(character_id: int) -> int:
     level = 3
     if character_id == 0:
         level, __ = attr_calculation.get_favorability_level(
-            target_data.favorability[0]
+            relations.favorability(target_data.cid)[0]
         )
     elif character_data.target_character_id == 0:
         level, __ = attr_calculation.get_favorability_level(
-            character_data.favorability[0]
+            relations.favorability(character_id)[0]
         )
     if level <= 2:
         return 1
@@ -1936,11 +1934,11 @@ def handle_favorability_ge_3(character_id: int) -> int:
     level = 0
     if character_id == 0:
         level, __ = attr_calculation.get_favorability_level(
-            target_data.favorability[0]
+            relations.favorability(target_data.cid)[0]
         )
     elif character_data.target_character_id == 0:
         level, __ = attr_calculation.get_favorability_level(
-            character_data.favorability[0]
+            relations.favorability(character_id)[0]
         )
     if level >= 3:
         return 1
@@ -1960,7 +1958,7 @@ def handle_target_trust_ge_200(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
 
-    return target_data.trust >= 200
+    return relations.trust(target_data.cid) >= 200
 
 
 @add_premise(constant_promise.Premise.HAVE_COLLECTION)
@@ -2512,8 +2510,7 @@ def handle_self_have_nick_name_to_pl(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return len(character_data.nick_name_to_pl)
+    return len(chara_profile.nick_name_to_pl(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_NOT_HAVE_NICK_NAME_TO_PL)
@@ -2537,8 +2534,7 @@ def handle_self_have_nick_name_to_self(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return len(character_data.nick_name)
+    return len(chara_profile.nick_name(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_NOT_HAVE_NICK_NAME_TO_SELF)

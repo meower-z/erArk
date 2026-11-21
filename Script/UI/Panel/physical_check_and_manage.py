@@ -13,7 +13,7 @@ from Script.Design import handle_premise, attr_calculation, game_time, attr_text
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import physical_exam
+from Script.Modules.domains import physical_exam, chara_life, relations
 import random
 
 from Script.UI.Panel import achievement_panel
@@ -863,7 +863,7 @@ class Physical_Check_And_Manage_Panel:
                     target_character_id
                 ):
                     # 工作结算
-                    target_character_data.work.work_type = 193
+                    chara_life.work_type.set(target_character_id, 193)
                     basement.update_work_people()
                     info_text += _(
                         "因为被要求进行性爱的相关练习，所以{0}的工作被调整为特殊职业-{1}了\n"
@@ -891,7 +891,7 @@ class Physical_Check_And_Manage_Panel:
                 ) and handle_premise.handle_work_is_sex_trainee(
                     target_character_id
                 ):
-                    target_character_data.work.work_type = 0
+                    chara_life.work_type.set(target_character_id, 0)
                     basement.update_work_people()
                     info_text += _(
                         "因为没有进行性爱的相关练习，所以{0}的特殊职业-{1}被取消了\n"
@@ -1148,7 +1148,7 @@ class Physical_Check_And_Manage_Panel:
         report_text += (
             _(" 【出身地】")
             + game_config.config_birthplace[
-                target_character_data.relationship.birthplace
+                relations.birthplace(target_character_id)
             ].name
             + "\n"
         )
@@ -1203,7 +1203,7 @@ class Physical_Check_And_Manage_Panel:
                 pregnancy.of(target_character_data.cid).fertilization_rate
             )
         # 已生育
-        child_id_list = target_character_data.relationship.child_id_list
+        child_id_list = relations.child_id_list(target_character_id)
         if len(child_id_list) > 0:
             report_text += _(" 已经生育了{0}个孩子，分别是：{1}").format(
                 len(child_id_list),

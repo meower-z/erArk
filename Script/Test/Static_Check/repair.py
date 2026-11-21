@@ -23,6 +23,7 @@ from Script.Modules.domains import flags, modes, needs, power, wardrobe, work
 from . import check_log
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import chara_life
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -366,10 +367,7 @@ def repair_main_power_operator_slots(cache: game_type.Cache) -> list[dict]:
     for i, m in enumerate(slots):
         if not m:
             continue
-        if m in seen or not (
-            m in cd
-            and getattr(getattr(cd[m], "work", None), "work_type", None) == 11
-        ):
+        if m in seen or not (m in cd and chara_life.work_type(m) == 11):
             slots[i] = 0
         else:
             seen.add(m)
@@ -387,23 +385,6 @@ def repair_main_power_operator_slots(cache: game_type.Cache) -> list[dict]:
     ]
 
 
-def _permanent_dormitory_attr(chara: object) -> str:
-    """
-    参数:
-        chara: 角色对象
-    返回值:
-        str: 角色对象上实际存在的"登记宿舍"属性名——优先新名permanent_dormitory，不存在时退回旧名pre_dormitory
-    功能:
-        写回前探测实际存在的属性名再setattr，兼容历史对象上可能残留的旧属性名pre_dormitory，
-        避免凭空新增一个游戏从不读取的属性
-    """
-    return (
-        "permanent_dormitory"
-        if hasattr(chara, "permanent_dormitory")
-        else "pre_dormitory"
-    )
-
-
 @register_repair("PLACE-28", "登记宿舍与当前宿舍相同时清空")
 def repair_permanent_dormitory_equal_to_dormitory(
     cache: game_type.Cache,
@@ -414,20 +395,23 @@ def repair_permanent_dormitory_equal_to_dormitory(
     返回值:
         List[dict]: 修复记录列表
     功能:
-        与PLACE-28同语义：角色「登记宿舍」（双名兼容属性permanent_dormitory/pre_dormitory）非空且等于
-        当前dormitory时，说明离开特殊房间（客房/监牢/博士房间/舍管房/关押区休息室）时的恢复点未清空
-        该字段，按语义清空为""。只处理这一种失败模式；「非空且是特殊房间」（PLACE-29）不在本修复范围——
-        该情形信息不足以推断角色离开特殊房间前真正住的普通宿舍，只报不修
+        与PLACE-28同语义：角色的「登记宿舍」（角色键 life.permanent_dormitory）非空且等于当前宿舍时，清空为""。
+        这说明角色离开特殊房间时登记宿舍没有清空。
+        只修这一种失败模式。登记宿舍不是开放的普通宿舍（PLACE-29）时本函数不修，因为推不出角色原来住的普通宿舍
     """
     records = []
     for cid, chara in cache.character_data.items():
-        attr = _permanent_dormitory_attr(chara)
-        v = getattr(chara, attr, "")
-        dormitory = getattr(chara, "dormitory", "")
-        if v != "" and v == dormitory:
-            setattr(chara, attr, "")
+        v = chara_life.permanent_dormitory(cid)
+        if v != "" and v == chara_life.dormitory(cid):
+            chara_life.permanent_dormitory.set(cid, "")
             records.append(
-                _record("PLACE-28", _chara_label(cid, chara), attr, v, "")
+                _record(
+                    "PLACE-28",
+                    _chara_label(cid, chara),
+                    "permanent_dormitory",
+                    v,
+                    "",
+                )
             )
     return records
 
@@ -446,16 +430,10 @@ def repair_warden_reference(cache: game_type.Cache) -> list[dict]:
     cd = cache.character_data
     warden_id = work.warden()
     if warden_id == 0 or (
-        warden_id in cd
-        and getattr(getattr(cd[warden_id], "work", None), "work_type", None)
-        == 191
+        warden_id in cd and chara_life.work_type(warden_id) == 191
     ):
         return []
-    actual_wardens = [
-        cid
-        for cid, ch in cd.items()
-        if getattr(getattr(ch, "work", None), "work_type", None) == 191
-    ]
+    actual_wardens = [cid for cid in cd if chara_life.work_type(cid) == 191]
     new_id = actual_wardens[0] if len(actual_wardens) == 1 else 0
     work.set_warden(new_id)
     return [
@@ -523,9 +501,7 @@ def repair_overcrowded_dormitory_room(cache: game_type.Cache) -> list[dict]:
         chara = cache.character_data.get(cid)
         if chara is None:
             continue
-        room_residents.setdefault(getattr(chara, "dormitory", ""), []).append(
-            cid
-        )
+        room_residents.setdefault(chara_life.dormitory(cid), []).append(cid)
     records = []
     for room_path in sorted(room_residents):
         cids = room_residents[room_path]
@@ -549,8 +525,8 @@ def repair_overcrowded_dormitory_room(cache: game_type.Cache) -> list[dict]:
             if new_room == room_path:
                 continue
             chara = cache.character_data[cid]
-            old_room = chara.dormitory
-            chara.dormitory = new_room
+            old_room = chara_life.dormitory(chara.cid)
+            chara_life.dormitory.set(chara.cid, new_room)
             records.append(
                 _record(
                     "ISLAND-20",

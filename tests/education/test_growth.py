@@ -12,7 +12,7 @@ from Script.Design import handle_ability
 import inspect
 from Script.System.Official_Event_System import official_event_handle
 from tests import chara_abilities as ca, kernel_data, world
-from Script.Modules.domains import first_record, library, status
+from Script.Modules.domains import first_record, library, status, chara_life
 
 open_all_classroom()
 clear_schedules()
@@ -374,13 +374,13 @@ check(
     not roster.has(203)
     and 203 not in growth_handle.get_course_candidate_list(),
 )
-student.work.work_type = 0
+chara_life.work_type.set(student.cid, 0)
 check(
     "女儿换岗后不在个人课表名单（只认学生岗）",
     201 not in growth_handle.get_course_candidate_list(),
 )
 # 换回学生岗：待炫耀只记学生岗（Plan 32 L20），下一段拿她验炫耀
-student.work.work_type = education_constant.STUDENT_WORK_TYPE
+chara_life.work_type.set(student.cid, education_constant.STUDENT_WORK_TYPE)
 
 section("待炫耀只记课程科目、只记幼女/萝莉期的女儿（第五轮）")
 
@@ -601,7 +601,7 @@ check(
     and growth.of(no_growth.cid) is None,
 )
 g.last_absent_period = []
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 clear_schedules()
 schedule_handle.set_selected_course(201, 2, 3, E6.COURSE_TYPE_THEORY, ROOM1)
 check(
@@ -615,12 +615,12 @@ check(
     "格子在、没排教师（降级自习）仍是一节课：算",
     growth_handle.judge_selected_cell_real(201, 2, 3),
 )
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 check(
     "改了岗：课表残留也不算",
     not growth_handle.judge_selected_cell_real(201, 2, 3),
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 check(
     "没选课的格子、角色不存在：不算",
     not growth_handle.judge_selected_cell_real(201, 2, 4)
@@ -694,12 +694,12 @@ check(
     growth_handle.judge_have_course_type(201, E6.COURSE_TYPE_THEORY)
     and not growth_handle.judge_have_course_type(201, E6.COURSE_TYPE_PE),
 )
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 check(
     "L11 改了岗：课表残留不算",
     not growth_handle.judge_have_course_type(201, E6.COURSE_TYPE_THEORY),
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 schedule_handle.set_selected_course(201, 3, 1, E6.COURSE_TYPE_PE, _lockable_pe)
 check(
     "L11 体育课场地开放：有体育课",

@@ -15,7 +15,7 @@ from Script.Modules.save_load import reset
 
 import random
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, relations
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -198,7 +198,7 @@ def update_recruit() -> None:
                     character_data = cache.character_data[chara_id]
                     # 筛选出出生地是当前罗德岛所在地的角色
                     if (
-                        character_data.relationship.birthplace
+                        relations.birthplace(character_data.cid)
                         != location.country()
                     ):
                         continue
@@ -210,9 +210,8 @@ def update_recruit() -> None:
                 elif recruitment_strategy == 2:
                     character_data = cache.character_data[chara_id]
                     # 筛选出势力相同的角色
-                    if (
-                        character_data.relationship.nation
-                        != line_main_chara_data.relationship.nation
+                    if relations.nation(character_data.cid) != relations.nation(
+                        line_main_chara_id
                     ):
                         continue
                     wait_id_list.append(chara_id)
@@ -220,10 +219,9 @@ def update_recruit() -> None:
                 elif recruitment_strategy == 3:
                     character_data = cache.character_data[chara_id]
                     # 筛选出出身地相同的角色
-                    if (
-                        character_data.relationship.birthplace
-                        != line_main_chara_data.relationship.birthplace
-                    ):
+                    if relations.birthplace(
+                        character_data.cid
+                    ) != relations.birthplace(line_main_chara_id):
                         continue
                     wait_id_list.append(chara_id)
                 # 同职业干员
@@ -498,29 +496,21 @@ class Recruit_Panel:
                     talent = abilities.talent(chara_id)
                     if recruitment_strategy_id == 0:
                         if (
-                            chara_data.relationship.birthplace
+                            relations.birthplace(chara_data.cid)
                             == location.country()
                         ):
                             line_wait_id_list.append(chara_id)
                     elif recruitment_strategy_id == 1:
                         line_wait_id_list.append(chara_id)
                     elif recruitment_strategy_id == 2:
-                        if (
-                            line_main_chara_id
-                            and chara_data.relationship.nation
-                            == cache.character_data[
-                                line_main_chara_id
-                            ].relationship.nation
-                        ):
+                        if line_main_chara_id and relations.nation(
+                            chara_data.cid
+                        ) == relations.nation(line_main_chara_id):
                             line_wait_id_list.append(chara_id)
                     elif recruitment_strategy_id == 3:
-                        if (
-                            line_main_chara_id
-                            and chara_data.relationship.birthplace
-                            == cache.character_data[
-                                line_main_chara_id
-                            ].relationship.birthplace
-                        ):
+                        if line_main_chara_id and relations.birthplace(
+                            chara_data.cid
+                        ) == relations.birthplace(line_main_chara_id):
                             line_wait_id_list.append(chara_id)
                     elif recruitment_strategy_id == 4:
                         if (
@@ -717,12 +707,10 @@ class Recruit_Panel:
                     ]
                     add_text = ""
                     if cid == 2:
-                        nation_id = line_main_chara_data.relationship.nation
+                        nation_id = relations.nation(line_main_chara_id)
                         add_text = game_config.config_nation[nation_id].name
                     elif cid == 3:
-                        birthplace_id = (
-                            line_main_chara_data.relationship.birthplace
-                        )
+                        birthplace_id = relations.birthplace(line_main_chara_id)
                         add_text = game_config.config_birthplace[
                             birthplace_id
                         ].name
@@ -837,10 +825,10 @@ class Recruit_Panel:
                 return cfg[key].name if key in cfg else "-"
 
             nation = safe_get(
-                game_config.config_nation, chara.relationship.nation
+                game_config.config_nation, relations.nation(chara_id)
             )
             birth = safe_get(
-                game_config.config_birthplace, chara.relationship.birthplace
+                game_config.config_birthplace, relations.birthplace(chara_id)
             )
             prof = safe_get(game_config.config_profession, chara.profession)
             race = safe_get(game_config.config_race, chara.race)
