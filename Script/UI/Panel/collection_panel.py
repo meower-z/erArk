@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import player_collection, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -30,8 +30,6 @@ def collapse_collection() -> None:
     """
     from Script.UI.Panel import achievement_panel
 
-    character_data: game_type.Character = cache.character_data[0]
-
     now_draw: draw.NormalDraw = draw.WaitDraw()
     now_draw.width = window_width
     now_draw.text = _("\n开始摆放藏品\n")
@@ -41,58 +39,42 @@ def collapse_collection() -> None:
     now_draw_text = ""
 
     # 内裤
-    if len(character_data.pl_collection.npc_panties_tem):
-        for npc_id in character_data.pl_collection.npc_panties_tem:
+    panties_tem = player_collection.get("npc_panties_tem")
+    if panties_tem:
+        npc_panties = player_collection.get("npc_panties")
+        for npc_id, pan_ids in panties_tem.items():
             if npc_id == 0:
                 continue
-            for pan_id in character_data.pl_collection.npc_panties_tem[npc_id]:
+            for pan_id in pan_ids:
                 # 如果该内裤不存在，则跳过
                 if pan_id not in game_config.config_clothing_tem:
                     continue
                 pan_name = game_config.config_clothing_tem[pan_id].name
-                """
-                # 如果已经重复持有，则进行提示
-                # if pan_name in character_data.pl_collection.npc_panties[npc_id]:
-                #     now_draw.text = _("\n已持有藏品：{0}的{1}").format(cache.character_data[npc_id].name, pan_name)
-                # else:
-                """
-                # 改为可以重复持有
-                character_data.pl_collection.npc_panties[npc_id].append(
-                    pan_name
-                )
+                npc_panties.setdefault(npc_id, []).append(pan_name)
                 now_draw_text += _("增加了藏品：{0}的{1}\n").format(
                     cache.character_data[npc_id].name, pan_name
                 )
                 now_draw.draw()
-        # 最后清空
-        character_data.pl_collection.npc_panties_tem.clear()
+        player_collection.update(npc_panties=npc_panties, npc_panties_tem={})
 
     # 袜子
-    if len(character_data.pl_collection.npc_socks_tem):
-        for npc_id in character_data.pl_collection.npc_socks_tem:
+    socks_tem = player_collection.get("npc_socks_tem")
+    if socks_tem:
+        npc_socks = player_collection.get("npc_socks")
+        for npc_id, sock_ids in socks_tem.items():
             if npc_id == 0:
                 continue
-            for socks_id in character_data.pl_collection.npc_socks_tem[npc_id]:
+            for socks_id in sock_ids:
                 # 如果该袜子不存在，则跳过
                 if socks_id not in game_config.config_clothing_tem:
                     continue
                 socks_name = game_config.config_clothing_tem[socks_id].name
-                """
-                # 如果已经重复持有，则进行提示
-                if socks_name in character_data.pl_collection.npc_socks[npc_id]:
-                    now_draw.text = _("\n已持有藏品：{0}的{1}").format(cache.character_data[npc_id].name, socks_name)
-                else:
-                """
-                # 改为可以重复持有
-                character_data.pl_collection.npc_socks[npc_id].append(
-                    socks_name
-                )
+                npc_socks.setdefault(npc_id, []).append(socks_name)
                 now_draw_text += _("增加了藏品：{0}的{1}\n").format(
                     cache.character_data[npc_id].name, socks_name
                 )
                 now_draw.draw()
-        # 装完了之后清空
-        character_data.pl_collection.npc_socks_tem.clear()
+        player_collection.update(npc_socks=npc_socks, npc_socks_tem={})
 
     now_draw.text = now_draw_text
     now_draw.draw()
@@ -109,19 +91,19 @@ def refresh_all_bonus() -> None:
     """
     刷新所有未获得的解锁奖励
     """
-    pl_character = cache.character_data[0]
-
+    eqip = player_collection.get("eqip_token")
+    limit = eqip[0]
     # 遍历全部收集奖励
     for bonus_id in game_config.config_collection_bonus_data:
         # 目前仅刷新前10个奖励
         if bonus_id >= 10:
             break
         bonus_data = game_config.config_collection_bonus_data[bonus_id]
-        if pl_character.pl_collection.collection_bonus[bonus_id]:
+        if player_collection.bonus(bonus_id):
             # 刷新信物的上限解锁奖励
-            pl_character.pl_collection.eqip_token[0] = max(
-                pl_character.pl_collection.eqip_token[0], bonus_data.effect_2
-            )
+            limit = max(limit, bonus_data.effect_2)
+    if limit != eqip[0]:
+        player_collection.set_eqip_token(limit, eqip[1])
 
 
 class Collection_Panel:
@@ -143,7 +125,6 @@ class Collection_Panel:
     def draw(self) -> None:
         """绘制对象"""
 
-        pl_character_data: game_type.Character = cache.character_data[0]
         refresh_all_bonus()
 
         title_text = _("收藏品")
@@ -197,8 +178,7 @@ class Collection_Panel:
 
                 # 判断是否已经解锁前段奖励
                 un_lock_flag = not (
-                    cid in [1, 101, 201]
-                    or pl_character_data.pl_collection.collection_bonus[cid - 1]
+                    cid in [1, 101, 201] or player_collection.bonus(cid - 1)
                 )
 
                 now_bonus = game_config.config_collection_bonus_data[cid]
@@ -229,10 +209,7 @@ class Collection_Panel:
                 # 仅绘制当前面板，且根据是否已解锁来判断是绘制文本还是按钮
                 if draw_flag:
                     line_feed.draw()
-                    if (
-                        pl_character_data.pl_collection.collection_bonus[cid]
-                        or un_lock_flag
-                    ):
+                    if player_collection.bonus(cid) or un_lock_flag:
                         bonus_draw = draw.NormalDraw()
                         bonus_draw.text = "  ●" + bonus_text
                         bonus_draw.width = self.width
@@ -257,10 +234,11 @@ class Collection_Panel:
                 # 统计当前信物收集数
                 self.token_count = 0
                 token_chara_list = []
+                tokens = player_collection.get("token_list")
                 for npc_id in cache.npc_id_got:
                     if npc_id == 0:
                         continue
-                    if pl_character_data.pl_collection.token_list[npc_id]:
+                    if tokens.get(npc_id):
                         token_chara_list.append(npc_id)
                         self.token_count += 1
                 # 更新当前面板，并清空其他面板
@@ -275,37 +253,20 @@ class Collection_Panel:
                 # 统计当前内裤收集数
                 self.pan_count = 0
                 pan_chara_list = []
+                first_panties = player_collection.get("first_panties")
+                npc_panties = player_collection.get("npc_panties")
 
                 for npc_id in cache.npc_id_got:
                     if npc_id == 0:
                         continue
                     # 如果有收集到该角色的处子胖次或其他普通胖次
-                    if pl_character_data.pl_collection.first_panties[
-                        npc_id
-                    ] != "" or len(
-                        pl_character_data.pl_collection.npc_panties[npc_id]
-                    ):
+                    first_p = first_panties.get(npc_id, "")
+                    normal_p = npc_panties.get(npc_id, [])
+                    if first_p != "" or normal_p:
                         pan_chara_list.append(npc_id)
-                        # 处子血胖次
-                        if (
-                            npc_id
-                            in pl_character_data.pl_collection.first_panties
-                            and pl_character_data.pl_collection.first_panties[
-                                npc_id
-                            ]
-                            != ""
-                        ):
+                        if first_p != "":
                             self.pan_count += 1
-                        if (
-                            npc_id
-                            in pl_character_data.pl_collection.npc_panties
-                        ):
-                            # 统计当前角色的普通胖次数量
-                            self.pan_count += len(
-                                pl_character_data.pl_collection.npc_panties[
-                                    npc_id
-                                ]
-                            )
+                        self.pan_count += len(normal_p)
 
                 # 更新当前面板，并清空其他面板
                 handle_pan_panel.text_list = pan_chara_list
@@ -319,19 +280,15 @@ class Collection_Panel:
                 # 统计当前袜子收集数
                 self.sock_count = 0
                 socks_chara_list = []
+                npc_socks = player_collection.get("npc_socks")
 
                 for npc_id in cache.npc_id_got:
                     if npc_id == 0:
                         continue
-                    if len(pl_character_data.pl_collection.npc_socks[npc_id]):
+                    socks_list = npc_socks.get(npc_id, [])
+                    if socks_list:
                         socks_chara_list.append(npc_id)
-                        if npc_id in pl_character_data.pl_collection.npc_socks:
-                            # 统计当前角色的袜子数量
-                            self.sock_count += len(
-                                pl_character_data.pl_collection.npc_socks[
-                                    npc_id
-                                ]
-                            )
+                        self.sock_count += len(socks_list)
                 # 更新当前面板，并清空其他面板
                 handle_socks_panel.text_list = socks_chara_list
                 handle_socks_panel.update()
@@ -378,7 +335,6 @@ class Collection_Panel:
         Keyword arguments:
         bonus_id -- 奖励编号
         """
-        character_data: game_type.Character = cache.character_data[0]
         bonus_data = game_config.config_collection_bonus_data[bonus_id]
         originium_prime_flag = False
         token_flag = False
@@ -386,17 +342,17 @@ class Collection_Panel:
         # 比对相应的收集物数量，判断是否解锁成功
         if bonus_data.type == _("信物"):
             if self.token_count >= bonus_data.count or cache.debug_mode:
-                character_data.pl_collection.collection_bonus[bonus_id] = True
+                player_collection.set_bonus(bonus_id, True)
                 originium_prime_flag = True
                 token_flag = True
         elif bonus_data.type == _("内裤"):
             if self.pan_count >= bonus_data.count or cache.debug_mode:
-                character_data.pl_collection.collection_bonus[bonus_id] = True
+                player_collection.set_bonus(bonus_id, True)
                 if bonus_id == 101:
                     originium_prime_flag = True
         elif bonus_data.type == _("袜子"):
             if self.sock_count >= bonus_data.count or cache.debug_mode:
-                character_data.pl_collection.collection_bonus[bonus_id] = True
+                player_collection.set_bonus(bonus_id, True)
                 if bonus_id == 201:
                     originium_prime_flag = True
 
@@ -405,8 +361,9 @@ class Collection_Panel:
             warehouse.add(3, bonus_data.effect_1)
         # 解锁信物装备上限
         if token_flag:
-            character_data.pl_collection.eqip_token[0] = max(
-                character_data.pl_collection.eqip_token[0], bonus_data.effect_2
+            eqip = player_collection.get("eqip_token")
+            player_collection.set_eqip_token(
+                max(eqip[0], bonus_data.effect_2), eqip[1]
             )
 
         # 输出提示信息
@@ -493,24 +450,23 @@ class Pan_Draw:
         self.button_id: int = button_id
         """ 按钮编号 """
 
-        pl_character_data: game_type.Character = cache.character_data[0]
         npc_name = cache.character_data[self.character_id].name
 
         pan_text = f"\n  {npc_name}："
         # 处子血胖次
-        if (
-            self.character_id in pl_character_data.pl_collection.first_panties
-            and pl_character_data.pl_collection.first_panties[self.character_id]
-            != ""
-        ):
-            pan_text += f" {pl_character_data.pl_collection.first_panties[self.character_id]}"
+        first_p = player_collection.get("first_panties").get(
+            self.character_id, ""
+        )
+        if first_p != "":
+            pan_text += f" {first_p}"
         # 常规胖次
-        if self.character_id in pl_character_data.pl_collection.npc_panties:
+        normal_p = player_collection.get("npc_panties").get(
+            self.character_id, []
+        )
+        if normal_p:
             # 通过字典统计，输出每种内裤的数量
             pan_counts: dict[str, int] = {}
-            for pan in pl_character_data.pl_collection.npc_panties[
-                self.character_id
-            ]:
+            for pan in normal_p:
                 pan_counts[pan] = pan_counts.get(pan, 0) + 1
 
             for pan, count in pan_counts.items():
@@ -558,17 +514,15 @@ class Socks_Draw:
         self.button_id: int = button_id
         """ 按钮编号 """
 
-        pl_character_data: game_type.Character = cache.character_data[0]
         npc_name = cache.character_data[self.character_id].name
 
         socks_text = f"\n  {npc_name}："
-        # 常规胖次
-        if self.character_id in pl_character_data.pl_collection.npc_socks:
+        # 常规袜子
+        normal_s = player_collection.get("npc_socks").get(self.character_id, [])
+        if normal_s:
             # 通过字典统计，输出每种袜子的数量
             sock_counts: dict[str, int] = {}
-            for sock in pl_character_data.pl_collection.npc_socks[
-                self.character_id
-            ]:
+            for sock in normal_s:
                 sock_counts[sock] = sock_counts.get(sock, 0) + 1
             for sock, count in sock_counts.items():
                 socks_text += f" {sock}({count})"

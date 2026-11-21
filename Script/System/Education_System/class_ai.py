@@ -52,7 +52,7 @@ from Script.System.Education_System import (
 )
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import modes, needs
+from Script.Modules.domains import flags, modes, needs
 
 if TYPE_CHECKING:
     import datetime
@@ -116,7 +116,7 @@ def judge_teacher_available(teacher_id: int, classroom: str = "") -> bool:
     if teacher_data.dead:
         return False
     # 这几种状态下教师人不在教室，或不可能讲课
-    if teacher_data.sp_flag.is_h or teacher_data.sp_flag.imprisonment:
+    if flags.get(teacher_id, "is_h") or flags.get(teacher_id, "imprisonment"):
         return False
     # 玩家（临时实操课的授课者）只看上面两条：他来不来由玩家自己决定
     if teacher_id == 0:
@@ -140,9 +140,8 @@ def judge_teacher_available(teacher_id: int, classroom: str = "") -> bool:
     #    无意识 6 本不在 normal_5 / 6 里，得显式判（Plan 31 §3.4）；体控-逆推一开就进 H，已被上面的 is_h 挡掉
     if teacher_data.hypnosis.blockhead:
         return False
-    if (
-        teacher_data.sp_flag.field_commission
-        or teacher_data.sp_flag.in_diplomatic_visit
+    if flags.get(teacher_id, "field_commission") or flags.get(
+        teacher_id, "in_diplomatic_visit"
     ):
         return False
     # 已经不在岛上 / 换了岗：课表里还挂着她，但她的 AI 不会再来上课
@@ -152,7 +151,7 @@ def judge_teacher_available(teacher_id: int, classroom: str = "") -> bool:
     ):
         return False
     # 睡着的、离线的都来不了
-    if teacher_data.sp_flag.sleep:
+    if flags.get(teacher_id, "sleep"):
         return False
     if not handle_premise.handle_normal_7(teacher_id):
         return False
@@ -462,8 +461,7 @@ def get_attend_or_join_stage(character_id: int, now_course: dict) -> int:
 
     if not modes.sex_class():
         return education_constant.COURSE_STAGE_ATTEND
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.is_h:
+    if flags.get(character_id, "is_h"):
         return education_constant.COURSE_STAGE_ATTEND
     running_class = sex_class_handle.get_running_class()
     if running_class is None:
@@ -502,8 +500,7 @@ def judge_pending_class_joinable(
 
     if not modes.sex_class() or not pending_class.get("running", False):
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.is_h or not judge_in_scene(
+    if flags.get(character_id, "is_h") or not judge_in_scene(
         character_id, pending_classroom
     ):
         return False
@@ -671,8 +668,8 @@ def judge_student_pullable(student_id: int) -> bool:
     ):
         return False
     if (
-        character_data.sp_flag.is_h
-        or character_data.sp_flag.sleep
+        flags.get(student_id, "is_h")
+        or flags.get(student_id, "sleep")
         or character_data.behavior.behavior_id == constant.Behavior.SLEEP
     ):
         return False
@@ -777,7 +774,7 @@ def get_student_leave_time(character_id: int) -> datetime.datetime | None:
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
         return None
-    if character_data.sp_flag.is_h or character_data.sp_flag.sleep:
+    if flags.get(character_id, "is_h") or flags.get(character_id, "sleep"):
         return None
     behavior_id = character_data.behavior.behavior_id
     if behavior_id not in game_config.config_behavior:
@@ -895,15 +892,14 @@ def judge_mother_available(character_id: int) -> int:
         return -1
     # H中 / 无意识H中 / 被监禁
     if (
-        mother_data.sp_flag.is_h
-        or mother_data.sp_flag.unconscious_h
-        or mother_data.sp_flag.imprisonment
+        flags.get(mother_id, "is_h")
+        or flags.get(mother_id, "unconscious_h")
+        or flags.get(mother_id, "imprisonment")
     ):
         return -1
     # 母亲人不在罗德岛（外勤 / 外交访问）
-    if (
-        mother_data.sp_flag.field_commission
-        or mother_data.sp_flag.in_diplomatic_visit
+    if flags.get(mother_id, "field_commission") or flags.get(
+        mother_id, "in_diplomatic_visit"
     ):
         return -1
     # 不查医疗系统的住院表：住院表（base.medical_ward）的键是医疗系统里抽象病人的编号（MedicalPatient.patient_id，

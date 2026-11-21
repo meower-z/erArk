@@ -13,7 +13,7 @@ from Script.Design import (
 from Script.Core import cache_control, constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities, kitchen, needs
+from Script.Modules.domains import abilities, flags, kitchen, needs
 
 _: FunctionType = get_text._
 window_width: int = normal_config.config_normal.text_width
@@ -1988,8 +1988,7 @@ def handle_self_remote_toy_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.sex_toy_level = 0
+    flags.set(character_id, sex_toy_level=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2011,8 +2010,7 @@ def handle_self_remote_toy_set_weak(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.sex_toy_level = 1
+    flags.set(character_id, sex_toy_level=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2034,8 +2032,7 @@ def handle_self_remote_toy_set_medium(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.sex_toy_level = 2
+    flags.set(character_id, sex_toy_level=2)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2057,8 +2054,7 @@ def handle_self_remote_toy_set_strong(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.sex_toy_level = 3
+    flags.set(character_id, sex_toy_level=3)
 
 
 @settle_behavior.add_settle_behavior_effect(

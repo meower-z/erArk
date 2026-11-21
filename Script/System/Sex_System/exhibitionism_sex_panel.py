@@ -12,7 +12,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config
 from Script.Design import handle_premise, map_handle
-from Script.Modules.domains import achievement
+from Script.Modules.domains import achievement, flags
 
 panel_info_data: dict[str, object] = {}
 
@@ -31,9 +31,8 @@ window_width = normal_config.config_normal.text_width
 
 def update_exhibiionism_sex_mode() -> None:
     """更新露出H模式"""
-    character_data: game_type.Character = cache.character_data[0]
     # 如果不在露出模式则直接返回
-    if character_data.sp_flag.exhibitionism_sex_mode == 0:
+    if flags.get(0, "exhibitionism_sex_mode") == 0:
         return
     # 如果当前周围有人
     if handle_premise.handle_scene_over_two(0):
@@ -52,7 +51,7 @@ def update_exhibiionism_sex_mode() -> None:
         else:
             new_mode = 1
     # 更新模式
-    character_data.sp_flag.exhibitionism_sex_mode = new_mode
+    flags.set(0, exhibitionism_sex_mode=new_mode)
     # 获取场景内露出对象
     now_scene_character_list = map_handle.get_chara_now_scene_all_chara_id_list(
         0, remove_own_character=True
@@ -61,8 +60,10 @@ def update_exhibiionism_sex_mode() -> None:
         target_character_data: game_type.Character = cache.character_data[
             chara_id
         ]
-        if target_character_data.sp_flag.exhibitionism_sex_mode != 0:
-            target_character_data.sp_flag.exhibitionism_sex_mode = new_mode
+        if flags.get(target_character_data.cid, "exhibitionism_sex_mode") != 0:
+            flags.set(
+                target_character_data.cid, exhibitionism_sex_mode=new_mode
+            )
             break
 
 
@@ -150,9 +151,6 @@ class Select_Exhibitionism_Sex_Mode_Panel:
 
         character_data: game_type.Character = cache.character_data[0]
         target_character_id = character_data.target_character_id
-        target_character_data: game_type.Character = cache.character_data[
-            target_character_id
-        ]
 
         # 从被发现面板跳转过来（结算途中）时当场判定邀请；玩家选择时只定下行动，邀请在行动开始时判定，
         #    没过的换成邀请露出失败（它的开始代码提示失败），这里写下的模式随草稿一起作废
@@ -167,9 +165,9 @@ class Select_Exhibitionism_Sex_Mode_Panel:
             now_draw.draw()
             self.invite_failed = True
             return
-        character_data.sp_flag.exhibitionism_sex_mode = mode_id
-        target_character_data.sp_flag.exhibitionism_sex_mode = mode_id
-        target_character_data.sp_flag.is_follow = 0
+        flags.set(0, exhibitionism_sex_mode=mode_id)
+        flags.set(target_character_id, exhibitionism_sex_mode=mode_id)
+        flags.set(target_character_id, is_follow=0)
         now_scene_character_list = (
             map_handle.get_chara_now_scene_all_chara_id_list(0)
         )

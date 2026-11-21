@@ -15,27 +15,12 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import (
-    abilities,
-    commission,
-    diplomacy,
-    economy,
-    education,
-    fridge,
-    library,
-    maintenance,
-    medical,
-    modes,
-    needs,
-    physical_exam,
-    playthrough,
-    power,
-    prison,
-    production,
-    recruit,
-    visitor,
-    work,
-)
+from Script.Modules.domains import abilities, action_info, commission
+from Script.Modules.domains import diplomacy, economy, education, flags, fridge
+from Script.Modules.domains import library, maintenance, medical, modes, needs
+from Script.Modules.domains import physical_exam, player_ability
+from Script.Modules.domains import player_collection, playthrough, power
+from Script.Modules.domains import prison, production, recruit, visitor, work
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -734,18 +719,8 @@ def migrate_character_replacement(
         )
         new_character.dirty = old_character.dirty
         new_character.h_state = old_character.h_state
-        new_character.pl_ability = (
-            old_character.pl_ability
-            if hasattr(old_character, "pl_ability")
-            else game_type.PLAYER_ABILITY()
-        )
-        new_character.pl_collection = (
-            old_character.pl_collection
-            if hasattr(old_character, "pl_collection")
-            else game_type.PLAYER_COLLECTION()
-        )
-        new_character.sp_flag = old_character.sp_flag
-        new_character.action_info = old_character.action_info
+        for domain in (flags, action_info, player_ability, player_collection):
+            domain.copy_to(old_id, new_id)
         new_character.work = old_character.work
         new_character.entertainment = (
             old_character.entertainment
@@ -820,73 +795,6 @@ def migrate_character_replacement(
             new_character, "first_record_history", {}
         ).values():
             _remap_first_record_ids(history_record, old_to_new_id_map)
-
-        # action_info中的角色ID转换
-        if hasattr(new_character, "action_info"):
-            ai = new_character.action_info
-            if (
-                hasattr(ai, "ask_group_sex_refuse_chara_id_list")
-                and ai.ask_group_sex_refuse_chara_id_list
-            ):
-                ai.ask_group_sex_refuse_chara_id_list = [
-                    old_to_new_id_map.get(oid, oid)
-                    for oid in ai.ask_group_sex_refuse_chara_id_list
-                ]
-            if (
-                hasattr(ai, "social_contact_last_time")
-                and ai.social_contact_last_time
-            ):
-                old_social = ai.social_contact_last_time.copy()
-                ai.social_contact_last_time = {}
-                for oid, value in old_social.items():
-                    ai.social_contact_last_time[
-                        old_to_new_id_map.get(oid, oid)
-                    ] = value
-            if (
-                hasattr(ai, "social_contact_last_cut_down_time")
-                and ai.social_contact_last_cut_down_time
-            ):
-                old_cut = ai.social_contact_last_cut_down_time.copy()
-                ai.social_contact_last_cut_down_time = {}
-                for oid, value in old_cut.items():
-                    ai.social_contact_last_cut_down_time[
-                        old_to_new_id_map.get(oid, oid)
-                    ] = value
-            if (
-                hasattr(ai, "interacting_character_end_info")
-                and ai.interacting_character_end_info[0] != -1
-            ):
-                ai.interacting_character_end_info[0] = old_to_new_id_map.get(
-                    ai.interacting_character_end_info[0],
-                    ai.interacting_character_end_info[0],
-                )
-
-        # sp_flag中的角色ID转换
-        if hasattr(new_character, "sp_flag"):
-            sf = new_character.sp_flag
-            if hasattr(sf, "bagging_chara_id") and sf.bagging_chara_id != 0:
-                sf.bagging_chara_id = old_to_new_id_map.get(
-                    sf.bagging_chara_id, sf.bagging_chara_id
-                )
-
-        # pl_ability中的角色ID转换
-        if hasattr(new_character, "pl_ability"):
-            pa = new_character.pl_ability
-            if (
-                hasattr(pa, "carry_chara_id_in_time_stop")
-                and pa.carry_chara_id_in_time_stop != 0
-            ):
-                pa.carry_chara_id_in_time_stop = old_to_new_id_map.get(
-                    pa.carry_chara_id_in_time_stop,
-                    pa.carry_chara_id_in_time_stop,
-                )
-            if (
-                hasattr(pa, "free_in_time_stop_chara_id")
-                and pa.free_in_time_stop_chara_id != 0
-            ):
-                pa.free_in_time_stop_chara_id = old_to_new_id_map.get(
-                    pa.free_in_time_stop_chara_id, pa.free_in_time_stop_chara_id
-                )
 
         # h_state中的角色ID转换
         if hasattr(new_character, "h_state") and hasattr(
@@ -986,73 +894,6 @@ def migrate_character_replacement(
         ).values():
             _remap_first_record_ids(history_record, old_to_new_id_map)
 
-        # action_info中的角色ID
-        if hasattr(character, "action_info"):
-            ai = character.action_info
-            if (
-                hasattr(ai, "ask_group_sex_refuse_chara_id_list")
-                and ai.ask_group_sex_refuse_chara_id_list
-            ):
-                ai.ask_group_sex_refuse_chara_id_list = [
-                    old_to_new_id_map.get(oid, oid)
-                    for oid in ai.ask_group_sex_refuse_chara_id_list
-                ]
-            if (
-                hasattr(ai, "social_contact_last_time")
-                and ai.social_contact_last_time
-            ):
-                old_social = ai.social_contact_last_time.copy()
-                ai.social_contact_last_time = {}
-                for oid, value in old_social.items():
-                    ai.social_contact_last_time[
-                        old_to_new_id_map.get(oid, oid)
-                    ] = value
-            if (
-                hasattr(ai, "social_contact_last_cut_down_time")
-                and ai.social_contact_last_cut_down_time
-            ):
-                old_cut = ai.social_contact_last_cut_down_time.copy()
-                ai.social_contact_last_cut_down_time = {}
-                for oid, value in old_cut.items():
-                    ai.social_contact_last_cut_down_time[
-                        old_to_new_id_map.get(oid, oid)
-                    ] = value
-            if (
-                hasattr(ai, "interacting_character_end_info")
-                and ai.interacting_character_end_info[0] != -1
-            ):
-                ai.interacting_character_end_info[0] = old_to_new_id_map.get(
-                    ai.interacting_character_end_info[0],
-                    ai.interacting_character_end_info[0],
-                )
-
-        # sp_flag中的角色ID
-        if hasattr(character, "sp_flag"):
-            sf = character.sp_flag
-            if hasattr(sf, "bagging_chara_id") and sf.bagging_chara_id != 0:
-                sf.bagging_chara_id = old_to_new_id_map.get(
-                    sf.bagging_chara_id, sf.bagging_chara_id
-                )
-
-        # pl_ability中的角色ID（仅玩家有）
-        if hasattr(character, "pl_ability"):
-            pa = character.pl_ability
-            if (
-                hasattr(pa, "carry_chara_id_in_time_stop")
-                and pa.carry_chara_id_in_time_stop != 0
-            ):
-                pa.carry_chara_id_in_time_stop = old_to_new_id_map.get(
-                    pa.carry_chara_id_in_time_stop,
-                    pa.carry_chara_id_in_time_stop,
-                )
-            if (
-                hasattr(pa, "free_in_time_stop_chara_id")
-                and pa.free_in_time_stop_chara_id != 0
-            ):
-                pa.free_in_time_stop_chara_id = old_to_new_id_map.get(
-                    pa.free_in_time_stop_chara_id, pa.free_in_time_stop_chara_id
-                )
-
         # relationship中的角色ID
         if hasattr(character, "relationship"):
             rel = character.relationship
@@ -1105,81 +946,10 @@ def migrate_character_replacement(
                             for oid in serve_data[0]
                         ]
 
-    # ========== 7. 更新玩家收藏品 (pl_collection) ==========
-    if 0 in character_data:
-        pl_data = character_data[0]
-        if hasattr(pl_data, "pl_collection"):
-            pc = pl_data.pl_collection
-
-            # token_list
-            if hasattr(pc, "token_list") and pc.token_list:
-                old_tokens = pc.token_list.copy()
-                for old_id, new_id in old_to_new_id_map.items():
-                    if old_id in old_tokens:
-                        pc.token_list[new_id] = old_tokens[old_id]
-                        del pc.token_list[old_id]
-
-            # first_panties
-            if hasattr(pc, "first_panties") and pc.first_panties:
-                old_panties = pc.first_panties.copy()
-                for old_id, new_id in old_to_new_id_map.items():
-                    if old_id in old_panties:
-                        pc.first_panties[new_id] = old_panties[old_id]
-                        del pc.first_panties[old_id]
-
-            # npc_panties
-            if hasattr(pc, "npc_panties") and pc.npc_panties:
-                old_npc_panties = pc.npc_panties.copy()
-                for old_id, new_id in old_to_new_id_map.items():
-                    if old_id in old_npc_panties:
-                        pc.npc_panties[new_id] = old_npc_panties[old_id]
-                        del pc.npc_panties[old_id]
-
-            # npc_socks
-            if hasattr(pc, "npc_socks") and pc.npc_socks:
-                old_npc_socks = pc.npc_socks.copy()
-                for old_id, new_id in old_to_new_id_map.items():
-                    if old_id in old_npc_socks:
-                        pc.npc_socks[new_id] = old_npc_socks[old_id]
-                        del pc.npc_socks[old_id]
-
-            # npc_panties_tem
-            if hasattr(pc, "npc_panties_tem") and pc.npc_panties_tem:
-                old_panties_tem = pc.npc_panties_tem.copy()
-                for old_id, new_id in old_to_new_id_map.items():
-                    if old_id in old_panties_tem:
-                        pc.npc_panties_tem[new_id] = old_panties_tem[old_id]
-                        del pc.npc_panties_tem[old_id]
-
-            # npc_socks_tem
-            if hasattr(pc, "npc_socks_tem") and pc.npc_socks_tem:
-                old_socks_tem = pc.npc_socks_tem.copy()
-                for old_id, new_id in old_to_new_id_map.items():
-                    if old_id in old_socks_tem:
-                        pc.npc_socks_tem[new_id] = old_socks_tem[old_id]
-                        del pc.npc_socks_tem[old_id]
-
-            # eqip_token[1] - 已装备信物的干员id列表
-            if hasattr(pc, "eqip_token") and len(pc.eqip_token) > 1:
-                pc.eqip_token[1] = [
-                    old_to_new_id_map.get(oid, oid) for oid in pc.eqip_token[1]
-                ]
-
-            # milk_total
-            if hasattr(pc, "milk_total") and pc.milk_total:
-                old_milk = pc.milk_total.copy()
-                for old_id, new_id in old_to_new_id_map.items():
-                    if old_id in old_milk:
-                        pc.milk_total[new_id] = old_milk[old_id]
-                        del pc.milk_total[old_id]
-
-            # urine_total
-            if hasattr(pc, "urine_total") and pc.urine_total:
-                old_urine = pc.urine_total.copy()
-                for old_id, new_id in old_to_new_id_map.items():
-                    if old_id in old_urine:
-                        pc.urine_total[new_id] = old_urine[old_id]
-                        del pc.urine_total[old_id]
+    # ========== 7. 更新内核角色域与玩家收藏品中的角色ID引用 ==========
+    all_cids = tuple(character_data)
+    for domain in (flags, action_info, player_ability, player_collection):
+        domain.remap(all_cids, old_to_new_id_map)
 
     # ========== 8. 更新rhodes_island中的角色引用 ==========
     if "rhodes_island" in loaded_dict:
@@ -1365,14 +1135,21 @@ def fix_wrong_character(loaded_dict: dict[str, Any]) -> int:
             for key2, value2 in loaded_dict["character_data"].items():
                 if value2.adv == 448:
                     # 将阿玛雅的角色数据复制过去
-                    loaded_dict["character_data"][key2] = loaded_dict[
-                        "character_data"
-                    ][key]
-                    # 将adv改为448
+                    source_cid = value.cid
+                    loaded_dict["character_data"][key2] = value
+                    for domain in (
+                        flags,
+                        action_info,
+                        player_ability,
+                        player_collection,
+                    ):
+                        domain.copy_to(key, key2)
+                    # 同步目标槽位的cid并将adv改为448
+                    loaded_dict["character_data"][key2].cid = key2
                     loaded_dict["character_data"][key2].adv = 448
                     # 将当前角色改为当前模板的角色
                     now_tem_chara = loaded_dict["npc_tem_data"].get(
-                        value.cid, None
+                        source_cid, None
                     )
                     if now_tem_chara is None:
                         now_tem_chara = loaded_dict["npc_tem_data"].get(
@@ -1381,7 +1158,7 @@ def fix_wrong_character(loaded_dict: dict[str, Any]) -> int:
                     if now_tem_chara is not None:
                         # 创建一个新的角色数据
                         new_character = character_handle.init_character(
-                            value.cid, now_tem_chara
+                            source_cid, now_tem_chara, collect_reset=False
                         )
                         # 重新赋值角色数据
                         loaded_dict["character_data"][key] = new_character
@@ -1660,7 +1437,7 @@ def update_new_character(loaded_dict: dict[str, Any]) -> int:
             continue
         new_character_cid = now_npc_data.AdvNpc  # 使用adv作为cid
         new_character = character_handle.init_character(
-            new_character_cid, now_npc_data
+            new_character_cid, now_npc_data, collect_reset=False
         )
         loaded_dict["character_data"][new_character_cid] = new_character
         update_count += 1
@@ -1928,11 +1705,11 @@ def _clear_young_child_h_state(character: game_type.Character) -> int:
         "h_state",
         attr_calculation.get_h_state_reset(game_type.BODY_H_STATE()),
     )
-    default_flag = game_type.SPECIAL_FLAG()
     for flag_name in YOUNG_CHILD_H_FLAG_TUPLE:
-        count += _replace_if_changed(
-            character.sp_flag, flag_name, getattr(default_flag, flag_name)
-        )
+        default_val = flags.DEFAULTS[flag_name]
+        if flags.get(character.cid, flag_name) != default_val:
+            flags.set(character.cid, **{flag_name: default_val})
+            count += 1
     for talent_id in YOUNG_CHILD_H_TALENT_TUPLE:
         if talent.get(talent_id, 0):
             talent[talent_id] = 0
@@ -1960,23 +1737,29 @@ def _clear_young_child_egg_index(
     Return arguments:
     int -- 删掉的条数
     """
-    collection = player.pl_collection
+    held = player_collection.get("held_eggs", player.cid)
     count = 0
     for held_id in [
         held_id
-        for held_id, (chara_id, _) in collection.held_eggs.items()
+        for held_id, (chara_id, _) in held.items()
         if chara_id in young_child_id_set
     ]:
-        del collection.held_eggs[held_id]
+        del held[held_id]
         count += 1
+    if count:
+        player_collection.put("held_eggs", held, player.cid)
+    soft = player_collection.get("soft_eggs", player.cid)
+    soft_removed = 0
     for egg_id in [
         egg_id
-        for egg_id, egg_data in collection.soft_eggs.items()
+        for egg_id, egg_data in soft.items()
         if egg_data.get("mother_id") in young_child_id_set
     ]:
-        del collection.soft_eggs[egg_id]
-        count += 1
-    return count
+        del soft[egg_id]
+        soft_removed += 1
+    if soft_removed:
+        player_collection.put("soft_eggs", soft, player.cid)
+    return count + soft_removed
 
 
 def _remove_from_group_sex_template(
@@ -2069,54 +1852,78 @@ def _clear_young_child_reference(
     count = 0
     character_data = loaded_dict["character_data"]
     for character in character_data.values():
+        cid = character.cid
         if (
-            character.pl_ability.free_in_time_stop_chara_id
+            player_ability.get(cid, "free_in_time_stop_chara_id")
             in young_child_id_set
         ):
-            character.pl_ability.free_in_time_stop_chara_id = 0
+            player_ability.set(cid, free_in_time_stop_chara_id=0)
             count += 1
-        if character.sp_flag.bagging_chara_id in young_child_id_set:
-            character.sp_flag.bagging_chara_id = 0
+        if flags.get(cid, "bagging_chara_id") in young_child_id_set:
+            flags.set(cid, bagging_chara_id=0)
             count += 1
-        end_info = character.action_info.interacting_character_end_info
-        if character.cid in young_child_id_set or (
+        end_info = action_info.get(cid, "interacting_character_end_info")
+        if cid in young_child_id_set or (
             isinstance(end_info, list)
             and end_info
             and end_info[0] in young_child_id_set
         ):
-            count += _replace_if_changed(
-                character.action_info,
-                "interacting_character_end_info",
-                [-1, datetime.datetime(1, 1, 1)],
-            )
-        count += _discard_id(
-            character.action_info.ask_group_sex_refuse_chara_id_list,
-            young_child_id_set,
-        )
-        collection = character.pl_collection
-        for chara_id in young_child_id_set:
-            if collection.first_panties.get(chara_id):
-                collection.first_panties[chara_id] = ""
+            default_end = [-1, datetime.datetime(1, 1, 1)]
+            if end_info != default_end:
+                action_info.set(
+                    cid, "interacting_character_end_info", default_end
+                )
                 count += 1
-            for item_dict in (
-                collection.npc_panties,
-                collection.npc_panties_tem,
-                collection.npc_socks,
-                collection.npc_socks_tem,
-            ):
+        refuse = action_info.get(cid, "ask_group_sex_refuse_chara_id_list")
+        removed = _discard_id(refuse, young_child_id_set)
+        if removed:
+            action_info.set(cid, "ask_group_sex_refuse_chara_id_list", refuse)
+            count += removed
+        first_panties = player_collection.get("first_panties", cid)
+        fp_changed = False
+        for chara_id in young_child_id_set:
+            if first_panties.get(chara_id):
+                first_panties[chara_id] = ""
+                fp_changed = True
+                count += 1
+        if fp_changed:
+            player_collection.put("first_panties", first_panties, cid)
+        for field_name in (
+            "npc_panties",
+            "npc_panties_tem",
+            "npc_socks",
+            "npc_socks_tem",
+        ):
+            item_dict = player_collection.get(field_name, cid)
+            changed_items = False
+            for chara_id in young_child_id_set:
                 if item_dict.get(chara_id):
                     item_dict[chara_id] = []
+                    changed_items = True
                     count += 1
-            for total_dict in (collection.milk_total, collection.urine_total):
+            if changed_items:
+                player_collection.put(field_name, item_dict, cid)
+        for field_name in ("milk_total", "urine_total"):
+            total_dict = player_collection.get(field_name, cid)
+            changed_totals = False
+            for chara_id in young_child_id_set:
                 if total_dict.get(chara_id):
                     total_dict[chara_id] = 0
+                    changed_totals = True
                     count += 1
+            if changed_totals:
+                player_collection.put(field_name, total_dict, cid)
     for chara_id in young_child_id_set:
         child = character_data[chara_id]
-        count += _replace_if_changed(child.sp_flag, "be_bagged", False)
-        count += _replace_if_changed(child.sp_flag, "imprisonment", False)
-        count += _replace_if_changed(child.sp_flag, "escaping", False)
-        count += _replace_if_changed(child.sp_flag, "field_commission", 0)
+        for flag_name, default_val in (
+            ("be_bagged", False),
+            ("imprisonment", False),
+            ("escaping", False),
+            ("field_commission", 0),
+        ):
+            if flags.get(chara_id, flag_name) != default_val:
+                flags.set(chara_id, **{flag_name: default_val})
+                count += 1
         if child.entertainment.borrow_book_id_set:
             child.entertainment.borrow_book_id_set = set()
             count += 1
@@ -2215,7 +2022,9 @@ def _take_young_child_off_line(
             character.behavior = game_type.Behavior()
             character.state = constant.CharacterStatus.STATUS_ARDER
             count += 1
-        count += _replace_if_changed(character.sp_flag, "is_follow", 0)
+        if flags.get(character_id, "is_follow") != 0:
+            flags.set(character_id, is_follow=0)
+            count += 1
         count += _replace_if_changed(
             character, "target_character_id", character_id
         )
@@ -2260,14 +2069,17 @@ def _take_young_child_off_line(
         if character.assistant_character_id in young_child_id_set:
             character.assistant_character_id = 0
             count += 1
-        if character.action_info.carry_chara_id in young_child_id_set:
-            character.action_info.carry_chara_id = 0
-            count += 1
         if (
-            character.pl_ability.carry_chara_id_in_time_stop
+            action_info.get(character.cid, "carry_chara_id")
             in young_child_id_set
         ):
-            character.pl_ability.carry_chara_id_in_time_stop = 0
+            action_info.set(character.cid, "carry_chara_id", 0)
+            count += 1
+        if (
+            player_ability.get(character.cid, "carry_chara_id_in_time_stop")
+            in young_child_id_set
+        ):
+            player_ability.set(character.cid, carry_chara_id_in_time_stop=0)
             count += 1
         count += _remove_from_group_sex_template(character, young_child_id_set)
     count += _clear_young_child_reference(loaded_dict, young_child_id_set)
@@ -2354,7 +2166,7 @@ def _find_young_child_session(
                     if young_child_id_set & set(part_id_list + serve_id_list):
                         in_template = True
         child_in_scene_h = any(
-            character_data[chara_id].sp_flag.is_h
+            flags.get(chara_id, "is_h")
             and character_data[chara_id].position == player.position
             for chara_id in young_child_id_set
         )
@@ -2366,9 +2178,9 @@ def _find_young_child_session(
     if loaded_dict.get("time_stop_mode", modes.time_stop()):
         time_stop_id_set = {
             player.target_character_id,
-            player.pl_ability.free_in_time_stop_chara_id,
-            player.action_info.carry_chara_id,
-            player.pl_ability.carry_chara_id_in_time_stop,
+            player_ability.get(0, "free_in_time_stop_chara_id"),
+            action_info.get(0, "carry_chara_id"),
+            player_ability.get(0, "carry_chara_id_in_time_stop"),
         }
         session["time_stop"] = bool(time_stop_id_set & young_child_id_set)
     for character in character_data.values():
@@ -2380,9 +2192,9 @@ def _find_young_child_session(
         if session["group"] and character.position == player.position:
             continue
         if (
-            character.sp_flag.is_h
-            or character.sp_flag.hidden_sex_mode
-            or character.sp_flag.exhibitionism_sex_mode
+            flags.get(character.cid, "is_h")
+            or flags.get(character.cid, "hidden_sex_mode")
+            or flags.get(character.cid, "exhibitionism_sex_mode")
         ):
             session["single_partner_id_set"].add(character.cid)
     return session

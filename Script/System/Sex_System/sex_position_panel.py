@@ -11,7 +11,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, map_handle
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, flags
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -118,7 +118,7 @@ class Sex_Position_Panel:
 
                 # 隐奸携带模式中只能使用对面抱位
                 if (
-                    character_data.sp_flag.hidden_sex_mode == 5
+                    flags.get(0, "hidden_sex_mode") == 5
                     and sex_position_id != 9
                 ):
                     sex_position_text += _("(携带中只能使用对面抱位)")

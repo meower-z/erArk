@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from types import FunctionType
 from Script.Core import cache_control, constant, game_type, get_text, num
-from Script.Design import handle_premise, talk, settle_behavior
+from Script.Design import game_time, handle_premise, settle_behavior, talk
 from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
-from Script.Design import game_time
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, flags
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -476,7 +475,7 @@ def judge_child_growth_second_behavior(character_id: int) -> None:
 
     if class_ai.judge_skip_class_today(character_id):
         on_sex_class = (
-            character_data.sp_flag.is_h
+            flags.get(character_id, "is_h")
             or sex_class_handle.judge_in_running_class(character_id)
             or class_ai.get_course_stage(character_id)
             in (
@@ -959,7 +958,7 @@ def item_effect(character_id: int) -> None:
                         continue
                     # 如果与玩家不在同一场景，则将该道具置为关闭状态然后跳过
                     if not handle_premise.handle_in_player_scene(character_id):
-                        character_data.sp_flag.sex_toy_level = 0
+                        flags.set(character_id, sex_toy_level=0)
                         continue
                 second_behavior_id = body_item_data.behavior_id
                 character_get_second_behavior(character_id, second_behavior_id)

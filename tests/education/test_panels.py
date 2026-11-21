@@ -45,7 +45,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 from Script.UI.Moudle import view
 import inspect
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import library
+from Script.Modules.domains import flags, library
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -993,9 +993,9 @@ check(
     and not _blocked_line,
     (_count_line, _blocked_line),
 )
-cache.character_data[201].sp_flag.imprisonment = True
+kernel_data.put(flags.set, 201, imprisonment=True)
 _count_line, _blocked_line, _no_course_line = draw_sex_class_page()
-cache.character_data[201].sp_flag.imprisonment = False
+kernel_data.put(flags.set, 201, imprisonment=False)
 check(
     "L8 状态异常（被监禁）的女儿同样归进「此刻进不了课堂」；一个能参加的都没有时写 0 人、说明选修的人都进不了课堂",
     "女儿01" in _blocked_line
@@ -1156,7 +1156,7 @@ clear_schedules()
 set_time(period_time(0))
 _l21_day = game_time.now().weekday()
 schedule_handle.set_class_cell(ROOM1, _l21_day, 0, 45, 103)
-teacher_b.sp_flag.imprisonment = True
+kernel_data.put(flags.set, teacher_b.cid, imprisonment=True)
 check(
     "L21 被监禁的教师：全称「（被监禁）」、短写「（监禁）」（此前在岛、在岗，格子不灰不标）",
     class_schedule_panel.get_teacher_absent_mark(103) == _("（被监禁）")
@@ -1227,7 +1227,7 @@ check(
     and all(str(cid) in captured["rl"] for cid in (101, 104, 105)),
     captured["rl"],
 )
-teacher_b.sp_flag.imprisonment = False
+kernel_data.put(flags.set, teacher_b.cid, imprisonment=False)
 check(
     "L21 放出来之后不再标注",
     class_schedule_panel.get_teacher_absent_mark(103) == "",
@@ -1291,7 +1291,7 @@ check(
     and not _blocked_line,
     (_count_line, _no_course_line, _blocked_line),
 )
-cache.character_data[202].sp_flag.imprisonment = True
+kernel_data.put(flags.set, 202, imprisonment=True)
 _count_line, _blocked_line, _no_course_line = draw_sex_class_page()
 _must_line = next(
     (t for t in drawn_text if "必修（无论原本排了什么都来" in t), ""
@@ -1307,7 +1307,7 @@ check(
     and "女儿01" not in _blocked_line,
     (_must_line, _blocked_line),
 )
-cache.character_data[202].sp_flag.imprisonment = False
+kernel_data.put(flags.set, 202, imprisonment=False)
 clear_schedules()
 for _cid in (201, 202):
     schedule_handle.clear_selected_course(_cid, _l8_day, _l8_period)
@@ -1417,13 +1417,13 @@ check(
     character_info_head.get_now_class_tip(201) is not None,
 )
 _st_growth.last_absent_period = []
-_st.sp_flag.is_h = True
+kernel_data.put(flags.set, 201, is_h=True)
 check(
     "L14 复审补：人在体育课的地点、但在 H 里（被玩家带进 H）：不亮 <课>（<翘> 对在 H 里的人也不亮，此前这里改亮 <课>）",
     character_info_head.get_now_class_tip(201) is None,
     character_info_head.get_now_class_tip(201),
 )
-_st.sp_flag.is_h = False
+kernel_data.put(flags.set, 201, is_h=False)
 
 schedule_handle.set_selected_course(
     201, _st_day, 0, E.COURSE_TYPE_THEORY, ROOM1
@@ -1453,14 +1453,14 @@ check(
     _tip,
 )
 kernel_data.set_needs(_st.cid, hit=100)
-_st.sp_flag.is_h = True
+kernel_data.put(flags.set, 201, is_h=True)
 _tip = character_info_head.get_now_class_tip(201)
 check(
     "L1 人在 H 里（课堂 H、被玩家带进 H）：不亮 <翘>（此前写「翘课中：本该上 实操课」）",
     _tip is None or not _tip[0],
     _tip,
 )
-_st.sp_flag.is_h = False
+kernel_data.put(flags.set, 201, is_h=False)
 sex_class_handle.set_temp_class(
     game_time.now().date().toordinal(), 0, ROOM_P, 74, must_attend=[201]
 )

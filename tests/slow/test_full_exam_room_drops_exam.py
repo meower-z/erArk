@@ -13,6 +13,7 @@
 """
 
 from tests.slow.health_check import EXAM_ROOM, SLOT_START, HealthCheckTestCase
+from tests import kernel_data
 
 GIVE_UP_MINUTES = 30
 """ 坐满体检科后，等她放弃的最长分钟数（新干员原地等待的时长） """
@@ -33,7 +34,11 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         self.operator_id = self.book_daily_exam("可露希尔")
         self.operator = self.cache.character_data[self.operator_id]
         self.sleep_through_midnight()
-        self.start = SLOT_START[self.operator.action_info.health_check_today]
+        self.start = SLOT_START[
+            kernel_data.domain("action_info").get(
+                self.operator.cid, "health_check_today"
+            )
+        ]
 
     def check_gives_up_for_today(self) -> None:
         """
@@ -48,14 +53,20 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
 
         operator = self.operator
         gave_up = self.wait_until(
-            lambda: operator.action_info.health_check_today == 0
+            lambda: kernel_data.domain("action_info").get(
+                operator.cid, "health_check_today"
+            )
+            == 0
             and self.operator_id not in self.waiting(),
             GIVE_UP_MINUTES,
+        )
+        hc = kernel_data.domain("action_info").get(
+            operator.cid, "health_check_today"
         )
         waiting = self.operator_id in self.waiting()
         self.assertTrue(
             gave_up,
-            f"今日体检时间 {operator.action_info.health_check_today}，在等待名单上：{waiting}",
+            f"今日体检时间 {hc}，在等待名单上：{waiting}",
         )
         today = game_time.now().day
         self.assertTrue(
@@ -82,7 +93,9 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         self.fill_exam_room()
         self.check_gives_up_for_today()
         self.assertIn(
-            self.operator.action_info.health_check_today,
+            kernel_data.domain("action_info").get(
+                self.operator.cid, "health_check_today"
+            ),
             SLOT_START,
             "下一个体检日的抽签抽中了她",
         )

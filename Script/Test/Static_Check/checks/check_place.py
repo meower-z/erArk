@@ -24,7 +24,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
-from Script.Modules.domains import education, visitor, work
+from Script.Modules.domains import action_info, education, flags, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -107,19 +107,19 @@ def _permanent_dormitory(chara: object) -> str:
     )
 
 
-def _offline_flags(sp_flag: object) -> bool:
+def _offline_flags(cid: int) -> bool:
     """
     参数:
-        sp_flag: 角色的SPECIAL_FLAG对象，可能为None
+        cid: 角色id
     返回值:
         bool: 该角色带有被装袋/外勤中/逃跑中三个离线标记之一时为True
     功能:
-        供多条检查复用的"是否带明确离线标记"判定，字段缺失时按False处理
+        供多条检查复用的"是否带明确离线标记"判定
     """
     return bool(
-        getattr(sp_flag, "be_bagged", False)
-        or getattr(sp_flag, "field_commission", 0)
-        or getattr(sp_flag, "escaping", False)
+        flags.get(cid, "be_bagged")
+        or flags.get(cid, "field_commission")
+        or flags.get(cid, "escaping")
     )
 
 
@@ -244,7 +244,6 @@ def check_character_position_is_existing_scene() -> list[CheckFailure]:
         if _valid_scene_path(position, scene_data):
             continue
         behavior = getattr(c, "behavior", None)
-        sp_flag = getattr(c, "sp_flag", None)
         failures.append(
             make_failure(
                 "PLACE-04",
@@ -256,9 +255,9 @@ def check_character_position_is_existing_scene() -> list[CheckFailure]:
                     f"move_src={getattr(behavior, 'move_src', None)}，"
                     f"move_target={getattr(behavior, 'move_target', None)}，"
                     f"move_final_target={getattr(behavior, 'move_final_target', None)}，"
-                    f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                    f"escaping={getattr(sp_flag, 'escaping', None)}"
+                    f"be_bagged={flags.get(cid, 'be_bagged')}，"
+                    f"field_commission={flags.get(cid, 'field_commission')}，"
+                    f"escaping={flags.get(cid, 'escaping')}"
                 ),
                 [cid],
             )
@@ -312,7 +311,6 @@ def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
         character_list = getattr(sc, "character_list", None) or []
         if cid not in character_list:
             behavior = getattr(c, "behavior", None)
-            sp_flag = getattr(c, "sp_flag", None)
             failures.append(
                 make_failure(
                     "PLACE-05",
@@ -323,9 +321,9 @@ def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
                         f"{sorted(character_list)}中不含该id；behavior_id={getattr(behavior, 'behavior_id', None)}，"
                         f"move_src={getattr(behavior, 'move_src', None)}，"
                         f"move_target={getattr(behavior, 'move_target', None)}，"
-                        f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                        f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                        f"escaping={getattr(sp_flag, 'escaping', None)}，是否在npc_id_got中={cid in npc_id_got}"
+                        f"be_bagged={flags.get(cid, 'be_bagged')}，"
+                        f"field_commission={flags.get(cid, 'field_commission')}，"
+                        f"escaping={flags.get(cid, 'escaping')}，是否在npc_id_got中={cid in npc_id_got}"
                     ),
                     [cid],
                 )
@@ -348,9 +346,7 @@ def check_scene_to_character_direction_consistency() -> list[CheckFailure]:
     scene_data = getattr(cache, "scene_data", {}) or {}
     pl = character_data.get(0)
     bagging_id = (
-        getattr(getattr(pl, "sp_flag", None), "bagging_chara_id", None)
-        if pl is not None
-        else None
+        flags.get(pl.cid, "bagging_chara_id") if pl is not None else None
     )
     # 预先构建 cid -> 所在全部场景路径的映射，避免每条失败都重新全表扫描
     cid_to_scenes = collections.defaultdict(list)
@@ -453,7 +449,6 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
     for cid, paths in cid_to_scenes.items():
         if cid != 0 and cid not in npc_id_got:
             c = character_data.get(cid)
-            sp_flag = getattr(c, "sp_flag", None) if c else None
             failures.append(
                 make_failure(
                     "PLACE-08",
@@ -462,10 +457,10 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
                         f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}出现在场景名册{paths}中，"
                         f"但既非玩家也不在npc_id_got中；"
                         f"position={getattr(c, 'position', None) if c else None}，"
-                        f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                        f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                        f"escaping={getattr(sp_flag, 'escaping', None)}，"
-                        f"vistor={getattr(sp_flag, 'vistor', None)}"
+                        f"be_bagged={flags.get(cid, 'be_bagged') if c else None}，"
+                        f"field_commission={flags.get(cid, 'field_commission') if c else None}，"
+                        f"escaping={flags.get(cid, 'escaping') if c else None}，"
+                        f"vistor={flags.get(cid, 'vistor') if c else None}"
                     ),
                     [cid],
                 )
@@ -473,20 +468,19 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
 
     # (b) 带明确离线标记的角色必须已退出npc_id_got
     for cid, c in character_data.items():
-        sp_flag = getattr(c, "sp_flag", None)
-        if _offline_flags(sp_flag) and cid in npc_id_got:
+        if _offline_flags(cid) and cid in npc_id_got:
             failures.append(
                 make_failure(
                     "PLACE-08",
                     "场景名册只容纳在册角色/离线角色必须退出名册",
                     (
                         f"角色id={cid} name={getattr(c, 'name', '')}带有离线标记(be_bagged="
-                        f"{getattr(sp_flag, 'be_bagged', None)}，"
-                        f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                        f"escaping={getattr(sp_flag, 'escaping', None)})，"
+                        f"{flags.get(cid, 'be_bagged')}，"
+                        f"field_commission={flags.get(cid, 'field_commission')}，"
+                        f"escaping={flags.get(cid, 'escaping')})，"
                         f"但仍在npc_id_got中；position={getattr(c, 'position', None)}，"
                         f"所在场景名册={cid_to_scenes.get(cid, [])}，"
-                        f"vistor={getattr(sp_flag, 'vistor', None)}"
+                        f"vistor={flags.get(cid, 'vistor')}"
                     ),
                     [cid],
                 )
@@ -646,10 +640,7 @@ def check_past_move_position_list_valid() -> list[CheckFailure]:
     character_data = getattr(cache, "character_data", {}) or {}
     scene_data = getattr(cache, "scene_data", {}) or {}
     for cid, c in character_data.items():
-        action_info = getattr(c, "action_info", None)
-        past_list = getattr(action_info, "past_move_position_list", None)
-        if not isinstance(past_list, list):
-            continue
+        past_list = action_info.get(cid, "past_move_position_list")
         bad_items = [
             p for p in past_list if not _valid_scene_path(p, scene_data)
         ]
@@ -754,7 +745,6 @@ def check_target_character_id_exists() -> list[CheckFailure]:
         target_id = getattr(c, "target_character_id", cid)
         if target_id not in character_data:
             behavior = getattr(c, "behavior", None)
-            sp_flag = getattr(c, "sp_flag", None)
             failures.append(
                 make_failure(
                     "PLACE-16",
@@ -763,7 +753,7 @@ def check_target_character_id_exists() -> list[CheckFailure]:
                         f"角色id={cid} name={getattr(c, 'name', '')}的target_character_id={target_id}在character_data中"
                         f"不存在"
                         f"（自指=无交互对象、0=以玩家为交互对象均合法，此处既非自指也非现存id）；"
-                        f"behavior_id={getattr(behavior, 'behavior_id', None)}，is_h={getattr(sp_flag, 'is_h', None)}，"
+                        f"behavior_id={getattr(behavior, 'behavior_id', None)}，is_h={flags.get(cid, 'is_h')}，"
                         f"position={getattr(c, 'position', None)}"
                     ),
                     [cid],
@@ -787,16 +777,13 @@ def check_h_state_target_same_scene() -> list[CheckFailure]:
     character_data = getattr(cache, "character_data", {}) or {}
     pl = character_data.get(0)
     bagging_id = (
-        getattr(getattr(pl, "sp_flag", None), "bagging_chara_id", None)
-        if pl is not None
-        else None
+        flags.get(pl.cid, "bagging_chara_id") if pl is not None else None
     )
     for cid in _live_ids(cache):
         c = character_data.get(cid)
         if c is None:
             continue
-        sp_flag = getattr(c, "sp_flag", None)
-        if not getattr(sp_flag, "is_h", False):
+        if not flags.get(cid, "is_h"):
             continue
         target_id = getattr(c, "target_character_id", cid)
         target = character_data.get(target_id)
@@ -819,7 +806,7 @@ def check_h_state_target_same_scene() -> list[CheckFailure]:
                     f"其target_character_id={target_id}"
                     f"{target_desc}，自身position={getattr(c, 'position', None)}；"
                     f"behavior_id={getattr(behavior, 'behavior_id', None)}，"
-                    f"unconscious_h={getattr(sp_flag, 'unconscious_h', None)}，pl.sp_flag.bagging_chara_id={bagging_id}"
+                    f"unconscious_h={flags.get(cid, 'unconscious_h')}，pl.sp_flag.bagging_chara_id={bagging_id}"
                 ),
                 [cid] + ([target_id] if target is not None else []),
             )
@@ -898,8 +885,7 @@ def check_current_assistant_valid_and_online() -> list[CheckFailure]:
         return failures
     in_got = aid in npc_id_got
     dead = getattr(assistant, "dead", False)
-    sp_flag = getattr(assistant, "sp_flag", None)
-    offline = _offline_flags(sp_flag)
+    offline = _offline_flags(aid)
     if not (in_got and not dead and not offline):
         failures.append(
             make_failure(
@@ -908,9 +894,9 @@ def check_current_assistant_valid_and_online() -> list[CheckFailure]:
                 (
                     f"玩家当前助理id={aid} name={getattr(assistant, 'name', '')} "
                     f"position={getattr(assistant, 'position', None)}，"
-                    f"是否在npc_id_got中={in_got}，dead={dead}，be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                    f"escaping={getattr(sp_flag, 'escaping', None)}，"
+                    f"是否在npc_id_got中={in_got}，dead={dead}，be_bagged={flags.get(aid, 'be_bagged')}，"
+                    f"field_commission={flags.get(aid, 'field_commission')}，"
+                    f"escaping={flags.get(aid, 'escaping')}，"
                     f"玩家position={getattr(pl, 'position', None)}"
                 ),
                 [aid],
@@ -1062,8 +1048,7 @@ def check_follow_mode_value_valid() -> list[CheckFailure]:
     pl = character_data.get(0)
     pl_aid = getattr(pl, "assistant_character_id", 0) if pl is not None else 0
     for cid, c in character_data.items():
-        sp_flag = getattr(c, "sp_flag", None)
-        is_follow = getattr(sp_flag, "is_follow", 0)
+        is_follow = flags.get(cid, "is_follow")
         if is_follow not in (0, 1, 2, 3, 4):
             behavior = getattr(c, "behavior", None)
             services = getattr(c, "assistant_services", None) or {}
@@ -1097,8 +1082,7 @@ def check_player_not_following_self() -> list[CheckFailure]:
     pl = character_data.get(0)
     if pl is None:
         return failures
-    sp_flag = getattr(pl, "sp_flag", None)
-    is_follow = getattr(sp_flag, "is_follow", 0)
+    is_follow = flags.get(0, "is_follow")
     if is_follow != 0:
         debug_mode = bool(getattr(cache, "debug_mode", False))
         prefix = (
@@ -1139,16 +1123,15 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
     character_data = getattr(cache, "character_data", {}) or {}
     npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
     for cid, c in character_data.items():
-        sp_flag = getattr(c, "sp_flag", None)
-        is_follow = getattr(sp_flag, "is_follow", 0)
+        is_follow = flags.get(cid, "is_follow")
         if is_follow == 0:
             continue
         dead = getattr(c, "dead", False)
-        offline = _offline_flags(sp_flag)
+        offline = _offline_flags(cid)
         in_got = cid in npc_id_got
         if cid != 0 and in_got and not dead and not offline:
             continue
-        vistor = getattr(sp_flag, "vistor", None)
+        vistor = flags.get(cid, "vistor")
         known_bug_note = (
             "；已知缺陷：访客到期离开(invite_visitor_panel.visitor_leave)未清is_follow，若vistor==2大概率是该已知路径"
             if vistor == 2
@@ -1162,9 +1145,9 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
                     f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的sp_flag.is_follow={is_follow}非0，"
                     f"但是否为玩家自身={cid == 0}，"
                     f"是否在npc_id_got中={in_got}，dead={dead}，position={getattr(c, 'position', None)}，"
-                    f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                    f"escaping={getattr(sp_flag, 'escaping', None)}，vistor={vistor}，"
+                    f"be_bagged={flags.get(cid, 'be_bagged')}，"
+                    f"field_commission={flags.get(cid, 'field_commission')}，"
+                    f"escaping={flags.get(cid, 'escaping')}，vistor={vistor}，"
                     f"是否在访客名册中={visitor.is_visitor(cid)}"
                     f"{known_bug_note}"
                 ),
@@ -1198,8 +1181,7 @@ def check_bagging_consistency() -> list[CheckFailure]:
     for cid, c in character_data.items():
         if cid == 0:
             continue
-        sp_flag = getattr(c, "sp_flag", None)
-        bagging_id = getattr(sp_flag, "bagging_chara_id", 0)
+        bagging_id = flags.get(cid, "bagging_chara_id")
         if bagging_id != 0:
             failures.append(
                 make_failure(
@@ -1213,14 +1195,13 @@ def check_bagging_consistency() -> list[CheckFailure]:
                 )
             )
 
-    pl_sp_flag = getattr(pl, "sp_flag", None)
-    pl_bagging_id = getattr(pl_sp_flag, "bagging_chara_id", 0) or 0
+    pl_bagging_id = flags.get(0, "bagging_chara_id") or 0
 
     # (2) be_bagged集合必须恰好等于{玩家当前装袋对象}
     be_bagged_ids = {
         cid
         for cid, c in character_data.items()
-        if getattr(getattr(c, "sp_flag", None), "be_bagged", False)
+        if flags.get(c.cid, "be_bagged")
     }
     expected_ids = {pl_bagging_id} if pl_bagging_id else set()
     if be_bagged_ids != expected_ids:
@@ -1256,8 +1237,7 @@ def check_bagging_consistency() -> list[CheckFailure]:
                 )
             )
         else:
-            target_sp_flag = getattr(target, "sp_flag", None)
-            be_bagged = getattr(target_sp_flag, "be_bagged", False)
+            be_bagged = flags.get(bid, "be_bagged")
             in_got = bid in npc_id_got
             position = getattr(target, "position", None)
             scenes_with_bid = [

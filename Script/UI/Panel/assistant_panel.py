@@ -1,22 +1,12 @@
 """助理面板，以及助理候选、选择与替换的处理"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-    py_cmd,
-)
-from Script.Design import (
-    handle_premise,
-    attr_calculation,
-    map_handle,
-    second_behavior,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text, py_cmd
+from Script.Design import attr_calculation, handle_premise, map_handle
+from Script.Design import second_behavior
 from Script.UI.Moudle import draw, panel, view
-from Script.Modules.domains import visitor, work
+from Script.Modules.domains import action_info, flags, visitor, work
 from Script.Modules.save_load import reset
 from Script.Config import game_config, normal_config
 
@@ -143,7 +133,7 @@ def assistant_replace(new_assistant_id: int) -> None:
         old_assistant_data = cache.character_data[
             character_data.assistant_character_id
         ]
-        old_assistant_data.sp_flag.is_follow = 0
+        flags.set(old_assistant_data.cid, is_follow=0)
         # 去掉旧助理的同居状态
         if (
             character_data.assistant_character_id != 0
@@ -185,7 +175,7 @@ def assistant_replace(new_assistant_id: int) -> None:
         new_assistant_data = cache.character_data[
             character_data.assistant_character_id
         ]
-        new_assistant_data.sp_flag.is_follow = 1
+        flags.set(new_assistant_data.cid, is_follow=1)
         new_assistant_data.assistant_services[2] = 1
         second_behavior.character_get_second_behavior(
             new_assistant_id, "not_as_assistant", reset=True
@@ -223,8 +213,8 @@ def assistant_replace(new_assistant_id: int) -> None:
 def repair_follow_flag() -> None:
     """读档时修补：跟随状态超出 0-4 的角色归零"""
     for character_data in cache.character_data.values():
-        if character_data.sp_flag.is_follow > 4:
-            character_data.sp_flag.is_follow = 0
+        if flags.get(character_data.cid, "is_follow") > 4:
+            flags.set(character_data.cid, is_follow=0)
 
 
 class Assistant_Panel:
@@ -319,10 +309,10 @@ class Assistant_Panel:
                             "  [更改早安服务预定时间]——当前预定时间：{0}:{1}"
                         ).format(
                             str(
-                                character_data.action_info.plan_to_wake_time[0]
+                                action_info.get(0, "plan_to_wake_time")[0]
                             ).rjust(2, "0"),
                             str(
-                                character_data.action_info.plan_to_wake_time[1]
+                                action_info.get(0, "plan_to_wake_time")[1]
                             ).rjust(2, "0"),
                         )
                         button_draw = draw.LeftButton(
@@ -340,10 +330,10 @@ class Assistant_Panel:
                             "  [更改晚安服务预定时间]——当前预定时间：{0}:{1}"
                         ).format(
                             str(
-                                character_data.action_info.plan_to_sleep_time[0]
+                                action_info.get(0, "plan_to_sleep_time")[0]
                             ).rjust(2, "0"),
                             str(
-                                character_data.action_info.plan_to_sleep_time[1]
+                                action_info.get(0, "plan_to_sleep_time")[1]
                             ).rjust(2, "0"),
                         )
                         button_draw = draw.LeftButton(
@@ -383,12 +373,15 @@ class Assistant_Panel:
                 not assistant_data.assistant_services[service_cid]
             )
             if (
-                assistant_data.sp_flag.is_follow == 1
-                or assistant_data.sp_flag.is_follow > 4
+                flags.get(assistant_data.cid, "is_follow") == 1
+                or flags.get(assistant_data.cid, "is_follow") > 4
             ):
-                assistant_data.sp_flag.is_follow = 0
+                flags.set(assistant_data.cid, is_follow=0)
             else:
-                assistant_data.sp_flag.is_follow += 1
+                flags.set(
+                    assistant_data.cid,
+                    is_follow=flags.get(assistant_data.cid, "is_follow") + 1,
+                )
         # 其他服务
         else:
             assistant_data.assistant_services.setdefault(service_cid, 0)
@@ -534,7 +527,6 @@ class Assistant_Panel:
 
     def select_morning_salutation_time(self) -> None:
         """选择早安服务的时间"""
-        character_data: game_type.Character = cache.character_data[0]
         return_list = []
 
         while 1:
@@ -543,7 +535,7 @@ class Assistant_Panel:
             line_draw.draw()
             line_feed.draw()
             # 显示当前时间
-            plan_to_wake_time = character_data.action_info.plan_to_wake_time
+            plan_to_wake_time = action_info.get(0, "plan_to_wake_time")
             now_time_hour, now_time_minute = (
                 plan_to_wake_time[0],
                 plan_to_wake_time[1],
@@ -606,7 +598,6 @@ class Assistant_Panel:
 
     def select_night_salutation_time(self) -> None:
         """选择晚安服务的时间"""
-        character_data: game_type.Character = cache.character_data[0]
         return_list = []
 
         while 1:
@@ -615,7 +606,7 @@ class Assistant_Panel:
             line_draw.draw()
             line_feed.draw()
             # 显示当前时间
-            plan_to_sleep_time = character_data.action_info.plan_to_sleep_time
+            plan_to_sleep_time = action_info.get(0, "plan_to_sleep_time")
             now_time_hour, now_time_minute = (
                 plan_to_sleep_time[0],
                 plan_to_sleep_time[1],
@@ -672,7 +663,6 @@ class Assistant_Panel:
 
     def change_hour(self, morning_flag: bool = True) -> None:
         """更改小时"""
-        character_data: game_type.Character = cache.character_data[0]
         while 1:
             input_text = flow_handle.askfor_str(_(_("请输入小时(24小时制)：")))
             try:
@@ -684,7 +674,7 @@ class Assistant_Panel:
                     user_input = 0
                 elif user_input > 9:
                     user_input = 9
-                character_data.action_info.plan_to_wake_time[0] = user_input
+                action_info.set_plan_time(0, "plan_to_wake_time", 0, user_input)
                 break
             else:
                 if user_input <= 18:
@@ -692,14 +682,13 @@ class Assistant_Panel:
                 elif user_input > 0:
                     if user_input > 23:
                         user_input = 23
-                    character_data.action_info.plan_to_sleep_time[0] = (
-                        user_input
+                    action_info.set_plan_time(
+                        0, "plan_to_sleep_time", 0, user_input
                     )
                     break
 
     def change_minute(self, morning_flag: bool = True) -> None:
         """更改分钟"""
-        character_data: game_type.Character = cache.character_data[0]
         while 1:
             input_text = flow_handle.askfor_str(_(_("请输入分钟：")))
             try:
@@ -712,10 +701,12 @@ class Assistant_Panel:
                 if user_input > 59:
                     user_input = 59
                 if morning_flag:
-                    character_data.action_info.plan_to_wake_time[1] = user_input
+                    action_info.set_plan_time(
+                        0, "plan_to_wake_time", 1, user_input
+                    )
                 else:
-                    character_data.action_info.plan_to_sleep_time[1] = (
-                        user_input
+                    action_info.set_plan_time(
+                        0, "plan_to_sleep_time", 1, user_input
                     )
                 break
 

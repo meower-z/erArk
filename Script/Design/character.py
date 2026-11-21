@@ -17,7 +17,8 @@ from Script.Design import (
 )
 from Script.Config import normal_config
 from Script.UI.Moudle import panel, draw
-from Script.Modules.domains import abilities, needs
+from Script.Modules.domains import abilities, action_info, flags, needs
+from Script.Modules.domains import player_ability, player_collection
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -71,12 +72,12 @@ def init_attr(character_id: int) -> None:
         character_data.h_state
     )
     character_data.first_record = attr_calculation.get_first_record_zero()
-    character_data.action_info = attr_calculation.get_action_info_state_zero()
+    action_info.init_zero(character_id)
     character_data.event = attr_calculation.get_event_zero()
     character_data.work = attr_calculation.get_work_zero()
     character_data.entertainment = attr_calculation.get_entertainment_zero()
     character_data.pregnancy = attr_calculation.get_pregnancy_zero()
-    character_data.sp_flag = game_type.SPECIAL_FLAG()
+    flags.reset(character_id)
     character_data.chara_setting = attr_calculation.get_chara_setting_zero()
     character_data.assistant_services = (
         attr_calculation.get_assistant_services_zero()
@@ -93,13 +94,8 @@ def init_attr(character_id: int) -> None:
         needs.set(character_id, sanity=100, sanity_max=100)
         character_data.semen_point = 100
         character_data.semen_point_max = 100
-        character_data.pl_collection.token_list = (
-            attr_calculation.get_token_zero(
-                character_data.pl_collection.token_list
-            )
-        )
-        character_data.pl_ability = attr_calculation.get_pl_ability_zero()
-        character_data.pl_collection = attr_calculation.get_collection_zero()
+        player_ability.reset(0)
+        player_collection.init_zero(0)
         character_data.cloth = attr_calculation.get_cloth_zero()
         character_data.favorability = {0: 0}
         character_data.dormitory = map_handle.get_map_system_path_str_for_list(

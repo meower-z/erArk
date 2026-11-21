@@ -282,7 +282,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
             "完成的委托计外勤成就",
         )
         self.assertEqual(
-            self.cache.character_data[adult_id].sp_flag.field_commission,
+            kernel_data.domain("flags").get(adult_id, "field_commission"),
             0,
             "成年干员回来了",
         )

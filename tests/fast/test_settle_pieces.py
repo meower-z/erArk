@@ -15,7 +15,7 @@ from unittest import mock
 from Script.Core import constant, game_type
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, player_ability
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
@@ -152,7 +152,7 @@ class SettlePiecesTest(FastTestCase):
 
         def prepare() -> game_type.Character:
             player = self.world.chara(0, "博士")
-            player.pl_ability.visual = True
+            kernel_data.put(player_ability.set, player.cid, visual=True)
             kernel_data.set_needs(player.cid, sanity=100)
             self.behave(0, constant.Behavior.WAIT, 8)
             return player

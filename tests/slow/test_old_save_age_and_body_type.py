@@ -158,9 +158,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
 
         child = cache.character_data[id_dict["d102"]]
         mother = cache.character_data[mother_id]
-        map_handle.character_move_scene(
-            child.position, mother.position, id_dict["d102"]
-        )
+        with kd.writing():
+            map_handle.character_move_scene(
+                child.position, mother.position, id_dict["d102"]
+            )
         cache.npc_id_got.add(id_dict["d102"])
         self.assertIn(
             id_dict["d102"],
@@ -181,18 +182,20 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             dormitory_common.get_open_dormitory_room_occupancy(),
             "存档前102的孩子住在开放的普通宿舍里",
         )
-        child.sp_flag.is_follow = 1
-        child.sp_flag.is_h = True
+        from Script.Modules.domains import action_info as ai, education
+        from Script.Modules.domains import flags as fl, physical_exam as exam
+        from Script.Modules.domains import player_ability as pa
+        from Script.Modules.domains import player_collection as pc, prison
+
         child.dirty.body_semen[min(game_config.config_body_part)] = [
             "",
             20,
             20,
             1,
         ]
-        cache.character_data[0].target_character_id = id_dict["d102"]
-        mother.target_character_id = id_dict["d102"]
         player = cache.character_data[0]
-        player.action_info.carry_chara_id = id_dict["d102"]
+        player.target_character_id = id_dict["d102"]
+        mother.target_character_id = id_dict["d102"]
         player.assistant_character_id = id_dict["d102"]
         child.assistant_services[min(child.assistant_services)] = 1
         mother.h_state.group_sex_body_template_dict["A"][0]["mouth"] = [
@@ -204,35 +207,27 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             3,
         ]
         child_id = id_dict["d102"]
-        player.pl_ability.free_in_time_stop_chara_id = child_id
-        player.sp_flag.bagging_chara_id = child_id
-        child.sp_flag.be_bagged = True
-        mother.action_info.interacting_character_end_info = [
-            child_id,
-            game_time.now(),
-        ]
-        player.action_info.ask_group_sex_refuse_chara_id_list = [
-            child_id,
-            mother_id,
-        ]
-        player.pl_collection.first_panties[child_id] = "测试"
-        player.pl_collection.npc_panties[child_id] = ["测试"]
-        player.pl_collection.npc_socks[child_id] = ["测试"]
-        player.pl_collection.milk_total[child_id] = 30
-        player.pl_collection.urine_total[child_id] = 20
-        education = importlib.import_module("Script.Modules.domains.education")
-        prison = importlib.import_module("Script.Modules.domains.prison")
-        child.sp_flag.imprisonment = True
         commission_id = min(game_config.config_commission)
         team = [child_id, mother_id]
-        kd.written(start, commission_id, team, game_time.now(), [])
-        child.sp_flag.field_commission = commission_id
-        exam = importlib.import_module("Script.Modules.domains.physical_exam")
+        now = game_time.now()
         with kd.writing():
-            exam.finish(child_id, {1})
+            start(commission_id, team, now, [])
+            ai.set(0, "carry_chara_id", child_id)
+            pa.set(0, free_in_time_stop_chara_id=child_id)
+            fl.set(0, bagging_chara_id=child_id, is_h=True)
+            fl.set(child_id, is_follow=1, is_h=True, be_bagged=True)
+            fl.set(child_id, imprisonment=True, field_commission=commission_id)
+            ai.set(mother_id, "interacting_character_end_info", [child_id, now])
+            ai.set(0, "ask_group_sex_refuse_chara_id_list", team)
+            pc.put("first_panties", {child_id: "测试"})
+            pc.put("npc_panties", {child_id: ["测试"]})
+            pc.put("npc_socks", {child_id: ["测试"]})
+            pc.put("milk_total", {child_id: 30})
+            pc.put("urine_total", {child_id: 20})
+            exam.finish(child_id, {"1"})
             exam.add(exam.WAITING, child_id)
             exam.add(exam.CHOSEN, child_id)
-            prison.imprison(child_id, game_time.now(), 0)
+            prison.imprison(child_id, now, 0)
             education.put_temp_class(
                 "1-1",
                 {
@@ -260,7 +255,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         cache.old_character_id = child_id
         # 玩家与她在单人H中（双方都在H、玩家所在房间关着门，她脱了一件衣服），母亲正对她做着别的行为；
         #    她身上有快感、催眠、待触发事件与必须结算的二段行为
-        player.sp_flag.is_h = True
         player.h_state.insert_position = 2
         cache.scene_data[
             map_handle.get_map_system_path_str_for_list(player.position)
@@ -337,10 +331,18 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 if state.type == 0
             )
         ] = [3, 3]
-        baby.sp_flag.is_h = True
-        baby.sp_flag.milk = True
-        baby.sp_flag.masturebate = 1
-        baby.sp_flag.go_to_join_group_sex = True
+        baby_id = baby.cid
+        with kd.writing():
+            fl.set(baby_id, is_h=True, milk=True, masturebate=1)
+            fl.set(baby_id, go_to_join_group_sex=True)
+            pc.put("held_eggs", {0: (baby_id, 0)})
+            pc.put(
+                "soft_eggs",
+                {
+                    0: {"mother_id": baby_id, "semen_count": 5.0},
+                    1: {"mother_id": mother_id, "semen_count": 5.0},
+                },
+            )
         baby.target_character_id = 0
         for talent_id in (20, 21, 27):
             ca.talent(baby)[talent_id] = 1
@@ -349,12 +351,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         baby.pregnancy.fertilization_rate = 30
         baby.pregnancy.eggs = {0: {"identified": False, "fertilized": True}}
         baby.pregnancy.next_egg_id = 1
-        collection = cache.character_data[0].pl_collection
-        collection.held_eggs = {0: (id_dict["d101"], 0)}
-        collection.soft_eggs = {
-            0: {"mother_id": id_dict["d101"], "semen_count": 5.0},
-            1: {"mother_id": mother_id, "semen_count": 5.0},
-        }
         baby.pregnancy.born_time = game_time.now()
         id_dict["baby_born_time"] = game_time.now()
         mother = cache.character_data[mother_id]
@@ -389,14 +385,15 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         dict -- 角色id到数据的字典，外加世界设定、日程模板、玩家收藏品里的卵、当前干员列表、各场景的角色、GameState 的
            全部全局数据，以及场景面板记着的角色
         """
-        collection = self.cache.character_data[0].pl_collection
-        education = importlib.import_module("Script.Modules.domains.education")
+        from Script.Modules.domains import action_info as ai, education
+        from Script.Modules.domains import flags as fl, player_ability as pa
+        from Script.Modules.domains import player_collection as pc
         from Script.Kernel import core
 
         snapshot: dict[str | int, object] = {
             "world_setting": kd.world_settings(),
             "template": repr(education.templates()),
-            "eggs": repr((collection.held_eggs, collection.soft_eggs)),
+            "eggs": repr((pc.get("held_eggs"), pc.get("soft_eggs"))),
             "npc_id_got": sorted(self.cache.npc_id_got),
             "scene": {
                 path: sorted(scene.character_list)
@@ -415,7 +412,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 list(chara.entertainment.entertainment_type),
                 list(chara.position),
                 chara.target_character_id,
-                chara.action_info.carry_chara_id,
+                ai.get(chara.cid, "carry_chara_id"),
                 repr(
                     (
                         chara.cloth.cloth_wear,
@@ -430,16 +427,16 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 dict(chara.assistant_services),
                 repr(
                     (
-                        chara.pl_ability.free_in_time_stop_chara_id,
-                        chara.sp_flag.bagging_chara_id,
-                        chara.sp_flag.be_bagged,
-                        chara.action_info.interacting_character_end_info[0],
-                        chara.action_info.ask_group_sex_refuse_chara_id_list,
+                        pa.get(chara.cid, "free_in_time_stop_chara_id"),
+                        fl.get(chara.cid, "bagging_chara_id"),
+                        fl.get(chara.cid, "be_bagged"),
+                        ai.get(chara.cid, "interacting_character_end_info")[0],
+                        ai.get(chara.cid, "ask_group_sex_refuse_chara_id_list"),
                     )
                 ),
                 repr(
                     [
-                        sorted(getattr(chara.pl_collection, name).items())
+                        sorted(pc.get(name, chara.cid).items())
                         for name in (
                             "first_panties",
                             "npc_panties",
@@ -458,10 +455,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                         for part in (
                             chara.dirty,
                             chara.h_state,
-                            chara.sp_flag,
                             chara.pregnancy,
                         )
                     ]
+                    + [sorted(fl.snapshot(chara.cid).items())]
                 ),
             )
         return snapshot
@@ -648,12 +645,14 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             [],
             "101的婴儿没有绝顶记录",
         )
+        from Script.Modules.domains import action_info as ai, flags as fl
+
         self.assertEqual(
             (
-                baby.sp_flag.is_h,
-                baby.sp_flag.milk,
-                baby.sp_flag.masturebate,
-                baby.sp_flag.go_to_join_group_sex,
+                fl.get(baby.cid, "is_h"),
+                fl.get(baby.cid, "milk"),
+                fl.get(baby.cid, "masturebate"),
+                fl.get(baby.cid, "go_to_join_group_sex"),
             ),
             (False, 0, 0, False),
             "101的婴儿没有H标记与后续链",
@@ -723,7 +722,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             self.assertEqual(
                 (
                     child.position,
-                    child.sp_flag.is_follow,
+                    fl.get(child.cid, "is_follow"),
                     child.target_character_id,
                 ),
                 (["0", "0"], 0, child_id),
@@ -744,7 +743,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         ].h_state.group_sex_body_template_dict
         self.assertEqual(
             (
-                player.action_info.carry_chara_id,
+                ai.get(0, "carry_chara_id"),
                 player.assistant_character_id,
                 template_dict["A"][0]["mouth"],
                 template_dict["B"][1],
@@ -775,7 +774,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         self._assert_h_session_ended(id_dict)
         self.assertEqual(
             (
-                child.sp_flag.is_h,
+                fl.get(child.cid, "is_h"),
                 [
                     key
                     for key, semen_list in child.dirty.body_semen.items()
@@ -785,11 +784,11 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             (False, []),
             "102的孩子没有H标记与精液",
         )
-        collection = cache.character_data[0].pl_collection
+        pc = kd.domain("player_collection")
         self.assertEqual(
             (
-                collection.held_eggs,
-                [egg["mother_id"] for egg in collection.soft_eggs.values()],
+                pc.get("held_eggs"),
+                [egg["mother_id"] for egg in pc.get("soft_eggs").values()],
             ),
             ({}, [id_dict["mother"]]),
             "玩家收藏品里没有101婴儿的卵，母亲的体外卵保留",
@@ -811,49 +810,45 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
 
     def _assert_no_child_reference(self, id_dict: dict) -> None:
         """检查其他结构里没有对102孩子的引用，与她并列的母亲的条目保留"""
-        cache = self.cache
         child_id = id_dict["d102"]
         mother_id = id_dict["mother"]
-        child = cache.character_data[child_id]
-        player = cache.character_data[0]
-        from Script.Modules.domains import commission, library
+        child = self.cache.character_data[child_id]
+        from Script.Modules.domains import action_info as ai, commission
+        from Script.Modules.domains import education, flags as fl, library
+        from Script.Modules.domains import physical_exam as exam, prison
+        from Script.Modules.domains import player_ability as pa
+        from Script.Modules.domains import player_collection as pc
 
-        collection = player.pl_collection
         self.assertEqual(
             (
-                player.pl_ability.free_in_time_stop_chara_id,
-                player.sp_flag.bagging_chara_id,
-                child.sp_flag.be_bagged,
+                pa.get(0, "free_in_time_stop_chara_id"),
+                fl.get(0, "bagging_chara_id"),
+                fl.get(child_id, "be_bagged"),
             ),
             (0, 0, False),
             "没有以孩子为时停自由活动或装袋的对象",
         )
         self.assertEqual(
-            cache.character_data[
-                mother_id
-            ].action_info.interacting_character_end_info[0],
+            ai.get(mother_id, "interacting_character_end_info")[0],
             -1,
             "母亲的交互中对象不是孩子",
         )
         self.assertEqual(
-            player.action_info.ask_group_sex_refuse_chara_id_list,
+            ai.get(0, "ask_group_sex_refuse_chara_id_list"),
             [mother_id],
             "拒绝群交名单里没有孩子，母亲保留",
         )
         self.assertEqual(
             (
-                collection.first_panties.get(child_id, ""),
-                collection.npc_panties.get(child_id, []),
-                collection.npc_socks.get(child_id, []),
-                collection.milk_total.get(child_id, 0),
-                collection.urine_total.get(child_id, 0),
+                pc.get("first_panties").get(child_id, ""),
+                pc.get("npc_panties").get(child_id, []),
+                pc.get("npc_socks").get(child_id, []),
+                pc.get("milk_total").get(child_id, 0),
+                pc.get("urine_total").get(child_id, 0),
             ),
             ("", [], [], 0, 0),
             "玩家收藏品里没有孩子的胖次、袜子、乳汁与圣水",
         )
-        education = importlib.import_module("Script.Modules.domains.education")
-        prison = importlib.import_module("Script.Modules.domains.prison")
-        exam = importlib.import_module("Script.Modules.domains.physical_exam")
         self.assertEqual(
             [child_id in one for one in (prison.prisoner_ids(),)]
             + [exam.has(key, child_id) for key in (exam.TODAY, *exam.ID_LISTS)],
@@ -861,7 +856,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "囚犯与体检名单里没有孩子",
         )
         self.assertEqual(
-            (child.sp_flag.imprisonment, child.sp_flag.field_commission),
+            (
+                fl.get(child_id, "imprisonment"),
+                fl.get(child_id, "field_commission"),
+            ),
             (False, 0),
             "孩子不在监禁与外勤中",
         )
@@ -877,7 +875,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             (
                 library.holders()[id_dict["book"]],
                 child.entertainment.borrow_book_id_set,
-                cache.old_character_id,
+                self.cache.old_character_id,
             ),
             (-1, set(), 0),
             "孩子借的书还回去，场景面板记着的角色不是她",
@@ -899,12 +897,13 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         child = cache.character_data[id_dict["d102"]]
         mother = cache.character_data[id_dict["mother"]]
         clothing_type, cloth_id = id_dict["cloth"]
+        fl = kd.domain("flags")
         self.assertEqual(
             (
-                player.sp_flag.is_h,
+                fl.get(0, "is_h"),
                 player.target_character_id,
                 player.h_state.insert_position,
-                player.sp_flag.hidden_sex_mode,
+                fl.get(0, "hidden_sex_mode"),
             ),
             (False, 0, -1, 0),
             "玩家已结束H，交互对象是自己",
@@ -918,7 +917,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
         self.assertEqual(
             (
-                child.sp_flag.is_h,
+                fl.get(child.cid, "is_h"),
                 child.cloth.cloth_off[clothing_type],
                 cloth_id in child.cloth.cloth_wear[clothing_type],
             ),
@@ -1018,18 +1017,18 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
         mother_id, other_id = static_id_list[0], static_id_list[1]
         child_id = self._daughter(mother_id, "测试女儿群交", 102)
-        for character_id in (child_id, other_id):
-            map_handle.character_move_scene(
-                cache.character_data[character_id].position,
-                player.position,
-                character_id,
-            )
+        from Script.Modules.domains import flags as fl, modes
+
+        with kd.writing():
+            for cid in (child_id, other_id):
+                map_handle.character_move_scene(
+                    cache.character_data[cid].position, player.position, cid
+                )
+                cache.character_data[cid].target_character_id = 0
+            modes.set_group_sex(True)
+            for cid in (0, child_id, other_id):
+                fl.set(cid, is_h=True)
         cache.npc_id_got.add(child_id)
-        kd.set_world(kd.domain("modes").set_group_sex, True)
-        player.sp_flag.is_h = True
-        for character_id in (child_id, other_id):
-            cache.character_data[character_id].sp_flag.is_h = True
-            cache.character_data[character_id].target_character_id = 0
         player.h_state.group_sex_body_template_dict["A"][0]["L_hand"] = [
             other_id,
             5,
@@ -1062,7 +1061,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             for character_id in (0, child_id, other_id):
                 chara = cache.character_data[character_id]
                 self.assertFalse(
-                    chara.sp_flag.is_h, f"角色{character_id}不在H中"
+                    fl.get(chara.cid, "is_h"),
+                    f"角色{character_id}不在H中",
                 )
                 self.assertIn(
                     chara.target_character_id,

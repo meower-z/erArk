@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from tests.slow.base import SlowTestCase
 from tests.world import UnplannedInput
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -147,7 +147,9 @@ class OptionEventListsChildTest(SlowTestCase):
         before = (ca.juel(npc).get(0, 0), ca.experience(npc).get(0, 0))
         for _ in range(TRIES):
             # 聊天次数超过上限时，聊天指令走聊天失败行为
-            npc.action_info.talk_count = 0
+            kernel_data.put(
+                kernel_data.domain("action_info").set, npc.cid, "talk_count", 0
+            )
             fired.clear()
             offered.clear()
             self.world.player.planned.clear()

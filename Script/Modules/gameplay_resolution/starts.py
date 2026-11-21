@@ -19,6 +19,7 @@ from typing import cast
 from Script.Core import cache_control, constant, game_type
 from Script.Design import game_time
 from Script.Kernel import core
+from Script.Modules.domains import action_info, flags
 from Script.Modules.gameplay_resolution import (
     actions,
     draft,
@@ -127,6 +128,18 @@ def write_field(who: int, path: str, value: core.JSON) -> None:
     root, *names = path.split(".")
     if root not in FIELD_ROOTS or not names:
         raise ValueError(f"Intent.fields 不能写 {path}")
+    if root == "sp_flag" and len(names) == 1:
+        name = names[0]
+        if name not in flags.DEFAULTS:
+            raise AttributeError(f"{path} 不是角色身上已有的字段")
+        flags.set(who, **{name: cast(int, plain(value))})
+        return
+    if root == "action_info" and len(names) == 1:
+        name = names[0]
+        if name not in action_info.FIELDS:
+            raise AttributeError(f"{path} 不是角色身上已有的字段")
+        action_info.set(who, name, plain(value))
+        return
     node: object = getattr(cache.character_data[who], root)
     *parents, last = names
     for name in parents:
@@ -170,7 +183,7 @@ def begin(who: int, act: core.Action, chosen: intent.Intent) -> None:
         )
         character_data.behavior.start_time = behavior.start_time
         character_data.behavior.duration = act.duration
-        character_data.action_info.last_move_time = behavior.start_time
+        action_info.set(who, "last_move_time", behavior.start_time)
     say = chosen.get("say")
     if say is not None:
         args = chosen.get("args", {})

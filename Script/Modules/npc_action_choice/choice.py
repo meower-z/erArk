@@ -12,6 +12,7 @@ from Script.Config import normal_config
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import character_move, map_handle
 from Script.Kernel import core
+from Script.Modules.domains import action_info, flags
 from Script.Modules.gameplay_resolution import intent
 
 cache: game_type.Cache = cache_control.cache
@@ -142,8 +143,13 @@ class Plan:
         """
         if path in self._shadow:
             return self._shadow[path]
+        root, *rest = path.split(".")
+        if root == "sp_flag" and len(rest) == 1:
+            return flags.get(self.character_id, rest[0])
+        if root == "action_info" and len(rest) == 1:
+            return action_info.get(self.character_id, rest[0])
         node: object = cache.character_data[self.character_id]
-        for name in path.split("."):
+        for name in (root, *rest):
             node = getattr(node, name)
         return node
 

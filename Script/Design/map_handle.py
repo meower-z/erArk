@@ -6,7 +6,7 @@ from Script.Core import cache_control, game_type, get_text, constant
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from types import FunctionType
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, flags
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -127,17 +127,9 @@ def character_move_scene(
     character_data.behavior.move_src = old_scene_path
     character_data.behavior.move_target = new_scene_path
     # 记录移动历史
-    if len(character_data.action_info.past_move_position_list) == 0 or (
-        len(character_data.action_info.past_move_position_list)
-        and old_scene_path
-        != character_data.action_info.past_move_position_list[-1]
-    ):
-        character_data.action_info.past_move_position_list.append(
-            old_scene_path
-        )
-        # 如果移动历史超过10条，则删除最早的一条
-        if len(character_data.action_info.past_move_position_list) > 10:
-            character_data.action_info.past_move_position_list.pop(0)
+    from Script.Modules.domains import action_info
+
+    action_info.record_move(character_id, old_scene_path)
     # 清零最终目的地
     if new_scene_path == character_data.behavior.move_final_target:
         character_data.behavior.move_final_target = []
@@ -479,7 +471,7 @@ def judge_follow_player_into_scene(
     Return arguments:
     bool -- 智能跟随或强制跟随中，且目标场景是博士所在或正要进入的场景时为True
     """
-    if cache.character_data[character_id].sp_flag.is_follow not in {1, 2}:
+    if flags.get(character_id, "is_follow") not in {1, 2}:
         return False
     pl_character_data = cache.character_data[0]
     if (
@@ -748,7 +740,7 @@ def judge_scene_accessible(
         # 被博士召集到他当前位置的角色可以进博士所在的房间（博士为她开门）
         elif (
             character_id
-            and character_data.sp_flag.is_follow == 4
+            and flags.get(character_data.cid, "is_follow") == 4
             and get_map_system_path_str_for_list(pl_character_data.position)
             == target_scene_str
         ):
@@ -760,7 +752,7 @@ def judge_scene_accessible(
         ):
             pass
         # 被邀请群交的角色可以进
-        elif character_data.sp_flag.go_to_join_group_sex:
+        elif flags.get(character_data.cid, "go_to_join_group_sex"):
             pass
         # 牢房可以进
         elif "Prison" in now_scene_data.scene_tag:
@@ -783,7 +775,9 @@ def judge_scene_accessible(
 
     # 私密场所判断，仅限干员
     # 被邀请群交的角色可以进
-    if character_id and not character_data.sp_flag.go_to_join_group_sex:
+    if character_id and not flags.get(
+        character_data.cid, "go_to_join_group_sex"
+    ):
         # 博士房间
         if "Dr_room" in now_scene_data.scene_tag:
             # 助理可以进

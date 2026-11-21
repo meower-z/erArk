@@ -22,7 +22,8 @@ from typing import TypeGuard
 
 from Script.Core import cache_control, num
 from Script.Design import map_handle
-from Script.Modules.domains import abilities, achievement, modes, needs
+from Script.Modules.domains import abilities, achievement, action_info, flags
+from Script.Modules.domains import modes, needs, player_ability
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -120,7 +121,8 @@ def _u(chara: object) -> int:
     返回值: int sp_flag.unconscious_h取值，结构缺失时返回-1（不落在任何合法值域内，交由调用方处理）
     功能: 防御式读取无意识H状态
     """
-    return getattr(getattr(chara, "sp_flag", None), "unconscious_h", -1)
+    cid = getattr(chara, "cid", None)
+    return flags.get(cid, "unconscious_h") if isinstance(cid, int) else -1
 
 
 def _behavior_id(chara: object) -> str:
@@ -322,9 +324,8 @@ def check_time_stop_carry_free_fields_zero() -> list[CheckFailure]:
     pl = _pl()
     if pl is None:
         return []
-    pl_ability = getattr(pl, "pl_ability", None)
-    carry = getattr(pl_ability, "carry_chara_id_in_time_stop", 0)
-    free = getattr(pl_ability, "free_in_time_stop_chara_id", 0)
+    carry = player_ability.get(0, "carry_chara_id_in_time_stop")
+    free = player_ability.get(0, "free_in_time_stop_chara_id")
     if carry == 0 and free == 0:
         return []
     return [
@@ -333,7 +334,7 @@ def check_time_stop_carry_free_fields_zero() -> list[CheckFailure]:
             "时停搬运/自由活动字段在正常游戏中恒为零",
             f"[warning] 迁移/脏状态: carry_chara_id_in_time_stop={carry!r} free_in_time_stop_chara_id={free!r} "
             f"(均应恒为0，当前版本正常路径写不出非零值)，time_stop_mode={modes.time_stop()}，"
-            f"action_info.carry_chara_id={getattr(getattr(pl, 'action_info', None), 'carry_chara_id', '?')}",
+            f"action_info.carry_chara_id={action_info.get(pl.cid, "carry_chara_id")}",
             [0],
         )
     ]
@@ -399,7 +400,7 @@ def check_carry_target_valid_and_colocated() -> list[CheckFailure]:
     pl = _pl()
     if pl is None:
         return []
-    cid = getattr(getattr(pl, "action_info", None), "carry_chara_id", 0)
+    cid = action_info.get(pl.cid, "carry_chara_id")
     if cid == 0:
         return []
     character_data = getattr(cache, "character_data", {})
@@ -503,7 +504,7 @@ def check_hypnosis_type_degree_threshold() -> list[CheckFailure]:
                     f"[warning] 角色id={cid}({_name(chara)})unconscious_h={u}但hypnosis_degree={degree!r}未达门槛"
                     f"{thresholds[u]}，"
                     f"玩家hypnosis_type="
-                    f"{getattr(getattr(pl, 'pl_ability', None), 'hypnosis_type', '?') if pl is not None else '?'}，"
+                    f"{player_ability.get(pl.cid, "hypnosis_type") if pl is not None else '?'}，"
                     f"talent[71/72/73]={ {tid: _talent_get(chara, tid) for tid in (71, 72, 73)} }"
                 ),
                 [cid],
@@ -699,7 +700,7 @@ def check_body_control_unconscious_needs_mode() -> list[CheckFailure]:
                     f"roleplay={getattr(h, 'roleplay', '?')} "
                     f"h_state.npc_active_h="
                     f"{getattr(h_state, 'npc_active_h', '?')} "
-                    f"sp_flag.is_h={getattr(getattr(chara, 'sp_flag', None), 'is_h', '?')} "
+                    f"sp_flag.is_h={flags.get(chara.cid, "is_h")} "
                     f"time_stop_mode={modes.time_stop()} "
                     f"behavior_id={_behavior_id(chara)}"
                 ),
@@ -843,7 +844,7 @@ def check_body_mind_control_sub_item_requires_talent_73() -> list[CheckFailure]:
                     f"talent[71/72/73]={ {tid: _talent_get(chara, tid) for tid in (71, 72, 73)} }，"
                     f"hypnosis_degree={getattr(h, 'hypnosis_degree', '?')}，"
                     f"玩家hypnosis_type="
-                    f"{getattr(getattr(pl, 'pl_ability', None), 'hypnosis_type', '?') if pl is not None else '?'}"
+                    f"{player_ability.get(pl.cid, "hypnosis_type") if pl is not None else '?'}"
                 ),
                 [cid],
             )
@@ -866,7 +867,7 @@ def check_air_hypnosis_colocated_with_anchor() -> list[CheckFailure]:
     pl = _pl()
     if pl is None:
         return []
-    air = getattr(getattr(pl, "pl_ability", None), "air_hypnosis_position", "")
+    air = player_ability.get(pl.cid, "air_hypnosis_position")
     pl_pos = getattr(pl, "position", None)
     hits = []
     for cid, chara in _iter_all():
@@ -921,9 +922,7 @@ def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
         ):
             continue
         air_position = (
-            getattr(
-                getattr(pl, "pl_ability", None), "air_hypnosis_position", "?"
-            )
+            player_ability.get(pl.cid, "air_hypnosis_position")
             if pl is not None
             else "?"
         )
@@ -956,7 +955,7 @@ def check_air_hypnosis_anchor_shape() -> list[CheckFailure]:
     pl = _pl()
     if pl is None:
         return []
-    air = getattr(getattr(pl, "pl_ability", None), "air_hypnosis_position", "")
+    air = player_ability.get(pl.cid, "air_hypnosis_position")
     if air == "":
         return []
     scene_data = getattr(cache, "scene_data", None)
@@ -999,7 +998,7 @@ def check_pl_hypnosis_type_valid() -> list[CheckFailure]:
     pl = _pl()
     if pl is None:
         return []
-    t = getattr(getattr(pl, "pl_ability", None), "hypnosis_type", None)
+    t = player_ability.get(pl.cid, "hypnosis_type")
     prereq = {1: 331, 2: 333, 3: 334, 4: 334}
     ok = (
         isinstance(t, int)
@@ -1038,7 +1037,7 @@ def check_unconscious_h_range() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_pl_and_npcs():
-        u = getattr(getattr(chara, "sp_flag", None), "unconscious_h", None)
+        u = flags.get(chara.cid, "unconscious_h")
         if isinstance(u, bool) or not isinstance(u, int) or not (0 <= u <= 7):
             failures.append(
                 make_failure(
@@ -1046,7 +1045,7 @@ def check_unconscious_h_range() -> list[CheckFailure]:
                     "无意识状态取值域",
                     (
                         f"[warning] 角色id={cid}({_name(chara)})的sp_flag.unconscious_h越界: {u!r}，"
-                        f"is_h={getattr(getattr(chara, 'sp_flag', None), 'is_h', '?')} "
+                        f"is_h={flags.get(chara.cid, "is_h")} "
                         f"behavior_id={_behavior_id(chara)} state={getattr(chara, 'state', '?')}"
                     ),
                     [cid],
@@ -1141,7 +1140,6 @@ def check_sleep_unconscious_needs_sleep_or_pretend() -> list[CheckFailure]:
             getattr(chara, "h_state", None), "pretend_sleep", False
         ):
             continue
-        sp_flag = getattr(chara, "sp_flag", None)
         failures.append(
             make_failure(
                 "MIND-25",
@@ -1150,7 +1148,7 @@ def check_sleep_unconscious_needs_sleep_or_pretend() -> list[CheckFailure]:
                     f"角色id={cid}({_name(chara)})unconscious_h=1但既不在sleep行为中也未装睡: "
                     f"behavior_id={_behavior_id(chara)} "
                     f"pretend_sleep={getattr(getattr(chara, 'h_state', None), 'pretend_sleep', '?')} "
-                    f"sleep_h_awake={getattr(sp_flag, 'sleep_h_awake', '?')} "
+                    f"sleep_h_awake={flags.get(cid, 'sleep_h_awake')} "
                     f"sleep_point={num.shown(needs.of(cid)['sleep'])} state={getattr(chara, 'state', '?')}"
                 ),
                 [cid],
@@ -1207,9 +1205,8 @@ def check_sleep_plan_time_shape() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_pl_and_npcs():
-        action_info = getattr(chara, "action_info", None)
-        sleep_t = getattr(action_info, "plan_to_sleep_time", None)
-        wake_t = getattr(action_info, "plan_to_wake_time", None)
+        sleep_t = action_info.get(cid, "plan_to_sleep_time")
+        wake_t = action_info.get(cid, "plan_to_wake_time")
 
         def _time_ok(t: object) -> bool:
             """检查单个[时,分]字段是否合法"""
@@ -1231,8 +1228,8 @@ def check_sleep_plan_time_shape() -> list[CheckFailure]:
                 (
                     f"[warning] 角色id={cid}({_name(chara)})的睡眠计划时分字段非法: plan_to_sleep_time={sleep_t!r} "
                     f"plan_to_wake_time={wake_t!r}，"
-                    f"sleep_time={getattr(action_info, 'sleep_time', '?')} "
-                    f"wake_time={getattr(action_info, 'wake_time', '?')}"
+                    f"sleep_time={action_info.get(cid, 'sleep_time')} "
+                    f"wake_time={action_info.get(cid, 'wake_time')}"
                 ),
                 [cid],
             )
@@ -1257,7 +1254,6 @@ def check_pretend_sleep_should_be_unreachable() -> list[CheckFailure]:
         h_state = getattr(chara, "h_state", None)
         if not getattr(h_state, "pretend_sleep", False):
             continue
-        sp_flag = getattr(chara, "sp_flag", None)
         failures.append(
             make_failure(
                 "MIND-30",
@@ -1265,8 +1261,8 @@ def check_pretend_sleep_should_be_unreachable() -> list[CheckFailure]:
                 (
                     f"[warning] 角色id={cid}({_name(chara)})的h_state.pretend_sleep=True(当前版本该写入路径应不可达，"
                     f"属死代码复活警报): "
-                    f"is_h={getattr(sp_flag, 'is_h', '?')} unconscious_h={_u(chara)} behavior_id={_behavior_id(chara)} "
-                    f"sleep_h_awake={getattr(sp_flag, 'sleep_h_awake', '?')}"
+                    f"is_h={flags.get(cid, 'is_h')} unconscious_h={_u(chara)} behavior_id={_behavior_id(chara)} "
+                    f"sleep_h_awake={flags.get(cid, 'sleep_h_awake')}"
                 ),
                 [cid],
             )

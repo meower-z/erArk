@@ -156,10 +156,12 @@ class PickDraftWorldTest(SlowTestCase):
             self.show(constant.Panel.CHECK_LOCKER)
         )
         self.assert_one_edit(start, end, changed)
-        player = self.cache.character_data[0]
         npc = self.cache.character_data[self.chara_id]
         self.assertEqual(
-            player.pl_collection.npc_panties_tem[self.chara_id], [pan_id]
+            kernel_data.domain("player_collection").get("npc_panties_tem")[
+                self.chara_id
+            ],
+            [pan_id],
         )
         self.assertEqual(npc.cloth.cloth_locker_in_shower[PANTIES], [])
 
@@ -347,7 +349,7 @@ class PickDraftWorldTest(SlowTestCase):
         start, end, changed = self.run_pick(pick)
         self.assert_one_edit(start, end, changed)
         follow = {
-            self.cache.character_data[i].sp_flag.is_follow
+            kernel_data.domain("flags").get(i, "is_follow")
             for i in self.cache.npc_id_got
             if i
         }

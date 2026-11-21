@@ -23,8 +23,9 @@ from Script.Design import (
     game_time,
 )
 from Script.Kernel import core
-from Script.Modules.domains import abilities, country, physical_exam, prison
-from Script.Modules.domains import playthrough, visitor, warehouse, work
+from Script.Modules.domains import abilities, country, physical_exam
+from Script.Modules.domains import player_ability, playthrough, prison, visitor
+from Script.Modules.domains import warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
@@ -259,9 +260,8 @@ class Character_JJ:
         self.return_list: list[str] = []
         """ 监听的按钮列表 """
 
-        character_data: game_type.Character = cache.character_data[0]
         jj_text = game_config.config_jj_tem[
-            character_data.pl_ability.jj_size
+            player_ability.get(0, "jj_size")
         ].name
         now_draw_list: list[draw.Drawable] = []
 
@@ -297,11 +297,10 @@ class Character_JJ:
 
     def change(self) -> None:
         """大小改变"""
-        character_data: game_type.Character = cache.character_data[0]
-        if character_data.pl_ability.jj_size == 3:
-            character_data.pl_ability.jj_size = 0
+        if player_ability.get(0, "jj_size") == 3:
+            player_ability.set(0, jj_size=0)
         else:
-            character_data.pl_ability.jj_size += 1
+            player_ability.set(0, jj_size=player_ability.get(0, "jj_size") + 1)
 
 
 class Character_Debug:

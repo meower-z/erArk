@@ -18,7 +18,9 @@ from Script.UI.Panel import ejaculation_panel, system_setting
 import math
 import random
 from Script.Design import game_time
-from Script.Modules.domains import abilities, history, modes, needs, playthrough
+from Script.Modules.domains import abilities, flags, history, modes, needs
+from Script.Modules.domains import player_ability, player_collection
+from Script.Modules.domains import playthrough
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -399,7 +401,7 @@ def chara_feel_state_adjust(
         tech_adjust = handle_ability.get_ability_adjust(ability_level)
         final_adjust = math.sqrt(feel_adjust * tech_adjust)
     # 调香
-    if character_data.sp_flag.aromatherapy == 4:
+    if flags.get(character_id, "aromatherapy") == 4:
         final_adjust += 1
     # 催眠-敏感
     if character_data.hypnosis.increase_body_sensitivity:
@@ -443,7 +445,7 @@ def chara_feel_state_adjust(
     drunk_level, __ = drunk_sex_common.get_drunk_level(character_id)
     final_adjust += 0.2 * drunk_level
     # 信物调整值
-    now_token = pl_character_data.pl_collection.eqip_token[1]
+    now_token = player_collection.get("eqip_token")[1]
     if len(now_token):
         # 信物干员的基础调整为0.5
         if character_id in now_token:
@@ -451,9 +453,9 @@ def chara_feel_state_adjust(
         # 全体干员+数量*0.01
         final_adjust += len(now_token) * 0.01
     # 群交中会因在场的其他干员人数进行调整
-    if character_data.sp_flag.is_h and handle_premise.handle_group_sex_mode_on(
-        character_id
-    ):
+    if flags.get(
+        character_id, "is_h"
+    ) and handle_premise.handle_group_sex_mode_on(character_id):
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             character_data.position
         )
@@ -486,7 +488,6 @@ def chara_base_state_adjust(
     """
 
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
     ability_level = max(0, ability_level)
 
     # 系数加成
@@ -542,7 +543,7 @@ def chara_base_state_adjust(
     if abilities.talent(character_id)[223] == 1:
         final_adjust -= 0.4
     # 信物修正
-    now_token = pl_character_data.pl_collection.eqip_token[1]
+    now_token = player_collection.get("eqip_token")[1]
     token_adjust: float = 0
     if len(now_token):
         # 信物干员的基础调整为0.5
@@ -551,25 +552,25 @@ def chara_base_state_adjust(
         # 全体干员+数量*0.01
         token_adjust += len(now_token) * 0.01
     # 调香
-    if character_data.sp_flag.aromatherapy:
-        if character_data.sp_flag.aromatherapy == 2 and state_id == 9:
+    if flags.get(character_id, "aromatherapy"):
+        if flags.get(character_id, "aromatherapy") == 2 and state_id == 9:
             final_adjust += 1
-        elif character_data.sp_flag.aromatherapy == 3 and state_id in [
+        elif flags.get(character_id, "aromatherapy") == 3 and state_id in [
             17,
             18,
             19,
             20,
         ]:
             final_adjust -= 0.5
-        elif character_data.sp_flag.aromatherapy == 4 and state_id == 12:
+        elif flags.get(character_id, "aromatherapy") == 4 and state_id == 12:
             final_adjust += 1
     # 催眠-敏感
     if character_data.hypnosis.increase_body_sensitivity and state_id == 12:
         final_adjust += 2
     # 群交中会因在场的其他干员人数进行调整
-    if character_data.sp_flag.is_h and handle_premise.handle_group_sex_mode_on(
-        character_id
-    ):
+    if flags.get(
+        character_id, "is_h"
+    ) and handle_premise.handle_group_sex_mode_on(character_id):
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             character_data.position
         )
@@ -744,7 +745,6 @@ def base_chara_favorability_and_trust_common_settle(
     target_character_id -- 交互对象id，默认为0。在为0时会自动获取角色的交互对象id。若角色没有交互对象，则不会进行结算
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
 
     # 判断交互对象
     if target_character_id == 0:
@@ -769,7 +769,7 @@ def base_chara_favorability_and_trust_common_settle(
             return
 
         # 信物调整值
-        now_token = pl_character_data.pl_collection.eqip_token[1]
+        now_token = player_collection.get("eqip_token")[1]
         token_adjust: float = 0
         if len(now_token):
             # 信物干员的基础调整为0.1
@@ -988,15 +988,15 @@ def calculation_favorability(
         fix += 0.25
     # 好感香薰修正
     if (
-        character_data.sp_flag.aromatherapy == 5
-        or target_data.sp_flag.aromatherapy == 5
+        flags.get(character_id, "aromatherapy") == 5
+        or flags.get(target_character_id, "aromatherapy") == 5
     ):
         fix += 0.5
     # 空气催眠置为零
-    if (
-        target_data.sp_flag.unconscious_h == 5
-        and character_data.position
-        == character_data.pl_ability.air_hypnosis_position
+    if flags.get(
+        target_character_id, "unconscious_h"
+    ) == 5 and character_data.position == player_ability.get(
+        character_id, "air_hypnosis_position"
     ):
         fix = 0
     favorability = int(fix * favorability)
@@ -1014,7 +1014,6 @@ def calculation_trust(giver_id: int, receiver_id: int, add_time: int) -> float:
     float -- 最终的信赖度
     """
     character_data: game_type.Character = cache.character_data[giver_id]
-    target_data: game_type.Character = cache.character_data[receiver_id]
     fix = 1.0
 
     # 能力相关计算#
@@ -1063,15 +1062,15 @@ def calculation_trust(giver_id: int, receiver_id: int, add_time: int) -> float:
         fix += 0.25
     # 好感香薰修正
     if (
-        character_data.sp_flag.aromatherapy == 5
-        or target_data.sp_flag.aromatherapy == 5
+        flags.get(giver_id, "aromatherapy") == 5
+        or flags.get(receiver_id, "aromatherapy") == 5
     ):
         fix += 0.5
     # 空气催眠置为零
-    if (
-        target_data.sp_flag.unconscious_h == 5
-        and character_data.position
-        == character_data.pl_ability.air_hypnosis_position
+    if flags.get(
+        receiver_id, "unconscious_h"
+    ) == 5 and character_data.position == player_ability.get(
+        giver_id, "air_hypnosis_position"
     ):
         fix = 0
     trust_add = add_time / 60 * fix

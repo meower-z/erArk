@@ -45,6 +45,17 @@ def is_num_read(node: ast.AST) -> bool:
     """
     if isinstance(node, ast.Attribute):
         return node.attr in PLAIN
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "get"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "player_ability"
+        and len(node.args) >= 2
+        and isinstance(node.args[1], ast.Constant)
+        and node.args[1].value == "today_sanity_point_cost"
+    ):
+        return True
     if not isinstance(node, ast.Subscript):
         return False
     base = node.value

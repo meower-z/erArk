@@ -14,6 +14,7 @@ from Script.Config import game_config
 from Script.Design import map_handle
 from tests.fast.base import FastTestCase
 from tests import kernel_data
+from Script.Modules.domains import flags
 
 ROOM = ["中枢", "会议室"]
 OTHER_ROOM = ["中枢", "茶水间"]
@@ -91,7 +92,7 @@ class LockedRoomEntryTest(FastTestCase):
         self.doctor_locks_inside(ROOM)
         for chara in (self.assistant, self.other):
             with self.subTest(cid=chara.cid):
-                chara.sp_flag.is_follow = 4
+                kernel_data.put(flags.set, chara.cid, is_follow=4)
                 self.assertEqual(self.access(ROOM, chara.cid), "open")
 
     def test_summon_opens_only_doctors_room(self) -> None:
@@ -100,7 +101,7 @@ class LockedRoomEntryTest(FastTestCase):
         self.lock(OTHER_ROOM)
         for chara in (self.assistant, self.other):
             with self.subTest(cid=chara.cid):
-                chara.sp_flag.is_follow = 4
+                kernel_data.put(flags.set, chara.cid, is_follow=4)
                 self.assertEqual(
                     self.access(OTHER_ROOM, chara.cid), "door_lock"
                 )
@@ -110,7 +111,9 @@ class LockedRoomEntryTest(FastTestCase):
         self.doctor_locks_inside(ROOM)
         for is_follow in (1, 2):
             with self.subTest(is_follow=is_follow):
-                self.assistant.sp_flag.is_follow = is_follow
+                kernel_data.put(
+                    flags.set, self.assistant.cid, is_follow=is_follow
+                )
                 self.assertEqual(self.access(ROOM, 1), "open")
 
     def test_non_assistant_locked_out(self) -> None:
@@ -118,7 +121,7 @@ class LockedRoomEntryTest(FastTestCase):
         self.doctor_locks_inside(ROOM)
         for is_follow in (0, 1, 2):
             with self.subTest(is_follow=is_follow):
-                self.other.sp_flag.is_follow = is_follow
+                kernel_data.put(flags.set, self.other.cid, is_follow=is_follow)
                 self.assertEqual(self.access(ROOM, 2), "door_lock")
 
     def test_assistant_enters_locked_dr_rooms(self) -> None:

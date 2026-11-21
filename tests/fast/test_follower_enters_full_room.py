@@ -14,6 +14,7 @@ from Script.Core import constant
 from Script.Design import map_handle
 from tests.fast.base import FastTestCase
 from tests import kernel_data
+from Script.Modules.domains import flags
 
 ROOM = ["医疗", "体检科"]
 DOOR = ["医疗", "内走廊"]
@@ -67,7 +68,7 @@ class FollowerEntersFullRoomTest(FastTestCase):
         behavior.move_target = ROOM
         behavior.move_final_target = ROOM
         behavior.duration = 1
-        self.follower.sp_flag.is_follow = 1
+        kernel_data.put(flags.set, self.follower.cid, is_follow=1)
         self.assertEqual(self.access(ROOM, 1), "open")
         self.assertEqual(self.access(ROOM, 2), "full")
 
@@ -81,16 +82,18 @@ class FollowerEntersFullRoomTest(FastTestCase):
             (4, "full"),
         ):
             with self.subTest(is_follow=is_follow):
-                self.follower.sp_flag.is_follow = is_follow
+                kernel_data.put(
+                    flags.set, self.follower.cid, is_follow=is_follow
+                )
                 self.assertEqual(self.access(ROOM, 1), expected)
 
     def test_follower_blocked_when_doctor_elsewhere(self) -> None:
         """博士在门口站着、不进体检科时，跟随中的干员被满员挡在门外"""
-        self.follower.sp_flag.is_follow = 1
+        kernel_data.put(flags.set, self.follower.cid, is_follow=1)
         self.assertEqual(self.access(ROOM, 1), "full")
 
     def test_private_room_unchanged(self) -> None:
         """博士在博士房间里时，跟随的非助理干员进不了博士房间"""
         self.world.move(0, DR_ROOM)
-        self.follower.sp_flag.is_follow = 1
+        kernel_data.put(flags.set, self.follower.cid, is_follow=1)
         self.assertEqual(self.access(DR_ROOM, 1), "private")

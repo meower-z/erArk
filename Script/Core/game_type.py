@@ -1641,14 +1641,6 @@ class Character:
         """ 角色身上污浊的情况 """
         self.h_state: BODY_H_STATE = BODY_H_STATE()
         """ 角色本次H的情况 """
-        self.pl_ability: PLAYER_ABILITY = PLAYER_ABILITY()
-        """ 玩家的特殊能力 """
-        self.pl_collection: PLAYER_COLLECTION = PLAYER_COLLECTION()
-        """ 玩家的收藏品 """
-        self.sp_flag: SPECIAL_FLAG = SPECIAL_FLAG()
-        """ 特殊flag """
-        self.action_info: ACTION_INFO = ACTION_INFO()
-        """ 角色的行动记录 """
         self.work: CHARA_WORK = CHARA_WORK()
         """ 角色的工作情况 """
         self.entertainment: CHARA_ENTERTAINMENT = CHARA_ENTERTAINMENT()

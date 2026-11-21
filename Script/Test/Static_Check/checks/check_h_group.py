@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from Script.Core import cache_control, num
 from Script.Design import game_time
-from Script.Modules.domains import abilities, history, modes, needs
+from Script.Modules.domains import abilities, flags, history, modes, needs
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -177,7 +177,7 @@ def check_hgroup_01() -> list[CheckFailure]:
         return []
     if not modes.group_sex():
         return []
-    if getattr(pl.sp_flag, "is_h", False):
+    if flags.get(pl.cid, "is_h"):
         return []
     npcs = _npcs(cache)
     same_scene_h = [
@@ -185,7 +185,7 @@ def check_hgroup_01() -> list[CheckFailure]:
         for cid in npcs
         if cid in cache.character_data
         and cache.character_data[cid].position == pl.position
-        and getattr(cache.character_data[cid].sp_flag, "is_h", False)
+        and flags.get(cid, "is_h")
     ]
     msg = (
         f"mode.group_sex=True但玩家(cid=0,{_name(pl)})sp_flag.is_h=False；behavior_id={_behavior_id(pl)} "
@@ -222,7 +222,7 @@ def check_hgroup_02() -> list[CheckFailure]:
         if c is None:
             continue
         if (
-            getattr(c.sp_flag, "is_h", False)
+            flags.get(c.cid, "is_h")
             and getattr(c, "position", None) == pl.position
         ):
             in_h.append(c)
@@ -232,7 +232,7 @@ def check_hgroup_02() -> list[CheckFailure]:
         return []
     detail = [
         (
-            f"cid={c.cid} name={_name(c)} is_h={c.sp_flag.is_h} behavior_id={_behavior_id(c)} "
+            f"cid={c.cid} name={_name(c)} is_h={flags.get(c.cid, "is_h")} behavior_id={_behavior_id(c)} "
             f"hit_point={num.shown(needs.of(c.cid)['hit'])}"
         )
         for c in in_h
@@ -583,7 +583,7 @@ def check_hgroup_08() -> list[CheckFailure]:
             )
             continue
         chara = cache.character_data[c]
-        if not getattr(chara.sp_flag, "is_h", False):
+        if not flags.get(chara.cid, "is_h"):
             failures.append(
                 make_failure(
                     "HGROUP-08",
@@ -603,7 +603,7 @@ def check_hgroup_08() -> list[CheckFailure]:
                     "模板中的角色必须是已获得NPC、在H、且同场景",
                     (
                         f"模板引用角色cid={c}({_name(chara)})不与玩家同场景: position={chara.position} "
-                        f"pl.position={pl.position}；is_h={getattr(chara.sp_flag, 'is_h', None)} "
+                        f"pl.position={pl.position}；is_h={flags.get(chara.cid, "is_h")} "
                         f"behavior_id={_behavior_id(chara)}；完整模板={tpls!r} "
                         f"mode.group_sex={modes.group_sex()}"
                     ),
@@ -803,7 +803,7 @@ def check_hgroup_11() -> list[CheckFailure]:
                         "HGROUP-11",
                         "NPC自身的群交模板必须为空",
                         (
-                            f"NPC cid={cid}({_name(c)})模板{k}非空: {T!r}；is_h={getattr(c.sp_flag, 'is_h', None)} "
+                            f"NPC cid={cid}({_name(c)})模板{k}非空: {T!r}；is_h={flags.get(c.cid, "is_h")} "
                             f"mode.group_sex={modes.group_sex()}"
                         ),
                         [cid],
@@ -835,7 +835,7 @@ def check_hgroup_12() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        if getattr(c.sp_flag, "masturebate", 0) != 3:
+        if flags.get(c.cid, "masturebate") != 3:
             continue
         if cid == 0:
             failures.append(
@@ -853,7 +853,7 @@ def check_hgroup_12() -> list[CheckFailure]:
         bad = []
         if not modes.group_sex():
             bad.append("mode.group_sex=False")
-        if not getattr(c.sp_flag, "is_h", False):
+        if not flags.get(c.cid, "is_h"):
             bad.append("is_h=False")
         if not time_stop and getattr(c, "position", None) != pl.position:
             bad.append(f"position={c.position}!=pl.position={pl.position}")
@@ -888,7 +888,7 @@ def check_hgroup_13() -> list[CheckFailure]:
     pl = _pl(cache)
     if pl is None:
         return []
-    if getattr(pl.sp_flag, "go_to_join_group_sex", False):
+    if flags.get(pl.cid, "go_to_join_group_sex"):
         return [
             make_failure(
                 "HGROUP-13",
@@ -927,14 +927,14 @@ def check_hgroup_14() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        if not getattr(c.sp_flag, "go_to_join_group_sex", False):
+        if not flags.get(c.cid, "go_to_join_group_sex"):
             continue
         bad = []
         if not modes.group_sex():
             bad.append(
                 "mode.group_sex=False(已知bug: group_sex_end的407只清玩家所在场景成员，途中受邀NPC残留标记)"
             )
-        if getattr(c.sp_flag, "is_h", False):
+        if flags.get(c.cid, "is_h"):
             bad.append("is_h=True")
         if not time_stop and getattr(c, "position", None) == pl.position:
             bad.append("position==pl.position(已到场未清)")
@@ -984,21 +984,21 @@ def check_hgroup_15() -> list[CheckFailure]:
     pl = _pl(cache)
     if pl is None:
         return []
-    m = getattr(pl.sp_flag, "hidden_sex_mode", 0)
+    m = flags.get(pl.cid, "hidden_sex_mode")
     npcs = _npcs(cache)
     hidden = []
     for cid in npcs:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        if getattr(c.sp_flag, "hidden_sex_mode", 0) > 0:
+        if flags.get(c.cid, "hidden_sex_mode") > 0:
             hidden.append(c)
 
     def _ctx() -> str:
         detail = [
             (
-                f"cid={h.cid} name={_name(h)} position={h.position} mode={h.sp_flag.hidden_sex_mode} "
-                f"is_h={h.sp_flag.is_h} behavior_id={_behavior_id(h)}"
+                f"cid={h.cid} name={_name(h)} position={h.position} mode={flags.get(h.cid, "hidden_sex_mode")} "
+                f"is_h={flags.get(h.cid, "is_h")} behavior_id={_behavior_id(h)}"
             )
             for h in hidden
         ]
@@ -1037,14 +1037,14 @@ def check_hgroup_15() -> list[CheckFailure]:
             )
         else:
             t = hidden[0]
-            if getattr(t.sp_flag, "hidden_sex_mode", None) != m:
+            if flags.get(t.cid, "hidden_sex_mode") != m:
                 failures.append(
                     make_failure(
                         "HGROUP-15",
                         "隐奸模式必须双向一致且至多一对",
                         (
                             f"[warning] 隐奸模式不对称：玩家={m} NPC "
-                            f"cid={t.cid}({_name(t)})={t.sp_flag.hidden_sex_mode}；{_ctx()}"
+                            f"cid={t.cid}({_name(t)})={flags.get(t.cid, "hidden_sex_mode")}；{_ctx()}"
                         ),
                         [0, t.cid],
                     )
@@ -1094,7 +1094,7 @@ def check_hgroup_16() -> list[CheckFailure]:
     pl = _pl(cache)
     if pl is None:
         return []
-    m = getattr(pl.sp_flag, "hidden_sex_mode", 0)
+    m = flags.get(pl.cid, "hidden_sex_mode")
     if m <= 0:
         return []
     npcs = _npcs(cache)
@@ -1103,22 +1103,24 @@ def check_hgroup_16() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        if getattr(c.sp_flag, "hidden_sex_mode", 0) > 0 and not getattr(
-            c.sp_flag, "is_h", False
+        if flags.get(c.cid, "hidden_sex_mode") > 0 and not flags.get(
+            c.cid, "is_h"
         ):
             failures.append(
                 make_failure(
                     "HGROUP-16",
                     "隐奸对象在H；模式1/2时玩家不在H",
                     (
-                        f"隐奸模式={m}下NPC cid={cid}({_name(c)})hidden_sex_mode={c.sp_flag.hidden_sex_mode}但is_h=Fals"
-                        f"e；behavior_id={_behavior_id(c)} 最近指令={_pre_instr(cache)}"
+                        f"隐奸模式={m}下NPC cid={cid}({_name(c)})"
+                        f"hidden_sex_mode={flags.get(c.cid, 'hidden_sex_mode')}"
+                        f"但is_h=False；behavior_id={_behavior_id(c)} "
+                        f"最近指令={_pre_instr(cache)}"
                     ),
                     [cid],
                 )
             )
-    if m in (1, 2) and getattr(pl.sp_flag, "is_h", False):
-        exhib = getattr(pl.sp_flag, "exhibitionism_sex_mode", 0)
+    if m in (1, 2) and flags.get(pl.cid, "is_h"):
+        exhib = flags.get(pl.cid, "exhibitionism_sex_mode")
         failures.append(
             make_failure(
                 "HGROUP-16",
@@ -1152,15 +1154,14 @@ def check_hgroup_17() -> list[CheckFailure]:
     pl = _pl(cache)
     if pl is None:
         return []
-    m = getattr(pl.sp_flag, "hidden_sex_mode", 0)
+    m = flags.get(pl.cid, "hidden_sex_mode")
     if m > 0 and modes.group_sex():
         npcs = _npcs(cache)
         scene_hidden = {
-            cid: cache.character_data[cid].sp_flag.hidden_sex_mode
+            cid: flags.get(cid, "hidden_sex_mode")
             for cid in npcs
             if cid in cache.character_data
-            and getattr(cache.character_data[cid].sp_flag, "hidden_sex_mode", 0)
-            > 0
+            and flags.get(cid, "hidden_sex_mode") > 0
         }
         return [
             make_failure(
@@ -1204,8 +1205,8 @@ def check_hgroup_18() -> list[CheckFailure]:
                 "隐奸发现度：0..100，且只有玩家可能非0",
                 (
                     f"玩家hidden_sex_discovery_dregree={d!r}越界(应为0..100)；"
-                    f"hidden_sex_mode={getattr(pl.sp_flag, 'hidden_sex_mode', None)} "
-                    f"is_h={getattr(pl.sp_flag, 'is_h', None)}"
+                    f"hidden_sex_mode={flags.get(pl.cid, "hidden_sex_mode")} "
+                    f"is_h={flags.get(pl.cid, "is_h")}"
                 ),
                 [0],
             )
@@ -1225,8 +1226,8 @@ def check_hgroup_18() -> list[CheckFailure]:
                     "隐奸发现度：0..100，且只有玩家可能非0",
                     (
                         f"NPC cid={cid}({_name(c)})hidden_sex_discovery_dregree={v!r}应为0；"
-                        f"hidden_sex_mode={getattr(c.sp_flag, 'hidden_sex_mode', None)} "
-                        f"is_h={getattr(c.sp_flag, 'is_h', None)} ability[90]={ability_90} "
+                        f"hidden_sex_mode={flags.get(c.cid, "hidden_sex_mode")} "
+                        f"is_h={flags.get(c.cid, "is_h")} ability[90]={ability_90} "
                         f"behavior_id={_behavior_id(c)} duration={getattr(behavior, 'duration', None)}"
                     ),
                     [cid],
@@ -1251,27 +1252,27 @@ def check_hgroup_19() -> list[CheckFailure]:
     pl = _pl(cache)
     if pl is None:
         return []
-    e = getattr(pl.sp_flag, "exhibitionism_sex_mode", 0)
+    e = flags.get(pl.cid, "exhibitionism_sex_mode")
     npcs = _npcs(cache)
     ex = []
     for cid in npcs:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        if getattr(c.sp_flag, "exhibitionism_sex_mode", 0) > 0:
+        if flags.get(c.cid, "exhibitionism_sex_mode") > 0:
             ex.append(c)
 
     def _ctx() -> str:
         detail = [
             (
-                f"cid={x.cid} name={_name(x)} position={x.position} mode={x.sp_flag.exhibitionism_sex_mode} "
-                f"is_h={x.sp_flag.is_h}"
+                f"cid={x.cid} name={_name(x)} position={x.position} mode={flags.get(x.cid, "exhibitionism_sex_mode")} "
+                f"is_h={flags.get(x.cid, "is_h")}"
             )
             for x in ex
         ]
         return (
             f"pl.exhibitionism_sex_mode={e} 明细={detail} pl.position={pl.position} "
-            f"hidden_sex_mode={getattr(pl.sp_flag, 'hidden_sex_mode', None)} behavior_id={_behavior_id(pl)}"
+            f"hidden_sex_mode={flags.get(pl.cid, "hidden_sex_mode")} behavior_id={_behavior_id(pl)}"
         )
 
     failures = []
@@ -1298,13 +1299,13 @@ def check_hgroup_19() -> list[CheckFailure]:
         else:
             t = ex[0]
             probs = []
-            if getattr(t.sp_flag, "exhibitionism_sex_mode", None) != e:
+            if flags.get(t.cid, "exhibitionism_sex_mode") != e:
                 probs.append(
-                    f"NPC模式{t.sp_flag.exhibitionism_sex_mode}!=玩家模式{e}"
+                    f"NPC模式{flags.get(t.cid, "exhibitionism_sex_mode")}!=玩家模式{e}"
                 )
-            if not getattr(t.sp_flag, "is_h", False):
+            if not flags.get(t.cid, "is_h"):
                 probs.append("NPC is_h=False")
-            if not getattr(pl.sp_flag, "is_h", False):
+            if not flags.get(pl.cid, "is_h"):
                 probs.append("玩家is_h=False")
             if (
                 not modes.time_stop()
@@ -1349,7 +1350,7 @@ def check_hgroup_20() -> list[CheckFailure]:
     pl = _pl(cache)
     if pl is None:
         return []
-    e = getattr(pl.sp_flag, "exhibitionism_sex_mode", 0)
+    e = flags.get(pl.cid, "exhibitionism_sex_mode")
     if modes.group_sex() and e > 0:
         return [
             make_failure(
@@ -1383,8 +1384,8 @@ def check_hgroup_21() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        hm = getattr(c.sp_flag, "hidden_sex_mode", None)
-        em = getattr(c.sp_flag, "exhibitionism_sex_mode", None)
+        hm = flags.get(c.cid, "hidden_sex_mode")
+        em = flags.get(c.cid, "exhibitionism_sex_mode")
         bad = []
         if hm not in (0, 1, 2, 3, 4):
             bad.append(f"hidden_sex_mode={hm!r}")
@@ -1397,7 +1398,7 @@ def check_hgroup_21() -> list[CheckFailure]:
                     "隐奸/露出模式值域",
                     (
                         f"角色cid={cid}({_name(c)}) {'; '.join(bad)}越界(应为0..4)；"
-                        f"is_h={getattr(c.sp_flag, 'is_h', None)} position={getattr(c, 'position', None)} "
+                        f"is_h={flags.get(c.cid, "is_h")} position={getattr(c, 'position', None)} "
                         f"behavior_id={_behavior_id(c)}"
                     ),
                     [cid],
@@ -1435,7 +1436,7 @@ def check_hgroup_22() -> list[CheckFailure]:
         if c is None:
             continue
         if (
-            getattr(c.sp_flag, "is_h", False)
+            flags.get(c.cid, "is_h")
             and getattr(c, "position", None) != pl.position
         ):
             failures.append(
@@ -1445,9 +1446,9 @@ def check_hgroup_22() -> list[CheckFailure]:
                     (
                         f"NPC cid={cid}({_name(c)})is_h=True但position={c.position}!=pl.position={pl.position}；"
                         f"behavior_id={_behavior_id(c)} state={getattr(c, 'state', None)} "
-                        f"unconscious_h={getattr(c.sp_flag, 'unconscious_h', None)} "
-                        f"hidden_sex_mode={getattr(c.sp_flag, 'hidden_sex_mode', None)} "
-                        f"exhibitionism_sex_mode={getattr(c.sp_flag, 'exhibitionism_sex_mode', None)} "
+                        f"unconscious_h={flags.get(c.cid, "unconscious_h")} "
+                        f"hidden_sex_mode={flags.get(c.cid, "hidden_sex_mode")} "
+                        f"exhibitionism_sex_mode={flags.get(c.cid, "exhibitionism_sex_mode")} "
                         f"mode.group_sex={modes.group_sex()} "
                         f"mode.time_stop={modes.time_stop()}"
                     ),
@@ -1476,9 +1477,9 @@ def check_hgroup_23() -> list[CheckFailure]:
     if pl is None:
         return []
     if not (
-        getattr(pl.sp_flag, "is_h", False)
+        flags.get(pl.cid, "is_h")
         and not modes.group_sex()
-        and getattr(pl.sp_flag, "hidden_sex_mode", 0) == 0
+        and flags.get(pl.cid, "hidden_sex_mode") == 0
         and not modes.time_stop()
     ):
         return []
@@ -1491,7 +1492,7 @@ def check_hgroup_23() -> list[CheckFailure]:
             continue
         if getattr(c, "position", None) == pl.position:
             scene_list.append(cid)
-            if getattr(c.sp_flag, "is_h", False):
+            if flags.get(c.cid, "is_h"):
                 same_scene_h.append(cid)
     if same_scene_h:
         return []
@@ -1499,7 +1500,7 @@ def check_hgroup_23() -> list[CheckFailure]:
     tinfo = "无"
     if target and target in cache.character_data:
         t = cache.character_data[target]
-        tinfo = f"cid={target} is_h={getattr(t.sp_flag, 'is_h', None)} position={t.position}"
+        tinfo = f"cid={target} is_h={flags.get(target, "is_h")} position={t.position}"
     return [
         make_failure(
             "HGROUP-23",
@@ -1507,8 +1508,8 @@ def check_hgroup_23() -> list[CheckFailure]:
             (
                 f"玩家is_h=True(非群交/非隐奸/非时停)但同场景无任何在H的NPC；pl.position={pl.position} "
                 f"behavior_id={_behavior_id(pl)} "
-                f"exhibitionism_sex_mode={getattr(pl.sp_flag, 'exhibitionism_sex_mode', None)} "
-                f"unconscious_h={getattr(pl.sp_flag, 'unconscious_h', None)} "
+                f"exhibitionism_sex_mode={flags.get(pl.cid, "exhibitionism_sex_mode")} "
+                f"unconscious_h={flags.get(pl.cid, "unconscious_h")} "
                 f"target_character_id线索={tinfo} 同场景NPC列表={scene_list} 最近指令={_pre_instr(cache)}"
             ),
             [0],
@@ -1544,7 +1545,7 @@ def check_hgroup_24() -> list[CheckFailure]:
         bad = []
         if cid == 0:
             bad.append("cid==0(玩家不应带此标记)")
-        if not getattr(c.sp_flag, "is_h", False):
+        if not flags.get(c.cid, "is_h"):
             bad.append("is_h=False")
         if modes.group_sex():
             bad.append("mode.group_sex=True")
@@ -1559,7 +1560,7 @@ def check_hgroup_24() -> list[CheckFailure]:
                         f"角色cid={cid}({_name(c)})npc_active_h=True但{'; '.join(bad)}；"
                         f"hypnosis.active_h={getattr(c.hypnosis, 'active_h', None)} "
                         f"hypnosis.blockhead={getattr(c.hypnosis, 'blockhead', None)} "
-                        f"unconscious_h={getattr(c.sp_flag, 'unconscious_h', None)} "
+                        f"unconscious_h={flags.get(c.cid, "unconscious_h")} "
                         f"target_character_id(玩家)={pl.target_character_id} behavior_id={_behavior_id(c)}"
                     ),
                     [cid],
@@ -1596,8 +1597,8 @@ def check_hgroup_25() -> list[CheckFailure]:
                     (
                         f"角色cid={cid}({_name(c)})hypnosis.blockhead与hypnosis.active_h同时为True；"
                         f"roleplay={getattr(c.hypnosis, 'roleplay', None)} "
-                        f"unconscious_h={getattr(c.sp_flag, 'unconscious_h', None)} "
-                        f"is_h={getattr(c.sp_flag, 'is_h', None)}"
+                        f"unconscious_h={flags.get(c.cid, "unconscious_h")} "
+                        f"is_h={flags.get(c.cid, "is_h")}"
                     ),
                     [cid],
                 )
@@ -1623,7 +1624,7 @@ def check_hgroup_26() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        v = getattr(c.sp_flag, "unconscious_h", None)
+        v = flags.get(c.cid, "unconscious_h")
         if v not in range(0, 8):
             failures.append(
                 make_failure(
@@ -1633,7 +1634,7 @@ def check_hgroup_26() -> list[CheckFailure]:
                         f"角色cid={cid}({_name(c)})unconscious_h={v!r}越界(应为0..7)；"
                         f"hypnosis.blockhead={getattr(c.hypnosis, 'blockhead', None)} "
                         f"hypnosis.active_h={getattr(c.hypnosis, 'active_h', None)} "
-                        f"is_h={getattr(c.sp_flag, 'is_h', None)} behavior_id={_behavior_id(c)}"
+                        f"is_h={flags.get(c.cid, "is_h")} behavior_id={_behavior_id(c)}"
                     ),
                     [cid],
                 )
@@ -1666,7 +1667,7 @@ def check_hgroup_27() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        v = getattr(c.sp_flag, "unconscious_h", None)
+        v = flags.get(c.cid, "unconscious_h")
         if ts and v != 3:
             failures.append(
                 make_failure(
@@ -1674,7 +1675,7 @@ def check_hgroup_27() -> list[CheckFailure]:
                     "时停开关与unconscious_h==3双向一致",
                     (
                         f"mode.time_stop=True但角色cid={cid}({_name(c)})unconscious_h={v!r}!=3；"
-                        f"position={c.position} is_h={getattr(c.sp_flag, 'is_h', None)} "
+                        f"position={c.position} is_h={flags.get(c.cid, "is_h")} "
                         f"game_time={game_time.now()} pl.behavior_id={pl_behavior_id}"
                     ),
                     [cid],
@@ -1688,7 +1689,7 @@ def check_hgroup_27() -> list[CheckFailure]:
                     (
                         f"mode.time_stop=False但角色cid={cid}({_name(c)})unconscious_h=3(未随时停关闭写回)；"
                         f"position={c.position} "
-                        f"is_h={getattr(c.sp_flag, 'is_h', None)} game_time={game_time.now()} "
+                        f"is_h={flags.get(c.cid, "is_h")} game_time={game_time.now()} "
                         f"pl.behavior_id={pl_behavior_id}"
                     ),
                     [cid],
@@ -1720,9 +1721,9 @@ def check_hgroup_28() -> list[CheckFailure]:
             continue
         if not getattr(c.h_state, "pretend_sleep", False):
             continue
-        awake = getattr(c.sp_flag, "sleep_h_awake", False)
-        uh = getattr(c.sp_flag, "unconscious_h", None)
-        ih = getattr(c.sp_flag, "is_h", False)
+        awake = flags.get(c.cid, "sleep_h_awake")
+        uh = flags.get(c.cid, "unconscious_h")
+        ih = flags.get(c.cid, "is_h")
         if not (awake and uh == 1 and ih):
             failures.append(
                 make_failure(
@@ -1760,8 +1761,8 @@ def check_hgroup_29() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        mfp = getattr(c.sp_flag, "npc_masturebate_for_player", False)
-        mb = getattr(c.sp_flag, "masturebate", 0)
+        mfp = flags.get(c.cid, "npc_masturebate_for_player")
+        mb = flags.get(c.cid, "masturebate")
         if mfp and mb in (1, 2):
             failures.append(
                 make_failure(
@@ -1898,12 +1899,11 @@ def check_hgroup_31() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        sp = c.sp_flag
         if not (
-            getattr(sp, "is_h", False)
-            or getattr(sp, "hidden_sex_mode", 0) != 0
-            or getattr(sp, "exhibitionism_sex_mode", 0) != 0
-            or getattr(sp, "unconscious_h", 0) != 0
+            flags.get(cid, "is_h")
+            or flags.get(cid, "hidden_sex_mode") != 0
+            or flags.get(cid, "exhibitionism_sex_mode") != 0
+            or flags.get(cid, "unconscious_h") != 0
         ):
             hs = c.h_state
             bad = []

@@ -29,8 +29,8 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import abilities, entertainment, facility, needs
-from Script.Modules.domains import physical_exam
+from Script.Modules.domains import abilities, action_info, entertainment
+from Script.Modules.domains import facility, flags, needs, physical_exam
 from Script.Modules.domains import pregnancy, recruit, warehouse
 
 cache: game_type.Cache = cache_control.cache
@@ -1366,7 +1366,7 @@ class Debug_Panel:
                     cache.npc_id_got.discard(0)
                     for chara_id in cache.npc_id_got:
                         character_data = cache.character_data[chara_id]
-                        character_data.sp_flag = game_type.SPECIAL_FLAG()
+                        flags.reset(character_data.cid)
                 # 重置全角色服装
                 elif key_index == 12:
                     cache.npc_id_got.discard(0)
@@ -2379,72 +2379,75 @@ class Debug_Panel:
                     f"{handle_premise.handle_normal_7(self.target_character_id)}"
                 )
                 info_text += "\n\n"
-                info_text += f"[000]:在H模式中：{target_data.sp_flag.is_h}\n"
-                info_text += f"[001]:AI行动里的原地发呆判定：{target_data.sp_flag.wait_flag}\n"
+                info_text += f"[000]:在H模式中：{flags.get(self.target_character_id, "is_h")}\n"
+                tid = self.target_character_id
+                info_text += f"[001]:AI行动里的原地发呆判定：{flags.get(tid, 'wait_flag')}\n"
                 info_text += (
                     f"[002]:跟随玩家，int [0不跟随,1智能跟随,2强制跟随,3前往博士办公室,4前往博士当前位置]："
-                    f"{target_data.sp_flag.is_follow}\n"
+                    f"{flags.get(tid, 'is_follow')}\n"
                 )
                 info_text += (
-                    f"[003]:疲劳状态（HP=1）：{target_data.sp_flag.tired}\n"
+                    f"[003]:疲劳状态（HP=1）：{flags.get(tid, 'tired')}\n"
                 )
-                info_text += f"[004]:被玩家惹生气：{target_data.sp_flag.angry_with_player}\n"
+                info_text += f"[004]:被玩家惹生气：{flags.get(tid, 'angry_with_player')}\n"
                 info_text += (
-                    f"[005]:角色停止移动：{target_data.sp_flag.move_stop}\n"
+                    f"[005]:角色停止移动：{flags.get(tid, 'move_stop')}\n"
                 )
                 info_text += (
-                    f"[006]:被装袋搬走状态：{target_data.sp_flag.be_bagged}\n"
+                    f"[006]:被装袋搬走状态：{flags.get(tid, 'be_bagged')}\n"
                 )
-                info_text += f"[007]:玩家正在装袋搬走的角色的id：{target_data.sp_flag.bagging_chara_id}\n"
+                info_text += f"[007]:玩家正在装袋搬走的角色的id：{flags.get(tid, 'bagging_chara_id')}\n"
                 info_text += (
-                    f"[008]:被监禁状态：{target_data.sp_flag.imprisonment}\n"
+                    f"[008]:被监禁状态：{flags.get(tid, 'imprisonment')}\n"
                 )
                 info_text += (
                     f"[009]:洗澡状态，int [0无,1要更衣,2要洗澡,3要披浴巾,"
-                    f"4洗完澡]：{target_data.sp_flag.shower}\n"
+                    f"4洗完澡]：{flags.get(tid, 'shower')}\n"
                 )
-                info_text += f"[010]:吃饭状态，int [0无,1要取餐,2要吃饭]：{target_data.sp_flag.eat_food}\n"
-                info_text += f"[011]:要睡觉状态：{target_data.sp_flag.sleep}\n"
-                info_text += f"[012]:要休息状态：{target_data.sp_flag.rest}\n"
-                info_text += f"[013]:要撒尿状态：{target_data.sp_flag.pee}\n"
-                info_text += f"[014]:发现食物不对劲：{target_data.sp_flag.find_food_weird}\n"
-                info_text += f"[015]:游泳状态，int [0无,1要换泳衣,2要游泳]：{target_data.sp_flag.swim}\n"
-                info_text += f"[016]:要检修状态：{target_data.sp_flag.work_maintenance}\n"
+                info_text += f"[010]:吃饭状态，int [0无,1要取餐,2要吃饭]：{flags.get(tid, 'eat_food')}\n"
+                info_text += f"[011]:要睡觉状态：{flags.get(tid, 'sleep')}\n"
+                info_text += f"[012]:要休息状态：{flags.get(tid, 'rest')}\n"
+                info_text += f"[013]:要撒尿状态：{flags.get(tid, 'pee')}\n"
+                info_text += f"[014]:发现食物不对劲：{flags.get(tid, 'find_food_weird')}\n"
+                info_text += f"[015]:游泳状态，int [0无,1要换泳衣,2要游泳]：{flags.get(tid, 'swim')}\n"
+                info_text += (
+                    f"[016]:要检修状态：{flags.get(tid, 'work_maintenance')}\n"
+                )
                 info_text += (
                     f"[017]:帮忙买午饭状态，int [0无,1要买饭,2要买第二份饭,3要送饭]："
-                    f"{target_data.sp_flag.help_buy_food}\n"
+                    f"{flags.get(tid, 'help_buy_food')}\n"
                 )
-                info_text += f"[018]:帮忙做饭状态，int [0无,1要做饭,2要送饭]：{target_data.sp_flag.help_make_food}\n"
+                info_text += f"[018]:帮忙做饭状态，int [0无,1要做饭,2要送饭]：{flags.get(tid, 'help_make_food')}\n"
                 info_text += (
                     f"[019]:早安问候状态，int [0无,1要问候,2已问候]："
-                    f"{target_data.sp_flag.morning_salutation}\n"
+                    f"{flags.get(tid, 'morning_salutation')}\n"
                 )
-                info_text += f"[020]:晚安问候状态，int [0无,1要问候,2已问候]：{target_data.sp_flag.night_salutation}\n"
+                info_text += f"[020]:晚安问候状态，int [0无,1要问候,2已问候]：{flags.get(tid, 'night_salutation')}\n"
                 info_text += (
                     f"[021]:大浴场娱乐状态，int [0无,1要更衣,2要娱乐]："
-                    f"{target_data.sp_flag.bathhouse_entertainment}\n"
+                    f"{flags.get(tid, 'bathhouse_entertainment')}\n"
                 )
-                info_text += f"[022]:要挤奶状态：{target_data.sp_flag.milk}\n"
+                info_text += f"[022]:要挤奶状态：{flags.get(tid, 'milk')}\n"
                 info_text += (
-                    f"[023]:要自慰状态：{target_data.sp_flag.masturebate}\n"
+                    f"[023]:要自慰状态：{flags.get(tid, 'masturebate')}\n"
                 )
-                info_text += f"[024]:访客状态，int [0无,1访问中,2访问过]：{target_data.sp_flag.vistor}\n"
+                info_text += f"[024]:访客状态，int [0无,1访问中,2访问过]：{flags.get(tid, 'vistor')}\n"
                 info_text += (
                     f"[025]:香薰疗愈状态，int [0无,1回复,2习得,3反感,4快感,5好感,6催眠]："
-                    f"{target_data.sp_flag.aromatherapy}\n"
+                    f"{flags.get(tid, 'aromatherapy')}\n"
                 )
                 info_text += (
                     f"[026]:外勤委托状态，0为未外勤，否则为对应外勤委托编号"
-                    f"：{target_data.sp_flag.field_commission}\n"
+                    f"：{flags.get(tid, 'field_commission')}\n"
                 )
-                info_text += f"[027]:要找玩家逆推来自慰的状态：{target_data.sp_flag.npc_masturebate_for_player}\n"
+                info_text += f"[027]:要找玩家逆推来自慰的状态：{flags.get(tid, 'npc_masturebate_for_player')}\n"
                 info_text += (
                     f"[028]:正在等待体检状态（仅查看，无法修改）："
-                    f"{physical_exam.has(physical_exam.WAITING, self.target_character_id)}\n"
+                    f"{physical_exam.has(physical_exam.WAITING, tid)}\n"
                 )
                 info_text += (
                     f"[029]:今天体检时间，[0不需要，1上午，2下午，3新干员立刻体检]："
-                    f"{target_data.action_info.health_check_today}\n"
+                    f"{action_info.get(tid, 'health_check_today')}\n"
                 )
                 info_draw.text = info_text
                 info_draw.draw()
@@ -2466,69 +2469,46 @@ class Debug_Panel:
                         info_draw.text = "\n输出格式错误，请重试\n"
                         info_draw.draw()
                         continue
-                    if value_index[0] == 0:
-                        target_data.sp_flag.is_h = value_index[1]
-                    elif value_index[0] == 1:
-                        target_data.sp_flag.wait_flag = value_index[1]
-                    elif value_index[0] == 2:
-                        target_data.sp_flag.is_follow = value_index[1]
-                    elif value_index[0] == 3:
-                        target_data.sp_flag.tired = value_index[1]
-                    elif value_index[0] == 4:
-                        target_data.sp_flag.angry_with_player = value_index[1]
-                    elif value_index[0] == 5:
-                        target_data.sp_flag.move_stop = value_index[1]
-                    elif value_index[0] == 6:
-                        target_data.sp_flag.be_bagged = value_index[1]
-                    elif value_index[0] == 7:
-                        target_data.sp_flag.bagging_chara_id = value_index[1]
-                    elif value_index[0] == 8:
-                        target_data.sp_flag.imprisonment = value_index[1]
-                    elif value_index[0] == 9:
-                        target_data.sp_flag.shower = value_index[1]
-                    elif value_index[0] == 10:
-                        target_data.sp_flag.eat_food = value_index[1]
-                    elif value_index[0] == 11:
-                        target_data.sp_flag.sleep = value_index[1]
-                    elif value_index[0] == 12:
-                        target_data.sp_flag.rest = value_index[1]
-                    elif value_index[0] == 13:
-                        target_data.sp_flag.pee = value_index[1]
-                    elif value_index[0] == 14:
-                        target_data.sp_flag.find_food_weird = value_index[1]
-                    elif value_index[0] == 15:
-                        target_data.sp_flag.swim = value_index[1]
-                    elif value_index[0] == 16:
-                        target_data.sp_flag.work_maintenance = value_index[1]
-                    elif value_index[0] == 17:
-                        target_data.sp_flag.help_buy_food = value_index[1]
-                    elif value_index[0] == 18:
-                        target_data.sp_flag.help_make_food = value_index[1]
-                    elif value_index[0] == 19:
-                        target_data.sp_flag.morning_salutation = value_index[1]
-                    elif value_index[0] == 20:
-                        target_data.sp_flag.night_salutation = value_index[1]
-                    elif value_index[0] == 21:
-                        target_data.sp_flag.bathhouse_entertainment = (
-                            value_index[1]
-                        )
-                    elif value_index[0] == 22:
-                        target_data.sp_flag.milk = value_index[1]
-                    elif value_index[0] == 23:
-                        target_data.sp_flag.masturebate = value_index[1]
-                    elif value_index[0] == 24:
-                        target_data.sp_flag.vistor = value_index[1]
-                    elif value_index[0] == 25:
-                        target_data.sp_flag.aromatherapy = value_index[1]
-                    elif value_index[0] == 26:
-                        target_data.sp_flag.field_commission = value_index[1]
-                    elif value_index[0] == 27:
-                        target_data.sp_flag.npc_masturebate_for_player = (
-                            value_index[1]
+                    debug_flags = (
+                        "is_h",
+                        "wait_flag",
+                        "is_follow",
+                        "tired",
+                        "angry_with_player",
+                        "move_stop",
+                        "be_bagged",
+                        "bagging_chara_id",
+                        "imprisonment",
+                        "shower",
+                        "eat_food",
+                        "sleep",
+                        "rest",
+                        "pee",
+                        "find_food_weird",
+                        "swim",
+                        "work_maintenance",
+                        "help_buy_food",
+                        "help_make_food",
+                        "morning_salutation",
+                        "night_salutation",
+                        "bathhouse_entertainment",
+                        "milk",
+                        "masturebate",
+                        "vistor",
+                        "aromatherapy",
+                        "field_commission",
+                        "npc_masturebate_for_player",
+                    )
+                    if 0 <= value_index[0] < len(debug_flags):
+                        flags.set(
+                            target_data.cid,
+                            **{debug_flags[value_index[0]]: value_index[1]},
                         )
                     elif value_index[0] == 29:
-                        target_data.action_info.health_check_today = (
-                            value_index[1]
+                        action_info.set(
+                            target_data.cid,
+                            "health_check_today",
+                            value_index[1],
                         )
 
                     # 接着刷新一遍显示新内容

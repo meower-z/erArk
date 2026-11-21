@@ -41,9 +41,10 @@ class PrisonerMarkDownMarkerTest(SlowTestCase):
         )
 
         cid = self.npc("阿米娅")
-        cd = self.cache.character_data[cid]
         ca.ability(cid)[HATE_MARK] = 1
-        cd.sp_flag.imprisonment = imprisoned
+        kernel_data.put(
+            kernel_data.domain("flags").set, cid, imprisonment=imprisoned
+        )
         ca.juel(cid)[PAIN_JUEL] = pain_juel
         kernel_data.set_facility_level(PRISON_FACILITY, 5)
         self.world.player.buttons.clear()

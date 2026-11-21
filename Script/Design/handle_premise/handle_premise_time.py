@@ -5,7 +5,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design import game_time
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import needs, physical_exam
+from Script.Modules.domains import action_info, needs, physical_exam
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -604,8 +604,7 @@ def handle_morning_salutation_time(character_id: int) -> int:
     if now_time_hour >= 12:
         return 0
     # 玩家的醒来时间
-    pl_character_data = cache.character_data[0]
-    plan_to_wake_time = pl_character_data.action_info.plan_to_wake_time
+    plan_to_wake_time = action_info.get(0, "plan_to_wake_time")
     wake_time_hour, wake_time_minute = (
         plan_to_wake_time[0],
         plan_to_wake_time[1],
@@ -637,8 +636,7 @@ def handle_not_morning_salutation_time(character_id: int) -> int:
     character_data: game_type.Character = cache.character_data[character_id]
     now_time = character_data.behavior.start_time
     now_time_hour, now_time_minute = now_time.hour, now_time.minute
-    pl_character_data = cache.character_data[0]
-    plan_to_wake_time = pl_character_data.action_info.plan_to_wake_time
+    plan_to_wake_time = action_info.get(0, "plan_to_wake_time")
     wake_time_hour, wake_time_minute = (
         plan_to_wake_time[0],
         plan_to_wake_time[1],
@@ -667,8 +665,7 @@ def handle_before_morning_salutation_time(character_id: int) -> int:
     if now_time_hour >= 12:
         return 0
     # 玩家的醒来时间
-    pl_character_data = cache.character_data[0]
-    plan_to_wake_time = pl_character_data.action_info.plan_to_wake_time
+    plan_to_wake_time = action_info.get(0, "plan_to_wake_time")
     wake_time_hour, wake_time_minute = (
         plan_to_wake_time[0],
         plan_to_wake_time[1],
@@ -694,8 +691,7 @@ def handle_night_salutation_time(character_id: int) -> int:
     now_time = character_data.behavior.start_time
     now_time_hour, now_time_minute = now_time.hour, now_time.minute
     # 玩家的睡觉时间
-    pl_character_data = cache.character_data[0]
-    plan_to_sleep_time = pl_character_data.action_info.plan_to_sleep_time
+    plan_to_sleep_time = action_info.get(0, "plan_to_sleep_time")
     sleep_time_hour, sleep_time_minute = (
         plan_to_sleep_time[0],
         plan_to_sleep_time[1],
@@ -723,8 +719,7 @@ def handle_not_night_salutation_time(character_id: int) -> int:
     now_time = character_data.behavior.start_time
     now_time_hour, now_time_minute = now_time.hour, now_time.minute
     # 玩家的睡觉时间
-    pl_character_data = cache.character_data[0]
-    plan_to_sleep_time = pl_character_data.action_info.plan_to_sleep_time
+    plan_to_sleep_time = action_info.get(0, "plan_to_sleep_time")
     sleep_time_hour, sleep_time_minute = (
         plan_to_sleep_time[0],
         plan_to_sleep_time[1],

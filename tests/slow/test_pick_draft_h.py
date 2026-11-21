@@ -15,7 +15,7 @@ from collections.abc import Callable, Mapping
 from typing import cast
 
 from tests.slow.base import SlowTestCase
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
 
 
 class PickDraftHTest(SlowTestCase):
@@ -157,10 +157,10 @@ class PickDraftHTest(SlowTestCase):
         )
         self.assertEqual([c for c in calls if c[1]], [(False, True)])
         self.assertEqual(
-            self.cache.character_data[0].sp_flag.hidden_sex_mode, 1
+            kernel_data.domain("flags").get(0, "hidden_sex_mode"), 1
         )
         self.assertEqual(
-            self.cache.character_data[target].sp_flag.hidden_sex_mode, 1
+            kernel_data.domain("flags").get(target, "hidden_sex_mode"), 1
         )
 
     def test_hidden_sex_fails_runs_fail_behaviour(self) -> None:
@@ -171,7 +171,6 @@ class PickDraftHTest(SlowTestCase):
         from Script.Core import constant
 
         target = self.target_here()
-        target_data = self.cache.character_data[target]
         calls = self.watch_judge("隐奸", refuse=True)
         self.world.player.press("[1]不隐藏")
         _, _, changed = self.run_pick(self.panel(constant.Panel.ASK_HIDDEN_SEX))
@@ -185,9 +184,11 @@ class PickDraftHTest(SlowTestCase):
             "结算的判定不是只在开始时跑一次",
         )
         self.assertEqual(
-            self.cache.character_data[0].sp_flag.hidden_sex_mode, 0
+            kernel_data.domain("flags").get(0, "hidden_sex_mode"), 0
         )
-        self.assertEqual(target_data.sp_flag.hidden_sex_mode, 0)
+        self.assertEqual(
+            kernel_data.domain("flags").get(target, "hidden_sex_mode"), 0
+        )
         self.assertIn("邀请隐奸失败", self.screen())
 
     def test_hidden_sex_panel_back_commits_nothing(self) -> None:
@@ -220,10 +221,10 @@ class PickDraftHTest(SlowTestCase):
         )
         self.assertEqual([c for c in calls if c[1]], [(False, True)])
         self.assertEqual(
-            self.cache.character_data[0].sp_flag.exhibitionism_sex_mode, 1
+            kernel_data.domain("flags").get(0, "exhibitionism_sex_mode"), 1
         )
         self.assertEqual(
-            self.cache.character_data[target].sp_flag.exhibitionism_sex_mode, 1
+            kernel_data.domain("flags").get(target, "exhibitionism_sex_mode"), 1
         )
 
     def test_group_sex_invite_asks_nothing(self) -> None:
@@ -276,7 +277,9 @@ class PickDraftHTest(SlowTestCase):
             1,
             "名单只判不扣，邀请她时结算一次代价（随 Edit 生效）",
         )
-        self.assertTrue(guest_data.sp_flag.go_to_join_group_sex)
+        self.assertTrue(
+            kernel_data.domain("flags").get(guest, "go_to_join_group_sex")
+        )
         self.started.clear()
         world.act(lambda: player_pick.choose(constant.Behavior.WAIT, 1))
         guest_starts = [
@@ -298,7 +301,9 @@ class PickDraftHTest(SlowTestCase):
         cid = min(c for c in game_config.config_hypnosis_type if c > 0)
         type_data = game_config.config_hypnosis_type[cid]
         ca.talent(0)[type_data.talent_id] = 1
-        pl.pl_ability.hypnosis_type = 0
+        kernel_data.put(
+            kernel_data.domain("player_ability").set, 0, hypnosis_type=0
+        )
         show = self.panel(constant.Panel.CHANGE_HYPNOSIS_MODE)
 
         def change_then_back() -> None:
@@ -309,13 +314,17 @@ class PickDraftHTest(SlowTestCase):
         self.world.player.press(f"[{type_data.name}]")
         start, end, changed = self.run_pick(change_then_back)
         self.assertEqual(self.player_starts(), [])
-        self.assertEqual(pl.pl_ability.hypnosis_type, 0)
+        self.assertEqual(
+            kernel_data.domain("player_ability").get(0, "hypnosis_type"), 0
+        )
         self.world.player.press(f"[{type_data.name}]")
         start, end, changed = self.run_pick(show)
         self.assertFalse(changed, "选择期间写了缓存")
         self.assertEqual(self.player_starts(), [edits.EDIT])
         self.assertEqual(end, start)
-        self.assertEqual(pl.pl_ability.hypnosis_type, cid)
+        self.assertEqual(
+            kernel_data.domain("player_ability").get(0, "hypnosis_type"), cid
+        )
 
     def test_official_work_settles_one_event_at_start(self) -> None:
         """两条公务事件排队：弹出第一条，选项结算在开始时跑一次，第一条记进履历，第二条留在队列里"""
@@ -383,7 +392,9 @@ class PickDraftHTest(SlowTestCase):
         from Script.System.Instruct_System import handle_instruct
 
         target = self.target_here()
-        self.cache.character_data[target].sp_flag.unconscious_h = 1
+        kernel_data.put(
+            kernel_data.domain("flags").set, target, unconscious_h=1
+        )
         start, end, changed = self.run_pick(
             lambda: handle_instruct.handle_instruct(
                 constant.Instruct.STOP_SLEEP_OBSCENITY
@@ -393,5 +404,5 @@ class PickDraftHTest(SlowTestCase):
         self.assertEqual(self.player_starts(), [edits.EDIT])
         self.assertEqual(end, start)
         self.assertEqual(
-            self.cache.character_data[target].sp_flag.unconscious_h, 0
+            kernel_data.domain("flags").get(target, "unconscious_h"), 0
         )

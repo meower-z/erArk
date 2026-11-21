@@ -13,7 +13,8 @@ from Script.Core import (
 from Script.Design import handle_talent, handle_premise
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, warehouse
+from Script.Modules.domains import abilities, player_ability, player_collection
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -97,7 +98,9 @@ class Originium_Arts_Panel:
 
             if handle_talent.have_hypnosis_talent():
                 button3_text = _("[003]催眠系能力：")
-                now_type_id = self.pl_character_data.pl_ability.hypnosis_type
+                now_type_id = player_ability.get(
+                    self.pl_character_data.cid, "hypnosis_type"
+                )
                 now_type_name = game_config.config_hypnosis_type[
                     now_type_id
                 ].name
@@ -468,14 +471,8 @@ class Originium_Arts_Panel:
                 elif talent_id == 307:
                     # 总内裤数量
                     now_pan_count = 0
-                    for (
-                        chara_cid
-                    ) in self.pl_character_data.pl_collection.npc_panties:
-                        now_pan_count += len(
-                            self.pl_character_data.pl_collection.npc_panties[
-                                chara_cid
-                            ]
-                        )
+                    for items in player_collection.get("npc_panties").values():
+                        now_pan_count += len(items)
                     # 绘制
                     draw_text += _(
                         "：需要全干员内裤收藏总数量≥{0}（当前{1}）"
@@ -627,7 +624,9 @@ class Originium_Arts_Panel:
 
     def change_hypnosis_type(self, hypnosis_type_cid: int) -> None:
         """改变当前的催眠类型"""
-        self.pl_character_data.pl_ability.hypnosis_type = hypnosis_type_cid
+        player_ability.set(
+            self.pl_character_data.cid, hypnosis_type=hypnosis_type_cid
+        )
 
     def gain_and_upgrade_ability_which(
         self, cid: int, no_cost_flag: bool = False
@@ -760,21 +759,17 @@ class Down_Negative_Talent_Panel:
         self.chara_id = chara_id
         name = character_data.name
 
-        pl_character_data = cache.character_data[0]
-        if self.chara_id not in pl_character_data.pl_collection.npc_panties:
-            pl_character_data.pl_collection.npc_panties[self.chara_id] = []
-        panties_data = pl_character_data.pl_collection.npc_panties[
-            self.chara_id
-        ]
-
         while 1:
             return_list = []
 
             # 输出提示信息
             info_draw = draw.NormalDraw()
+            panties_count = len(
+                player_collection.get("npc_panties").get(self.chara_id, ())
+            )
             info_text = _(
                 "\n要降低[{0}]的哪个刻印呢？(需要消耗该角色已收藏至藏品馆的5条内裤，当前共{1}条，优先消耗重复款式)\n\n"
-            ).format(name, len(panties_data))
+            ).format(name, panties_count)
             if cache.debug_mode:
                 info_text += _("当前为debug模式，不需要消耗内裤\n\n")
             info_draw.text = info_text
@@ -812,40 +807,33 @@ class Down_Negative_Talent_Panel:
         ability = abilities.ability(character_data.cid)
 
         # 计算当前该角色的胖次数量，大于五则成功，不足则弹出失败提示
-        pl_character_data = cache.character_data[0]
-        if (
-            len(pl_character_data.pl_collection.npc_panties[self.chara_id]) >= 5
-            or cache.debug_mode
-        ):
+        panties = list(
+            player_collection.get("npc_panties").get(self.chara_id, ())
+        )
+        if len(panties) >= 5 or cache.debug_mode:
             # debug模式下不消耗内裤
             if not cache.debug_mode:
-
                 # 先统计每种内裤的数量
-                pan_counts: dict[int, int] = {}
-                for pan in pl_character_data.pl_collection.npc_panties[
-                    self.chara_id
-                ]:
+                pan_counts: dict[str, int] = {}
+                for pan in panties:
                     pan_counts[pan] = pan_counts.get(pan, 0) + 1
                 # 遍历全部内裤，优先删除重复款式的内裤，如果删除的数量不够5个，则从前往后删除
                 pop_pan_count = 0
                 for pan, count in pan_counts.items():
-                    # 优先删除重复款式的内裤
                     if count > 1:
                         remove_count = min(count - 1, 5 - pop_pan_count)
                         for _tem in range(remove_count):
-                            pl_character_data.pl_collection.npc_panties[
-                                self.chara_id
-                            ].remove(pan)
+                            panties.remove(pan)
                         pop_pan_count += remove_count
                         if pop_pan_count >= 5:
                             break
                 # 从前往后删除
                 while pop_pan_count < 5:
-                    if pop_pan_count < 5:
-                        pl_character_data.pl_collection.npc_panties[
-                            self.chara_id
-                        ].pop(0)
-                        pop_pan_count += 1
+                    panties.pop(0)
+                    pop_pan_count += 1
+                player_collection.set_list_map_entry(
+                    "npc_panties", self.chara_id, panties
+                )
 
             # 降低刻印
             ability[ability_id] -= 1
@@ -861,7 +849,7 @@ class Down_Negative_Talent_Panel:
                 "  {0}感觉心里轻松了很多，对{1}的印象有些改观了，{2}下降到了{3}级\n"
             ).format(
                 character_data.name,
-                pl_character_data.name,
+                cache.character_data[0].name,
                 game_config.config_ability[ability_id].name,
                 ability[ability_id],
             )

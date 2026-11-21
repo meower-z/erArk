@@ -18,7 +18,7 @@ from fractions import Fraction
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
 
 WIDTH = 120
 """ 绘制宽度 """
@@ -53,7 +53,11 @@ class NumDisplayTest(SlowTestCase):
         self.operator = self.cache.character_data[self.operator_id]
         self.operator.position = list(self.player.position)
         self.player.target_character_id = self.operator_id
-        self.player.pl_ability.visual = True
+        kernel_data.put(
+            kernel_data.domain("player_ability").set,
+            self.player.cid,
+            visual=True,
+        )
         ca.talent(self.player)[309] = 1
         core = importlib.import_module("Script.Kernel.core")
         working = importlib.import_module(
@@ -118,8 +122,12 @@ class NumDisplayTest(SlowTestCase):
         for cid in (0, self.operator_id):
             draw(character_info_head.CharacterInfoHead(cid, WIDTH).draw)
         for in_h in (False, True):
-            self.player.sp_flag.is_h = in_h
-            self.operator.sp_flag.is_h = in_h
+            kernel_data.put(
+                kernel_data.domain("flags").set, self.player.cid, is_h=in_h
+            )
+            kernel_data.put(
+                kernel_data.domain("flags").set, self.operator.cid, is_h=in_h
+            )
             for cid in (0, self.operator_id):
                 draw(
                     see_character_info_panel.SeeCharacterStatusPanel(

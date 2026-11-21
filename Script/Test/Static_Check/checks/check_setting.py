@@ -7,7 +7,7 @@ from __future__ import annotations
 from Script.Core import cache_control
 from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
-from Script.Modules.domains import playthrough
+from Script.Modules.domains import player_collection, playthrough
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -113,9 +113,7 @@ def check_birth_02() -> list[CheckFailure]:
                     [cid],
                 )
             )
-    held = getattr(
-        getattr(characters.get(0), "pl_collection", None), "held_eggs", None
-    )
+    held = player_collection.get("held_eggs") if 0 in characters else None
     if isinstance(held, dict):
         for key, value in held.items():
             if (

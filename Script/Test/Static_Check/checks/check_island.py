@@ -22,24 +22,10 @@ from typing import Any
 
 from Script.Core import cache_control
 from Script.Config import game_config
-from Script.Modules.domains import (
-    commission,
-    diplomacy,
-    dormitory,
-    economy,
-    entertainment,
-    facility,
-    library,
-    location,
-    maintenance,
-    power,
-    prison,
-    production,
-    recruit,
-    visitor,
-    warehouse,
-    work,
-)
+from Script.Modules.domains import commission, diplomacy, dormitory, economy
+from Script.Modules.domains import entertainment, facility, flags, library
+from Script.Modules.domains import location, maintenance, power, prison
+from Script.Modules.domains import production, recruit, visitor, warehouse, work
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -106,12 +92,14 @@ def _sp_flag_brief(ch: Any) -> str:
     功能:
         统一提取全域前提中约定的四个离线来源标记，供失败消息展示，用于判断"离线残留"还是"真实联动缺陷"
     """
-    sp_flag = getattr(ch, "sp_flag", None)
+    cid = getattr(ch, "cid", None)
+    if cid is None:
+        return "field_commission=?,escaping=?,be_bagged=?,in_diplomatic_visit=?"
     return (
-        f"field_commission={getattr(sp_flag, 'field_commission', '?')},"
-        f"escaping={getattr(sp_flag, 'escaping', '?')},"
-        f"be_bagged={getattr(sp_flag, 'be_bagged', '?')},"
-        f"in_diplomatic_visit={getattr(sp_flag, 'in_diplomatic_visit', '?')}"
+        f"field_commission={flags.get(cid, 'field_commission')},"
+        f"escaping={flags.get(cid, 'escaping')},"
+        f"be_bagged={flags.get(cid, 'be_bagged')},"
+        f"in_diplomatic_visit={flags.get(cid, 'in_diplomatic_visit')}"
     )
 
 
@@ -1249,13 +1237,13 @@ def check_island_26_field_commission_flag_consistency() -> list[CheckFailure]:
                 continue
             seen.add(cid)
             ch = cd[cid]
-            if ch.sp_flag.field_commission != com_id:
+            if flags.get(ch.cid, "field_commission") != com_id:
                 failures.append(
                     make_failure(
                         "ISLAND-26",
                         "外勤派遣名单与干员外勤标记一致",
                         f"委托com_id={com_id}({commission_name})名单含cid={cid}({ch.name})，但其"
-                        f"sp_flag.field_commission={ch.sp_flag.field_commission}，与委托id不符，"
+                        f"sp_flag.field_commission={flags.get(ch.cid, "field_commission")}，与委托id不符，"
                         f"cid in cache.npc_id_got={cid in cache.npc_id_got}",
                         [cid],
                     )
@@ -1263,12 +1251,13 @@ def check_island_26_field_commission_flag_consistency() -> list[CheckFailure]:
     for cid, ch in cd.items():
         if cid == 0:
             continue
-        if ch.sp_flag.field_commission != 0 and cid not in seen:
+        if flags.get(ch.cid, "field_commission") != 0 and cid not in seen:
             failures.append(
                 make_failure(
                     "ISLAND-26",
                     "外勤派遣名单与干员外勤标记一致",
-                    f"角色cid={cid}({ch.name})的sp_flag.field_commission={ch.sp_flag.field_commission}(悬空标记)，"
+                    f"角色cid={cid}({ch.name})的sp_flag.field_commission="
+                    f"{flags.get(ch.cid, 'field_commission')}(悬空标记)，"
                     f"但未出现在任何进行中委托名单里",
                     [cid],
                 )
@@ -1618,7 +1607,7 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
         seen[did] = country
         ch = cd[did]
         if (
-            ch.sp_flag.in_diplomatic_visit != country
+            flags.get(ch.cid, "in_diplomatic_visit") != country
             or ch.work.work_type != 131
         ):
             location_head = location.country()
@@ -1628,22 +1617,22 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
                     "外交官映射、岗位与外派标记三方一致",
                     f"[warning] country_id={country}，diplomat_id={did}({ch.name})，"
                     f"实际work.work_type={ch.work.work_type}(期望131)，"
-                    f"实际sp_flag.in_diplomatic_visit={ch.sp_flag.in_diplomatic_visit}(期望{country})，"
+                    f"实际sp_flag.in_diplomatic_visit={flags.get(ch.cid, "in_diplomatic_visit")}(期望{country})，"
                     f"所在国家={location_head}",
                     [did],
                 )
             )
     for cid, ch in cd.items():
-        if cid and ch.sp_flag.in_diplomatic_visit:
-            if seen.get(cid) != ch.sp_flag.in_diplomatic_visit:
+        if cid and flags.get(ch.cid, "in_diplomatic_visit"):
+            if seen.get(cid) != flags.get(ch.cid, "in_diplomatic_visit"):
                 failures.append(
                     make_failure(
                         "ISLAND-33",
                         "外交官映射、岗位与外派标记三方一致",
                         (
                             f"[warning] 角色cid={cid}({ch.name})的sp_flag.in_diplomatic_visit="
-                            f"{ch.sp_flag.in_diplomatic_visit}，"
-                            f"但diplomacy.table()[{ch.sp_flag.in_diplomatic_visit}]未指回该角色"
+                            f"{flags.get(ch.cid, "in_diplomatic_visit")}，"
+                            f"但diplomacy.table()[{flags.get(ch.cid, "in_diplomatic_visit")}]未指回该角色"
                             f"(实际映射到seen.get(cid)={seen.get(cid)})"
                         ),
                         [cid],

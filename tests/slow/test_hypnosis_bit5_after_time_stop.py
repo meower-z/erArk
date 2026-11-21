@@ -10,7 +10,7 @@
 """
 
 from tests.slow.base import SlowTestCase
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
 
 ROOM = ["中枢", "会议室"]
 PRIMARY_HYPNOSIS = 331
@@ -53,7 +53,11 @@ class HypnosisBit5AfterTimeStopTest(SlowTestCase):
         self.instruct(constant.Instruct.CHANGE_HYPNOSIS_MODE)
         self.show_panel()
         self.world.player.check_done()
-        self.assertEqual(operator.sp_flag.unconscious_h, 4, "平然")
+        self.assertEqual(
+            kernel_data.domain("flags").get(operator_id, "unconscious_h"),
+            4,
+            "平然",
+        )
         self.assertEqual(
             handle_premise.handle_normal_5(operator_id),
             0,
@@ -66,7 +70,11 @@ class HypnosisBit5AfterTimeStopTest(SlowTestCase):
             "时停中异常位6为异常",
         )
         self.instruct(constant.Instruct.TIME_STOP_OFF)
-        self.assertEqual(operator.sp_flag.unconscious_h, 0, "关时停后她清醒")
+        self.assertEqual(
+            kernel_data.domain("flags").get(operator_id, "unconscious_h"),
+            0,
+            "关时停后她清醒",
+        )
         self.assertEqual(
             handle_premise.handle_normal_5(operator_id),
             1,

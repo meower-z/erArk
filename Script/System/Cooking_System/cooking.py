@@ -7,7 +7,8 @@ from Script.Core.game_type import Recipes, Food
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
-from Script.Modules.domains import abilities, achievement, economy, kitchen
+from Script.Modules.domains import abilities, achievement, economy, flags
+from Script.Modules.domains import kitchen
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
 
@@ -590,7 +591,6 @@ def judge_accept_special_seasoning_food(
     bool -- 接受或不接受
     """
     talent = abilities.talent(character_id)
-    target_data: game_type.Character = cache.character_data[character_id]
     return_d100 = random.randint(1, 100)
     # 食物的菜谱难度
     food_recipe_data: game_type.Recipes = cache.recipe_data[food.recipe]
@@ -618,7 +618,7 @@ def judge_accept_special_seasoning_food(
         if food.special_seasoning in (11, 12):
             # 精爱味觉或淫乱可以通过
             if talent[31] or talent[40]:
-                target_data.sp_flag.find_food_weird = True
+                flags.set(character_id, find_food_weird=True)
                 # 精爱味觉触发一次绝顶
                 if talent[31]:
                     from Script.Settle.default import (
@@ -629,7 +629,7 @@ def judge_accept_special_seasoning_food(
                 return 1
             # 性无知会直接接受精液食物
             if talent[222]:
-                target_data.sp_flag.find_food_weird = False
+                flags.set(character_id, find_food_weird=False)
                 return 1
 
             # 精液_巧妙混合
@@ -637,37 +637,37 @@ def judge_accept_special_seasoning_food(
                 # 3级爱情系或至少2级隶属系的话才接受
                 for talent_id in {203, 204, 212, 213, 214}:
                     if talent[talent_id]:
-                        target_data.sp_flag.find_food_weird = True
+                        flags.set(character_id, find_food_weird=True)
                         return 1
                 # 进行概率判定，难度*5，但不会高于50
                 if min(return_d100 * 5, 50) <= accept_rate:
-                    target_data.sp_flag.find_food_weird = False
+                    flags.set(character_id, find_food_weird=False)
                     return 1
                 else:
-                    target_data.sp_flag.find_food_weird = True
+                    flags.set(character_id, find_food_weird=True)
                     return 0
             # 精液_直接盖上
             elif food.special_seasoning == 12:
                 # 4级爱情系或至少3级隶属系的话才接受
                 for talent_id in {204, 213, 214}:
                     if talent[talent_id]:
-                        target_data.sp_flag.find_food_weird = True
+                        flags.set(character_id, find_food_weird=True)
                         return 1
                 # 进行概率判定，难度*10，但不会高于80
                 if min(return_d100 * 10, 80) <= accept_rate:
-                    target_data.sp_flag.find_food_weird = False
+                    flags.set(character_id, find_food_weird=False)
                     return 1
                 else:
-                    target_data.sp_flag.find_food_weird = True
+                    flags.set(character_id, find_food_weird=True)
                     return 0
         # 药物判定
         elif food.special_seasoning >= 100:
             # 进行概率判定，难度*2，但不会高于40
             if min(return_d100 * 2, 40) <= accept_rate:
-                target_data.sp_flag.find_food_weird = False
+                flags.set(character_id, find_food_weird=False)
                 return 1
             else:
-                target_data.sp_flag.find_food_weird = True
+                flags.set(character_id, find_food_weird=True)
                 return 0
 
     return 0

@@ -3,6 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import flags
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -201,7 +202,7 @@ def handle_assistant_send_food_1_able(character_id: int) -> int:
     character_data: game_type.Character = cache.character_data[character_id]
     if (
         character_data.assistant_services[4] == 1
-        and character_data.sp_flag.help_buy_food == 0
+        and flags.get(character_id, "help_buy_food") == 0
         and character_data.behavior.start_time.hour in {12, 13}
     ):
         return 1
@@ -218,15 +219,11 @@ def handle_assistant_send_food_2_able(character_id: int) -> int:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if (
-        character_data.assistant_services[4] == 2
-        and character_data.sp_flag.help_make_food == 0
-        and character_data.behavior.start_time.hour in {12, 13}
-    ):
-        return 1
-    elif (
-        character_data.assistant_services[4] == 3
-        and character_data.sp_flag.help_make_food == 0
+    if flags.get(character_id, "help_make_food") != 0:
+        return 0
+    service = character_data.assistant_services[4]
+    if service == 3 or (
+        service == 2 and character_data.behavior.start_time.hour in {12, 13}
     ):
         return 1
     return 0

@@ -1,6 +1,7 @@
 """避孕套的存量池与装饰：存量池的增减与清空、装饰的挂上与取回，以及饮用与挤出的结算"""
 
 from Script.Core import cache_control, game_type
+from Script.Modules.domains import flags, player_collection
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -12,7 +13,7 @@ def get_used_condoms() -> list[int]:
     Return arguments:\n
     List[int] -- 存量池列表，每个元素为该避孕套内的精液量(ml)
     """
-    return cache.character_data[0].pl_collection.used_condoms
+    return list(player_collection.get("used_condoms"))
 
 
 def add_used_condom(semen_count: int) -> None:
@@ -23,7 +24,7 @@ def add_used_condom(semen_count: int) -> None:
     Return arguments:\n
     无
     """
-    cache.character_data[0].pl_collection.used_condoms.append(semen_count)
+    player_collection.append_used_condom(semen_count)
 
 
 def clear_used_condoms() -> None:
@@ -32,7 +33,7 @@ def clear_used_condoms() -> None:
     Return arguments:\n
     无
     """
-    cache.character_data[0].pl_collection.used_condoms = []
+    player_collection.clear_used_condoms()
 
 
 def get_decoration_dict(character_id: int) -> dict[tuple, list[int]]:
@@ -122,6 +123,8 @@ def move_to_decoration(
         if 0 <= index < len(used_condoms):
             decoration_dict[location_key].append(used_condoms.pop(index))
             move_count += 1
+    if move_count:
+        player_collection.put("used_condoms", used_condoms)
     return move_count
 
 
@@ -147,6 +150,8 @@ def take_back_decoration(
         if 0 <= index < len(now_list):
             used_condoms.append(now_list.pop(index))
             take_count += 1
+    if take_count:
+        player_collection.put("used_condoms", used_condoms)
     # 清理空部位
     for location_key in list(decoration_dict.keys()):
         if not decoration_dict[location_key]:
@@ -168,6 +173,8 @@ def consume_condoms(condom_index_list: list[int]) -> list[int]:
     for index in sorted(set(condom_index_list), reverse=True):
         if 0 <= index < len(used_condoms):
             consumed_list.append(used_condoms.pop(index))
+    if consumed_list:
+        player_collection.put("used_condoms", used_condoms)
     return consumed_list
 
 
@@ -191,9 +198,7 @@ def settle_hang(
         target_character_id, part_type, part_cid, condom_index_list
     )
     # 标记当前行为的目标是身体部位还是服装部位，用于口上前提区分
-    cache.character_data[0].sp_flag.condom_cloth_flag = (
-        1 if part_type == 1 else 0
-    )
+    flags.set(0, condom_cloth_flag=1 if part_type == 1 else 0)
 
 
 def settle_take_back(
@@ -211,9 +216,7 @@ def settle_take_back(
         return
     # 标记当前行为的目标是身体部位还是服装部位（按第一个选中的装饰位置判定），用于口上前提区分
     first_location = location_index_list[0][0]
-    cache.character_data[0].sp_flag.condom_cloth_flag = (
-        1 if first_location[0] == 1 else 0
-    )
+    flags.set(0, condom_cloth_flag=1 if first_location[0] == 1 else 0)
     take_back_decoration(target_character_id, location_index_list)
 
 
@@ -295,9 +298,7 @@ def settle_squeeze(
     from Script.UI.Panel import ejaculation_panel
 
     # 标记当前行为的目标是身体部位还是服装部位，用于口上前提区分
-    cache.character_data[0].sp_flag.condom_cloth_flag = (
-        1 if part_type == 1 else 0
-    )
+    flags.set(0, condom_cloth_flag=1 if part_type == 1 else 0)
     # 消耗选中的避孕套
     consumed_list = consume_condoms(condom_index_list)
     if not consumed_list:

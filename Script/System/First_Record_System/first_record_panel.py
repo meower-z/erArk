@@ -421,7 +421,6 @@ def _build_fluid_text(character_id: int) -> str:
     str -- 分组文本
     """
     character_data = cache.character_data[character_id]
-    pl_character_data = cache.character_data[0]
     now_text = ""
     # 全身累计被射精液量
     semen_count = 0
@@ -473,12 +472,12 @@ def _build_fluid_text(character_id: int) -> str:
                         part_name, part_semen
                     )
     # 收集的乳汁与圣水
-    milk_total = pl_character_data.pl_collection.milk_total.get(character_id, 0)
+    from Script.Modules.domains import player_collection
+
+    milk_total = player_collection.get("milk_total").get(character_id, 0)
     if milk_total > 0:
         now_text += _("  总共收集了{0}ml乳汁\n").format(milk_total)
-    urine_total = pl_character_data.pl_collection.urine_total.get(
-        character_id, 0
-    )
+    urine_total = player_collection.get("urine_total").get(character_id, 0)
     if urine_total > 0:
         now_text += _("  总共收集了{0}ml圣水\n").format(urine_total)
     return now_text

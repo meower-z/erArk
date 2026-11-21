@@ -22,7 +22,7 @@ from unittest import mock
 from Script.Design import attr_calculation, character_behavior, game_time
 from Script.Design import handle_premise
 from Script.Kernel import core
-from Script.Modules.domains import modes, needs
+from Script.Modules.domains import flags, modes, needs
 from Script.Modules.gameplay_resolution import actions, events, time_hooks
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
@@ -53,7 +53,12 @@ def state(clock: int, ticked: int, settled_day: int) -> core.GameState:
         who: core.Character(
             core.Action(who, actions.behave.name, None, clock - 1, 600),
             MappingProxyType(
-                {needs.KEY: cast(core.JSON, needs.of(int(who), core.state()))}
+                {
+                    needs.KEY: cast(
+                        core.JSON, needs.of(int(who), core.state())
+                    ),
+                    flags.KEY: working.get(who, flags.KEY, core.state()),
+                }
             ),
         )
         for who in ("0", "1")
@@ -92,7 +97,7 @@ class PrecedenceTest(FastTestCase):
         self.player.target_character_id = 1
         kernel_data.set_needs(self.player.cid, hit=100)
         kernel_data.set_needs(self.npc.cid, hit=100)
-        self.npc.sp_flag.is_h = True
+        kernel_data.put(flags.set, self.npc.cid, is_h=True)
         self.arts_due = False
         self.enterContext(
             mock.patch.object(
@@ -160,7 +165,7 @@ class PrecedenceTest(FastTestCase):
             self.arts_due = due
             return settled()
 
-        self.npc.sp_flag.tired = True
+        kernel_data.put(flags.set, self.npc.cid, tired=True)
         cases: tuple[tuple[Trigger, object, Callable[[], None]], ...] = (
             (events._player_spent_when, "0", self.spend_player),
             (events._h_end_when, "1", lambda: None),
@@ -199,15 +204,15 @@ class PrecedenceTest(FastTestCase):
 
     def test_stop_following_waits_for_become_tired(self) -> None:
         """跟随中的干员体力到 1 而疲劳标记还没设：StopFollowing 不触发；设上之后交回他"""
-        self.npc.sp_flag.is_h = False
-        self.npc.sp_flag.is_follow = 1
+        kernel_data.put(flags.set, self.npc.cid, is_h=False)
+        kernel_data.put(flags.set, self.npc.cid, is_follow=1)
         kernel_data.set_needs(self.npc.cid, hit=1)
         self.enterContext(
             mock.patch.object(attr_calculation, "get_tired_level", lambda v: 2)
         )
 
         def tired(flag: bool) -> core.GameState:
-            self.npc.sp_flag.tired = flag
+            kernel_data.put(flags.set, self.npc.cid, tired=flag)
             return settled()
 
         self.assertEqual(events._become_tired_when(tired(False)), "1")
@@ -223,17 +228,18 @@ class PrecedenceTest(FastTestCase):
         BecomeTired 与 PlayerSpent 从交给触发函数的 GameState 读体力：状态里体力为 1 时触发，
         同一步里还没套用的写入把体力改成 100 也一样触发。状态里干员体力为 100 时 BecomeTired 不触发
         """
-        self.npc.sp_flag.is_h = False
+        kernel_data.put(flags.set, self.npc.cid, is_h=False)
         kernel_data.set_needs(self.npc.cid, hit=1)
         kernel_data.set_needs(self.player.cid, hit=1)
         spent = settled()
+        kernel_data.put(flags.set, self.npc.cid, is_h=True)
+        spent_h = settled()
+        kernel_data.put(flags.set, self.npc.cid, is_h=False)
         with working.based_on(core.state()):
             needs.set(1, hit=100)
             needs.set(0, hit=100)
             self.assertEqual(events._become_tired_when(spent), "1")
-            self.npc.sp_flag.is_h = True
-            self.assertEqual(events._player_spent_when(spent), "0")
-            self.npc.sp_flag.is_h = False
+            self.assertEqual(events._player_spent_when(spent_h), "0")
         kernel_data.set_needs(self.npc.cid, hit=100)
         self.assertIsNone(events._become_tired_when(settled()))
 
@@ -246,7 +252,7 @@ class PrecedenceTest(FastTestCase):
         )
 
         def tired(flag: bool) -> core.GameState:
-            self.npc.sp_flag.tired = flag
+            kernel_data.put(flags.set, self.npc.cid, tired=flag)
             return settled()
 
         self.assertEqual(events._h_end_when(tired(True)), "1")
@@ -264,8 +270,8 @@ class PrecedenceTest(FastTestCase):
         scene -- 改现场的函数
         """
         kernel_data.set_needs(self.player.cid, hit=100)
-        self.npc.sp_flag.is_h = True
-        self.npc.sp_flag.tired = True
+        kernel_data.put(flags.set, self.npc.cid, is_h=True)
+        kernel_data.put(flags.set, self.npc.cid, tired=True)
         kernel_data.set_world(modes.set_group_sex, False)
         self.arts_due = False
         scene()
@@ -276,11 +282,11 @@ class PrecedenceTest(FastTestCase):
 
     def tire_npc(self) -> None:
         """干员疲劳"""
-        self.npc.sp_flag.tired = True
+        kernel_data.put(flags.set, self.npc.cid, tired=True)
 
     def rest_npc(self) -> None:
         """干员不疲劳"""
-        self.npc.sp_flag.tired = False
+        kernel_data.put(flags.set, self.npc.cid, tired=False)
 
     def group_sex(self) -> None:
         """群交中"""

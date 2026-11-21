@@ -20,7 +20,7 @@ from Script.Design import (
 )
 from Script.Modules.tk_ui import player_pick
 import math
-from Script.Modules.domains import needs
+from Script.Modules.domains import action_info, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -37,8 +37,7 @@ window_width = normal_config.config_normal.text_width
 
 def judge_time_to_pl_awake(start_time: datetime.datetime) -> int:
     """计算睡到玩家起床的时间"""
-    pl_character_data: game_type.Character = cache.character_data[0]
-    plan_to_wake_time = pl_character_data.action_info.plan_to_wake_time
+    plan_to_wake_time = action_info.get(0, "plan_to_wake_time")
     wake_time_hour, wake_time_minute = (
         plan_to_wake_time[0],
         plan_to_wake_time[1],
@@ -341,7 +340,9 @@ class Sleep_Panel:
             self.min_to_moring_service_hour, 1
         )
         # 获得早安服务时间的文本
-        plan_to_wake_time = self.pl_character_data.action_info.plan_to_wake_time
+        plan_to_wake_time = action_info.get(
+            self.pl_character_data.cid, "plan_to_wake_time"
+        )
         wake_time_hour, wake_time_minute = (
             plan_to_wake_time[0],
             plan_to_wake_time[1],

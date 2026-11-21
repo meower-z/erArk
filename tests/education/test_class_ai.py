@@ -2,52 +2,23 @@
 """class_ai：翘课概率与定种子掷骰、教师可用性、上课状态函数、工作链里的师生目标行（Plan 24）、normal 门槛、
 外层闸、见学回落链"""
 
-from _bootstrap import (
-    DEFAULT_TIME,
-    SCENE_DORM,
-    SCENE_EDU_ENTRY,
-    SCENE_NURSERY,
-    _,
-    cache,
-    check,
-    class_ai,
-    classroom_path,
-    clear_schedules,
-    constant,
-    constant_effect,
-    datetime,
-    education,
-    education_constant,
-    finish,
-    game_config,
-    game_time,
-    game_type,
-    growth_handle,
-    handle_premise,
-    make_character,
-    map_handle,
-    move_to,
-    npc_turn,
-    open_all_classroom,
-    period_time,
-    pl,
-    random,
-    remove_character,
-    scene_str,
-    schedule_handle,
-    schedule_template_handle,
-    section,
-    set_time,
-    sex_class_handle,
-    sync,
-    wait,
-)
+from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, SCENE_NURSERY
+from _bootstrap import _, cache, check, class_ai, classroom_path
+from _bootstrap import clear_schedules, constant, constant_effect, datetime
+from _bootstrap import education, education_constant, finish, game_config
+from _bootstrap import game_time, game_type, growth_handle, handle_premise
+from _bootstrap import make_character, map_handle, move_to, npc_turn
+from _bootstrap import open_all_classroom, period_time, pl, random
+from _bootstrap import remove_character, scene_str, schedule_handle
+from _bootstrap import schedule_template_handle, section, set_time
+from _bootstrap import sex_class_handle, sync, wait
 from Script.Design import character_behavior, clothing, handle_npc_ai
 from Script.Settle import realtime_settle
 from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
 from Script.Kernel import core
-from Script.Modules.domains import achievement, modes, plan, physical_exam as px
+from Script.Modules.domains import achievement, action_info, flags, modes
+from Script.Modules.domains import physical_exam as px, plan
 from tests import chara_abilities as ca, kernel_data, world
 from Script.Modules.domains import library
 
@@ -103,8 +74,7 @@ def prepare_ai(cid: int) -> None:
     无
     功能: 没起床会先被「起床」目标（target 205）接管；全裸则 normal_all 不成立，工作 / 娱乐的目标行根本不跑
     """
-    cd = cache.character_data[cid]
-    cd.action_info.wake_time = game_time.now()
+    kernel_data.put(action_info.set, cid, "wake_time", game_time.now())
     clothing.get_npc_cloth(cid)
 
 
@@ -126,7 +96,7 @@ def dispatch(cid: int, now_time: datetime.datetime | None = None) -> int:
     cd.behavior.move_final_target = []
     cd.state = constant.CharacterStatus.STATUS_ARDER
     set_time(now_time if now_time is not None else period_time(0))
-    cd.action_info.wake_time = game_time.now()
+    kernel_data.put(action_info.set, cid, "wake_time", game_time.now())
     hit: list[int] = []
     choose_state_machine = handle_npc_ai.choose_state_machine
 
@@ -289,15 +259,15 @@ section("教师可用性")
 check("-1 不可用", not class_ai.judge_teacher_available(-1))
 check("不存在的角色不可用", not class_ai.judge_teacher_available(999))
 check("正常教师可用", teacher_available())
-teacher.sp_flag.is_h = True
+kernel_data.put(flags.set, teacher.cid, is_h=True)
 check("H 中不可用", not teacher_available())
-teacher.sp_flag.is_h = False
-teacher.sp_flag.imprisonment = True
+kernel_data.put(flags.set, teacher.cid, is_h=False)
+kernel_data.put(flags.set, teacher.cid, imprisonment=True)
 check("监禁中不可用", not teacher_available())
-teacher.sp_flag.imprisonment = False
-teacher.sp_flag.field_commission = True
+kernel_data.put(flags.set, teacher.cid, imprisonment=False)
+kernel_data.put(flags.set, teacher.cid, field_commission=True)
 check("外勤中不可用", not teacher_available())
-teacher.sp_flag.field_commission = False
+kernel_data.put(flags.set, teacher.cid, field_commission=False)
 teacher.dead = True
 check("死亡不可用", not teacher_available())
 teacher.dead = False
@@ -305,12 +275,12 @@ teacher.dead = False
 teacher.work.work_type = 21
 check("换了岗不可用", not teacher_available())
 teacher.work.work_type = 151
-teacher.sp_flag.is_follow = 1
+kernel_data.put(flags.set, teacher.cid, is_follow=1)
 check("跟随玩家中不可用（normal_3）", not teacher_available())
-teacher.sp_flag.is_follow = 0
-teacher.sp_flag.sleep = True
+kernel_data.put(flags.set, teacher.cid, is_follow=0)
+kernel_data.put(flags.set, teacher.cid, sleep=True)
 check("睡着不可用", not teacher_available())
-teacher.sp_flag.sleep = False
+kernel_data.put(flags.set, teacher.cid, sleep=False)
 kernel_data.set_ward(101)
 check(
     "M4 住院表里有编号恰为 101 的病人（病人编号与角色 id 无关）→ 教师 101 照常可用（此前判为住院、整天来不了）",
@@ -519,9 +489,9 @@ check(
 )
 move_to(201, classroom_path(ROOM1))
 check("到了教室、教师可用 → 304 听课", dispatch(201) == SM.WORK_ATTENT_CLASS)
-teacher.sp_flag.is_h = True
+kernel_data.put(flags.set, teacher.cid, is_h=True)
 check("教师 H 中 → 713 自习", dispatch(201) == SM.EDUCATION_SELF_STUDY)
-teacher.sp_flag.is_h = False
+kernel_data.put(flags.set, teacher.cid, is_h=False)
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, -1)
 check("课表上没排教师 → 713 自习", dispatch(201) == SM.EDUCATION_SELF_STUDY)
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
@@ -878,12 +848,12 @@ check(
     and handle_premise.handle_premise("self_mother_available", 202) == 1,
 )
 kernel_data.set_ward()
-mother.sp_flag.is_h = True
+kernel_data.put(flags.set, mother.cid, is_h=True)
 check("母亲 H 中 → 无效", class_ai.judge_mother_available(202) == -1)
-mother.sp_flag.is_h = False
-mother.sp_flag.imprisonment = True
+kernel_data.put(flags.set, mother.cid, is_h=False)
+kernel_data.put(flags.set, mother.cid, imprisonment=True)
 check("母亲被监禁 → 无效", class_ai.judge_mother_available(202) == -1)
-mother.sp_flag.imprisonment = False
+kernel_data.put(flags.set, mother.cid, imprisonment=False)
 mother.dead = True
 check("母亲死亡 → 无效", class_ai.judge_mother_available(202) == -1)
 mother.dead = False
@@ -1107,11 +1077,11 @@ for _cid, _name in ((101, "教师"), (201, "学生")):
     _cd = cache.character_data[_cid]
     move_to(0, SCENE_EDU_ENTRY)
     move_to(_cid, SCENE_EDU_ENTRY)
-    _cd.sp_flag.is_follow = 1
+    kernel_data.put(flags.set, _cd.cid, is_follow=1)
     _first_sm = dispatch(_cid)
     move_to(_cid, classroom_path(ROOM1))
     _second_sm = dispatch(_cid)
-    _cd.sp_flag.is_follow = 0
+    kernel_data.put(flags.set, _cd.cid, is_follow=0)
     check(
         f"跟随中的{_name}：在玩家身边不被派去教室、在教室被拉回玩家身边（不再来回走）",
         _first_sm not in CLASS_SM_SET and _second_sm not in CLASS_SM_SET,
@@ -1245,8 +1215,8 @@ check(
 kernel_data.set_needs(teacher.cid, drunk=0)
 # 醉酒时派发的是睡觉：先把她叫起来，下面只验催眠与恢复
 teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-teacher.sp_flag.sleep = False
-teacher.sp_flag.unconscious_h = 5
+kernel_data.put(flags.set, teacher.cid, sleep=False)
+kernel_data.put(flags.set, teacher.cid, unconscious_h=5)
 move_to(101, classroom_path(ROOM1))
 # Plan 31 §3.4 改写：原先断言「空气催眠中的教师仍可用」。空气催眠只在人已在本节教室时豁免（授课行 220700 照样成立），
 #    去教室的移动行 210700 挂的是 normal_all、人不在教室就走不过去；不知道本节在哪间教室（classroom 为空）时按来不了判
@@ -1258,13 +1228,13 @@ check(
     "M3 空气催眠、人已在本节教室 → 仍可用（授课行挂的是 normal_all_except_special_hypnosis）",
     class_ai.judge_teacher_available(101, ROOM1),
 )
-teacher.sp_flag.unconscious_h = 0
+kernel_data.put(flags.set, teacher.cid, unconscious_h=0)
 check(
     "恢复后可用",
     teacher_available(),
     (
-        teacher.sp_flag.sleep,
-        teacher.sp_flag.is_h,
+        flags.get(teacher.cid, "sleep"),
+        flags.get(teacher.cid, "is_h"),
         teacher.behavior.behavior_id,
         kernel_data.needs_of(teacher.cid)["drunk"],
         [
@@ -1301,7 +1271,7 @@ def begin(
     cd.behavior.duration = duration
     cd.behavior.move_target = []
     cd.behavior.move_final_target = []
-    cd.action_info.wake_time = start
+    kernel_data.put(action_info.set, cid, "wake_time", start)
     world.set_clock(now)
 
 
@@ -1394,12 +1364,12 @@ check(
     handle_npc_ai.judge_student_leave_truncate(201) == 0,
 )
 begin(201, constant.Behavior.PLAY_HOUSE, period_time(0), _round_end)
-student.sp_flag.is_follow = 1
+kernel_data.put(flags.set, student.cid, is_follow=1)
 check(
     "A 跟随玩家中（normal_all 不成立）→ 不截，截了 AI 也派不出上课行",
     handle_npc_ai.judge_student_leave_truncate(201) == 0,
 )
-student.sp_flag.is_follow = 0
+kernel_data.put(flags.set, student.cid, is_follow=0)
 begin(101, constant.Behavior.PLAY_HOUSE, period_time(0), _round_end)
 check("非学生岗不截", handle_npc_ai.judge_student_leave_truncate(101) == 0)
 begin(201, constant.Behavior.PLAY_HOUSE, _round_end, _round_end)
@@ -1494,7 +1464,7 @@ schedule_handle.set_selected_course(202, 0, 5, E.COURSE_TYPE_PRACTICE, ROOM_P)
 sex_class_handle.start_sex_class(70, [])
 kernel_data.set_world(modes.set_sex_class, True)
 kernel_data.set_world(modes.set_group_sex, True)
-pl.sp_flag.is_h = True
+kernel_data.put(flags.set, pl.cid, is_h=True)
 _late = period_time(5) + datetime.timedelta(minutes=10)
 move_to(202, SCENE_DORM)
 check(
@@ -1512,8 +1482,8 @@ sm = dispatch(202, _late)
 check(
     "派 722：进 H、看见玩家的 H、到场二段口上（原先 713 在一边自习）",
     sm == SM.EDUCATION_JOIN_SEX_CLASS
-    and child.sp_flag.is_h
-    and child.sp_flag.see_pl_h
+    and flags.get(child.cid, "is_h")
+    and flags.get(child.cid, "see_pl_h")
     and child.second_behavior.get(constant.Behavior.JOIN_SEX_CLASS, 0) > 0,
     sm,
 )
@@ -1521,8 +1491,8 @@ check(
     "晚到的人补记一节出勤",
     growth_handle.get_child_growth(202).attend_class_count == _attend + 1,
 )
-child.sp_flag.is_h = False
-child.sp_flag.see_pl_h = False
+kernel_data.put(flags.set, child.cid, is_h=False)
+kernel_data.put(flags.set, child.cid, see_pl_h=False)
 make_character(301, "成年学生", 152)
 prepare_ai(301)
 schedule_handle.set_selected_course(301, 0, 5, E.COURSE_TYPE_PRACTICE, ROOM_P)
@@ -1533,7 +1503,7 @@ check(
     class_ai.get_course_stage(301) == E.COURSE_STAGE_ATTEND,
 )
 remove_character(301)
-pl.sp_flag.is_h = False
+kernel_data.put(flags.set, pl.cid, is_h=False)
 sex_class_handle.end_sex_class()
 kernel_data.set_world(modes.set_sex_class, False)
 set_time(_late)
@@ -1723,7 +1693,7 @@ check(
 sex_class_handle.start_sex_class(70, [])
 kernel_data.set_world(modes.set_sex_class, True)
 kernel_data.set_world(modes.set_group_sex, True)
-pl.sp_flag.is_h = True
+kernel_data.put(flags.set, pl.cid, is_h=True)
 set_time(_early)
 check(
     "玩家提前开讲了那节：人已在教室 → JOIN",
@@ -1734,12 +1704,12 @@ sm = dispatch(201, _early)
 check(
     "整条链：派 722 入课并补记出勤",
     sm == SM.EDUCATION_JOIN_SEX_CLASS
-    and student.sp_flag.is_h
+    and flags.get(student.cid, "is_h")
     and growth_handle.get_child_growth(201).attend_class_count == _attend + 1,
     sm,
 )
-student.sp_flag.is_h = False
-student.sp_flag.see_pl_h = False
+kernel_data.put(flags.set, student.cid, is_h=False)
+kernel_data.put(flags.set, student.cid, see_pl_h=False)
 move_to(201, SCENE_DORM)
 set_time(_early)
 check(
@@ -1761,36 +1731,36 @@ check(
     == SM.EDUCATION_JOIN_SEX_CLASS,
 )
 move_to(201, classroom_path(ROOM_P))
-student.sp_flag.go_to_join_group_sex = True
+kernel_data.put(flags.set, student.cid, go_to_join_group_sex=True)
 sm = dispatch(201, _early)
 check(
     "受邀的学生走到玩家身边 → 722 入课、清掉前往标记",
     sm == SM.EDUCATION_JOIN_SEX_CLASS
-    and student.sp_flag.is_h
-    and not student.sp_flag.go_to_join_group_sex,
+    and flags.get(student.cid, "is_h")
+    and not flags.get(student.cid, "go_to_join_group_sex"),
     sm,
 )
-student.sp_flag.is_h = False
-student.sp_flag.see_pl_h = False
+kernel_data.put(flags.set, student.cid, is_h=False)
+kernel_data.put(flags.set, student.cid, see_pl_h=False)
 move_to(102, classroom_path(ROOM_P))
 prepare_ai(102)
-mother.sp_flag.go_to_join_group_sex = True
+kernel_data.put(flags.set, mother.cid, go_to_join_group_sex=True)
 sm = dispatch(102, _early)
 check(
     "受邀的非学生干员到场 → 722 判不过门槛，原地收场、不进 H",
     sm == SM.EDUCATION_JOIN_SEX_CLASS
-    and not mother.sp_flag.is_h
-    and not mother.sp_flag.go_to_join_group_sex,
+    and not flags.get(mother.cid, "is_h")
+    and not flags.get(mother.cid, "go_to_join_group_sex"),
     sm,
 )
-pl.sp_flag.is_h = False
+kernel_data.put(flags.set, pl.cid, is_h=False)
 sex_class_handle.end_sex_class()
 kernel_data.set_world(modes.set_sex_class, False)
-mother.sp_flag.go_to_join_group_sex = True
+kernel_data.put(flags.set, mother.cid, go_to_join_group_sex=True)
 sm = dispatch(102, _early)
 check("普通群交（不是课堂）→ 505 → 96 加入群交", sm == 96, sm)
-mother.sp_flag.go_to_join_group_sex = False
-mother.sp_flag.is_h = False
+kernel_data.put(flags.set, mother.cid, go_to_join_group_sex=False)
+kernel_data.put(flags.set, mother.cid, is_h=False)
 kernel_data.set_world(modes.set_group_sex, False)
 move_to(0, SCENE_DORM)
 move_to(102, SCENE_EDU_ENTRY)
@@ -1798,13 +1768,13 @@ move_to(201, SCENE_DORM)
 clear_schedules()
 
 section("母亲睡着时，公务事件的「母亲可跟随」不受影响")
-mother.sp_flag.sleep = True
+kernel_data.put(flags.set, mother.cid, sleep=True)
 check(
     "公务事件前提 self_mother_available 照旧成立（事件在跨天时派发，那时母亲多半睡着）",
     class_ai.judge_mother_available(202) == 102
     and handle_premise.handle_premise("self_mother_available", 202) == 1,
 )
-mother.sp_flag.sleep = False
+kernel_data.put(flags.set, mother.cid, sleep=False)
 
 section("Plan 27 §3.3：个人课表指向的教室这一节已停课，视为没课")
 clear_schedules()
@@ -1916,7 +1886,7 @@ schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
-student.sp_flag.sleep = False
+kernel_data.put(flags.set, student.cid, sleep=False)
 student.behavior.behavior_id = constant.Behavior.SLEEP
 student.behavior.duration = 120
 check("行为是睡觉：判为不可拉", not class_ai.judge_student_pullable(201))
@@ -2318,7 +2288,7 @@ schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 prepare_ai(101)
 prepare_ai(201)
 teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-teacher.sp_flag.unconscious_h = 5
+kernel_data.put(flags.set, teacher.cid, unconscious_h=5)
 move_to(101, SCENE_EDU_ENTRY)
 check(
     (
@@ -2336,7 +2306,7 @@ check(
     "M3 空气催眠、人在教室但不是本节那间 → 来不了",
     not class_ai.judge_teacher_available(101, ROOM2),
 )
-teacher.sp_flag.unconscious_h = 6
+kernel_data.put(flags.set, teacher.cid, unconscious_h=6)
 teacher.hypnosis.blockhead = True
 check(
     "M3 体控-木头人、人就在本节教室 → 也来不了（每轮被锁成原地等待，玩家离开也不解除；此前判能到岗）",
@@ -2350,7 +2320,7 @@ check(
     sm,
 )
 teacher.hypnosis.blockhead = False
-teacher.sp_flag.unconscious_h = 0
+kernel_data.put(flags.set, teacher.cid, unconscious_h=0)
 check("M3 催眠解除后恢复能到岗", class_ai.judge_teacher_available(101, ROOM1))
 clear_schedules()
 
@@ -2575,24 +2545,24 @@ check(
 )
 student.behavior.behavior_id = constant.Behavior.WAIT
 student.behavior.start_time = t_open
-student.sp_flag.is_follow = 1
+kernel_data.put(flags.set, student.cid, is_follow=1)
 check(
     "L5 跟随玩家中的学生（normal_3 不成立）：303 不拉（她自己决策时也不命中听课行，此前被拉成听课）",
     not class_ai.judge_student_join_class(201, ROOM1, t_open),
 )
-student.sp_flag.is_follow = 0
-student.sp_flag.eat_food = 1
+kernel_data.put(flags.set, student.cid, is_follow=0)
+kernel_data.put(flags.set, student.cid, eat_food=1)
 check(
     "L5 有吃饭需求的学生（normal_1 不成立）：303 不拉（需求链排在工作链之前）",
     not class_ai.judge_student_join_class(201, ROOM1, t_open),
 )
-student.sp_flag.eat_food = 0
-student.sp_flag.unconscious_h = 5
+kernel_data.put(flags.set, student.cid, eat_food=0)
+kernel_data.put(flags.set, student.cid, unconscious_h=5)
 check(
     "L5 空气催眠中的学生照拉（与听课行 220815 的 normal_all_except_special_hypnosis 同口径）",
     class_ai.judge_student_join_class(201, ROOM1, t_open),
 )
-student.sp_flag.unconscious_h = 0
+kernel_data.put(flags.set, student.cid, unconscious_h=0)
 check(
     "L5 对照：状态解除后照拉",
     class_ai.judge_student_join_class(201, ROOM1, t_open),
@@ -2679,14 +2649,17 @@ def clear_need(cid: int) -> None:
     无
     功能: 夹具环境没有食谱数据，饿了去买饭会抛异常
     """
-    cd = cache.character_data[cid]
     kernel_data.set_needs(cid, hunger=0, urine=0, tired=0)
     kernel_data.set_needs(cid, sleep=0)
-    for name in ("eat_food", "rest", "pee"):
-        if hasattr(cd.sp_flag, name):
-            setattr(cd.sp_flag, name, 0)
-    cd.sp_flag.sleep = False
-    cd.sp_flag.tired = False
+    kernel_data.put(
+        flags.set,
+        cid,
+        eat_food=0,
+        rest=False,
+        pee=False,
+        sleep=False,
+        tired=False,
+    )
     kernel_data.set_needs(cid, hit=kernel_data.needs_of(cid)["hit_max"])
     kernel_data.set_needs(cid, mana=kernel_data.needs_of(cid)["mana_max"])
 
@@ -2794,9 +2767,9 @@ def setup_h1(third_room: str) -> None:
         prepare_ai(cid)
         kernel_data.set_needs(cid, hit_max=2000)
         kernel_data.set_needs(cid, mana_max=2000)
-        cd.sp_flag.is_h = False
-        cd.sp_flag.is_follow = 0
-        cd.sp_flag.unconscious_h = 0
+        kernel_data.put(flags.set, cid, is_h=False)
+        kernel_data.put(flags.set, cid, is_follow=0)
+        kernel_data.put(flags.set, cid, unconscious_h=0)
         cd.hypnosis.blockhead = False
         for key in cd.second_behavior:
             cd.second_behavior[key] = 0
@@ -2972,7 +2945,7 @@ g32.selected_course = {}
 prepare_ai(201)
 clear_need(201)
 move_to(102, SCENE_EDU_ENTRY)
-mother.sp_flag.is_h = False
+kernel_data.put(flags.set, mother.cid, is_h=False)
 student.work.work_type = E.STUDENT_WORK_TYPE
 student.entertainment.entertainment_type = [TEND] * 3
 move_to(201, SCENE_DORM)
@@ -3031,9 +3004,9 @@ def run_rt32(
     move_to(201, place)
     kernel_data.set_needs(student.cid, hit_max=2000)
     kernel_data.set_needs(student.cid, mana_max=2000)
-    student.sp_flag.is_h = False
-    student.sp_flag.is_follow = 0
-    student.sp_flag.unconscious_h = 0
+    kernel_data.put(flags.set, student.cid, is_h=False)
+    kernel_data.put(flags.set, student.cid, is_follow=0)
+    kernel_data.put(flags.set, student.cid, unconscious_h=0)
     student.hypnosis.blockhead = False
     for key in student.second_behavior:
         student.second_behavior[key] = 0
@@ -3050,7 +3023,7 @@ def run_rt32(
     student.behavior.move_final_target = []
     student.state = constant.CharacterStatus.STATUS_ARDER
     student.target_character_id = 201
-    student.action_info.wake_time = start
+    kernel_data.put(action_info.set, student.cid, "wake_time", start)
     clear_need(201)
     H1_SM_LOG.clear()
     H1_GAIN_LOG.clear()
@@ -3355,7 +3328,7 @@ set_time(T1030)
 sex_class_handle.start_sex_class(70, [])
 kernel_data.set_world(modes.set_sex_class, True)
 kernel_data.set_world(modes.set_group_sex, True)
-pl.sp_flag.is_h = True
+kernel_data.put(flags.set, pl.cid, is_h=True)
 move_to(202, classroom_path(ROOM_P))
 sm = dispatch(202, T1030 + datetime.timedelta(minutes=10))
 check(
@@ -3365,7 +3338,7 @@ check(
     == 1,
     sm,
 )
-pl.sp_flag.is_h = False
+kernel_data.put(flags.set, pl.cid, is_h=False)
 sex_class_handle.end_sex_class()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
@@ -3388,7 +3361,7 @@ for _cid in (101, 201):
     clear_need(_cid)
 move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
-teacher.sp_flag.is_h = False
+kernel_data.put(flags.set, teacher.cid, is_h=False)
 kernel_data.set_ward(101)
 sm = dispatch(201)
 check(
@@ -3401,14 +3374,14 @@ check(
     == 1,
     sm,
 )
-teacher.sp_flag.is_h = True
+kernel_data.put(flags.set, teacher.cid, is_h=True)
 sm = dispatch(201)
 check(
     "M4 学生侧对照：同一现场教师真的来不了（H 中）→ 713 自习（说明上一条走的是教师能否到岗的判定）",
     sm == SM.EDUCATION_SELF_STUDY,
     sm,
 )
-teacher.sp_flag.is_h = False
+kernel_data.put(flags.set, teacher.cid, is_h=False)
 kernel_data.set_ward()
 schedule_handle.clear_selected_course(201, 0, 0)
 move_to(201, SCENE_DORM)
@@ -3430,14 +3403,14 @@ schedule_handle.set_selected_course(202, 0, 2, E.COURSE_TYPE_PRACTICE, ROOM_P)
 move_to(0, SCENE_DORM)
 move_to(201, SCENE_DORM)
 move_to(202, classroom_path(ROOM_P))
-pl.sp_flag.is_h = False
+kernel_data.put(flags.set, pl.cid, is_h=False)
 set_time(T1030)
 prepare_ai(202)
 kernel_data.set_needs(child.cid, hit_max=2000)
 kernel_data.set_needs(child.cid, mana_max=2000)
-child.sp_flag.is_h = False
-child.sp_flag.is_follow = 0
-child.sp_flag.unconscious_h = 0
+kernel_data.put(flags.set, child.cid, is_h=False)
+kernel_data.put(flags.set, child.cid, is_follow=0)
+kernel_data.put(flags.set, child.cid, unconscious_h=0)
 for key in child.second_behavior:
     child.second_behavior[key] = 0
 child.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
@@ -3587,17 +3560,17 @@ def setup_ghost() -> dict:
     kernel_data.set_world(modes.set_group_sex, True)
     # 开群交时的结算（Settle 3417）建好的群交成就记录；玩家行动收尾的成就结算要读它
     kernel_data.set_world(achievement.put, "group_sex_record", {1: [], 2: []})
-    pl.sp_flag.is_h = False
+    kernel_data.put(flags.set, pl.cid, is_h=False)
     kernel_data.set_needs(pl.cid, hit_max=2000, hit=2000)
     kernel_data.set_needs(pl.cid, mana_max=2000, mana=2000)
-    child.sp_flag.is_h = False
+    kernel_data.put(flags.set, child.cid, is_h=False)
     prepare_ai(201)
     kernel_data.set_needs(student.cid, hit_max=2000)
     kernel_data.set_needs(student.cid, mana_max=2000)
-    student.sp_flag.is_h = False
-    student.sp_flag.see_pl_h = False
-    student.sp_flag.is_follow = 0
-    student.sp_flag.unconscious_h = 0
+    kernel_data.put(flags.set, student.cid, is_h=False)
+    kernel_data.put(flags.set, student.cid, see_pl_h=False)
+    kernel_data.put(flags.set, student.cid, is_follow=0)
+    kernel_data.put(flags.set, student.cid, unconscious_h=0)
     student.hypnosis.blockhead = False
     for key in student.second_behavior:
         student.second_behavior[key] = 0
@@ -3628,7 +3601,7 @@ check(
     modes.sex_class()
     and modes.group_sex()
     and sex_class_handle.get_running_class() == _ghost
-    and not pl.sp_flag.is_h
+    and not flags.get(pl.cid, "is_h")
     and pl.position == SCENE_DORM
     and class_ai.judge_in_scene(201, ROOM_P)
     and sex_class_handle.judge_has_sex_skill_course(201)
@@ -3664,7 +3637,7 @@ check(
     "H1 真实循环：收敛（没有撞护栏），状态机记录里没有 722，她没被拉进 H（此前判 JOIN、722 把她拉进没有博士的课堂）",
     not rounds[0][2]
     and not any(one[0] == SM.EDUCATION_JOIN_SEX_CLASS for one in _ghost_sm)
-    and not student.sp_flag.is_h,
+    and not flags.get(student.cid, "is_h"),
     (rounds, _ghost_sm),
 )
 check(
@@ -3701,8 +3674,8 @@ kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 education.clear_temp_classes()
 for _cid in (0, 201, 202):
-    cache.character_data[_cid].sp_flag.is_h = False
-student.sp_flag.see_pl_h = False
+    kernel_data.put(flags.set, _cid, is_h=False)
+kernel_data.put(flags.set, student.cid, see_pl_h=False)
 for key in student.second_behavior:
     student.second_behavior[key] = 0
 kernel_data.set_needs(student.cid, hit_max=100, hit=100)
@@ -3733,9 +3706,9 @@ for _cid in (201, 202):
     _cd = cache.character_data[_cid]
     kernel_data.set_needs(_cd.cid, hit_max=100, hit=100)
     kernel_data.set_needs(_cd.cid, mana_max=100, mana=100)
-    _cd.sp_flag.is_h = False
-    _cd.sp_flag.see_pl_h = False
-    _cd.sp_flag.go_to_join_group_sex = False
+    kernel_data.put(flags.set, _cd.cid, is_h=False)
+    kernel_data.put(flags.set, _cd.cid, see_pl_h=False)
+    kernel_data.put(flags.set, _cd.cid, go_to_join_group_sex=False)
 clear_schedules()
 set_time(period_time(5))
 move_to(0, classroom_path(ROOM_P))
@@ -3747,10 +3720,10 @@ for _cid in (201, 202):
 sex_class_handle.start_sex_class(70, [])
 kernel_data.set_world(modes.set_sex_class, True)
 kernel_data.set_world(modes.set_group_sex, True)
-pl.sp_flag.is_h = True
+kernel_data.put(flags.set, pl.cid, is_h=True)
 # 开课时已在教室、被拉进课堂 H 的学生：她在 H 里，晚到的人一进门就满足「该地点有其他角色在和玩家进行非隐奸的 H」
 move_to(201, classroom_path(ROOM_P))
-student.sp_flag.is_h = True
+kernel_data.put(flags.set, student.cid, is_h=True)
 _late = period_time(5) + datetime.timedelta(minutes=10)
 move_to(202, classroom_path(ROOM_P))
 set_time(_late)
@@ -3782,16 +3755,16 @@ check(
         "面板，220835 一次都走不到）"
     ),
     sm == SM.EDUCATION_JOIN_SEX_CLASS
-    and child.sp_flag.is_h
-    and child.sp_flag.see_pl_h
+    and flags.get(child.cid, "is_h")
+    and flags.get(child.cid, "see_pl_h")
     and growth_handle.get_child_growth(202).attend_class_count == _attend + 1,
     sm,
 )
 # 对照一：走进来的非学生干员照旧目击 H
 prepare_ai(102)
 move_to(102, classroom_path(ROOM_P))
-mother.sp_flag.see_pl_h = False
-mother.sp_flag.go_to_join_group_sex = False
+kernel_data.put(flags.set, mother.cid, see_pl_h=False)
+kernel_data.put(flags.set, mother.cid, go_to_join_group_sex=False)
 sm = dispatch(102, _late)
 check(
     "§8.1 对照：走进课堂的非学生干员照旧目击 H（派 40），新前提对她判 1",
@@ -3799,7 +3772,7 @@ check(
     and handle_premise.handle_premise(_NOT_HERE, 102) == 1,
     sm,
 )
-mother.sp_flag.see_pl_h = False
+kernel_data.put(flags.set, mother.cid, see_pl_h=False)
 move_to(102, SCENE_DORM)
 # 对照二：选了这一节、却够不上课堂的学生（实行值不足的成年学生）
 make_character(301, "成年学生", 152)
@@ -3825,11 +3798,11 @@ check(
 )
 remove_character(301)
 # 对照三：待赴的那节被玩家提前开讲（Plan 26 §3.5），教室里已有别的学生在课堂 H 里
-child.sp_flag.is_h = False
-child.sp_flag.see_pl_h = False
+kernel_data.put(flags.set, child.cid, is_h=False)
+kernel_data.put(flags.set, child.cid, see_pl_h=False)
 for key in child.second_behavior:
     child.second_behavior[key] = 0
-pl.sp_flag.is_h = False
+kernel_data.put(flags.set, pl.cid, is_h=False)
 sex_class_handle.end_sex_class()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
@@ -3842,8 +3815,8 @@ set_time(_early_81)
 sex_class_handle.start_sex_class(70, [])
 kernel_data.set_world(modes.set_sex_class, True)
 kernel_data.set_world(modes.set_group_sex, True)
-pl.sp_flag.is_h = True
-student.sp_flag.is_h = True
+kernel_data.put(flags.set, pl.cid, is_h=True)
+kernel_data.put(flags.set, student.cid, is_h=True)
 move_to(202, classroom_path(ROOM_P))
 set_time(_early_81)
 sm = dispatch(202, _early_81)
@@ -3852,19 +3825,19 @@ check(
         "§8.1 提前开讲的待赴课：点名必修的学生开讲前 5 分钟到场，教室里已有学生在课堂 H 里 → 照样派 722 "
         "加入（同样不先目击 H）"
     ),
-    sm == SM.EDUCATION_JOIN_SEX_CLASS and child.sp_flag.is_h,
+    sm == SM.EDUCATION_JOIN_SEX_CLASS and flags.get(child.cid, "is_h"),
     sm,
 )
 # 还原
 constant.handle_state_machine_data[SM.SEE_H_AND_MOVE_TO_DORMITORY] = _orig_see_h
-pl.sp_flag.is_h = False
+kernel_data.put(flags.set, pl.cid, is_h=False)
 sex_class_handle.end_sex_class()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 education.clear_temp_classes()
 for _cid in (0, 102, 201, 202):
-    cache.character_data[_cid].sp_flag.is_h = False
-    cache.character_data[_cid].sp_flag.see_pl_h = False
+    kernel_data.put(flags.set, _cid, is_h=False)
+    kernel_data.put(flags.set, _cid, see_pl_h=False)
 for key in child.second_behavior:
     child.second_behavior[key] = 0
 move_to(201, SCENE_DORM)

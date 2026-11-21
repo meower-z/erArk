@@ -12,7 +12,8 @@ from __future__ import annotations
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import map_handle
-from Script.Modules.domains import facility, modes, needs, power, warehouse
+from Script.Modules.domains import facility, flags, modes, needs, power
+from Script.Modules.domains import warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -174,8 +175,7 @@ def check_time_stop_unconscious_survives_off_list() -> list[CheckFailure]:
     npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
     failures = []
     for cid, c in character_data.items():
-        sp_flag = getattr(c, "sp_flag", None)
-        if getattr(sp_flag, "unconscious_h", 0) != 3:
+        if flags.get(cid, "unconscious_h") != 3:
             continue
         failures.append(
             make_failure(
@@ -185,9 +185,9 @@ def check_time_stop_unconscious_survives_off_list() -> list[CheckFailure]:
                     f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的sp_flag.unconscious_h=3，"
                     f"但当前time_stop_mode=False；"
                     f"是否在npc_id_got中={cid in npc_id_got}，"
-                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                    f"escaping={getattr(sp_flag, 'escaping', None)}，be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                    f"vistor={getattr(sp_flag, 'vistor', None)}，position={getattr(c, 'position', None)}，"
+                    f"field_commission={flags.get(cid, 'field_commission')}，"
+                    f"escaping={flags.get(cid, 'escaping')}，be_bagged={flags.get(cid, 'be_bagged')}，"
+                    f"vistor={flags.get(cid, 'vistor')}，position={getattr(c, 'position', None)}，"
                     f"疑似TIME_STOP_OFF清理范围漏掉了时停中已离开名单的角色"
                 ),
                 [cid],

@@ -17,7 +17,7 @@ from Script.UI.Panel import achievement_panel
 from Script.Modules.gameplay_resolution import starts
 from Script.Modules.gameplay_resolution.intent import Intent
 from Script.Design import game_time
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, action_info, flags
 
 panel_info_data: dict[str, object] = {}
 
@@ -276,7 +276,7 @@ class Sex_Be_Discovered_Panel:
             self._end_current_h()
         else:
             # 结算成就
-            if self.pl_chara_data.sp_flag.hidden_sex_mode == 1:
+            if flags.get(self.pl_chara_data.cid, "hidden_sex_mode") == 1:
                 achievement_panel.get_achievement_judge_by_value(914, 1)
 
     def _continue_exhibitionism_sex(self) -> None:
@@ -343,7 +343,7 @@ class Sex_Be_Discovered_Panel:
     def _end_current_h(self) -> None:
         """选择结束当前H：发现者排上打断行为，玩家排上结束群交或被打断的结束H"""
         # 交互对象进入被打断状态
-        self.target_chara_data.action_info.h_interrupt = 1
+        action_info.set(self.target_chara_data.cid, "h_interrupt", 1)
         self._plan_reaction(constant.Behavior.SEE_H_AND_INTERRUPT)
         # 如果是在群交中，则结束群交
         if handle_premise.handle_group_sex_mode_on(0):

@@ -22,7 +22,8 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement, history, needs
+from Script.Modules.domains import abilities, achievement, action_info, flags
+from Script.Modules.domains import history, needs, player_ability
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -64,11 +65,10 @@ def judge_character_h_obscenity_unconscious(
     # 玩家部分
     if character_id == 0:
         # 清空空气催眠位置
-        if (
-            character_data.position
-            != character_data.pl_ability.air_hypnosis_position
+        if character_data.position != player_ability.get(
+            character_id, "air_hypnosis_position"
         ):
-            character_data.pl_ability.air_hypnosis_position = ""
+            player_ability.set(character_id, air_hypnosis_position="")
         # 如果前指令是口交类型则重置所有阴茎污浊状态
         if handle_premise.handle_last_cmd_blowjob_type(0):
             for dirty_key in character_data.dirty.penis_dirty_dict:
@@ -105,7 +105,7 @@ def judge_character_h_obscenity_unconscious(
             )
         # 如果在搬运角色，则直接移动到玩家同一地点
         if handle_premise.handle_carry_somebody(0):
-            now_carry_chara_id = pl_character_data.action_info.carry_chara_id
+            now_carry_chara_id = action_info.get(0, "carry_chara_id")
             now_carry_character_data = cache.character_data[now_carry_chara_id]
             map_handle.character_move_scene(
                 now_carry_character_data.position,
@@ -132,7 +132,7 @@ def judge_character_h_obscenity_unconscious(
     # 群交中，仅自慰类型和补位类型的干员由群交AI判断处理（睡奸与6异常时例外）；
     # H中或木头人时做什么由她选行动时决定（handle_npc_ai.choose_state_machine）
     if (
-        (character_data.sp_flag.is_h or character_data.hypnosis.blockhead)
+        (flags.get(character_id, "is_h") or character_data.hypnosis.blockhead)
         and character_data.behavior.behavior_id != constant.Behavior.SLEEP
         and handle_premise.handle_normal_6(character_id)
         and handle_premise.handle_group_sex_mode_on(character_id)
@@ -155,11 +155,10 @@ def end_h_left_behind(character_id: int) -> None:
     from Script.Modules.gameplay_resolution import plan_queue
 
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
     # 结束H状态
     if handle_premise.handle_self_is_h(character_id):
-        character_data.sp_flag.is_h = False
-        character_data.sp_flag.unconscious_h = 0
+        flags.set(character_id, is_h=False)
+        flags.set(character_id, unconscious_h=0)
         plan_queue.plan_next(
             character_id,
             constant.Behavior.END_H,
@@ -169,20 +168,20 @@ def end_h_left_behind(character_id: int) -> None:
         )
     # 结束睡眠猥亵状态
     if handle_premise.handle_unconscious_flag_1(character_id):
-        character_data.sp_flag.unconscious_h = 0
+        flags.set(character_id, unconscious_h=0)
     # 结束空气催眠
-    if (
-        handle_premise.handle_unconscious_flag_5(character_id)
-        and character_data.position
-        != pl_character_data.pl_ability.air_hypnosis_position
+    if handle_premise.handle_unconscious_flag_5(
+        character_id
+    ) and character_data.position != player_ability.get(
+        0, "air_hypnosis_position"
     ):
-        character_data.sp_flag.unconscious_h = 0
+        flags.set(character_id, unconscious_h=0)
     # 结束隐奸状态
     if handle_premise.handle_hidden_sex_mode_ge_1(character_id):
-        character_data.sp_flag.hidden_sex_mode = 0
+        flags.set(character_id, hidden_sex_mode=0)
     # 结束露出状态
     if handle_premise.handle_exhibitionism_sex_mode_ge_1(character_id):
-        character_data.sp_flag.exhibitionism_sex_mode = 0
+        flags.set(character_id, exhibitionism_sex_mode=0)
 
 
 def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
@@ -207,7 +206,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
 
     # 如果角色不在无意识H状态，则直接返回
-    if target_data.sp_flag.unconscious_h == 0:
+    if flags.get(target_data.cid, "unconscious_h") == 0:
         return
 
     # 输出提示信息
@@ -225,7 +224,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
 
     # 睡眠中，则对方获得睡奸醒来状态
     if handle_premise.handle_action_sleep(character_data.target_character_id):
-        target_data.sp_flag.sleep_h_awake = True
+        flags.set(target_data.cid, sleep_h_awake=True)
 
     # 结算恢复无意识的二段行为
     settle_unconscious_semen_and_cloth(target_data.cid)
@@ -285,7 +284,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
             character_data.target_character_id
         ):
             target_data.h_state.pretend_sleep = True
-            target_data.sp_flag.unconscious_h = 1
+            flags.set(target_data.cid, unconscious_h=1)
             # 成就刷新
             achievement.set_entry("sleep_sex_record", 1, 1)
     # 否则对象只等1分钟，地点开门；双方H结构体由排上的结束无意识H在补体力气力上限之后重置
@@ -362,8 +361,8 @@ def handle_unconscious_h_response(
     target_data: game_type.Character = cache.character_data[target_character_id]
 
     # 停止对方的无意识状态与H状态
-    target_data.sp_flag.unconscious_h = 0
-    target_data.sp_flag.is_h = False
+    flags.set(target_character_id, unconscious_h=0)
+    flags.set(target_character_id, is_h=False)
 
     # 如果目标对象处于监禁状态，则直接满足条件
     if handle_premise.handle_imprisonment_1(target_character_id):
@@ -387,7 +386,7 @@ def handle_unconscious_h_response(
         elif character_fall_level < 0:
             response = UnconsciousHResponse.ANGRY
             needs.add(target_character_id, "angry", 100)
-            target_data.sp_flag.angry_with_player = True
+            flags.set(target_character_id, angry_with_player=True)
         # 如果没有陷落状态，则设置为高级性骚扰状态
         else:
             response = UnconsciousHResponse.HIGH_OBSCENITY
@@ -490,14 +489,14 @@ def wake_by_noise(character_id: int, target_character_id: int) -> None:
     target_data: game_type.Character = cache.character_data[target_character_id]
     # 清空疲劳和睡眠程度
     needs.set(target_character_id, tired=0, sleep=0)
-    if target_data.sp_flag.unconscious_h == 1:
+    if flags.get(target_character_id, "unconscious_h") == 1:
         # 睡奸目标：走现有无意识H恢复流程
         info_text = _("\n因为{0}的动作，{1}从梦中惊醒过来\n").format(
             now_character_data.name, target_data.name
         )
         recover_from_unconscious_h(character_id, info_text)
         return
-    if target_data.sp_flag.unconscious_h == 0:
+    if flags.get(target_character_id, "unconscious_h") == 0:
         # 普通睡眠角色：睡眠行为当场结束，“睡觉中被吵醒”排进它的计划队列。
         # 交互对象设为产生动静的角色（玩家），供效果762把对方推回前一场景使用
         plan_queue.plan_next(
@@ -752,17 +751,15 @@ def npc_ai_in_group_sex(character_id: int) -> None:
     if character_id in group_sex_chara_id_list:
         return
 
-    character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data: game_type.Character = cache.character_data[0]
     A_template_data = pl_character_data.h_state.group_sex_body_template_dict[
         "A"
     ]
 
     # 如果不是H状态+群交，则返回
-    if (
-        not character_data.sp_flag.is_h
-        or handle_premise.handle_group_sex_mode_off(character_id)
-    ):
+    if not flags.get(
+        character_id, "is_h"
+    ) or handle_premise.handle_group_sex_mode_off(character_id):
         return
 
     # 被绳子捆绑则返回
@@ -771,7 +768,7 @@ def npc_ai_in_group_sex(character_id: int) -> None:
 
     # 如果设定NPC为仅自慰，则进入要自慰后返回
     if handle_premise.handle_npc_ai_type_1_in_group_sex(character_id):
-        character_data.sp_flag.masturebate = 3
+        flags.set(character_id, masturebate=3)
         return
 
     # 获取当前模板的空缺部位和非空缺部位
@@ -781,7 +778,7 @@ def npc_ai_in_group_sex(character_id: int) -> None:
 
     # 没有空缺时，自己进入要自慰状态
     if not now_template_empty_part_list:
-        character_data.sp_flag.masturebate = 3
+        flags.set(character_id, masturebate=3)
         return
     # 随机选择一个部位；如果是加入侍奉，则直接加入
     body_part = random.choice(now_template_empty_part_list)

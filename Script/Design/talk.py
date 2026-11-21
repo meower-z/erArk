@@ -7,18 +7,13 @@ import random
 import re
 from types import FunctionType
 
-from Script.Core import (
-    cache_control,
-    game_type,
-    value_handle,
-    get_text,
-    constant,
-    rich_text,
-)
+from Script.Core import cache_control, constant, game_type, get_text, rich_text
+from Script.Core import value_handle
 from Script.Design import map_handle, handle_premise, talk_image
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
 from Script.Design import game_time
+from Script.Modules.domains import action_info, flags
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -49,7 +44,7 @@ def handle_talk(character_id: int) -> None:
     # 智能跟随模式下，博士离开时，跟随的角色不显示送别文本
     if (
         character_id == 0
-        and target_data.sp_flag.is_follow == 1
+        and flags.get(target_data.cid, "is_follow") == 1
         and behavior_id == constant.Behavior.MOVE
         and handle_premise.handle_move_to_same_target_with_pl(
             character_data.target_character_id
@@ -764,7 +759,6 @@ def check_not_draw_talk(
     now_behavior_id -- 当前行为id
     unusual_talk_flag -- 是否是特殊文本
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     # 未触发文本
     if not now_behavior_id:
         return True
@@ -776,34 +770,37 @@ def check_not_draw_talk(
             # print(f"debug {character_data.name}设置为屏蔽，不显示移动文本")
             return True
         # 跟随博士的移动不触发
-        if (
-            character_data.sp_flag.is_follow == 1
-            and handle_premise.handle_move_to_same_target_with_pl(character_id)
+        if flags.get(
+            character_id, "is_follow"
+        ) == 1 and handle_premise.handle_move_to_same_target_with_pl(
+            character_id
         ):
             # print(f"debug 智能跟随模式下，{character_data.name}在跟随博士，不显示移动文本")
             return True
         # 当前小时内已触发过的不触发
         if (
-            character_data.action_info.move_talk_time.hour
+            action_info.get(character_id, "move_talk_time").hour
             == game_time.now().hour
-            and character_data.action_info.move_talk_time.year > 1
+            and action_info.get(character_id, "move_talk_time").year > 1
         ):
             # print(f"debug {character_data.name}在当前小时内已触发过一次移动文本")
             return True
         else:
             # 重置移动文本触发时间
-            character_data.action_info.move_talk_time = game_time.now()
+            action_info.set(character_id, "move_talk_time", game_time.now())
             return False
 
     # NPC的等待
     if character_id != 0 and now_behavior_id == constant.Behavior.WAIT:
         # 当前行动中已触发过的不触发
-        if character_data.action_info.have_shown_waiting_in_now_instruct:
+        if action_info.get(character_id, "have_shown_waiting_in_now_instruct"):
             # print(f"debug {character_data.name}在当前行动中已触发过一次等待文本")
             return True
         else:
             # 重置当前行动中已触发过等待文本标记
-            character_data.action_info.have_shown_waiting_in_now_instruct = True
+            action_info.set(
+                character_id, "have_shown_waiting_in_now_instruct", True
+            )
             return False
 
     # NPC的每日招呼

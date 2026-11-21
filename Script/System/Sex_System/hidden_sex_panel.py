@@ -15,7 +15,7 @@ from Script.Design import handle_premise, handle_ability, map_handle
 from Script.UI.Panel import dirty_panel
 
 import random
-from Script.Modules.domains import abilities, achievement
+from Script.Modules.domains import abilities, achievement, flags
 
 panel_info_data: dict[str, object] = {}
 
@@ -267,7 +267,7 @@ def settle_discovered(character_id: int) -> None:
     # 获取角色数据
     character_data = cache.character_data[character_id]
     # 记录本次是否由隐奸被发现触发（清零标记前记录，供被发现面板判定选项与描述）
-    from_hidden_sex_flag = character_data.sp_flag.hidden_sex_mode > 0
+    from_hidden_sex_flag = flags.get(character_id, "hidden_sex_mode") > 0
     # 获取隐奸对象（需在清零对方标记前获取）
     hidden_sex_target_id_list = get_hidden_sex_targets(character_id)
     # 寻找是否有会发现的人（需在清零对方标记前统计，避免把隐奸对象计入发现者）
@@ -278,12 +278,12 @@ def settle_discovered(character_id: int) -> None:
     interrupt_chara_list = [
         chara_id
         for chara_id in interrupt_chara_list
-        if not cache.character_data[chara_id].sp_flag.see_pl_h
+        if not flags.get(chara_id, "see_pl_h")
     ]
     # 双方退出隐奸模式（对方标记如残留会导致消耗倍率等携带模式效果异常延续）
-    character_data.sp_flag.hidden_sex_mode = 0
+    flags.set(character_id, hidden_sex_mode=0)
     for hidden_target_id in hidden_sex_target_id_list:
-        cache.character_data[hidden_target_id].sp_flag.hidden_sex_mode = 0
+        flags.set(hidden_target_id, hidden_sex_mode=0)
     if len(hidden_sex_target_id_list):
         character_data.target_character_id = hidden_sex_target_id_list[0]
     else:
@@ -378,7 +378,7 @@ class See_Hidden_Sex_InfoPanel:
         all_text += _(" 隐蔽程度：{0}").format(hidden_text)
 
         # 携带模式文本
-        if pl_character_data.sp_flag.hidden_sex_mode == 5:
+        if flags.get(0, "hidden_sex_mode") == 5:
             carry_target_data = cache.character_data[
                 pl_character_data.target_character_id
             ]
@@ -546,9 +546,6 @@ class Select_Hidden_Sex_Mode_Panel:
 
         character_data: game_type.Character = cache.character_data[0]
         target_character_id = character_data.target_character_id
-        target_character_data: game_type.Character = cache.character_data[
-            target_character_id
-        ]
 
         # 携带模式需要先选择插入的部位，取消则返回模式选择
         carry_sex_type = 0
@@ -570,9 +567,9 @@ class Select_Hidden_Sex_Mode_Panel:
             now_draw.draw()
             self.invite_failed = True
             return
-        character_data.sp_flag.hidden_sex_mode = mode_id
-        target_character_data.sp_flag.hidden_sex_mode = mode_id
-        target_character_data.sp_flag.is_follow = 0
+        flags.set(0, hidden_sex_mode=mode_id)
+        flags.set(target_character_id, hidden_sex_mode=mode_id)
+        flags.set(target_character_id, is_follow=0)
         # 在场其他角色数量
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             character_data.position
@@ -586,9 +583,9 @@ class Select_Hidden_Sex_Mode_Panel:
         )
         # 如果男不隐，则玩家取消H状态
         if mode_id in {1, 2}:
-            character_data.sp_flag.is_h = False
+            flags.set(0, is_h=False)
         if mode_id == 5:
-            character_data.sp_flag.is_h = True
+            flags.set(0, is_h=True)
             character_data.h_state.current_sex_position = -1
         # 携带模式下邀请之后以对面抱位直接插入所选部位；插入本身不判定实行值，邀请隐奸的判定没过时不会插入
         carry_behavior_id = ""

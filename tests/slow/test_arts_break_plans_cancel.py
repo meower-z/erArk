@@ -86,7 +86,11 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         self.instruct(constant.Instruct.CHANGE_HYPNOSIS_MODE)
         self.show_panel()
         self.world.player.check_done()
-        self.assertEqual(operator.sp_flag.unconscious_h, 4, "平然")
+        self.assertEqual(
+            kernel_data.domain("flags").get(operator_id, "unconscious_h"),
+            4,
+            "平然",
+        )
         return operator_id
 
     def test_hypnosis_cancel_starts_next(self) -> None:
@@ -96,20 +100,28 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         pl = self.cache.character_data[0]
         ca.talent(0)[PRIMARY_HYPNOSIS] = 1
         operator = self.cache.character_data[self._hypnotize("杜宾")]
-        pl.pl_ability.visual = True
+        kernel_data.put(
+            kernel_data.domain("player_ability").set, 0, visual=True
+        )
         kernel_data.set_needs(pl.cid, sanity=Fraction(1, 3))
         breaks = self._count_breaks()
         self.instruct(constant.Instruct.WAIT)
         self.assertEqual(len(breaks), 1, "技艺中断的提示出现一次")
         self.assertEqual(kernel_data.needs_of(pl.cid)["sanity"], 0)
-        self.assertFalse(pl.pl_ability.visual, "透视关掉")
+        self.assertFalse(
+            kernel_data.domain("player_ability").get(0, "visual"), "透视关掉"
+        )
         history = importlib.import_module("Script.Modules.domains.history")
         self.assertEqual(
             history.recent()[-2:],
             [constant.Behavior.WAIT, constant.Behavior.HYPNOSIS_CANCEL],
             "等待之后接着解除催眠",
         )
-        self.assertEqual(operator.sp_flag.unconscious_h, 0, "她清醒过来")
+        self.assertEqual(
+            kernel_data.domain("flags").get(operator.cid, "unconscious_h"),
+            0,
+            "她清醒过来",
+        )
 
     def test_time_stop_off_starts_next(self) -> None:
         """时停中理智耗尽：博士下一个行动是解除时停，时间重新流动"""

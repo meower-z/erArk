@@ -17,7 +17,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
-from Script.Modules.domains import abilities, history, needs, tallies
+from Script.Modules.domains import abilities, flags, history, needs, tallies
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -82,7 +82,7 @@ def update_new_day() -> None:
                 ).format(expired_food_num)
                 now_draw.draw()
         # 清零香薰疗愈的flag
-        character_data.sp_flag.aromatherapy = 0
+        flags.set(character_data.cid, aromatherapy=0)
         if character_data.child_growth is not None:
             growth_data = character_data.child_growth
             if (
@@ -107,17 +107,17 @@ def update_new_day() -> None:
             pregnancy_handle.update_reproduction_period(character_id)
             # 清零助理服务的flag
             if (
-                character_data.sp_flag.morning_salutation == 2
+                flags.get(character_data.cid, "morning_salutation") == 2
                 or character_data.assistant_services[5] == 0
             ):
-                character_data.sp_flag.morning_salutation = 0
+                flags.set(character_data.cid, morning_salutation=0)
             if (
-                character_data.sp_flag.night_salutation == 2
+                flags.get(character_data.cid, "night_salutation") == 2
                 or character_data.assistant_services[6] == 0
             ):
-                character_data.sp_flag.night_salutation = 0
+                flags.set(character_data.cid, night_salutation=0)
             # 清零食物不对劲的flag
-            character_data.sp_flag.find_food_weird = False
+            flags.set(character_data.cid, find_food_weird=False)
             # 根据欲望等级增加欲望值
             needs.add(
                 character_id,

@@ -17,7 +17,8 @@ from Script.Modules.domains import physical_exam
 import random
 
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import abilities, achievement
+from Script.Modules.domains import abilities, achievement, action_info
+from Script.Modules.domains import player_collection
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -47,9 +48,7 @@ def settle_health_check() -> None:
                 if chara_id == 0:
                     continue
                 # 重置今日体检时间数据
-                cache.character_data[
-                    chara_id
-                ].action_info.health_check_today = 0
+                action_info.set(chara_id, "health_check_today", 0)
                 # 如果干员在体检名单中，则加入要体检的干员列表
                 if handle_premise.handle_self_in_health_check_list(chara_id):
                     need_physical_examination_chara_id_list.append(chara_id)
@@ -70,9 +69,13 @@ def settle_health_check() -> None:
             for chara_id in final_physical_examination_chara_id_list:
                 now_character_data = cache.character_data[chara_id]
                 if random.randint(0, 1) == 0:
-                    now_character_data.action_info.health_check_today = 1
+                    action_info.set(
+                        now_character_data.cid, "health_check_today", 1
+                    )
                 else:
-                    now_character_data.action_info.health_check_today = 2
+                    action_info.set(
+                        now_character_data.cid, "health_check_today", 2
+                    )
         # 重置周期内的已体检干员数据
         if physical_exam.setting(3) == 0:
             # 每年重置一次
@@ -247,13 +250,12 @@ class Physical_Check_And_Manage_Panel:
         """结算完成的体检"""
         # 如果已经体检了
         if len(self.done_check_behavior_id_set) > 0:
-            target_character_data = cache.character_data[target_character_id]
             # 做过的检查移进今日已体检。受检者加进本周期已体检名单，并移出等待名单
             physical_exam.finish(
                 target_character_id, self.done_check_behavior_id_set
             )
             # 清零今日体检时间
-            target_character_data.action_info.health_check_today = 0
+            action_info.set(target_character_id, "health_check_today", 0)
 
     def check_target_physical(self, target_character_id: int) -> None:
         """查看目标角色的身体情况"""
@@ -574,9 +576,9 @@ class Physical_Check_And_Manage_Panel:
         if body_manage_second_behavior_id == "ask_give_pan_everyday":
             # 内裤收藏数
             now_value_1 = len(
-                self.pl_character_data.pl_collection.npc_panties[
-                    target_character_id
-                ]
+                player_collection.get("npc_panties").get(
+                    target_character_id, ()
+                )
             )
             require_value_1 = body_manage_data.need_value_1
             require_text += _("内裤收藏数量{0}/{1}").format(
@@ -587,9 +589,7 @@ class Physical_Check_And_Manage_Panel:
         elif body_manage_second_behavior_id == "ask_give_socks_everyday":
             # 袜子收藏数
             now_value_1 = len(
-                self.pl_character_data.pl_collection.npc_socks[
-                    target_character_id
-                ]
+                player_collection.get("npc_socks").get(target_character_id, ())
             )
             require_value_1 = body_manage_data.need_value_1
             require_text += _("袜子收藏数量{0}/{1}").format(
@@ -621,9 +621,9 @@ class Physical_Check_And_Manage_Panel:
         ):
             # 内裤收藏数
             now_value_1 = len(
-                self.pl_character_data.pl_collection.npc_panties[
-                    target_character_id
-                ]
+                player_collection.get("npc_panties").get(
+                    target_character_id, ()
+                )
             )
             require_value_1 = body_manage_data.need_value_1
             require_text += _("内裤收藏数量{0}/{1}").format(

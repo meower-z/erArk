@@ -27,7 +27,8 @@ import datetime
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import achievement, history, modes
+from Script.Modules.domains import achievement, action_info, flags, history
+from Script.Modules.domains import modes
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -340,9 +341,7 @@ def check_behavior_duration_non_negative_int() -> list[CheckFailure]:
         duration = getattr(behavior, "duration", None)
         if type(duration) is int and duration >= 0:
             continue
-        wake_time = getattr(
-            getattr(chara, "action_info", None), "wake_time", None
-        )
+        wake_time = action_info.get(chara.cid, "wake_time")
         failures.append(
             make_failure(
                 "BEHAV-09",
@@ -474,8 +473,8 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None or not _behavior_type_ok(chara):
             continue
-        sp_flag = getattr(chara, "sp_flag", None)
-        if getattr(sp_flag, "is_h", False):
+        is_h = flags.get(cid, "is_h")
+        if is_h:
             continue
         behavior = chara.behavior
         if behavior.duration <= 0:
@@ -496,7 +495,7 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
                     f"behavior_id={behavior.behavior_id!r}, "
                     f"start_time={behavior.start_time!r}, duration={behavior.duration!r}, END={end_time!r} < "
                     f"game_time={game_t!r}；"
-                    f"is_h={getattr(sp_flag, 'is_h', None)}, unconscious_h={getattr(sp_flag, 'unconscious_h', None)}, "
+                    f"is_h={is_h}, unconscious_h={flags.get(cid, 'unconscious_h')}, "
                     f"time_stop_mode={modes.time_stop()}, group_sex_mode={group_sex_mode}, "
                     f"target_character_id={getattr(chara, 'target_character_id', None)}"
                 ),
@@ -537,8 +536,7 @@ def check_move_behavior_has_executable_path() -> list[CheckFailure]:
         behavior = getattr(chara, "behavior", None)
         if getattr(behavior, "behavior_id", None) != "move":
             continue
-        sp_flag = getattr(chara, "sp_flag", None)
-        is_h = getattr(sp_flag, "is_h", False)
+        is_h = flags.get(cid, "is_h")
         duration = getattr(behavior, "duration", None)
         move_target = getattr(behavior, "move_target", None)
         move_src = getattr(behavior, "move_src", None)
@@ -586,7 +584,7 @@ def check_move_behavior_has_executable_path() -> list[CheckFailure]:
                     f"position={getattr(chara, 'position', None)!r}, "
                     f"move_final_target={getattr(behavior, 'move_final_target', None)!r}, "
                     f"duration={duration!r}, state={getattr(chara, 'state', None)!r}, "
-                    f"is_follow={getattr(sp_flag, 'is_follow', None)!r}"
+                    f"is_follow={flags.get(cid, 'is_follow')!r}"
                 ),
                 [cid],
             )
@@ -613,8 +611,7 @@ def check_interacting_character_end_info_valid() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None:
             continue
-        action_info = getattr(chara, "action_info", None)
-        info = getattr(action_info, "interacting_character_end_info", None)
+        info = action_info.get(cid, "interacting_character_end_info")
         if not (isinstance(info, (list, tuple)) and len(info) >= 1):
             continue
         other_id = info[0]
@@ -666,8 +663,7 @@ def check_active_body_item_not_expired() -> list[CheckFailure]:
         body_item = getattr(h_state, "body_item", None)
         if not isinstance(body_item, dict):
             continue
-        sp_flag = getattr(chara, "sp_flag", None)
-        is_h = getattr(sp_flag, "is_h", False)
+        is_h = flags.get(cid, "is_h")
         indices = range(len(body_item)) if is_h else (8, 9)
         for i in indices:
             if i not in body_item:
@@ -687,7 +683,7 @@ def check_active_body_item_not_expired() -> list[CheckFailure]:
                     "生效中的身体道具不得已过期",
                     f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})部位{i}({item_name!r})生效中(active=True)"
                     f"但结束时间{end_time!r}已<=当前game_time={game_t!r}，说明该角色本轮未被结算到；"
-                    f"is_h={is_h}, unconscious_h={getattr(sp_flag, 'unconscious_h', None)}, time_stop_mode={time_stop}",
+                    f"is_h={is_h}, unconscious_h={flags.get(cid, 'unconscious_h')}, time_stop_mode={time_stop}",
                     [cid],
                 )
             )
@@ -732,7 +728,7 @@ def check_second_behavior_values_and_pending_ids() -> list[CheckFailure]:
         behavior_id = getattr(
             getattr(chara, "behavior", None), "behavior_id", None
         )
-        is_h = getattr(getattr(chara, "sp_flag", None), "is_h", None)
+        is_h = flags.get(chara.cid, "is_h")
         for v in values:
             if type(v) is int and v in (0, 1):
                 continue
@@ -834,13 +830,13 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
     player = character_data.get(0)
     if player is None:
         return []
-    sp_flag = getattr(player, "sp_flag", None)
-    if getattr(sp_flag, "unconscious_h", None) == 3:
+    u = flags.get(0, "unconscious_h")
+    if u == 3:
         return []
     unconscious_npcs = []
     for cid in _live_ids(cache):
         other = character_data.get(cid)
-        if getattr(getattr(other, "sp_flag", None), "unconscious_h", None) == 3:
+        if other is not None and flags.get(cid, "unconscious_h") == 3:
             unconscious_npcs.append(cid)
         if len(unconscious_npcs) >= 10:
             break
@@ -850,8 +846,8 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
             "时停中玩家必须处于时停无意识态",
             (
                 f"[warning] time_stop_mode=True但0号玩家sp_flag.unconscious"
-                f"_h={getattr(sp_flag, 'unconscious_h', None)!r}"
-                f"!=3，时停开关可能只跑了一半；is_h={getattr(sp_flag, 'is_h', None)}, "
+                f"_h={u!r}"
+                f"!=3，时停开关可能只跑了一半；is_h={flags.get(0, 'is_h')}, "
                 f"已置3的NPC样本(至多10个)={unconscious_npcs}, "
                 f"time_stop_duration={achievement.get('time_stop_duration')!r}"
             ),
@@ -880,13 +876,12 @@ def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
     player = character_data.get(0)
     if player is None:
         return []
-    sp_flag = getattr(player, "sp_flag", None)
-    if getattr(sp_flag, "is_h", False):
+    if flags.get(0, "is_h"):
         return []
     h_npcs = []
     for cid in _live_ids(cache):
         other = character_data.get(cid)
-        if getattr(getattr(other, "sp_flag", None), "is_h", False):
+        if other is not None and flags.get(cid, "is_h"):
             h_npcs.append(cid)
         if len(h_npcs) >= 10:
             break

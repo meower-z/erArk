@@ -58,13 +58,13 @@ class NewRoundClockTest(SlowTestCase):
         self.assertGreater(len(game_state.characters), 1, "内核里有干员")
         visitor = game("Script.Modules.domains.visitor")
         self.assertEqual(game_time.minutes(visitor.last_arrival()), first)
-        for chara_id, character in cache.character_data.items():
-            info = character.action_info
+        action_info = game("Script.Modules.domains.action_info")
+        for chara_id in cache.character_data:
             stamps = {
-                "talk_time": info.talk_time,
-                "last_move_time": info.last_move_time,
-                "wake_time": info.wake_time,
-                "sleep_time": info.sleep_time,
+                "talk_time": action_info.get(chara_id, "talk_time"),
+                "last_move_time": action_info.get(chara_id, "last_move_time"),
+                "wake_time": action_info.get(chara_id, "wake_time"),
+                "sleep_time": action_info.get(chara_id, "sleep_time"),
             }
             for name, stamp in stamps.items():
                 self.assertEqual(

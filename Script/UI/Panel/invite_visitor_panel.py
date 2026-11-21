@@ -2,13 +2,8 @@
 
 import os
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text
 from Script.Design import (
     attr_calculation,
     map_handle,
@@ -21,7 +16,8 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import manage_basement_panel, recruit_panel
 import random
-from Script.Modules.domains import abilities, facility, location, visitor
+from Script.Modules.domains import abilities, facility, flags, location
+from Script.Modules.domains import visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -109,7 +105,7 @@ def visitor_to_operator(character_id: int) -> None:
     character_data = cache.character_data[character_id]
 
     # flag置为已访问
-    character_data.sp_flag.vistor = 2
+    flags.set(character_id, vistor=2)
 
     # 从访客列表中移除
     visitor.leave(character_id)
@@ -190,7 +186,7 @@ def visitor_leave(character_id: int) -> None:
     character_data = cache.character_data[character_id]
 
     # flag置为已访问
-    character_data.sp_flag.vistor = 2
+    flags.set(character_id, vistor=2)
 
     # 从访客列表中移除
     visitor.leave(character_id)

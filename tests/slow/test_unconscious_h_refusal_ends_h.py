@@ -39,8 +39,10 @@ class UnconsciousHRefusalEndsHTest(SlowTestCase):
         unconscious -- sp_flag.unconscious_h 的值
         """
         data = self.cache.character_data[cid]
-        data.sp_flag.is_h = True
-        data.sp_flag.unconscious_h = unconscious
+        kernel_data.put(kernel_data.domain("flags").set, cid, is_h=True)
+        kernel_data.put(
+            kernel_data.domain("flags").set, cid, unconscious_h=unconscious
+        )
         data.h_state.insert_position = INSERTED
         if cid == 0:
             return
@@ -56,7 +58,7 @@ class UnconsciousHRefusalEndsHTest(SlowTestCase):
         """
         data = self.cache.character_data[cid]
         return (
-            data.sp_flag.is_h,
+            kernel_data.domain("flags").get(cid, "is_h"),
             data.h_state.insert_position,
             any(data.cloth.cloth_off.values()),
         )

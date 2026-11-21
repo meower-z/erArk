@@ -16,6 +16,7 @@
 from typing import TYPE_CHECKING
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 if TYPE_CHECKING:
     from typing import Any
@@ -42,7 +43,11 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
         self.walk(ROOM)
         self.operator_id = self.npc("杜宾")
         self.operator = self.cache.character_data[self.operator_id]
-        self.operator.sp_flag.npc_masturebate_for_player = True
+        kernel_data.put(
+            kernel_data.domain("flags").set,
+            self.operator.cid,
+            npc_masturebate_for_player=True,
+        )
         self.settled_events: list[str] = []
         """ handle_event_data 结算过的事件id """
         real_handle = settle_behavior.handle_event_data
@@ -87,7 +92,9 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
         )
         self.assertEqual(self.world.scene(ROOM).close_flag, 1)
         self.assertTrue(self.operator.h_state.npc_active_h)
-        self.assertTrue(self.operator.sp_flag.is_h)
+        self.assertTrue(
+            kernel_data.domain("flags").get(self.operator.cid, "is_h")
+        )
         self.assertEqual(
             self.cache.character_data[0].target_character_id, self.operator_id
         )
@@ -111,7 +118,12 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
         self.show_panel()
         self.world.player.press("逆来顺受")
         self.assertTrue(
-            self.wait_until(lambda: self.operator.sp_flag.is_h, 60),
+            self.wait_until(
+                lambda: kernel_data.domain("flags").get(
+                    self.operator.cid, "is_h"
+                ),
+                60,
+            ),
             f"杜宾在 {self.operator.position}",
         )
         self.check_ambush("move")

@@ -11,19 +11,13 @@ import datetime
 from types import FunctionType
 from typing import Protocol
 
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-    text_handle,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text, text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, basement
 from Script.System.Education_System import education_constant, schedule_handle
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, flags
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -73,7 +67,7 @@ def get_teacher_absent_mark(teacher_id: int, short: bool = False) -> str:
     teacher_data: game_type.Character = cache.character_data[teacher_id]
     if teacher_data.work.work_type != education_constant.TEACHER_WORK_TYPE:
         return _("（离岗）") if short else _("（已离岗）")
-    if teacher_data.sp_flag.imprisonment:
+    if flags.get(teacher_id, "imprisonment"):
         return _("（监禁）") if short else _("（被监禁）")
     if teacher_id not in cache.npc_id_got:
         return _("（离岛）") if short else _("（不在岛上）")

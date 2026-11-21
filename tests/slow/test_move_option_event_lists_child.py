@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from tests.slow.base import SlowTestCase
 from tests.world import UnplannedInput
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
 
 if TYPE_CHECKING:
     from Script.UI.Panel.draw_event_text_panel import DrawEventTextPanel
@@ -93,7 +93,9 @@ class MoveOptionEventListsChildTest(SlowTestCase):
                 if result.event_id == PARENT_ID:
                     previous[:] = [
                         path
-                        for path in player.action_info.past_move_position_list
+                        for path in kernel_data.domain("action_info").get(
+                            player.cid, "past_move_position_list"
+                        )
                         if path != player.position
                     ][-1:]
             return result

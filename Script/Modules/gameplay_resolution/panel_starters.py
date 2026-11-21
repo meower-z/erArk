@@ -21,7 +21,8 @@ from Script.Design import (
     map_handle,
 )
 from Script.Kernel import core
-from Script.Modules.domains import achievement, economy, tallies
+from Script.Modules.domains import achievement, action_info, economy, flags
+from Script.Modules.domains import player_ability, tallies
 from Script.Modules.gameplay_resolution import intent, plan_queue, starts
 from Script.System.Cooking_System import cooking
 from Script.System.Sex_System import drunk_sex_common
@@ -169,7 +170,7 @@ def start_eat_food(who: int, chosen: intent.Intent) -> None:
     character_data.behavior.target_food = food
     if args.get("angry"):
         needs.add(who, "angry", 40)
-        character_data.sp_flag.angry_with_player = True
+        flags.set(who, angry_with_player=True)
     elif (
         chosen["behavior_id"] == constant.Behavior.EAT
         and food.special_seasoning in [11, 12]
@@ -231,7 +232,7 @@ def start_aromatherapy(who: int, chosen: intent.Intent) -> None:
         need_type, need_value = (int(v) for v in need_text.split("|"))
         warehouse.add(need_type, -need_value)
     tallies.add(tallies.AROMATHERAPY, -1)
-    cache.character_data[target_id].sp_flag.aromatherapy = recipe_id
+    flags.set(target_id, aromatherapy=recipe_id)
     plan_queue.plan_next(
         target_id,
         constant.Behavior.WAIT,
@@ -255,11 +256,13 @@ def start_sleep(who: int, chosen: intent.Intent) -> None:
         scene_data = cache.scene_data[scene_path]
         scene_data.close_flag = scene_data.close_type
     now = game_time.now()
-    character_data.action_info.sleep_time = now
-    character_data.action_info.wake_time = game_time.get_sub_date(
-        minute=chosen["minutes"], old_date=now
+    action_info.set(who, "sleep_time", now)
+    action_info.set(
+        who,
+        "wake_time",
+        game_time.get_sub_date(minute=chosen["minutes"], old_date=now),
     )
-    character_data.pl_ability.visual = False
+    player_ability.set(who, visual=False)
     _assistant_goes_to_sleep(character_data.assistant_character_id)
 
 

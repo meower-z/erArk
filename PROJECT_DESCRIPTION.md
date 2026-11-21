@@ -419,8 +419,8 @@ Script/
 - 成长/社交：`favorability`, `trust`, `status_data`（能力、经验、宝珠与素质表都不在 Character 上，在 GameState 的角色键 `abilities.ability`、`abilities.experience`、`abilities.juel`、`abilities.talent` 里，用 `abilities.ability(cid)` 等读写）
 - 行为：`behavior`（Behavior 对象）, `second_behavior`, `must_settle/must_show_second_behavior_id_list`, `last_behavior_id_list`
 - 位置/住宿：`position`, `officeroom`, `dormitory`, `pre_dormitory`
-- 子对象：`event`, `cloth`, `item`, `food_bag`, `target_character_id`, `body_manage`, `first_record`, `dirty`, `h_state`, `sp_flag`, `action_info`, `work`, `entertainment`, `pregnancy`, `relationship`, `hypnosis`, `author_flag`
-- 玩家特有：`pl_ability`, `pl_collection`, `collection_character`
+- 子对象：`event`, `cloth`, `item`, `food_bag`, `target_character_id`, `body_manage`, `first_record`, `dirty`, `h_state`, `work`, `entertainment`, `pregnancy`, `relationship`, `hypnosis`, `author_flag`（角色特殊状态标记与行动记录分别在 GameState 的角色键 `chara.flags` 与 `chara.action_info` 里，由 `Modules/domains/flags.py` 与 `Modules/domains/action_info.py` 读写）
+- 玩家特有：`collection_character`（玩家能力状态与玩家收藏品分别在 GameState 的角色键 `player.ability` 与 `player.collection` 里，由 `Modules/domains/player_ability.py` 与 `Modules/domains/player_collection.py` 读写）
 - 其他：`birthday`, `text_color`, `talk_size`, `token_text`, `assistant_character_id`, `assistant_services`, `chara_setting`
 
 ### 9.3 Behavior / 其他重要类

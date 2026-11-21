@@ -15,6 +15,7 @@ talk.talk_common_judge 不能依赖这个顺序：里层排在外层前面时，
 """
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 ROOM = ["中枢", "会议室"]
 MOUTH = 21
@@ -35,10 +36,14 @@ class TalkCommonNestedTest(SlowTestCase):
         operator_id = self.npc("杜宾")
         operator = self.cache.character_data[operator_id]
         self.world.move(operator_id, ROOM)
-        operator.sp_flag.npc_masturebate_for_player = True
+        kernel_data.put(
+            kernel_data.domain("flags").set,
+            operator_id,
+            npc_masturebate_for_player=True,
+        )
         self.world.player.press("逆来顺受")
         self.instruct(constant.Instruct.DOOR_LOCK_INNER)
-        self.assertTrue(operator.sp_flag.is_h)
+        self.assertTrue(kernel_data.domain("flags").get(operator_id, "is_h"))
 
         normal_config.system_setting.draw_setting[13] = 10
         game_config.config_talk_common_cid_list_by_type = dict(

@@ -17,7 +17,7 @@ import random
 from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import handle_premise as HP
-from Script.Modules.domains import modes
+from Script.Modules.domains import action_info, flags, modes
 from Script.Modules.domains import physical_exam as exam
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
@@ -181,12 +181,19 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
                 constant.Behavior.WAIT,
             ]
         )
-        operator.sp_flag.unconscious_h = rng.randrange(8)
-        operator.sp_flag.is_follow = (
-            rng.choice([1, 2, 3, 4]) if rng.random() < 0.15 else 0
+        kernel_data.put(flags.set, operator.cid, unconscious_h=rng.randrange(8))
+        kernel_data.put(
+            flags.set,
+            operator.cid,
+            is_follow=rng.choice([1, 2, 3, 4]) if rng.random() < 0.15 else 0,
         )
         self.player.assistant_character_id = 1 if rng.random() < 0.15 else 0
-        operator.action_info.health_check_today = rng.randrange(4)
+        kernel_data.put(
+            action_info.set,
+            operator.cid,
+            "health_check_today",
+            rng.randrange(4),
+        )
         waiting = exam.add if rng.random() < 0.3 else exam.discard
         kernel_data.put(waiting, exam.WAITING, 1)
         kernel_data.set_needs(operator.cid, sleep=rng.choice(SLEEP_POINTS))
@@ -232,7 +239,7 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
                             n,
                             full,
                             short,
-                            op.sp_flag.unconscious_h,
+                            flags.get(op.cid, "unconscious_h"),
                             op.behavior.behavior_id,
                             kernel_data.needs_of(op.cid)["sleep"],
                             kernel_data.needs_of(op.cid)["drunk"],

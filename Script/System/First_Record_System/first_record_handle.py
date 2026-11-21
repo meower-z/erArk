@@ -5,7 +5,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import abilities, modes
+from Script.Modules.domains import abilities, flags, modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -159,12 +159,13 @@ def check_first_h_mode(character_id: int) -> None:
         return
     character_data = cache.character_data[character_id]
     # 需要处于H模式中
-    if not character_data.sp_flag.is_h:
+    if not flags.get(character_id, "is_h"):
         return
     # 无意识H按类型拆分为独立键（1睡眠~7心控），一名角色可积累至多7条
-    if character_data.sp_flag.unconscious_h:
+    if flags.get(character_id, "unconscious_h"):
         record_first_h_mode(
-            character_id, f"unconscious_{character_data.sp_flag.unconscious_h}"
+            character_id,
+            f"unconscious_{flags.get(character_id, "unconscious_h")}",
         )
     # 群交（附加数据：当时场景内角色数）
     if modes.group_sex():
@@ -180,15 +181,15 @@ def check_first_h_mode(character_id: int) -> None:
             character_id, "group_sex", str(scene_character_count)
         )
     # 露出H（附加数据：模式名）
-    if character_data.sp_flag.exhibitionism_sex_mode:
+    if flags.get(character_id, "exhibitionism_sex_mode"):
         mode_name = EXHIBITIONISM_MODE_NAME_DICT.get(
-            character_data.sp_flag.exhibitionism_sex_mode, ""
+            flags.get(character_id, "exhibitionism_sex_mode"), ""
         )
         record_first_h_mode(character_id, "exhibitionism", mode_name)
     # 隐奸H（附加数据：模式名）
-    if character_data.sp_flag.hidden_sex_mode:
+    if flags.get(character_id, "hidden_sex_mode"):
         mode_name = HIDDEN_SEX_MODE_NAME_DICT.get(
-            character_data.sp_flag.hidden_sex_mode, ""
+            flags.get(character_id, "hidden_sex_mode"), ""
         )
         record_first_h_mode(character_id, "hidden_sex", mode_name)
     # 装睡H

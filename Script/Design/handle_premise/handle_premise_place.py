@@ -12,7 +12,7 @@ from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Modules.domains import maintenance
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import entertainment, location
+from Script.Modules.domains import action_info, entertainment, flags, location
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -368,9 +368,9 @@ def handle_scene_someone_h_but_not_hidden_sex(character_id: int) -> int:
                 chara_id
             ]
             # 检测是否在非隐奸H
-            if other_character_data.sp_flag.is_h and _handle_hidden_sex_mode_0(
-                chara_id
-            ):
+            if flags.get(
+                other_character_data.cid, "is_h"
+            ) and _handle_hidden_sex_mode_0(chara_id):
                 return 999
     return 0
 
@@ -1417,12 +1417,12 @@ def handle_in_ai_food_shop(character_id: int) -> int:
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
     now_scene_data = cache.scene_data[now_scene_str]
     # 去食堂的
-    if character_data.action_info.eat_food_restaurant == -1:
+    if action_info.get(character_id, "eat_food_restaurant") == -1:
         if handle_in_take_food(character_id):
             return 1
     # 去指定餐厅的
     else:
-        restaurant_id = character_data.action_info.eat_food_restaurant
+        restaurant_id = action_info.get(character_id, "eat_food_restaurant")
         place_tag = game_config.config_restaurant[restaurant_id].tag_name
         if place_tag in now_scene_data.scene_tag:
             return 1

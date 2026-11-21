@@ -21,7 +21,7 @@ import datetime
 from Script.Core import game_type, save_handle
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import needs, power, pregnancy
+from Script.Modules.domains import needs, player_ability, power, pregnancy
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import upgrade
 from Script.Settle import realtime_settle
@@ -68,8 +68,13 @@ class OldSaveIntsTest(FastTestCase):
                 ],
             }
         ]
-        vars(npc.pl_ability)["today_sanity_point_cost"] = 0.1
+        pa = game_type.PLAYER_ABILITY()
+        vars(pa)["today_sanity_point_cost"] = 0.1
+        vars(npc)["pl_ability"] = pa
         save_handle.exact_stats()
+        with working.based_on(core.state()):
+            player_ability.adopt_old_save({"character_data": {0: npc}})
+            adopted_cost = player_ability.get(0, "today_sanity_point_cost")
         got = [
             npc.eja_point,
             npc.semen_point,
@@ -78,7 +83,7 @@ class OldSaveIntsTest(FastTestCase):
             npc.dirty.absorbed_total_semen,
             npc.dirty.body_semen[0][1],
             npc.dirty.semen_flow[0]["targets"][0]["remaining_volume"],
-            npc.pl_ability.today_sanity_point_cost,
+            adopted_cost,
         ]
         want = [
             Fraction(25, 2),

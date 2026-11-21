@@ -16,7 +16,8 @@ from Script.Settle.common_default import (
     base_chara_state_common_settle,
 )
 from Script.Design import game_time
-from Script.Modules.domains import abilities, fridge, needs, pregnancy
+from Script.Modules.domains import abilities, action_info, flags, fridge, needs
+from Script.Modules.domains import player_collection, pregnancy
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -115,7 +116,7 @@ def handle_add_1_nclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[0][0] += 1
         character_data.h_state.orgasm_count[0][1] += 1
 
@@ -142,7 +143,7 @@ def handle_add_1_bclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[1][0] += 1
         character_data.h_state.orgasm_count[1][1] += 1
 
@@ -169,7 +170,7 @@ def handle_add_1_cclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[2][0] += 1
         character_data.h_state.orgasm_count[2][1] += 1
 
@@ -222,7 +223,7 @@ def handle_add_1_vclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[4][0] += 1
         character_data.h_state.orgasm_count[4][1] += 1
 
@@ -249,7 +250,7 @@ def handle_add_1_aclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[5][0] += 1
         character_data.h_state.orgasm_count[5][1] += 1
 
@@ -276,7 +277,7 @@ def handle_add_1_uclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[6][0] += 1
         character_data.h_state.orgasm_count[6][1] += 1
 
@@ -303,7 +304,7 @@ def handle_add_1_wclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[7][0] += 1
         character_data.h_state.orgasm_count[7][1] += 1
 
@@ -786,7 +787,7 @@ def handle_add_small_p_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = game_time.now()
+    action_info.set(0, "last_eaj_add_time", game_time.now())
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -1530,7 +1531,7 @@ def handle_add_middle_v_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = game_time.now()
+    action_info.set(character_id, "last_eaj_add_time", game_time.now())
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -2050,7 +2051,7 @@ def handle_add_large_p_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = game_time.now()
+    action_info.set(character_id, "last_eaj_add_time", game_time.now())
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -2262,7 +2263,7 @@ def handle_add_b_feel_remote_toy(
     duration = character_data.behavior.duration
 
     # 补正根据档位变化
-    toy_adjust = character_data.sp_flag.sex_toy_level * 0.5
+    toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
     # 如果补正为0，则直接返回
     if toy_adjust <= 0:
         return
@@ -2293,7 +2294,7 @@ def handle_add_c_feel_remote_toy(
     """
     character_data: game_type.Character = cache.character_data[character_id]
     duration = character_data.behavior.duration
-    toy_adjust = character_data.sp_flag.sex_toy_level * 0.5
+    toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
     if toy_adjust <= 0:
         return
     base_chara_state_common_settle(
@@ -2323,7 +2324,7 @@ def handle_add_v_feel_remote_toy(
     """
     character_data: game_type.Character = cache.character_data[character_id]
     duration = character_data.behavior.duration
-    toy_adjust = character_data.sp_flag.sex_toy_level * 0.5
+    toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
     if toy_adjust <= 0:
         return
     base_chara_state_common_settle(
@@ -2353,7 +2354,7 @@ def handle_add_a_feel_remote_toy(
     """
     character_data: game_type.Character = cache.character_data[character_id]
     duration = character_data.behavior.duration
-    toy_adjust = character_data.sp_flag.sex_toy_level * 0.5
+    toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
     if toy_adjust <= 0:
         return
     base_chara_state_common_settle(
@@ -2383,7 +2384,7 @@ def handle_add_u_feel_remote_toy(
     """
     character_data: game_type.Character = cache.character_data[character_id]
     duration = character_data.behavior.duration
-    toy_adjust = character_data.sp_flag.sex_toy_level * 0.5
+    toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
     if toy_adjust <= 0:
         return
     base_chara_state_common_settle(
@@ -3167,7 +3168,6 @@ def handle_milking_machine(
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
     if character_data.dead:
         return
 
@@ -3180,8 +3180,7 @@ def handle_milking_machine(
             )
         )
         fridge.add(fridge.MILK, character_id, now_milk)
-        pl_character_data.pl_collection.milk_total.setdefault(character_id, 0)
-        pl_character_data.pl_collection.milk_total[character_id] += now_milk
+        player_collection.add_total("milk_total", character_id, now_milk)
         needs.add(character_id, "milk", -(now_milk))
         character_data.behavior.milk_ml += now_milk
 
@@ -3225,7 +3224,6 @@ def handle_urine_collector(
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
     if character_data.dead:
         return
 
@@ -3238,8 +3236,7 @@ def handle_urine_collector(
             )
         )
         fridge.add(fridge.URINE, character_id, now_urine)
-        pl_character_data.pl_collection.urine_total.setdefault(character_id, 0)
-        pl_character_data.pl_collection.urine_total[character_id] += now_urine
+        player_collection.add_total("urine_total", character_id, now_urine)
         needs.add(character_id, "urine", -(now_urine))
         character_data.behavior.urine_ml += now_urine
 
@@ -3268,7 +3265,6 @@ def handle_b_orgasm_to_milk(
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
     if character_data.dead:
         return
 
@@ -3288,12 +3284,7 @@ def handle_b_orgasm_to_milk(
         # 如果已经装上搾乳机了，则收集至搾乳机中
         if character_data.h_state.body_item[4][1]:
             fridge.add(fridge.MILK, character_id, eject_milk)
-            pl_character_data.pl_collection.milk_total.setdefault(
-                character_id, 0
-            )
-            pl_character_data.pl_collection.milk_total[
-                character_id
-            ] += eject_milk
+            player_collection.add_total("milk_total", character_id, eject_milk)
             now_text = _(
                 "\n{0}在绝顶的同时喷出了{1}ml的乳汁，喷出的乳汁被收集到搾乳机中\n"
             ).format(character_data.name, eject_milk)
@@ -3324,7 +3315,6 @@ def handle_u_orgasm_to_pee(
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
     if character_data.dead:
         return
 
@@ -3339,12 +3329,9 @@ def handle_u_orgasm_to_pee(
         # 如果已经装上采尿器了，则收集至采尿器中
         if character_data.h_state.body_item[5][1]:
             fridge.add(fridge.URINE, character_id, eject_urine)
-            pl_character_data.pl_collection.urine_total.setdefault(
-                character_id, 0
+            player_collection.add_total(
+                "urine_total", character_id, eject_urine
             )
-            pl_character_data.pl_collection.urine_total[
-                character_id
-            ] += eject_urine
             now_text = _(
                 "\n{0}在绝顶的同时漏出了{1}ml的尿液，漏出的尿液被收集到采尿器中\n"
             ).format(character_data.name, eject_urine)
@@ -4047,7 +4034,7 @@ def handle_add_1_mclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[21][0] += 1
         character_data.h_state.orgasm_count[21][1] += 1
 
@@ -4074,7 +4061,7 @@ def handle_add_1_fclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[22][0] += 1
         character_data.h_state.orgasm_count[22][1] += 1
 
@@ -4101,7 +4088,7 @@ def handle_add_1_hclimax_experience(
     base_chara_experience_common_settle(
         character_id, 20, 1, change_data=change_data
     )
-    if character_data.sp_flag.is_h == 1:
+    if flags.get(character_id, "is_h") == 1:
         character_data.h_state.orgasm_count[23][0] += 1
         character_data.h_state.orgasm_count[23][1] += 1
 

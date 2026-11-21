@@ -2,17 +2,12 @@
 
 from types import FunctionType
 from Script.UI.Moudle import draw, view
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    flow_handle,
-    constant,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, handle_premise
 from Script.System.Pregnancy_System import pregnancy_constant
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, action_info, flags
 
 panel_info_data: dict[str, object] = {}
 
@@ -534,7 +529,9 @@ class Gift_Panel:
                 return False
         # 好感礼物的情况
         elif gift_data.type == 3:
-            last_gift_time = target_character_data.action_info.last_gift_time
+            last_gift_time = action_info.get(
+                target_character_data.cid, "last_gift_time"
+            )
             days_diff = game_time.count_day_for_datetime(
                 last_gift_time, game_time.now()
             )
@@ -562,9 +559,10 @@ class Gift_Panel:
                 now_draw.text = draw_text
                 now_draw.draw()
                 return False
-            elif (
-                abilities.ability(target_character_data.cid)[18] == 0
-                and not target_character_data.sp_flag.angry_with_player
+            elif abilities.ability(target_character_data.cid)[
+                18
+            ] == 0 and not flags.get(
+                target_character_data.cid, "angry_with_player"
             ):
                 now_draw = draw.WaitDraw()
                 draw_text = _("\n  {0}没有生气，不需要赠送道歉礼物\n").format(

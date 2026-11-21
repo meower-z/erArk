@@ -2,18 +2,13 @@
 
 from types import FunctionType
 from Script.UI.Moudle import draw, panel, view
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    flow_handle,
-    constant,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text
 from Script.Config import game_config, normal_config
 from Script.Design import map_handle, game_time
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import entertainment, fridge, playthrough, warehouse
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, action_info, entertainment
+from Script.Modules.domains import fridge, playthrough, warehouse
 
 panel_info_data: dict[str, object] = {}
 
@@ -55,7 +50,7 @@ class Close_Door_Panel:
         """
 
         character_data: game_type.Character = cache.character_data[0]
-        if character_data.action_info.ask_close_door_flag:
+        if action_info.get(0, "ask_close_door_flag"):
             return None
 
         title_text = _("关门")
@@ -507,7 +502,7 @@ class Order_Hotel_Room_Panel:
                 room_name = [_("标间"), _("情趣主题房"), _("顶级套房")]
                 draw_text = _("当前已预订{0}，退房时间为{1}日12点\n").format(
                     room_name[entertainment.hotel_room() - 1],
-                    cache.character_data[0].action_info.check_out_time.day,
+                    action_info.get(0, "check_out_time").day,
                 )
                 info_draw.text = draw_text
                 info_draw.draw()
@@ -539,11 +534,12 @@ class Order_Hotel_Room_Panel:
         warehouse.add(4, -room_price[room_id])
         entertainment.set_hotel_room(room_id + 1)
         pl_character_data: game_type.Character = cache.character_data[0]
-        pl_character_data.action_info.check_out_time = game_time.get_sub_date(
-            day=1, old_date=game_time.now()
-        )
-        pl_character_data.action_info.check_out_time = (
-            pl_character_data.action_info.check_out_time.replace(hour=12)
+        action_info.set(
+            0,
+            "check_out_time",
+            game_time.get_sub_date(day=1, old_date=game_time.now()).replace(
+                hour=12
+            ),
         )
         # 情趣房的赠送
         if room_id == 1:
@@ -552,7 +548,7 @@ class Order_Hotel_Room_Panel:
         # 输出预订成功信息
         now_draw = draw.WaitDraw()
         draw_text = _("\n成功预订了{0}，退房时间为{1}\n").format(
-            room_name[room_id], pl_character_data.action_info.check_out_time
+            room_name[room_id], action_info.get(0, "check_out_time")
         )
         now_draw.text = draw_text
         now_draw.draw()

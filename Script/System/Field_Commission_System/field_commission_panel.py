@@ -16,7 +16,8 @@ from Script.System.Field_Commission_System.field_commission_function import (
     get_commission_demand_and_reward,
     process_commission_text,
 )
-from Script.Modules.domains import abilities, commission, facility, location
+from Script.Modules.domains import abilities, commission, facility, flags
+from Script.Modules.domains import location
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1276,9 +1277,7 @@ class CommissionDraw:
         from Script.Settle import default
 
         for character_id in self.send_npc_list:
-            cache.character_data[character_id].sp_flag.field_commission = (
-                commision_id
-            )
+            flags.set(character_id, field_commission=commision_id)
             default.handle_chara_off_line(
                 character_id,
                 1,

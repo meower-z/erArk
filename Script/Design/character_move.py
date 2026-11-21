@@ -3,7 +3,7 @@
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import map_handle, update
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import plan
+from Script.Modules.domains import action_info, flags, plan
 from types import FunctionType
 
 cache: game_type.Cache = cache_control.cache
@@ -112,8 +112,8 @@ def _player_leg(
     str -- 寻路结果，"end" 为已在目标或被叫停
     """
     character_data: game_type.Character = cache.character_data[0]
-    if character_data.sp_flag.move_stop:
-        character_data.sp_flag.move_stop = False
+    if flags.get(0, "move_stop"):
+        flags.set(0, move_stop=False)
         plan.set_route(None)
         return "end"
     if character_data.position == target_scene:
@@ -124,7 +124,7 @@ def _player_leg(
     if move_now in _BREAK_LIST:
         return move_now
     # 隐奸携带模式中使用携带H中移动行为，消耗大幅增加
-    if character_data.sp_flag.hidden_sex_mode == 5:
+    if flags.get(0, "hidden_sex_mode") == 5:
         behavior_id = constant.Behavior.CARRY_MOVE
         state = constant.CharacterStatus.STATUS_CARRY_MOVE
     else:
@@ -309,17 +309,17 @@ def private_move_outcome(
     )
     if access_type != "private":
         return True, False, ""
-    wait_time = character_data.action_info.follow_wait_time
+    wait_time = action_info.get(character_id, "follow_wait_time")
     setting = character_data.chara_setting[0]
     # 超时后取消跟随
     if setting == 0:
         if wait_time < 30:
             return False, True, "wait_outside"
         # 如果是因为等待
-        if character_data.sp_flag.is_follow > 0:
+        if flags.get(character_id, "is_follow") > 0:
             return False, False, "stop_follow"
         # 如果是因为想逆推
-        if character_data.sp_flag.npc_masturebate_for_player:
+        if flags.get(character_id, "npc_masturebate_for_player"):
             # 如果门没关的话，就依然进去
             if cache.scene_data[target_scene_str].close_flag == 0:
                 return True, False, ""
@@ -351,9 +351,9 @@ def settle_private_move(character_id: int, outcome: str) -> None:
         return
     character_data: game_type.Character = cache.character_data[character_id]
     if outcome == "stop_follow":
-        character_data.sp_flag.is_follow = 0
+        flags.set(character_id, is_follow=0)
     elif outcome == "give_up":
-        character_data.sp_flag.npc_masturebate_for_player = False
+        flags.set(character_id, npc_masturebate_for_player=False)
     now_draw = draw.NormalDraw()
     now_draw.text = _private_move_text(outcome).format(character_data.name)
     now_draw.draw()

@@ -162,3 +162,6 @@ def project_base_tallies(state: dict[str, object]) -> None:
         flatten(f"world.base.{field}", value, state)
     for old, kind in fridge.PICKLED.items():
         flatten(f"world.cooking.{old}", fridge.table(kind), state)
+    from tests import chara_projection
+
+    chara_projection.project(state)
