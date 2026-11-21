@@ -3,8 +3,9 @@
 新游戏存进当前版本，再读再存
 ============================
 开新游戏（SlowTestCase.setUp），存档目录换成临时目录。
-- 等待 60 分钟，在动力系统管理面板里把一个区块的供电策略调高一档，再加一台 L1 蓄电池，存进新存档。
-  文件 "2" 里有 Fraction 的标签和 base.power。读回这个存档，内核状态的 JSON 与存档前相同。
+- 等待 60 分钟。在动力系统管理面板里把一个区块的供电策略调高一档，再加一台 L1 蓄电池。
+  在基建面板里把访客区升到 2 级，再存进新存档。文件 "2" 里有 Fraction 的标签、base.power 与 base.facility_level。
+  读回这个存档，内核状态的 JSON 与存档前相同。
 - 存档之后接着玩 60 分钟，与读回存档后接着玩 60 分钟（随机数同样重设）比较。内核状态、花名册顺序、
   全部角色的生理需求、开始的行动序列与随机数状态都相同。
 - 读回后再存一次，文件 "2" 除了存档标记都与上一次相同。再读一次，内核状态与存档前相同，缓存的 JSON 与第一次读回时相同。
@@ -168,6 +169,12 @@ class SaveV1Test(SlowTestCase):
         self.world.player.check_done()
         self.assertNotEqual(power.strategies(), strategies, "面板里改了策略")
         self.assertEqual(power.plant()["batteries"], (1, 0, 0), "加了蓄电池")
+        facility = game("Script.Modules.domains.facility")
+        view.now_panel_id = constant.Panel.BUILDING
+        self.world.player.press("访客区", "【升级】", "返回")
+        world.act(constant.panel_data[view.now_panel_id])
+        self.world.player.check_done()
+        self.assertEqual(facility.level(13), 2, "访客区升到 2 级")
         before_save = self.state_json()
         save_handle.establish_save(SLOT)
         path = os.path.join(self.folder, SLOT, kernel_state.SAVE_FILE)
@@ -175,6 +182,7 @@ class SaveV1Test(SlowTestCase):
             first_file = json.load(f)
         self.assertIn('"$frac"', json.dumps(first_file), "文件 2 里有 Fraction")
         self.assertIn(power.PLANT, first_file["data"], "文件 2 里有动力设施")
+        self.assertIn(facility.LEVEL, first_file["data"], "文件 2 里有设施等级")
 
         random.seed(SEED)
         self.started.clear()
