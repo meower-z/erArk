@@ -298,3 +298,45 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     }
     for field, value in island.items():
         flatten(f"world.base.{field}", value, state)
+    _project_economy(state)
+
+
+def _project_economy(state: dict[str, object]) -> None:
+    """
+    快照里按旧罗德岛对象的属性名记下 GameState 里的经济与贸易数据。
+    今日收入、已开放商店、供需系数、今日买卖总量、交易员名单、主交易员与自动交易设置记在 world.base 下。
+    自动交易设置记配置里的每种资源与表里的每种资源经 economy.auto_trade 读出的值。
+    餐馆的货架记在 world.cooking.restaurant_data.<餐馆id> 下，地摊小贩的记在 world.cooking.stall_vendor_data.0 下。
+    每份食物记作 economy.food 按货架记录做出的食物对象
+    Keyword arguments:
+    state -- 快照，原地补上
+    """
+    from Script.Config import game_config
+    from Script.Modules.domains import economy
+    from tests.snapshot import flatten
+
+    rids = [*game_config.config_resouce, *economy.auto_trade_table()]
+    island = {
+        "all_income": economy.income(),
+        "shop_open_list": list(economy.shops_open()),
+        "supply_demand_dict": economy.supply_demand(),
+        "today_trade_resource_count": economy.traded_today(),
+        "trade_operator_ids_list": economy.trade_operator_ids(),
+        "resource_type_main_trader": economy.main_traders(),
+        "resource_type_auto_trade_setting": {
+            rid: economy.auto_trade(rid) for rid in rids
+        },
+    }
+    for field, value in island.items():
+        flatten(f"world.base.{field}", value, state)
+    shelves = economy.shelf_table()
+    for shop, foods in shelves.items():
+        name = (
+            "world.cooking.stall_vendor_data.0"
+            if shop == economy.STALL
+            else f"world.cooking.restaurant_data.{shop}"
+        )
+        for recipe, row in foods.items():
+            for uid, quality in row.items():
+                food = economy.food(recipe, uid, quality)
+                flatten(f"{name}.{recipe}.{uid}", food, state)

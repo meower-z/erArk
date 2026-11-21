@@ -7,6 +7,7 @@ from Script.Core.game_type import Recipes, Food
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
+from Script.Modules.domains import economy
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
 
@@ -253,7 +254,7 @@ def init_food_shop_data(
             if restaurant_id != update_restaurant_id:
                 continue
         cook_index = 0
-        cache.rhodes_island.restaurant_data[restaurant_id] = {}
+        shelf: dict[str, dict[str, int]] = {}
         while 1:
             food_list = {}
             # 只能选择该餐馆自己的食谱
@@ -272,20 +273,17 @@ def init_food_shop_data(
                 continue
             cook_level = random.randint(3, 7)
             new_food = cook(food_list, recipes_id, cook_level, "")
-            cache.rhodes_island.restaurant_data.setdefault(restaurant_id, {})
-            cache.rhodes_island.restaurant_data[restaurant_id].setdefault(
-                str(recipes_id), {}
-            )
-            cache.rhodes_island.restaurant_data[restaurant_id][str(recipes_id)][
-                new_food.uid
-            ] = new_food
+            shelf.setdefault(str(recipes_id), {})[
+                str(new_food.uid)
+            ] = new_food.quality
             cook_index += 1
             if cook_index >= max_people:
                 break
+        economy.stock(restaurant_id, shelf)
     # 如果是新的一天则初始化地摊小贩的食物
     if new_day_flag:
         cook_index = 0
-        cache.rhodes_island.stall_vendor_data[0] = {}
+        shelf = {}
         while 1:
             food_list = {}
             # 选择零食和饮料类型的食谱
@@ -298,15 +296,13 @@ def init_food_shop_data(
             now_recipe_data = cache.recipe_data[recipes_id]
             cook_level = random.randint(1, 8)
             new_food = cook(food_list, recipes_id, cook_level, "")
-            cache.rhodes_island.stall_vendor_data[0].setdefault(
-                str(recipes_id), {}
-            )
-            cache.rhodes_island.stall_vendor_data[0][str(recipes_id)][
-                new_food.uid
-            ] = new_food
+            shelf.setdefault(str(recipes_id), {})[
+                str(new_food.uid)
+            ] = new_food.quality
             cook_index += 1
             if cook_index >= max_people or cook_index >= 10:
                 break
+        economy.stock(economy.STALL, shelf)
 
 
 def get_character_cookable_recipes(
@@ -466,35 +462,10 @@ def get_food_list_from_food_shop(
             ][now_food_uid]
             if now_food.recipe != -1:
                 food_list[food_id] = cache.recipe_data[int(food_id)].name
-    # 餐馆的食物
-    elif restaurant_id in cache.rhodes_island.restaurant_data:
-        for food_id in cache.rhodes_island.restaurant_data[restaurant_id]:
-            if not len(
-                cache.rhodes_island.restaurant_data[restaurant_id][food_id]
-            ):
-                continue
-            now_food_uid = list(
-                cache.rhodes_island.restaurant_data[restaurant_id][
-                    food_id
-                ].keys()
-            )[0]
-            now_food = cache.rhodes_island.restaurant_data[restaurant_id][
-                food_id
-            ][now_food_uid]
-            if now_food.recipe != -1:
-                food_list[food_id] = cache.recipe_data[int(food_id)].name
-    # 地摊小贩的食物
-    elif restaurant_id == "Stall_Vendor":
-        for food_id in cache.rhodes_island.stall_vendor_data[0]:
-            if not len(cache.rhodes_island.stall_vendor_data[0][food_id]):
-                continue
-            now_food_uid = list(
-                cache.rhodes_island.stall_vendor_data[0][food_id].keys()
-            )[0]
-            now_food = cache.rhodes_island.stall_vendor_data[0][food_id][
-                now_food_uid
-            ]
-            if now_food.recipe != -1:
+    # 餐馆与地摊小贩的食物
+    elif economy.has_shelf(restaurant_id):
+        for food_id, foods in economy.shelf(restaurant_id).items():
+            if len(foods):
                 food_list[food_id] = cache.recipe_data[int(food_id)].name
     return food_list
 

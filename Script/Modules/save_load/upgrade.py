@@ -11,6 +11,8 @@ CURRENT 是本游戏写的文件 "2" 的版本。STEPS[n] 把版本 n 的 JSON �
 版本 3 之前的存档里，体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒在文件 "1" 的角色对象上。
 乳汁上限在角色的妊娠数据上。2 升 3 的 STEPS[2] 只给 body.needs 补上默认值。
 存档里的值由读档时角色替换的 copy_pickled 与重建角色后的 adopt_pickled 取来。
+版本 5 之前的存档把今日收入、已开放商店、货架、供需系数、今日买卖量、主交易员与自动交易设置放在罗德岛对象上。
+install_save 解开缓存后对每个版本调 adopt_economy，把它们搬进 GameState。4 升 5 的 STEPS[4] 原样交回文件 "2"。
 读旧存档不改写存档的文件。读完再存，写的是当前版本。本模块不登记行动、事件或规则，也不在 LOAD_ORDER 里。
 """
 
@@ -19,11 +21,11 @@ from typing import Any, cast
 
 from Script.Core import game_type, num
 from Script.Core.num import Num
-from Script.Modules.domains import facility, needs, power, pregnancy
+from Script.Modules.domains import economy, facility, needs, power, pregnancy
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import settings
 
-CURRENT = 4
+CURRENT = 5
 """ 本游戏写的文件 "2" 的版本 """
 
 
@@ -160,10 +162,22 @@ def _v3_to_v4(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v4_to_v5(data: dict[str, Any]) -> dict[str, Any]:
+    """
+    版本 4 升 5。文件 "2" 不用改，原样交回。旧存档的经济数据在文件 "1" 的罗德岛对象上，由 adopt_economy 搬进 GameState
+    Keyword arguments:
+    data -- 版本 4 的 JSON 对象
+    Return arguments:
+    dict -- 同一个对象
+    """
+    return data
+
+
 STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
     1: _v1_to_v2,
     2: fill_v2_needs,
     3: _v3_to_v4,
+    4: _v4_to_v5,
 }
 """ 版本 n 到 n + 1 的升级步骤。版本 0 升 1 不是 JSON 步骤，见模块说明 """
 
@@ -372,3 +386,53 @@ def adopt_pickled(loaded_dict: dict[str, Any]) -> None:
             delattr(character.pregnancy, PICKLED_MILK_MAX)
         if hasattr(character, STALE):
             delattr(character, STALE)
+
+
+V4_ECONOMY = (
+    "all_income",
+    "shop_open_list",
+    "restaurant_data",
+    "stall_vendor_data",
+    "supply_demand_dict",
+    "today_trade_resource_count",
+    "trade_operator_ids_list",
+    "resource_type_main_trader",
+    "resource_type_auto_trade_setting",
+)
+""" 版本 5 之前的存档里罗德岛对象上的九个经济属性名 """
+
+
+def _shelf(foods: dict[Any, dict[Any, Any]]) -> dict[str, dict[str, int]]:
+    return {
+        str(recipe): {str(uid): food.quality for uid, food in row.items()}
+        for recipe, row in foods.items()
+    }
+
+
+def adopt_economy(loaded_dict: dict[str, Any]) -> None:
+    """
+    罗德岛对象带着 V4_ECONOMY 里的属性（版本 5 之前的存档）时，从对象上删掉这些属性，把它们的值写进当前缓冲区。
+    货架上每份食物只记食谱、uid 与品质。地摊小贩的货物表 0 号写成商店 economy.STALL。
+    交易员名单不写，它由岗位名册算出。对象上没有这些属性时什么也不写
+    Keyword arguments:
+    loaded_dict -- 存档缓存的属性表
+    """
+    island = loaded_dict.get("rhodes_island")
+    attrs = vars(island) if island is not None else {}
+    found = {name: attrs.pop(name) for name in V4_ECONOMY if name in attrs}
+    if not found:
+        return
+    economy.set_income(found.get("all_income", 0))
+    for name in found.get("shop_open_list", ()):
+        economy.open_shop(name)
+    for rid, foods in found.get("restaurant_data", {}).items():
+        economy.stock(rid, _shelf(foods))
+    if 0 in found.get("stall_vendor_data", {}):
+        economy.stock(economy.STALL, _shelf(found["stall_vendor_data"][0]))
+    economy.set_supply_demand(found.get("supply_demand_dict", {}))
+    economy.set_traded(found.get("today_trade_resource_count", {}))
+    for res_type, cid in found.get("resource_type_main_trader", {}).items():
+        economy.set_main_trader(res_type, cid)
+    table = found.get("resource_type_auto_trade_setting", {})
+    for rid, setting in table.items():
+        economy.set_auto_trade(rid, setting)

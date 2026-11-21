@@ -12,7 +12,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Design import game_time
-from Script.Modules.domains import facility, power
+from Script.Modules.domains import economy, facility, power
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -36,19 +36,6 @@ def get_base_zero() -> game_type.Rhodes_Island:
     for all_cid in game_config.config_resouce:
         # 全资源数量设为0
         base_data.materials_resouce[all_cid] = 0
-        resouce_data = game_config.config_resouce[all_cid]
-        res_type = resouce_data.type
-        if res_type not in base_data.resource_type_main_trader:
-            base_data.resource_type_main_trader[res_type] = 0
-        if all_cid not in base_data.resource_type_auto_trade_setting:
-            base_data.resource_type_auto_trade_setting[all_cid] = {
-                "buy_on": False,
-                "buy_stock": 0,
-                "buy_price_percent": 100,
-                "sell_on": False,
-                "sell_stock": 0,
-                "sell_price_percent": 100,
-            }
 
     # 遍历全部书籍
     for book_id in game_config.config_book:
@@ -473,7 +460,6 @@ def update_work_people() -> None:
 
     # 初始化各职位的干员集合
     cache.rhodes_island.work_people_now = 0
-    cache.rhodes_island.trade_operator_ids_list = []
     for all_cid in game_config.config_work_type:
         cache.rhodes_island.all_work_npc_set[all_cid] = set()
     # 重置各岗位当前人员名单，后续按在编角色重建
@@ -492,17 +478,7 @@ def update_work_people() -> None:
     )
 
     # 检查各资源类型主交易员有效性
-    for res_type in list(cache.rhodes_island.resource_type_main_trader.keys()):
-        main_id = cache.rhodes_island.resource_type_main_trader.get(res_type, 0)
-        if not isinstance(main_id, int) or main_id == 0:
-            cache.rhodes_island.resource_type_main_trader[res_type] = 0
-            continue
-        if main_id not in cache.character_data:
-            cache.rhodes_island.resource_type_main_trader[res_type] = 0
-            continue
-        character_data = cache.character_data[main_id]
-        if character_data.work.work_type != 111:
-            cache.rhodes_island.resource_type_main_trader[res_type] = 0
+    economy.drop_invalid_traders()
 
     # 检查各招聘线主招聘专员有效性
     for recruit_line_id in cache.rhodes_island.recruit_line:
@@ -642,14 +618,6 @@ def update_work_people() -> None:
         else:
             if chara_id in cache.rhodes_island.hr_operator_ids_list:
                 cache.rhodes_island.hr_operator_ids_list.remove(chara_id)
-
-        # 贸易管理干员列表维护
-        if work_type == 111:
-            if chara_id not in cache.rhodes_island.trade_operator_ids_list:
-                cache.rhodes_island.trade_operator_ids_list.append(chara_id)
-        else:
-            if chara_id in cache.rhodes_island.trade_operator_ids_list:
-                cache.rhodes_island.trade_operator_ids_list.remove(chara_id)
 
         # 如果是工人，则加入工人列表
         if work_type == 121:

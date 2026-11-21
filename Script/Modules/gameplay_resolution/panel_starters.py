@@ -21,6 +21,7 @@ from Script.Design import (
     map_handle,
 )
 from Script.Kernel import core
+from Script.Modules.domains import economy
 from Script.Modules.gameplay_resolution import intent, plan_queue, starts
 from Script.System.Cooking_System import cooking
 from Script.System.Sex_System import drunk_sex_common
@@ -75,29 +76,26 @@ def start_read_book(who: int, chosen: intent.Intent) -> None:
     )
 
 
-def _shop_food(args: dict[str, core.JSON]) -> dict[UUID, game_type.Food]:
+def _still_there(args: dict[str, core.JSON]) -> bool:
     """
-    要买的食物所在的货架：食堂、摊贩或餐厅里这种食物的那一格
+    要买的食物还在食堂、地摊小贩或餐馆的货架上
     Keyword arguments:
-    args -- player_buy_food 的参数：food_cid、restaurant（None、"Stall_Vendor" 或餐厅id）
+    args -- player_buy_food 的 food_cid、food_uid、restaurant（None 为食堂，"Stall_Vendor" 为地摊小贩，其余为餐馆id）
     Return arguments:
-    dict -- 食物uid到食物
+    bool -- 还在时为 True
     """
-    cid = str(args["food_cid"])
+    cid, uid = str(args["food_cid"]), str(args["food_uid"])
     restaurant = args.get("restaurant")
     if restaurant is None:
-        return cache.rhodes_island.dining_hall_data.get(cid, {})
-    if restaurant == "Stall_Vendor":
-        return cache.rhodes_island.stall_vendor_data[0].get(cid, {})
-    restaurant_data = cache.rhodes_island.restaurant_data
-    return restaurant_data.get(cast(int, restaurant), {}).get(cid, {})
+        dining = cache.rhodes_island.dining_hall_data.get(cid, {})
+        return UUID(uid) in dining
+    return uid in economy.shelf(cast(int | str, restaurant)).get(cid, {})
 
 
 @starts.check("player_buy_food")
 def check_buy_food(who: int, chosen: intent.Intent) -> core.Action | None:
     """买食物：同一分钟里更早的开始买走了这份食物时退回 1 分钟的等待"""
-    args = _args(chosen)
-    if UUID(str(args["food_uid"])) in _shop_food(args):
+    if _still_there(_args(chosen)):
         return None
     return _wait_one_minute(who)
 
@@ -106,10 +104,17 @@ def check_buy_food(who: int, chosen: intent.Intent) -> core.Action | None:
 def start_buy_food(who: int, chosen: intent.Intent) -> None:
     """买食物：从货架移进背包，作为行为的目标食物"""
     args = _args(chosen)
-    uid = UUID(str(args["food_uid"]))
+    cid, uid = str(args["food_cid"]), str(args["food_uid"])
+    restaurant = args.get("restaurant")
+    if restaurant is None:
+        food = cache.rhodes_island.dining_hall_data[cid].pop(UUID(uid))
+    else:
+        taken = economy.take(cast(int | str, restaurant), cid, uid)
+        assert taken is not None
+        food = taken
     character_data = cache.character_data[who]
-    character_data.food_bag[uid] = _shop_food(args).pop(uid)
-    character_data.behavior.target_food = character_data.food_bag[uid]
+    character_data.food_bag[UUID(uid)] = food
+    character_data.behavior.target_food = food
 
 
 @starts.check("eat_food")

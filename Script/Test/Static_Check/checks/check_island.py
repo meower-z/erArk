@@ -22,7 +22,7 @@ from typing import Any
 
 from Script.Core import cache_control
 from Script.Config import game_config
-from Script.Modules.domains import facility, power
+from Script.Modules.domains import economy, facility, power
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -509,13 +509,12 @@ def check_island_10_work_people_now() -> list[CheckFailure]:
     return []
 
 
-# 六个岗位派生列表 与 (对应的all_work_npc_set键, 是否每轮全量重建), ISLAND-11/ISLAND-12共用
+# 四个岗位派生列表与对应的all_work_npc_set键，ISLAND-11/ISLAND-12共用
 _WORK_LIST_FIELDS = (
-    ("production_worker_ids", 121, False),
-    ("hr_operator_ids_list", 71, False),
-    ("trade_operator_ids_list", 111, True),
-    ("herb_garden_operator_ids", 161, False),
-    ("green_house_operator_ids", 162, False),
+    ("production_worker_ids", 121),
+    ("hr_operator_ids_list", 71),
+    ("herb_garden_operator_ids", 161),
+    ("green_house_operator_ids", 162),
 )
 
 
@@ -527,9 +526,9 @@ def check_island_11_work_lists_superset() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验六个岗位派生列表的成员必须是存在的角色且岗位匹配、列表内不得重复；每个列表必须包含对应岗位集合
-        的全部成员（漏人=真bug）。贸易员列表每轮全量重建，取严格相等；其余五个增量列表只断言超集，多出来的
-        是离线残留（合法可达，交给ISLAND-12），少人才是刷新缺陷
+        校验四个岗位派生列表引用合法、无重复、不漏在岗者。列表成员必须是存在的角色，且岗位与列表对应。
+        每个列表必须包含对应岗位集合的全部成员，漏人是真bug。四个列表都只断言超集，不报多出的成员。
+        多出来的是离线残留，合法可达，交给ISLAND-12
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
@@ -538,7 +537,7 @@ def check_island_11_work_lists_superset() -> list[CheckFailure]:
     if not isinstance(all_work_npc_set, dict):
         return []
     failures = []
-    for field, wid, is_exact in _WORK_LIST_FIELDS:
+    for field, wid in _WORK_LIST_FIELDS:
         lst = getattr(ri, field, None)
         if not isinstance(lst, list):
             continue
@@ -554,19 +553,18 @@ def check_island_11_work_lists_superset() -> list[CheckFailure]:
         ]
         expected = all_work_npc_set.get(wid, set())
         missing = expected - set(lst)
-        extra = set(lst) - expected if is_exact else set()
-        if dup or mismatched or missing or extra:
+        if dup or mismatched or missing:
             detail = [
                 f"cid={cid},{_sp_flag_brief(cd.get(cid))}"
-                for cid in sorted(set(dup) | missing | extra)
+                for cid in sorted(set(dup) | missing)
             ]
             failures.append(
                 make_failure(
                     "ISLAND-11",
                     "岗位人员列表引用合法、无重复、不漏在岗者",
                     f"列表{field}(work_id={wid})：重复cid={dup}，岗位不匹配(cid,name,work_type)={mismatched}，"
-                    f"漏人(缺失的cid)={sorted(missing)}，残留(多出的cid)={sorted(extra)}，明细={detail}",
-                    sorted(set(dup) | missing | extra),
+                    f"漏人(缺失的cid)={sorted(missing)}，明细={detail}",
+                    sorted(set(dup) | missing),
                 )
             )
     return failures
@@ -580,7 +578,7 @@ def check_island_12_work_lists_stale_members() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        [warning] 校验五个增量维护的岗位列表应与对应岗位集合严格相等；出现多余成员说明列表在两次刷新之间
+        [warning] 校验四个增量维护的岗位列表应与对应岗位集合严格相等。出现多余成员说明列表在两次刷新之间
         滞后于成员实际状态。日结时update_work_people()会整体重置并按在编角色重建这些列表，本条覆盖的是
         两次重建之间可能出现的瞬态漂移
     """
@@ -591,7 +589,7 @@ def check_island_12_work_lists_stale_members() -> list[CheckFailure]:
     if not isinstance(all_work_npc_set, dict):
         return []
     failures = []
-    for field, wid, _is_exact in _WORK_LIST_FIELDS:
+    for field, wid in _WORK_LIST_FIELDS:
         lst = getattr(ri, field, None)
         if not isinstance(lst, list):
             continue
@@ -740,9 +738,10 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验流水线(岗位121)、药田(161)、温室(162)、招募线(71)的主负责人槽位与各资源类型主交易员(111)必须是
-        0或一名存在的角色，岗位须与该线要求一致，且必须在对应岗位人员列表中；同类线内一人不得同时主理两条。
-        不得要求主负责人在npc_id_got——主管/种植员/招聘专员都能被派外勤，岗位与槽位都保留
+        校验流水线(岗位121)、药田(161)、温室(162)、招募线(71)的主负责人与各资源类型主交易员(111)有效。
+        四类线的主负责人槽位必须是0或一名存在的角色，岗位须与该线要求一致，且必须在对应岗位人员列表中。
+        同类线内一人不得同时主理两条。base.main_traders 里的主交易员必须是0或一名职位为111的存在角色。
+        不得要求主负责人在npc_id_got：主管/种植员/招聘专员都能被派外勤，岗位与槽位都保留
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
@@ -798,26 +797,24 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
                     [m for _lid, m in illegal if type(m) is int],
                 )
             )
-    resource_type_main_trader = getattr(ri, "resource_type_main_trader", None)
-    if isinstance(resource_type_main_trader, dict):
-        illegal_traders = [
-            (rtype, m)
-            for rtype, m in resource_type_main_trader.items()
-            if m and not (m in cd and cd[m].work.work_type == 111)
+    illegal_traders = [
+        (rtype, m)
+        for rtype, m in economy.main_traders().items()
+        if m and not (m in cd and cd[m].work.work_type == economy.TRADER_WORK)
+    ]
+    if illegal_traders:
+        detail = [
+            f"type={t},m={m},{_chara_name(cd, m)},work_type={cd[m].work.work_type if m in cd else None}"
+            for t, m in illegal_traders
         ]
-        if illegal_traders:
-            detail = [
-                f"type={t},m={m},{_chara_name(cd, m)},work_type={cd[m].work.work_type if m in cd else None}"
-                for t, m in illegal_traders
-            ]
-            failures.append(
-                make_failure(
-                    "ISLAND-15",
-                    "各生产/招募/交易线主负责人有效、岗位匹配、同类不重复",
-                    f"resource_type_main_trader非法槽位={illegal_traders}，详情={detail}",
-                    [m for _t, m in illegal_traders],
-                )
+        failures.append(
+            make_failure(
+                "ISLAND-15",
+                "各生产/招募/交易线主负责人有效、岗位匹配、同类不重复",
+                f"{economy.TRADERS}非法槽位={illegal_traders}，详情={detail}",
+                [m for _t, m in illegal_traders],
             )
+        )
     return failures
 
 
@@ -1248,28 +1245,15 @@ def check_island_24_auto_trade_setting() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验每个自动交易资源id必须存在于资源配置；设置字典必须含六个标准键；库存阈值在0..仓库容量，价格
-        百分比在0..300，开关是0/1或True/False。开关不能写type(...) is bool——_ensure_trade_setting对缺失
-        键统一setdefault(key,0)，补进去的是整数0
+        校验base.auto_trade里的自动交易设置键与阈值合法。每个资源id必须存在于资源配置。
+        设置字典必须含六个标准键。库存阈值在0..仓库容量，价格百分比在0..300，开关是0/1或True/False。
+        开关不能写type(...) is bool：economy.auto_trade把设置过的资源缺的键读成整数0，面板改设置时连这个0一起存回
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    resource_type_auto_trade_setting = getattr(
-        ri, "resource_type_auto_trade_setting", None
-    )
-    if not isinstance(resource_type_auto_trade_setting, dict):
-        return []
-    keys_required = {
-        "buy_on",
-        "buy_stock",
-        "buy_price_percent",
-        "sell_on",
-        "sell_stock",
-        "sell_price_percent",
-    }
+    ri = cache_control.cache.rhodes_island
+    keys_required = set(economy.AUTO_TRADE_KEYS)
     warehouse_capacity = getattr(ri, "warehouse_capacity", 0)
     failures = []
-    for rid, s in resource_type_auto_trade_setting.items():
+    for rid, s in economy.auto_trade_table().items():
         if (
             rid not in game_config.config_resouce
             or not isinstance(s, dict)
@@ -1747,15 +1731,13 @@ def check_island_32_shop_open_list() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验shop_open_list无重名、长度不超过贸易区(cid 11)当前等级效果值，且其中每个名称都对应一个贸易区
-        可建设施且该设施已开放。反向不成立、禁止加：贸易区5级会经zone_cid规则自动开放全部151-168号子设施
-        而不append到shop_open_list，"facility_open为真⇒名字在列表里"是必现误报
+        校验已开放商店名(base.shops_open)无重名、长度不超过贸易区(cid 11)当前等级效果值，且其中每个名称都
+        对应一个贸易区可建设施且该设施已开放。反向不成立、禁止加：贸易区5级会经zone_cid规则自动开放全部151-168号
+        子设施而不调economy.open_shop，"facility_open为真⇒名字在base.shops_open里"是必现误报
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
-    shop_open_list = getattr(ri, "shop_open_list", None)
-    if not isinstance(shop_open_list, list):
-        return []
+    shop_open_list = economy.shops_open()
     eff11 = _eff(ri, 11)
     trade_open = {
         o.name: oid

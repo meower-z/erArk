@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.Design import basement
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import facility, power_supply
+from Script.Modules.domains import economy, facility, power_supply
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -307,8 +307,8 @@ class Building_Panel:
                 else:
                     # 已修建的设施
                     trade_draw_text += _("已修建的设施：")
-                    trade_draw_text += f"({len(cache.rhodes_island.shop_open_list)}/{facility_data_now.effect})："
-                    for name in cache.rhodes_island.shop_open_list:
+                    trade_draw_text += f"({len(economy.shops_open())}/{facility_data_now.effect})："
+                    for name in economy.shops_open():
                         trade_draw_text += f"  {name}"
                 trade_draw.text = trade_draw_text
                 trade_draw.width = self.width
@@ -317,8 +317,7 @@ class Building_Panel:
                 # 增加要修建的设施
                 if (
                     facility_cid <= 114
-                    and len(cache.rhodes_island.shop_open_list)
-                    < facility_data_now.effect
+                    and len(economy.shops_open()) < facility_data_now.effect
                 ):
                     button_draw = draw.CenterButton(
                         _("【修建】"),
@@ -374,9 +373,9 @@ class Building_Panel:
 
     def build_trade_sub_panel(self, facility_cid: int) -> None:
         """
-        显示建筑升级的详细信息
+        列出贸易区里还能修建的子设施，选中一个后进入修建确认
         Keyword arguments:
-        facility_cid -- 建筑效果编号
+        facility_cid -- 贸易区当前的设施效果编号，决定能否列出娱乐设施与酒店
         """
         while 1:
             return_list = []
@@ -392,7 +391,7 @@ class Building_Panel:
                     # 跳过已经开放的设施
                     if facility.is_open(facility_open_cid) == 1:
                         continue
-                    elif open_data.name in cache.rhodes_island.shop_open_list:
+                    elif open_data.name in economy.shops_open():
                         continue
                     # 跳过与当前可修建的类型不符的设施
                     if facility_cid < 114 and open_data.info == _("酒店"):
@@ -462,13 +461,13 @@ class Building_Panel:
 
     def build_trade(self, facility_open_cid: int) -> None:
         """
-        确定是否要升级设施
+        修建贸易区的一个子设施，并把它的名字加进已开放的商店名（base.shops_open）
         Keyword arguments:
-        facility_cid -- 建筑效果编号
+        facility_open_cid -- 设施开放配置（config_facility_open）的id
         """
         open_data = game_config.config_facility_open[facility_open_cid]
         facility.set_open(facility_open_cid, True)
-        cache.rhodes_island.shop_open_list.append(open_data.name)
+        economy.open_shop(open_data.name)
         basement.get_base_updata()
 
         # 输出提示信息

@@ -103,13 +103,17 @@ class NpcTem:
 class Food:
     """食物数据结构体"""
 
-    def __init__(self) -> None:
-        """初始化食物对象"""
+    def __init__(self, uid: UUID | None = None) -> None:
+        """
+        初始化食物对象
+        Keyword arguments:
+        uid -- 食物的唯一id，None 时新取一个 uuid4
+        """
         self.id: str = ""
         """ 食物配置表id """
         self.name: str = ""
         """ 食物名字 """
-        self.uid: UUID = uuid.uuid4()
+        self.uid: UUID = uuid.uuid4() if uid is None else uid
         """ 食物对象的唯一id """
         self.quality: int = 0
         """ 食物品质 """
@@ -1439,8 +1443,6 @@ class Rhodes_Island:
         """ 当前工作干员人数 """
         self.people_max: int = 0
         """ 干员人数上限 """
-        self.all_income: int = 0
-        """ 今日全部门总收入 """
         self.party_day_of_week: dict[int, int] = {}
         """ 一周内的派对计划，周一0~周日6:娱乐id """
         self.class_schedule: dict[str, dict[int, dict[int, list]]] = {}
@@ -1611,33 +1613,8 @@ class Rhodes_Island:
         """ 推荐的阅读类别 """
 
         # 贸易区
-        self.shop_open_list: list[str] = []
-        """ 商店开放列表 """
         self.love_hotel_room_lv: int = 0
         """ 在爱情旅馆中的房间级别，0未入住，1标间，2情趣主题房，3顶级套房 """
-        self.restaurant_data: dict[int, dict] = {}
-        """
-        餐馆内贩卖的食物数据
-        餐馆id:食物名字:食物唯一id:食物对象
-        """
-        self.stall_vendor_data: dict[int, dict] = {}
-        """
-        地摊小贩的货物数据
-        货物类型id（0为食物）:货物字典
-        """
-        self.supply_demand_dict: dict[int, float] = {}
-        """
-        供需关系字典
-        货物类型id: 供需系数值
-        """
-        self.today_trade_resource_count: dict[int, int] = {}
-        """ 资源类型id: 今日买入卖出总量 """
-        self.trade_operator_ids_list: list[int] = []
-        """ 资源交易员id列表 """
-        self.resource_type_main_trader: dict[str, int] = {}
-        """ 各资源类型的主交易员 type_str:角色id """
-        self.resource_type_auto_trade_setting: dict[int, dict[str, Any]] = {}
-        """ 自动交易设置 资源id:设置字典 """
 
         # 制造加工区
         self.assembly_line: dict[int, list] = {}

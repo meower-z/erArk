@@ -437,11 +437,7 @@ def try_consume_medicine(
             continue
         total_income += income_value
 
-    if total_income > 0:
-        rhodes_island.medical_income_today += total_income
-        rhodes_island.medical_income_total += total_income
-        rhodes_island.all_income += total_income
-        inventory[1] = int(inventory.get(1, 0) or 0) + total_income
+    medical_core._apply_income_to_rhodes(rhodes_island, total_income)
 
     if overall_success:
         patient.medicine_recorded = {}

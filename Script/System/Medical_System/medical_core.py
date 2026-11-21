@@ -11,6 +11,7 @@ import math
 
 from Script.Config import config_def, game_config
 from Script.Core import cache_control, game_type
+from Script.Modules.domains import economy
 from Script.System.Medical_System import medical_constant
 from Script.Modules.domains import facility
 
@@ -53,7 +54,7 @@ def _apply_income_to_rhodes(
         rhodes_island (Optional[game_type.Rhodes_Island]): 目标基地缓存对象。
         income_value (int): 本次入账的龙门币数值，仅当大于 0 时生效。
     返回:
-        None: 在基地对象上累加收入并同步物资仓库。
+        None: 无返回值。基地对象上的医疗收入与龙门币库存加上收入，今日总收入 base.income_today 也加上收入。
     """
 
     # 收入不合法或没有目标基地时直接退出。
@@ -62,7 +63,7 @@ def _apply_income_to_rhodes(
     # 更新医疗收入字段并累计到全局收益。
     rhodes_island.medical_income_today += income_value
     rhodes_island.medical_income_total += income_value
-    rhodes_island.all_income += income_value
+    economy.add_income(income_value)
     # 同步物资仓库中的龙门币库存。
     inventory = getattr(rhodes_island, "materials_resouce", None)
     if isinstance(inventory, dict):

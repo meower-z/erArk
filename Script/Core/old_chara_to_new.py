@@ -15,7 +15,7 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import needs, power
+from Script.Modules.domains import economy, needs, power
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -491,21 +491,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 else:
                     ri.book_borrow_dict[book_id] = old_id
 
-        # trade_operator_ids_list
-        if hasattr(ri, "trade_operator_ids_list"):
-            ri.trade_operator_ids_list = [
-                old_to_new_id.get(oid, oid)
-                for oid in ri.trade_operator_ids_list
-            ]
-
-        # resource_type_main_trader (Dict[str, int])
-        if hasattr(ri, "resource_type_main_trader"):
-            old_traders = ri.resource_type_main_trader.copy()
-            ri.resource_type_main_trader = {}
-            for key, old_id in old_traders.items():
-                ri.resource_type_main_trader[key] = old_to_new_id.get(
-                    old_id, old_id
-                )
+        economy.remap_traders(old_to_new_id)
 
         # assembly_line (Dict[int, List])
         if hasattr(ri, "assembly_line"):
@@ -1486,24 +1472,7 @@ def migrate_character_replacement(
                 else:
                     ri.book_borrow_dict[book_id] = old_id
 
-        # trade_operator_ids_list
-        if hasattr(ri, "trade_operator_ids_list"):
-            ri.trade_operator_ids_list = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.trade_operator_ids_list
-            ]
-
-        # resource_type_main_trader
-        if (
-            hasattr(ri, "resource_type_main_trader")
-            and ri.resource_type_main_trader
-        ):
-            old_traders = ri.resource_type_main_trader.copy()
-            ri.resource_type_main_trader = {}
-            for key, oid in old_traders.items():
-                ri.resource_type_main_trader[key] = old_to_new_id_map.get(
-                    oid, oid
-                )
+        economy.remap_traders(old_to_new_id_map)
 
         # assembly_line
         if hasattr(ri, "assembly_line") and ri.assembly_line:

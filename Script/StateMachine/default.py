@@ -18,6 +18,7 @@ from Script.Design import (
 )
 from Script.Core import get_text, cache_control, game_type, constant
 from Script.UI.Moudle import draw
+from Script.Modules.domains import economy
 
 if TYPE_CHECKING:
     from Script.Modules.npc_action_choice import choice
@@ -2979,8 +2980,8 @@ def character_start_eat_food(character_id: int) -> choice.Plan:
     else:
         # 首先获取所有开放的餐厅id
         all_restaurant_id_list = []
-        if len(cache.rhodes_island.shop_open_list):
-            for shop_name in cache.rhodes_island.shop_open_list:
+        if len(economy.shops_open()):
+            for shop_name in economy.shops_open():
                 for restaurant_id in game_config.config_restaurant:
                     if (
                         game_config.config_restaurant[restaurant_id].name
@@ -3074,36 +3075,15 @@ def character_buy_rand_food_at_foodshop(character_id: int) -> choice.Plan:
     # 在指定餐厅购买
     else:
         restaurant_id = character_data.action_info.eat_food_restaurant
-        for recipes_id in cache.rhodes_island.restaurant_data[restaurant_id]:
-            if not len(
-                cache.rhodes_island.restaurant_data[restaurant_id][recipes_id]
-            ):
-                continue
-            for food_uid in cache.rhodes_island.restaurant_data[restaurant_id][
-                recipes_id
-            ]:
-                now_food = cache.rhodes_island.restaurant_data[restaurant_id][
-                    recipes_id
-                ][food_uid]
-                all_food_list.append(recipes_id)
-                break
+        shelf = economy.shelf(restaurant_id)
+        all_food_list = [recipe for recipe, foods in shelf.items() if foods]
         if not len(all_food_list):
             plan.kind("restock_shop")
             plan.arg("shop", restaurant_id)
             return plan
         now_food_id = random.choice(all_food_list)
-        now_food = cache.rhodes_island.restaurant_data[restaurant_id][
-            now_food_id
-        ][
-            random.choice(
-                list(
-                    cache.rhodes_island.restaurant_data[restaurant_id][
-                        now_food_id
-                    ].keys()
-                )
-            )
-        ]
-        _buy_food(plan, restaurant_id, now_food_id, now_food.uid)
+        now_food_uid = random.choice(list(shelf[now_food_id]))
+        _buy_food(plan, restaurant_id, now_food_id, now_food_uid)
 
     plan.set("behavior.behavior_id", constant.Behavior.BUY_FOOD)
     plan.set("state", constant.CharacterStatus.STATUS_BUY_FOOD)
