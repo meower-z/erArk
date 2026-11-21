@@ -24,7 +24,7 @@ from Script.Config import game_config
 from Script.Core import game_type
 from Script.Design import basement
 from Script.Kernel import core
-from Script.Modules.domains import economy, work
+from Script.Modules.domains import economy, warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state, upgrade
 from Script.System.Cooking_System import cooking
@@ -73,7 +73,7 @@ class EconomyStateTest(FastTestCase):
         再卖出 60 个：系数按总量 120 下调一次，今日总量 180
         """
         rid = _tradable()
-        self.island.materials_resouce[1] = 10**9
+        warehouse.set(1, 10**9)
         self.island.warehouse_capacity = 10**6
         bought = trade.perform_trade(rid, 120, True)
         assert bought is not None
@@ -88,7 +88,7 @@ class EconomyStateTest(FastTestCase):
     def test_day_drift_resets_counts(self) -> None:
         """买入 50 个后跑每天的供需波动：除龙门币外每种资源的今日买卖总量为 0，供需系数都不低于 0.1"""
         rid = _tradable()
-        self.island.materials_resouce[1] = 10**9
+        warehouse.set(1, 10**9)
         self.island.warehouse_capacity = 10**6
         trade.perform_trade(rid, 50, True)
         trade.daily_supply_demand_fluctuation()
@@ -100,7 +100,6 @@ class EconomyStateTest(FastTestCase):
 
     def test_income_of_one_step_adds_up(self) -> None:
         """同一步里两笔医疗收入 30 与 12：今日收入为 42，龙门币库存也为 42。换成效果后今日收入只有一个 Change"""
-        self.island.materials_resouce[1] = 0
         with working.based_on(core.state()) as step:
             medical_core._apply_income_to_rhodes(self.island, 30)
             medical_core._apply_income_to_rhodes(self.island, 12)
@@ -110,10 +109,9 @@ class EconomyStateTest(FastTestCase):
         ]
         self.assertEqual(len(changes), 1)
         self.assertIsInstance(changes[0], core.Change)
-        self.assertEqual(
-            economy.income(core.preview(core.state(), effects)), 42
-        )
-        self.assertEqual(self.island.materials_resouce[1], 42)
+        game = core.preview(core.state(), effects)
+        self.assertEqual(economy.income(game), 42)
+        self.assertEqual(warehouse.amount(1, game), 42)
 
     def restock(self) -> None:
         """载入菜谱，按 3 名已招募干员给新的一天进货"""

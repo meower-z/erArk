@@ -12,6 +12,7 @@
 """
 
 import datetime
+import importlib
 import shutil
 
 from tests.slow.base import SlowTestCase
@@ -94,7 +95,8 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         panel = manage_vehicle_panel.Manage_Vehicle_Panel(
             normal_config.config_normal.text_width
         )
-        panel.buy_vehicle(VEHICLE_ID)
+        with kernel_data.writing():
+            panel.buy_vehicle(VEHICLE_ID)
         self.assertEqual(
             self.cache.rhodes_island.vehicles[VEHICLE_ID],
             [1, 0],
@@ -124,7 +126,8 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         for chara_id in member_id_list:
             panel.select_this_npc(chara_id)
         panel.add_this_vehicle(VEHICLE_ID)
-        panel.send_commision(commission_id)
+        with kernel_data.writing():
+            panel.send_commision(commission_id)
         self.assertEqual(
             self.cache.rhodes_island.ongoing_field_commissions[commission_id][
                 0
@@ -199,10 +202,11 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
             "再读一次，委托与载具不变",
         )
         # 过了返回时间：不发奖励、不算完成
-        resource_before = dict(island.materials_resouce)
+        warehouse = importlib.import_module("Script.Modules.domains.warehouse")
+        resource_before = warehouse.stock()
         self._finish_after(end_time)
         self.assertEqual(
-            island.materials_resouce, resource_before, "取消的委托不发奖励"
+            warehouse.stock(), resource_before, "取消的委托不发奖励"
         )
         self.assertNotIn(
             ALL_CHILD_COMMISSION,
@@ -237,7 +241,8 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         self.assertEqual(
             island.vehicles[VEHICLE_ID], [1, 1], "进行中的委托的载具仍在外"
         )
-        resource_before = island.materials_resouce[REWARD_RESOURCE]
+        warehouse = importlib.import_module("Script.Modules.domains.warehouse")
+        resource_before = warehouse.amount(REWARD_RESOURCE)
         self._finish_after(end_time)
         self.assertNotIn(
             PARTIAL_COMMISSION,
@@ -245,7 +250,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
             "到返回时间委托结束",
         )
         self.assertEqual(
-            island.materials_resouce[REWARD_RESOURCE],
+            warehouse.amount(REWARD_RESOURCE),
             resource_before + 200,
             "完成的委托发奖励",
         )

@@ -250,7 +250,7 @@ def _without_open(game: core.GameState, who: str) -> dict[str, core.JSON]:
 
 def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     """
-    快照里按旧缓存的属性名记下 GameState 里的生理需求、体力等数值与动力状态，快照因此能与按这些名字录下的基准逐项比较。
+    快照里按旧缓存的属性名记下 GameState 里的生理需求、体力等数值、动力与仓库，以便与按这些名字录下的基准逐项比较。
     body.needs 记作 chara.<id>.tired_point、hunger_point、urinate_point、pregnancy.milk
     与 upgrade.PICKLED_NEEDS 里的属性名，乳汁上限记作 chara.<id>.pregnancy.milk_max。
     每个大区块的生效策略记作 world.base.power_supply_strategy.<区块id>。
@@ -260,12 +260,21 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     main_power_facility_operator_ids、orundum_reactor_list（主反应炉等级与副反应炉数量）、other_power_facility_list
     与 battery_list。岗位名册与监狱长记在 world.base 下，名字为 all_work_npc_set（岗位id到角色id的集合）、
     work_people_now、hr_operator_ids_list 与 current_warden_id。
+    资源库存记作 world.base.materials_resouce.<资源id>，已用的仓储空间扩展模块数记作
+    world.base.used_extra_warehouse_capacity_module。
     Keyword arguments:
     cache -- 游戏缓存
     state -- 快照，原地补上
     """
     from Script.Config import game_config
-    from Script.Modules.domains import facility, needs, power, pregnancy, work
+    from Script.Modules.domains import (
+        facility,
+        needs,
+        power,
+        pregnancy,
+        warehouse,
+        work,
+    )
     from Script.Modules.save_load import upgrade
     from tests.snapshot import flatten
 
@@ -300,6 +309,8 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         "work_people_now": work.people_now(),
         "hr_operator_ids_list": list(work.roster(work.HR_WORK)),
         "current_warden_id": work.warden(),
+        "materials_resouce": warehouse.stock(),
+        "used_extra_warehouse_capacity_module": warehouse.extra_modules(),
     }
     for field, value in island.items():
         flatten(f"world.base.{field}", value, state)

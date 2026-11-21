@@ -17,6 +17,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -46,7 +47,8 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
         kernel = game("Script.Kernel.core")
         normal_config.config_normal.debug = True
         self.instruct(constant.Instruct.DEBUG_MODE_ON)
-        self.cache.rhodes_island.materials_resouce[PURE_ORIGINIUM] = 2
+        warehouse = game("Script.Modules.domains.warehouse")
+        kernel_data.written(warehouse.set, PURE_ORIGINIUM, 2)
         self.started: list[core.Action] = []
         saved = kernel._bodies["kernel.StartAction"]
 

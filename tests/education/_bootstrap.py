@@ -128,6 +128,7 @@ _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
 
 from Script.Modules.save_load import kernel_state
+from Script.Modules.domains import warehouse
 
 character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
@@ -140,8 +141,7 @@ cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
 cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
 # 罗德岛设施：GameState 里没有设施数据，读到的是每个设施 1 级、每个待开放设施未开放。教育区的等级由测试按需改
 # 资源仓库：每种资源 0（与 basement 初始化一致）；内核推进时玩家行动收尾的成就结算要读它
-for _resouce_cid in game_config.config_resouce:
-    cache.rhodes_island.materials_resouce.setdefault(_resouce_cid, 0)
+kernel_data.written(warehouse.start, {})
 # 书库：全部书籍在架、没被借走（与 basement 初始化一致）；兴趣课读书要先借书（Plan 29），空书库会让那一节视为没课
 for _book_cid in game_config.config_book:
     cache.rhodes_island.book_borrow_dict.setdefault(_book_cid, -1)
