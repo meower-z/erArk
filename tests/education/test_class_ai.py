@@ -47,7 +47,7 @@ from Script.Settle import realtime_settle
 from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
 from Script.Kernel import core
-from Script.Modules.domains import achievement, modes, plan
+from Script.Modules.domains import achievement, modes, plan, physical_exam as px
 from tests import kernel_data, world
 from Script.Modules.domains import library
 
@@ -330,9 +330,9 @@ teacher.talent[23] = 0
 pl.assistant_character_id = 101
 check("当助理不可用（normal_3）", not teacher_available())
 pl.assistant_character_id = 0
-cache.rhodes_island.waiting_for_exam_operator_ids.add(101)
+kernel_data.put(px.add, px.WAITING, 101)
 check("在体检链中不可用（normal_3）", not teacher_available())
-cache.rhodes_island.waiting_for_exam_operator_ids.discard(101)
+kernel_data.put(px.discard, px.WAITING, 101)
 check("玩家（临时实操课的授课者）可用", class_ai.judge_teacher_available(0))
 check("恢复后正常教师可用", teacher_available())
 
@@ -1119,7 +1119,7 @@ for _cid, _name in ((101, "教师"), (201, "学生")):
     )
 move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
-_waiting = cache.rhodes_island.waiting_for_exam_operator_ids
+_put = {True: px.add, False: px.discard}
 for _name, _toggle in (
     ("临盆", lambda on: teacher.talent.__setitem__(22, 1 if on else 0)),
     ("产后", lambda on: teacher.talent.__setitem__(23, 1 if on else 0)),
@@ -1127,7 +1127,7 @@ for _name, _toggle in (
         "当助理",
         lambda on: setattr(pl, "assistant_character_id", 101 if on else 0),
     ),
-    ("体检中", lambda on: _waiting.add(101) if on else _waiting.discard(101)),
+    ("体检中", lambda on: kernel_data.put(_put[on], px.WAITING, 101)),
 ):
     _toggle(True)
     _available = teacher_available()

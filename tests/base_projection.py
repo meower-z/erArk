@@ -1,21 +1,23 @@
 # -*- coding: UTF-8 -*-
 """
-快照里按旧罗德岛对象的属性名记下招募、公务、外交、宿舍管理员、图书馆、关押区与教育区的值
-========================================================================================
+快照里按旧罗德岛对象的属性名记下招募、公务、外交、宿舍管理员、图书馆、关押区、教育区、工程部与体检的值
+======================================================================================================
 kernel_data.project_state 调用 project。快照因此能与按缓存属性录下的快照逐项比较。
 """
 
 
 def project(state: dict[str, object]) -> None:
     """
-    快照里按旧罗德岛对象的属性名记下招募、公务、外交、宿舍管理员、图书馆、关押区与教育区的值。
+    快照里按旧罗德岛对象的属性名记下招募、公务、外交、宿舍管理员、图书馆、关押区、教育区、工程部与体检的值。
     借阅表与推荐阅读记在 world.library 下，其余记在 world.base 下。
     招募线记作旧的四项列表，效率一项记 0。外交记作 [外交官, 外交方针]
     Keyword arguments:
     state -- 快照，原地补上
     """
     from Script.Modules.domains import diplomacy, dormitory, education, library
+    from Script.Modules.domains import maintenance as m
     from Script.Modules.domains import official, prison, recruit
+    from Script.Modules.domains import physical_exam as px
     from tests.snapshot import flatten
 
     island = {
@@ -44,6 +46,18 @@ def project(state: dict[str, object]) -> None:
         "class_schedule": education.class_schedule(),
         "temp_sex_class": education.temp_classes(),
         "child_schedule_template": education.templates(),
+        "facility_damage_data": m.damage(),
+        "maintenance_place": m.places(),
+        "maintenance_equipment_chara_id": m.repairs(),
+        "equipment_maintain_setting": m.settings(),
+        "equipment_maintain_operator_ids": m.operators(),
+        "physical_examination_setting": px.settings(),
+        "today_physical_examination_chara_id_dict": px.checks(px.TODAY),
+        "physical_examination_in_progress": px.checks(px.IN_PROGRESS),
+        "examined_operator_ids": px.ids(px.EXAMINED),
+        "waiting_for_exam_operator_ids": px.ids(px.WAITING),
+        "manually_selected_exam_operator_ids": px.ids(px.CHOSEN),
+        "manually_selected_exam_week_day_list": px.week_days(),
     }
     for field, value in island.items():
         flatten(f"world.base.{field}", value, state)

@@ -224,13 +224,16 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         player.pl_collection.urine_total[child_id] = 20
         education = importlib.import_module("Script.Modules.domains.education")
         prison = importlib.import_module("Script.Modules.domains.prison")
-        island = cache.rhodes_island
         child.sp_flag.imprisonment = True
         commission_id = min(game_config.config_commission)
         team = [child_id, mother_id]
         kd.written(start, commission_id, team, game_time.now(), [])
         child.sp_flag.field_commission = commission_id
+        exam = importlib.import_module("Script.Modules.domains.physical_exam")
         with kd.writing():
+            exam.finish(child_id, {1})
+            exam.add(exam.WAITING, child_id)
+            exam.add(exam.CHOSEN, child_id)
             prison.imprison(child_id, game_time.now(), 0)
             education.put_temp_class(
                 "1-1",
@@ -253,10 +256,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                     },
                 },
             )
-        island.examined_operator_ids.add(child_id)
-        island.waiting_for_exam_operator_ids.add(child_id)
-        island.manually_selected_exam_operator_ids.add(child_id)
-        island.today_physical_examination_chara_id_dict[child_id] = {1}
         book_id = min(game_config.config_book)
         kd.set_book_holders({book_id: child_id})
         child.entertainment.borrow_book_id_set = {book_id}
@@ -390,7 +389,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         无
         Return arguments:
         dict -- 角色id到数据的字典，外加世界设定、日程模板、玩家收藏品里的卵、当前干员列表、各场景的角色、GameState 的
-           全部全局数据、罗德岛里的体检数据，以及场景面板记着的角色
+           全部全局数据，以及场景面板记着的角色
         """
         collection = self.cache.character_data[0].pl_collection
         education = importlib.import_module("Script.Modules.domains.education")
@@ -406,17 +405,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 for path, scene in self.cache.scene_data.items()
             },
             "data": dict(core.state().data),
-            "island": repr(
-                [
-                    getattr(self.cache.rhodes_island, name)
-                    for name in (
-                        "examined_operator_ids",
-                        "waiting_for_exam_operator_ids",
-                        "manually_selected_exam_operator_ids",
-                        "today_physical_examination_chara_id_dict",
-                    )
-                ]
-            ),
             "old_character_id": self.cache.old_character_id,
         }
         for cid, chara in self.cache.character_data.items():
@@ -829,7 +817,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         mother_id = id_dict["mother"]
         child = cache.character_data[child_id]
         player = cache.character_data[0]
-        island = cache.rhodes_island
         from Script.Modules.domains import commission, library
 
         collection = player.pl_collection
@@ -867,17 +854,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
         education = importlib.import_module("Script.Modules.domains.education")
         prison = importlib.import_module("Script.Modules.domains.prison")
+        exam = importlib.import_module("Script.Modules.domains.physical_exam")
         self.assertEqual(
-            [
-                child_id in one
-                for one in (
-                    prison.prisoner_ids(),
-                    island.today_physical_examination_chara_id_dict,
-                    island.examined_operator_ids,
-                    island.waiting_for_exam_operator_ids,
-                    island.manually_selected_exam_operator_ids,
-                )
-            ],
+            [child_id in one for one in (prison.prisoner_ids(),)]
+            + [exam.has(key, child_id) for key in (exam.TODAY, *exam.ID_LISTS)],
             [False] * 5,
             "囚犯与体检名单里没有孩子",
         )
