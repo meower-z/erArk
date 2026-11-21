@@ -17,7 +17,7 @@
 | PLACE 位置与场景 | `check_place.py` | 31 |
 | ROSTER 名册 | `check_roster.py` | 33 |
 | BIRTH / COOK 设置记忆 | `check_setting.py` | 4 |
-| SUPP 补充盲点 | `check_supplement.py` | 8 |
+| SUPP 补充盲点 | `check_supplement.py` | 7 |
 | 合计 | | 288 |
 
 ## CORE：核心
@@ -183,13 +183,13 @@ H 状态、群交模式、逆推、隐奸。
 | ISLAND-22 | 一周派对排期键值合法且同一娱乐不占两天 | party_day_of_week必须是dict、键恰为0..6，值为合法娱乐id(0表示无活动)，且同一非零娱乐id不得同时 占据两天 |
 | ISLAND-23 | 干员娱乐安排固定三项且id合法 | 每个角色的entertainment.entertainment_type必须是长度恰为3的list，每项都是Entertainment.csv中的 合法cid(0=无) |
 | ISLAND-24 | 自动交易设置键与阈值合法 | base.auto_trade里的自动交易设置键与阈值合法 |
-| ISLAND-25 | 载具在外数量与进行中委托占用一致 | 每种载具记录形如[总数,外勤中数量]，满足0<=外勤中<=总数，且"外勤中"精确等于所有进行中委托占用 该型载具的台数之和；委托引用的载具型号必须同时存在于配置与载具表 |
+| ISLAND-25 | 载具在外数量与进行中委托占用一致 | base.vehicles里每种载具的记录是两个int(拥有数,外勤中数)，满足0<=外勤中数<=拥有数，外勤中数等于所有进行中委托派出该型载具的台数之和，委托派出的载具型号必须同时存在于配置与载具表 |
 | ISLAND-26 | 外勤派遣名单与干员外勤标记一致 | 每个进行中委托的id必须合法；成员必须是存在的角色、不被两个委托同时派遣、其sp_flag.field_commission 等于该委托id；反过来，任何field_commission!=0的角色都必须恰好出现在对应委… |
 | ISLAND-27 | 储能与供能设施结构、绝对范围合法 | base.power_storage 在[0, 最大储能]内、clean 与 batteries 各有 3 项、副反应炉与各设施数量都是非负整数 |
 | ISLAND-28 | 主供能调控员槽位有效且不重复 | base.power 的 main_operators 是火/水/风/光 4 槽、每个非0值是 work.work_type==11 的现有角色、4 槽互不重复 |
 | ISLAND-29 | 监狱长引用与囚犯数据自洽 | 监狱长（work.warden）为0或指向一名存在的、work.work_type==191的角色；每个囚犯id必须存在，逃脱概率 落在0..100 |
 | ISLAND-30 | 设施损坏数据与检修分派自洽 | facility_damage_data的键必须是合法场景路径、值为正整数(<=0时代码会pop)；maintenance_place的键 必须是存在的、work.work_type==21的角色，值必须是合法场景路径 |
-| ISLAND-31 | 访客集合与待确认招募集合合法 | visitor_info是dict，键均为存在的角色，访客数不超过visitor_max；recruited_id是集合、不含0、 成员均存在，且与已招募名单不相交 |
+| ISLAND-31 | 访客集合与待确认招募集合合法 | base.visitor里的访客都是存在的角色，访客数不超过按已开放客房数算出的访客上限(visitor.capacity())，recruited_id是集合时不含0、成员均存在、与已招募名单不相交 |
 | ISLAND-32 | 贸易子设施列表与开放表一致、不超上限、无重复 | 已开放商店名(base.shops_open)无重名、长度不超过贸易区(cid 11)当前等级效果值，且其中每个名称都 对应一个贸易区可建设施且该设施已开放 |
 | ISLAND-33 | 外交官映射、岗位与外派标记三方一致 | diplomat_of_country[国家][0]的非零角色必须存在、sp_flag.in_diplomatic_visit等于该国家、 work.work_type==131，且一人不得同时负责两国 |
 
@@ -351,21 +351,21 @@ H 状态、群交模式、逆推、隐奸。
 | ROSTER-11 | 监狱长缓存唯一且指向真实岗位 | 在编干员里最多只能有一名工作类型191的监狱长，监狱长(work.warden)非零时必须指向存在的角色， 不能与那名在编191冲突 |
 | ROSTER-12 | 监狱长身份软约束 | 期望状态：监狱长(work.warden)非零时该人在编、宿舍是关押区休息室、不是囚犯/访客、不在外勤 |
 | ROSTER-13 | 监禁调教设置键齐全且取值在选项范围内 | 设置字典由配置表全量初始化为0，UI用option[cid][value]直接索引(越界IndexError)， 结算路径对[4]/[13]直取(缺键KeyError) |
-| ROSTER-14 | 访客名册与访客flag完全等价 | visitor_info与sp_flag.vistor == 1是同一件事的两份记录，且当前访客必然在编 |
+| ROSTER-14 | 访客名册与访客flag完全等价 | base.visitor的访客名册与sp_flag.vistor == 1的角色是同一批人，且当前访客都在在编名册(cache.npc_id_got)里 |
 | ROSTER-15 | 访客住在互不重复的客房 | 访客由分配器挑一间没有别的访客占用的客房；用场景标签集合GUEST_ROOMS判定房间合法性， 比"客房" in d的子串判定更强 |
-| ROSTER-16 | 访客人数不超过客房上限 | visitor_max是按已开放客房数重算的接待闸门 |
-| ROSTER-17 | 没有严重逾期未结算的访客 | 访客到期由跨日结算处理一次，"D日到期、D+1日00:00才结算"是正常窗口，阈值必须放到一整天以上， 否则会周期性误报；类型检查不可省，脏值在减法处会抛异常而非给出判定 |
-| ROSTER-18 | 邀请栏结构完整、空目标必归零 | invite_visitor是[目标id, 进度, 效率]；目标为0时进度必须为0；进度与效率是非负有限数 |
+| ROSTER-16 | 访客人数不超过客房上限 | 访客数不超过visitor.capacity()按已开放客房数算出的访客上限 |
+| ROSTER-17 | 没有严重逾期未结算的访客 | base.visitor里没有离开时刻已过去一整天或更久的访客 |
+| ROSTER-18 | 邀请栏结构完整、空目标必归零 | base.visitor的邀请是(目标id, 进度)，目标是int，进度是非负有限数，目标为0时进度为0 |
 | ROSTER-19 | 邀请目标仍是合法的未入编候选 | 邀请目标只能来自find_recruitable_npc() |
 | ROSTER-20 | 待确认招募名单合法 | recruited_id是"已招募待玩家确认"的暂存池，里面不该有0、不存在的id，也不该有已在编或身份冲突的人 |
 | ROSTER-21 | 当前访客与其它名册身份互斥 | 当前访客不能同时是待确认招募、邀请目标、囚犯、逃犯或外勤队员 —— 这些身份的在线规则互相冲突 |
 | ROSTER-22 | 招募线记录形状与进度范围 | 每条recruit_line是[进度, 策略id, 主专员id, 效率]；进度与效率为非负有限数，策略与主专员为整数， 进度上界<100由增量写入与结算相邻两行保证，不存在"已加未结"窗口 |
 | ROSTER-23 | 招募线主专员真实可用且不重复 | 每条线第3位是主招聘专员：0(空缺)或一名工作类型71且在招聘专员名单work.roster(71)内的角色； 同一人不能同时主理两条线 |
 | ROSTER-24 | 招聘专员列表无重复、成员岗位正确、在编71全部在内 | 招聘专员名单work.roster(71)是招募效率计算用的名单 |
-| ROSTER-25 | 进行中委托记录结构合法、人员全局唯一 | 每条记录是[干员id列表, 返回时间, 载具id列表]；同一人不能在单条记录里重复，也不能同时出现在两个委托里 |
+| ROSTER-25 | 进行中委托记录结构合法、人员全局唯一 | base.commission里进行中委托的id不为0，同一人不在一个委托的队伍里重复出现，也不同时在两个委托的队伍里 |
 | ROSTER-26 | 外勤名单与角色外勤flag双向一致 | 派遣时逐人写sp_flag.field_commission = 委托id，结算时逐人清0再上线 |
 | ROSTER-27 | 外勤人员不得兼任访客/囚犯/助理/监狱长/招募目标 | 派遣候选表显式排除访客、助理、监狱长以及2类(临盆/产后/监禁)、7类(离线)异常；待确认招募与 邀请目标本就不在在编名册内 |
-| ROSTER-28 | 载具外勤中数与委托明细守恒 | vehicles[vid] = [拥有数, 外勤中数]；外勤中数必须等于所有进行中委托里该型号载具的出现次数， 且不超过拥有数 |
+| ROSTER-28 | 载具外勤中数与委托明细守恒 | base.vehicles[vid] = (拥有数, 外勤中数)，外勤中数等于所有进行中委托里这种载具的出现次数且在0与拥有数之间，委托里出现的载具都在载具表里 |
 | ROSTER-29 | 进行中委托id有效且未逾期 | 委托完成判定在每个非时停玩家回合的行为树里先于NPC结算跑一次，回合结束时留下的委托必须严格 满足end_time > game_time(> 而非 >=，恰好到点的委托按完成条件本应已结算) |
 | ROSTER-30 | 外交官表与角色外派flag双向一致 | 任命写diplomat_of_country[国家][0] = id与sp_flag.in_diplomatic_visit = 国家，解任同时清两者 |
 | ROSTER-32 | 助理身份互斥 | 助理候选排除访客、监狱长以及2/7类异常 |
@@ -389,7 +389,6 @@ H 状态、群交模式、逆推、隐奸。
 | 编号 | 名称 | 说明 |
 |---|---|---|
 | SUPP-01 | 供电策略合法性 | GameState全局键base.power_strategy的键值域：键必须是当前配置中type==-1的大区块设施cid，值必须是game_config.config_supply_strategy的合法键 |
-| SUPP-02 | 访客上限与开放客房数一致 | visitor_max等于当前config_facility_open中名称含"客房"且facility_open为真的条目数 |
 | SUPP-03 | 设施开放派生单调覆盖 | 对当前config_facility_open中每个待开放项，只要其zone_cid已被全设施 当前等级效果cid覆盖（相等，或同十位且个位数达标），对应facility_open[open_cid]就应为真 |
 | SUPP-04 | 时停无意识值跨名单残留 | 非时停时，character_data中任何角色都不应残留专属时停无意识值 unconscious_h==3 |
 | SUPP-05 | 愤怒值下界 | 每个角色的body.needs的angry类型为int且不小于0 |

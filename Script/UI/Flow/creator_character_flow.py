@@ -21,9 +21,10 @@ from Script.Design import (
     character_handle,
     attr_calculation,
     basement,
+    game_time,
 )
 from Script.Kernel import core
-from Script.Modules.domains import work
+from Script.Modules.domains import visitor, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
@@ -125,6 +126,7 @@ def game_start() -> None:
     character_handle.init_character_entertainment()  # 需要设施开放的属性，所以放在设施后面
     medical_service.init_medical_department_data(reset_runtime=True)
     manage_vehicle_panel.update_basement_vehicle_data()
+    visitor.set_last_arrival(game_time.now())
     achievement_panel.achievement_flow(_("周目"))
 
 
@@ -234,8 +236,6 @@ class Character_creat_Handle:
             bonus_draw,
             world_setting_draw,
             other_settings_draw,
-            # abi_draw,
-            # tal_draw,
         ]
         """ 绘制的面板列表 """
         self.return_list: list[str] = []

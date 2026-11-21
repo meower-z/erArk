@@ -15,7 +15,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import needs, warehouse
+from Script.Modules.domains import commission, needs, warehouse
 
 if TYPE_CHECKING:
     from typing import Any
@@ -97,8 +97,8 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
     vehicles_count = 0
     read_book_count = 0
     if achievement_type == _("载具"):
-        for cid in cache.rhodes_island.vehicles:
-            vehicles_count += cache.rhodes_island.vehicles[cid][0]
+        for owned, _out in commission.vehicles().values():
+            vehicles_count += owned
     # 统计读书进度
     elif achievement_type == _("读书"):
         for book_id in pl_character_data.entertainment.read_book_progress:
@@ -859,10 +859,10 @@ class Achievement_Panel:
                 cache.achievement.buy_item_count_list.append(item_id)
         # 如果外勤数小于已完成的外勤统计数，则等于外勤统计数量
         if cache.achievement.field_commission_count < len(
-            cache.rhodes_island.finished_field_commissions_set
+            commission.finished()
         ):
             cache.achievement.field_commission_count = len(
-                cache.rhodes_island.finished_field_commissions_set
+                commission.finished()
             )
         # 刷新所有成就
         for achievement_id in game_config.config_achievement:

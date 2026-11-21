@@ -16,6 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.domains import facility, power, power_supply, warehouse
+from Script.Modules.domains import location
 
 from typing import TYPE_CHECKING
 
@@ -445,7 +446,6 @@ class Manage_Power_System_Panel:
     # ---------- 发电设施管理 ---------- #
     def _panel_facilities(self) -> None:
         """发电设施管理子界面"""
-        ri = cache.rhodes_island
         fac_lv = facility.level(1, 1)
         # 计算区块等级提供的基础发电设施数量
         base_power_facility_by_fac_lv = fac_lv * 2 + 3
@@ -478,7 +478,7 @@ class Manage_Power_System_Panel:
                 )
             # 如果当前罗德岛在行驶中
             move_flag = False
-            if ri.move_target_and_time[0] != 0:
+            if location.move() is not None:
                 summary.text += _(
                     "！当前罗德岛处于行驶中，水力与风力发电设施无法工作！\n"
                 )

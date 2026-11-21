@@ -23,10 +23,13 @@ from typing import Any
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Modules.domains import (
+    commission,
     economy,
     facility,
+    location,
     power,
     production,
+    visitor,
     warehouse,
     work,
 )
@@ -1238,31 +1241,16 @@ def check_island_25_vehicle_usage_consistency() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验每种载具记录形如[总数,外勤中数量]，满足0<=外勤中<=总数，且"外勤中"精确等于所有进行中委托占用
-        该型载具的台数之和；委托引用的载具型号必须同时存在于配置与载具表。必须先扫委托再扫载具表——只遍历
-        vehicles会漏掉"委托引用了不在载具表里的型号"这一类
+        校验base.vehicles里每种载具的记录是两个int(拥有数,外勤中数)，满足0<=外勤中数<=拥有数，
+        外勤中数等于所有进行中委托派出该型载具的台数之和，委托派出的载具型号必须同时存在于配置与载具表。
+        先扫委托再扫载具表，因为只遍历载具表会漏掉"委托引用了不在载具表里的型号"这一类
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    ongoing = getattr(ri, "ongoing_field_commissions", None)
-    vehicles = getattr(ri, "vehicles", None)
-    if not isinstance(ongoing, dict) or not isinstance(vehicles, dict):
-        return []
+    vehicles = commission.vehicles()
     failures = []
     used: Counter[int] = Counter()
     used_by: dict[int, list[int]] = {}
-    for com_id, c in ongoing.items():
-        if not (isinstance(c, list) and len(c) >= 3 and isinstance(c[2], list)):
-            failures.append(
-                make_failure(
-                    "ISLAND-25",
-                    "载具在外数量与进行中委托占用一致",
-                    f"委托com_id={com_id}的记录结构非法：{c!r}",
-                    [],
-                )
-            )
-            continue
-        for vid in c[2]:
+    for com_id, c in commission.ongoing().items():
+        for vid in c.vehicles:
             if vid not in game_config.config_vehicle or vid not in vehicles:
                 failures.append(
                     make_failure(
@@ -1281,16 +1269,12 @@ def check_island_25_vehicle_usage_consistency() -> list[CheckFailure]:
             if vid in game_config.config_vehicle
             else "?"
         )
-        if not (
-            isinstance(v, list)
-            and len(v) == 2
-            and all(type(x) is int for x in v)
-        ):
+        if not all(type(x) is int for x in v):
             failures.append(
                 make_failure(
                     "ISLAND-25",
                     "载具在外数量与进行中委托占用一致",
-                    f"vid={vid}({vehicle_name})的记录结构非法：{v!r}",
+                    f"vid={vid}({vehicle_name})的记录类型非法：{v!r}",
                     [],
                 )
             )
@@ -1323,14 +1307,10 @@ def check_island_26_field_commission_flag_consistency() -> list[CheckFailure]:
         遍历character_data而不是npc_id_got——外勤成员必然不在npc_id_got里，用名单遍历会必现漏检
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
-    ongoing = getattr(ri, "ongoing_field_commissions", None)
-    if not isinstance(ongoing, dict):
-        return []
     failures = []
     seen = set()
-    for com_id, c in ongoing.items():
+    for com_id, c in commission.ongoing().items():
         if com_id not in game_config.config_commission:
             failures.append(
                 make_failure(
@@ -1342,17 +1322,7 @@ def check_island_26_field_commission_flag_consistency() -> list[CheckFailure]:
             )
             continue
         commission_name = game_config.config_commission[com_id].name
-        if not (isinstance(c, list) and len(c) >= 1 and isinstance(c[0], list)):
-            failures.append(
-                make_failure(
-                    "ISLAND-26",
-                    "外勤派遣名单与干员外勤标记一致",
-                    f"委托com_id={com_id}({commission_name})的记录结构非法：{c!r}",
-                    [],
-                )
-            )
-            continue
-        for cid in c[0]:
+        for cid in c.team:
             if cid not in cd:
                 failures.append(
                     make_failure(
@@ -1612,29 +1582,25 @@ def check_island_31_visitor_and_recruited_id() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验visitor_info是dict，键均为存在的角色，访客数不超过visitor_max；recruited_id是集合、不含0、
-        成员均存在，且与已招募名单不相交。不断言"访客必须在npc_id_got"（访客同样可能被绑架而离线）；不断言
-        "干员数<=people_max"（访客计入名单但只受客房数约束，属设计内流程，不在本条硬检查范围）
+        校验base.visitor里的访客都是存在的角色，访客数不超过按已开放客房数算出的访客上限(visitor.capacity())，
+        recruited_id是集合时不含0、成员均存在、与已招募名单不相交。不断言"访客必须在npc_id_got"（可能被绑架而离线）。
+        不断言"干员数<=people_max"（访客计入名单但只受客房数约束，属设计内流程，不在本条硬检查范围）
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
     cd = cache.character_data
     failures = []
-    visitor_info = getattr(ri, "visitor_info", None)
-    visitor_max = getattr(ri, "visitor_max", None)
-    if isinstance(visitor_info, dict):
-        ghost_visitors = [v for v in visitor_info if v not in cd]
-        if ghost_visitors or (
-            visitor_max is not None and len(visitor_info) > visitor_max
-        ):
-            failures.append(
-                make_failure(
-                    "ISLAND-31",
-                    "访客集合与待确认招募集合合法",
-                    f"len(visitor_info)={len(visitor_info)}，visitor_max={visitor_max}，幽灵访客id={ghost_visitors}",
-                    ghost_visitors,
-                )
+    visitors = visitor.visitors()
+    ghost_visitors = [v for v in visitors if v not in cd]
+    if ghost_visitors or len(visitors) > visitor.capacity():
+        failures.append(
+            make_failure(
+                "ISLAND-31",
+                "访客集合与待确认招募集合合法",
+                f"访客数={len(visitors)}，访客上限={visitor.capacity()}，幽灵访客id={ghost_visitors}",
+                ghost_visitors,
             )
+        )
     recruited_id = getattr(ri, "recruited_id", None)
     if isinstance(recruited_id, set):
         conflict = recruited_id & cache.npc_id_got
@@ -1776,11 +1742,7 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
             ch.sp_flag.in_diplomatic_visit != country
             or ch.work.work_type != 131
         ):
-            location_head = (
-                getattr(ri, "current_location", [None])[0]
-                if getattr(ri, "current_location", None)
-                else None
-            )
+            location_head = location.country()
             failures.append(
                 make_failure(
                     "ISLAND-33",
@@ -1788,7 +1750,7 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
                     f"[warning] country_id={country}，diplomat_id={did}({ch.name})，"
                     f"实际work.work_type={ch.work.work_type}(期望131)，"
                     f"实际sp_flag.in_diplomatic_visit={ch.sp_flag.in_diplomatic_visit}(期望{country})，"
-                    f"current_location[0]={location_head}",
+                    f"所在国家={location_head}",
                     [did],
                 )
             )

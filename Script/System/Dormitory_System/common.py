@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -461,7 +461,7 @@ def new_character_get_dormitory(character_id: int) -> None:
     """
     character_data = cache.character_data[character_id]
     # 分为访客和普通干员
-    if character_id in cache.rhodes_island.visitor_info:
+    if visitor.is_visitor(character_id):
         from Script.UI.Panel import invite_visitor_panel
 
         guest_room = {
@@ -497,7 +497,7 @@ def new_character_get_dormitory(character_id: int) -> None:
         for room_path in final_room_list:
             room_occupied = False
             # 检查是否有其他访客已经住在这个房间
-            for now_character_id in cache.rhodes_island.visitor_info:
+            for now_character_id in visitor.visitors():
                 if now_character_id == character_id:
                     continue
                 now_character_data = cache.character_data[now_character_id]

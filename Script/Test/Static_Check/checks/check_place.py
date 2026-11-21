@@ -24,7 +24,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
-from Script.Modules.domains import work
+from Script.Modules.domains import visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -713,8 +713,6 @@ def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     scene_data = getattr(cache, "scene_data", {}) or {}
-    rhodes_island = getattr(cache, "rhodes_island", None)
-    visitor_info = getattr(rhodes_island, "visitor_info", {}) or {}
     for cid in _live_ids(cache):
         c = character_data.get(cid)
         if c is None:
@@ -732,7 +730,7 @@ def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
                     f"' / '无')；"
                     f"permanent_dormitory={getattr(c, 'permanent_dormitory', None)!r}，"
                     f"position={getattr(c, 'position', None)}，"
-                    f"work_type={getattr(work, 'work_type', None)}，是否为访客={cid in visitor_info}"
+                    f"work_type={getattr(work, 'work_type', None)}，是否为访客={visitor.is_visitor(cid)}"
                 ),
                 [cid],
             )
@@ -1140,8 +1138,6 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
-    rhodes_island = getattr(cache, "rhodes_island", None)
-    visitor_info = getattr(rhodes_island, "visitor_info", {}) or {}
     for cid, c in character_data.items():
         sp_flag = getattr(c, "sp_flag", None)
         is_follow = getattr(sp_flag, "is_follow", 0)
@@ -1169,7 +1165,7 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
                     f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
                     f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
                     f"escaping={getattr(sp_flag, 'escaping', None)}，vistor={vistor}，"
-                    f"是否在rhodes_island.visitor_info中={cid in visitor_info}"
+                    f"是否在访客名册中={visitor.is_visitor(cid)}"
                     f"{known_bug_note}"
                 ),
                 [cid],

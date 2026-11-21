@@ -5,7 +5,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import commission, location, warehouse
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -90,7 +90,7 @@ def get_commission_demand_and_reward(
     # 特殊奖励单独处理
     if demand_or_reward and deduction_or_increase:
         if commission_id == 1104:
-            cache.rhodes_island.vehicles[51][0] += 1
+            commission.add_vehicle(51, owned=1)
             info_draw = draw.WaitDraw()
             info_draw.text = _("\n获得了一辆新的载具：{0}\n").format(
                 game_config.config_vehicle[51].name
@@ -267,7 +267,7 @@ def process_commission_text(
         item_type = _("特产")
         now_have_item_num = 0
         # 获取当前地点的特产
-        now_location = cache.rhodes_island.current_location[0]
+        now_location = location.country()
         nation_specialty_list = game_config.config_resouce_data_of_nation.get(
             now_location, []
         )
@@ -286,7 +286,7 @@ def process_commission_text(
         now_have_item_num = 0
         # 0为当前国家
         if item_id == 0:
-            now_country = cache.rhodes_island.current_location[0]
+            now_country = location.country()
             for (
                 nation_id
             ) in game_config.config_nation_data_of_country_subordinate:
@@ -408,29 +408,7 @@ def process_commission_text(
                 warehouse.add(item_id, int(item_num))
             # 委托部分，-1不可完成，0可以进行，1已完成
             elif text_list[0] == "m":
-                if item_num == -1:
-                    cache.rhodes_island.shut_down_field_commissions_set.add(
-                        item_id
-                    )
-                elif item_num == 0:
-                    if (
-                        item_id
-                        in cache.rhodes_island.shut_down_field_commissions_set
-                    ):
-                        cache.rhodes_island.shut_down_field_commissions_set.remove(
-                            item_id
-                        )
-                    elif (
-                        item_id
-                        in cache.rhodes_island.finished_field_commissions_set
-                    ):
-                        cache.rhodes_island.finished_field_commissions_set.remove(
-                            item_id
-                        )
-                elif item_num == 1:
-                    cache.rhodes_island.finished_field_commissions_set.add(
-                        item_id
-                    )
+                commission.mark(item_id, item_num)
             # 声望
             elif text_list[0] == "声望":
                 # 在前面已经乘过了，不需要再乘一遍
@@ -474,35 +452,23 @@ def judge_field_commission_finish() -> None:
     from Script.Design import second_behavior
     from Script.UI.Panel import manage_vehicle_panel
 
-    now_ongoing_field_commissions = (
-        cache.rhodes_island.ongoing_field_commissions.copy()
-    )
     draw_text = ""
-    for commision_id in now_ongoing_field_commissions:
-        end_time = cache.rhodes_island.ongoing_field_commissions[commision_id][
-            1
-        ]
+    for commision_id, now_commission in commission.ongoing().items():
         if (
-            game_time.judge_date_big_or_small(game_time.now(), end_time)
+            game_time.judge_date_big_or_small(
+                game_time.now(), now_commission.end
+            )
             or cache.debug_mode
         ):
             # 获取派遣人员列表
-            send_npc_list = cache.rhodes_island.ongoing_field_commissions[
-                commision_id
-            ][0]
+            send_npc_list = list(now_commission.team)
             # 获取奖励
             reward_return_list = get_commission_demand_and_reward(
                 commision_id, send_npc_list, True, True
             )
             reward_text = reward_return_list[2]
             # 加入已完成的委托
-            if (
-                commision_id
-                not in cache.rhodes_island.finished_field_commissions_set
-            ):
-                cache.rhodes_island.finished_field_commissions_set.add(
-                    commision_id
-                )
+            commission.mark(commision_id, 1)
             # 奖励信息
             commision_name = game_config.config_commission[commision_id].name
             draw_text += "\n"
@@ -536,7 +502,7 @@ def judge_field_commission_finish() -> None:
                 )
             )
             # 移除委托
-            cache.rhodes_island.ongoing_field_commissions.pop(commision_id)
+            commission.finish(commision_id)
             # 最后总结
             draw_text += _("完成了委托：{0}，获得奖励：{1}\n\n").format(
                 commision_name, reward_text
@@ -579,10 +545,7 @@ def settle_recruit_new_chara(commision_id: int) -> str:
         for chara_id in recruitable_npc_id_list:
             character_data = cache.character_data[chara_id]
             # 筛选出出生地是当前罗德岛所在地的角色
-            if (
-                character_data.relationship.birthplace
-                != cache.rhodes_island.current_location[0]
-            ):
+            if character_data.relationship.birthplace != location.country():
                 continue
             else:
                 wait_id_list.append(chara_id)

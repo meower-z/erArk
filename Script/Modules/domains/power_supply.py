@@ -12,7 +12,7 @@ from typing import TypedDict
 from Script.Config import game_config
 from Script.Core import cache_control, get_text
 from Script.Design import handle_ability
-from Script.Modules.domains import facility, power, warehouse
+from Script.Modules.domains import facility, location, power, warehouse
 
 _: FunctionType = get_text._
 
@@ -173,7 +173,7 @@ def clean_generation(kind: int = -1) -> float:
         count * base[i] * (operator_bonus(i + 1) + 1)
         for i, count in enumerate(power.plant()["clean"])
     ]
-    if cache_control.cache.rhodes_island.move_target_and_time[0] != 0:
+    if location.move() is not None:
         values[0] = values[1] = 0
     if kind in (0, 1, 2):
         return round(values[kind], 2)

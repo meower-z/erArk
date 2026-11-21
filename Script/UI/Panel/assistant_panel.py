@@ -16,7 +16,7 @@ from Script.Design import (
     second_behavior,
 )
 from Script.UI.Moudle import draw, panel, view
-from Script.Modules.domains import work
+from Script.Modules.domains import visitor, work
 from Script.Modules.save_load import reset
 from Script.Config import game_config, normal_config
 
@@ -51,7 +51,7 @@ def get_assistant_candidates() -> list[int]:
         if npc_id == work.warden():
             continue
         # 跳过访客
-        if npc_id in cache.rhodes_island.visitor_info:
+        if visitor.is_visitor(npc_id):
             continue
         candidates.append(npc_id)
     return candidates

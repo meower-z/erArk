@@ -15,7 +15,7 @@ from Script.Core import (
 from Script.Design import map_handle, attr_text, game_time
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import location, visitor, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -36,18 +36,17 @@ def judge_arrive() -> bool:
     """
     from Script.Settle import default
 
-    if cache.rhodes_island.move_target_and_time[0] != 0:
-        if game_time.judge_date_big_or_small(
-            game_time.now(), cache.rhodes_island.move_target_and_time[2]
-        ):
+    going = location.move()
+    if going is not None:
+        target_scene_id, arrive_time = going
+        if game_time.judge_date_big_or_small(game_time.now(), arrive_time):
             # 结算抵达
-            now_scene_id = cache.rhodes_island.current_location[0]
-            cache.rhodes_island.base_move_visitor_flag = True
-            target_scene_id = cache.rhodes_island.move_target_and_time[0]
+            now_scene_id = location.country()
+            visitor.set_moved(True)
             target_scene_name = game_config.config_birthplace[
                 target_scene_id
             ].name
-            cache.rhodes_island.current_location[0] = target_scene_id
+            location.arrive()
             # 结算变动的外交官
             if now_scene_id in cache.rhodes_island.diplomat_of_country:
                 now_diplomat_chara_id = cache.rhodes_island.diplomat_of_country[
@@ -71,8 +70,6 @@ def judge_arrive() -> bool:
                         change_data=game_type.CharacterStatusChange(),
                         now_time=game_time.now(),
                     )
-            # 清零移动目标
-            cache.rhodes_island.move_target_and_time = [0, 0, 0]
             # 绘制提示信息
             now_draw = draw.WaitDraw()
             now_draw.text = _("\n罗德岛已抵达目的地：{0}\n").format(
@@ -173,14 +170,13 @@ class Base_function_class:
         for birthplace_id in game_config.config_birthplace:
             birthplace_data = game_config.config_birthplace[birthplace_id]
             if birthplace_data.name == scene_name:
-                cache.rhodes_island.move_target_and_time[0] = birthplace_id
                 arrive_time = game_time.get_sub_date(
                     day=need_time, old_date=game_time.now()
                 )
                 # debug模式下直接抵达
                 if cache.debug_mode:
                     arrive_time = game_time.now()
-                cache.rhodes_island.move_target_and_time[2] = arrive_time
+                location.set_move(birthplace_id, arrive_time)
                 warehouse.add(15, -need_fuel)
                 break
 
@@ -216,26 +212,25 @@ class Navigation_Panel(Base_function_class):
             title_draw.draw()
             now_draw_list: game_type.MapDraw = map_data.map_draw
             # 当前位置
-            now_country_id = cache.rhodes_island.current_location[0]
+            now_country_id = location.country()
             now_country_name = game_config.config_birthplace[
                 now_country_id
             ].name
             # TODO 在处理好中文地图路径之后再改回来
             base_scene_name = _(now_country_name, revert_translation=True)
             # 移动中的目标地点
-            target_scene_id = cache.rhodes_island.move_target_and_time[0]
+            going = location.move()
+            target_scene_id = going[0] if going else 0
             target_scene_name = game_config.config_birthplace[
                 target_scene_id
             ].name
-            if cache.rhodes_island.move_target_and_time[0] != 0:
+            if going is not None:
                 now_draw: draw.Button | draw.NormalDraw = draw.NormalDraw()
                 now_draw.text = _(
                     "\n罗德岛正在移动至{0}，预计抵达时间为{1}\n"
                 ).format(
                     target_scene_name,
-                    game_time.get_date_until_day(
-                        cache.rhodes_island.move_target_and_time[2]
-                    ),
+                    game_time.get_date_until_day(going[1]),
                 )
                 now_draw.width = self.width
                 now_draw.draw()
@@ -276,7 +271,7 @@ class Navigation_Panel(Base_function_class):
                             # 初始化目标地点路径
                             target_scene = [draw_text.text, 1]
                             # 如果正在移动中，则目标为红色，其他为灰色
-                            if cache.rhodes_island.move_target_and_time[0] != 0:
+                            if location.move() is not None:
                                 if draw_text.text == target_scene_name:
                                     now_draw = draw.Button(
                                         draw_text.text,
@@ -475,7 +470,7 @@ class MapSceneNameDraw(Base_function_class):
         title_draw = draw.TitleLineDraw(map_name, self.width)
         title_draw.draw()
         # 当前位置
-        now_country_id = cache.rhodes_island.current_location[0]
+        now_country_id = location.country()
         now_country_name = game_config.config_birthplace[now_country_id].name
         # TODO 在处理好中文地图路径之后再改回来
         base_scene_name = _(now_country_name, revert_translation=True)
@@ -499,7 +494,7 @@ class MapSceneNameDraw(Base_function_class):
                 if scene_name == base_scene_name:
                     continue
                 # 当前在移动中则也跳过
-                if cache.rhodes_island.move_target_and_time[0] != 0:
+                if location.move() is not None:
                     continue
                 else:
                     now_id_text = f"→{_(load_scene_data.scene_name)}"

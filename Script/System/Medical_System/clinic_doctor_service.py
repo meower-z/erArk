@@ -19,7 +19,7 @@ from Script.System.Medical_System import (
     medical_core,
 )
 from Script.System.Medical_System import clinic_patient_management
-from Script.Modules.domains import medical, medical_patient
+from Script.Modules.domains import medical, medical_patient, visitor
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -711,8 +711,7 @@ def _is_medical_doctor_candidate(
         return False
 
     # 来访者无法被纳入医生队伍。
-    visitor_info = getattr(rhodes_island, "visitor_info", {})
-    if character_id in visitor_info:
+    if visitor.is_visitor(character_id):
         return False
 
     # 校验基础前提，确保干员满足正常工作条件。

@@ -29,6 +29,7 @@ from Script.UI.Panel import body_info_panel, character_info_head
 from Script.System.First_Record_System import first_record_panel
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import visitor
 
 panel_info_data: dict[str, object] = {}
 
@@ -190,7 +191,7 @@ class See_Character_Base_Attributes_Panel:
                 Daily_draw,
             ]
         # 如果是访客则再加一个访客栏
-        if character_id in cache.rhodes_island.visitor_info:
+        if visitor.is_visitor(character_id):
             visitor_draw = CharacterVisitorText(character_id, width, 8, False)
             self.draw_list.append(visitor_draw)
         """ 绘制的面板列表 """
@@ -371,8 +372,6 @@ class SeeCharacterStatusPanel:
         self.type_number = type_number
         """ 显示的状态类型 """
         character_data = cache.character_data[character_id]
-        # print("game_config.config_character_state_type :",game_config.config_character_state_type)
-        # print("game_config.config_character_state_type_data :",game_config.config_character_state_type_data)
 
         # 润滑单独处理，归到快感里
         other_status_ids = [8]
@@ -1084,7 +1083,7 @@ class CharacterVisitorText:
             if stay_posibility < attitude_data.rate
         )
         leav_time = game_time.get_date_until_day(
-            cache.rhodes_island.visitor_info[character_id]
+            visitor.visitors()[character_id]
         )
         live_room = character_data.dormitory.split(os.sep)[-1]
         text_list += _("留下意愿：{0}     ").format(stay_text)

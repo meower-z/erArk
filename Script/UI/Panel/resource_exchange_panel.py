@@ -9,7 +9,7 @@ from Script.Core import (
     constant,
 )
 from Script.Design import attr_calculation
-from Script.Modules.domains import economy
+from Script.Modules.domains import economy, location
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import warehouse
@@ -267,7 +267,7 @@ def get_resouce_price(
     # 非本地特产的价格为1.5倍
     if (
         resouce_data.type == _("特产")
-        and resouce_data.specialty == cache.rhodes_island.current_location[0]
+        and resouce_data.specialty == location.country()
     ):
         base_price *= 1.5
     else:
@@ -793,8 +793,7 @@ class Resource_Exchange_Line_Panel:
             elif self.quantity_of_resouce < 0:
                 if (now_resouce_stock >= abs_qty) and (
                     resouce_data.type != _("特产")
-                    or resouce_data.specialty
-                    == cache.rhodes_island.current_location[0]
+                    or resouce_data.specialty == location.country()
                 ):
                     sell_button = draw.CenterButton(
                         _("[确认卖出]"),
@@ -1402,8 +1401,7 @@ class Resource_Exchange_Line_Panel:
                         if resouce_data.type == _("特产"):
                             if (
                                 warehouse.amount(resouce_id) == 0
-                                and resouce_data.specialty
-                                != cache.rhodes_island.current_location[0]
+                                and resouce_data.specialty != location.country()
                             ):
                                 continue
                         button_draw = draw.LeftButton(

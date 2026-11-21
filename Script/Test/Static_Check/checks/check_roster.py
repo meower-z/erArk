@@ -19,7 +19,7 @@ import os
 
 from Script.Config import game_config
 from Script.Core import cache_control
-from Script.Modules.domains import work
+from Script.Modules.domains import commission, location, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -91,14 +91,13 @@ def _scene_membership(cache: game_type.Cache) -> dict[int, list[str]]:
     return membership
 
 
-def _invite_target(ri: game_type.Rhodes_Island) -> int:
+def _invite_target() -> int:
     """
-    参数: ri -- cache.rhodes_island
-    返回值: int -- invite_visitor[0](邀请目标id)，形状不合法(旧存档/未初始化)时按0(无目标)处理
-    功能: 复现ROSTER-18的形状守卫，供ROSTER-19/21/27等引用invite_visitor的检查复用，避免对不足长度的旧list直接下标
+    返回值: int -- 邀请目标id，不是int时按0(无邀请)处理
+    功能: 与ROSTER-18同样判断目标的类型，供ROSTER-19/21/27等读邀请目标的检查调用
     """
-    iv = ri.invite_visitor if isinstance(ri.invite_visitor, list) else []
-    return iv[0] if len(iv) >= 1 and type(iv[0]) is int else 0
+    target = visitor.invite()[0]
+    return target if type(target) is int else 0
 
 
 def _sev(cache: game_type.Cache, declared_warning: bool) -> str:
@@ -603,7 +602,7 @@ def check_escapee_has_executable_capture_commission() -> list[CheckFailure]:
     failures: list[CheckFailure] = []
     if not game_config.config_commission:
         return failures
-    finished = ri.finished_field_commissions_set
+    finished = commission.finished()
     for cid, c in cd.items():
         if cid == 0 or not c.sp_flag.escaping:
             continue
@@ -620,8 +619,8 @@ def check_escapee_has_executable_capture_commission() -> list[CheckFailure]:
                     "ROSTER-10",
                     "逃跑者仍有一条可执行的追捕委托",
                     f"{warn}逃跑者cid={cid} name={c.name!r} 没有任何未完成的追捕委托(期望reward={target_reward!r})；"
-                    f"finished_field_commissions_set={ri.finished_field_commissions_set}，"
-                    f"ongoing_field_commissions的id列表={list(ri.ongoing_field_commissions)}，当前囚犯数={len(ri.current_prisoners)}",
+                    f"已完成的委托={sorted(finished)}，"
+                    f"进行中的委托id列表={list(commission.ongoing())}，当前囚犯数={len(ri.current_prisoners)}",
                     [cid],
                 )
             )
@@ -804,18 +803,17 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: visitor_info与sp_flag.vistor == 1是同一件事的两份记录，且当前访客必然在编。
-    不写成vistor != 0 —— 前访客恒为2，是合法状态，不应被本条判为不一致
+    功能: base.visitor的访客名册与sp_flag.vistor == 1的角色是同一批人，且当前访客都在在编名册(cache.npc_id_got)里。
+    不写成vistor != 0，因为前访客恒为2，是合法状态，不应被本条判为不一致
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     vis_flag = {
         cid for cid, c in cd.items() if cid != 0 and c.sp_flag.vistor == 1
     }
-    vis_reg = set(ri.visitor_info)
+    vis_reg = set(visitor.visitors())
     for cid in vis_reg - vis_flag:
         c = cd.get(cid)
         v = c.sp_flag.vistor if c is not None else None
@@ -823,7 +821,7 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-14",
                 "访客名册与访客flag完全等价",
-                f"{warn}cid={cid}在ri.visitor_info名册中，但sp_flag.vistor={v}不为1",
+                f"{warn}cid={cid}在访客名册中，但sp_flag.vistor={v}不为1",
                 [cid],
             )
         )
@@ -834,7 +832,7 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
                 "ROSTER-14",
                 "访客名册与访客flag完全等价",
                 (
-                    f"{warn}cid={cid} name={c.name!r} sp_flag.vistor==1，但不在ri.visitor_info名册中，"
+                    f"{warn}cid={cid} name={c.name!r} sp_flag.vistor==1，但不在访客名册中，"
                     f"dormitory={c.dormitory!r}"
                 ),
                 [cid],
@@ -864,12 +862,11 @@ def check_visitor_room_uniqueness() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     guest_rooms = _guest_rooms(cache)
     room_to_cids: dict[str, list[int]] = {}
-    for cid in ri.visitor_info:
+    for cid in visitor.visitors():
         if cid not in cd:
             failures.append(
                 make_failure(
@@ -892,7 +889,7 @@ def check_visitor_room_uniqueness() -> list[CheckFailure]:
                     "ROSTER-15",
                     "访客住在互不重复的客房",
                     f"{warn}访客cid={cid} name={c.name!r} 的dormitory={d!r}不在合法客房集合GUEST_ROOMS中；"
-                    f"position={c.position}，visitor_max={ri.visitor_max}，facility_open(2000-2099)={open_2000}",
+                    f"position={c.position}，访客上限={visitor.capacity()}，facility_open(2000-2099)={open_2000}",
                     [cid],
                 )
             )
@@ -915,14 +912,13 @@ def check_visitor_count_within_capacity() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: visitor_max是按已开放客房数重算的接待闸门。运行期facility_open只会置True，不存在"关闭客房造成合法超员"
-    的路径，但visitor_max只在基建面板刷新时重算，属派生缓存，旧存档可能带陈旧值，故定为warning
+    功能: 访客数不超过visitor.capacity()按已开放客房数算出的访客上限。级别为warning
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     warn = _sev(cache, True)
     failures: list[CheckFailure] = []
-    if len(ri.visitor_info) > ri.visitor_max:
+    visitors = visitor.visitors()
+    if len(visitors) > visitor.capacity():
         open_2000 = {
             k: v for k, v in facility.opens().items() if 2000 < k < 2100
         }
@@ -930,9 +926,9 @@ def check_visitor_count_within_capacity() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-16",
                 "访客人数不超过客房上限",
-                f"{warn}当前访客数len(visitor_info)={len(ri.visitor_info)}超过visitor_max={ri.visitor_max}；"
+                f"{warn}当前访客数={len(visitors)}超过访客上限={visitor.capacity()}；"
                 f"facility_open(2000-2099)={open_2000}，facility_level[13]={facility.levels().get(13)}",
-                list(ri.visitor_info),
+                list(visitors),
             )
         )
     return failures
@@ -943,24 +939,13 @@ def check_no_severely_overdue_visitors() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 访客到期由跨日结算处理一次，"D日到期、D+1日00:00才结算"是正常窗口，阈值必须放到一整天以上，
-    否则会周期性误报；类型检查不可省，脏值在减法处会抛异常而非给出判定
+    功能: base.visitor里没有离开时刻已过去一整天或更久的访客。访客到期由跨日结算处理一次，
+    "D日到期、D+1日00:00才结算"是正常窗口，阈值因此放到一整天，否则会周期性误报
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     warn = _sev(cache, True)
     failures: list[CheckFailure] = []
-    for cid, end in ri.visitor_info.items():
-        if not isinstance(end, datetime.datetime):
-            failures.append(
-                make_failure(
-                    "ROSTER-17",
-                    "没有严重逾期未结算的访客",
-                    f"{warn}访客cid={cid}的到期时间类型异常: {end!r}",
-                    [cid],
-                )
-            )
-            continue
+    for cid, end in visitor.visitors().items():
         delta = game_time.now() - end
         if delta.days >= 1:
             failures.append(
@@ -968,8 +953,8 @@ def check_no_severely_overdue_visitors() -> list[CheckFailure]:
                     "ROSTER-17",
                     "没有严重逾期未结算的访客",
                     f"{warn}访客cid={cid}到期时间{end}已逾期{delta}，超过一整天未结算(可能日结算漏跑或该访客被卡住)；"
-                    f"game_time={game_time.now()}，last_visitor_time={ri.last_visitor_time}，"
-                    f"base_move_visitor_flag={ri.base_move_visitor_flag}",
+                    f"game_time={game_time.now()}，上次随机来访={visitor.last_arrival()}，"
+                    f"罗德岛抵达过别处={visitor.moved()}",
                     [cid],
                 )
             )
@@ -981,45 +966,28 @@ def check_invite_visitor_shape_integrity() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: invite_visitor是[目标id, 进度, 效率]；目标为0时进度必须为0；进度与效率是非负有限数。
-    不加进度上界 —— 客房满时settle_visitor_arrivals返回失败且不清零，进度停在>=100甚至继续增长是合法状态。
-    本条形状守卫供ROSTER-19/21/27复用，本模块内各条各自独立调用_invite_target，不依赖调用顺序
+    功能: base.visitor的邀请是(目标id, 进度)，目标是int，进度是非负有限数，目标为0时进度为0。
+    不加进度上界，因为客房满时settle_visitor_arrivals返回失败且不清零，进度停在>=100甚至继续增长是合法状态。
+    本条的类型守卫由_invite_target复现，供ROSTER-19/21/27复用，各条各自调用_invite_target，不依赖调用顺序
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    raw = ri.invite_visitor
-    if not (isinstance(raw, list) and len(raw) == 3):
-        failures.append(
-            make_failure(
-                "ROSTER-18",
-                "邀请栏结构完整、空目标必归零",
-                f"{warn}ri.invite_visitor形状异常，期望长度3的list，实得{raw!r}",
-                [],
-            )
-        )
-        return failures
+    raw = visitor.invite()
     problems = []
     if type(raw[0]) is not int:
-        problems.append(f"raw[0]={raw[0]!r}类型不是int")
-    for i, x in enumerate(raw[1:], start=1):
-        if (
-            isinstance(x, bool)
-            or not isinstance(x, (int, float))
-            or not math.isfinite(x)
-            or x < 0
-        ):
-            problems.append(f"raw[{i}]={x!r}不是非负有限数")
-    if type(raw[0]) is int and raw[0] == 0:
-        prog_ok = (
-            isinstance(raw[1], (int, float))
-            and not isinstance(raw[1], bool)
-            and raw[1] == 0
-        )
-        if not prog_ok:
-            problems.append(f"目标raw[0]==0但进度raw[1]={raw[1]!r}未归零")
+        problems.append(f"目标={raw[0]!r}类型不是int")
+    x = raw[1]
+    if (
+        isinstance(x, bool)
+        or not isinstance(x, (int, float))
+        or not math.isfinite(x)
+        or x < 0
+    ):
+        problems.append(f"进度={x!r}不是非负有限数")
+    elif type(raw[0]) is int and raw[0] == 0 and x != 0:
+        problems.append(f"目标为0但进度={x!r}未归零")
     if problems:
         target = raw[0] if type(raw[0]) is int else None
         exists = target in cd if target else None
@@ -1028,7 +996,7 @@ def check_invite_visitor_shape_integrity() -> list[CheckFailure]:
                 "ROSTER-18",
                 "邀请栏结构完整、空目标必归零",
                 (
-                    f"{warn}ri.invite_visitor={raw!r}存在问题: {'; '.join(problems)}；"
+                    f"{warn}邀请(目标, 进度)={raw!r}存在问题: {'; '.join(problems)}；"
                     f"facility_level[13]={facility.levels().get(13)}，"
                     f"game_time={game_time.now()}，目标是否存在于character_data={exists}"
                 ),
@@ -1052,7 +1020,7 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
     ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    t = _invite_target(ri)
+    t = _invite_target()
     if not t:
         return failures
     if t not in cd:
@@ -1060,7 +1028,7 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-19",
                 "邀请目标仍是合法的未入编候选",
-                f"{warn}邀请目标t={t}不存在于character_data中，invite_visitor={ri.invite_visitor!r}",
+                f"{warn}邀请目标t={t}不存在于character_data中，邀请(目标, 进度)={visitor.invite()!r}",
                 [t],
             )
         )
@@ -1069,8 +1037,8 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
     problems = []
     if t in cache.npc_id_got:
         problems.append("已在npc_id_got在编名册中")
-    if t in ri.visitor_info:
-        problems.append("已在ri.visitor_info访客名册中")
+    if visitor.is_visitor(t):
+        problems.append("已在访客名册中")
     if t in ri.recruited_id:
         problems.append("已在ri.recruited_id待确认招募名单中")
     if t in ri.current_prisoners:
@@ -1093,7 +1061,7 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
                 "ROSTER-19",
                 "邀请目标仍是合法的未入编候选",
                 f"{warn}邀请目标t={t} name={c.name!r} adv={c.adv} 不再是合法候选: {'; '.join(problems)}；"
-                f"len(visitor_info)={len(ri.visitor_info)}，visitor_max={ri.visitor_max}",
+                f"访客数={len(visitor.visitors())}，访客上限={visitor.capacity()}",
                 [t],
             )
         )
@@ -1131,8 +1099,8 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
         problems = []
         if cid in cache.npc_id_got:
             problems.append("已在npc_id_got在编名册中")
-        if cid in ri.visitor_info:
-            problems.append("已在ri.visitor_info访客名册中")
+        if visitor.is_visitor(cid):
+            problems.append("已在访客名册中")
         if c.sp_flag.vistor == 1:
             problems.append("当前是在岛访客(vistor==1)")
         if c.sp_flag.imprisonment:
@@ -1171,20 +1139,19 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
     ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    V = set(ri.visitor_info)
+    V = set(visitor.visitors())
     P = set(ri.recruited_id)
-    t = _invite_target(ri)
+    t = _invite_target()
     invited = {t} if t else set()
     C: set[int] = set()
-    for r in ri.ongoing_field_commissions.values():
-        if isinstance(r, list) and r and isinstance(r[0], list):
-            C |= set(r[0])
+    for r in commission.ongoing().values():
+        C |= set(r.team)
     R = set(ri.current_prisoners)
     E = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.escaping}
     named = {
         "待确认招募(recruited_id)": P,
         "邀请目标(invite_visitor)": invited,
-        "外勤中(ongoing_field_commissions)": C,
+        "外勤中(base.commission)": C,
         "囚犯(current_prisoners)": R,
         "逃跑者(escaping)": E,
     }
@@ -1198,7 +1165,7 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
                     "当前访客与其它名册身份互斥",
                     f"{warn}访客cid={cid} name={getattr(c, 'name', '?')!r} 同时命中身份集合: {hit_names}；"
                     f"vistor={getattr(getattr(c, 'sp_flag', None), 'vistor', None)}，recruited_id={sorted(P)}，"
-                    f"invite_visitor={ri.invite_visitor!r}，cid in npc_id_got={cid in cache.npc_id_got}",
+                    f"邀请(目标, 进度)={visitor.invite()!r}，cid in npc_id_got={cid in cache.npc_id_got}",
                     [cid],
                 )
             )
@@ -1399,53 +1366,33 @@ def check_ongoing_commission_shape_and_member_uniqueness() -> (
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 每条记录是[干员id列表, 返回时间, 载具id列表]；同一人不能在单条记录里重复，也不能同时出现在两个委托里
+    功能: base.commission里进行中委托的id不为0，同一人不在一个委托的队伍里重复出现，也不同时在两个委托的队伍里
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     seen: dict[int, int] = {}
-    for mid, r in ri.ongoing_field_commissions.items():
+    for mid, r in commission.ongoing().items():
         problems = []
-        if not (isinstance(mid, int) and mid != 0):
+        if mid == 0:
             problems.append(f"委托id={mid!r}非法(应为非零int)")
-        if not (isinstance(r, list) and len(r) == 3):
-            failures.append(
-                make_failure(
-                    "ROSTER-25",
-                    "进行中委托记录结构合法、人员全局唯一",
-                    f"{warn}委托mid={mid!r}记录形状异常，期望长度3的list，实得{r!r}",
-                    [],
-                )
+        members = list(r.team)
+        if len(members) != len(set(members)):
+            problems.append(f"队伍内部有重复干员id: {members}")
+        dup_across = set(members) & set(seen)
+        if dup_across:
+            problems.append(
+                f"以下干员同时出现在别的委托中: {[(cid, seen[cid]) for cid in dup_across]}"
             )
-            continue
-        members, ret_time, vehicles = r[0], r[1], r[2]
-        if not isinstance(members, list):
-            problems.append(f"r[0]={members!r}不是list")
-        if not isinstance(ret_time, datetime.datetime):
-            problems.append(f"r[1]={ret_time!r}不是datetime")
-        if not isinstance(vehicles, list):
-            problems.append(f"r[2]={vehicles!r}不是list")
-        involved: list[int] = []
-        if isinstance(members, list):
-            if len(members) != len(set(members)):
-                problems.append(f"r[0]内部有重复干员id: {members}")
-            dup_across = set(members) & set(seen)
-            if dup_across:
-                problems.append(
-                    f"以下干员同时出现在别的委托中: {[(cid, seen[cid]) for cid in dup_across]}"
-                )
-            for cid in members:
-                seen.setdefault(cid, mid)
-                involved.append(cid)
+        for cid in members:
+            seen.setdefault(cid, mid)
         if problems:
             failures.append(
                 make_failure(
                     "ROSTER-25",
                     "进行中委托记录结构合法、人员全局唯一",
                     f"{warn}委托mid={mid} {'; '.join(problems)}；完整record={r!r}，game_time={game_time.now()}",
-                    involved,
+                    members,
                 )
             )
     return failures
@@ -1462,15 +1409,12 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     membership_scene = _scene_membership(cache)
     membership: dict[int, int] = {}
-    for mid, r in ri.ongoing_field_commissions.items():
-        if not (isinstance(r, list) and r and isinstance(r[0], list)):
-            continue
-        for cid in r[0]:
+    for mid, r in commission.ongoing().items():
+        for cid in r.team:
             if cid == 0 or cid not in cd:
                 failures.append(
                     make_failure(
@@ -1533,12 +1477,11 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
     failures: list[CheckFailure] = []
     C: set[int] = set()
     commission_of: dict[int, int] = {}
-    for mid, r in ri.ongoing_field_commissions.items():
-        if isinstance(r, list) and r and isinstance(r[0], list):
-            for cid in r[0]:
-                C.add(cid)
-                commission_of.setdefault(cid, mid)
-    t = _invite_target(ri)
+    for mid, r in commission.ongoing().items():
+        for cid in r.team:
+            C.add(cid)
+            commission_of.setdefault(cid, mid)
+    t = _invite_target()
     player = cd.get(0)
     assistant = (
         getattr(player, "assistant_character_id", 0)
@@ -1546,7 +1489,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
         else 0
     )
     forbidden = {
-        "访客(visitor_info)": set(ri.visitor_info),
+        "访客(base.visitor)": set(visitor.visitors()),
         "待确认招募(recruited_id)": set(ri.recruited_id),
         "囚犯(current_prisoners)": set(ri.current_prisoners),
         "邀请目标(invite_visitor)": {t} if t else set(),
@@ -1607,37 +1550,33 @@ def check_vehicle_busy_count_conservation() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: vehicles[vid] = [拥有数, 外勤中数]；外勤中数必须等于所有进行中委托里该型号载具的出现次数，
-    且不超过拥有数。调用顺序安全(先settle_vehicle再pop委托)，计数错误会直接表现为"有车却派不出去"或负库存
+    功能: base.vehicles[vid] = (拥有数, 外勤中数)，外勤中数等于所有进行中委托里这种载具的出现次数且在0与拥有数之间，
+    委托里出现的载具都在载具表里。完成结算先调settle_vehicle再删委托，计数错误会直接表现为"有车却派不出去"或负库存
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     used: collections.Counter[int] = collections.Counter()
-    for r in ri.ongoing_field_commissions.values():
-        if isinstance(r, list) and len(r) == 3 and isinstance(r[2], list):
-            used.update(r[2])
-    for vid in set(used) - set(ri.vehicles):
+    ongoing = commission.ongoing()
+    for r in ongoing.values():
+        used.update(r.vehicles)
+    vehicles = commission.vehicles()
+    for vid in set(used) - set(vehicles):
         failures.append(
             make_failure(
                 "ROSTER-28",
                 "载具外勤中数与委托明细守恒",
-                f"{warn}委托明细中出现的载具vid={vid}未在ri.vehicles中登记，使用次数={used[vid]}",
+                f"{warn}委托明细中出现的载具vid={vid}未在载具表中登记，使用次数={used[vid]}",
                 [],
             )
         )
-    for vid, v in ri.vehicles.items():
-        if not (
-            isinstance(v, list)
-            and len(v) == 2
-            and all(type(x) is int for x in v)
-        ):
+    for vid, v in vehicles.items():
+        if not all(type(x) is int for x in v):
             failures.append(
                 make_failure(
                     "ROSTER-28",
                     "载具外勤中数与委托明细守恒",
-                    f"{warn}ri.vehicles[{vid}]形状异常，期望[拥有数,外勤中数]两个int，实得{v!r}",
+                    f"{warn}载具表[{vid}]类型异常，期望(拥有数,外勤中数)两个int，实得{v!r}",
                     [],
                 )
             )
@@ -1654,11 +1593,7 @@ def check_vehicle_busy_count_conservation() -> list[CheckFailure]:
                 )
             )
         if busy != u:
-            detail = {
-                mid: r[2]
-                for mid, r in ri.ongoing_field_commissions.items()
-                if isinstance(r, list) and len(r) == 3
-            }
+            detail = {mid: r.vehicles for mid, r in ongoing.items()}
             failures.append(
                 make_failure(
                     "ROSTER-28",
@@ -1681,11 +1616,10 @@ def check_ongoing_commission_id_valid_and_not_overdue() -> list[CheckFailure]:
     id有效性依赖game_config.config_commission，若为空(独立环境未加载配置)则降级跳过该子句，仅保留结构与逾期判定
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     config_loaded = bool(game_config.config_commission)
-    for mid, r in ri.ongoing_field_commissions.items():
+    for mid, r in commission.ongoing().items():
         if config_loaded and mid not in game_config.config_commission:
             failures.append(
                 make_failure(
@@ -1695,37 +1629,17 @@ def check_ongoing_commission_id_valid_and_not_overdue() -> list[CheckFailure]:
                     [],
                 )
             )
-        if not (isinstance(r, list) and len(r) == 3):
-            failures.append(
-                make_failure(
-                    "ROSTER-29",
-                    "进行中委托id有效且未逾期",
-                    f"{warn}委托mid={mid}记录形状异常，期望长度3的list，实得{r!r}",
-                    [],
-                )
-            )
-            continue
-        end_time = r[1]
-        if not isinstance(end_time, datetime.datetime):
-            failures.append(
-                make_failure(
-                    "ROSTER-29",
-                    "进行中委托id有效且未逾期",
-                    f"{warn}委托mid={mid}的结束时间r[1]={end_time!r}不是datetime",
-                    [],
-                )
-            )
-            continue
+        end_time = r.end
         if not cache.debug_mode and not cache.time_stop_mode:
             if not (end_time > game_time.now()):
                 overdue = game_time.now() - end_time
-                members = r[0] if isinstance(r[0], list) else []
+                members = list(r.team)
                 failures.append(
                     make_failure(
                         "ROSTER-29",
                         "进行中委托id有效且未逾期",
                         f"{warn}委托mid={mid}已到期或逾期，end_time={end_time}，game_time={game_time.now()}，逾期时长={overdue}；"
-                        f"人员={members}，finished_field_commissions_set={ri.finished_field_commissions_set}",
+                        f"人员={members}，已完成的委托={sorted(commission.finished())}",
                         members,
                     )
                 )
@@ -1746,11 +1660,7 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
     ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    current_country = (
-        ri.current_location[0]
-        if isinstance(ri.current_location, list) and ri.current_location
-        else None
-    )
+    current_country = location.country()
     for country, info in ri.diplomat_of_country.items():
         if not (isinstance(info, list) and len(info) >= 1):
             failures.append(
@@ -1808,7 +1718,7 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
                     "ROSTER-30",
                     "外交官表与角色外派flag双向一致",
                     f"{warn}国家{country}外交官did={did} name={c.name!r} {'; '.join(problems)}；"
-                    f"work.work_type={c.work.work_type}，current_location={ri.current_location}，position={c.position}",
+                    f"work.work_type={c.work.work_type}，所在国家={current_country}，position={c.position}",
                     [did],
                 )
             )
@@ -1872,9 +1782,9 @@ def check_assistant_identity_exclusion() -> list[CheckFailure]:
     problems = []
     if a not in cache.npc_id_got:
         problems.append("不在npc_id_got在编名册中")
-    if a in ri.visitor_info or ca.sp_flag.vistor == 1:
+    if visitor.is_visitor(a) or ca.sp_flag.vistor == 1:
         problems.append(
-            f"当前是访客(a in visitor_info={a in ri.visitor_info}, vistor={ca.sp_flag.vistor})"
+            f"当前是访客(在访客名册={visitor.is_visitor(a)}, vistor={ca.sp_flag.vistor})"
         )
     if a == work.warden():
         problems.append("同时是监狱长(work.warden)")
@@ -1965,8 +1875,8 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
             problems.append(f"position={c.position!r}未归零")
         if b in ri.current_prisoners or c.sp_flag.imprisonment:
             problems.append("同时是囚犯(current_prisoners或imprisonment)")
-        if b in ri.visitor_info or c.sp_flag.vistor == 1:
-            problems.append("同时是访客(visitor_info或vistor==1)")
+        if visitor.is_visitor(b) or c.sp_flag.vistor == 1:
+            problems.append("同时是访客(访客名册或vistor==1)")
         if c.sp_flag.field_commission:
             problems.append(
                 f"field_commission={c.sp_flag.field_commission}非零"

@@ -16,6 +16,7 @@ from Script.Core import cache_control, game_type
 from Script.Modules.domains import (
     economy,
     facility,
+    location,
     medical,
     medical_patient,
     warehouse,
@@ -207,13 +208,12 @@ def _pick_hospital_level_config(
 
 
 def _calculate_patient_refresh_count(
-    rhodes_island: game_type.Rhodes_Island,
     level_config: config_def.Medical_Hospital_Level,
 ) -> int:
-    """依据医院等级、收费系数、国家感染率计算今日应刷新病人数。
+    """
+    依据医院等级、收费系数与罗德岛所在国家的感染率计算今日应刷新的病人数。
 
     参数:
-        rhodes_island (game_type.Rhodes_Island): 当前基地对象。
         level_config (config_def.Medical_Hospital_Level): 医院等级配置内容。
     返回:
         int: 预计应刷新病人的数量。
@@ -237,12 +237,7 @@ def _calculate_patient_refresh_count(
         else {}
     )
     # 获取当前国家 ID
-    current_country_id: int | None = None
-    if (
-        isinstance(rhodes_island.current_location, (list, tuple))
-        and rhodes_island.current_location
-    ):
-        current_country_id = rhodes_island.current_location[0]
+    current_country_id = location.country()
     # 获取当前国家的感染人数的影响系数，缺失时默认为 1.0。
     infection_ratio = float(
         infection_ratio_table.get(current_country_id, 1.0) or 1.0

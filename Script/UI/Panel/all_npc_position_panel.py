@@ -12,6 +12,7 @@ from Script.Core import (
 from Script.Design import map_handle, handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -192,9 +193,8 @@ class All_Npc_Position_Panel:
                         ):
                             continue
                         # 访客筛选
-                        elif (
-                            self.select_type == 2
-                            and npc_id not in cache.rhodes_island.visitor_info
+                        elif self.select_type == 2 and not visitor.is_visitor(
+                            npc_id
                         ):
                             continue
                         # 未陷落筛选

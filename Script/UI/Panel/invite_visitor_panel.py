@@ -21,7 +21,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import manage_basement_panel, recruit_panel
 import random
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, location, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -50,7 +50,7 @@ def get_empty_guest_room_id() -> int | bool:
         room_name = game_config.config_facility_open[room_id].name
         # 遍历全部访客
         have_visitor_flag = False
-        for chara_id in cache.rhodes_island.visitor_info:
+        for chara_id in visitor.visitors():
             # 如果该房间已经有访客，则跳过
             if cache.character_data[chara_id].dormitory == room_name:
                 have_visitor_flag = True
@@ -85,19 +85,17 @@ def sort_guest_room_key(room_path: str) -> int:
 def update_invite_visitor() -> None:
     """刷新邀请访客栏位"""
 
+    target, progress = visitor.invite()
     # 未选择邀请目标则跳过
-    if cache.rhodes_island.invite_visitor[0] == 0:
+    if target == 0:
         return
 
     # 如果超过100则进行结算
-    if cache.rhodes_island.invite_visitor[1] >= 100:
+    if progress >= 100:
 
         # 成功邀请时
-        if settle_visitor_arrivals(
-            visitor_id=cache.rhodes_island.invite_visitor[0]
-        ):
-            cache.rhodes_island.invite_visitor[0] = 0
-            cache.rhodes_island.invite_visitor[1] = 0
+        if settle_visitor_arrivals(visitor_id=target):
+            visitor.set_invite(0)
 
 
 def visitor_to_operator(character_id: int) -> None:
@@ -114,7 +112,7 @@ def visitor_to_operator(character_id: int) -> None:
     character_data.sp_flag.vistor = 2
 
     # 从访客列表中移除
-    del cache.rhodes_island.visitor_info[character_id]
+    visitor.leave(character_id)
 
     # 如果满足设施开放的前提条件，则开放该设施
     for open_cid in game_config.config_facility_open:
@@ -143,7 +141,7 @@ def settle_visitor_arrivals(visitor_id: int = 0) -> int:
     now_draw.style = "gold_enrod"
 
     # 判断是否有空闲客房
-    if len(cache.rhodes_island.visitor_info) >= cache.rhodes_island.visitor_max:
+    if len(visitor.visitors()) >= visitor.capacity():
         # 输出提示信息
         now_draw.text = _(
             "\n ●由于没有空闲的客房，罗德岛没有接待到一名新抵达的访客\n"
@@ -156,7 +154,7 @@ def settle_visitor_arrivals(visitor_id: int = 0) -> int:
             # 未招募的干员id列表
             not_recruit_npc_id_list = recruit_panel.find_recruitable_npc()
             # 根据当前基地的位置筛选出同国度且没有招募的干员
-            now_country_id = cache.rhodes_island.current_location[0]
+            now_country_id = location.country()
             now_country_npc_id_list = []
             # 开始筛选
             for npc_id in not_recruit_npc_id_list:
@@ -195,7 +193,7 @@ def visitor_leave(character_id: int) -> None:
     character_data.sp_flag.vistor = 2
 
     # 从访客列表中移除
-    del cache.rhodes_island.visitor_info[character_id]
+    visitor.leave(character_id)
 
     # 从已有干员列表中移除
     cache.npc_id_got.discard(character_id)
@@ -215,29 +213,26 @@ def settle_visitor_arrivals_and_departures() -> None:
     """
 
     # 因罗德岛移动而产生的访客
-    if cache.rhodes_island.base_move_visitor_flag:
+    if visitor.moved():
         # 将flag重置为False
-        cache.rhodes_island.base_move_visitor_flag = False
+        visitor.set_moved(False)
         settle_visitor_arrivals()
 
     # 根据时间而产生的访客
     add_day = game_time.count_day_for_datetime(
-        cache.rhodes_island.last_visitor_time, game_time.now()
+        visitor.last_arrival(), game_time.now()
     )
     visitor_come_possibility = add_day * 3
     if random.randint(1, 100) <= visitor_come_possibility:
         # 刷新访客来访时间
-        cache.rhodes_island.last_visitor_time = game_time.now()
+        visitor.set_last_arrival(game_time.now())
         settle_visitor_arrivals()
 
     # 访客离开
     # 遍历全部访客
-    now_visitor_id_list = list(cache.rhodes_island.visitor_info.keys())
-    for visitor_id in now_visitor_id_list:
+    for visitor_id, leave_time in visitor.visitors().items():
         # 判断是否已经超过停留时间
-        if game_time.judge_date_big_or_small(
-            game_time.now(), cache.rhodes_island.visitor_info[visitor_id]
-        ):
+        if game_time.judge_date_big_or_small(game_time.now(), leave_time):
             judge_visitor_if_leave(visitor_id)
 
 
@@ -293,17 +288,14 @@ def get_today_departing_visitors() -> list[int]:
     """
     departing_visitors = []
     # 遍历全部访客
-    now_visitor_id_list = list(cache.rhodes_island.visitor_info.keys())
-    for visitor_id in now_visitor_id_list:
+    for visitor_id, leave_time in visitor.visitors().items():
         # 判断时间为明天0点
         judge_time = game_time.get_sub_date(day=1)
         judge_time = judge_time.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
         # 判定今天结束后是否要离开
-        if game_time.judge_date_big_or_small(
-            judge_time, cache.rhodes_island.visitor_info[visitor_id]
-        ):
+        if game_time.judge_date_big_or_small(judge_time, leave_time):
             # 计算访客留下概率
             _tem_1, _tem_2, stay_posibility = (
                 instuct_judege.calculation_instuct_judege(
@@ -344,20 +336,18 @@ class Invite_Visitor_Panel:
             all_info_draw = draw.NormalDraw()
             now_text = ""
             now_text += _(" 当前的访客上限为：{0}人\n").format(
-                cache.rhodes_island.visitor_max
+                visitor.capacity()
             )
-            if len(cache.rhodes_island.visitor_info) == 0:
+            if len(visitor.visitors()) == 0:
                 now_text += _(" 目前没有访客\n")
             else:
                 now_text += _(" 目前的访客有：")
-                for chara_id in cache.rhodes_island.visitor_info:
+                for chara_id, leave_time in visitor.visitors().items():
                     character_data: game_type.Character = cache.character_data[
                         chara_id
                     ]
                     live_room = character_data.dormitory.split(os.sep)[-1]
-                    leav_time = game_time.get_date_until_day(
-                        cache.rhodes_island.visitor_info[chara_id]
-                    )
+                    leav_time = game_time.get_date_until_day(leave_time)
                     now_text += _(" [{0}]{1}，居住房间：{2}，离开{3}\n").format(
                         str(character_data.adv).rjust(4, "0"),
                         character_data.name,
@@ -375,17 +365,15 @@ class Invite_Visitor_Panel:
             now_text = _("\n 当前邀请目标：")
             if now_level <= 1:
                 now_text += _(" 需要访客区至少为2级才可以邀请访客\n")
-            elif cache.rhodes_island.invite_visitor[0] == 0:
+            elif visitor.invite()[0] == 0:
                 now_text += _(" 无")
             else:
-                chara_id = cache.rhodes_island.invite_visitor[0]
+                chara_id, progress = visitor.invite()
                 character_data = cache.character_data[chara_id]
                 now_text += f" [{chara_id}]{character_data.name}"
 
                 # 邀请进度
-                now_text += _("\n 邀请进度：{0}%").format(
-                    cache.rhodes_island.invite_visitor[1]
-                )
+                now_text += _("\n 邀请进度：{0}%").format(progress)
                 # 邀请效率加成
                 all_effect: float = 0
                 now_text += _("\n 邀请效率加成：")
@@ -394,7 +382,7 @@ class Invite_Visitor_Panel:
                 id_list = [
                     i
                     for i in cache.npc_id_got
-                    if i != 0 and i not in cache.rhodes_island.visitor_info
+                    if i != 0 and not visitor.is_visitor(i)
                 ]
                 for chara_id in id_list:
                     character_data = cache.character_data[chara_id]
@@ -442,7 +430,7 @@ class Invite_Visitor_Panel:
                 button_draw.draw()
 
             # 增加提前结算访客离开的按钮
-            if len(cache.rhodes_island.visitor_info) > 0:
+            if len(visitor.visitors()) > 0:
                 line_feed.draw()
                 button_text = _("[100]提前结算访客离开")
                 button_draw = draw.LeftButton(
@@ -476,10 +464,10 @@ class Invite_Visitor_Panel:
 
             # 邀请目标
             now_text = _("\n 当前邀请目标：")
-            if cache.rhodes_island.invite_visitor[0] == 0:
+            chara_id = visitor.invite()[0]
+            if chara_id == 0:
                 now_text += _(" 无\n")
             else:
-                chara_id = cache.rhodes_island.invite_visitor[0]
                 character_data: game_type.Character = cache.character_data[
                     chara_id
                 ]
@@ -495,12 +483,10 @@ class Invite_Visitor_Panel:
             ].effect
             now_text += _(" 访客区等级：{0}\n").format(now_level)
             now_text += _(" 访客停留时长：{0}天\n").format(facility_effect)
-            now_text += _(" 访客数量上限：{0}人\n").format(
-                cache.rhodes_island.visitor_max
-            )
+            now_text += _(" 访客数量上限：{0}人\n").format(visitor.capacity())
 
             # 可邀请范围
-            now_country_id = cache.rhodes_island.current_location[0]
+            now_country_id = location.country()
             now_country_name = game_config.config_birthplace[
                 now_country_id
             ].name
@@ -615,8 +601,7 @@ class Invite_Visitor_Panel:
 
     def change_invite_target(self, chara_id: int) -> None:
         """更改邀请目标"""
-        cache.rhodes_island.invite_visitor[0] = chara_id
-        cache.rhodes_island.invite_visitor[1] = 0
+        visitor.set_invite(chara_id)
 
     def settle_visitor_departures(self) -> None:
         """结算访客离开"""
@@ -627,7 +612,7 @@ class Invite_Visitor_Panel:
             line_feed.draw()
 
             # 遍历所有访客，输出每个访客的adv_id和姓名的按钮，每行输出三个
-            visitor_id_list = list(cache.rhodes_island.visitor_info.keys())
+            visitor_id_list = list(visitor.visitors())
             visitor_count = 0
             for visitor_id in visitor_id_list:
                 visitor_count += 1
