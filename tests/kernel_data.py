@@ -262,6 +262,10 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     work_people_now、hr_operator_ids_list 与 current_warden_id。
     资源库存记作 world.base.materials_resouce.<资源id>，已用的仓储空间扩展模块数记作
     world.base.used_extra_warehouse_capacity_module。
+    生产线按旧的五项列表记作 world.base.<production.PICKLED_LINES 里的属性名>.<线id>。
+    效率一项在流水线上记 0.0，在药田与温室上记 0。待换生产一项记 0。
+    工人名单记作 world.base.<production.PICKLED_WORKERS 里的属性名>。
+    食堂货架记作 world.cooking.dining_hall_data。
     Keyword arguments:
     cache -- 游戏缓存
     state -- 快照，原地补上
@@ -269,9 +273,11 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     from Script.Config import game_config
     from Script.Modules.domains import (
         facility,
+        kitchen,
         needs,
         power,
         pregnancy,
+        production,
         warehouse,
         work,
     )
@@ -314,6 +320,15 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     }
     for field, value in island.items():
         flatten(f"world.base.{field}", value, state)
+    for field, kind in production.PICKLED_LINES.items():
+        rate = 0.0 if kind == "assembly" else 0
+        for line_id, line in production.lines(kind).items():
+            old = [line["product"], line["main"], rate, 0, line["hour"]]
+            flatten(f"world.base.{field}.{line_id}", old, state)
+    for field, kind in production.PICKLED_WORKERS.items():
+        flatten(f"world.base.{field}", production.workers(kind), state)
+    name = "world.cooking.dining_hall_data"
+    flatten(name, kitchen.shelves(), state)
     _project_economy(state)
 
 

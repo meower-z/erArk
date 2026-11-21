@@ -15,6 +15,7 @@ from typing import Any
 
 from Script.Config import game_config
 from Script.Core import constant, game_type
+from Script.Modules.domains import kitchen
 from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import food_bag_panel
 from Script.UI.Panel import (
@@ -24,6 +25,7 @@ from Script.UI.Panel import (
     normal_panel,
     read_book_panel,
 )
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 
@@ -99,9 +101,7 @@ class PanelPicksLeaveCache(FastTestCase):
         self.world.chara(1, "干员")
         book_id = next(iter(game_config.config_book))
         shop_food = _food("shop")
-        self.cache.rhodes_island.dining_hall_data["1"] = {
-            shop_food.uid: shop_food
-        }
+        kernel_data.written(kitchen.stock, "1", shop_food)
         bag_food = _food("bag")
         self.cache.character_data[0].food_bag[bag_food.uid] = bag_food
         self.cache.character_data[0].target_character_id = 1
@@ -158,6 +158,4 @@ class PanelPicksLeaveCache(FastTestCase):
                 self.assertEqual(
                     {k: got.get(k) for k in expected}, expected, got
                 )
-        self.assertIn(
-            shop_food.uid, self.cache.rhodes_island.dining_hall_data["1"]
-        )
+        self.assertIn(shop_food.uid, kitchen.shelves()["1"])
