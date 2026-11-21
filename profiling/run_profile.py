@@ -244,6 +244,7 @@ def new_game_minimal_init() -> None:
         basement,
     )
     from Script.System.Cooking_System import cooking
+    from Script.System.Medical_System import medical_service
     from Script.Config import game_config, normal_config
     from Script.Core import io_init
     from Script.System.Dormitory_System import common as dormitory_common
@@ -260,6 +261,7 @@ def new_game_minimal_init() -> None:
 
     # 2. 基础基地与设定
     cache.rhodes_island = basement.get_base_zero()
+    medical_service.init_medical_department_data(cache.rhodes_island)
 
     # 初始奖励 / 世界设定 (等同 first_bonus_and_setting_updata 的核心)
     for cid in game_config.config_first_bonus:
@@ -281,8 +283,6 @@ def new_game_minimal_init() -> None:
     base_adv_set = core_constant.first_NPC_adv_set
 
     for cid, npc_tem in cache.npc_tem_data.items():
-        # npc_tem 是模板；正式实例化后会进入 character_data?
-        # character_handle.init_character_list() 已创建模板，下面实例化/加入?
         # 简化：如果模板的干员编号在基础集合里，就确保加入 npc_id_got
         try:
             adv = getattr(npc_tem, "AdvNpc", None)

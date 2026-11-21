@@ -13,6 +13,7 @@ from Script.Core import game_type, get_text
 from Script.Config import game_config
 from Script.UI.Moudle import draw
 from Script.System.Medical_System import medical_constant, medical_core
+from Script.Modules.domains import medical
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -30,12 +31,10 @@ def _ensure_storage(
     """
 
     # 优先读取现有列表，若缺失或类型异常则重建空列表。
-    storage: list[dict[str, Any]] | None = getattr(
-        rhodes_island, "medical_recent_reports", None
-    )
+    storage: list[dict[str, Any]] | None = medical.state().recent_reports
     if not isinstance(storage, list):
         storage = []
-        rhodes_island.medical_recent_reports = storage
+        medical.state().recent_reports = storage
     return storage
 
 
@@ -192,9 +191,7 @@ def _format_medical_report_entry(
     accumulator_map: dict[int, float] = {}
     rhodes_island = medical_core._get_rhodes_island(None)
     if rhodes_island is not None:
-        accumulator_source = getattr(
-            rhodes_island, "medical_inventory_accumulator", None
-        )
+        accumulator_source = medical.state().accumulator
         if isinstance(accumulator_source, Mapping):
             for resource_id, pending_units in accumulator_source.items():
                 try:
@@ -448,7 +445,7 @@ def get_recent_medical_reports(
         return []
 
     # 复制日志列表，避免修改原始数据
-    storage = list(getattr(rhodes_island, "medical_recent_reports", []) or [])
+    storage = list(medical.state().recent_reports or [])
     if not storage:
         return []
 

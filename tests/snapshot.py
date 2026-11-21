@@ -87,13 +87,8 @@ WORLD_AREAS = {
 """ 罗德岛（cache.rhodes_island）字段所属的区域；
 没列出的字段以 MEDICAL_PREFIXES 开头的归 world.medical，其余归 world.base """
 
-MEDICAL_PREFIXES = (
-    "medical_",
-    "patient_",
-    "used_hospital_bed_modules",
-    "player_examined_patient_ids",
-)
-""" 医疗部字段的名字开头：病人表、床位、医生、收入与计数 """
+MEDICAL_PREFIXES = ("medical_",)
+""" 罗德岛对象上医疗部字段的名字开头：床位上限 """
 
 CACHE_AREAS = {
     "game_round": "clock",

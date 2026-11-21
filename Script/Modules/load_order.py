@@ -4,9 +4,9 @@
 LOAD_ORDER 由内到外列出各模块的文件。core.load 之后，内核只调用内核自己与这里列出的文件登记的钩子。
 输入钩子由外到内调用，输出钩子由内到外调用。
 一个输入钩子截下调用（Intercept）时，内层的钩子都不调用，只调用更外层的模块的输出钩子。
-domains 的 power、needs、pregnancy、facility、economy、work、warehouse、production 与 kitchen 排在最内，不挂钩子。
-它们登记 working 的键：power 与 facility 各三个，needs、pregnancy、production 与 kitchen 各一个，economy 七个，
-work 与 warehouse 各两个。needs 还登记它的键的规则。economy 还登记今日收入与今日买卖总量两个键的规则。
+domains 的 medical、power、needs、pregnancy、facility、economy、work、warehouse、production 与 kitchen 排在最内，
+不挂钩子。它们登记 working 的键：medical、power 与 facility 各三个，needs、pregnancy、production 与 kitchen 各一个，
+economy 七个，work 与 warehouse 各两个。needs 还登记它的键的规则。economy 还登记今日收入与今日买卖总量两个键的规则。
 warehouse 还登记库存的规则。
 PickNextAction 上的输入钩子由外到内是：save_load 的自动存档、计划队列、tk_ui 的玩家选择。
 内核本体给出 1 分钟的 Idle，npc_action_choice 的输出钩子把干员的 Idle 换成要开始的行动。
@@ -24,6 +24,7 @@ from Script.Modules.domains import (
     economy,
     facility,
     kitchen,
+    medical,
     needs,
     power,
     pregnancy,
@@ -49,6 +50,7 @@ from Script.Modules.save_load import autosave, reset, settings
 from Script.Modules.tk_ui import player_hook, player_pick
 
 LOAD_ORDER: tuple[ModuleType, ...] = (
+    medical,
     power,
     needs,
     pregnancy,

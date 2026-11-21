@@ -215,84 +215,6 @@ def build_medicine_consumption_template() -> dict[int, float]:
     return {resource_id: 0.0 for resource_id in sorted(resolved_ids)}
 
 
-@dataclass
-class MedicalPatient:
-    """运行期病人结构，统一记录医疗系统所需全部字段与默认值"""
-
-    patient_id: int = 0
-    """病人唯一编号（运行时自增生成）"""
-    severity_level: int = 0
-    """病情等级，来自 MedicalSeverity.csv"""
-    complications: list[int] = field(default_factory=list)
-    """已抽取并发症 ID 列表"""
-    diagnose_progress: float = 0.0
-    """诊疗进度（工时单位）"""
-    need_resources: dict[int, float] = field(default_factory=dict)
-    """药物需求累计值，key=资源 ID，value=需求数量"""
-    state: MedicalPatientState = MedicalPatientState.REFRESHED
-    """病人当前状态"""
-    clinic_waiting_days: int = 0
-    """已门诊等待天数"""
-    stay_days: int = 0
-    """已住院天数"""
-    need_surgery: bool = False
-    """是否需要手术治疗"""
-    surgery_blocked: bool = False
-    """手术是否因条件不足被阻塞"""
-    personality_type: MedicalPatientPersonality = (
-        MedicalPatientPersonality.RATIONAL
-    )
-    """病人性格"""
-    race_id: int = 0
-    """病人种族 ID（排除博士）"""
-    age: int = 18
-    """病人年龄"""
-    assigned_doctor_id: int = 0
-    """当前绑定的门诊医生编号（0 表示未绑定）"""
-    assigned_hospital_doctor_id: int = 0
-    """当前绑定的住院医生编号（0 表示未绑定）"""
-    severity_name: str = ""
-    """病情等级对应的名称标签，用于 UI 展示"""
-    price_ratio: float = 1.0
-    """刷新/接诊时记录的收费系数快照"""
-    complication_trace: list[dict[str, Any]] = field(default_factory=list)
-    """并发症追踪记录，包含系统/部位等辅助信息"""
-    system_keys: list[str] = field(default_factory=list)
-    """病人关联的生理系统标签集合（字符串形式）"""
-    player_session_active: bool = False
-    """标记玩家诊疗会话是否处于激活状态"""
-    player_previous_state: str = ""
-    """玩家介入前病人的原始状态字符串"""
-    player_used_checks: int = 0
-    """本次玩家诊疗流程已使用的检查次数"""
-    player_confirmed_complications: list[int] = field(default_factory=list)
-    """玩家诊疗流程中已确诊的并发症 ID 列表"""
-    player_check_records: list[dict[str, Any]] = field(default_factory=list)
-    """玩家诊疗流程中产生的检查记录摘要列表"""
-    player_pending_checks: list[dict[str, Any]] = field(default_factory=list)
-    """玩家诊疗流程中等待执行的检查计划列表"""
-    last_surgery_result: str = ""
-    """最近一次手术流程的结果标识"""
-    surgery_blocked_resource: int | None = None
-    """导致手术阻塞的药物资源 ID，None 表示不存在阻塞"""
-    state_label: str = ""
-    """调试用途的最新状态字符串"""
-    medicine_recorded: dict[int, float] = field(default_factory=dict)
-    """累计登记但尚未扣除的药品需求量"""
-    medicine_progress: dict[int, float] = field(default_factory=dict)
-    """住院每日用药进度缓存"""
-    medicine_consumed_units: dict[int, int] = field(default_factory=dict)
-    """历史累计消耗的药物单位数"""
-    last_consumed_units: dict[int, int] = field(default_factory=dict)
-    """最近一次用药操作实际消耗的资源记录"""
-
-    def ensure_resource_keys(self) -> None:
-        """补齐药物需求键，避免读取和累计过程中出现缺省键"""
-
-        for resource_id in ALL_MEDICINE_RESOURCE_IDS:
-            self.need_resources.setdefault(resource_id, 0.0)
-
-
 DISPLAY_NAME_MAPPING: dict[str, str] = {
     "diagnose_completed_outpatient": _("门诊诊疗完成"),
     "diagnose_completed_hospital": _("住院诊疗完成"),
@@ -649,7 +571,6 @@ __all__ = [
     "SPECIALIZATION_ROLES",
     "PATIENT_ID_COUNTER",
     "ALL_MEDICINE_RESOURCE_IDS",
-    "MedicalPatient",
     "translate_priority",
     "get_state_display_name",
     "PRIORITY_OPTIONS",

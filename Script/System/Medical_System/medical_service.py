@@ -13,7 +13,7 @@ from types import FunctionType
 
 from Script.Config import normal_config
 from Script.Core import game_type, get_text
-from Script.Modules.domains import economy
+from Script.Modules.domains import economy, medical
 
 from Script.System.Medical_System import (
     clinic_doctor_service,
@@ -29,6 +29,9 @@ from Script.Modules.domains import warehouse
 _: FunctionType = get_text._
 """ 翻译函数 """
 
+# 对外的入口在 medical_core.edits 里运行：写医疗部数据的调用在一个 medical.editing() 块里
+edits = medical_core.edits
+
 # 医生相关函数重导出
 assign_doctor_specialization = (
     clinic_doctor_service.assign_doctor_specialization
@@ -40,24 +43,30 @@ get_specialization_categories = (
 get_doctor_specialization_overview = (
     clinic_doctor_service.get_doctor_specialization_overview
 )
-acquire_patient_for_doctor = clinic_doctor_service.acquire_patient_for_doctor
+acquire_patient_for_doctor = edits(
+    clinic_doctor_service.acquire_patient_for_doctor
+)
 prepare_doctor_medical_behavior = (
     clinic_doctor_service.prepare_doctor_medical_behavior
 )
-update_doctor_assignments = clinic_doctor_service.update_doctor_assignments
+update_doctor_assignments = edits(
+    clinic_doctor_service.update_doctor_assignments
+)
 
-conduct_ward_round = hospital_doctor_service.conduct_ward_round
+conduct_ward_round = edits(hospital_doctor_service.conduct_ward_round)
 get_surgery_candidate_patient_ids = (
     hospital_doctor_service.get_surgery_candidate_patient_ids
 )
-attempt_surgery = hospital_doctor_service.attempt_surgery
-consume_surgery_resources = hospital_doctor_service.consume_surgery_resources
+attempt_surgery = edits(hospital_doctor_service.attempt_surgery)
+consume_surgery_resources = edits(
+    hospital_doctor_service.consume_surgery_resources
+)
 evaluate_surgery_preconditions = (
     hospital_doctor_service.evaluate_surgery_preconditions
 )
 
 # 病人相关函数重导出
-advance_diagnose = clinic_patient_management.advance_diagnose
+advance_diagnose = edits(clinic_patient_management.advance_diagnose)
 set_patient_state = clinic_patient_management.set_patient_state
 get_patient_table = clinic_patient_management.get_patient_table
 get_medical_price_ratio = clinic_patient_management.get_medical_price_ratio
@@ -101,6 +110,7 @@ get_recent_medical_reports = log_system.get_recent_medical_reports
 render_medical_reports = log_system.render_medical_reports
 
 
+@edits
 def init_medical_department_data(
     target_base: game_type.Rhodes_Island | None = None,
     *,
@@ -129,45 +139,40 @@ def init_medical_department_data(
     # 根据重置标记决定是否重新初始化所有运行期缓存字段。
     if reset_runtime:
         # 全量刷新运行期容器，消除旧局面遗留的引用。
-        rhodes_island.medical_patients_today = {}
-        rhodes_island.medical_hospitalized = {}
-        rhodes_island.medical_surgery_records = []
-        rhodes_island.medical_inventory_accumulator = {
+        medical.state().today = {}
+        medical.state().hospitalized = {}
+        medical.state().surgery_records = []
+        medical.state().accumulator = {
             resource_id: 0.0
             for resource_id in medical_constant.ALL_MEDICINE_RESOURCE_IDS
         }
         # 重置收入、计数器与医生配置。
-        rhodes_island.medical_income_today = 0
-        rhodes_island.medical_income_total = 0
-        rhodes_island.medical_daily_counters = (
-            medical_constant.MedicalDailyCounters()
-        )
-        rhodes_island.medical_recent_reports = []
-        rhodes_island.medical_clinic_doctor_ids = []
-        rhodes_island.medical_clinic_doctor_power = 0.0
-        rhodes_island.medical_hospital_doctor_ids = []
-        rhodes_island.medical_hospital_doctor_power = 0.0
-        rhodes_island.medical_patient_priority_mode = (
+        medical.state().income_today = 0
+        medical.state().income_total = 0
+        medical.state().daily_counters = medical_constant.MedicalDailyCounters()
+        medical.state().recent_reports = []
+        medical.state().clinic_doctor_ids = []
+        medical.state().clinic_doctor_power = 0.0
+        medical.state().hospital_doctor_ids = []
+        medical.state().hospital_doctor_power = 0.0
+        medical.state().priority_mode = (
             medical_constant.MedicalPatientPriority.NORMAL.value
         )
-        rhodes_island.medical_player_current_patient_id = 0
-        rhodes_island.medical_doctor_specializations = {}
+        medical.state().player_patient_id = 0
+        medical.state().doctor_specializations = {}
     else:
         # 如果不重置则确保容器存在，并同步当前玩家诊疗状态。
         medical_core._ensure_runtime_dict(rhodes_island)
-        rhodes_island.medical_player_current_patient_id = int(
-            getattr(rhodes_island, "medical_player_current_patient_id", 0) or 0
+        medical.state().player_patient_id = int(
+            medical.state().player_patient_id or 0
         )
 
     # 门诊医生的专业结构需要在复用前确保初始化。
     clinic_doctor_service._ensure_specialization_structure(rhodes_island)
 
     # 没有收费系数时写入默认值，防止后续计算出现零值。
-    if (
-        not rhodes_island.medical_price_ratio
-        or rhodes_island.medical_price_ratio <= 0
-    ):
-        rhodes_island.medical_price_ratio = (
+    if not medical.state().price_ratio or medical.state().price_ratio <= 0:
+        medical.state().price_ratio = (
             medical_core._resolve_default_price_ratio()
         )
 
@@ -177,12 +182,13 @@ def init_medical_department_data(
     )
 
     # 若没有留存的病人数据则刷新今日病人列表。
-    patient_table = getattr(rhodes_island, "medical_patients_today", {})
+    patient_table = medical.state().today
     should_refresh_patients = reset_runtime or not patient_table
     if should_refresh_patients:
         refresh_medical_patients(target_base=rhodes_island)
 
 
+@edits
 def update_medical_save_data_structure(cache_snapshot: dict[str, Any]) -> None:
     """在读取旧存档时修复医疗系统相关字段。
 
@@ -203,6 +209,7 @@ def update_medical_save_data_structure(cache_snapshot: dict[str, Any]) -> None:
     )
 
 
+@edits
 def settle_medical_department(
     *,
     target_base: game_type.Rhodes_Island | None = None,
@@ -233,13 +240,13 @@ def settle_medical_department(
     stats: dict[str, int] = counters.as_dict() if counters else {}
 
     # 拉取实收收入与收费系数，供结算描述使用。
-    income_today = int(rhodes_island.medical_income_today or 0)
-    price_ratio = float(rhodes_island.medical_price_ratio or 1.0)
+    income_today = int(medical.state().income_today or 0)
+    price_ratio = float(medical.state().price_ratio or 1.0)
 
     # 统计队列中各状态人数，为日志与 UI 提供摘要。
     waiting_states = medical_constant.WAITING_QUEUE_STATE_SET
-    patients = list(rhodes_island.medical_patients_today.values())
-    hospitalized_patients = list(rhodes_island.medical_hospitalized.values())
+    patients = list(medical.state().today.values())
+    hospitalized_patients = list(medical.state().hospitalized.values())
 
     waiting_count = 0
     waiting_medication = 0
@@ -275,9 +282,7 @@ def settle_medical_department(
     # 计算药品库存快照，便于日志输出消耗、缺口与库存
     inventory_snapshot: dict[int, dict[str, float]] = {}
     inventory_map = warehouse.stock()
-    accumulator_map = dict(
-        getattr(rhodes_island, "medical_inventory_accumulator", {}) or {}
-    )
+    accumulator_map = dict(medical.state().accumulator or {})
     consumption_map = (
         medical_constant.MedicalDailyCounters._coerce_consumption_mapping(
             stats.get("medicine_consumed", {})
@@ -336,28 +341,20 @@ def settle_medical_department(
     cleared_outpatient_ids: list[int] = []
     cleared_hospitalized_ids: list[int] = []
 
-    # 门诊表中过滤已拿药治疗或已出院的病人，同时移除异常的空引用。
-    outpatient_table = rhodes_island.medical_patients_today
+    # 门诊表中过滤已拿药治疗或已出院的病人。
+    outpatient_table = medical.state().today
     for patient_id, patient in list(outpatient_table.items()):
         should_remove = False
-        # 病人状态
-        state = getattr(patient, "state", None)
         # 病人等待天数+1
-        if hasattr(patient, "clinic_waiting_days"):
-            patient.clinic_waiting_days += 1
-        # 若病人记录异常为空则直接剔除。
-        if patient is None:
-            should_remove = True
+        patient.clinic_waiting_days += 1
         # 已拿药治疗或已出院的病人予以剔除。
-        elif state in (
+        if patient.state in (
             medical_constant.MedicalPatientState.MEDICINE_GRANTED,
             medical_constant.MedicalPatientState.DISCHARGED,
         ):
             should_remove = True
         # 等待天数超过病情程度+3天的病人予以剔除，视为自行离开。
-        elif getattr(patient, "clinic_waiting_days", 0) > (
-            (getattr(patient, "severity_level", 0) or 0) + 3
-        ):
+        elif patient.clinic_waiting_days > ((patient.severity_level or 0) + 3):
             should_remove = True
         # 符合移除条件时从门诊表中剔除该病人记录。
         if should_remove:
@@ -365,26 +362,16 @@ def settle_medical_department(
             cleared_outpatient_ids.append(patient_id)
 
     # 住院表一般不会保留已出院病人，但仍补充一次兜底清理逻辑。
-    hospital_table = rhodes_island.medical_hospitalized
+    hospital_table = medical.state().hospitalized
     for patient_id, patient in list(hospital_table.items()):
-        should_remove = False
-        if patient is None:
-            should_remove = True
-        elif (
-            getattr(patient, "state", None)
-            == medical_constant.MedicalPatientState.DISCHARGED
-        ):
-            should_remove = True
-        if should_remove:
+        if patient.state == medical_constant.MedicalPatientState.DISCHARGED:
             hospital_table.pop(patient_id, None)
             cleared_hospitalized_ids.append(patient_id)
 
     # 结算结束后重置当日收入与计数器，等待下一轮业务累计。
-    rhodes_island.medical_income_today = 0
+    medical.state().income_today = 0
     economy.set_income(0)
-    rhodes_island.medical_daily_counters = (
-        medical_constant.MedicalDailyCounters()
-    )
+    medical.state().daily_counters = medical_constant.MedicalDailyCounters()
 
     # 检查是否有待调整的收费系数，若有则应用并清空。
     clinic_patient_management.apply_new_medical_price_ratio(

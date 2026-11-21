@@ -14,6 +14,7 @@ from Script.Core import cache_control, constant, game_type
 from Script.Kernel import core
 from Script.Modules.domains import economy, kitchen
 from Script.Modules.gameplay_resolution import intent, starts
+from Script.Modules.domains import medical, medical_patient
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -242,18 +243,19 @@ def patient_still_there(who: int, data: intent.Intent) -> core.Action | None:
 @starts.starter("schedule_surgery")
 def schedule_surgery(who: int, data: intent.Intent) -> None:
     """扣除手术资源并给患者安排这位医生的手术；资源不足时什么都不改"""
-    from Script.System.Medical_System import medical_constant, medical_service
+    from Script.System.Medical_System import medical_service
 
-    patient = _surgery_patient(who, int(str(_args(data)["patient_id"])))
-    assert isinstance(patient, medical_constant.MedicalPatient)
-    if not medical_service.consume_surgery_resources(
-        patient, cache.rhodes_island
-    ):
-        return
-    patient.assigned_hospital_doctor_id = who
-    patient.last_surgery_result = "scheduled"
-    patient.surgery_blocked_resource = None
-    patient.surgery_blocked = False
+    with medical.editing():
+        patient = _surgery_patient(who, int(str(_args(data)["patient_id"])))
+        assert isinstance(patient, medical_patient.MedicalPatient)
+        if not medical_service.consume_surgery_resources(
+            patient, cache.rhodes_island
+        ):
+            return
+        patient.assigned_hospital_doctor_id = who
+        patient.last_surgery_result = "scheduled"
+        patient.surgery_blocked_resource = None
+        patient.surgery_blocked = False
     cache.character_data[who].work.surgery_patient_id = patient.patient_id
 
 

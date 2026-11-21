@@ -16,7 +16,7 @@ from Script.Core import game_type
 from Script.Design import handle_ability
 from Script.System.Medical_System import medical_constant, medical_core
 from Script.Design import game_time
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import medical, medical_patient, warehouse
 
 
 @dataclass
@@ -50,7 +50,7 @@ def _acquire_hospital_patient_for_doctor(
     rhodes_island: game_type.Rhodes_Island | None,
     *,
     require_surgery: bool = False,
-) -> medical_constant.MedicalPatient | None:
+) -> medical_patient.MedicalPatient | None:
     """选择并返回一个符合条件的住院病人。
 
     参数:
@@ -58,7 +58,7 @@ def _acquire_hospital_patient_for_doctor(
         rhodes_island (Optional[game_type.Rhodes_Island]): 医疗部归属的罗德岛基座。
         require_surgery (bool): 是否仅筛选需要手术的病人。
     返回:
-        Optional[medical_constant.MedicalPatient]: 成功分配到的病人，否则为 None。
+        Optional[medical_patient.MedicalPatient]: 成功分配到的病人，否则为 None。
     """
 
     # 医生或基地不存在时无法分配病人。
@@ -66,7 +66,7 @@ def _acquire_hospital_patient_for_doctor(
         return None
 
     # 读取当前住院病人列表。
-    patient_table = rhodes_island.medical_hospitalized
+    patient_table = medical.state().hospitalized
     if not patient_table:
         work_data = getattr(doctor_character, "work", None)
         if work_data is not None:
@@ -117,7 +117,7 @@ def _acquire_hospital_patient_for_doctor(
         return None
 
     def _hospital_priority(
-        target: medical_constant.MedicalPatient,
+        target: medical_patient.MedicalPatient,
     ) -> tuple[int, int, int]:
         return (
             -int(getattr(target, "severity_level", 0) or 0),
@@ -134,7 +134,7 @@ def _acquire_hospital_patient_for_doctor(
 
 
 def evaluate_surgery_preconditions(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     doctor_character: game_type.Character | None,
     rhodes_island: game_type.Rhodes_Island | None,
 ) -> SurgeryPrecheckResult:
@@ -214,13 +214,13 @@ def evaluate_surgery_preconditions(
 
 
 def consume_surgery_resources(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     rhodes_island: game_type.Rhodes_Island | None,
 ) -> bool:
     """直接扣除病人执行手术所需的药品资源。
 
     参数:
-        patient (Optional[medical_constant.MedicalPatient]): 需要执行手术的住院病人对象。
+        patient (Optional[medical_patient.MedicalPatient]): 需要执行手术的住院病人对象。
         rhodes_island (Optional[game_type.Rhodes_Island]): 当前所属的罗德岛基地数据。
     返回:
         bool: 药品资源扣除是否完成，True 表示已成功扣除。
@@ -287,7 +287,7 @@ def consume_surgery_resources(
 def get_surgery_candidate_patient_ids(
     doctor_character: game_type.Character,
     target_base: game_type.Rhodes_Island | None = None,
-) -> list[medical_constant.MedicalPatient]:
+) -> list[medical_patient.MedicalPatient]:
     """
     返回指定医生角色所有可以进行手术的住院病人ID列表。
 
@@ -295,16 +295,14 @@ def get_surgery_candidate_patient_ids(
         doctor_character: game_type.Character: 指定医生角色对象。
         target_base (Optional[game_type.Rhodes_Island]): 指定基地实例，默认读取全局缓存。
     返回:
-        List[medical_constant.MedicalPatient]: 符合条件的住院病人列表。
+        List[medical_patient.MedicalPatient]: 符合条件的住院病人列表。
     """
     rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None or not hasattr(
-        rhodes_island, "medical_hospitalized"
-    ):
+    if rhodes_island is None:
         return []
 
     # 获取住院患者列表
-    hospitalized = getattr(rhodes_island, "medical_hospitalized", {}) or {}
+    hospitalized = medical.state().hospitalized or {}
     if not hospitalized:
         return []
 
@@ -367,7 +365,7 @@ def conduct_ward_round(
             work_data.medical_patient_id = 0
         return {"handled": False, "patient": None, "result": "no_candidate"}
 
-    def _consume(target_patient: medical_constant.MedicalPatient) -> bool:
+    def _consume(target_patient: medical_patient.MedicalPatient) -> bool:
         from Script.System.Medical_System import medical_service
 
         return medical_service.try_consume_medicine(
@@ -431,14 +429,14 @@ def attempt_surgery(
 
 def _attempt_surgery_on_patient(
     rhodes_island: game_type.Rhodes_Island,
-    patient: medical_constant.MedicalPatient,
+    patient: medical_patient.MedicalPatient,
     doctor: game_type.Character,
 ) -> bool:
     """结算住院病人的手术结果并更新病人状态。
 
     参数:
         rhodes_island (game_type.Rhodes_Island): 执行手术的罗德岛基地实例。
-        patient (medical_constant.MedicalPatient): 正在接受手术的住院病人对象。
+        patient (medical_patient.MedicalPatient): 正在接受手术的住院病人对象。
         doctor (game_type.Character): 执刀的医生角色数据。
     返回:
         bool: 手术是否完成结算。
@@ -457,7 +455,7 @@ def _attempt_surgery_on_patient(
     doctor_ability_level = int(
         doctor.ability.get(medical_constant.MEDICAL_ABILITY_ID, 0) or 0
     )
-    price_ratio = float(rhodes_island.medical_price_ratio or 1.0)
+    price_ratio = float(medical.state().price_ratio or 1.0)
     income_multiplier = medical_core.resolve_price_income_multiplier(
         price_ratio
     )
@@ -553,7 +551,7 @@ def _attempt_surgery_on_patient(
 
 def _record_surgery_attempt(
     rhodes_island: game_type.Rhodes_Island,
-    patient: medical_constant.MedicalPatient,
+    patient: medical_patient.MedicalPatient,
     doctor: game_type.Character,
     *,
     status: str,
@@ -563,7 +561,7 @@ def _record_surgery_attempt(
 
     参数:
         rhodes_island (game_type.Rhodes_Island): 发生手术的基地实例。
-        patient (medical_constant.MedicalPatient): 进行手术的住院病人。
+        patient (medical_patient.MedicalPatient): 进行手术的住院病人。
         doctor (game_type.Character): 执刀医生角色对象。
         status (str): 手术结果标签，例如 success、resource_shortage。
         extra (Optional[Dict[str, object]]): 额外写入的补充字段。
@@ -583,11 +581,11 @@ def _record_surgery_attempt(
         record.update(extra)
 
     # 写入基地的手术记录列表，并保持长度限制。
-    rhodes_island.medical_surgery_records.append(record)
+    medical.state().surgery_records.append(record)
     if (
-        len(rhodes_island.medical_surgery_records)
+        len(medical.state().surgery_records)
         > medical_constant.MAX_SURGERY_RECORDS
     ):
-        del rhodes_island.medical_surgery_records[
+        del medical.state().surgery_records[
             0 : -medical_constant.MAX_SURGERY_RECORDS
         ]

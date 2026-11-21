@@ -44,7 +44,6 @@ from _bootstrap import (
 )
 from Script.Design import handle_npc_ai, clothing
 from Script.Settle import realtime_settle
-from Script.System.Medical_System import medical_constant
 from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
 from Script.Design import character_behavior
@@ -311,16 +310,12 @@ teacher.sp_flag.is_follow = 0
 teacher.sp_flag.sleep = True
 check("睡着不可用", not teacher_available())
 teacher.sp_flag.sleep = False
-cache.rhodes_island.medical_hospitalized = {
-    101: medical_constant.MedicalPatient(
-        patient_id=101, state=medical_constant.MedicalPatientState.HOSPITALIZED
-    )
-}
+kernel_data.set_ward(101)
 check(
     "M4 住院表里有编号恰为 101 的病人（病人编号与角色 id 无关）→ 教师 101 照常可用（此前判为住院、整天来不了）",
     teacher_available(),
 )
-cache.rhodes_island.medical_hospitalized = {}
+kernel_data.set_ward()
 cache.npc_id_got.discard(101)
 check("不在岛上（不在 npc_id_got）不可用", not teacher_available())
 cache.npc_id_got.add(101)
@@ -872,11 +867,7 @@ clear_schedules()
 
 section("母亲有效性")
 check("有效母亲", class_ai.judge_mother_available(202) == 102)
-cache.rhodes_island.medical_hospitalized = {
-    102: medical_constant.MedicalPatient(
-        patient_id=102, state=medical_constant.MedicalPatientState.HOSPITALIZED
-    )
-}
+kernel_data.set_ward(102)
 check(
     (
         "M4 住院表里有编号恰为 102 的病人 → 母亲 102 照常有效、可跟随，公务事件前提 self_mother_available "
@@ -885,7 +876,7 @@ check(
     class_ai.judge_mother_available(202) == 102
     and handle_premise.handle_premise("self_mother_available", 202) == 1,
 )
-cache.rhodes_island.medical_hospitalized = {}
+kernel_data.set_ward()
 mother.sp_flag.is_h = True
 check("母亲 H 中 → 无效", class_ai.judge_mother_available(202) == -1)
 mother.sp_flag.is_h = False
@@ -3400,11 +3391,7 @@ for _cid in (101, 201):
 move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 teacher.sp_flag.is_h = False
-cache.rhodes_island.medical_hospitalized = {
-    101: medical_constant.MedicalPatient(
-        patient_id=101, state=medical_constant.MedicalPatientState.HOSPITALIZED
-    )
-}
+kernel_data.set_ward(101)
 sm = dispatch(201)
 check(
     (
@@ -3424,7 +3411,7 @@ check(
     sm,
 )
 teacher.sp_flag.is_h = False
-cache.rhodes_island.medical_hospitalized = {}
+kernel_data.set_ward()
 schedule_handle.clear_selected_course(201, 0, 0)
 move_to(201, SCENE_DORM)
 clear_schedules()

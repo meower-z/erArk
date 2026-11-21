@@ -330,7 +330,7 @@ class MinimalWorld:
         cache.birth_type_setting = (
             attr_calculation.get_birth_type_setting_zero()
         )
-        cache.rhodes_island = basement.get_base_zero()
+        cache.rhodes_island = kernel_data.new_island()
         kernel_data.written(basement.get_base_updata)
         for clothing_type, cloth_ids in STANDARD_OUTFIT.items():
             for cloth_id in cloth_ids:

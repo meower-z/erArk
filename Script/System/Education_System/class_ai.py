@@ -906,7 +906,7 @@ def judge_mother_available(character_id: int) -> int:
         or mother_data.sp_flag.in_diplomatic_visit
     ):
         return -1
-    # 不查医疗系统的住院表：medical_hospitalized 的键是医疗系统里抽象病人的编号（MedicalPatient.patient_id，
+    # 不查医疗系统的住院表：住院表（base.medical_ward）的键是医疗系统里抽象病人的编号（MedicalPatient.patient_id，
     #    每次启动从 1 自增），不关联任何角色，干员从不进这张表；拿母亲的角色 id 去查，只会在编号撞上时误判
     # 母亲所在场景不可达（未解锁 / 已拆除）
     mother_scene_str = map_handle.get_map_system_path_str_for_list(

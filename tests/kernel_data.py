@@ -8,6 +8,7 @@
 - reset_clock 把内核换成一个没有角色、时钟在给定时刻、带着给定全局数据的 GameState。
 - set_facility_level 改设施等级。set_room_open 改待开放设施的开放情况。
 - set_needs 与 needs_of 改、读角色的 body.needs，set_milk_max 与 milk_max_of 改、读角色的乳汁上限（body.pregnancy）。
+- set_ward 在一步之外换掉医疗部的住院病人表。
 - reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
 - project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册与监狱长的值，
   快照因此能与按缓存属性录下的快照比较。
@@ -57,6 +58,21 @@ def written[**P, T](fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
     """
     with writing():
         return fn(*args, **kwargs)
+
+
+def new_island() -> game_type.Rhodes_Island:
+    """
+    测试世界启动时的罗德岛对象（basement.get_base_zero），随后像游戏的新开局一样重置医疗部数据，写进内核状态。
+    get_base_zero 自己不再重置医疗部；这里补上，测试世界的医疗部数据与随机数消耗才和游戏开局时相同
+    Return arguments:
+    game_type.Rhodes_Island -- 新的罗德岛对象
+    """
+    from Script.Design import basement
+    from Script.System.Medical_System import medical_service
+
+    island = basement.get_base_zero()
+    written(medical_service.init_medical_department_data, island)
+    return island
 
 
 def reset_clock(dt: datetime.datetime, data: Mapping[str, core.JSON]) -> None:
@@ -190,6 +206,25 @@ def milk_max_of(cid: int) -> int:
     return pregnancy.milk_max(cid)
 
 
+def set_ward(*patient_ids: int) -> None:
+    """
+    在一步之外把住院病人表换成只有给出编号的住院病人
+    Keyword arguments:
+    patient_ids -- 病人编号，不给则清空住院表
+    """
+    from Script.Modules.domains import medical, medical_patient
+    from Script.System.Medical_System import medical_constant
+
+    with writing(), medical.editing() as m:
+        m.hospitalized = {
+            pid: medical_patient.MedicalPatient(
+                patient_id=pid,
+                state=medical_constant.MedicalPatientState.HOSPITALIZED,
+            )
+            for pid in patient_ids
+        }
+
+
 def reprojected(game: core.GameState) -> core.GameState:
     """
     由 actions.state_from_cache 从缓存投影出各角色的行动，时钟取自 game。
@@ -265,7 +300,8 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     生产线按旧的五项列表记作 world.base.<production.PICKLED_LINES 里的属性名>.<线id>。
     效率一项在流水线上记 0.0，在药田与温室上记 0。待换生产一项记 0。
     工人名单记作 world.base.<production.PICKLED_WORKERS 里的属性名>。
-    食堂货架记作 world.cooking.dining_hall_data。
+    食堂货架记作 world.cooking.dining_hall_data。医疗部数据记在 world.medical 下，
+    名字为罗德岛对象上旧的属性名（medical.OLD_NAMES），病人按字段展开。
     Keyword arguments:
     cache -- 游戏缓存
     state -- 快照，原地补上
@@ -274,6 +310,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     from Script.Modules.domains import (
         facility,
         kitchen,
+        medical,
         needs,
         power,
         pregnancy,
@@ -329,6 +366,12 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         flatten(f"world.base.{field}", production.workers(kind), state)
     name = "world.cooking.dining_hall_data"
     flatten(name, kitchen.shelves(), state)
+    for field, value in medical.state().as_fields().items():
+        if field in medical.OLD_TABLES:
+            patients = {pid: p.as_dict() for pid, p in value.items()}
+            flatten(f"world.medical.{field}", patients, state)
+        else:
+            flatten(f"world.medical.{field}", value, state)
     _project_economy(state)
 
 

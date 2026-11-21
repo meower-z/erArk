@@ -365,7 +365,7 @@ def in_settlement() -> bool:
 
 def _frozen(value: JSON) -> JSON:
     if isinstance(value, Mapping):
-        return _frozen_data(value)
+        return value if type(value) is MappingProxyType else _frozen_data(value)
     if isinstance(value, tuple | list):
         return tuple(_frozen(item) for item in value)
     if value is None or isinstance(value, bool | int | float | Fraction | str):
@@ -604,7 +604,7 @@ def with_value(
     game: GameState, who: str | None, key: str, new: JSON
 ) -> GameState:
     """
-    返回改了一项数据的新状态。只冻结 new。状态里已有的值本来就是冻结的，原样沿用。
+    返回改了一项数据的新状态。只冻结 new，new 里的 MappingProxyType 已是冻结的，原样沿用。
     Keyword arguments:
     game -- 游戏状态
     who -- 角色键，None 为全局数据

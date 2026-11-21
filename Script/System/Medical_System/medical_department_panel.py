@@ -19,7 +19,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 from Script.UI.Moudle import draw, view
 from Script.System.Medical_System import medical_constant, medical_service
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, medical
 
 cache: game_type.Cache = cache_control.cache
 """ 全局缓存对象 """
@@ -63,6 +63,7 @@ class Medical_Department_Panel:
             self.panel_order[5]: FinanceReportSubPanel(width),
         }
 
+    @medical_service.edits
     def draw(self) -> None:
         """绘制医疗部总面板并响应用户输入"""
 
@@ -181,10 +182,10 @@ class OverviewSubPanel(_BaseSubPanel):
         overview_draw.text += _(
             "门诊医生：{0} 人（医疗能力总和 {1}） | 住院医生：{2} 人（医疗能力总和 {3}）\n"
         ).format(
-            len(ri.medical_clinic_doctor_ids),
-            int(ri.medical_clinic_doctor_power or 0),
-            len(ri.medical_hospital_doctor_ids),
-            int(ri.medical_hospital_doctor_power or 0),
+            len(medical.state().clinic_doctor_ids),
+            int(medical.state().clinic_doctor_power or 0),
+            len(medical.state().hospital_doctor_ids),
+            int(medical.state().hospital_doctor_power or 0),
         )
         overview_draw.text += _(
             "门诊排队 {0} 人 | 等待用药 {1} 人 | 住院 {2}/{3} 张床位 | 今日收入 {4} 龙门币\n"
@@ -193,7 +194,7 @@ class OverviewSubPanel(_BaseSubPanel):
             waiting_medication,
             bed_occupied,
             bed_limit,
-            int(ri.medical_income_today),
+            int(medical.state().income_today),
         )
         overview_draw.draw()
 
@@ -219,9 +220,9 @@ class OverviewSubPanel(_BaseSubPanel):
         accumulator_draw = draw.NormalDraw()
         accumulator_draw.width = self.width
         accumulator_draw.text = _("药品扣除缓存：\n")
-        if ri.medical_inventory_accumulator:
+        if medical.state().accumulator:
             for resource_id, progress in sorted(
-                ri.medical_inventory_accumulator.items()
+                medical.state().accumulator.items()
             ):
                 resource_name = game_config.config_resouce.get(resource_id)
                 name = getattr(resource_name, "name", str(resource_id))
@@ -263,10 +264,10 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         info_draw = draw.NormalDraw()
         info_draw.width = self.width
         info_draw.text = _("门诊医生：{0} 人 | 医疗能力总和 {1}\n").format(
-            len(clinic_ids), int(ri.medical_clinic_doctor_power or 0)
+            len(clinic_ids), int(medical.state().clinic_doctor_power or 0)
         )
         info_draw.text += _("住院医生：{0} 人 | 医疗能力总和 {1}\n").format(
-            len(hospital_ids), int(ri.medical_hospital_doctor_power or 0)
+            len(hospital_ids), int(medical.state().hospital_doctor_power or 0)
         )
         info_draw.text += _("床位上限 {0} 张，当前占用 {1} 张\n").format(
             bed_limit, bed_occupied
@@ -500,9 +501,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         self, mode: medical_constant.MedicalPatientPriority
     ) -> None:
         """切换病人接诊优先策略并提示结果"""
-        resolved = medical_service.set_patient_priority_mode(mode)
-        medical_constant.translate_priority(resolved)
-        # self.feedback_text = _("已切换接诊策略为：{0}").format(mode_text)
+        medical_service.set_patient_priority_mode(mode)
 
     def _estimate_remaining_hours(self) -> float:
         """估算当前门诊病人需要的剩余工时"""
@@ -526,7 +525,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
             total_remaining += remaining
 
         total_speed = 0.0
-        for doctor_id in cache.rhodes_island.medical_clinic_doctor_ids:
+        for doctor_id in medical.state().clinic_doctor_ids:
             character = cache.character_data.get(doctor_id)
             if character is None:
                 continue
@@ -705,7 +704,7 @@ class MedicalDetailSubPanel(_BaseSubPanel):
         accumulator_draw.width = self.width
         accumulator_draw.text = _("药品扣除缓存：\n")
         for resource_id, progress in sorted(
-            ri.medical_inventory_accumulator.items()
+            medical.state().accumulator.items()
         ):
             resource_name = game_config.config_resouce.get(resource_id)
             name = getattr(resource_name, "name", str(resource_id))
@@ -758,7 +757,7 @@ class SurgeryManagementSubPanel(_BaseSubPanel):
         record_draw = draw.NormalDraw()
         record_draw.width = self.width
         record_draw.text = _("近期手术记录：\n")
-        for record in cache.rhodes_island.medical_surgery_records[-10:]:
+        for record in medical.state().surgery_records[-10:]:
             doctor_data = cache.character_data.get(record.get("doctor_id", 0))
             doctor_name = getattr(doctor_data, "name", "-")
             record_draw.text += _(
@@ -769,7 +768,7 @@ class SurgeryManagementSubPanel(_BaseSubPanel):
                 doctor_name or "-",
                 record.get("status", "-"),
             )
-        if not cache.rhodes_island.medical_surgery_records:
+        if not medical.state().surgery_records:
             record_draw.text += _("  暂无手术记录\n")
         record_draw.draw()
 
@@ -788,14 +787,14 @@ class FinanceReportSubPanel(_BaseSubPanel):
         info_draw = draw.NormalDraw()
         info_draw.width = self.width
         info_draw.text = _("今日医疗收入：{0} 龙门币\n").format(
-            int(ri.medical_income_today)
+            int(medical.state().income_today)
         )
         info_draw.text += _("累计医疗收入：{0} 龙门币\n").format(
-            int(ri.medical_income_total)
+            int(medical.state().income_total)
         )
 
         counters = medical_constant.MedicalDailyCounters.from_mapping(
-            getattr(ri, "medical_daily_counters", None)
+            medical.state().daily_counters
         )
         counter_dict = counters.as_dict()
         if counter_dict:
