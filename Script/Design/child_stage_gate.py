@@ -6,6 +6,7 @@
 
 from Script.Core import cache_control, constant, game_type
 from Script.Config import game_config
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -48,7 +49,7 @@ def is_child_stage(character_id: int) -> bool:
     if character_data is None:
         return False
     return any(
-        character_data.talent.get(talent_id, 0)
+        abilities.talent(character_data.cid).get(talent_id, 0)
         for talent_id in CHILD_STAGE_TALENTS
     )
 

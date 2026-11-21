@@ -26,7 +26,7 @@ from Script.Design import (
     handle_ability,
     second_behavior,
 )
-from Script.Modules.domains import facility
+from Script.Modules.domains import abilities, facility
 
 panel_info_data: dict[str, object] = {}
 
@@ -77,7 +77,7 @@ def total_juel_value_from_entries(
         else:
             juel_id = int(need_juel)
             adjust = 1
-        have_count = character_data.juel.get(juel_id, 0)
+        have_count = abilities.juel(character_data.cid).get(juel_id, 0)
         total += int(have_count * adjust)
     return total
 
@@ -103,6 +103,7 @@ class Characterabi_show_Text:
 
     def draw(self) -> None:
         """绘制对象"""
+        ability = abilities.ability(self.character_id)
         self.return_list = []
         # 绘制标题#
         line_feed.draw()
@@ -120,7 +121,7 @@ class Characterabi_show_Text:
                 # 遍历刻印
                 for ability_id in type_set:
                     # 当前刻印等级
-                    now_mark_level = self.character_data.ability[ability_id]
+                    now_mark_level = ability[ability_id]
                     button_text = f" {game_config.config_ability[ability_id].name}   {now_mark_level} "
                     # 要求：已经记录了刻印升级条件，小于3级，不是负面刻印
                     if (
@@ -200,7 +201,7 @@ class Characterabi_show_Text:
                         continue
                     # 这个_1是为了补空格让格式对齐#
                     now_exp = 0
-                    now_exp = self.character_data.ability[ability_id]
+                    now_exp = ability[ability_id]
                     button_text = f" {ability_data.name} "
                     # 為能力、技能、技巧補上缺少的兩個半形空格
                     if anility_type in (3, 4, 5):
@@ -238,21 +239,17 @@ class Characterabi_show_Text:
                     )
                     self.return_list.append(button_draw.return_text)
                     button_draw.draw()
-                    # py_cmd.clr_cmd()
-                    # if yrn == self.back_draw.return_text:
-                    #     break
             # 只有不是最后一个类型就补个换行#
             if anility_type != 6:
                 new_draw_n = draw.NormalDraw()
                 new_draw_n.text = "\n"
                 new_draw_n.width = 1
                 new_draw_n.draw()
-        # yrn = flow_handle.askfor_all(self.return_list)
 
     def mark_up_show(self, ability_id: int) -> None:
         """显示刻印升级面板"""
         # 获取刻印升级数据
-        now_mark_level = self.character_data.ability[ability_id]
+        now_mark_level = abilities.ability(self.character_id)[ability_id]
         mark_up_data_id = game_config.config_mark_up_data_by_ability[
             ability_id
         ][now_mark_level]
@@ -284,7 +281,7 @@ class Characterabi_show_Text:
         # 宝珠信息
         juel_type_id = mark_up_data.need_juel_type
         juel_name = game_config.config_juel[juel_type_id].name
-        now_juel = self.character_data.juel[juel_type_id]
+        now_juel = abilities.juel(self.character_id)[juel_type_id]
         juel_text = _(
             "减去提供值后需要消耗的宝珠为：{0} {1}，当前拥有：{2}\n"
         ).format(juel_name, need_juel, now_juel)
@@ -335,7 +332,7 @@ class Characterabi_show_Text:
         """显示刻印降级面板"""
         # 调整使用的宝珠
         # 获取刻印降级数据
-        now_mark_level = self.character_data.ability[ability_id]
+        now_mark_level = abilities.ability(self.character_id)[ability_id]
         mark_down_data_id = game_config.config_mark_down_data_by_ability[
             ability_id
         ][now_mark_level]
@@ -478,7 +475,7 @@ class Characterabi_show_Text:
         mark_down_data_all_value: int -- 当前宝珠总值
         need_juel_all_value: int -- 需要的宝珠总值
         """
-        max_count = self.character_data.juel[juel_id]
+        max_count = abilities.juel(self.character_id)[juel_id]
         guess_num = 0
         # 计算预计需要的宝珠数量
         if mark_down_data_all_value >= need_juel_all_value:
@@ -511,16 +508,16 @@ class Characterabi_show_Text:
 
     def mark_up(self, ability_id: int, need_juel: int) -> None:
         """升级刻印"""
-        now_mark_level = self.character_data.ability[ability_id]
+        now_mark_level = abilities.ability(self.character_id)[ability_id]
         mark_up_data_id = game_config.config_mark_up_data_by_ability[
             ability_id
         ][now_mark_level]
         mark_up_data = game_config.config_mark_up_data[mark_up_data_id]
         # 扣除宝珠
         juel_type_id = mark_up_data.need_juel_type
-        self.character_data.juel[juel_type_id] -= need_juel
+        abilities.juel(self.character_id)[juel_type_id] -= need_juel
         # 刻印等级+1
-        self.character_data.ability[ability_id] += 1
+        abilities.ability(self.character_id)[ability_id] += 1
         # 赋予二段行为
         second_behavior_id = mark_up_data.second_behavior
         second_behavior.character_get_second_behavior(
@@ -536,16 +533,18 @@ class Characterabi_show_Text:
     def mark_down(self, ability_id: int) -> None:
         """降级刻印"""
         # 刻印等级-1
-        self.character_data.ability[ability_id] -= 1
+        abilities.ability(self.character_id)[ability_id] -= 1
         # 扣除宝珠
         for juel_id in self.jewel_use_dict:
             # 扣除宝珠
-            self.character_data.juel[juel_id] -= self.jewel_use_dict[juel_id]
+            abilities.juel(self.character_id)[juel_id] -= self.jewel_use_dict[
+                juel_id
+            ]
         # 输出降级信息
         info_draw = draw.WaitDraw()
         info_draw.text = _("\n刻印降级成功，{0}降至{1}级\n").format(
             game_config.config_ability[ability_id].name,
-            self.character_data.ability[ability_id],
+            abilities.ability(self.character_id)[ability_id],
         )
         info_draw.style = "gold_enrod"
         info_draw.draw()
@@ -563,10 +562,12 @@ class Characterabi_show_Text:
         检查指定能力是否可升级或可降级
         返回 (can_up: bool, can_down: bool)
         """
+        ability = abilities.ability(self.character_id)
+        juel = abilities.juel(self.character_id)
         can_up = False
         can_down = False
         try:
-            now_level = self.character_data.ability[ability_id]
+            now_level = ability[ability_id]
             # 刻印类能力的判断逻辑
             if (
                 ability_id in game_config.config_mark_up_data_by_ability
@@ -606,9 +607,7 @@ class Characterabi_show_Text:
                             )
                             need_juel = max(need_juel, 0)
                             juel_type_id = mark_up_data.need_juel_type
-                            now_juel = self.character_data.juel.get(
-                                juel_type_id, 0
-                            )
+                            now_juel = juel.get(juel_type_id, 0)
                             if now_juel >= need_juel:
                                 can_up = True
                     except Exception:
@@ -683,11 +682,11 @@ class Characterabi_show_Text:
                 need_type_id = int(need_text.split("|")[0][1:])
                 need_value = int(need_text.split("|")[1])
                 if need_type == "A":
-                    now_value = self.character_data.ability.get(need_type_id, 0)
+                    now_value = ability.get(need_type_id, 0)
                 elif need_type == "J":
-                    now_value = self.character_data.juel.get(need_type_id, 0)
+                    now_value = juel.get(need_type_id, 0)
                 elif need_type == "E":
-                    now_value = self.character_data.experience.get(
+                    now_value = abilities.experience(self.character_id).get(
                         need_type_id, 0
                     )
                 else:
@@ -736,7 +735,7 @@ class Characterabi_cmd_Text:
         """ 监听的按钮列表 """
         self.character_data = cache.character_data[self.character_id]
         """ 角色数据 """
-        self.ability_level = self.character_data.ability[ability_id]
+        self.ability_level = abilities.ability(self.character_id)[ability_id]
         """ 能力等级 """
 
     def draw(self) -> None:
@@ -888,19 +887,18 @@ class Characterabi_cmd_Text:
         jule_dict: dict[int, int] = {}
         # 遍历升级需求，并输出信息
         for need_text in need_list:
-            # print(f"debug need_text = {need_text}")
             need_type = need_text.split("|")[0][0]
             need_type_id = int(need_text.split("|")[0][1:])
             need_value = int(need_text.split("|")[1])
             if need_type == "A":
                 abi_name = game_config.config_ability[need_type_id].name
-                now_value = self.character_data.ability[need_type_id]
+                now_value = abilities.ability(self.character_id)[need_type_id]
                 button_text = _("需要能力 : {0} 至少为{1}，当前为{2}\n").format(
                     abi_name, need_value, now_value
                 )
             elif need_type == "J":
                 juel_name = game_config.config_juel[need_type_id].name
-                now_value = self.character_data.juel[need_type_id]
+                now_value = abilities.juel(self.character_id)[need_type_id]
                 button_text = _("需要宝珠 : {0} 至少为{1}，当前为{2}\n").format(
                     juel_name, need_value, now_value
                 )
@@ -909,7 +907,9 @@ class Characterabi_cmd_Text:
                 experience_name = game_config.config_experience[
                     need_type_id
                 ].name
-                now_value = self.character_data.experience[need_type_id]
+                now_value = abilities.experience(self.character_id)[
+                    need_type_id
+                ]
                 button_text = _("需要经验 : {0} 至少为{1}，当前为{2}\n").format(
                     experience_name, need_value, now_value
                 )
@@ -929,10 +929,10 @@ class Characterabi_cmd_Text:
         None
         """
         for need_type_id in jule_dict:
-            cache.character_data[self.character_id].juel[
+            abilities.juel(self.character_id)[need_type_id] -= jule_dict[
                 need_type_id
-            ] -= jule_dict[need_type_id]
-        cache.character_data[self.character_id].ability[self.ability_id] += 1
+            ]
+        abilities.ability(self.character_id)[self.ability_id] += 1
         # 结算成就
         achievement_panel.achievement_flow(_("技能"))
 

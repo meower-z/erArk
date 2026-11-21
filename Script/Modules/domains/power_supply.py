@@ -10,9 +10,10 @@ from types import FunctionType
 from typing import TypedDict
 
 from Script.Config import game_config
-from Script.Core import cache_control, get_text
+from Script.Core import get_text
 from Script.Design import handle_ability
 from Script.Modules.domains import facility, location, power, warehouse
+from Script.Modules.domains import abilities
 
 _: FunctionType = get_text._
 
@@ -88,7 +89,7 @@ def operator_bonus(kind: int = -1) -> float:
     total: float = 0
     for chara_id in power.operator_ids():
         try:
-            ability = cache_control.cache.character_data[chara_id].ability[48]
+            ability = abilities.ability(chara_id)[48]
             value = handle_ability.get_ability_adjust(ability) - 1
         except Exception:
             value = handle_ability.get_ability_adjust(0) - 1

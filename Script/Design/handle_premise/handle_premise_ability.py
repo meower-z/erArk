@@ -3,6 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -21,7 +22,7 @@ def handle_t_nfeel_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[0] >= 1:
+    if abilities.ability(target_data.cid)[0] >= 1:
         return 1
     return 0
 
@@ -37,7 +38,7 @@ def handle_t_nfeel_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[0] >= 3:
+    if abilities.ability(target_data.cid)[0] >= 3:
         return 1
     return 0
 
@@ -53,7 +54,7 @@ def handle_t_nfeel_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[0] >= 5:
+    if abilities.ability(target_data.cid)[0] >= 5:
         return 1
     return 0
 
@@ -69,7 +70,7 @@ def handle_t_nfeel_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[0] >= 7:
+    if abilities.ability(target_data.cid)[0] >= 7:
         return 1
     return 0
 
@@ -85,7 +86,7 @@ def handle_t_nfeel_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[0] < 1:
+    if abilities.ability(target_data.cid)[0] < 1:
         return 1
     return 0
 
@@ -101,7 +102,7 @@ def handle_t_nfeel_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[0] < 3:
+    if abilities.ability(target_data.cid)[0] < 3:
         return 1
     return 0
 
@@ -117,7 +118,7 @@ def handle_t_nfeel_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[0] < 5:
+    if abilities.ability(target_data.cid)[0] < 5:
         return 1
     return 0
 
@@ -133,7 +134,7 @@ def handle_t_bfeel_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[1] >= 1:
+    if abilities.ability(target_data.cid)[1] >= 1:
         return 1
     return 0
 
@@ -149,7 +150,7 @@ def handle_t_bfeel_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[1] >= 3:
+    if abilities.ability(target_data.cid)[1] >= 3:
         return 1
     return 0
 
@@ -165,7 +166,7 @@ def handle_t_bfeel_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[1] >= 5:
+    if abilities.ability(target_data.cid)[1] >= 5:
         return 1
     return 0
 
@@ -181,7 +182,7 @@ def handle_t_bfeel_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[1] >= 7:
+    if abilities.ability(target_data.cid)[1] >= 7:
         return 1
     return 0
 
@@ -197,7 +198,7 @@ def handle_t_bfeel_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[1] < 1:
+    if abilities.ability(target_data.cid)[1] < 1:
         return 1
     return 0
 
@@ -213,7 +214,7 @@ def handle_t_bfeel_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[1] < 3:
+    if abilities.ability(target_data.cid)[1] < 3:
         return 1
     return 0
 
@@ -229,7 +230,7 @@ def handle_t_bfeel_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[1] < 5:
+    if abilities.ability(target_data.cid)[1] < 5:
         return 1
     return 0
 
@@ -245,7 +246,7 @@ def handle_t_cfeel_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[2] >= 1:
+    if abilities.ability(target_data.cid)[2] >= 1:
         return 1
     return 0
 
@@ -261,7 +262,7 @@ def handle_t_cfeel_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[2] >= 3:
+    if abilities.ability(target_data.cid)[2] >= 3:
         return 1
     return 0
 
@@ -277,7 +278,7 @@ def handle_t_cfeel_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[2] >= 5:
+    if abilities.ability(target_data.cid)[2] >= 5:
         return 1
     return 0
 
@@ -293,7 +294,7 @@ def handle_t_cfeel_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[2] >= 7:
+    if abilities.ability(target_data.cid)[2] >= 7:
         return 1
     return 0
 
@@ -309,7 +310,7 @@ def handle_t_cfeel_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[2] < 1:
+    if abilities.ability(target_data.cid)[2] < 1:
         return 1
     return 0
 
@@ -325,7 +326,7 @@ def handle_t_cfeel_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[2] < 3:
+    if abilities.ability(target_data.cid)[2] < 3:
         return 1
     return 0
 
@@ -341,7 +342,7 @@ def handle_t_cfeel_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[2] < 5:
+    if abilities.ability(target_data.cid)[2] < 5:
         return 1
     return 0
 
@@ -355,8 +356,7 @@ def handle_pfeel_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[3] >= 1:
+    if abilities.ability(character_id)[3] >= 1:
         return 1
     return 0
 
@@ -370,8 +370,7 @@ def handle_pfeel_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[3] >= 3:
+    if abilities.ability(character_id)[3] >= 3:
         return 1
     return 0
 
@@ -385,8 +384,7 @@ def handle_pfeel_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[3] >= 5:
+    if abilities.ability(character_id)[3] >= 5:
         return 1
     return 0
 
@@ -400,8 +398,7 @@ def handle_pfeel_ge_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[3] >= 7:
+    if abilities.ability(character_id)[3] >= 7:
         return 1
     return 0
 
@@ -415,8 +412,7 @@ def handle_pfeel_l_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[3] < 1:
+    if abilities.ability(character_id)[3] < 1:
         return 1
     return 0
 
@@ -430,8 +426,7 @@ def handle_pfeel_l_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[3] < 3:
+    if abilities.ability(character_id)[3] < 3:
         return 1
     return 0
 
@@ -445,8 +440,7 @@ def handle_pfeel_l_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[3] < 5:
+    if abilities.ability(character_id)[3] < 5:
         return 1
     return 0
 
@@ -462,7 +456,7 @@ def handle_t_vfeel_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[4] >= 1:
+    if abilities.ability(target_data.cid)[4] >= 1:
         return 1
     return 0
 
@@ -478,7 +472,7 @@ def handle_t_vfeel_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[4] >= 3:
+    if abilities.ability(target_data.cid)[4] >= 3:
         return 1
     return 0
 
@@ -494,7 +488,7 @@ def handle_t_vfeel_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[4] >= 5:
+    if abilities.ability(target_data.cid)[4] >= 5:
         return 1
     return 0
 
@@ -510,7 +504,7 @@ def handle_t_vfeel_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[4] >= 7:
+    if abilities.ability(target_data.cid)[4] >= 7:
         return 1
     return 0
 
@@ -526,7 +520,7 @@ def handle_t_vfeel_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[4] < 1:
+    if abilities.ability(target_data.cid)[4] < 1:
         return 1
     return 0
 
@@ -542,7 +536,7 @@ def handle_t_vfeel_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[4] < 3:
+    if abilities.ability(target_data.cid)[4] < 3:
         return 1
     return 0
 
@@ -558,7 +552,7 @@ def handle_t_vfeel_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[4] < 5:
+    if abilities.ability(target_data.cid)[4] < 5:
         return 1
     return 0
 
@@ -574,7 +568,7 @@ def handle_t_afeel_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[5] >= 1:
+    if abilities.ability(target_data.cid)[5] >= 1:
         return 1
     return 0
 
@@ -590,7 +584,7 @@ def handle_t_afeel_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[5] >= 3:
+    if abilities.ability(target_data.cid)[5] >= 3:
         return 1
     return 0
 
@@ -606,7 +600,7 @@ def handle_t_afeel_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[5] >= 5:
+    if abilities.ability(target_data.cid)[5] >= 5:
         return 1
     return 0
 
@@ -622,7 +616,7 @@ def handle_t_afeel_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[5] >= 7:
+    if abilities.ability(target_data.cid)[5] >= 7:
         return 1
     return 0
 
@@ -638,7 +632,7 @@ def handle_t_afeel_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[5] < 1:
+    if abilities.ability(target_data.cid)[5] < 1:
         return 1
     return 0
 
@@ -654,7 +648,7 @@ def handle_t_afeel_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[5] < 3:
+    if abilities.ability(target_data.cid)[5] < 3:
         return 1
     return 0
 
@@ -670,7 +664,7 @@ def handle_t_afeel_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[5] < 5:
+    if abilities.ability(target_data.cid)[5] < 5:
         return 1
     return 0
 
@@ -686,7 +680,7 @@ def handle_t_ufeel_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[6] >= 1:
+    if abilities.ability(target_data.cid)[6] >= 1:
         return 1
     return 0
 
@@ -702,7 +696,7 @@ def handle_t_ufeel_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[6] >= 3:
+    if abilities.ability(target_data.cid)[6] >= 3:
         return 1
     return 0
 
@@ -718,7 +712,7 @@ def handle_t_ufeel_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[6] >= 5:
+    if abilities.ability(target_data.cid)[6] >= 5:
         return 1
     return 0
 
@@ -734,7 +728,7 @@ def handle_t_ufeel_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[6] >= 7:
+    if abilities.ability(target_data.cid)[6] >= 7:
         return 1
     return 0
 
@@ -750,7 +744,7 @@ def handle_t_ufeel_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[6] < 1:
+    if abilities.ability(target_data.cid)[6] < 1:
         return 1
     return 0
 
@@ -766,7 +760,7 @@ def handle_t_ufeel_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[6] < 3:
+    if abilities.ability(target_data.cid)[6] < 3:
         return 1
     return 0
 
@@ -782,7 +776,7 @@ def handle_t_ufeel_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[6] < 5:
+    if abilities.ability(target_data.cid)[6] < 5:
         return 1
     return 0
 
@@ -798,7 +792,7 @@ def handle_t_wfeel_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[7] >= 1:
+    if abilities.ability(target_data.cid)[7] >= 1:
         return 1
     return 0
 
@@ -814,7 +808,7 @@ def handle_t_wfeel_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[7] >= 3:
+    if abilities.ability(target_data.cid)[7] >= 3:
         return 1
     return 0
 
@@ -830,7 +824,7 @@ def handle_t_wfeel_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[7] >= 5:
+    if abilities.ability(target_data.cid)[7] >= 5:
         return 1
     return 0
 
@@ -846,7 +840,7 @@ def handle_t_wfeel_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[7] >= 7:
+    if abilities.ability(target_data.cid)[7] >= 7:
         return 1
     return 0
 
@@ -862,7 +856,7 @@ def handle_t_wfeel_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[7] < 1:
+    if abilities.ability(target_data.cid)[7] < 1:
         return 1
     return 0
 
@@ -878,7 +872,7 @@ def handle_t_wfeel_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[7] < 3:
+    if abilities.ability(target_data.cid)[7] < 3:
         return 1
     return 0
 
@@ -894,7 +888,7 @@ def handle_t_wfeel_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[7] < 5:
+    if abilities.ability(target_data.cid)[7] < 5:
         return 1
     return 0
 
@@ -910,7 +904,7 @@ def handle_t_u_dilate_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[11] >= 1:
+    if abilities.ability(target_data.cid)[11] >= 1:
         return 1
     return 0
 
@@ -926,7 +920,7 @@ def handle_t_u_dilate_ge_2(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[11] >= 2:
+    if abilities.ability(target_data.cid)[11] >= 2:
         return 1
     return 0
 
@@ -942,7 +936,7 @@ def handle_t_u_dilate_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[11] >= 3:
+    if abilities.ability(target_data.cid)[11] >= 3:
         return 1
     return 0
 
@@ -958,7 +952,7 @@ def handle_t_u_dilate_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[11] >= 5:
+    if abilities.ability(target_data.cid)[11] >= 5:
         return 1
     return 0
 
@@ -974,7 +968,7 @@ def handle_t_w_dilate_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[12] >= 3:
+    if abilities.ability(target_data.cid)[12] >= 3:
         return 1
     return 0
 
@@ -990,7 +984,7 @@ def handle_t_w_dilate_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[12] >= 5:
+    if abilities.ability(target_data.cid)[12] >= 5:
         return 1
     return 0
 
@@ -1004,8 +998,7 @@ def handle_technique_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[30] >= 3:
+    if abilities.ability(character_id)[30] >= 3:
         return 1
     return 0
 
@@ -1019,8 +1012,7 @@ def handle_technique_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[30] >= 5:
+    if abilities.ability(character_id)[30] >= 5:
         return 1
     return 0
 
@@ -1034,8 +1026,7 @@ def handle_finger_technique_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[70] >= 3:
+    if abilities.ability(character_id)[70] >= 3:
         return 1
     return 0
 
@@ -1049,8 +1040,7 @@ def handle_finger_technique_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[70] >= 5:
+    if abilities.ability(character_id)[70] >= 5:
         return 1
     return 0
 
@@ -1064,8 +1054,7 @@ def handle_waist_technique_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[76] >= 3:
+    if abilities.ability(character_id)[76] >= 3:
         return 1
     return 0
 
@@ -1079,8 +1068,7 @@ def handle_waist_technique_ge_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[76] >= 4:
+    if abilities.ability(character_id)[76] >= 4:
         return 1
     return 0
 
@@ -1094,8 +1082,7 @@ def handle_waist_technique_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[76] >= 5:
+    if abilities.ability(character_id)[76] >= 5:
         return 1
     return 0
 
@@ -1109,8 +1096,7 @@ def handle_waist_technique_ge_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[76] >= 7:
+    if abilities.ability(character_id)[76] >= 7:
         return 1
     return 0
 
@@ -1126,7 +1112,7 @@ def handle_t_technique_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[30] >= 3:
+    if abilities.ability(target_data.cid)[30] >= 3:
         return 1
     return 0
 
@@ -1142,7 +1128,7 @@ def handle_t_technique_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[30] >= 5:
+    if abilities.ability(target_data.cid)[30] >= 5:
         return 1
     return 0
 
@@ -1178,7 +1164,7 @@ def handle_t_submit_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[31] >= 1:
+    if abilities.ability(target_data.cid)[31] >= 1:
         return 1
     return 0
 
@@ -1194,7 +1180,7 @@ def handle_t_submit_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[31] >= 3:
+    if abilities.ability(target_data.cid)[31] >= 3:
         return 1
     return 0
 
@@ -1210,7 +1196,7 @@ def handle_t_submit_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[31] >= 5:
+    if abilities.ability(target_data.cid)[31] >= 5:
         return 1
     return 0
 
@@ -1226,7 +1212,7 @@ def handle_t_submit_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[31] >= 7:
+    if abilities.ability(target_data.cid)[31] >= 7:
         return 1
     return 0
 
@@ -1242,7 +1228,7 @@ def handle_t_submit_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[31] < 1:
+    if abilities.ability(target_data.cid)[31] < 1:
         return 1
     return 0
 
@@ -1258,7 +1244,7 @@ def handle_t_submit_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[31] < 3:
+    if abilities.ability(target_data.cid)[31] < 3:
         return 1
     return 0
 
@@ -1274,7 +1260,7 @@ def handle_t_submit_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[31] < 5:
+    if abilities.ability(target_data.cid)[31] < 5:
         return 1
     return 0
 
@@ -1290,7 +1276,7 @@ def handle_target_intimacy_8(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[32] == 8:
+    if abilities.ability(target_data.cid)[32] == 8:
         return 1
     return 0
 
@@ -1306,7 +1292,7 @@ def handle_target_intimacy_le_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[32] <= 1:
+    if abilities.ability(target_data.cid)[32] <= 1:
         return 1
     return 0
 
@@ -1322,7 +1308,7 @@ def handle_target_intimacy_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[32] >= 3:
+    if abilities.ability(target_data.cid)[32] >= 3:
         return 1
     return 0
 
@@ -1338,7 +1324,7 @@ def handle_target_intimacy_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[32] >= 5:
+    if abilities.ability(target_data.cid)[32] >= 5:
         return 1
     return 0
 
@@ -1354,7 +1340,7 @@ def handle_target_desire_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[33] >= 5:
+    if abilities.ability(target_data.cid)[33] >= 5:
         return 1
     return 0
 
@@ -1370,7 +1356,7 @@ def handle_target_desire_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[33] >= 7:
+    if abilities.ability(target_data.cid)[33] >= 7:
         return 1
     return 0
 
@@ -1386,7 +1372,7 @@ def handle_t_exhibit_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[34] >= 1:
+    if abilities.ability(target_data.cid)[34] >= 1:
         return 1
     return 0
 
@@ -1402,7 +1388,7 @@ def handle_t_exhibit_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[34] >= 3:
+    if abilities.ability(target_data.cid)[34] >= 3:
         return 1
     return 0
 
@@ -1418,7 +1404,7 @@ def handle_t_exhibit_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[34] >= 5:
+    if abilities.ability(target_data.cid)[34] >= 5:
         return 1
     return 0
 
@@ -1434,7 +1420,7 @@ def handle_t_exhibit_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[34] >= 7:
+    if abilities.ability(target_data.cid)[34] >= 7:
         return 1
     return 0
 
@@ -1450,7 +1436,7 @@ def handle_t_exhibit_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[34] < 1:
+    if abilities.ability(target_data.cid)[34] < 1:
         return 1
     return 0
 
@@ -1466,7 +1452,7 @@ def handle_t_exhibit_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[34] < 3:
+    if abilities.ability(target_data.cid)[34] < 3:
         return 1
     return 0
 
@@ -1482,7 +1468,7 @@ def handle_t_exhibit_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[34] < 5:
+    if abilities.ability(target_data.cid)[34] < 5:
         return 1
     return 0
 
@@ -1496,8 +1482,7 @@ def handle_s_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[35] >= 1:
+    if abilities.ability(character_id)[35] >= 1:
         return 1
     return 0
 
@@ -1511,8 +1496,7 @@ def handle_s_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[35] >= 3:
+    if abilities.ability(character_id)[35] >= 3:
         return 1
     return 0
 
@@ -1526,8 +1510,7 @@ def handle_s_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[35] >= 5:
+    if abilities.ability(character_id)[35] >= 5:
         return 1
     return 0
 
@@ -1541,8 +1524,7 @@ def handle_s_ge_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[35] >= 7:
+    if abilities.ability(character_id)[35] >= 7:
         return 1
     return 0
 
@@ -1556,8 +1538,7 @@ def handle_s_l_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[35] < 1:
+    if abilities.ability(character_id)[35] < 1:
         return 1
     return 0
 
@@ -1571,8 +1552,7 @@ def handle_s_l_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[35] < 3:
+    if abilities.ability(character_id)[35] < 3:
         return 1
     return 0
 
@@ -1586,8 +1566,7 @@ def handle_s_l_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[35] < 5:
+    if abilities.ability(character_id)[35] < 5:
         return 1
     return 0
 
@@ -1603,7 +1582,7 @@ def handle_t_s_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[35] >= 1:
+    if abilities.ability(target_data.cid)[35] >= 1:
         return 1
     return 0
 
@@ -1619,7 +1598,7 @@ def handle_t_s_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[35] >= 3:
+    if abilities.ability(target_data.cid)[35] >= 3:
         return 1
     return 0
 
@@ -1635,7 +1614,7 @@ def handle_t_s_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[35] >= 5:
+    if abilities.ability(target_data.cid)[35] >= 5:
         return 1
     return 0
 
@@ -1651,7 +1630,7 @@ def handle_t_s_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[35] >= 7:
+    if abilities.ability(target_data.cid)[35] >= 7:
         return 1
     return 0
 
@@ -1667,7 +1646,7 @@ def handle_t_s_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[35] < 1:
+    if abilities.ability(target_data.cid)[35] < 1:
         return 1
     return 0
 
@@ -1683,7 +1662,7 @@ def handle_t_s_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[35] < 3:
+    if abilities.ability(target_data.cid)[35] < 3:
         return 1
     return 0
 
@@ -1699,7 +1678,7 @@ def handle_t_s_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[35] < 5:
+    if abilities.ability(target_data.cid)[35] < 5:
         return 1
     return 0
 
@@ -1713,8 +1692,7 @@ def handle_m_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[36] >= 1:
+    if abilities.ability(character_id)[36] >= 1:
         return 1
     return 0
 
@@ -1728,8 +1706,7 @@ def handle_m_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[36] >= 3:
+    if abilities.ability(character_id)[36] >= 3:
         return 1
     return 0
 
@@ -1743,8 +1720,7 @@ def handle_m_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[36] >= 5:
+    if abilities.ability(character_id)[36] >= 5:
         return 1
     return 0
 
@@ -1758,8 +1734,7 @@ def handle_m_ge_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[36] >= 7:
+    if abilities.ability(character_id)[36] >= 7:
         return 1
     return 0
 
@@ -1773,8 +1748,7 @@ def handle_m_l_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[36] < 1:
+    if abilities.ability(character_id)[36] < 1:
         return 1
     return 0
 
@@ -1788,8 +1762,7 @@ def handle_m_l_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[36] < 3:
+    if abilities.ability(character_id)[36] < 3:
         return 1
     return 0
 
@@ -1803,8 +1776,7 @@ def handle_m_l_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[36] < 5:
+    if abilities.ability(character_id)[36] < 5:
         return 1
     return 0
 
@@ -1820,7 +1792,7 @@ def handle_t_m_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[36] >= 1:
+    if abilities.ability(target_data.cid)[36] >= 1:
         return 1
     return 0
 
@@ -1836,7 +1808,7 @@ def handle_t_m_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[36] >= 3:
+    if abilities.ability(target_data.cid)[36] >= 3:
         return 1
     return 0
 
@@ -1852,7 +1824,7 @@ def handle_t_m_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[36] >= 5:
+    if abilities.ability(target_data.cid)[36] >= 5:
         return 1
     return 0
 
@@ -1868,7 +1840,7 @@ def handle_t_m_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[36] >= 7:
+    if abilities.ability(target_data.cid)[36] >= 7:
         return 1
     return 0
 
@@ -1884,7 +1856,7 @@ def handle_t_m_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[36] < 1:
+    if abilities.ability(target_data.cid)[36] < 1:
         return 1
     return 0
 
@@ -1900,7 +1872,7 @@ def handle_t_m_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[36] < 3:
+    if abilities.ability(target_data.cid)[36] < 3:
         return 1
     return 0
 
@@ -1916,7 +1888,7 @@ def handle_t_m_l_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[36] < 5:
+    if abilities.ability(target_data.cid)[36] < 5:
         return 1
     return 0
 
@@ -1932,7 +1904,7 @@ def handle_t_happy_mark_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[13] == 1:
+    if abilities.ability(target_data.cid)[13] == 1:
         return 1
     return 0
 
@@ -1948,7 +1920,7 @@ def handle_t_happy_mark_2(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[13] == 2:
+    if abilities.ability(target_data.cid)[13] == 2:
         return 1
     return 0
 
@@ -1964,7 +1936,7 @@ def handle_t_happy_mark_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[13] == 3:
+    if abilities.ability(target_data.cid)[13] == 3:
         return 1
     return 0
 
@@ -1980,7 +1952,7 @@ def handle_t_happy_mark_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[13] >= 1:
+    if abilities.ability(target_data.cid)[13] >= 1:
         return 1
     return 0
 
@@ -1996,7 +1968,7 @@ def handle_t_happy_mark_le_2(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[13] <= 2:
+    if abilities.ability(target_data.cid)[13] <= 2:
         return 1
     return 0
 
@@ -2012,7 +1984,7 @@ def handle_t_yield_mark_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[14] == 1:
+    if abilities.ability(target_data.cid)[14] == 1:
         return 1
     return 0
 
@@ -2028,7 +2000,7 @@ def handle_t_yield_mark_2(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[14] == 2:
+    if abilities.ability(target_data.cid)[14] == 2:
         return 1
     return 0
 
@@ -2044,7 +2016,7 @@ def handle_t_yield_mark_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[14] == 3:
+    if abilities.ability(target_data.cid)[14] == 3:
         return 1
     return 0
 
@@ -2060,7 +2032,7 @@ def handle_t_yield_mark_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[14] >= 1:
+    if abilities.ability(target_data.cid)[14] >= 1:
         return 1
     return 0
 
@@ -2076,7 +2048,7 @@ def handle_t_yield_mark_le_2(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[14] <= 2:
+    if abilities.ability(target_data.cid)[14] <= 2:
         return 1
     return 0
 
@@ -2090,8 +2062,7 @@ def handle_talk_le_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[40] <= 1:
+    if abilities.ability(character_id)[40] <= 1:
         return 1
     return 0
 
@@ -2105,8 +2076,7 @@ def handle_talk_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[40] >= 3:
+    if abilities.ability(character_id)[40] >= 3:
         return 1
     return 0
 
@@ -2120,8 +2090,7 @@ def handle_talk_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[40] >= 5:
+    if abilities.ability(character_id)[40] >= 5:
         return 1
     return 0
 
@@ -2137,7 +2106,7 @@ def handle_t_talk_le_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[40] <= 1:
+    if abilities.ability(target_data.cid)[40] <= 1:
         return 1
     return 0
 
@@ -2153,7 +2122,7 @@ def handle_t_talk_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[40] >= 3:
+    if abilities.ability(target_data.cid)[40] >= 3:
         return 1
     return 0
 
@@ -2169,7 +2138,7 @@ def handle_t_talk_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[40] >= 5:
+    if abilities.ability(target_data.cid)[40] >= 5:
         return 1
     return 0
 
@@ -2183,8 +2152,7 @@ def handle_cook_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[43] == 1:
+    if abilities.ability(character_id)[43] == 1:
         return 1
     return 0
 
@@ -2198,8 +2166,7 @@ def handle_cook_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[43] == 2:
+    if abilities.ability(character_id)[43] == 2:
         return 1
     return 0
 
@@ -2213,8 +2180,7 @@ def handle_cook_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[43] == 3:
+    if abilities.ability(character_id)[43] == 3:
         return 1
     return 0
 
@@ -2228,8 +2194,7 @@ def handle_cook_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[43] == 4:
+    if abilities.ability(character_id)[43] == 4:
         return 1
     return 0
 
@@ -2243,8 +2208,7 @@ def handle_cook_le_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[43] <= 1:
+    if abilities.ability(character_id)[43] <= 1:
         return 1
     return 0
 
@@ -2258,8 +2222,7 @@ def handle_cook_le_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[43] <= 3:
+    if abilities.ability(character_id)[43] <= 3:
         return 1
     return 0
 
@@ -2273,8 +2236,7 @@ def handle_cook_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[43] >= 3:
+    if abilities.ability(character_id)[43] >= 3:
         return 1
     return 0
 
@@ -2288,8 +2250,7 @@ def handle_cook_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[43] >= 5:
+    if abilities.ability(character_id)[43] >= 5:
         return 1
     return 0
 
@@ -2305,7 +2266,7 @@ def handle_target_cook_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[43] == 1:
+    if abilities.ability(target_data.cid)[43] == 1:
         return 1
     return 0
 
@@ -2321,7 +2282,7 @@ def handle_target_cook_2(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[43] == 2:
+    if abilities.ability(target_data.cid)[43] == 2:
         return 1
     return 0
 
@@ -2337,7 +2298,7 @@ def handle_target_cook_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[43] == 3:
+    if abilities.ability(target_data.cid)[43] == 3:
         return 1
     return 0
 
@@ -2353,7 +2314,7 @@ def handle_target_cook_4(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[43] == 4:
+    if abilities.ability(target_data.cid)[43] == 4:
         return 1
     return 0
 
@@ -2369,7 +2330,7 @@ def handle_target_cook_le_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[43] <= 1:
+    if abilities.ability(target_data.cid)[43] <= 1:
         return 1
     return 0
 
@@ -2385,7 +2346,7 @@ def handle_target_cook_le_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[43] <= 3:
+    if abilities.ability(target_data.cid)[43] <= 3:
         return 1
     return 0
 
@@ -2401,7 +2362,7 @@ def handle_target_cook_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[43] >= 3:
+    if abilities.ability(target_data.cid)[43] >= 3:
         return 1
     return 0
 
@@ -2417,7 +2378,7 @@ def handle_target_cook_g_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[43] > 3:
+    if abilities.ability(target_data.cid)[43] > 3:
         return 1
     return 0
 
@@ -2433,7 +2394,7 @@ def handle_target_cook_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[43] >= 5:
+    if abilities.ability(target_data.cid)[43] >= 5:
         return 1
     return 0
 
@@ -2447,8 +2408,7 @@ def handle_music_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[44] == 1:
+    if abilities.ability(character_id)[44] == 1:
         return 1
     return 0
 
@@ -2462,8 +2422,7 @@ def handle_music_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[44] == 2:
+    if abilities.ability(character_id)[44] == 2:
         return 1
     return 0
 
@@ -2477,8 +2436,7 @@ def handle_music_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[44] == 3:
+    if abilities.ability(character_id)[44] == 3:
         return 1
     return 0
 
@@ -2492,8 +2450,7 @@ def handle_music_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[44] == 4:
+    if abilities.ability(character_id)[44] == 4:
         return 1
     return 0
 
@@ -2507,8 +2464,7 @@ def handle_music_le_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[44] <= 1:
+    if abilities.ability(character_id)[44] <= 1:
         return 1
     return 0
 
@@ -2522,8 +2478,7 @@ def handle_music_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[44] >= 3:
+    if abilities.ability(character_id)[44] >= 3:
         return 1
     return 0
 
@@ -2537,8 +2492,7 @@ def handle_music_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.ability[44] >= 5:
+    if abilities.ability(character_id)[44] >= 5:
         return 1
     return 0
 
@@ -2552,8 +2506,7 @@ def handle_music_ge_2_le_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if 2 <= character_data.ability[44] <= 4:
+    if 2 <= abilities.ability(character_id)[44] <= 4:
         return 1
     return 0
 
@@ -2569,7 +2522,7 @@ def handle_target_music_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[44] == 1:
+    if abilities.ability(target_data.cid)[44] == 1:
         return 1
     return 0
 
@@ -2585,7 +2538,7 @@ def handle_target_music_2(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[44] == 2:
+    if abilities.ability(target_data.cid)[44] == 2:
         return 1
     return 0
 
@@ -2601,7 +2554,7 @@ def handle_target_music_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[44] == 3:
+    if abilities.ability(target_data.cid)[44] == 3:
         return 1
     return 0
 
@@ -2617,7 +2570,7 @@ def handle_target_music_4(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[44] == 4:
+    if abilities.ability(target_data.cid)[44] == 4:
         return 1
     return 0
 
@@ -2633,7 +2586,7 @@ def handle_target_music_le_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[44] <= 1:
+    if abilities.ability(target_data.cid)[44] <= 1:
         return 1
     return 0
 
@@ -2649,7 +2602,7 @@ def handle_target_music_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[44] >= 3:
+    if abilities.ability(target_data.cid)[44] >= 3:
         return 1
     return 0
 
@@ -2665,7 +2618,7 @@ def handle_target_music_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[44] >= 5:
+    if abilities.ability(target_data.cid)[44] >= 5:
         return 1
     return 0
 
@@ -2681,7 +2634,7 @@ def handle_t_finger_tec_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[70] >= 1:
+    if abilities.ability(target_data.cid)[70] >= 1:
         return 1
     return 0
 
@@ -2697,7 +2650,7 @@ def handle_t_finger_tec_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[70] >= 3:
+    if abilities.ability(target_data.cid)[70] >= 3:
         return 1
     return 0
 
@@ -2713,7 +2666,7 @@ def handle_t_finger_tec_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[70] >= 5:
+    if abilities.ability(target_data.cid)[70] >= 5:
         return 1
     return 0
 
@@ -2729,7 +2682,7 @@ def handle_t_finger_tec_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[70] >= 7:
+    if abilities.ability(target_data.cid)[70] >= 7:
         return 1
     return 0
 
@@ -2745,7 +2698,7 @@ def handle_t_finger_tec_0(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[70] == 0:
+    if abilities.ability(target_data.cid)[70] == 0:
         return 1
     return 0
 
@@ -2761,7 +2714,7 @@ def handle_t_finger_tec_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[70] < 3:
+    if abilities.ability(target_data.cid)[70] < 3:
         return 1
     return 0
 
@@ -2777,6 +2730,6 @@ def handle_t_finger_tec_l_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.ability[70] < 7:
+    if abilities.ability(target_data.cid)[70] < 7:
         return 1
     return 0

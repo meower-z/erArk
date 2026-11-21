@@ -14,7 +14,7 @@ from Script.Core import (
 from Script.Core.num import Num
 from Script.Design import game_time
 from Script.Config import game_config
-from Script.Modules.domains import facility
+from Script.Modules.domains import abilities, facility
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -495,7 +495,7 @@ def get_item_zero(item_dict: dict[int, int]) -> dict[int, int]:
     return item_list
 
 
-def get_Dr_talent_zero(juel_dict: dict[int, int]) -> dict[int, int]:
+def get_Dr_talent_zero(juel_dict: abilities.Table) -> abilities.Table:
     """
     检查是否是0号角色，将特定项补为0
     """
@@ -975,13 +975,13 @@ def judge_require(
         judge_type_id = int(judge_text.split("|")[0][1:] or 0)
         judge_value = int(judge_text.split("|")[1])
         if judge_type == "A":
-            if character_data.ability[judge_type_id] < judge_value:
+            if abilities.ability(character_id)[judge_type_id] < judge_value:
                 judge = 0
                 reason += f"{game_config.config_ability[judge_type_id].name}>={judge_value}  "
                 break
         elif judge_type == "T":
             # 素质条件的写法是 T<素质id>|<要求值>，与上面的 A/J/E 一样，id 在竖线**前面**
-            if character_data.talent[judge_type_id] != judge_value:
+            if abilities.talent(character_id)[judge_type_id] != judge_value:
                 judge = 0
                 if judge_value:
                     reason += (
@@ -993,12 +993,12 @@ def judge_require(
                     )
                 break
         elif judge_type == "J":
-            if character_data.juel[judge_type_id] < judge_value:
+            if abilities.juel(character_id)[judge_type_id] < judge_value:
                 judge = 0
                 reason += f"{game_config.config_juel[judge_type_id].name}>={judge_value}  "
                 break
         elif judge_type == "E":
-            if character_data.experience[judge_type_id] < judge_value:
+            if abilities.experience(character_id)[judge_type_id] < judge_value:
                 judge = 0
                 reason += f"{game_config.config_experience[judge_type_id].name}>={judge_value}  "
                 break

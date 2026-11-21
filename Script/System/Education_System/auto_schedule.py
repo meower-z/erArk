@@ -17,6 +17,7 @@
 from Script.Core import cache_control, game_type
 from Script.Design import game_time
 from Script.System.Education_System import education_constant, schedule_handle
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -80,9 +81,8 @@ def pick_best_teacher(
             teacher_id, week_day, period, classroom
         ):
             continue
-        teacher_data: game_type.Character = cache.character_data[teacher_id]
         # ability 的值可能是 float，比较前一律 int()
-        now_level = int(teacher_data.ability.get(ability_id, 0))
+        now_level = int(abilities.ability(teacher_id).get(ability_id, 0))
         if now_level > best_level:
             best_level = now_level
             best_id = teacher_id
@@ -183,7 +183,6 @@ def auto_fill_selected_course(character_id: int) -> tuple[int, int]:
         room: schedule_handle.get_course_type_by_classroom(room)
         for room in room_list
     }
-    character_data: game_type.Character = cache.character_data[character_id]
 
     filled_count = 0
     skip_count = 0
@@ -207,7 +206,7 @@ def auto_fill_selected_course(character_id: int) -> tuple[int, int]:
                 )
                 if cell is None:
                     continue
-                now_level = int(character_data.ability.get(cell[0], 0))
+                now_level = int(abilities.ability(character_id).get(cell[0], 0))
                 # 取等级最低的那门；并列时取教室顺序靠前的（room_list 已按理论→实践→大礼堂排好）
                 if best_room == "" or now_level < best_level:
                     best_room = classroom

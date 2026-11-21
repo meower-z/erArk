@@ -9,7 +9,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_premise, map_handle
-from Script.Modules.domains import prison
+from Script.Modules.domains import abilities, prison
 from Script.UI.Moudle import draw
 
 cache: game_type.Cache = cache_control.cache
@@ -281,6 +281,7 @@ def get_underwear(
     Return arguments:\n
     无
     """
+    talent = abilities.talent(character_id)
     character_data = cache.character_data[character_id]
     # 60,幼女,61,萝莉,62,少女,63,成年,64,长生者
 
@@ -339,7 +340,7 @@ def get_underwear(
             bra_id = random.choice(bra_H_list)
             character_data.cloth.cloth_wear[6].append(bra_id)
         # 童装：幼女
-        elif character_data.talent[102]:
+        elif talent[102]:
             bra_id = random.choice(bra_loli_list)
             character_data.cloth.cloth_wear[6].append(bra_id)
         # 正常
@@ -355,7 +356,7 @@ def get_underwear(
         if type_cid == 2 and len(pan_H_list):
             pan_id = random.choice(pan_H_list)
             character_data.cloth.cloth_wear[9].append(pan_id)
-        elif character_data.talent[102]:
+        elif talent[102]:
             pan_id = random.choice(pan_loli_list)
             character_data.cloth.cloth_wear[9].append(pan_id)
         else:
@@ -648,22 +649,20 @@ def chara_special_wear_cloth(character_id: int) -> list[int]:
     Return arguments:
     无
     """
+    talent = abilities.talent(character_id)
     return_list = []
     if character_id:
         character_data = cache.character_data[character_id]
-        # print(f"debug name = {character_data.name}")
 
         # 阿米娅必须戴抑制戒指
         if character_data.adv == 1:
             if 701 not in character_data.cloth.cloth_wear[7]:
                 character_data.cloth.cloth_wear[7].append(701)
-                # print("换上戒指了")
             return_list.append(701)
         # 源石病感染者必须戴监测环
-        if character_data.talent[150]:
+        if talent[150]:
             if 1301 not in character_data.cloth.cloth_wear[13]:
                 character_data.cloth.cloth_wear[13].append(1301)
-                # print("换上监测环了")
             return_list.append(1301)
         # 囚犯必须戴镣铐
         if handle_premise.handle_imprisonment_1(character_id):
@@ -672,13 +671,13 @@ def chara_special_wear_cloth(character_id: int) -> list[int]:
                 # print("换上镣铐了")
             return_list.append(1302)
         # 有戒指素质的必须戴戒指
-        if character_data.talent[205]:
+        if talent[205]:
             if 751 not in character_data.cloth.cloth_wear[7]:
                 character_data.cloth.cloth_wear[7].append(751)
                 # print("换上戒指了")
             return_list.append(751)
         # 项圈同理
-        elif character_data.talent[215]:
+        elif talent[215]:
             if 352 not in character_data.cloth.cloth_wear[3]:
                 character_data.cloth.cloth_wear[3].append(352)
                 # print("换上项圈了")
@@ -772,6 +771,7 @@ def get_exposed_body_parts(
         List[int]: 可暴露的身体部位序号列表
     """
     # 初始化返回列表
+    talent = abilities.talent(character_id)
     return_list = []
     # 获取角色数据
     character_data = cache.character_data[character_id]
@@ -802,11 +802,11 @@ def get_exposed_body_parts(
     # 遍历所有身体部位
     for body_part_cid in game_config.config_body_part:
         # 如果角色没有该身体部位则跳过
-        if body_part_cid == 12 and not character_data.talent[113]:
+        if body_part_cid == 12 and not talent[113]:
             continue
-        elif body_part_cid == 13 and not character_data.talent[112]:
+        elif body_part_cid == 13 and not talent[112]:
             continue
-        elif body_part_cid == 14 and not character_data.talent[111]:
+        elif body_part_cid == 14 and not talent[111]:
             continue
 
         now_body_cloth_cid = body_cloth_list[body_part_cid]

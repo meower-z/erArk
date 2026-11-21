@@ -16,13 +16,13 @@ from Script.Design import game_time
 from Script.Design import handle_premise
 from Script.System.Pregnancy_System import egg_handle, family_tree_draw
 from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
@@ -634,7 +634,7 @@ class Pregnancy_Overview_Panel:
             )
             stage_name = _("成年")
             for talent_id in (101, 102, 103, 104):
-                if character_data.talent.get(talent_id):
+                if abilities.talent(character_id).get(talent_id):
                     stage_name = education_constant.STAGE_TALENT_NAME.get(
                         talent_id, _("成年")
                     )

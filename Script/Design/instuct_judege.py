@@ -21,7 +21,7 @@ from Script.Design import (
 )
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import entertainment, needs
+from Script.Modules.domains import abilities, entertainment, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -75,6 +75,8 @@ def calculation_instuct_judege(
     """
     from Script.System.Sex_System import drunk_sex_common
 
+    ability = abilities.ability(target_character_id)
+    talent = abilities.talent(target_character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[target_character_id]
 
@@ -155,22 +157,19 @@ def calculation_instuct_judege(
         calculation_text += _("+状态修正(") + str(judge_status) + ")"
 
     # 能力修正，亲密(32)和欲望(33)修正#
-    judge_ability = target_data.ability[32] * 10 + target_data.ability[33] * 5
+    judge_ability = ability[32] * 10 + ability[33] * 5
     judge += judge_ability
     if judge_ability:
         calculation_text += _("+能力修正(") + str(judge_ability) + ")"
 
     # 刻印修正，快乐(13)、屈服(14)、苦痛(15)、时停(16)、恐怖(17)、反发(18)、无觉(19)修正#
     judge_mark = (
-        target_data.ability[13] * 50
-        + target_data.ability[14] * 50
-        + target_data.ability[15] * 10
-        + target_data.ability[19] * 25
+        ability[13] * 50
+        + ability[14] * 50
+        + ability[15] * 10
+        + ability[19] * 25
     )
-    judge_mark -= (
-        min(target_data.ability[17] - target_data.ability[16], 0) * 50
-        + target_data.ability[18] * 100
-    )
+    judge_mark -= min(ability[17] - ability[16], 0) * 50 + ability[18] * 100
     judge += judge_mark
     if judge_mark:
         calculation_text += _("+全刻印总修正(") + str(judge_mark) + ")"
@@ -184,40 +183,40 @@ def calculation_instuct_judege(
 
     # 陷落素质判定，第一阶段~第四阶段分别为30,50,80,100#
     judge_fall = (
-        target_data.talent[201] * 30
-        + target_data.talent[202] * 50
-        + target_data.talent[203] * 80
-        + target_data.talent[204] * 100
-        + target_data.talent[211] * 30
-        + target_data.talent[212] * 50
-        + target_data.talent[213] * 80
-        + target_data.talent[214] * 100
+        talent[201] * 30
+        + talent[202] * 50
+        + talent[203] * 80
+        + talent[204] * 100
+        + talent[211] * 30
+        + talent[212] * 50
+        + talent[213] * 80
+        + talent[214] * 100
     )
     judge += judge_fall
     if judge_fall:
         calculation_text += _("+陷落修正(") + str(judge_fall) + ")"
     # 讨厌男性修正#
-    judge_hate = target_data.talent[227] * 30
+    judge_hate = talent[227] * 30
     judge -= judge_hate
     if judge_hate:
         calculation_text += _("+讨厌男性(-") + str(judge_hate) + ")"
     # 难以越过的底线修正#
-    judge_hardlove = target_data.talent[224] * 100
+    judge_hardlove = talent[224] * 100
     judge -= judge_hardlove
     if judge_hardlove:
         calculation_text += _("+难以越过的底线(-") + str(judge_hardlove) + ")"
     # 被对方持有把柄修正
-    judge_weakness = target_data.talent[401] * 100
+    judge_weakness = talent[401] * 100
     judge -= judge_weakness
     if judge_weakness:
         calculation_text += _("+被对方持有把柄(-") + str(judge_weakness) + ")"
     # 持有对方把柄修正
-    judge_weakness = target_data.talent[402] * 100
+    judge_weakness = talent[402] * 100
     judge += judge_weakness
     if judge_weakness:
         calculation_text += _("+持有对方把柄(+") + str(judge_weakness) + ")"
     # 女儿修正
-    judge_daughter = target_data.talent[451] * 100
+    judge_daughter = talent[451] * 100
     judge += judge_daughter
     if judge_daughter:
         calculation_text += _("+女儿(+") + str(judge_daughter) + ")"
@@ -265,19 +264,19 @@ def calculation_instuct_judege(
     # 仅性爱指令
     if judge_data_type == "S":
         # 淫乱相关属性修正#
-        if target_data.talent[40]:
+        if talent[40]:
             judge += 50
             calculation_text += _("+淫乱(+50)")
         # 性好奇
-        if target_data.talent[220]:
+        if talent[220]:
             judge += 30
             calculation_text += _("+性好奇(+30)")
         # 性冷漠
-        if target_data.talent[221]:
+        if talent[221]:
             judge -= 30
             calculation_text += _("+性冷漠(-30)")
         # 性无知
-        if target_data.talent[222]:
+        if talent[222]:
             judge += 100
             calculation_text += _("+性无知(+100)")
         # 爱情旅馆修正
@@ -299,9 +298,9 @@ def calculation_instuct_judege(
     # 激素系能力修正#
     if character_data.pl_ability.hormone:
         judge_information = (
-            character_data.talent[304] * 25
-            + character_data.talent[305] * 50
-            + character_data.talent[306] * 100
+            abilities.talent(character_id)[304] * 25
+            + abilities.talent(character_id)[305] * 50
+            + abilities.talent(character_id)[306] * 100
         )
         judge += judge_information
         talent_id = handle_talent.have_hormone_talent()
@@ -328,7 +327,7 @@ def calculation_instuct_judege(
             else:
                 judge_other_people = 25 + 25 * other_chara_count
             # 露出修正
-            adjust = handle_ability.get_ability_adjust(target_data.ability[34])
+            adjust = handle_ability.get_ability_adjust(ability[34])
             judge_other_people = int(judge_other_people * (adjust - 1.6))
             judge += judge_other_people
             calculation_text += (
@@ -402,7 +401,7 @@ def calculation_instuct_judege(
     # A处女修正
     if (
         instruct_name == _("A性交")
-        and target_data.talent[1]
+        and talent[1]
         and handle_premise.handle_self_sexual_ignorance_0(target_character_id)
     ):
         judge -= 350
@@ -411,7 +410,7 @@ def calculation_instuct_judege(
     # W处女修正
     if (
         instruct_name == _("W性交")
-        and target_data.talent[3]
+        and talent[3]
         and handle_premise.handle_self_sexual_ignorance_0(target_character_id)
     ):
         judge -= 400
@@ -420,7 +419,7 @@ def calculation_instuct_judege(
     # U处女修正
     if (
         instruct_name == _("U性交")
-        and target_data.talent[2]
+        and talent[2]
         and handle_premise.handle_self_sexual_ignorance_0(target_character_id)
     ):
         judge -= 400
@@ -429,7 +428,7 @@ def calculation_instuct_judege(
     # 初吻修正
     if (
         instruct_name == _("亲吻")
-        and target_data.talent[4]
+        and talent[4]
         and handle_premise.handle_self_sexual_ignorance_0(target_character_id)
     ):
         judge -= 125
@@ -439,16 +438,16 @@ def calculation_instuct_judege(
     if instruct_name in {_("性交"), _("W性交")}:
         # 妊娠合意、避孕套、避孕中出合意+事前避孕药、性无知，以上可直接通过
         if (
-            target_data.talent[14]
+            talent[14]
             or character_data.h_state.body_item[13][1]
-            or (target_data.talent[13] and target_data.h_state.body_item[11][1])
-            or target_data.talent[222]
+            or (talent[13] and target_data.h_state.body_item[11][1])
+            or talent[222]
         ):
             pass
         else:
             if handle_premise.handle_reproduction_period_0(target_character_id):
                 # 避孕中出合意合意
-                if target_data.talent[13]:
+                if talent[13]:
                     pass
                 else:
                     judge -= 10
@@ -572,23 +571,23 @@ def calculation_instuct_judege(
         ):
             agree_draw = draw.WaitDraw()
             draw_text = ""
-            if instruct_name == _("亲吻") and target_data.talent[11] == 0:
-                target_data.talent[11] = 1
+            if instruct_name == _("亲吻") and talent[11] == 0:
+                talent[11] = 1
                 draw_text += _("\n 获得了{0}的【亲吻合意】\n").format(
                     target_data.name
                 )
-            if instruct_name == _("性交") and target_data.talent[12] == 0:
-                target_data.talent[12] = 1
+            if instruct_name == _("性交") and talent[12] == 0:
+                talent[12] = 1
                 draw_text += _("\n 获得了{0}的【本番合意】\n").format(
                     target_data.name
                 )
-            if instruct_name == _("A性交") and target_data.talent[15] == 0:
-                target_data.talent[15] = 1
+            if instruct_name == _("A性交") and talent[15] == 0:
+                talent[15] = 1
                 draw_text += _("\n 获得了{0}的【Ａ性交合意】\n").format(
                     target_data.name
                 )
-            if instruct_name == _("U性交") and target_data.talent[16] == 0:
-                target_data.talent[16] = 1
+            if instruct_name == _("U性交") and talent[16] == 0:
+                talent[16] = 1
                 draw_text += _("\n 获得了{0}的【Ｕ性交合意】\n").format(
                     target_data.name
                 )
@@ -597,13 +596,13 @@ def calculation_instuct_judege(
             if (
                 handle_premise.handle_no_virgin(target_character_id)
                 and (instruct_name == _("性交") or instruct_name == _("W性交"))
-                and target_data.talent[13] == 0
+                and talent[13] == 0
                 and not condom_flag
                 and handle_premise.handle_reproduction_period_0(
                     target_character_id
                 )
             ):
-                target_data.talent[13] = 1
+                talent[13] = 1
                 draw_text += _("\n 获得了{0}的【避孕中出合意】\n").format(
                     target_data.name
                 )
@@ -611,7 +610,7 @@ def calculation_instuct_judege(
             if (
                 handle_premise.handle_no_virgin(target_character_id)
                 and (instruct_name == _("性交") or instruct_name == _("W性交"))
-                and target_data.talent[14] == 0
+                and talent[14] == 0
                 and not condom_flag
                 and (
                     handle_premise.handle_reproduction_period_2(
@@ -622,7 +621,7 @@ def calculation_instuct_judege(
                     )
                 )
             ):
-                target_data.talent[14] = 1
+                talent[14] = 1
                 draw_text += _("\n 获得了{0}的【妊娠合意】\n").format(
                     target_data.name
                 )
@@ -671,20 +670,21 @@ def ask_text(
     Return arguments:
     str -- 要问的话
     """
+    talent = abilities.talent(target_character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[target_character_id]
     text = ""
-    if instruct_name == _("亲吻") and target_data.talent[4]:
+    if instruct_name == _("亲吻") and talent[4]:
         text += _("\n\n 是否要夺走{0}的初吻？").format(target_data.name)
-    if instruct_name == _("口交") and target_data.talent[4]:
+    if instruct_name == _("口交") and talent[4]:
         text += _("\n\n 是否要用阴茎夺走{0}的初吻？").format(target_data.name)
-    elif instruct_name == _("性交") and target_data.talent[0]:
+    elif instruct_name == _("性交") and talent[0]:
         text += _("\n\n 是否要夺走{0}的阴道处女？").format(target_data.name)
-    elif instruct_name == _("A性交") and target_data.talent[1]:
+    elif instruct_name == _("A性交") and talent[1]:
         text += _("\n\n 是否要夺走{0}的肛门处女？").format(target_data.name)
-    elif instruct_name == _("U性交") and target_data.talent[2]:
+    elif instruct_name == _("U性交") and talent[2]:
         text += _("\n\n 是否要夺走{0}的尿道处女？").format(target_data.name)
-    elif instruct_name == _("W性交") and target_data.talent[3]:
+    elif instruct_name == _("W性交") and talent[3]:
         text += _("\n\n 是否要夺走{0}的子宫处女？").format(target_data.name)
     if _asks_condom(character_data, target_data, instruct_name):
         # 无意识
@@ -693,17 +693,17 @@ def ask_text(
                 target_data.name
             )
         # 妊娠合意
-        elif target_data.talent[14]:
+        elif talent[14]:
             text += _(
                 "{0}已经做好了随时都可以怀孕的准备，是否不戴套？\n"
             ).format(target_data.name)
         # 避孕中出合意+事前避孕药
-        elif target_data.talent[13] and target_data.h_state.body_item[11][1]:
+        elif talent[13] and target_data.h_state.body_item[11][1]:
             text += _(
                 "{0}已经吃过事前避孕药了，所以内射也不会怀孕，是否不戴套？\n"
             ).format(target_data.name)
         # 性无知
-        elif target_data.talent[222]:
+        elif talent[222]:
             text += _("{0}似乎对性和避孕都一无所知，是否不戴套？\n").format(
                 target_data.name
             )

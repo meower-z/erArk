@@ -18,6 +18,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -51,13 +52,13 @@ def calculate_hypnosis_sanity_cost(character_id: int) -> int:
     Return arguments:
     int -- 预计会消耗的理智值
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    talent = abilities.talent(character_id)
     base_cost = 10
-    if character_data.talent[73]:
+    if talent[73]:
         return 1
-    elif character_data.talent[72]:
+    elif talent[72]:
         return base_cost + 20
-    elif character_data.talent[71]:
+    elif talent[71]:
         return base_cost + 15
     else:
         return base_cost + 10
@@ -71,7 +72,7 @@ def hypnosis_degree_calculation(target_character_id: int) -> float:
     Return arguments:
     float -- 催眠增长值
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
+    talent = abilities.talent(0)
     target_character_data: game_type.Character = cache.character_data[
         target_character_id
     ]
@@ -88,9 +89,9 @@ def hypnosis_degree_calculation(target_character_id: int) -> float:
 
     # 根据玩家的催眠能力，计算催眠增长系数
     hypnosis_degree_adjust: float = 2
-    if pl_character_data.talent[334]:
+    if talent[334]:
         hypnosis_degree_adjust = 6
-    elif pl_character_data.talent[333]:
+    elif talent[333]:
         hypnosis_degree_adjust = 4
 
     # 调香的加成
@@ -99,7 +100,7 @@ def hypnosis_degree_calculation(target_character_id: int) -> float:
 
     # 根据无觉刻印的等级，计算催眠增长系数
     hypnosis_degree_adjust *= handle_ability.get_ability_adjust(
-        target_character_data.ability[19]
+        abilities.ability(target_character_id)[19]
     )
 
     # 乘以0.5~1.5的随机系数
@@ -109,7 +110,6 @@ def hypnosis_degree_calculation(target_character_id: int) -> float:
     final_addition = base_addition * hypnosis_degree_adjust
     # 限制为1位小数
     final_addition = round(final_addition, 1)
-    # print(f"debug final_addition = {final_addition}")
 
     return final_addition
 
@@ -122,13 +122,12 @@ def hypnosis_degree_limit_calculation() -> int:
     Return arguments:
     int -- 催眠上限
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
 
     # 如果已经达到当前玩家的能力上限，则不再增加
     hypnosis_degree_limit = 0
     for cid in game_config.config_hypnosis_talent_of_pl:
         hypnosis_data = game_config.config_hypnosis_talent_of_pl[cid]
-        if pl_character_data.talent[hypnosis_data.hypnosis_talent_id]:
+        if abilities.talent(0)[hypnosis_data.hypnosis_talent_id]:
             hypnosis_degree_limit = max(
                 hypnosis_degree_limit, hypnosis_data.max_hypnosis_degree
             )
@@ -243,6 +242,7 @@ class Chose_Hypnosis_Type_Panel:
     def draw(self) -> None:
         """绘制对象"""
 
+        talent = abilities.talent(0)
         title_text = _("选择催眠类型")
         title_draw = draw.TitleLineDraw(title_text, self.width)
         while 1:
@@ -278,7 +278,7 @@ class Chose_Hypnosis_Type_Panel:
                     talent_name, max_degree, talent_info
                 )
                 now_draw = draw.NormalDraw()
-                if not pl_character_data.talent[talent_id]:
+                if not talent[talent_id]:
                     draw_text = _("  {0}(未解锁)：{1}\n").format(
                         talent_name, talent_info
                     )
@@ -299,7 +299,7 @@ class Chose_Hypnosis_Type_Panel:
                     hypnosis_type_data.hypnosis_degree,
                 )
                 draw_text += f"：{hypnosis_type_data.introduce}"
-                if pl_character_data.talent[hypnosis_type_data.talent_id] and (
+                if talent[hypnosis_type_data.talent_id] and (
                     pl_character_data.target_character_id == 0
                     or (
                         pl_character_data.target_character_id > 0

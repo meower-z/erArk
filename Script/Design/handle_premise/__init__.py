@@ -28,7 +28,7 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import history, needs, physical_exam
+from Script.Modules.domains import abilities, history, needs, physical_exam
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -457,9 +457,6 @@ def handle_comprehensive_value_premise(
     final_character_id = character_id
     final_character_data = character_data
     if premise_all_value_list[0] == "A2":
-        # （已废弃）如果没有交互对象，则返回0
-        # if character_data.target_character_id == character_id:
-        #     return 0
         final_character_id = character_data.target_character_id
         final_character_data = cache.character_data[
             character_data.target_character_id
@@ -489,16 +486,20 @@ def handle_comprehensive_value_premise(
         return 0
     final_value: num.Num | float = 0
     if premise_all_value_list[1][0] == "A":
-        final_value = final_character_data.ability.get(type_son_id, 0)
+        final_value = abilities.ability(final_character_id).get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "T":
         if "Time" in premise_all_value_list[1]:
             final_value = final_character_data.behavior.start_time.hour
         else:
-            final_value = final_character_data.talent.get(type_son_id, 0)
+            final_value = abilities.talent(final_character_id).get(
+                type_son_id, 0
+            )
     elif premise_all_value_list[1][0] == "J":
-        final_value = final_character_data.juel.get(type_son_id, 0)
+        final_value = abilities.juel(final_character_id).get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "E":
-        final_value = final_character_data.experience.get(type_son_id, 0)
+        final_value = abilities.experience(final_character_id).get(
+            type_son_id, 0
+        )
     elif premise_all_value_list[1][0] == "S":
         if "ShootPos" in premise_all_value_list[1]:
             b2_value = premise_all_value_list[1].split("ShootPos|")[1]
@@ -656,7 +657,6 @@ def handle_comprehensive_value_premise(
                 premise_all_value_list[:2] + premise_all_value_list[-2:]
             )
             behavior_id = behavior_id_str.split("|")[1]
-            # print(f"debug behavior_id = {behavior_id}, premise_all_value_list = {premise_all_value_list}")
             # 指令计数
             count = 0
             for i in range(len_pre_behavior):
@@ -679,7 +679,6 @@ def handle_comprehensive_value_premise(
 
     # 进行方式C和数值D的判别
     judge_value = int(premise_all_value_list[3])
-    # print(f"debug final_value = {final_value}, judge_value = {judge_value}")
 
     # 攻略程度的不过0处理。养成数值同样以G开头，但它是可正可负的普通数值，不能套这套夹逼
     if (
@@ -709,7 +708,6 @@ def handle_comprehensive_value_premise(
     # 正常的运算符判定
     if premise_all_value_list[2] == "G":
         if final_value > judge_value:
-            # print(f"debug 成功进入G判定，返回值为1")
             return 1
     elif premise_all_value_list[2] == "L":
         if final_value < judge_value:

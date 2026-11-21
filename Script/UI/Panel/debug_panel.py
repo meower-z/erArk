@@ -29,7 +29,8 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import entertainment, facility, needs, physical_exam
+from Script.Modules.domains import abilities, entertainment, facility, needs
+from Script.Modules.domains import physical_exam
 from Script.Modules.domains import pregnancy, recruit, warehouse
 
 cache: game_type.Cache = cache_control.cache
@@ -812,12 +813,6 @@ class Debug_Panel:
             line = draw.LineDraw("+", self.width)
             line.draw()
 
-            # facility_draw = draw.NormalDraw()
-            # facility_text = "\n当前设施情况："
-            # facility_draw.text = facility_text
-            # facility_draw.width = self.width
-            # facility_draw.draw()
-
             # 本页依次绘制的单个绘制对象
             draw_items: list[draw.Drawable] = []
 
@@ -1353,7 +1348,7 @@ class Debug_Panel:
                         333,
                         334,
                     }:
-                        cache.character_data[0].talent[talent_id] = 1
+                        abilities.talent(0)[talent_id] = 1
                         needs.set(0, sanity=9999, sanity_max=9999)
                 # 资源全99999
                 elif key_index == 9:
@@ -1462,6 +1457,10 @@ class Debug_Panel:
             target_data: game_type.Character = cache.character_data[
                 self.target_character_id
             ]
+            talent = abilities.talent(target_data.cid)
+            juel = abilities.juel(target_data.cid)
+            experience = abilities.experience(target_data.cid)
+            ability = abilities.ability(target_data.cid)
             name_draw, info_draw = draw.NormalDraw(), draw.NormalDraw()
             name_draw.text = (
                 f"[{str(target_data.adv).rjust(4,'0')}]：{target_data.name}\n\n"
@@ -1690,7 +1689,7 @@ class Debug_Panel:
                 info_text = "\n"
                 for cid in game_config.config_ability:
                     name = game_config.config_ability[cid].name
-                    info_text += f"{cid}:{name}={target_data.ability[cid]} "
+                    info_text += f"{cid}:{name}={ability[cid]} "
                 draw_text_list.append(f"[000]:能力列表：\n{info_text}")
 
                 # 进行显示
@@ -1718,7 +1717,7 @@ class Debug_Panel:
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
 
-                    target_data.ability[value_index] = new_value
+                    ability[value_index] = new_value
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False
@@ -1728,12 +1727,12 @@ class Debug_Panel:
             elif key_index == 8:
                 draw_text_list = []
                 info_text = "\n"
-                for cid in target_data.experience:
+                for cid in experience:
                     # 如果不存在该id，则跳过
                     if cid not in game_config.config_experience:
                         continue
                     name = game_config.config_experience[cid].name
-                    info_text += f"{cid}:{name}={target_data.experience[cid]} "
+                    info_text += f"{cid}:{name}={experience[cid]} "
                 draw_text_list.append(f"[000]:经验列表：\n{info_text}")
 
                 # 进行显示
@@ -1761,7 +1760,7 @@ class Debug_Panel:
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
 
-                    target_data.experience[value_index] = new_value
+                    experience[value_index] = new_value
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False
@@ -1771,9 +1770,9 @@ class Debug_Panel:
             elif key_index == 9:
                 draw_text_list = []
                 info_text = "\n"
-                for cid in target_data.juel:
+                for cid in juel:
                     name = game_config.config_juel[cid].name
-                    info_text += f"{cid}:{name}={target_data.juel[cid]} "
+                    info_text += f"{cid}:{name}={juel[cid]} "
                 draw_text_list.append(f"[000]:宝珠列表：\n{info_text}")
 
                 # 进行显示
@@ -1801,7 +1800,7 @@ class Debug_Panel:
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
 
-                    target_data.juel[value_index] = new_value
+                    juel[value_index] = new_value
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False
@@ -1811,9 +1810,9 @@ class Debug_Panel:
             elif key_index == 10:
                 draw_text_list = []
                 info_text = "\n"
-                for cid in target_data.talent:
+                for cid in talent:
                     name = game_config.config_talent[cid].name
-                    info_text += f"{cid}:{name}={target_data.talent[cid]} "
+                    info_text += f"{cid}:{name}={talent[cid]} "
                 draw_text_list.append(f"[000]:素质列表：\n{info_text}")
 
                 # 进行显示
@@ -1841,7 +1840,7 @@ class Debug_Panel:
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
 
-                    target_data.talent[value_index] = new_value
+                    talent[value_index] = new_value
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False
@@ -2173,7 +2172,7 @@ class Debug_Panel:
                     f"[002]:开始受精的时间：{target_data.pregnancy.fertilization_time}      年月日分别为0,1,2"
                 )
                 draw_text_list.append(
-                    f"[003]:当前妊娠素质：0受精-{target_data.talent[20]}，1妊娠-{target_data.talent[21]}，2临盆-{target_data.talent[22]}，3产后-{target_data.talent[23]}，4育儿-{target_data.talent[24]}"
+                    f"[003]:当前妊娠素质：0受精-{talent[20]}，1妊娠-{talent[21]}，2临盆-{talent[22]}，3产后-{talent[23]}，4育儿-{talent[24]}"
                 )
                 draw_text_list.append(
                     f"[004]:出生的时间：{target_data.pregnancy.born_time}      年月日分别为0,1,2"
@@ -2219,7 +2218,7 @@ class Debug_Panel:
                     elif value_index == 1:
                         target_data.pregnancy.reproduction_period = new_value
                     elif value_index == 5:
-                        target_data.talent[22] = 1
+                        talent[22] = 1
                         target_data.pregnancy.fertilization_time = (
                             game_time.now()
                         )
@@ -2271,7 +2270,7 @@ class Debug_Panel:
                             info_draw.text = "\n输出格式错误，请重试\n"
                             info_draw.draw()
                             continue
-                        target_data.talent[20 + value_index[1]] = new_value
+                        talent[20 + value_index[1]] = new_value
                         target_data.pregnancy.fertilization_time = (
                             game_time.now()
                         )

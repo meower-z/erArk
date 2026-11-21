@@ -18,7 +18,7 @@ from Script.UI.Panel import ejaculation_panel, system_setting
 import math
 import random
 from Script.Design import game_time
-from Script.Modules.domains import history, modes, needs, playthrough
+from Script.Modules.domains import abilities, history, modes, needs, playthrough
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -318,7 +318,7 @@ def base_chara_state_common_settle(
             final_value,
             23,
             0,
-            ability_level=character_data.ability[36],
+            ability_level=abilities.ability(character_id)[36],
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
@@ -372,6 +372,7 @@ def chara_feel_state_adjust(
     ability_level -- 系数修正用能力等级，此处为技巧能力等级
     """
 
+    ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data: game_type.Character = cache.character_data[0]
 
@@ -391,9 +392,7 @@ def chara_feel_state_adjust(
     # 心理
     elif state_id == 23:
         feel_ability_id = 102
-    feel_adjust = handle_ability.get_ability_adjust(
-        character_data.ability[feel_ability_id]
-    )
+    feel_adjust = handle_ability.get_ability_adjust(ability[feel_ability_id])
     final_adjust += feel_adjust
     # 技巧
     if ability_level >= 0:
@@ -439,9 +438,7 @@ def chara_feel_state_adjust(
         final_adjust += 0.2
     # 无觉刻印会增加无意识状态下的部位快感系数
     if handle_premise.handle_unconscious_flag_ge_1(character_id):
-        final_adjust += (
-            handle_ability.get_ability_adjust(character_data.ability[19]) - 1
-        ) * 2
+        final_adjust += (handle_ability.get_ability_adjust(ability[19]) - 1) * 2
     # 醉酒程度会增加全部快感
     drunk_level, __ = drunk_sex_common.get_drunk_level(character_id)
     final_adjust += 0.2 * drunk_level
@@ -503,46 +500,46 @@ def chara_base_state_adjust(
     # 素质修正
     if state_id in [9, 14]:  # 习得、先导
         # 勤劳
-        if character_data.talent[271] == 1:
+        if abilities.talent(character_id)[271] == 1:
             final_adjust += 0.3
         # 懒散
-        elif character_data.talent[272] == 1:
+        elif abilities.talent(character_id)[272] == 1:
             final_adjust -= 0.3
         # 教官
-        if character_data.talent[358] == 1:
+        if abilities.talent(character_id)[358] == 1:
             final_adjust += 0.5
     if state_id in [10, 15]:  # 恭顺、屈服
         # 脆弱
-        if character_data.talent[273] == 1:
+        if abilities.talent(character_id)[273] == 1:
             final_adjust += 0.3
         # 坚强
-        elif character_data.talent[274] == 1:
+        elif abilities.talent(character_id)[274] == 1:
             final_adjust -= 0.3
         # 献身
-        if character_data.talent[225] == 1:
+        if abilities.talent(character_id)[225] == 1:
             final_adjust += 0.4
     if state_id in [11, 13]:  # 好意、快乐
         # 热情
-        if character_data.talent[275] == 1:
+        if abilities.talent(character_id)[275] == 1:
             final_adjust += 0.3
         # 孤僻
-        elif character_data.talent[276] == 1:
+        elif abilities.talent(character_id)[276] == 1:
             final_adjust -= 0.3
     if state_id in [12, 16]:  # 欲情、羞耻
         # 羞耻
-        if character_data.talent[277] == 1:
+        if abilities.talent(character_id)[277] == 1:
             final_adjust += 0.3
         # 开放
-        elif character_data.talent[278] == 1:
+        elif abilities.talent(character_id)[278] == 1:
             final_adjust -= 0.3
     # 施虐狂
-    if character_data.talent[229] == 1 and state_id == 14:
+    if abilities.talent(character_id)[229] == 1 and state_id == 14:
         final_adjust += 0.4
     # 受虐狂
-    if character_data.talent[230] == 1 and state_id == 17:
+    if abilities.talent(character_id)[230] == 1 and state_id == 17:
         final_adjust += 0.4
     # 感情缺乏
-    if character_data.talent[223] == 1:
+    if abilities.talent(character_id)[223] == 1:
         final_adjust -= 0.4
     # 信物修正
     now_token = pl_character_data.pl_collection.eqip_token[1]
@@ -647,13 +644,13 @@ def extra_feel_settle(
     final_value = max(10, share) if exact else int(max(10, share))
 
     # 顺从对恭顺
-    if state_id == 10 and character_data.ability[31] >= 5:
+    if state_id == 10 and abilities.ability(character_id)[31] >= 5:
         base_chara_state_common_settle(
             character_id,
             final_value,
             23,
             0,
-            ability_level=character_data.ability[31],
+            ability_level=abilities.ability(character_id)[31],
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
@@ -666,13 +663,13 @@ def extra_feel_settle(
             change_data_to_target_change=change_data_to_target_change,
         )
     # 施虐对先导
-    elif state_id == 14 and character_data.ability[35] >= 5:
+    elif state_id == 14 and abilities.ability(character_id)[35] >= 5:
         base_chara_state_common_settle(
             character_id,
             final_value,
             23,
             0,
-            ability_level=character_data.ability[35],
+            ability_level=abilities.ability(character_id)[35],
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
@@ -685,13 +682,13 @@ def extra_feel_settle(
             change_data_to_target_change=change_data_to_target_change,
         )
     # 露出对羞耻
-    elif state_id == 16 and character_data.ability[34] >= 5:
+    elif state_id == 16 and abilities.ability(character_id)[34] >= 5:
         base_chara_state_common_settle(
             character_id,
             final_value,
             23,
             0,
-            ability_level=character_data.ability[34],
+            ability_level=abilities.ability(character_id)[34],
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
@@ -704,13 +701,13 @@ def extra_feel_settle(
             change_data_to_target_change=change_data_to_target_change,
         )
     # 受虐对苦痛
-    elif state_id == 17 and character_data.ability[36] >= 5:
+    elif state_id == 17 and abilities.ability(character_id)[36] >= 5:
         base_chara_state_common_settle(
             character_id,
             final_value,
             23,
             0,
-            ability_level=character_data.ability[36],
+            ability_level=abilities.ability(character_id)[36],
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
@@ -920,6 +917,7 @@ def calculation_favorability(
     Return arguments:
     int -- 最终的好感值
     """
+    target_character_id_talent = abilities.talent(target_character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[target_character_id]
     fix = 1.0
@@ -947,46 +945,46 @@ def calculation_favorability(
     # 能力相关计算#
     # 亲密、快乐刻印、屈服刻印每级+0.2倍#
     for i in {13, 14, 32}:
-        ability_level = target_data.ability[i]
+        ability_level = abilities.ability(target_character_id)[i]
         fix += ability_level * 0.2
     # 苦痛刻印、恐怖刻印每级-0.3倍#
     for i in {15, 17}:
-        ability_level = target_data.ability[i]
+        ability_level = abilities.ability(target_character_id)[i]
         fix -= ability_level * 0.3
     # 反发刻印每级-1.0倍#
     for i in {18}:
-        ability_level = target_data.ability[i]
+        ability_level = abilities.ability(target_character_id)[i]
         fix -= ability_level * 1.0
 
     # 素质相关计算#
     # 爱情与隶属系加成0.5~2.0#
-    if target_data.talent[201] or target_data.talent[211]:
+    if target_character_id_talent[201] or target_character_id_talent[211]:
         fix += 0.25
-    if target_data.talent[202] or target_data.talent[212]:
+    if target_character_id_talent[202] or target_character_id_talent[212]:
         fix += 0.5
-    if target_data.talent[203] or target_data.talent[213]:
+    if target_character_id_talent[203] or target_character_id_talent[213]:
         fix += 0.75
-    if target_data.talent[204] or target_data.talent[214]:
+    if target_character_id_talent[204] or target_character_id_talent[214]:
         fix += 1.0
     # 受精、妊娠、育儿均+0.5#
     if (
-        target_data.talent[20]
-        or target_data.talent[21]
-        or target_data.talent[22]
+        target_character_id_talent[20]
+        or target_character_id_talent[21]
+        or target_character_id_talent[22]
     ):
         fix += 0.5
     # 感情缺乏-0.2#
-    if target_data.talent[223]:
+    if target_character_id_talent[223]:
         fix -= 0.2
     # 讨厌男性-0.2#
-    if target_data.talent[227]:
+    if target_character_id_talent[227]:
         fix -= 0.2
     # 博士信息素每级+0.25#
-    if character_data.talent[306]:
+    if abilities.talent(character_id)[306]:
         fix += 0.75
-    elif character_data.talent[305]:
+    elif abilities.talent(character_id)[305]:
         fix += 0.5
-    elif character_data.talent[304]:
+    elif abilities.talent(character_id)[304]:
         fix += 0.25
     # 好感香薰修正
     if (
@@ -1022,46 +1020,46 @@ def calculation_trust(giver_id: int, receiver_id: int, add_time: int) -> float:
     # 能力相关计算#
     # 亲密、快乐刻印、屈服刻印每级+0.2倍#
     for i in {13, 14, 32}:
-        ability_level = target_data.ability[i]
+        ability_level = abilities.ability(receiver_id)[i]
         fix += ability_level * 0.2
     # 苦痛刻印、恐怖刻印每级-0.3倍#
     for i in {15, 17}:
-        ability_level = target_data.ability[i]
+        ability_level = abilities.ability(receiver_id)[i]
         fix -= ability_level * 0.3
     # 反发刻印每级-1.0倍#
     for i in {18}:
-        ability_level = target_data.ability[i]
+        ability_level = abilities.ability(receiver_id)[i]
         fix -= ability_level * 1.0
 
     # 素质相关计算#
     # 爱情与隶属系加成0.5~2.0#
-    if target_data.talent[201] or target_data.talent[211]:
+    if abilities.talent(receiver_id)[201] or abilities.talent(receiver_id)[211]:
         fix += 0.25
-    if target_data.talent[202] or target_data.talent[212]:
+    if abilities.talent(receiver_id)[202] or abilities.talent(receiver_id)[212]:
         fix += 0.5
-    if target_data.talent[203] or target_data.talent[213]:
+    if abilities.talent(receiver_id)[203] or abilities.talent(receiver_id)[213]:
         fix += 0.75
-    if target_data.talent[204] or target_data.talent[214]:
+    if abilities.talent(receiver_id)[204] or abilities.talent(receiver_id)[214]:
         fix += 1.0
     # 受精、妊娠、育儿均+0.5#
     if (
-        target_data.talent[20]
-        or target_data.talent[21]
-        or target_data.talent[22]
+        abilities.talent(receiver_id)[20]
+        or abilities.talent(receiver_id)[21]
+        or abilities.talent(receiver_id)[22]
     ):
         fix += 0.5
     # 感情缺乏-0.2#
-    if target_data.talent[223]:
+    if abilities.talent(receiver_id)[223]:
         fix -= 0.2
     # 讨厌男性-0.2#
-    if target_data.talent[227]:
+    if abilities.talent(receiver_id)[227]:
         fix -= 0.2
     # 博士信息素每级+0.25#
-    if character_data.talent[306]:
+    if abilities.talent(giver_id)[306]:
         fix += 0.75
-    elif character_data.talent[305]:
+    elif abilities.talent(giver_id)[305]:
         fix += 0.5
-    elif character_data.talent[304]:
+    elif abilities.talent(giver_id)[304]:
         fix += 0.25
     # 好感香薰修正
     if (
@@ -1286,10 +1284,10 @@ def base_chara_experience_common_settle(
             )
 
     # 结算最终值
-    character_data.experience.setdefault(experience_id, 0)
-    character_data.experience[experience_id] += base_value
-    character_data.experience[experience_id] = max(
-        0, character_data.experience[experience_id]
+    abilities.experience(character_data.cid).setdefault(experience_id, 0)
+    abilities.experience(character_data.cid)[experience_id] += base_value
+    abilities.experience(character_data.cid)[experience_id] = max(
+        0, abilities.experience(character_data.cid)[experience_id]
     )
 
     # 口交经验结算时补记口交初体验（覆盖早安咬/晚安咬、测试口腔吮吸、AI文本等不经阴茎位置效果的口交来源）

@@ -18,6 +18,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -91,7 +92,6 @@ class SeeCharacterClothPanel:
         type_line = draw.LittleTitleLineDraw(_("服装"), width, ":")
         self.draw_list.append(type_line)
 
-        # cloth_text_list = []
         now_text = ""
         # 遍历全部衣服类型
         # print(f"debug target_character_data.cloth.cloth_wear = {target_character_data.cloth.cloth_wear}")
@@ -103,7 +103,7 @@ class SeeCharacterClothPanel:
                 if clothing_type in {6, 9} and not cache.debug_mode:
                     if not (
                         character_data.pl_ability.visual
-                        and character_data.talent[307]
+                        and abilities.talent(0)[307]
                     ) and len(
                         target_character_data.cloth.cloth_wear[
                             clothing_type - 1
@@ -525,7 +525,7 @@ class SwitchCharacterClothPanel:
                 if clothing_type in {6, 9} and not cache.debug_mode:
                     if (
                         character_data.pl_ability.visual
-                        and character_data.talent[307]
+                        and abilities.talent(0)[307]
                     ) or len(
                         target_character_data.cloth.cloth_wear[
                             clothing_type - 1

@@ -6,6 +6,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
+from Script.Modules.domains import abilities
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -41,17 +42,17 @@ def check_upgrade_requirements(
         need_value = int(need_text.split("|")[1])
         # 检查不同类型的需求
         if need_type == "A":
-            if character_data.ability[need_type_id] < need_value:
+            if abilities.ability(character_id)[need_type_id] < need_value:
                 return False, {}
         elif need_type == "T":
-            if not character_data.talent[need_value]:
+            if not abilities.talent(character_id)[need_value]:
                 return False, {}
         elif need_type == "J":
             jule_dict[need_type_id] = need_value
-            if character_data.juel[need_type_id] < need_value:
+            if abilities.juel(character_id)[need_type_id] < need_value:
                 return False, {}
         elif need_type == "E":
-            if character_data.experience[need_type_id] < need_value:
+            if abilities.experience(character_id)[need_type_id] < need_value:
                 return False, {}
         elif need_type == "F":
             if character_data.favorability[0] < need_value:
@@ -72,6 +73,7 @@ def gain_ability(character_id: int) -> None:
     功能描述:
         遍历所有能力，判断是否满足升级条件，支持主需求和备选需求（AbilityUp.csv的up_need和up_need2），满足任一即可升级。
     """
+    ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     # 遍历全能力
     for ability_cid in game_config.config_ability:
@@ -82,7 +84,7 @@ def gain_ability(character_id: int) -> None:
 
         # 进行循环，以保证能力升级时可以继续升级，直到满足退出条件
         while True:
-            ability_level = character_data.ability[ability_cid]
+            ability_level = ability[ability_cid]
             # 最大8级
             if ability_level >= 8:
                 break
@@ -129,12 +131,14 @@ def gain_ability(character_id: int) -> None:
                 break
 
             # 满足要求则升级能力
-            character_data.ability[ability_cid] += 1
+            ability[ability_cid] += 1
             ability_name = ability_data.name
 
             # 扣除相应的珠
             for need_type_id in jule_dict:
-                character_data.juel[need_type_id] -= jule_dict[need_type_id]
+                abilities.juel(character_id)[need_type_id] -= jule_dict[
+                    need_type_id
+                ]
 
             # 输出升级信息
             now_draw_succed = draw.NormalDraw()
@@ -164,7 +168,7 @@ def gain_ability(character_id: int) -> None:
                 ):
                     character_data.child_growth.show_off_ability[
                         ability_cid
-                    ] = character_data.ability[ability_cid]
+                    ] = ability[ability_cid]
     # print(f"debug {character_data.name}的睡觉结算素质结束")
 
 
@@ -180,15 +184,15 @@ def extra_ability_check(
     返回:
     judge: int -- 主条件是否满足
     """
+    ability = abilities.ability(character_id)
     judge = 1
-    character_data = cache.character_data[character_id]
     ability_data = game_config.config_ability[ability_id]
     info_text = ""
     # 技巧
     if ability_data.name == _("技巧"):
         # 玩家的情况
         if character_id == 0:
-            now_ability_level = character_data.ability[ability_id]
+            now_ability_level = ability[ability_id]
             now_other_ability_level = 0
             # 统计所有子性技等级之和
             for tem_ability_cid in game_config.config_ability:
@@ -196,9 +200,7 @@ def extra_ability_check(
                     game_config.config_ability[tem_ability_cid].ability_type
                     == 5
                 ):
-                    now_other_ability_level += character_data.ability[
-                        tem_ability_cid
-                    ]
+                    now_other_ability_level += ability[tem_ability_cid]
             info_text = _("\n○博士的技巧升级需要额外满足以下条件：\n")
             info_text += _(
                 "  [指技]、[舌技]、[腰技]、[隐蔽]能力等级之和大于等于技巧等级*2\n"
@@ -210,7 +212,7 @@ def extra_ability_check(
                 judge = 0
         # NPC的情况
         else:
-            now_ability_level = character_data.ability[ability_id]
+            now_ability_level = ability[ability_id]
             now_other_ability_level = 0
             # 统计所有子性技等级之和
             for tem_ability_cid in game_config.config_ability:
@@ -218,9 +220,7 @@ def extra_ability_check(
                     game_config.config_ability[tem_ability_cid].ability_type
                     == 5
                 ):
-                    now_other_ability_level += character_data.ability[
-                        tem_ability_cid
-                    ]
+                    now_other_ability_level += ability[tem_ability_cid]
             info_text = _("\n○干员的技巧升级需要额外满足以下条件：\n")
             info_text += _(
                 "  全子性技的等级之和，"
@@ -235,11 +235,11 @@ def extra_ability_check(
     elif ability_data.name == _("顺从"):
         # 在提升至4、6、8级时分别需要屈服刻印1、2、3级
         need_mark_level = 0
-        if character_data.ability[ability_id] >= 7:
+        if ability[ability_id] >= 7:
             need_mark_level = 3
-        elif character_data.ability[ability_id] >= 5:
+        elif ability[ability_id] >= 5:
             need_mark_level = 2
-        elif character_data.ability[ability_id] >= 3:
+        elif ability[ability_id] >= 3:
             need_mark_level = 1
         # 获取屈服刻印等级
         yield_ability_id = 14
@@ -249,7 +249,7 @@ def extra_ability_check(
             ):
                 yield_ability_id = tem_ability_cid
                 break
-        yield_mark_level = character_data.ability[yield_ability_id]
+        yield_mark_level = ability[yield_ability_id]
         # 绘制额外条件信息
         info_text = _("\n○顺从能力的提升需要额外满足以下条件：\n")
         info_text += _("  屈服刻印等级大于等于{0}级\n").format(need_mark_level)
@@ -261,11 +261,11 @@ def extra_ability_check(
     elif ability_data.name == _("欲望"):
         # 在提升至4、6、8级时分别需要快乐刻印1、2、3级
         need_mark_level = 0
-        if character_data.ability[ability_id] >= 7:
+        if ability[ability_id] >= 7:
             need_mark_level = 3
-        elif character_data.ability[ability_id] >= 5:
+        elif ability[ability_id] >= 5:
             need_mark_level = 2
-        elif character_data.ability[ability_id] >= 3:
+        elif ability[ability_id] >= 3:
             need_mark_level = 1
         # 获取快乐刻印等级
         happy_ability_id = 13
@@ -275,7 +275,7 @@ def extra_ability_check(
             ):
                 happy_ability_id = tem_ability_cid
                 break
-        happy_mark_level = character_data.ability[happy_ability_id]
+        happy_mark_level = ability[happy_ability_id]
         # 绘制额外条件信息
         info_text = _("\n○欲望能力的提升需要额外满足以下条件：\n")
         info_text += _("  快乐刻印等级大于等于{0}级\n").format(need_mark_level)
@@ -287,11 +287,11 @@ def extra_ability_check(
     elif ability_data.name == _("受虐"):
         # 在提升至4、6、8级时分别需要苦痛刻印1、2、3级
         need_mark_level = 0
-        if character_data.ability[ability_id] >= 7:
+        if ability[ability_id] >= 7:
             need_mark_level = 3
-        elif character_data.ability[ability_id] >= 5:
+        elif ability[ability_id] >= 5:
             need_mark_level = 2
-        elif character_data.ability[ability_id] >= 3:
+        elif ability[ability_id] >= 3:
             need_mark_level = 1
         # 获取苦痛刻印等级
         pain_ability_id = 15
@@ -301,7 +301,7 @@ def extra_ability_check(
             ):
                 pain_ability_id = tem_ability_cid
                 break
-        pain_mark_level = character_data.ability[pain_ability_id]
+        pain_mark_level = ability[pain_ability_id]
         # 绘制额外条件信息
         info_text = _("\n○受虐能力的提升需要额外满足以下条件：\n")
         info_text += _("  苦痛刻印等级大于等于{0}级\n").format(need_mark_level)

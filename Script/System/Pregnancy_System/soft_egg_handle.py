@@ -25,6 +25,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant, egg_handle
 from Script.Design import game_time
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -109,7 +110,7 @@ def judge_external_ovulation(
         return False
     if child_stage_gate.is_child_stage(character_id):
         return False
-    if character_data.race == 2 and character_data.talent[171] == 0:
+    if character_data.race == 2 and abilities.talent(character_id)[171] == 0:
         return False
     now_rate = get_external_ovulation_rate(
         character_id, orgasm_part, orgasm_degree

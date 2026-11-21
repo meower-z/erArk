@@ -25,6 +25,7 @@ import json
 from typing import TYPE_CHECKING
 from Script.Design import game_time
 from Script.Modules.domains import (
+    abilities,
     achievement,
     commission,
     country,
@@ -60,9 +61,7 @@ if TYPE_CHECKING:
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
-""" 翻译api """
 STALE_UI_FIELDS = (
     "current_draw_elements",
     "current_return_list",
@@ -430,7 +429,7 @@ def _clear_soft_egg_race_pregnancy(
     \n读档时一次性清除 20受精/21妊娠/22临盆/26孕肚/35无意识妊娠 及本次胎数/同卵双胞胎/妊娠加速累计，
     \n23产后/24育儿/27泌乳与已出生的孩子不受影响；非无壳卵生或未在孕程中的角色不做任何改动
     \n※本函数每次读档都会执行：无壳卵生开关关闭时该种族按单胎胎生运行，其孕程是正常妊娠，必须整体跳过，
-    \n否则玩家每读一次档就会被清空一次孕程（plan_21）
+    \n否则玩家每读一次档就会被清空一次孕程（plan_21）。版本 16 之前的素质表在角色对象上，之后的经 abilities.talent 读写
     Keyword arguments:
     character -- 角色数据
     soft_egg_enabled -- 无壳卵生开关是否开启（关闭时不做任何处理）
@@ -439,17 +438,17 @@ def _clear_soft_egg_race_pregnancy(
     """
     if not soft_egg_enabled:
         return
-    talent_data = getattr(character, "talent", None)
+    talent = getattr(character, "talent", abilities.talent(character.cid))
     pregnancy_data = getattr(character, "pregnancy", None)
-    if not isinstance(talent_data, dict) or pregnancy_data is None:
+    if not isinstance(talent, dict | abilities.Table) or pregnancy_data is None:
         return
     race_config = game_config.config_race.get(getattr(character, "race", -1))
     if race_config is None or getattr(race_config, "birth_type", 1) != 12:
         return
-    if not any(talent_data.get(talent_id, 0) for talent_id in (20, 21, 22)):
+    if not any(talent.get(talent_id, 0) for talent_id in (20, 21, 22)):
         return
     for talent_id in (20, 21, 22, 26, 35):
-        talent_data[talent_id] = 0
+        talent[talent_id] = 0
     pregnancy_data.fetus_count = 0
     pregnancy_data.identical_twins = False
     pregnancy_data.acceleration_days = 0.0
@@ -736,9 +735,9 @@ def input_load_save(save_id: str) -> None:
 def install_save(save_id: str, version: int) -> None:
     """
     读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
-    版本 0 先补齐生理需求与供电策略属性。随后二十三个 adopt 函数搬走罗德岛对象的属性，
-    其中十八个交回的条数计入跨版本更新。重建角色后 adopt_pickled 搬走角色的数值属性。
-    补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
+    版本 0 先补齐生理需求与供电策略属性。随后二十三个 adopt 函数搬走罗德岛对象的属性，其中十八个的条数计入跨版本更新。
+    修正编号后、角色替换前，abilities.adopt_old_save 把角色的四张表搬进 GameState。它去掉的素质项数也计入跨版本更新。
+    重建角色后 adopt_pickled 搬走角色的数值属性。补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -801,6 +800,7 @@ def install_save(save_id: str, version: int) -> None:
     update_count += old_chara_to_new.update_tem_character(loaded_dict)
     # 修正编号错误的角色数据
     update_count += old_chara_to_new.fix_wrong_character(loaded_dict)
+    update_count += abilities.adopt_old_save(loaded_dict)
 
     # ========== 角色替换迁移（新旧角色ID映射） ==========
     # 用于将旧角色的数据迁移到新角色，例如：1478号梅捷缇克缇 → 4056号缇缇

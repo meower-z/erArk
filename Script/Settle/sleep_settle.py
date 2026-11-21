@@ -19,7 +19,7 @@ from Script.System.Pregnancy_System import pregnancy_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import needs, plan
+from Script.Modules.domains import abilities, needs, plan
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -131,6 +131,7 @@ def settle_character_juel(character_id: int) -> int:
     Return arguments:
     bool -- 本次update时间切片内活动是否已完成
     """
+    juel = abilities.juel(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     for status_id in game_config.config_character_state:
         if character_data.sex == 0:
@@ -148,31 +149,27 @@ def settle_character_juel(character_id: int) -> int:
         # 只要状态值不为0就结算为对应珠
         if status_value != 0:
             add_juel = attr_calculation.get_juel(status_value)
-            character_data.juel.setdefault(status_id, 0)
+            juel.setdefault(status_id, 0)
             if status_id in [17, 18, 19]:
-                character_data.juel[status_id] += add_juel // 4
-                character_data.juel[20] += add_juel // 2
+                juel[status_id] += add_juel // 4
+                juel[20] += add_juel // 2
             else:
-                character_data.juel[status_id] += add_juel
+                juel[status_id] += add_juel
             # juel_text = game_config.config_juel[status_id].name
             # print("宝珠名：",juel_text,"。增加了 :",add_juel)
     # 当反感珠大于0时，计算和其他珠的抵消
-    if character_data.juel[20] > 0:
-        draw_text = _("\n当前共{0}反发珠，抵消了：").format(
-            character_data.juel[20]
-        )
+    if juel[20] > 0:
+        draw_text = _("\n当前共{0}反发珠，抵消了：").format(juel[20])
         for i in [15, 10, 11, 12, 13]:
             # 1好意抵消2反发
-            if character_data.juel[i] > 0:
-                juel_down = min(
-                    character_data.juel[20], character_data.juel[i] * 2
-                )
-                character_data.juel[20] -= juel_down
-                character_data.juel[i] -= juel_down // 2
+            if juel[i] > 0:
+                juel_down = min(juel[20], juel[i] * 2)
+                juel[20] -= juel_down
+                juel[i] -= juel_down // 2
                 draw_text += _(" {0}个{1} ").format(
                     juel_down // 2, game_config.config_juel[i].name
                 )
-        draw_text += _("，剩余{0}个反发珠\n").format(character_data.juel[20])
+        draw_text += _("，剩余{0}个反发珠\n").format(juel[20])
         now_draw = draw.NormalDraw()
         now_draw.text = draw_text
         # now_draw.draw()
@@ -236,6 +233,7 @@ def refresh_temp_semen_max() -> None:
     """
     刷新临时最大精液量\n
     """
+    talent = abilities.talent(0)
     character_data: game_type.Character = cache.character_data[0]
     now_semen = num.whole(character_data.semen_point)
     # 需要睡眠时长至少大于等于6h
@@ -251,9 +249,9 @@ def refresh_temp_semen_max() -> None:
             character_data.tem_extra_semen_point
             >= character_data.semen_point_max * 4
         ):
-            character_data.talent[33] = 1
+            talent[33] = 1
         else:
-            character_data.talent[33] = 0
+            talent[33] = 0
         # 绘制说明信息
         now_draw = draw.NormalDraw()
         now_draw.width = window_width

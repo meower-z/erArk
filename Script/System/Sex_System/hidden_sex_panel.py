@@ -15,7 +15,7 @@ from Script.Design import handle_premise, handle_ability, map_handle
 from Script.UI.Panel import dirty_panel
 
 import random
-from Script.Modules.domains import achievement
+from Script.Modules.domains import abilities, achievement
 
 panel_info_data: dict[str, object] = {}
 
@@ -205,7 +205,7 @@ def settle_hidden_value_by_action(
             elif tag == "侍奉":
                 now_intensity = max(2, now_intensity)
     # 隐蔽能力
-    now_ability_lv = character_data.ability[90]
+    now_ability_lv = abilities.ability(character_id)[90]
     abi_adjust = handle_ability.get_ability_adjust(now_ability_lv)
     # 在场人数
     scene_path_str = map_handle.get_map_system_path_str_for_list(
@@ -631,12 +631,11 @@ class Select_Hidden_Sex_Mode_Panel:
         info_text += _("\n请选择携带时插入的部位：\n")
         info_draw.text = info_text
         info_draw.draw()
-        character_data: game_type.Character = cache.character_data[0]
         # 对面抱位的体位要求判定（与性交体位面板的判定一致）
         sex_position_data = game_config.config_sex_position_data[9]
         base_cant_text = ""
         # 技巧判定
-        if sex_position_data.skill_req > character_data.ability[76]:
+        if sex_position_data.skill_req > abilities.ability(0)[76]:
             base_cant_text += _("(需要博士腰技至少为{0}级)").format(
                 sex_position_data.skill_req
             )

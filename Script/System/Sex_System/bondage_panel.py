@@ -11,6 +11,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
+from Script.Modules.domains import abilities
 
 panel_info_data: dict[str, object] = {}
 
@@ -98,7 +99,7 @@ class Bondage_Panel:
 
                     # 指技等级判定
                     need_lv = bondage_lvel * 2
-                    if character_data.ability[70] < need_lv:
+                    if abilities.ability(0)[70] < need_lv:
                         level_draw.text = _("(需要[指技]等级>={0})").format(
                             need_lv
                         )

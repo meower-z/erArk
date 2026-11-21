@@ -8,6 +8,7 @@ from Script.Core import (
     game_type,
 )
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import abilities
 
 panel_info_data: dict[str, object] = {}
 
@@ -33,8 +34,7 @@ def get_ability_lv_ui_text(character_id: int, ability_cid: int) -> str:
     Return arguments:
     ui_text -- 能力等级对应的UI文本
     """
-    character_data = cache.character_data[character_id]
-    ability_lv = character_data.ability[ability_cid]
+    ability_lv = abilities.ability(character_id)[ability_cid]
     ui_text_lv = (ability_lv + 1) // 2
     ui_text_lv = max(0, ui_text_lv)
     ui_text_lv = min(4, ui_text_lv)
@@ -63,6 +63,8 @@ class CharacterBodyText:
         center_status: bool = True,
     ) -> None:
         """初始化绘制对象"""
+        experience = abilities.experience(character_id)
+        talent = abilities.talent(character_id)
         self.character_id = character_id
         """ 要绘制的角色id """
         self.width = width
@@ -89,7 +91,7 @@ class CharacterBodyText:
             now_text = _("\n 【口】\n")
             now_text += _("  初吻情况：")
             # 初吻详情句已统一合并到[性行为履历]面板，此处只保留状态行
-            if character_data.talent[4]:
+            if talent[4]:
                 now_text += _("保有初吻\n")
             else:
                 now_text += _("已失去初吻\n")
@@ -104,7 +106,7 @@ class CharacterBodyText:
             now_text = _("\n 【胸】\n")
             # 根据胸部大小的素质来显示信息
             for bust_cid in [121, 122, 123, 124, 125]:
-                if character_data.talent[bust_cid]:
+                if talent[bust_cid]:
                     info_text = game_config.config_talent[bust_cid].info
                     now_text += f"  {info_text}\n"
             # B感觉描述
@@ -130,7 +132,7 @@ class CharacterBodyText:
             now_text = _("\n 【膣】\n")
             now_text += _("  处女情况：")
             # 破处详情句已统一合并到[性行为履历]面板，此处只保留状态行；感度描述只看处女素质，与破处记录解耦
-            if character_data.talent[0]:
+            if talent[0]:
                 now_text += _("保有处女\n")
                 ui_text = game_config.ui_text_data["ability"]["阴道感度0"]
             else:
@@ -146,7 +148,7 @@ class CharacterBodyText:
             now_text = _("\n 【肛】\n")
             now_text += _("  处女情况：")
             # 破处详情句已统一合并到[性行为履历]面板，此处只保留状态行；感度描述只看处女素质，与破处记录解耦
-            if character_data.talent[1]:
+            if talent[1]:
                 now_text += _("保有后庭处女\n")
                 ui_text = game_config.ui_text_data["ability"]["肛肠感度0"]
             else:
@@ -161,7 +163,7 @@ class CharacterBodyText:
             now_text = _("\n 【宫】\n")
             now_text += _("  处女情况：")
             # 破处详情句已统一合并到[性行为履历]面板，此处只保留状态行；感度描述只看处女素质，与破处记录解耦
-            if character_data.talent[3]:
+            if talent[3]:
                 now_text += _("保有子宫处女\n")
                 ui_text = game_config.ui_text_data["ability"]["子宫感度0"]
             else:
@@ -177,12 +179,12 @@ class CharacterBodyText:
             from Script.Design import game_time
 
             past_day = pregnancy_handle.get_pregnancy_past_day(character_id)
-            if character_data.talent[20]:
+            if talent[20]:
                 now_text += _("  已受精{0}，").format(
                     game_time.get_duration_text(past_day)
                 )
                 now_text += _("但从外表上还看不出来\n")
-            elif character_data.talent[21]:
+            elif talent[21]:
                 now_text += _("  已受精{0}，").format(
                     game_time.get_duration_text(past_day)
                 )
@@ -194,14 +196,14 @@ class CharacterBodyText:
                     )
                 else:
                     now_text += "\n"
-            elif character_data.talent[22]:
+            elif talent[22]:
                 now_text += _("  已受精{0}，").format(
                     game_time.get_duration_text(past_day)
                 )
                 now_text += _("[临盆]中，即将诞下爱的结晶\n")
-            elif character_data.talent[23]:
+            elif talent[23]:
                 now_text += _("  正在[产后]休息\n")
-            elif character_data.talent[24]:
+            elif talent[24]:
                 now_text += _("  [育儿]中，正在给宝宝喂奶\n")
             # 胎教累积（Plan 22 四期 §3.27）：生产前只有这一处看得到——
             # 否则玩家整个孕期做下来毫无反馈，要等孩子出生那一刻才第一次知道攒了多少（Plan 26 起出生时折成习得珠）
@@ -235,11 +237,11 @@ class CharacterBodyText:
                     now_text += _("（已达上限）")
                 now_text += "\n"
             # 假孕状态
-            if character_data.talent[25]:
+            if talent[25]:
                 now_text += _(
                     "  处于[假孕]状态，肚子隆起如孕妇但并未真正怀孕\n"
                 )
-            if character_data.experience[86] == 0:
+            if experience[86] == 0:
                 now_text += _("  未分娩过\n")
             else:
                 now_text += _("  为博士生下了  ")
@@ -253,7 +255,7 @@ class CharacterBodyText:
             now_text = _("\n 【尿】\n")
             now_text += _("  处女情况：")
             # 破处详情句已统一合并到[性行为履历]面板，此处只保留状态行；感度描述只看处女素质，与破处记录解耦
-            if character_data.talent[2]:
+            if talent[2]:
                 now_text += _("保有尿道处女\n")
                 ui_text = game_config.ui_text_data["ability"]["尿道感度0"]
             else:
@@ -291,7 +293,7 @@ class CharacterBodyText:
                 )
                 # 获取该姿势的经验
                 experience_id = 140 + favorite_position_id
-                experience_count = character_data.experience[experience_id]
+                experience_count = experience[experience_id]
                 now_text += _("该姿势的性交经验为：{0} 次\n").format(
                     experience_count
                 )

@@ -13,7 +13,7 @@ from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 import random
 from Script.Design import game_time
-from Script.Modules.domains import facility, library
+from Script.Modules.domains import abilities, facility, library
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -211,8 +211,8 @@ def can_read_book(character_id: int, book_cid: int) -> bool:
         难度为2时需要能力大于3级，难度为3时需要能力大于6级，其他情况均可阅读。
     """
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
     # 获取书籍数据
+    ability = abilities.ability(character_id)
     book_data = game_config.config_book[book_cid]
     # 获取书籍难度
     book_difficulty = book_data.difficulty
@@ -229,18 +229,18 @@ def can_read_book(character_id: int, book_cid: int) -> bool:
     # 如果书籍属于技能类，则判断能力是否达标
     if book_type_data.father_type_name == _("技能"):
         # 难度为3时需要能力大于6级
-        if book_difficulty == 3 and character_data.ability[book_ability_id] < 6:
+        if book_difficulty == 3 and ability[book_ability_id] < 6:
             return False
         # 难度为2时需要能力大于3级
-        if book_difficulty == 2 and character_data.ability[book_ability_id] < 3:
+        if book_difficulty == 2 and ability[book_ability_id] < 3:
             return False
     # 如果书籍属于色情类，则只判断NPC
     elif book_type_data.father_type_name == _("色情") and character_id != 0:
         # 难度为3时需要能力大于6级
-        if book_difficulty == 3 and character_data.ability[book_ability_id] < 6:
+        if book_difficulty == 3 and ability[book_ability_id] < 6:
             return False
         # 难度为2时需要能力大于3级
-        if book_difficulty == 2 and character_data.ability[book_ability_id] < 3:
+        if book_difficulty == 2 and ability[book_ability_id] < 3:
             return False
     # 其他情况均可阅读
     return True

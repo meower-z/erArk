@@ -16,7 +16,7 @@ from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
 from Script.Modules.domains import achievement, commission, needs, playthrough
-from Script.Modules.domains import prison, warehouse
+from Script.Modules.domains import abilities, prison, warehouse
 
 if TYPE_CHECKING:
     from typing import Any
@@ -410,41 +410,40 @@ def settle_chara_ability() -> list[int]:
     - return_list: 成就列表，包含已达成的成就ID
     """
     return_list: list[int] = []
-    pl_character_data: game_type.Character = cache.character_data[0]
 
     # 构建成就结算列表
     achievement_checks = [
         # (判断值, 成就ID)
-        (pl_character_data.ability[40], 501),
-        (pl_character_data.ability[40], 502),
-        (pl_character_data.ability[40], 503),
-        (pl_character_data.ability[41], 506),
-        (pl_character_data.ability[41], 507),
-        (pl_character_data.ability[41], 508),
-        (pl_character_data.ability[42], 511),
-        (pl_character_data.ability[42], 512),
-        (pl_character_data.ability[42], 513),
-        (pl_character_data.ability[43], 516),
-        (pl_character_data.ability[43], 517),
-        (pl_character_data.ability[43], 518),
-        (pl_character_data.ability[44], 521),
-        (pl_character_data.ability[44], 522),
-        (pl_character_data.ability[44], 523),
-        (pl_character_data.ability[45], 526),
-        (pl_character_data.ability[45], 527),
-        (pl_character_data.ability[45], 528),
-        (pl_character_data.ability[46], 531),
-        (pl_character_data.ability[46], 532),
-        (pl_character_data.ability[46], 533),
-        (pl_character_data.ability[47], 536),
-        (pl_character_data.ability[47], 537),
-        (pl_character_data.ability[47], 538),
-        (pl_character_data.ability[48], 541),
-        (pl_character_data.ability[48], 542),
-        (pl_character_data.ability[48], 543),
-        (pl_character_data.ability[49], 546),
-        (pl_character_data.ability[49], 547),
-        (pl_character_data.ability[49], 548),
+        (abilities.ability(0)[40], 501),
+        (abilities.ability(0)[40], 502),
+        (abilities.ability(0)[40], 503),
+        (abilities.ability(0)[41], 506),
+        (abilities.ability(0)[41], 507),
+        (abilities.ability(0)[41], 508),
+        (abilities.ability(0)[42], 511),
+        (abilities.ability(0)[42], 512),
+        (abilities.ability(0)[42], 513),
+        (abilities.ability(0)[43], 516),
+        (abilities.ability(0)[43], 517),
+        (abilities.ability(0)[43], 518),
+        (abilities.ability(0)[44], 521),
+        (abilities.ability(0)[44], 522),
+        (abilities.ability(0)[44], 523),
+        (abilities.ability(0)[45], 526),
+        (abilities.ability(0)[45], 527),
+        (abilities.ability(0)[45], 528),
+        (abilities.ability(0)[46], 531),
+        (abilities.ability(0)[46], 532),
+        (abilities.ability(0)[46], 533),
+        (abilities.ability(0)[47], 536),
+        (abilities.ability(0)[47], 537),
+        (abilities.ability(0)[47], 538),
+        (abilities.ability(0)[48], 541),
+        (abilities.ability(0)[48], 542),
+        (abilities.ability(0)[48], 543),
+        (abilities.ability(0)[49], 546),
+        (abilities.ability(0)[49], 547),
+        (abilities.ability(0)[49], 548),
     ]
     # 统一调用settle_achievement进行批量结算
     for judge_value, achievement_id in achievement_checks:
@@ -713,7 +712,7 @@ def settle_semen_shoot() -> list[int]:
     if 3 not in pl_character_data.h_state.orgasm_count:
         pl_character_data.h_state.orgasm_count[3] = [0, 0]
     now_semen_shoot_count = pl_character_data.h_state.orgasm_count[3][0]
-    all_semen_shoot_count = pl_character_data.experience[21]
+    all_semen_shoot_count = abilities.experience(0)[21]
     # 对方身上精液量
     inner_all_semen = 0
     cloth_all_semen = 0
@@ -736,7 +735,7 @@ def settle_semen_shoot() -> list[int]:
             1205,
         ),  # 在一次H中，在单名干员的所有服装上的总射精量超过500ml
         (
-            target_character_data.talent[32],
+            abilities.talent(target_character_id)[32],
             1206,
         ),  # 在干员体内射精量多到使其腹部隆起
     ]

@@ -5,7 +5,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import modes
+from Script.Modules.domains import abilities, modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -115,9 +115,11 @@ def get_special_data_for_second_behavior(
     Return arguments:
     str -- 附记数据文本，无则为空串
     """
-    character_data = cache.character_data[character_id]
     # 受精：附记是否为无意识受精（此时pregnancy.py的talent[35]判定已完成）
-    if second_behavior_id == "fertilization" and character_data.talent[35]:
+    if (
+        second_behavior_id == "fertilization"
+        and abilities.talent(character_id)[35]
+    ):
         return _("无意识受精")
     # 喷乳绝顶/放尿绝顶：附记当时的H模式（调用Sex_System通用函数，延迟导入理由见get_semen_source_text）
     if second_behavior_id in ("b_orgasm_to_milk", "u_orgasm_to_pee"):

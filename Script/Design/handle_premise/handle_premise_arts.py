@@ -4,7 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import modes
+from Script.Modules.domains import abilities, modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -41,8 +41,7 @@ def handle_primary_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[331]
+    return abilities.talent(character_id)[331]
 
 
 @add_premise(constant_promise.Premise.INTERMEDIATE_HYPNOSIS)
@@ -54,8 +53,7 @@ def handle_intermediate_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[332]
+    return abilities.talent(character_id)[332]
 
 
 @add_premise(constant_promise.Premise.ADVANCED_HYPNOSIS)
@@ -67,8 +65,7 @@ def handle_advanced_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[333]
+    return abilities.talent(character_id)[333]
 
 
 @add_premise(constant_promise.Premise.SPECIAL_HYPNOSIS)
@@ -80,8 +77,7 @@ def handle_special_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[334]
+    return abilities.talent(character_id)[334]
 
 
 @add_premise(constant_promise.Premise.SELF_HYPNOSIS_0)
@@ -146,9 +142,8 @@ def handle_self_has_been_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     for cid in {71, 72, 73}:
-        if character_data.talent[cid]:
+        if abilities.talent(character_id)[cid]:
             return 1
     return 0
 
@@ -174,8 +169,7 @@ def handle_self_has_been_primary_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[71]
+    return abilities.talent(character_id)[71]
 
 
 @add_premise(constant_promise.Premise.SELF_HAS_BEEN_DEEP_HYPNOSIS)
@@ -187,8 +181,7 @@ def handle_self_has_been_deep_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[72]
+    return abilities.talent(character_id)[72]
 
 
 @add_premise(constant_promise.Premise.SELF_HAS_BEEN_COMPLETE_HYPNOSIS)
@@ -200,8 +193,7 @@ def handle_self_has_been_complete_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[73]
+    return abilities.talent(character_id)[73]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAS_BEEN_HYPNOSIS)
@@ -350,8 +342,7 @@ def handle_primary_penetrating_vision(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[307]
+    return abilities.talent(character_id)[307]
 
 
 @add_premise(constant_promise.Premise.INTERMEDIATE_PENETRATING_VISION)
@@ -363,8 +354,7 @@ def handle_intermediate_penetrating_vision(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[308]
+    return abilities.talent(character_id)[308]
 
 
 @add_premise(constant_promise.Premise.ADVANCED_PENETRATING_VISION)
@@ -376,8 +366,7 @@ def handle_advanced_penetrating_vision(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[309]
+    return abilities.talent(character_id)[309]
 
 
 @add_premise(constant_promise.Premise.PENETRATING_VISION_ON)
@@ -415,8 +404,7 @@ def handle_primary_hormone(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[304]
+    return abilities.talent(character_id)[304]
 
 
 @add_premise(constant_promise.Premise.INTERMEDIATE_HORMONE)
@@ -428,8 +416,7 @@ def handle_intermediate_hormone(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[305]
+    return abilities.talent(character_id)[305]
 
 
 @add_premise(constant_promise.Premise.ADVANCED_HORMONE)
@@ -441,8 +428,7 @@ def handle_advanced_hormone(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[306]
+    return abilities.talent(character_id)[306]
 
 
 @add_premise(constant_promise.Premise.HORMONE_ON)
@@ -480,8 +466,7 @@ def handle_primary_telekinesis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[310]
+    return abilities.talent(character_id)[310]
 
 
 @add_premise(constant_promise.Premise.INTERMEDIATE_TELEKINESIS)
@@ -493,8 +478,7 @@ def handle_intermediate_telekinesis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[311]
+    return abilities.talent(character_id)[311]
 
 
 @add_premise(constant_promise.Premise.ADVANCED_TELEKINESIS)
@@ -506,8 +490,7 @@ def handle_advanced_telekinesis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[312]
+    return abilities.talent(character_id)[312]
 
 
 @add_premise(constant_promise.Premise.HYPNOSIS_INCREASE_BODY_SENSITIVITY)
@@ -963,8 +946,7 @@ def handle_primary_time_stop(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.talent[316]:
+    if abilities.talent(character_id)[316]:
         return 1
     return 0
 
@@ -978,8 +960,7 @@ def handle_intermediate_time_stop(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.talent[317]:
+    if abilities.talent(character_id)[317]:
         return 1
     return 0
 
@@ -993,8 +974,7 @@ def handle_advanced_time_stop(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.talent[318]:
+    if abilities.talent(character_id)[318]:
         return 1
     return 0
 

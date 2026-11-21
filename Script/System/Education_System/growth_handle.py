@@ -23,7 +23,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
-from Script.Modules.domains import facility
+from Script.Modules.domains import abilities, facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -53,11 +53,10 @@ def get_character_stage(character_id: int) -> int:
     Return arguments:
     int -- 101婴儿/102幼女/103学员/104少女，都不是则0
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     # 必须按 id 升序遍历：成长链正常情况下四个素质只会挂一个，
     #    但世界设定「萝莉化」会批量覆写年龄素质，遍历 set 的哈希序会取到不确定的那个
     for talent_id in sorted(education_constant.CHILD_TALENT_SET):
-        if character_data.talent.get(talent_id, 0):
+        if abilities.talent(character_id).get(talent_id, 0):
             return talent_id
     return 0
 
@@ -211,8 +210,9 @@ def get_growth_stop_adjust(character_id: int) -> float:
     """
     if character_id not in cache.character_data:
         return 1.0
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.talent.get(education_constant.GROWTH_STOP_TALENT_ID, 0):
+    if abilities.talent(character_id).get(
+        education_constant.GROWTH_STOP_TALENT_ID, 0
+    ):
         return education_constant.GROWTH_STOP_LEARN_RATE
     return 1.0
 
@@ -237,10 +237,8 @@ def get_class_adjust(
     # 无教师则走自习：没有教师就没有等级差可算，速度系数恒取1.0
     if teacher_id == -1 or teacher_id not in cache.character_data:
         return zone_adjust
-    student_data: game_type.Character = cache.character_data[student_id]
-    teacher_data: game_type.Character = cache.character_data[teacher_id]
-    student_level = int(student_data.ability.get(ability_id, 0))
-    teacher_level = int(teacher_data.ability.get(ability_id, 0))
+    student_level = int(abilities.ability(student_id).get(ability_id, 0))
+    teacher_level = int(abilities.ability(teacher_id).get(ability_id, 0))
     return get_learn_speed(teacher_level, student_level) * zone_adjust
 
 
@@ -507,13 +505,12 @@ def settle_teacher_class_gain(
         return
     from Script.Settle import common_default
 
-    teacher_data: game_type.Character = cache.character_data[teacher_id]
     # 教师自身的成长吃自己的该科目等级修正，与既有口径一致
     common_default.base_chara_state_common_settle(
         teacher_id,
         add_time,
         education_constant.LEARN_STATE_ID,
-        ability_level=int(teacher_data.ability.get(ability_id, 0)),
+        ability_level=int(abilities.ability(teacher_id).get(ability_id, 0)),
         change_data=change_data,
     )
     # 教学相长同一口径：性技科目教师也只拿理论经验（Plan 26 §3.1）
@@ -563,6 +560,7 @@ def settle_personality_pair(character_id: int, pair_id: int) -> int:
           毕业结算逐对调它；毕业之后改写倾向时由 settle_adult_personality_pair 只重选被改的那一对。
           只读养成数据，不惰性创建
     """
+    talent = abilities.talent(character_id)
     if (
         character_id not in cache.character_data
         or pair_id not in education_constant.PERSONALITY_PAIR_TALENT
@@ -583,9 +581,9 @@ def settle_personality_pair(character_id: int, pair_id: int) -> int:
     else:
         # 这一对没有倾向，两侧都不写
         return 0
-    character_data.talent[got_talent] = 1
+    talent[got_talent] = 1
     # 同一对的另一侧要清掉，避免出现"既勤劳又懒散"
-    character_data.talent[lost_talent] = 0
+    talent[lost_talent] = 0
     return got_talent
 
 
@@ -663,7 +661,7 @@ def get_career_suggestion_text(character_id: int) -> str:
             != education_constant.ABILITY_TYPE_SUBJECT
         ):
             continue
-        level = int(character_data.ability.get(ability_id, 0))
+        level = int(abilities.ability(character_id).get(ability_id, 0))
         if level > best_level:
             best_level = level
             best_ability_id = ability_id

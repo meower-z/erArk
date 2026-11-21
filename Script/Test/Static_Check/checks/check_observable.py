@@ -3,13 +3,12 @@
 静态检查系统 - 可观察矛盾检查
 
 本模块实现 OBS 组的14条不变量检查（OBS-01 ~ OBS-09、OBS-12、OBS-13、OBS-16 ~ OBS-18），覆盖玩家可直接从指令面板、
-角色标签、身体面板、
-位置面板与助理设置中观察到的状态矛盾。
+角色标签、身体面板、位置面板与助理设置中观察到的状态矛盾。
 
 全流水线实现总则：
-1. 禁止调用 Script/Design/handle_premise 中的正式前提函数；这些函数可能升级旧档结构、
-   补写指令过滤键或通过 setdefault 修改存档。本模块只直读 cache/character_data 字段，并只调用已确认
-   无副作用的地图路径与睡眠等级派生函数。
+1. 禁止调用 Script/Design/handle_premise 中的正式前提函数。这些函数可能升级旧档结构、补写指令过滤键，
+   或通过 setdefault 修改存档。本模块直读 cache/character_data 的字段，经领域模块的读函数读 GameState 里的数据。
+   地图路径与睡眠等级用已确认无副作用的派生函数算出。
 2. 每回合执行，角色检查保持单层 O(N) 遍历；配置表和场景路径等共享查表放在循环外。
 3. 每条检查的文档字符串都说明健康存档为何恒不命中；无法给出该理由的候选不进入本模块。
 4. 消息的 ``[warning] `` 前缀表示已确认会命中当前版本真实缺陷的探测器，不是容许误报的出口。
@@ -25,7 +24,8 @@ from collections.abc import Iterator
 
 from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
-from Script.Modules.domains import history, modes, needs, prison, work
+from Script.Modules.domains import abilities, history, modes, needs, prison
+from Script.Modules.domains import work
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
@@ -382,8 +382,8 @@ def check_observable_04() -> list[CheckFailure]:
     if pl is None or getattr(cache, "debug_mode", False):
         return []
     ability = getattr(pl, "pl_ability", None)
-    talent = getattr(pl, "talent", None)
-    if ability is None or not isinstance(talent, dict):
+    talent = abilities.talent(pl.cid)
+    if ability is None:
         return []
     bad = []
     if getattr(ability, "visual", False) and not talent.get(307, 0):

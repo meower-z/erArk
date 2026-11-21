@@ -17,7 +17,7 @@ from google.genai import types as genai_types
 import os
 import re
 from typing import Any, Callable, Iterable, TypedDict
-from Script.Modules.domains import needs
+from Script.Modules.domains import abilities, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -443,7 +443,7 @@ def build_user_prompt(
     talent_text = ""
     if tem_send_data_flags[102]:
         for talent_id in game_config.config_talent:
-            if npc_character_data.talent[talent_id]:
+            if abilities.talent(npc_character_data.cid)[talent_id]:
                 talent_name = game_config.config_talent[talent_id].name
                 talent_text += _("{0}、").format(talent_name)
         if len(talent_text) > 0:

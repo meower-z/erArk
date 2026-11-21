@@ -28,7 +28,7 @@ from Script.System.Pregnancy_System import born_event_panel
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config, normal_config
 from Script.Modules.gameplay_resolution import working
-from Script.Modules.domains import pregnancy, work
+from Script.Modules.domains import abilities, pregnancy, work
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -353,7 +353,7 @@ def get_fertilization_rate(character_id: int) -> tuple[float, str]:
                 now_rate = new_rate
                 character_data.hypnosis.force_ovulation = False
             # 浓厚精液
-            if pl_character_data.talent[33] == 1:
+            if abilities.talent(0)[33] == 1:
                 new_rate = min(100, now_rate * 2)
                 draw_text += _(
                     "\n在浓厚精液的影响下，怀孕概率由{0}上升到了{1}%\n"
@@ -371,6 +371,7 @@ def check_fertilization(character_id: int) -> int | None:
     """
     from Script.System.Pregnancy_System import egg_handle
 
+    talent = abilities.talent(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     draw_text = ""
 
@@ -403,7 +404,7 @@ def check_fertilization(character_id: int) -> int | None:
         character_data.hypnosis.force_ovulation = False
     # 如果当前已受精，则跳过判断
     for i in {20, 21, 22}:
-        if character_data.talent[i] == 1:
+        if talent[i] == 1:
             character_data.pregnancy.fertilization_rate = 0
             return 0
     if child_stage_gate.is_child_stage(character_id):
@@ -421,7 +422,7 @@ def check_fertilization(character_id: int) -> int | None:
             ).format(character_data.name)
 
         # 种族是机械的则需要判断是否有生育模组
-        elif character_data.race == 2 and character_data.talent[171] == 0:
+        elif character_data.race == 2 and talent[171] == 0:
             character_data.pregnancy.fertilization_rate = 0
             draw_text += _(
                 "\n{0}是机械体，且未安装生育模组，无法受精\n"
@@ -481,14 +482,14 @@ def check_fertilization(character_id: int) -> int | None:
                     character_data.name
                 )
                 draw_text += "\n※※※※※※※※※\n"
-                character_data.talent[20] = 1
+                talent[20] = 1
                 character_data.pregnancy.fertilization_time = game_time.now()
                 character_data.pregnancy.fetus_count = success_count
                 # 新受精重置妊娠加速药的累计加速天数
                 character_data.pregnancy.acceleration_days = 0.0
                 # 判断是否是无意识妊娠
                 if character_data.pregnancy.unconscious_fertilization:
-                    character_data.talent[35] = 1
+                    talent[35] = 1
                     draw_text += _(
                         "\n{0}从未在有意识下被中出过，因此不会意识到自己已经怀孕了\n"
                     ).format(character_data.name)
@@ -555,13 +556,10 @@ def check_pregnancy(character_id: int) -> None:
         past_day = get_pregnancy_past_day(character_id)
         # 受精满一个季月（30天）转为妊娠
         if past_day >= pregnancy_constant.PREGNANCY_DAY:
-            character_data.talent[20] = 0
-            character_data.talent[21] = 1
-            character_data.talent[26] = 1
-            character_data.talent[27] = 1
+            abilities.talent(character_id).merge({20: 0, 21: 1, 26: 1, 27: 1})
             # 根据罩杯大小修改乳汁上限
             for talent_id in [121, 122, 123, 124, 125]:
-                if character_data.talent[talent_id]:
+                if abilities.talent(character_id)[talent_id]:
                     pregnancy.set_milk_max(
                         character_id, 150 + (talent_id - 121) * 40
                     )
@@ -606,8 +604,7 @@ def check_near_born(character_id: int) -> None:
                 character_data.dirty
             )
             # 赋予对应素质和二段行动
-            character_data.talent[21] = 0
-            character_data.talent[22] = 1
+            abilities.talent(character_id).merge({21: 0, 22: 1})
             second_behavior.character_get_second_behavior(
                 character_id, "parturient"
             )
@@ -662,8 +659,7 @@ def check_rearing(character_id: int) -> None:
         ]
         past_day = get_child_grow_day(child_id)
         if past_day >= pregnancy_constant.POSTPARTUM_REST_DAY:
-            character_data.talent[23] = 0
-            character_data.talent[24] = 1
+            abilities.talent(character_id).merge({23: 0, 24: 1})
             second_behavior.character_get_second_behavior(
                 character_id, "rearing"
             )
@@ -710,15 +706,15 @@ def _settle_baby_grow_up(character_id: int, child_id: int) -> None:
 
     character_data: game_type.Character = cache.character_data[character_id]
     child_character_data: game_type.Character = cache.character_data[child_id]
-    child_character_data.talent[101] = 0
-    child_character_data.talent[102] = 1
+    child_talent = abilities.talent(child_id)
+    child_talent[101] = 0
+    child_talent[102] = 1
     # 婴儿期入队、还没处理的婴儿桶事件清掉，否则会顶着「幼女期」的抬头弹出
     growth_event_handle.drop_stale_stage_event(child_id)
     # 母亲名下是否还有其他婴儿需要照顾（有则保留育儿与泌乳状态）
     rearing_complete_flag = len(get_baby_id_list(character_id)) == 0
     if rearing_complete_flag:
-        character_data.talent[24] = 0
-        character_data.talent[27] = 0
+        abilities.talent(character_id).merge({24: 0, 27: 0})
     second_behavior.character_get_second_behavior(
         character_id, "rearing_complete"
     )
@@ -767,6 +763,7 @@ def check_grow_to_loli(character_id: int) -> None:
     """
     判断是否成长为学员：素质102→103，孩子上线、置为学生岗，开始在教育区上课
     """
+    talent = abilities.talent(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     # 需要是女儿，而且已经是幼女状态，且没有处于成长停滞（素质28）
     if (
@@ -782,8 +779,8 @@ def check_grow_to_loli(character_id: int) -> None:
                 character_id, "child_to_loli"
             )
             talk.must_show_talk_check(character_id)
-            character_data.talent[102] = 0
-            character_data.talent[103] = 1
+            talent[102] = 0
+            talent[103] = 1
             from Script.Design import handle_npc_ai
             from Script.System.Education_System import (
                 education_constant,
@@ -824,6 +821,7 @@ def check_grow_to_girl(character_id: int) -> None:
     """
     判断是否成长为少女
     """
+    talent = abilities.talent(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     # 需要是女儿，而且已经是学员状态，且没有处于成长停滞（素质28）
     if (
@@ -839,10 +837,10 @@ def check_grow_to_girl(character_id: int) -> None:
                 character_id, "loli_to_girl"
             )
             talk.must_show_talk_check(character_id)
-            character_data.talent[103] = 0
-            character_data.talent[104] = 1
+            talent[103] = 0
+            talent[104] = 1
             # 成长为少女后成长停滞素质已无意义，顺手清除
-            character_data.talent[28] = 0
+            talent[28] = 0
             # 学员期记下的待炫耀也清掉：炫耀口上只写幼女 / 学员，毕业后见面再派只会静默地加一份好感
             if character_data.child_growth is not None:
                 character_data.child_growth.show_off_ability = {}
@@ -989,8 +987,8 @@ def chest_grow(character_id: int, print_flag: bool = False) -> str:
         new_chest_id = old_chest_id
 
     # 把旧的胸部素质换成新的
-    character_data.talent[old_chest_id] = 0
-    character_data.talent[new_chest_id] = 1
+    abilities.talent(character_id)[old_chest_id] = 0
+    abilities.talent(character_id)[new_chest_id] = 1
 
     # 根据flag判定是否要绘制输出
     old_name = game_config.config_talent[old_chest_id].name
@@ -1041,23 +1039,23 @@ def body_part_grow(character_id: int, print_flag: bool = False) -> str:
         old_talent_id = 0
         new_talent_id = 0
         for talent_id in now_talent_id_list:
-            if character_data.talent[talent_id]:
+            if abilities.talent(character_id)[talent_id]:
                 old_talent_id = talent_id
-            if mom_character_data.talent[talent_id]:
+            if abilities.talent(mom_id)[talent_id]:
                 new_talent_id = talent_id
         # 如果自己id不是0，则去掉旧的素质
         if old_talent_id != 0:
-            character_data.talent[old_talent_id] = 0
+            abilities.talent(character_id)[old_talent_id] = 0
         # 如果母亲不是0，则继承母亲的素质
         if new_talent_id != 0:
-            character_data.talent[new_talent_id] = 1
+            abilities.talent(character_id)[new_talent_id] = 1
         # 否则如果母亲是0，则自己和母亲都随机等于当前列表中的一个
         elif old_talent_id != 0:
             random_talent_id = random.choice(now_talent_id_list)
             new_talent_id = random_talent_id
             old_talent_id = random_talent_id
-            character_data.talent[random_talent_id] = 1
-            mom_character_data.talent[random_talent_id] = 1
+            abilities.talent(character_id)[random_talent_id] = 1
+            abilities.talent(mom_id)[random_talent_id] = 1
         if new_talent_id != old_talent_id:
             old_name = game_config.config_talent[old_talent_id].name
             new_name = game_config.config_talent[new_talent_id].name

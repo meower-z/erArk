@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from Script.Core import cache_control, game_type, get_text, constant
 from Script.Design import handle_state_machine, map_handle, handle_premise
-from Script.Modules.domains import dormitory
+from Script.Modules.domains import abilities, dormitory
 from Script.System.Dormitory_System import common
 
 if TYPE_CHECKING:
@@ -51,8 +51,7 @@ def get_dormitory_manager_knowledge(character_id: int) -> int:
     if not manager_id or manager_id not in cache.character_data:
         return 0
 
-    manager_data = cache.character_data[manager_id]
-    return int(manager_data.ability.get(45, 0))
+    return int(abilities.ability(manager_id).get(45, 0))
 
 
 def _get_manager_layer_by_character(character_id: int) -> int:

@@ -14,7 +14,7 @@ from Script.Design import handle_talent, character_handle
 from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
 import copy
-from Script.Modules.domains import facility, needs, playthrough
+from Script.Modules.domains import abilities, facility, needs, playthrough
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -659,26 +659,26 @@ class New_Round_Handle:
         """
         计算源石技艺消耗
         """
+        talent = abilities.talent(0)
         if self.pl_originium_arts_count == 0:
             return 0
         else:
             all_cost = 0
-            pl_character_data = cache.character_data[0]
             # 初级源石技艺
             for i in [304, 307, 310, 316, 331]:
-                if pl_character_data.talent[i]:
+                if talent[i]:
                     all_cost += 10
             # 中级源石技艺
             for i in [305, 308, 311, 317, 332]:
-                if pl_character_data.talent[i]:
+                if talent[i]:
                     all_cost += 30
             # 高级源石技艺
             for i in [306, 309, 312, 318, 333]:
-                if pl_character_data.talent[i]:
+                if talent[i]:
                     all_cost += 60
             # 特级源石技艺
             for i in [334]:
-                if pl_character_data.talent[i]:
+                if talent[i]:
                     all_cost += 120
             return all_cost
 
@@ -893,6 +893,9 @@ class New_Round_Handle:
                 for stat in ("hit_max", "mana_max", "sanity_max")
             },
             "carried": playthrough.carry_for_new_round(core.state()),
+            "abilities": abilities.carry(
+                [0, *self.all_fall_chara_list], core.state()
+            ),
         }
 
     def start_new_round(self) -> None:
@@ -1028,26 +1031,19 @@ def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
 
     # 玩家能力与经验
     now_rate = _inherit_rate(1, _count(inherit, "pl_abi_and_exp_count"))
-    for i in old_pl_character_data.ability:
-        new_pl_character_data.ability[i] = int(
-            old_pl_character_data.ability[i] * now_rate / 100
-        )
-    for i in old_pl_character_data.experience:
-        new_pl_character_data.experience[i] = int(
-            old_pl_character_data.experience[i] * now_rate / 100
-        )
+    old = cast(Mapping[str, core.JSON], inherit["abilities"])
+    for name in ("ability", "experience"):
+        table = abilities.carried(old, 0, name)
+        new = {i: int(value * now_rate / 100) for i, value in table.items()}
+        abilities.Table(0, abilities.PICKLED[name]).merge(new)
     info_draw_text += _("玩家能力与经验继承完毕\n")
 
     # 玩家源石技艺
     if _count(inherit, "pl_originium_arts_count") > 0:
+        old_talent = abilities.carried(old, 0, "talent")
         for i in range(301, 350):
-            if (
-                i in old_pl_character_data.talent
-                and old_pl_character_data.talent[i]
-            ):
-                new_pl_character_data.talent[i] = old_pl_character_data.talent[
-                    i
-                ]
+            if i in old_talent and old_talent[i]:
+                abilities.talent(0)[i] = old_talent[i]
     info_draw_text += _("玩家源石技艺继承完毕\n")
 
     # 玩家属性上限成长
@@ -1164,14 +1160,11 @@ def _inherit_npc_data(
             now_rate = _inherit_rate(
                 5, _count(inherit, "chara_abi_and_exp_count")
             )
-            for i in old_npc_data[now_id].ability:
-                new_npc_data.ability[i] = int(
-                    old_npc_data[now_id].ability[i] * now_rate / 100
-                )
-            for i in old_npc_data[now_id].experience:
-                new_npc_data.experience[i] = int(
-                    old_npc_data[now_id].experience[i] * now_rate / 100
-                )
+            old = cast(Mapping[str, core.JSON], inherit["abilities"])
+            for name in ("ability", "experience"):
+                table = abilities.carried(old, now_id, name)
+                new = {i: int(v * now_rate / 100) for i, v in table.items()}
+                abilities.Table(now_id, abilities.PICKLED[name]).merge(new)
             if now_rate > 0:
                 info_draw_text += _(
                     "干员能力与经验继承完毕，共继承了{rate}%的能力与经验\n"
@@ -1329,7 +1322,7 @@ class CharacterabiText:
                 now_draw_1.text = " "
                 now_draw_1.width = 1
                 now_draw.width = self.width / len(type_set)
-                now_exp = character_data.ability[ability_id]
+                now_exp = abilities.ability(character_data.cid)[ability_id]
                 # 仅在这里与原版不同，增加继承比例
                 if now_exp > 0:
                     inherit_exp = int(now_exp * self.rate / 100)
@@ -1391,6 +1384,7 @@ class CharacterExperienceText:
         self, character_id: int, width: int, column: int, rate: int
     ) -> None:
         """初始化绘制对象"""
+        experience = abilities.experience(character_id)
         self.character_id = character_id
         """ 要绘制的角色id """
         self.width = width
@@ -1442,8 +1436,8 @@ class CharacterExperienceText:
                     continue
             experience_text = game_config.config_experience[experience_id].name
             experience_value = 0
-            if experience_id in character_data.experience:
-                experience_value = character_data.experience[experience_id]
+            if experience_id in experience:
+                experience_value = experience[experience_id]
                 # 仅在这里与原版不同，增加继承比例
                 inherit_exp = int(experience_value * self.rate / 100)
                 now_text = (

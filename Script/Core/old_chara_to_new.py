@@ -16,6 +16,7 @@ from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
 from Script.Modules.domains import (
+    abilities,
     commission,
     diplomacy,
     economy,
@@ -617,18 +618,7 @@ def migrate_character_replacement(
             if old_character.status_data
             else {}
         )
-        new_character.ability = (
-            old_character.ability.copy() if old_character.ability else {}
-        )
-        new_character.experience = (
-            old_character.experience.copy() if old_character.experience else {}
-        )
-        new_character.juel = (
-            old_character.juel.copy() if old_character.juel else {}
-        )
-        new_character.talent = (
-            old_character.talent.copy() if old_character.talent else {}
-        )
+        abilities.copy_tables(old_id, new_id)
         new_character.item = (
             old_character.item.copy() if old_character.item else {}
         )
@@ -1409,49 +1399,53 @@ def update_character_config_data(value: game_type.Character) -> int:
     """
     update_count = 0
     # 更新角色的各种属性
+    experience = abilities.experience(value.cid)
+    talent = abilities.talent(value.cid)
+    juel = abilities.juel(value.cid)
+    ability = abilities.ability(value.cid)
     # 经验
-    if len(value.experience) != len(game_config.config_experience):
+    if len(experience) != len(game_config.config_experience):
         for key in game_config.config_experience:
-            if key not in value.experience:
-                value.experience[key] = 0
+            if key not in experience:
+                experience[key] = 0
                 update_count += 1
     # 素质：补齐前先去掉 Talent.csv 里没有的编号 6 与 7。补齐只在素质数与 Talent.csv 不同时运行。
     # 留着这两个键，缺键的存档可能素质数相同而漏补。
     for talent_id in (6, 7):
-        update_count += int(value.talent.pop(talent_id, None) is not None)
-    if len(value.talent) != len(game_config.config_talent):
+        update_count += int(talent.pop(talent_id, None) is not None)
+    if len(talent) != len(game_config.config_talent):
         for key in game_config.config_talent:
-            if key not in value.talent:
-                value.talent[key] = 0
+            if key not in talent:
+                talent[key] = 0
                 update_count += 1
     # 如果没有u插入经验，则增加u处女素质
-    if value.experience[63] == 0 and value.talent[2] == 0 and value.cid != 0:
-        value.talent[2] = 1
+    if experience[63] == 0 and talent[2] == 0 and value.cid != 0:
+        talent[2] = 1
         update_count += 1
     # 去掉玩家的u处女素质
-    if value.cid == 0 and value.talent[2] == 1:
-        value.talent[2] = 0
+    if value.cid == 0 and talent[2] == 1:
+        talent[2] = 0
         update_count += 1
     # 如果没有w插入经验，则增加w处女素质
-    if value.experience[64] == 0 and value.talent[3] == 0 and value.cid != 0:
-        value.talent[3] = 1
+    if experience[64] == 0 and talent[3] == 0 and value.cid != 0:
+        talent[3] = 1
         update_count += 1
     # 去掉玩家的w处女素质
-    if value.cid == 0 and value.talent[3] == 1:
-        value.talent[3] = 0
+    if value.cid == 0 and talent[3] == 1:
+        talent[3] = 0
         update_count += 1
     # 宝珠
-    if len(value.juel) != len(game_config.config_juel):
+    if len(juel) != len(game_config.config_juel):
         for key in game_config.config_juel:
-            if key not in value.juel:
-                value.juel[key] = 0
+            if key not in juel:
+                juel[key] = 0
                 update_count += 1
     # 能力
     # 可能存在旧的空编号，所以这里不检查长度
     # if len(value.ability) != len(game_config.config_ability):
     for key in game_config.config_ability:
-        if key not in value.ability:
-            value.ability[key] = 0
+        if key not in ability:
+            ability[key] = 0
             update_count += 1
     # 状态
     for key in game_config.config_character_state:
@@ -1723,7 +1717,7 @@ def _is_young_child(character: game_type.Character) -> bool:
     bool -- 持有 child_stage_gate.CHILD_STAGE_TALENTS 中任一素质时为True
     """
     return any(
-        character.talent.get(talent_id, 0)
+        abilities.talent(character.cid).get(talent_id, 0)
         for talent_id in child_stage_gate.CHILD_STAGE_TALENTS
     )
 
@@ -1753,16 +1747,17 @@ def _migrate_static_talent(
     """
     from Script.Config import character_config
 
+    talent = abilities.talent(character.cid)
     count = 0
     stage_list = [
         talent_id
         for talent_id in STAGE_TALENT_TUPLE
-        if character.talent.get(talent_id, 0)
+        if talent.get(talent_id, 0)
     ]
     if not stage_list:
         return count
     for talent_id in stage_list:
-        character.talent[talent_id] = 0
+        talent[talent_id] = 0
         count += 1
     tem_character = character_config.character_tem_list.get(character.adv)
     body_list = [
@@ -1773,8 +1768,8 @@ def _migrate_static_talent(
         and tem_character.Talent.get(talent_id, 0)
     ]
     for talent_id in body_list or [ADULT_BODY_TALENT]:
-        if not character.talent.get(talent_id, 0):
-            character.talent[talent_id] = 1
+        if not talent.get(talent_id, 0):
+            talent[talent_id] = 1
             count += 1
     return count
 
@@ -1926,6 +1921,7 @@ def _clear_young_child_h_state(character: game_type.Character) -> int:
     int -- 改动的项数
     功能: 妊娠数据里的生殖周期、出生时间、成长加速天数与奶量上限保留，其余换成默认值；只改孩子本人，不动母亲
     """
+    talent = abilities.talent(character.cid)
     count = _replace_if_changed(character, "dirty", _get_new_dirty())
     count += _replace_if_changed(
         character,
@@ -1938,8 +1934,8 @@ def _clear_young_child_h_state(character: game_type.Character) -> int:
             character.sp_flag, flag_name, getattr(default_flag, flag_name)
         )
     for talent_id in YOUNG_CHILD_H_TALENT_TUPLE:
-        if character.talent.get(talent_id, 0):
-            character.talent[talent_id] = 0
+        if talent.get(talent_id, 0):
+            talent[talent_id] = 0
             count += 1
     default_pregnancy = game_type.PREGNANCY()
     for attr_name, default_value in vars(default_pregnancy).items():

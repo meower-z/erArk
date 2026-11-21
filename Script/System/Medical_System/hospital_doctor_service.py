@@ -160,9 +160,7 @@ def evaluate_surgery_preconditions(
     ability_requirement = medical_constant.SURGERY_ABILITY_REQUIREMENT.get(
         patient.severity_level, 4
     )
-    doctor_level = int(
-        doctor_character.ability.get(medical_constant.MEDICAL_ABILITY_ID, 0)
-    )
+    doctor_level = int(medical_core.medical_level(doctor_character.cid))
     # 能力不足时返回失败
     if doctor_level < ability_requirement:
         return SurgeryPrecheckResult(
@@ -452,9 +450,7 @@ def _attempt_surgery_on_patient(
         return False
 
     # 计算医生能力带来的倍率，用于后续收益结算。
-    doctor_ability_level = int(
-        doctor.ability.get(medical_constant.MEDICAL_ABILITY_ID, 0) or 0
-    )
+    doctor_ability_level = int(medical_core.medical_level(doctor.cid) or 0)
     price_ratio = float(medical.state().price_ratio or 1.0)
     income_multiplier = medical_core.resolve_price_income_multiplier(
         price_ratio

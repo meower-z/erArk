@@ -13,7 +13,7 @@ from Script.Core import (
 from Script.Design import handle_talent, handle_premise
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import abilities, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -48,6 +48,7 @@ class Originium_Arts_Panel:
     def draw(self) -> None:
         """绘制对象"""
 
+        talent = abilities.talent(0)
         title_text = _("源石技艺")
         title_draw = draw.TitleLineDraw(title_text, self.width)
         while 1:
@@ -76,7 +77,7 @@ class Originium_Arts_Panel:
                 talent_id_list = [316, 317, 318]
                 count = 0
                 for talent_id in talent_id_list:
-                    if not self.pl_character_data.talent[talent_id]:
+                    if not talent[talent_id]:
                         continue
                     talent_name = game_config.config_talent[talent_id].name
                     if talent_id != 316:
@@ -131,7 +132,7 @@ class Originium_Arts_Panel:
                 talent_id_list = [304, 305, 306]
                 count = 0
                 for talent_id in talent_id_list:
-                    if not self.pl_character_data.talent[talent_id]:
+                    if not talent[talent_id]:
                         continue
                     talent_name = game_config.config_talent[talent_id].name
                     if talent_id != 304:
@@ -155,7 +156,7 @@ class Originium_Arts_Panel:
                 talent_id_list = [307, 308, 309]
                 count = 0
                 for talent_id in talent_id_list:
-                    if not self.pl_character_data.talent[talent_id]:
+                    if not talent[talent_id]:
                         continue
                     talent_name = game_config.config_talent[talent_id].name
                     if talent_id != 307:
@@ -266,7 +267,7 @@ class Originium_Arts_Panel:
                     talent_info = game_config.config_talent[talent_id].info
                     draw_text = f"  {talent_name}：{talent_info}\n"
                     now_draw = draw.NormalDraw()
-                    if not self.pl_character_data.talent[talent_id]:
+                    if not abilities.talent(0)[talent_id]:
                         draw_text = _("  {0}(未解锁)：{1}\n").format(
                             talent_name, talent_info
                         )
@@ -311,6 +312,7 @@ class Originium_Arts_Panel:
 
     def gain_and_upgrade_ability(self) -> None:
         """能力获得与升级"""
+        experience = abilities.experience(0)
         while 1:
             return_list: list[str] = []
             line_draw = draw.LineDraw("-", self.width)
@@ -328,13 +330,11 @@ class Originium_Arts_Panel:
             for cid in game_config.config_talent_of_arts:
                 talent_of_arts_data = game_config.config_talent_of_arts[cid]
                 # 检查是否已经获得
-                if self.pl_character_data.talent[talent_of_arts_data.talent_id]:
+                if abilities.talent(0)[talent_of_arts_data.talent_id]:
                     continue
                 # 检查是否有前置素质
                 if talent_of_arts_data.need_id:
-                    if not self.pl_character_data.talent[
-                        talent_of_arts_data.need_id
-                    ]:
+                    if not abilities.talent(0)[talent_of_arts_data.need_id]:
                         continue
                 talent_id = talent_of_arts_data.talent_id
                 talent_name = game_config.config_talent[talent_id].name
@@ -444,7 +444,7 @@ class Originium_Arts_Panel:
                             character_data.favorability[0]
                         )
                         for talent_id in [204, 214]:
-                            if character_data.talent[talent_id]:
+                            if abilities.talent(chara_id)[talent_id]:
                                 now_fall_count += 1
                                 break
                     # 绘制
@@ -496,7 +496,7 @@ class Originium_Arts_Panel:
                             now_semen_count += character_data.dirty.body_semen[
                                 part_id
                             ][3]
-                        now_exp_count += character_data.experience[20]
+                        now_exp_count += abilities.experience(chara_id)[20]
                     # 绘制
                     draw_text += _(
                         "：需要全干员的体内部位被射精总量≥{0}ml（当前{1}ml），全干员总绝顶经验≥{2}（当前{3}）"
@@ -534,9 +534,9 @@ class Originium_Arts_Panel:
                     # 计算全干员无意识经验
                     now_orgasm_exp_count, now_sex_exp_count = 0, 0
                     for chara_id in cache.npc_id_got:
-                        character_data = cache.character_data[chara_id]
-                        now_orgasm_exp_count += character_data.experience[78]
-                        now_sex_exp_count += character_data.experience[79]
+                        npc_experience = abilities.experience(chara_id)
+                        now_orgasm_exp_count += npc_experience[78]
+                        now_sex_exp_count += npc_experience[79]
                     # 绘制
                     draw_text += _(
                         "：需要全干员无意识性交经验≥{0}（当前{1}），全干员总无意识绝顶经验≥{2}（当前{3}）"
@@ -558,12 +558,10 @@ class Originium_Arts_Panel:
                 elif talent_id == 317:
                     # 计算全干员无意识经验
                     now_time_stop_sex_exp_count, now_orgasm_exp_count = 0, 0
-                    now_time_stop_sex_exp_count = (
-                        self.pl_character_data.experience[124]
-                    )
+                    now_time_stop_sex_exp_count = experience[124]
                     for chara_id in cache.npc_id_got:
-                        character_data = cache.character_data[chara_id]
-                        now_orgasm_exp_count += character_data.experience[78]
+                        npc_experience = abilities.experience(chara_id)
+                        now_orgasm_exp_count += npc_experience[78]
                     # 绘制
                     draw_text += _(
                         "：需要对干员的时姦经验≥{0}（当前{1}），全干员总无意识绝顶经验≥{2}（当前{3}）"
@@ -587,13 +585,9 @@ class Originium_Arts_Panel:
                     # 绘制
                     draw_text += _(
                         "：需要对干员的睡姦经验≥{0}（当前{1}）"
-                    ).format(
-                        talent_of_arts_data.lv_up_value1,
-                        self.pl_character_data.experience[120],
-                    )
+                    ).format(talent_of_arts_data.lv_up_value1, experience[120])
                     now_contion = (
-                        self.pl_character_data.experience[120]
-                        >= talent_of_arts_data.lv_up_value1
+                        experience[120] >= talent_of_arts_data.lv_up_value1
                     )
                     return_list = self.draw_lv_up_button(
                         now_contion, draw_text, cid, return_list
@@ -604,7 +598,7 @@ class Originium_Arts_Panel:
                         talent_id
                     ]
                     need_exp = up_data.pl_experience
-                    now_exp = self.pl_character_data.experience[122]
+                    now_exp = experience[122]
                     need_degree = up_data.npc_hypnosis_degree
                     now_degree: float = 0
                     # 计算全获得干员的催眠深度
@@ -653,7 +647,7 @@ class Originium_Arts_Panel:
                 return
             warehouse.add(3, -money_cost)
         # 升级或获得能力
-        self.pl_character_data.talent[talent_id] = 1
+        abilities.talent(0)[talent_id] = 1
         info_text = _("\n习得了{0}\n").format(talent_name)
         info_draw = draw.WaitDraw()
         info_draw.text = _(info_text)
@@ -727,7 +721,7 @@ class Down_Negative_Talent_Panel:
                 character_data = cache.character_data[chara_id]
 
                 for ability_id in self.ability_id_list:
-                    if character_data.ability[ability_id]:
+                    if abilities.ability(chara_id)[ability_id]:
                         chara_exist_flag = True
                         name = character_data.name
                         adv_id = character_data.adv
@@ -761,6 +755,7 @@ class Down_Negative_Talent_Panel:
 
     def choice_down_which(self, chara_id: int) -> None:
         """选择降低哪一个"""
+        ability = abilities.ability(chara_id)
         character_data = cache.character_data[chara_id]
         self.chara_id = chara_id
         name = character_data.name
@@ -786,9 +781,9 @@ class Down_Negative_Talent_Panel:
             info_draw.draw()
 
             for ability_id in self.ability_id_list:
-                if character_data.ability[ability_id]:
+                if ability[ability_id]:
                     ability_name = game_config.config_ability[ability_id].name
-                    ability_lv = character_data.ability[ability_id]
+                    ability_lv = ability[ability_id]
                     button_text = f"  {ability_name}[lv{ability_lv}]"
 
                     button_draw = draw.LeftButton(
@@ -814,6 +809,7 @@ class Down_Negative_Talent_Panel:
         """结算刻印降低"""
         info_draw = draw.NormalDraw()
         character_data = cache.character_data[self.chara_id]
+        ability = abilities.ability(character_data.cid)
 
         # 计算当前该角色的胖次数量，大于五则成功，不足则弹出失败提示
         pl_character_data = cache.character_data[0]
@@ -852,7 +848,7 @@ class Down_Negative_Talent_Panel:
                         pop_pan_count += 1
 
             # 降低刻印
-            character_data.ability[ability_id] -= 1
+            ability[ability_id] -= 1
             # 也降低刻印对应的主状态值
             if ability_id == 15:
                 character_data.status_data[17] = 0
@@ -867,7 +863,7 @@ class Down_Negative_Talent_Panel:
                 character_data.name,
                 pl_character_data.name,
                 game_config.config_ability[ability_id].name,
-                character_data.ability[ability_id],
+                ability[ability_id],
             )
         else:
             info_text = _("  内裤数量不足\n")

@@ -20,6 +20,7 @@ from Script.Core import cache_control, constant, game_type
 from Script.Design import child_stage_gate, handle_premise, virgin_break_gate
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import intent
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -132,7 +133,7 @@ def takes_virginity(who: int, behavior_id: str, data: Data) -> bool:
     if behavior_config is None or target_data is None:
         return False
     return virgin_break_gate.takes_kept_virginity(
-        behavior_config.tag.split("|"), target_data.talent
+        behavior_config.tag.split("|"), abilities.talent(target_data.cid)
     )
 
 

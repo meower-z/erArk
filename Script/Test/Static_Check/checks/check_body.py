@@ -16,7 +16,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import game_time
-from Script.Modules.domains import needs, pregnancy
+from Script.Modules.domains import abilities, needs, pregnancy
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -121,7 +121,7 @@ def _cloth_locs(chara: object) -> list[tuple[str, dict]] | None:
     return locs
 
 
-def _talent_get(chara: object, talent_id: int) -> int:
+def _talent_get(chara: game_type.Character, talent_id: int) -> int:
     """
     参数:
         chara: 角色对象
@@ -131,10 +131,7 @@ def _talent_get(chara: object, talent_id: int) -> int:
     功能:
         防御式读取素质值，避免素质表缺键时检查器自身抛KeyError
     """
-    talent = getattr(chara, "talent", None)
-    if not isinstance(talent, dict):
-        return 0
-    value = talent.get(talent_id, 0)
+    value = abilities.talent(chara.cid).get(talent_id, 0)
     return (
         value if isinstance(value, int) and not isinstance(value, bool) else 0
     )
@@ -1433,17 +1430,7 @@ def check_talent_dict_shape() -> list[CheckFailure]:
     config_keys = set(talent_config)
     failures = []
     for cid, chara in _iter_charas():
-        talent = getattr(chara, "talent", None)
-        if not isinstance(talent, dict):
-            failures.append(
-                make_failure(
-                    "BODY-31",
-                    "素质字典完整且取值为0/1",
-                    f"角色id={cid}({_name(chara)})的talent不是dict: {type(talent).__name__}",
-                    [cid],
-                )
-            )
-            continue
+        talent = abilities.talent(cid)
         missing = config_keys - set(talent)
         bad = [
             (k, v)

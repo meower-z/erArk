@@ -1,6 +1,5 @@
 """角色数据的生成与初始化：NPC列表、角色模板、新生孩子、初始位置、娱乐、开放设施与工作，以及获得新角色与增加好感"""
 
-import copy
 import random
 from types import FunctionType
 from Script.Core import (
@@ -18,8 +17,8 @@ from Script.Design import (
     game_time,
 )
 from Script.Config import game_config, character_config, normal_config
-from Script.Modules.domains import facility, needs, playthrough, tallies
-from Script.Modules.domains import visitor
+from Script.Modules.domains import abilities, facility, needs, playthrough
+from Script.Modules.domains import tallies, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -73,9 +72,10 @@ def init_character(
     now_character.target_character_id = character_id
     now_character.favorability = {0: 0}
     now_character.trust = 0
-    now_character.ability = copy.deepcopy(character_tem.Ability)
-    now_character.experience = copy.deepcopy(character_tem.Experience)
-    now_character.talent = copy.deepcopy(character_tem.Talent)
+    abilities.ability(character_id).replace(character_tem.Ability)
+    abilities.experience(character_id).replace(character_tem.Experience)
+    abilities.talent(character_id).replace(character_tem.Talent)
+    abilities.juel(character_id).replace({})
     needs.set(
         now_character.cid, hit_max=character_tem.Hp, mana_max=character_tem.Mp
     )
@@ -194,7 +194,7 @@ def born_new_character(mother_id: int, child_name: str) -> int:
     for talent_id in game_config.config_talent:
         if (
             game_config.config_talent[talent_id].heredity
-            and mom_character_data.talent[talent_id]
+            and abilities.talent(mother_id)[talent_id]
         ):
             # 跳过胸部、臀部、腿和脚
             if 122 <= talent_id <= 132:
@@ -424,10 +424,9 @@ def handle_character_setting() -> None:
     for character_id in cache.character_data:
         if character_id == 0:
             continue
-        character_data = cache.character_data[character_id]
         # 淫乱化
         if playthrough.setting(playthrough.WORLD, 2):
-            character_data.talent[40] = 1
+            abilities.talent(character_id)[40] = 1
         # 泌乳化
         if playthrough.setting(playthrough.WORLD, 3):
-            character_data.talent[27] = 1
+            abilities.talent(character_id)[27] = 1

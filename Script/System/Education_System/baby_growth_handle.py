@@ -19,6 +19,7 @@ from types import FunctionType
 from Script.Config import game_config
 from Script.Core import cache_control, game_type, get_text
 from Script.System.Education_System import education_constant, growth_handle
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -137,6 +138,7 @@ def settle_prenatal_to_child(mother_id: int, child_id: int) -> str:
     Return arguments:
     str -- 给生产面板显示的说明文本，没有胎教累积时为空串
     """
+    juel = abilities.juel(child_id)
     prenatal_point = get_prenatal_point(mother_id)
     if prenatal_point <= 0 or child_id not in cache.character_data:
         return ""
@@ -145,8 +147,8 @@ def settle_prenatal_to_child(mother_id: int, child_id: int) -> str:
     juel_value = get_prenatal_juel_value(prenatal_point)
     child_data: game_type.Character = cache.character_data[child_id]
     if juel_value > 0:
-        child_data.juel.setdefault(education_constant.LEARN_STATE_ID, 0)
-        child_data.juel[education_constant.LEARN_STATE_ID] += juel_value
+        juel.setdefault(education_constant.LEARN_STATE_ID, 0)
+        juel[education_constant.LEARN_STATE_ID] += juel_value
         return _(
             "\n{0}在孕期听过{1}次胎教，底子比别的孩子好一些：获得了{2}个{3}\n"
         ).format(

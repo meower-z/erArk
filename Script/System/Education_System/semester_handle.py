@@ -22,6 +22,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import game_time, attr_calculation
 from Script.System.Education_System import education_constant, growth_handle
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -171,7 +172,7 @@ def get_semester_level_change(character_id: int) -> dict[int, list[int]]:
         return result
     for ability_id in education_constant.SUBJECT_ABILITY_LIST:
         # ability 的值可能是 float，比较前一律 int()
-        now_level = int(character_data.ability.get(ability_id, 0))
+        now_level = int(abilities.ability(character_id).get(ability_id, 0))
         base_level = int(growth_data.semester_base_ability.get(ability_id, 0))
         if now_level > base_level:
             result[ability_id] = [base_level, now_level]
@@ -189,12 +190,11 @@ def get_top_ability(character_id: int) -> tuple[int, int]:
 
     if character_id not in cache.character_data:
         return -1, 0
-    character_data: game_type.Character = cache.character_data[character_id]
     top_ability_id = -1
     top_level = 0
     # SUBJECT_ABILITY_LIST 本身是升序列表，用严格大于比较，并列时取id小的那门，结果可复现
     for ability_id in education_constant.SUBJECT_ABILITY_LIST:
-        now_level = int(character_data.ability.get(ability_id, 0))
+        now_level = int(abilities.ability(character_id).get(ability_id, 0))
         if now_level > top_level:
             top_level = now_level
             top_ability_id = ability_id
@@ -428,7 +428,7 @@ def reset_semester_baseline(character_id: int, semester_id: list[int]) -> None:
     growth_data.semester_base_attend = growth_data.attend_class_count
     growth_data.semester_base_absent = growth_data.absent_count
     growth_data.semester_base_ability = {
-        ability_id: int(character_data.ability.get(ability_id, 0))
+        ability_id: int(abilities.ability(character_id).get(ability_id, 0))
         for ability_id in education_constant.SUBJECT_ABILITY_LIST
     }
     # 学期初的岗位（Plan 30）：成绩单按它与结算时的岗位写不全的理由，学期结算据它认出整学期都不在学生岗的成年女儿
@@ -542,7 +542,7 @@ def get_report_card_text(
     # 各科水平只列已经学出等级的那几门：全18门铺开会把结算界面刷屏
     ability_text_list = []
     for ability_id in education_constant.SUBJECT_ABILITY_LIST:
-        now_level = int(character_data.ability.get(ability_id, 0))
+        now_level = int(abilities.ability(character_id).get(ability_id, 0))
         if now_level > 0:
             ability_text_list.append(
                 f"{game_config.config_ability[ability_id].name}{attr_calculation.judge_grade(now_level)}"

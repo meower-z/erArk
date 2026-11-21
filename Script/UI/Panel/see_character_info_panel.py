@@ -29,7 +29,7 @@ from Script.UI.Panel import body_info_panel, character_info_head
 from Script.System.First_Record_System import first_record_panel
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import visitor
+from Script.Modules.domains import abilities, visitor
 
 panel_info_data: dict[str, object] = {}
 
@@ -379,7 +379,6 @@ class SeeCharacterStatusPanel:
         for status_type in game_config.config_character_state_type_data:
             type_data = game_config.config_character_state_type[status_type]
             type_line = draw.LittleTitleLineDraw(type_data.name, width, ":")
-            # print("type_data.name :",type_data.name)
             self.draw_list.append(type_line)
             type_list = game_config.config_character_state_type_data[
                 status_type
@@ -628,7 +627,7 @@ class CharacterabiText:
                 # 去掉时奸刻印
                 if ability_id == 16:
                     continue
-                now_exp = character_data.ability[ability_id]
+                now_exp = abilities.ability(character_data.cid)[ability_id]
                 now_draw = draw.NormalDraw()
                 now_draw.text = "  " + attr_calculation.pad_display_width(
                     ability_data.name, 10
@@ -737,6 +736,7 @@ class CharacterExperienceText:
         center_status: bool = True,
     ) -> None:
         """初始化绘制对象"""
+        experience = abilities.experience(character_id)
         self.character_id = character_id
         """ 要绘制的角色id """
         self.width = width
@@ -788,8 +788,8 @@ class CharacterExperienceText:
                     continue
             experience_text = game_config.config_experience[experience_id].name
             experience_value = 0
-            if experience_id in character_data.experience:
-                experience_value = character_data.experience[experience_id]
+            if experience_id in experience:
+                experience_value = experience[experience_id]
                 now_text = f" {experience_text}:{experience_value}"
                 if experience_value > 0:
                     experience_text_list.append(now_text)
@@ -913,7 +913,7 @@ class CharacterTalentText:
             self.draw_list.append(now_normal_draw)
             talent_count = 0
             for talent_id in type_set:
-                if character_data.talent[talent_id]:
+                if abilities.talent(character_id)[talent_id]:
                     talent_text = game_config.config_talent[talent_id].name
                     talent_info = game_config.config_talent[talent_id].info
                     now_text = f"[{talent_text}] "
@@ -1126,6 +1126,7 @@ class CharacterJuelText:
         center_status: bool = True,
     ) -> None:
         """初始化绘制对象"""
+        juel = abilities.juel(character_id)
         self.character_id = character_id
         """ 要绘制的角色id """
         self.width = width
@@ -1152,8 +1153,8 @@ class CharacterJuelText:
                     continue
             juel_text = game_config.config_juel[juel_id].name
             juel_value = 0
-            if juel_id in character_data.juel:
-                juel_value = character_data.juel[juel_id]
+            if juel_id in juel:
+                juel_value = juel[juel_id]
             now_text = f" {juel_text}:{juel_value}"
             juel_text_list.append(now_text)
         now_draw: panel.CenterDrawTextListPanel | panel.LeftDrawTextListPanel
@@ -1272,14 +1273,13 @@ class PlayerAbilityText:
         """ 当前面板监听的按钮列表 """
         self.center_status: bool = center_status
         """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
         type_data = _("玩家能力")
         type_line = draw.LittleTitleLineDraw(type_data, width, ":")
         self.draw_list.append(type_line)
         ability_text_list = []
 
         # 定义能力与素质的对应字典
-        abilities = {
+        arts_groups = {
             _("视觉系"): {307, 308, 309},
             _("触觉系"): {310, 311, 312},
             _("激素系"): {304, 305, 306},
@@ -1288,10 +1288,10 @@ class PlayerAbilityText:
         }
 
         # 遍历能力字典，获取对应的文本
-        for ability_name, ids in abilities.items():
+        for ability_name, ids in arts_groups.items():
             now_text = _("\n 【{}】\n".format(ability_name))
             for i in ids:
-                if character_data.talent[i]:
+                if abilities.talent(character_id)[i]:
                     talent_name = game_config.config_talent[i].name
                     talent_info = game_config.config_talent[i].info
                     now_text += f"  {talent_name}：{talent_info}\n"

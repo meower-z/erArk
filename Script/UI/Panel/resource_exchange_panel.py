@@ -9,7 +9,7 @@ from Script.Core import (
     constant,
 )
 from Script.Design import attr_calculation
-from Script.Modules.domains import economy, location
+from Script.Modules.domains import abilities, economy, location
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import warehouse
@@ -73,12 +73,12 @@ def calculate_trade_multiplier(
     main_bonus = 0.0
     sub_bonus = 0.0
     if main_id in trade_ids and main_id > 0:
-        ability_lv = cache.character_data[main_id].ability.get(40, 0)
+        ability_lv = abilities.ability(main_id).get(40, 0)
         main_bonus = ability_lv * TRADE_MAIN_RATE
     for chara_id in trade_ids:
         if chara_id == main_id or chara_id not in cache.character_data:
             continue
-        ability_lv = cache.character_data[chara_id].ability.get(40, 0)
+        ability_lv = abilities.ability(chara_id).get(40, 0)
         sub_bonus += ability_lv * TRADE_SUB_RATE
     total_bonus = main_bonus + sub_bonus
     if buy_flag:
@@ -920,7 +920,7 @@ class Resource_Exchange_Line_Panel:
                     if main_id > 0
                     else _("空缺")
                 )
-                abi_lv = cache.character_data[main_id].ability.get(40, 0)
+                abi_lv = abilities.ability(main_id).get(40, 0)
                 abi_lv_text = (
                     _("(话术lv{0})").format(abi_lv) if main_id != 0 else ""
                 )
@@ -962,7 +962,7 @@ class Resource_Exchange_Line_Panel:
                 other_names = []
                 for c in other_ops:
                     chara = cache.character_data[c]
-                    abi_lv = chara.ability.get(40, 0)
+                    abi_lv = abilities.ability(c).get(40, 0)
                     other_names.append(
                         _("{chara_name}(话术lv{abi_lv})").format(
                             chara_name=chara.name, abi_lv=abi_lv

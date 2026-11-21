@@ -28,7 +28,7 @@ from Script.UI.Moudle import draw, view
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import achievement, needs
+from Script.Modules.domains import abilities, achievement, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -663,7 +663,7 @@ def handle_chat() -> None:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.action_info.talk_count > character_data.ability[40] + 1:
+    if target_data.action_info.talk_count > abilities.ability(0)[40] + 1:
         chara_handle_instruct_common_settle(
             constant.Behavior.CHAT_FAILED, start="count_talk"
         )
@@ -1255,9 +1255,7 @@ def _calm_value() -> int:
     Return arguments:
     int -- 愤怒值
     """
-    adjust = handle_ability.get_ability_adjust(
-        cache.character_data[0].ability[40]
-    )
+    adjust = handle_ability.get_ability_adjust(abilities.ability(0)[40])
     return int(10 + adjust * 10)
 
 
@@ -1627,12 +1625,12 @@ def _give_token(who: int, chosen: intent.Intent) -> None:
             )
         now_draw.draw()
         return
-    target_data.talent[old] = 0
-    target_data.talent[new] = 1
+    abilities.talent(target_id)[old] = 0
+    abilities.talent(target_id)[new] = 1
     # 记录陷落素质的获得时间与地点（此处直接赋值绕过了gain_talent，需补记）
     handle_talent.record_fall_talent_time(target_id, new)
-    target_data.talent[mark] = 1
-    target_data.talent[411] = 1
+    abilities.talent(target_id)[mark] = 1
+    abilities.talent(target_id)[411] = 1
     character_data.pl_collection.token_list[target_id] = True
     now_draw.text += _("\n获得了{0}的信物：{1}\n").format(
         target_data.name, target_data.token_text
@@ -2507,9 +2505,8 @@ def plan_group_sex_end(
 @add_instruct(constant.Instruct.SINGING)
 def handle_singing() -> None:
     """处理唱歌指令"""
-    character_data = cache.character_data[0]
     # 如果音乐等级过低，且周围有其他角色，则进行需要确认再唱歌
-    if character_data.ability[44] <= 2 and handle_premise.handle_scene_over_one(
+    if abilities.ability(0)[44] <= 2 and handle_premise.handle_scene_over_one(
         0
     ):
         while 1:
@@ -2541,9 +2538,8 @@ def handle_singing() -> None:
 @add_instruct(constant.Instruct.PLAY_INSTRUMENT)
 def handle_play_instrument() -> None:
     """处理演奏乐器指令"""
-    character_data: game_type.Character = cache.character_data[0]
     # 如果音乐等级过低，且周围有其他角色，则进行需要确认再演奏
-    if character_data.ability[44] <= 2 and handle_premise.handle_scene_over_one(
+    if abilities.ability(0)[44] <= 2 and handle_premise.handle_scene_over_one(
         0
     ):
         while 1:

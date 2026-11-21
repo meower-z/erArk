@@ -23,6 +23,7 @@ from Script.System.Education_System import (
     class_ai,
 )
 from Script.UI.Moudle import draw
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -135,11 +136,12 @@ class Growth_Panel:
             pregnancy_panel,
         )
 
+        talent = abilities.talent(character_id)
         character_data: game_type.Character = cache.character_data[character_id]
         stage_name = _("已成年")
         # STAGE_TALENT_NAME 取自 Talent.csv，载入时已翻译过，不再包 _()
         for talent_id in sorted(education_constant.STAGE_TALENT_NAME.keys()):
-            if character_data.talent.get(talent_id, 0):
+            if talent.get(talent_id, 0):
                 stage_name = education_constant.STAGE_TALENT_NAME[talent_id]
                 break
         # 母亲：血缘关系里的 mother_id，旧档或数据损坏时可能指向不存在的角色
@@ -165,9 +167,7 @@ class Growth_Panel:
             next_stage_name = pregnancy_handle.get_child_next_stage_name(
                 character_id
             )
-            if character_data.talent.get(
-                education_constant.GROWTH_STOP_TALENT_ID, 0
-            ):
+            if talent.get(education_constant.GROWTH_STOP_TALENT_ID, 0):
                 # 成长停滞期间 check_grow_to_* 不会推进阶段，写预计日期只会误导
                 text += _(
                     "｜成长停滞中，阶段不会推进（解除后距成长为{0}还需 {1}）\n"
@@ -214,14 +214,13 @@ class Growth_Panel:
         功能: 每行4门，0级的也灰显列出，好让玩家知道还有哪些没学；
               本学期涨过级的标出涨了几级并高亮——光看等级看不出这学期的课有没有白上
         """
-        character_data: game_type.Character = cache.character_data[character_id]
         draw.LittleTitleLineDraw(_("科目水平"), self.width).draw()
         # 本学期的增量走 semester_handle 的唯一算口（现等级 - 学期基线），不在这里另算一遍
         level_change = semester_handle.get_semester_level_change(character_id)
         for index, ability_id in enumerate(
             education_constant.SUBJECT_ABILITY_LIST
         ):
-            level = int(character_data.ability.get(ability_id, 0))
+            level = int(abilities.ability(character_id).get(ability_id, 0))
             now_draw = draw.LeftDraw()
             now_draw.width = int(self.width / 4)
             grade_text = attr_calculation.judge_grade(level)

@@ -14,6 +14,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -89,7 +90,7 @@ class Character_talent_show_Text:
         ):
             judge = 0
         if not self._draw_condition(
-            _(" 反发刻印0"), self.character_data.ability[18] == 0
+            _(" 反发刻印0"), abilities.ability(self.character_data.cid)[18] == 0
         ):
             judge = 0
 
@@ -118,15 +119,18 @@ class Character_talent_show_Text:
 
             # 检测爱情路线前提
             if not self._draw_condition(
-                _(" 苦痛刻印0"), self.character_data.ability[15] == 0
+                _(" 苦痛刻印0"),
+                abilities.ability(self.character_data.cid)[15] == 0,
             ):
                 love_judge = 0
             if not self._draw_condition(
-                _(" 恐怖刻印0"), self.character_data.ability[17] == 0
+                _(" 恐怖刻印0"),
+                abilities.ability(self.character_data.cid)[17] == 0,
             ):
                 love_judge = 0
             if not self._draw_condition(
-                _(" 亲密等级至少为2"), self.character_data.ability[32] >= 2
+                _(" 亲密等级至少为2"),
+                abilities.ability(self.character_data.cid)[32] >= 2,
             ):
                 love_judge = 0
 
@@ -154,15 +158,18 @@ class Character_talent_show_Text:
 
             # 检测隶属路线前提
             if not self._draw_condition(
-                _(" 快乐刻印>=1"), self.character_data.ability[13] >= 1
+                _(" 快乐刻印>=1"),
+                abilities.ability(self.character_data.cid)[13] >= 1,
             ):
                 obey_judge = 0
             if not self._draw_condition(
-                _(" 屈服刻印>=1"), self.character_data.ability[14] >= 1
+                _(" 屈服刻印>=1"),
+                abilities.ability(self.character_data.cid)[14] >= 1,
             ):
                 obey_judge = 0
             if not self._draw_condition(
-                _(" 顺从等级至少为2"), self.character_data.ability[31] >= 2
+                _(" 顺从等级至少为2"),
+                abilities.ability(self.character_data.cid)[31] >= 2,
             ):
                 obey_judge = 0
 
@@ -210,17 +217,25 @@ class Character_talent_show_Text:
                 button_text = _("  需要能力[{0}]至少为 {1}\n").format(
                     abi_name, str(need_value)
                 )
-                is_met = self.character_data.ability[need_type_id] >= need_value
+                is_met = (
+                    abilities.ability(self.character_data.cid)[need_type_id]
+                    >= need_value
+                )
             elif need_type == "T":
                 tal_name = game_config.config_talent[need_value].name
                 button_text = _("  需要素质[{0}]\n").format(tal_name)
-                is_met = bool(self.character_data.talent[need_value])
+                is_met = bool(
+                    abilities.talent(self.character_data.cid)[need_value]
+                )
             elif need_type == "J":
                 juel_name = game_config.config_juel[need_type_id].name
                 button_text = _("  需要宝珠[{0}]至少为 {1}\n").format(
                     juel_name, str(need_value)
                 )
-                is_met = self.character_data.juel[need_type_id] >= need_value
+                is_met = (
+                    abilities.juel(self.character_data.cid)[need_type_id]
+                    >= need_value
+                )
             elif need_type == "E":
                 experience_name = game_config.config_experience[
                     need_type_id
@@ -229,7 +244,8 @@ class Character_talent_show_Text:
                     experience_name, str(need_value)
                 )
                 is_met = (
-                    self.character_data.experience[need_type_id] >= need_value
+                    abilities.experience(self.character_data.cid)[need_type_id]
+                    >= need_value
                 )
             elif need_type == "F":
                 button_text = _("  需要好感至少为 {0}\n").format(

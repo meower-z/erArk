@@ -29,7 +29,7 @@ from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
-from Script.Modules.domains import modes, needs, work
+from Script.Modules.domains import abilities, modes, needs, work
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -619,11 +619,6 @@ def handle_settle_behavior(
         now_panel = rich_text.get_rich_text_draw_panel(now_text)
         now_panel.width = width
         now_panel.column = 8
-        # now_panel.draw()
-        # line = draw.LineDraw("-", width)
-        # line.draw()
-        # wait_draw = draw.WaitDraw()
-        # wait_draw.draw()
 
         return now_panel
     return None
@@ -1274,14 +1269,19 @@ def handle_comprehensive_value_effect(
             # 对属性进行操作
             operation_func = operation_mapping[operation]
 
-            # 获取属性值
-            attribute_value = getattr(final_character_data, attribute_name)
+            # 能力、素质、宝珠与经验表不在角色对象上，经 abilities.Table 读写
+            if attribute_name in abilities.PICKLED:
+                key = abilities.PICKLED[attribute_name]
+                attribute_value = abilities.Table(final_character_id, key)
+            else:
+                attribute_value = getattr(final_character_data, attribute_name)
             # 对属性值进行操作
             attribute_value[type_son_id] = operation_func(
                 attribute_value[type_son_id], int(effect_all_value_list[3])
             )
             # 将操作后的属性值重新设置到对象上
-            setattr(final_character_data, attribute_name, attribute_value)
+            if attribute_name not in abilities.PICKLED:
+                setattr(final_character_data, attribute_name, attribute_value)
 
             # 记录结算数据，结算记录里没有素质与宝珠的栏
             if attribute_name not in ["flag", "talent", "juel"]:

@@ -10,6 +10,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -194,8 +195,8 @@ def common_select_npc_button_list_func(
 
                     # 检查角色是否有该能力并且等级达到阈值
                     if (
-                        ability_cid not in character_data.ability
-                        or character_data.ability[ability_cid] < threshold
+                        ability_cid not in abilities.ability(npc_id)
+                        or abilities.ability(npc_id)[ability_cid] < threshold
                     ):
                         continue
             # 添加到过滤后的列表

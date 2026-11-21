@@ -22,7 +22,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
-from Script.Modules.domains import education, modes, needs
+from Script.Modules.domains import abilities, education, modes, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -678,10 +678,8 @@ def get_subject_bonus(student_id: int) -> float:
         return 1.0
     if student_id not in cache.character_data:
         return 1.0
-    pl_data: game_type.Character = cache.character_data[0]
-    student_data: game_type.Character = cache.character_data[student_id]
-    teacher_level = pl_data.ability.get(ability_id, 0)
-    student_level = student_data.ability.get(ability_id, 0)
+    teacher_level = abilities.ability(0).get(ability_id, 0)
+    student_level = abilities.ability(student_id).get(ability_id, 0)
     speed = growth_handle.get_learn_speed(teacher_level, student_level)
     return (
         education_constant.SUBJECT_BONUS
@@ -1225,11 +1223,10 @@ def settle_watcher(
     # 口上限流：本轮是否描写旁观者，与收益是否结算无关
     show_talk = judge_show_watch_talk()
     for watcher_id in watcher_list:
-        watcher_data: game_type.Character = cache.character_data[watcher_id]
         # 主修科目经验
         if exp_id and watch_exp:
-            watcher_data.experience.setdefault(exp_id, 0)
-            watcher_data.experience[exp_id] += watch_exp
+            abilities.experience(watcher_id).setdefault(exp_id, 0)
+            abilities.experience(watcher_id)[exp_id] += watch_exp
             change_data.target_change.setdefault(
                 watcher_id, game_type.TargetChange()
             )
@@ -1244,7 +1241,7 @@ def settle_watcher(
             add_time,
             16,
             base_value=education_constant.WATCH_STATE_BASE,
-            ability_level=watcher_data.ability.get(34, 0),
+            ability_level=abilities.ability(watcher_id).get(34, 0),
             tenths_add=False,
             change_data_to_target_change=change_data,
         )
@@ -1253,7 +1250,7 @@ def settle_watcher(
             add_time,
             12,
             base_value=education_constant.WATCH_STATE_BASE,
-            ability_level=watcher_data.ability.get(33, 0),
+            ability_level=abilities.ability(watcher_id).get(33, 0),
             tenths_add=False,
             change_data_to_target_change=change_data,
         )

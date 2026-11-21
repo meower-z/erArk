@@ -3,7 +3,7 @@
 from Script.Core import cache_control, constant, constant_promise, game_type
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import medical, official, prison, recruit, warehouse
-from Script.Modules.domains import work
+from Script.Modules.domains import abilities, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -783,7 +783,7 @@ def handle_nursery_have_work_to_do(character_id: int) -> int:
     )
     scene_data = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
-        if chara_id and cache.character_data[chara_id].talent[101]:
+        if chara_id and abilities.talent(chara_id)[101]:
             return 1
     return 0
 

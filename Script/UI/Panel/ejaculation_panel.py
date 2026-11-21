@@ -25,7 +25,7 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import achievement, modes, tallies
+from Script.Modules.domains import abilities, achievement, modes, tallies
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -46,7 +46,7 @@ def show_endure_ejaculation_panel() -> bool:
     bool -- 是否忍住 True为忍住 False为射出
     """
     character_data: game_type.Character = cache.character_data[0]
-    now_lv = character_data.ability[30]
+    now_lv = abilities.ability(0)[30]
     now_count = character_data.h_state.endure_not_shot_count
     line = draw.LineDraw("-", window_width)
 
@@ -188,7 +188,7 @@ def common_ejaculation() -> tuple[str, int]:
                 character_data.target_character_id
             ]
             squeeze_adjust = handle_ability.get_ability_adjust(
-                target_data.ability[77]
+                abilities.ability(target_data.cid)[77]
             )
             # 根据榨精能力等级调整射精量
             semen_count *= squeeze_adjust
@@ -272,17 +272,18 @@ def update_semen_dirty(
     semen_count -- 精液量
     update_shoot_position_flag -- 是否更新射精部位
     """
+    talent = abilities.talent(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data: game_type.Character = cache.character_data[0]
 
     # 判断部位类型
     if part_type == 0:
         # 检查是否有该部位
-        if part_cid == 12 and not character_data.talent[113]:
+        if part_cid == 12 and not talent[113]:
             return
-        elif part_cid == 13 and not character_data.talent[112]:
+        elif part_cid == 13 and not talent[112]:
             return
-        elif part_cid == 14 and not character_data.talent[111]:
+        elif part_cid == 14 and not talent[111]:
             return
         # 更新身体部位被射精污浊数据
         now_semen_data = character_data.dirty.body_semen[part_cid]
@@ -460,7 +461,6 @@ def calculate_semen_flow(
 
         # 添加到目标角色的精液流通情况列表中
         character_data.dirty.semen_flow.append(all_flow_dict)
-        # print(f"debug calculate_semen_flow name = {character_data.name},all_flow_dict = {all_flow_dict}")
 
 
 def ejaculation_flow(

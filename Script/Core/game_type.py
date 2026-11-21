@@ -1619,18 +1619,10 @@ class Character:
         """ 角色已死亡 """
         self.collection_character: set = set()
         """ 收藏的角色列表 """
-        self.ability: dict[int, int] = {}
-        """ 角色能力 """
-        self.experience: dict[int, int] = {}
-        """ 角色经验 """
-        self.juel: dict[int, int] = {}
-        """ 角色宝珠 """
         self.profession: int = 0
         """ 角色职业 """
         self.race: int = 0
         """ 角色种族 """
-        self.talent: dict[int, int] = {}
-        """ 角色素质 """
         self.token_text: str = ""
         """ 角色信物文本 """
         self.assistant_character_id: int = 0

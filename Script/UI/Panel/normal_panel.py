@@ -13,6 +13,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import map_handle, game_time
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import entertainment, fridge, playthrough, warehouse
+from Script.Modules.domains import abilities
 
 panel_info_data: dict[str, object] = {}
 
@@ -148,7 +149,7 @@ class Take_Care_Baby_Panel:
                 chara_id = adv_id
                 if chara_id not in cache.character_data:
                     continue
-                if cache.character_data[chara_id].talent[101]:
+                if abilities.talent(chara_id)[101]:
                     name = cache.character_data[chara_id].name
                     chara_adv_id = cache.character_data[chara_id].adv
                     button_text = f"[{str(chara_adv_id).rjust(4,'0')}]:{name} "
@@ -221,7 +222,6 @@ class Take_Care_Baby_Panel:
 
     def settle_take_care(self, instruct_id: int) -> None:
         """结算照顾指令"""
-        # button_text_list = ["抱一抱她","哼唱儿歌","喂奶","换尿布","教她说话","给她玩玩具"]
         behavior_id, state = {
             0: (
                 constant.Behavior.HOLD_CHILD,

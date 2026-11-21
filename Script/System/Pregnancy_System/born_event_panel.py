@@ -15,7 +15,7 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import pregnancy
+from Script.Modules.domains import abilities, pregnancy
 
 panel_info_data: dict[str, object] = {}
 
@@ -110,6 +110,9 @@ class Born_Panel:
         mom_character_data: game_type.Character = cache.character_data[
             self.mother_character_id
         ]
+        talent = abilities.talent(mom_character_data.cid)
+        experience = abilities.experience(mom_character_data.cid)
+        ability = abilities.ability(mom_character_data.cid)
 
         # 事件舞台在医疗部住院区：母亲与玩家先移动到位（胎生兜底 AI 尚未传送的情况，卵生母亲无临盆状态需在此移动）
         move_to_inpatient_department_for_born(self.mother_character_id)
@@ -371,22 +374,22 @@ class Born_Panel:
                 for egg_id in self.egg_id_list:
                     if egg_id in mom_character_data.pregnancy.eggs:
                         del mom_character_data.pregnancy.eggs[egg_id]
-                mom_character_data.talent[24] = 1
+                talent[24] = 1
                 draw_text += _("\n{0}获得了[育儿]\n").format(
                     mom_character_data.name
                 )
-                mom_character_data.talent[27] = 1
+                talent[27] = 1
                 draw_text += _("\n{0}获得了[泌乳]\n").format(
                     mom_character_data.name
                 )
                 # 根据罩杯大小修改乳汁上限
                 for talent_id in [121, 122, 123, 124, 125]:
-                    if mom_character_data.talent[talent_id]:
+                    if talent[talent_id]:
                         pregnancy.set_milk_max(
                             mom_character_data.cid, 150 + (talent_id - 121) * 40
                         )
                         break
-                mom_character_data.experience[86] += 1
+                experience[86] += 1
                 draw_text += _("\n{0}的妊娠经验+1\n").format(
                     mom_character_data.name
                 )
@@ -408,12 +411,12 @@ class Born_Panel:
                 draw_text += _(
                     "\n{0}的生产结束了，但她仍需要在住院部休息几天\n"
                 ).format(mom_character_data.name)
-                mom_character_data.talent[22] = 0
-                mom_character_data.talent[23] = 1
+                talent[22] = 0
+                talent[23] = 1
                 draw_text += _("\n{0}从[临盆]转变为[产后]\n").format(
                     mom_character_data.name
                 )
-                mom_character_data.talent[26] = 0
+                talent[26] = 0
                 draw_text += _("\n{0}失去了[孕肚]\n").format(
                     mom_character_data.name
                 )
@@ -421,19 +424,19 @@ class Born_Panel:
                 mom_character_data.pregnancy.acceleration_days = 0.0
                 mom_character_data.pregnancy.fetus_count = 0
                 mom_character_data.pregnancy.identical_twins = False
-                mom_character_data.experience[65] += 10
-                mom_character_data.experience[68] += 10
-                mom_character_data.experience[86] += 1
+                experience[65] += 10
+                experience[68] += 10
+                experience[86] += 1
                 draw_text += _(
                     "\n{0}的Ｖ扩张经验+10，Ｗ扩张经验+10，妊娠经验+1\n"
                 ).format(mom_character_data.name)
-                if mom_character_data.ability[9] < 5:
-                    mom_character_data.ability[9] = 5
+                if ability[9] < 5:
+                    ability[9] = 5
                     draw_text += _("\n{0}的Ｖ扩张上升至5级\n").format(
                         mom_character_data.name
                     )
-                if mom_character_data.ability[12] < 5:
-                    mom_character_data.ability[12] = 5
+                if ability[12] < 5:
+                    ability[12] = 5
                     draw_text += _("\n{0}的Ｗ扩张上升至5级\n").format(
                         mom_character_data.name
                     )
