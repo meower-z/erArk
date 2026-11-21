@@ -229,8 +229,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         player.pl_collection.milk_total[child_id] = 30
         player.pl_collection.urine_total[child_id] = 20
         island = cache.rhodes_island
-        island.milk_in_fridge[child_id] = 30
-        island.urine_in_fridge[child_id] = 10
         island.current_prisoners[child_id] = [game_time.now(), 0]
         child.sp_flag.imprisonment = True
         commission_id = min(game_config.config_commission)
@@ -389,7 +387,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         无
         Return arguments:
         dict -- 角色id到数据的字典，外加世界设定、日程模板、玩家收藏品里的卵、当前干员列表、各场景的角色、GameState 的
-           全部全局数据、罗德岛里的冷库、囚犯、实操课、体检与借书数据，以及场景面板记着的角色
+           全部全局数据、罗德岛里的囚犯、实操课与体检数据，以及场景面板记着的角色
         """
         collection = self.cache.character_data[0].pl_collection
         from Script.Kernel import core
@@ -408,8 +406,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 [
                     getattr(self.cache.rhodes_island, name)
                     for name in (
-                        "milk_in_fridge",
-                        "urine_in_fridge",
                         "current_prisoners",
                         "temp_sex_class",
                         "examined_operator_ids",
@@ -878,8 +874,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             [
                 child_id in one
                 for one in (
-                    island.milk_in_fridge,
-                    island.urine_in_fridge,
                     island.current_prisoners,
                     island.today_physical_examination_chara_id_dict,
                     island.examined_operator_ids,
@@ -887,8 +881,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                     island.manually_selected_exam_operator_ids,
                 )
             ],
-            [False] * 7,
-            "冷库、囚犯与体检名单里没有孩子",
+            [False] * 5,
+            "囚犯与体检名单里没有孩子",
         )
         self.assertEqual(
             (child.sp_flag.imprisonment, child.sp_flag.field_commission),

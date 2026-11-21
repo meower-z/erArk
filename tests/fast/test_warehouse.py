@@ -18,7 +18,7 @@ from Script.Config import game_config
 from Script.Core import save_handle
 from Script.Design import basement
 from Script.Kernel import core
-from Script.Modules.domains import country, warehouse
+from Script.Modules.domains import country, fridge, warehouse
 from Script.Modules.gameplay_resolution import working
 from Script.Test.Static_Check.check_registry import get_all_checks
 from Script.UI.Moudle import draw
@@ -89,11 +89,10 @@ class WarehouseTest(FastTestCase):
         self.assertFalse(
             hasattr(island, "used_extra_warehouse_capacity_module")
         )
-        with_modules = island.warehouse_capacity
+        with_modules = warehouse.capacity()
         with kernel_data.writing():
             warehouse.set_extra_modules(0)
-            basement.update_facility_limits(island)
-        self.assertEqual(with_modules - island.warehouse_capacity, 400)
+        self.assertEqual(with_modules - warehouse.capacity(), 400)
 
     def without_stock(self, kept: dict[str, int] | None = None) -> None:
         """
@@ -134,14 +133,14 @@ class WarehouseTest(FastTestCase):
             save_handle.install_save(SLOT, 3)
 
     def test_milk_stops_at_capacity(self) -> None:
-        """仓库容量 50，冰箱里有角色 0 的 80 毫升母乳。母乳结算后资源 31 的库存为 50"""
-        island = self.cache.rhodes_island
-        island.warehouse_capacity = 50
-        island.milk_in_fridge = {0: 80}
+        """冰箱 milk 表里角色 0 的存量比仓库容量多 30。母乳结算后资源 31 的库存等于容量，milk 表空了"""
+        capacity = warehouse.capacity()
         with kernel_data.writing():
             warehouse.start({})
+            fridge.add(fridge.MILK, 0, capacity + 30)
             basement.settle_milk()
-        self.assertEqual(warehouse.amount(31), 50)
+        self.assertEqual(warehouse.amount(31), capacity)
+        self.assertEqual(fridge.table(fridge.MILK), {})
 
     def test_stock_checks(self) -> None:
         """

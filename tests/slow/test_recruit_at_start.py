@@ -7,8 +7,10 @@
 - 宿舍已满：不定下行动，缓存不变。
 """
 
+import importlib
 from collections.abc import Mapping
 from typing import cast
+from unittest import mock
 
 from tests.slow.base import SlowTestCase
 
@@ -81,7 +83,11 @@ class RecruitAtStartTest(SlowTestCase):
 
     def test_full_dormitory_commits_nothing(self) -> None:
         """宿舍已满：没有行动，缓存不变，新干员没有加入"""
-        self.cache.rhodes_island.people_max = len(self.cache.npc_id_got)
+        facility = importlib.import_module("Script.Modules.domains.facility")
+        full = len(self.cache.npc_id_got)
+        self.enterContext(
+            mock.patch.object(facility, "people_max", lambda: full)
+        )
         changed = self.confirm()
         self.assertFalse(changed)
         self.assertEqual(self.started, [])

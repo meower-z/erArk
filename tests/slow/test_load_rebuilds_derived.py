@@ -1,12 +1,11 @@
 # -*- coding: UTF-8 -*-
 """
-读档时重新得出的缓存字段
-========================
+读档时重新得出的数据
+====================
 每个测试先开新游戏（SlowTestCase.setUp），把存档目录换成临时目录，再等待 60 分钟。
-- 存档后读档：仓库容量、干员人数上限、访客上限、床位上限、菜谱和角色模板都与存档前相同，
-  地图是游戏启动时载入的那份。
-- 直接 pickle 整个缓存的旧存档里，四个上限都是 99，地图为空。
-  读这个存档后，四个上限回到存档前的值，地图是游戏启动时载入的那份。
+- 存档后读档：仓库容量、干员人数上限、床位上限、菜谱和角色模板都与存档前相同，地图是游戏启动时载入的那份。
+- 直接 pickle 整个缓存的旧存档里，罗德岛对象上与 LIMITS 同名的三个属性都是 99，地图为空。
+  读这个存档后，三个上限回到存档前的值，地图是游戏启动时载入的那份。
 """
 
 import importlib
@@ -25,7 +24,7 @@ LIMITS = (
     "people_max",
     "medical_bed_limit",
 )
-""" 缓存文件不写、读档时重新算出的罗德岛字段 """
+""" 三个上限的名字。仓库容量与干员人数上限读时算出，床位上限读档时重算 """
 
 
 def game(name: str) -> Any:
@@ -40,7 +39,7 @@ def game(name: str) -> Any:
 
 
 class LoadRebuildsDerivedTest(SlowTestCase):
-    """读档时重新得出的缓存字段"""
+    """读档时重新得出的数据"""
 
     def setUp(self) -> None:
         """开新游戏，把存档目录换成临时目录，等待 60 分钟，记下游戏启动时载入的地图和存档前的值"""
@@ -73,13 +72,19 @@ class LoadRebuildsDerivedTest(SlowTestCase):
 
     def values(self) -> dict[str, object]:
         """
-        取四个上限、菜谱（draft.encode 的编码）和角色模板（键与对象 id 的列表）
+        取三个上限、菜谱（draft.encode 的编码）和角色模板（键与对象 id 的列表）
         Return arguments:
         dict -- 字段名: 值
         """
         draft = game("Script.Modules.gameplay_resolution.draft")
-        island = self.cache.rhodes_island
-        out: dict[str, object] = {k: getattr(island, k) for k in LIMITS}
+        facility = game("Script.Modules.domains.facility")
+        medical = game("Script.Modules.domains.medical")
+        warehouse = game("Script.Modules.domains.warehouse")
+        out: dict[str, object] = {
+            "warehouse_capacity": warehouse.capacity(),
+            "people_max": facility.people_max(),
+            "medical_bed_limit": medical.state().bed_limit,
+        }
         out["recipe_data"] = draft.encode(self.cache.recipe_data)
         out["npc_tem_data"] = [
             (k, id(v)) for k, v in self.cache.npc_tem_data.items()
@@ -98,7 +103,7 @@ class LoadRebuildsDerivedTest(SlowTestCase):
         kernel.load(load_order.LOAD_ORDER)
 
     def test_save_and_load_keep_values(self) -> None:
-        """存档后读档，四个上限、菜谱和角色模板与存档前相同，地图是游戏启动时载入的那份"""
+        """存档后读档，三个上限、菜谱和角色模板与存档前相同，地图是游戏启动时载入的那份"""
         save_handle = game("Script.Core.save_handle")
         save_handle.establish_save(SLOT)
         self.load()
@@ -106,7 +111,7 @@ class LoadRebuildsDerivedTest(SlowTestCase):
         self.assertIs(self.cache.map_data, self.boot_map)
 
     def test_old_save_gets_rebuilt_values(self) -> None:
-        """旧存档里四个上限是 99、地图为空，读这个存档后四个上限回到存档前的值，地图是游戏启动时载入的那份"""
+        """旧存档里三个上限是 99、地图为空，读这个存档后三个上限回到存档前的值，地图是游戏启动时载入的那份"""
         save_handle = game("Script.Core.save_handle")
         index = game("Script.Modules.save_load.index")
         save_handle.establish_save(SLOT)
@@ -119,9 +124,9 @@ class LoadRebuildsDerivedTest(SlowTestCase):
             pickle.dump(self.cache, f)
         self.cache.map_data = self.boot_map
         self.load()
-        island = self.cache.rhodes_island
+        values = self.values()
         self.assertEqual(
-            {k: getattr(island, k) for k in LIMITS},
+            {k: values[k] for k in LIMITS},
             {k: self.before[k] for k in LIMITS},
         )
         self.assertIs(self.cache.map_data, self.boot_map)

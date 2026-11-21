@@ -1,9 +1,12 @@
 # -*- coding: UTF-8 -*-
 """
-快照投影补充：世界设定、周目、国家、模式、吵醒名单、成就、事件与指令记录、计划队列与寻路
-====================================================================================
-供 tests/kernel_data.project_state 调用，把 GameState 里的这 14 个全局键按旧缓存的属性名记进快照。
+快照投影补充
+============
+供 tests/kernel_data.project_state 调用，把 GameState 里的全局键按旧缓存的属性名记进快照。
+project_world_misc 记世界设定、周目、国家、模式、吵醒名单、成就、事件与指令记录、计划队列与寻路，共 14 个全局键。
 指令记录只记最近行为，每日记录不在快照里。
+project_base_tallies 记基地的派对排期、旅馆房间档次、计数与冰箱，共 4 个全局键。
+它还记干员人数上限与仓库容量，这两项读时算出。
 """
 
 from __future__ import annotations
@@ -81,3 +84,28 @@ def project_world_misc(state: dict[str, object]) -> None:
     }
     for field, value in fields.items():
         flatten(f"world.{CACHE_AREAS.get(field, field)}.{field}", value, state)
+
+
+def project_base_tallies(state: dict[str, object]) -> None:
+    """
+    快照里按罗德岛对象上旧的属性名记下派对排期、旅馆房间档次、四项计数、冰箱的两个表与两项算出的上限。
+    快照因此能与按这些名字录下的快照比较。冰箱的两个表记在 world.cooking 下，其余记在 world.base 下
+    Keyword arguments:
+    state -- 快照，原地补上
+    """
+    from Script.Modules.domains import entertainment, facility, fridge, tallies
+    from Script.Modules.domains import warehouse
+    from tests.snapshot import flatten
+
+    base = {
+        "party_day_of_week": entertainment.party_days(),
+        "love_hotel_room_lv": entertainment.hotel_room(),
+        "people_max": facility.people_max(),
+        "warehouse_capacity": warehouse.capacity(),
+    }
+    for old, name in tallies.PICKLED.items():
+        base[old] = tallies.get(name)
+    for field, value in base.items():
+        flatten(f"world.base.{field}", value, state)
+    for old, kind in fridge.PICKLED.items():
+        flatten(f"world.cooking.{old}", fridge.table(kind), state)
