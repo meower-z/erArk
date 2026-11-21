@@ -13,7 +13,7 @@ from fractions import Fraction
 import importlib
 from unittest import mock
 
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from tests.slow.base import SlowTestCase
 
 ROOM = ["中枢", "会议室"]
@@ -94,7 +94,7 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         from Script.Core import constant
 
         pl = self.cache.character_data[0]
-        pl.talent[PRIMARY_HYPNOSIS] = 1
+        ca.talent(0)[PRIMARY_HYPNOSIS] = 1
         operator = self.cache.character_data[self._hypnotize("杜宾")]
         pl.pl_ability.visual = True
         kernel_data.set_needs(pl.cid, sanity=Fraction(1, 3))
@@ -118,7 +118,7 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         history = importlib.import_module("Script.Modules.domains.history")
         modes = importlib.import_module("Script.Modules.domains.modes")
         pl = self.cache.character_data[0]
-        pl.talent[PRIMARY_TIME_STOP] = 1
+        ca.talent(0)[PRIMARY_TIME_STOP] = 1
         self.instruct(constant.Instruct.TIME_STOP_ON)
         self.assertTrue(modes.time_stop(), "时停开着")
         kernel_data.set_needs(pl.cid, sanity=1)

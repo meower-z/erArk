@@ -7,6 +7,7 @@
 """
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca, kernel_data
 
 EVENT_ID = "108c4126-9c89-4fb5-9de3-b56a94de9d5e"
 """ 星熊的子事件，效果含 CVE_A2_J|0_G_1 """
@@ -33,18 +34,23 @@ class JuelEventEffectTest(SlowTestCase):
         npc = cache.character_data[npc_id]
         cache.character_data[0].target_character_id = npc_id
         before = [
-            npc.juel.get(0, 0),
+            ca.juel(npc_id).get(0, 0),
             npc.status_data.get(12, 0),
-            npc.experience.get(0, 0),
+            ca.experience(npc_id).get(0, 0),
         ]
         change_data = game_type.CharacterStatusChange()
-        settle_behavior.handle_event_data(
-            EVENT_ID, 0, 1, change_data, game_time.now()
+        kernel_data.written(
+            settle_behavior.handle_event_data,
+            EVENT_ID,
+            0,
+            1,
+            change_data,
+            game_time.now(),
         )
         after = [
-            npc.juel.get(0, 0),
+            ca.juel(npc_id).get(0, 0),
             npc.status_data.get(12, 0),
-            npc.experience.get(0, 0),
+            ca.experience(npc_id).get(0, 0),
         ]
         self.assertEqual(
             after[0] - before[0], 1, f"宝珠0：{before[0]} -> {after[0]}"

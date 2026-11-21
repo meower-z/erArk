@@ -9,6 +9,7 @@
 
 from Script.Design import handle_premise
 from tests.fast.base import FastTestCase
+from tests import chara_abilities as ca
 
 NURSERY = ["教", "育儿"]
 BABY_TALENT = 101
@@ -23,7 +24,7 @@ class OfflineBitSelfIsBabyTest(FastTestCase):
         self.world.chara(0, "博士")
         baby = self.world.chara(1, "婴儿", position=NURSERY)
         carer = self.world.chara(2, "保育员", position=NURSERY)
-        baby.talent[BABY_TALENT] = 1
+        ca.talent(baby)[BABY_TALENT] = 1
         # 游戏初始化角色时把交互对象设为她自己（同 character_handle.init_character）
         baby.target_character_id = 1
         carer.target_character_id = 1

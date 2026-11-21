@@ -22,6 +22,7 @@ from collections.abc import Mapping
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 NPC_NAME = "阿米娅"
 """ 主动H的干员，开局时有素质0~4 """
@@ -120,7 +121,7 @@ class NpcActiveHVirginTest(SlowTestCase):
         """
         from Script.Config import game_config
 
-        talent = self.cache.character_data[npc_id].talent
+        talent = ca.talent(npc_id)
         tags = {
             tag
             for talent_id, talent_tags in VIRGIN_TALENT_TAGS.items()
@@ -137,7 +138,7 @@ class NpcActiveHVirginTest(SlowTestCase):
     def test_virgin_npc_picks_no_break_behavior(self) -> None:
         """她有素质0~4：部位 0 与 22 下选出的行为都不会夺走其中任一素质"""
         npc_id = self.start_npc_active_h()
-        talent = self.cache.character_data[npc_id].talent
+        talent = ca.talent(npc_id)
         self.assertEqual(
             [talent[talent_id] for talent_id in VIRGIN_TALENT_TAGS],
             [1] * len(VIRGIN_TALENT_TAGS),
@@ -157,7 +158,7 @@ class NpcActiveHVirginTest(SlowTestCase):
     def test_npc_without_womb_virgin_picks_no_break_behavior(self) -> None:
         """她只有素质0、1、4：部位 0、21、22 下选出的行为都不会夺走其中任一素质，包括带 W 的破处行为"""
         npc_id = self.start_npc_active_h()
-        talent = self.cache.character_data[npc_id].talent
+        talent = ca.talent(npc_id)
         talent[2] = 0
         talent[3] = 0
         break_behaviors = self.break_behaviors(npc_id)
@@ -180,7 +181,7 @@ class NpcActiveHVirginTest(SlowTestCase):
 
         npc_id = self.start_npc_active_h()
         for talent_id in VIRGIN_TALENT_TAGS:
-            self.cache.character_data[npc_id].talent[talent_id] = 0
+            ca.talent(npc_id)[talent_id] = 0
         break_tagged = {
             behavior_id
             for behavior_id, behavior_data in game_config.config_behavior.items()

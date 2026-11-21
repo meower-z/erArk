@@ -16,7 +16,7 @@
 from typing import TYPE_CHECKING
 from unittest import mock
 
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -190,7 +190,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         child = self.cache.character_data[self.baby_id_list[0]]
         for talent_id, next_name in NEXT_STAGE_NAME.items():
             for stage_id in NEXT_STAGE_NAME:
-                child.talent[stage_id] = 1 if stage_id == talent_id else 0
+                ca.talent(child)[stage_id] = 1 if stage_id == talent_id else 0
             self.assertEqual(
                 pregnancy_handle.get_child_next_stage_name(child.cid),
                 next_name,
@@ -208,7 +208,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         child_id = self.baby_id_list[0]
         child_name = self.cache.character_data[child_id].name
         self.set_born_day(0)
-        self.mother.talent[REARING_TALENT] = 1
+        ca.talent(self.mother)[REARING_TALENT] = 1
         player_input.screen.clear()
         with mock.patch.object(
             pregnancy_handle,
@@ -218,10 +218,10 @@ class GrowthDrugStageNamesTest(SlowTestCase):
                 if cid == child_id
                 else 0
             ),
-        ):
+        ), kernel_data.writing():
             pregnancy_handle.check_rearing_complete(self.mother_id)
         self.assertEqual(
-            self.cache.character_data[child_id].talent[102],
+            ca.talent(child_id)[102],
             1,
             "第一个婴儿长成了幼女",
         )
@@ -243,9 +243,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
             pregnancy_handle, "chest_grow", return_value=""
         ), kernel_data.writing():
             pregnancy_handle.check_all_child_grow_to_loli()
-        self.assertEqual(
-            self.cache.character_data[child_id].talent[103], 1, "她长成了学员"
-        )
+        self.assertEqual(ca.talent(child_id)[103], 1, "她长成了学员")
         trainee_text = "".join(player_input.screen)
         self.assertIn(
             f"{child_name}从[{STAGE_NAME[102]}]成长为了[{STAGE_NAME[103]}]",

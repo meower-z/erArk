@@ -122,7 +122,7 @@ from Script.Core import (
     save_handle,
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
-from tests import kernel_data, kernel_project, world
+from tests import chara_abilities as ca, kernel_data, kernel_project, world
 
 _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
@@ -143,6 +143,7 @@ kernel_data.written(playthrough.reset_difficulty_and_birth)
 # 资源仓库：每种资源 0（与 basement 初始化一致）；内核推进时玩家行动收尾的成就结算要读它
 kernel_data.written(warehouse.start, {})
 kernel_project.auto_commit_outside_step(education.KEYS)
+ca.auto_commit_outside_step()
 # 书库：library.holders() 把配置里的每本书读作在架、没被借走；兴趣课读书要先借书（Plan 29）
 
 # ==== 3. 屏蔽 UI，并把绘制文本收进 drawn_text ====
@@ -308,11 +309,7 @@ def make_character(
         attr_calculation.get_shower_cloth_locker_zero()
     )
     cd.dirty = attr_calculation.get_zero_dirty()
-    cd.talent = attr_calculation.get_talent_zero({})
-    cd.ability = attr_calculation.get_ability_zero({})
     cd.status_data = attr_calculation.get_status_zero({})
-    cd.juel = attr_calculation.get_juel_zero({})
-    cd.experience = attr_calculation.get_experience_zero({})
     cd.second_behavior = attr_calculation.get_second_behavior_zero({})
     cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)
     cd.body_manage = attr_calculation.get_body_manage_zero()
@@ -320,12 +317,13 @@ def make_character(
     cd.assistant_services = (
         attr_calculation.get_assistant_services_zero()
     )  # 实行值计算会读助理服务[8]
-    cd.talent[121] = 1
+    ca.zero_tables(cid)
+    ca.talent(cid)[121] = 1
     cd.work.work_type = work_type
     cd.dormitory = scene_str(SCENE_DORM)
     cd.behavior.start_time = game_time.now()
     if stage:
-        cd.talent[stage] = 1
+        ca.talent(cd)[stage] = 1
     if daughter:
         cd.relationship.father_id = 0
         cd.relationship.mother_id = mother_id

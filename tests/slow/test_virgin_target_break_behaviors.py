@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 if TYPE_CHECKING:
     from typing import Any
@@ -103,7 +104,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         Return arguments:
         set -- 素质 0~4 中有的那几个对应的部位
         """
-        talent = self.cache.character_data[character_id].talent
+        talent = ca.talent(character_id)
         return {
             part
             for talent_id, part in PART_OF_TALENT.items()
@@ -163,7 +164,6 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
 
     def test_group_sex_panel(self) -> None:
         """凯尔希无接吻经验时，口与侍奉两栏不列出 N 的破处类行为；有了接吻经验就列出"""
-        kaltsit = self.cache.character_data[KALTSIT_ID]
         self.assertIn(
             "N", self.virgin_parts(KALTSIT_ID), "开局时凯尔希无接吻经验"
         )
@@ -173,7 +173,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
                 [],
                 f"{body_part} 栏列出了 N 的破处类行为",
             )
-        kaltsit.talent[4] = 0
+        ca.talent(KALTSIT_ID)[4] = 0
         for body_part in ("mouth", "侍奉"):
             self.assertNotEqual(
                 self.break_ids(self.panel_list(body_part), "N"),
@@ -185,8 +185,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         """阿米娅为交互对象：她还是处的部位，调教助手不列出该部位的破处类行为；破处之后就列出"""
         from Script.UI.Panel import confinement_and_training
 
-        amiya = self.cache.character_data[AMIYA_ID]
-
+        talent = ca.talent(AMIYA_ID)
         find = (
             confinement_and_training.get_all_can_use_behavior_id_for_sex_assistant
         )
@@ -203,13 +202,13 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
                 f"列出了 {part} 的破处类行为",
             )
         # 只失去 V 处女：V 的列出，A 与 N 的仍不列出
-        amiya.talent[0] = 0
+        talent[0] = 0
         now_list = listing()
         self.assertNotEqual(self.break_ids(now_list, "V"), [], "V 破处后应列出")
         self.assertEqual(self.break_ids(now_list, "A"), [], "A 仍是处")
         self.assertEqual(self.break_ids(now_list, "N"), [], "仍无接吻经验")
-        amiya.talent[1] = 0
-        amiya.talent[4] = 0
+        talent[1] = 0
+        talent[4] = 0
         now_list = listing()
         for part in ("A", "N"):
             self.assertNotEqual(

@@ -71,12 +71,15 @@ class BridgeInterruptsTest(FastTestCase):
             for who in roster
         }
         data = {
+            **core.state().data,
             time_hooks.TICKED: ticked,
             time_hooks.SETTLED_DAY: game_time.day(CLOCK),
         }
         core.reset_state(
-            core.GameState(
-                CLOCK, MappingProxyType(characters), MappingProxyType(data)
+            working.reconcile(
+                core.GameState(
+                    CLOCK, MappingProxyType(characters), MappingProxyType(data)
+                )
             )
         )
 

@@ -10,7 +10,7 @@
 
 import importlib
 
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from tests.slow.base import SlowTestCase
 
 HATE_MARK = 18
@@ -42,9 +42,9 @@ class PrisonerMarkDownMarkerTest(SlowTestCase):
 
         cid = self.npc("阿米娅")
         cd = self.cache.character_data[cid]
-        cd.ability[HATE_MARK] = 1
+        ca.ability(cid)[HATE_MARK] = 1
         cd.sp_flag.imprisonment = imprisoned
-        cd.juel[PAIN_JUEL] = pain_juel
+        ca.juel(cid)[PAIN_JUEL] = pain_juel
         kernel_data.set_facility_level(PRISON_FACILITY, 5)
         self.world.player.buttons.clear()
         ability_up_panel.Characterabi_show_Text(

@@ -40,7 +40,7 @@ from _bootstrap import (
 from Script.Design import handle_npc_ai, instuct_judege
 from Script.Settle import common_default
 from Script.Modules.domains import modes
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
 clear_schedules()
@@ -49,6 +49,7 @@ mother = make_character(102, "母亲", 0)
 student_a = make_character(
     201, "女儿A", 152, daughter=True, stage=103, mother_id=102
 )
+student_a_exp = ca.experience(student_a)
 student_b = make_character(
     202, "女儿B", 152, daughter=True, stage=103, mother_id=102
 )
@@ -359,7 +360,7 @@ set_time(period_time(4) + datetime.timedelta(minutes=43))
 check("下课类型：按时", sex_class_handle.judge_end_type() == 1)
 set_time(period_time(4) + datetime.timedelta(minutes=70))
 check("下课类型：拖堂", sex_class_handle.judge_end_type() == 2)
-pl.ability[70] = 6
+ca.ability(pl)[70] = 6
 bonus = sex_class_handle.get_subject_bonus(201)
 check(
     "主修加成 = 2.0 × 速度(1+0.25×6) × 教育区",
@@ -431,24 +432,21 @@ exp_id = sex_class_handle.get_now_bonus_exp_id()
 change = game_type.CharacterStatusChange()
 change.target_change.setdefault(202, game_type.TargetChange())
 change.target_change[202].experience[exp_id] = 40
-exp_before = student_a.experience.get(exp_id, 0)
+exp_before = student_a_exp.get(exp_id, 0)
 shy_before = student_a.status_data.get(16, 0)
 _orig_random = random.random
 random.random = lambda: 0.99
 sex_class_handle.settle_watcher(5, change)
 random.random = _orig_random
-check(
-    "旁观者拿 25% 主修经验",
-    student_a.experience.get(exp_id, 0) - exp_before == 10,
-)
+check("旁观者拿 25% 主修经验", student_a_exp.get(exp_id, 0) - exp_before == 10)
 check("旁观者羞耻上升", student_a.status_data.get(16, 0) > shy_before)
 check(
     "变更记录里也记了旁观者",
     change.target_change[201].experience.get(exp_id, 0) == 10,
 )
-exp_before = student_a.experience.get(exp_id, 0)
+exp_before = student_a_exp.get(exp_id, 0)
 sex_class_handle.settle_watcher(0, change)
-check("add_time=0 不结算", student_a.experience.get(exp_id, 0) == exp_before)
+check("add_time=0 不结算", student_a_exp.get(exp_id, 0) == exp_before)
 
 section("当场开的课下课即删（第五轮）")
 impromptu_key = sex_class_handle.get_running_class_key()
@@ -669,7 +667,7 @@ kernel_data.set_world(modes.set_group_sex, False)
 set_time(period_time(3))
 _hypno_day = (game_time.now().weekday() + 3) % 7
 hypno = make_character(305, "心控中的成年学生", 152)
-hypno.talent[72] = 1  # 被深层催眠
+ca.talent(hypno)[72] = 1  # 被深层催眠
 hypno.sp_flag.unconscious_h = (
     7  # 心控：不在 normal 5 / 6 里，门槛一路走到实行值计算的催眠补正段
 )
@@ -681,7 +679,7 @@ move_to(0, classroom_path(ROOM_P))
 move_to(305, classroom_path(ROOM_P))
 kernel_data.set_needs(pl.cid, sanity_max=2000, sanity=2000)
 pl.pl_ability.today_sanity_point_cost = 0
-pl.talent[332] = 0
+ca.talent(pl)[332] = 0
 check(
     "M1 前置：成年非女儿的学生岗、排过性技教室课、好感为 0；玩家没有中级催眠时实行值不足，进不了课堂",
     hypno.relationship.father_id != 0
@@ -689,7 +687,8 @@ check(
     and hypno.favorability.get(0, 0) == 0
     and not sex_class_handle.judge_can_join_sex_class(305),
 )
-pl.talent[332] = 1  # 中级催眠：对深层催眠的目标，实行值不足的部分由理智折算补上
+# 中级催眠：对深层催眠的目标，实行值不足的部分由理智折算补上
+ca.talent(pl)[332] = 1
 _m1_list = []
 for _index in range(4):
     _m1_list.append(sex_class_handle.judge_can_join_sex_class(305))
@@ -784,7 +783,7 @@ check(
     hypno.sp_flag.unconscious_h == 0,
     hypno.sp_flag.unconscious_h,
 )
-pl.talent[332] = 0
+ca.talent(pl)[332] = 0
 kernel_data.set_needs(pl.cid, sanity=0, sanity_max=0)
 pl.pl_ability.today_sanity_point_cost = 0
 schedule_handle.clear_class_cell(ROOM_P, _hypno_day, 8)
@@ -1281,7 +1280,7 @@ schedule_handle.set_selected_course(
 )
 for _cid in (0, 201, 202, 301, 303):
     move_to(_cid, classroom_path(ROOM_P))
-pl.talent[332] = 0
+ca.talent(pl)[332] = 0
 check(
     "L9 前置：成年学生排过性技教室课，但 H 模式实行值不足（好感为 0、玩家没有催眠补正），此刻过不了入课门槛",
     sex_class_handle.judge_has_sex_skill_course(303)
@@ -1451,14 +1450,12 @@ def l11_exp_gain(character_id: int, experience_id: int) -> int:
     Return arguments:
     int -- 这次加上的经验
     """
-    before = cache.character_data[character_id].experience.get(experience_id, 0)
+    experience = ca.experience(character_id)
+    before = experience.get(experience_id, 0)
     common_default.base_chara_experience_common_settle(
         character_id, experience_id, base_value=10
     )
-    return (
-        cache.character_data[character_id].experience.get(experience_id, 0)
-        - before
-    )
+    return experience.get(experience_id, 0) - before
 
 
 _l11_gain = l11_exp_gain(201, _l11_exp)

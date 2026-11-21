@@ -16,6 +16,7 @@ from Script.Modules.domains import needs
 from Script.Modules.gameplay_resolution import working
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
+from tests import chara_abilities as ca
 
 CHILD = 102
 """ 幼女素质 """
@@ -61,7 +62,9 @@ class TraineeNotChildTest(FastTestCase):
         无
         """
         for stage_id in (CHILD, TRAINEE):
-            self.daughter.talent[stage_id] = 1 if stage_id == talent_id else 0
+            ca.talent(self.daughter)[stage_id] = (
+                1 if stage_id == talent_id else 0
+            )
 
     def child_chat_talk(self) -> set:
         """
@@ -111,7 +114,7 @@ class TraineeNotChildTest(FastTestCase):
                 (GROWTH_RESUME_DRUG, 1),
             ):
                 with self.subTest(stage=talent_id, drug=drug_id):
-                    self.daughter.talent[GROWTH_STOP_TALENT] = stopped
+                    ca.talent(self.daughter)[GROWTH_STOP_TALENT] = stopped
                     self.assertTrue(
                         gift_panel.Gift_Panel(PANEL_WIDTH).is_drug_effective(
                             drug_id, self.daughter

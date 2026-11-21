@@ -20,7 +20,7 @@ from Script.Design import handle_premise as HP
 from Script.Modules.domains import modes
 from Script.Modules.domains import physical_exam as exam
 from tests.fast.base import FastTestCase
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 
 SAMPLES = 4000
 """ 随机状态的组数 """
@@ -192,8 +192,8 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
         kernel_data.set_needs(operator.cid, sleep=rng.choice(SLEEP_POINTS))
         kernel_data.set_needs(operator.cid, drunk=rng.choice(DRUNK_POINTS))
         for talent_id in range(350, 360):
-            if talent_id in operator.talent:
-                operator.talent[talent_id] = 1 if rng.random() < 0.15 else 0
+            if talent_id in ca.talent(operator):
+                ca.talent(operator)[talent_id] = 1 if rng.random() < 0.15 else 0
         kernel_data.set_world(modes.set_time_stop, rng.random() < 0.2)
         for clothing_type in game_config.config_clothing_type:
             roll = rng.random()

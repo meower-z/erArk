@@ -36,7 +36,7 @@ from _bootstrap import (
 )
 from Script.Design import handle_ability, second_behavior
 from Script.Modules.domains import modes
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
 clear_schedules()
@@ -149,12 +149,12 @@ schedule_handle.set_selected_course(202, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 check("同学前提", HP(P.SELF_HAVE_CLASSMATE, 201) == 1)
 schedule_handle.clear_selected_course(202, 0, 0)
 check("没有同学", HP(P.SELF_HAVE_CLASSMATE, 201) == 0)
-student.talent[28] = 1
+ca.talent(student)[28] = 1
 check(
     "成长停滞前提",
     HP("growth_stop_1", 201) == 1 and HP("growth_stop_0", 201) == 0,
 )
-student.talent[28] = 0
+ca.talent(student)[28] = 0
 
 section("师生工作链前提只认本岗（Plan 24）")
 set_time(period_time(0))
@@ -473,8 +473,8 @@ section("Plan 28 §3.2 / §3.7：上不成的个人式课视为没课；日程�
 from Script.UI.Panel import character_info_head  # noqa: E402
 
 set_time(period_time(0))
-student.talent[103] = 0
-student.talent[104] = 1
+ca.talent(student)[103] = 0
+ca.talent(student)[104] = 1
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, 99999)
 _ct_interest = f"CVP_A1_CourseType|{E.COURSE_TYPE_INTEREST}_E_1"
 kernel_data.set_needs(student.cid, hit=10)
@@ -485,8 +485,8 @@ check(
     and HP("self_course_absent_by_hp", 201) == 0,
 )
 kernel_data.set_needs(student.cid, hit=100)
-student.talent[104] = 0
-student.talent[103] = 1
+ca.talent(student)[104] = 0
+ca.talent(student)[103] = 1
 schedule_handle.set_selected_course(
     201,
     0,
@@ -1126,10 +1126,8 @@ _l20_worker = make_character(
 )
 for _one in (_l20_student, _l20_worker):
     growth_handle.get_child_growth(_one.cid).show_off_ability = {}
-    for _juel_id in list(_one.juel):
-        _one.juel[_juel_id] = 10**7
-    for _exp_id in list(_one.experience):
-        _one.experience[_exp_id] = 10**7
+    ca.juel(_one).replace(dict.fromkeys(ca.juel(_one), 10**7))
+    ca.experience(_one).replace(dict.fromkeys(ca.experience(_one), 10**7))
     handle_ability.gain_ability(_one.cid)
 _l20_student_growth = _l20_student.child_growth
 assert _l20_student_growth is not None
@@ -1144,7 +1142,8 @@ check(
     "L20 改了岗的萝莉女儿：科目照样升级，但不记待炫耀（此前照记，下次见面炫耀课堂与老师）",
     _l20_worker_growth.show_off_ability == {}
     and any(
-        _l20_worker.ability.get(_aid, 0) > 0 for _aid in E.SUBJECT_ABILITY_LIST
+        ca.ability(_l20_worker).get(_aid, 0) > 0
+        for _aid in E.SUBJECT_ABILITY_LIST
     ),
     _l20_worker_growth.show_off_ability,
 )

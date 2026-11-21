@@ -16,6 +16,7 @@ from Script.Config import game_config
 from Script.Core import constant_promise
 from Script.Design import attr_calculation, clothing, handle_premise
 from tests.fast.base import FastTestCase
+from tests import chara_abilities as ca
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -52,7 +53,7 @@ def set_stage(character: "game_type.Character", talent_id: int) -> None:
     无
     """
     for stage_id in (BABY, CHILD, TRAINEE):
-        character.talent[stage_id] = 1 if stage_id == talent_id else 0
+        ca.talent(character)[stage_id] = 1 if stage_id == talent_id else 0
 
 
 class ChildStagesOfflineTest(FastTestCase):

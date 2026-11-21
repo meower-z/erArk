@@ -11,6 +11,7 @@ import datetime
 from Script.Core import constant, constant_effect, game_type
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
+from tests import chara_abilities as ca
 
 
 class StatusAmountsTest(FastTestCase):
@@ -40,7 +41,7 @@ class StatusAmountsTest(FastTestCase):
         """灌肠中、苦痛刻印 1 的干员：5 次 1 分钟的苦痛等于 1 次 5 分钟的苦痛，且不是整数"""
         self.npc.dirty.a_clean = 1
         self.npc.dirty.enema_capacity = 1
-        self.npc.ability[15] = 1
+        ca.ability(self.npc)[15] = 1
         for _ in range(5):
             realtime_settle.settle_conscious_continuous(1, 1)
         pieces = self.npc.status_data[17]

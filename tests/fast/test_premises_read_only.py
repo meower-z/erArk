@@ -9,7 +9,7 @@
 小世界缺数据而抛错的判定跳过，但抛错的不能过半。
 """
 
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 import pickle
 from collections.abc import Callable
 from typing import Any
@@ -165,8 +165,8 @@ class PremisesReadOnlyTest(FastTestCase):
 
         def prepare() -> None:
             self.npc.sp_flag.unconscious_h = 4
-            self.npc.talent[71] = self.npc.talent[72] = 1
-            self.player.talent[332] = 1
+            ca.talent(self.npc)[71] = ca.talent(self.npc)[72] = 1
+            ca.talent(self.player)[332] = 1
             kernel_data.set_needs(self.player.cid, sanity=100, sanity_max=100)
 
         self.check(prepare)

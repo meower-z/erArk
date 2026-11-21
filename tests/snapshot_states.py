@@ -33,6 +33,7 @@ from __future__ import annotations
 import contextlib
 from typing import TYPE_CHECKING
 from unittest import mock
+from tests.kernel_data import writing, written
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -233,7 +234,6 @@ def days_passed(day: int) -> Iterator[None]:
     day -- 经过的天数
     """
     from Script.System.Pregnancy_System import pregnancy_handle
-    from tests.kernel_data import writing
 
     with mock.patch.object(
         pregnancy_handle, "get_pregnancy_past_day", return_value=day
@@ -264,7 +264,7 @@ def fertilize(world: FullWorld, mother_id: int) -> None:
             break
         pregnancy_handle.update_reproduction_period(mother_id)
     pregnancy_handle.get_fertilization_rate(mother_id)
-    pregnancy_handle.check_fertilization(mother_id)
+    written(pregnancy_handle.check_fertilization, mother_id)
     if not handle_premise.handle_fertilization_1(mother_id):
         raise PlanError(f"{mother.name} 没有受精")
 

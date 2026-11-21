@@ -15,7 +15,7 @@
 import shutil
 from unittest import mock
 
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from tests.slow.base import SlowTestCase
 
 BABY = 101
@@ -74,14 +74,13 @@ class GrowthEventsMatchStageTest(SlowTestCase):
         )
         talk.must_show_talk_check = lambda character_id: None
         mother_id = min(cid for cid in self.cache.npc_id_got if cid)
-        mother = self.cache.character_data[mother_id]
         elder_id = kernel_data.born(mother_id, "测试姐姐")
-        mother.talent[REARING_TALENT] = 1
+        ca.talent(mother_id)[REARING_TALENT] = 1
         with mock.patch.object(
             pregnancy_handle,
             "get_child_grow_day",
             return_value=pregnancy_constant.REARING_COMPLETE_DAY,
-        ):
+        ), kernel_data.writing():
             pregnancy_handle.check_rearing_complete(mother_id)
         # 胸部成长按母亲的胸部素质算，与本测试无关，不结算
         with mock.patch.object(
@@ -93,13 +92,13 @@ class GrowthEventsMatchStageTest(SlowTestCase):
         ), kernel_data.writing():
             pregnancy_handle.check_all_child_grow_to_loli()
         self.assertEqual(
-            self.cache.character_data[elder_id].talent[TRAINEE],
+            ca.talent(elder_id)[TRAINEE],
             1,
             "姐姐长成了学员",
         )
         younger_id = kernel_data.born(mother_id, "测试妹妹")
         self.assertEqual(
-            self.cache.character_data[younger_id].talent[BABY],
+            ca.talent(younger_id)[BABY],
             1,
             "妹妹出生时是婴儿",
         )
@@ -118,7 +117,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
         from Script.System.Education_System import growth_event_handle
 
         self.assertEqual(
-            self.cache.character_data[character_id].talent[stage],
+            ca.talent(character_id)[stage],
             1,
             f"孩子此刻是阶段 {stage}",
         )
@@ -147,12 +146,12 @@ class GrowthEventsMatchStageTest(SlowTestCase):
         mother_id, elder_id, younger_id = self.make_daughters()
         self.check_pool(younger_id, BABY)
         self.check_pool(elder_id, TRAINEE)
-        self.cache.character_data[mother_id].talent[REARING_TALENT] = 1
+        ca.talent(mother_id)[REARING_TALENT] = 1
         with mock.patch.object(
             pregnancy_handle,
             "get_child_grow_day",
             return_value=pregnancy_constant.REARING_COMPLETE_DAY,
-        ):
+        ), kernel_data.writing():
             pregnancy_handle.check_rearing_complete(mother_id)
         self.check_pool(younger_id, CHILD)
 

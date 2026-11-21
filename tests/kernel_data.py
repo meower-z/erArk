@@ -7,14 +7,14 @@
 - written 在 writing 里跑一个游戏函数并交回它的返回值。born 用 written 在一步之外生一个孩子。
 - reset_clock 把内核换成一个没有角色、时钟在给定时刻、带着给定全局数据的 GameState。
 - set_facility_level 改设施等级。set_room_open 改待开放设施的开放情况。
-- set_needs 与 needs_of 改、读角色的 body.needs，set_milk_max 与 milk_max_of 改、读角色的乳汁上限（body.pregnancy）。
+- set_needs 与 needs_of 改、读角色的 body.needs，set_milk_max 改角色的乳汁上限（body.pregnancy）。
 - set_ward 在一步之外换掉医疗部的住院病人表。
 - put 调用一个领域模块的写函数，在一步之外时经 written 套用（例如换公务事件队列）。
 - set_book_holders 改借阅表里给出的书的借书人。
 - reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
 - project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册、监狱长、
   仓库、生产线、食堂货架、医疗部、外勤委托、载具、访客、罗德岛位置、招募、公务、外交、宿舍管理员与图书馆等数据的值，
-  快照因此能与按缓存属性录下的快照比较。
+  角色的能力、经验、宝珠与素质表也这样记下。快照因此能与按缓存属性录下的快照比较。
 """
 
 from __future__ import annotations
@@ -200,19 +200,6 @@ def set_milk_max(cid: int, value: int) -> None:
             pregnancy.set_milk_max(cid, value)
 
 
-def milk_max_of(cid: int) -> int:
-    """
-    角色此刻的乳汁上限（body.pregnancy），在缓冲区里时含还没套用的写入
-    Keyword arguments:
-    cid -- 角色id
-    Return arguments:
-    int -- 乳汁上限
-    """
-    from Script.Modules.domains import pregnancy
-
-    return pregnancy.milk_max(cid)
-
-
 def put[**P](
     fn: Callable[P, object], *args: P.args, **kwargs: P.kwargs
 ) -> None:
@@ -341,6 +328,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     食堂货架记作 world.cooking.dining_hall_data。医疗部数据记在 world.medical 下，
     名字为罗德岛对象上旧的属性名（medical.OLD_NAMES），病人按字段展开。
     外勤委托、载具、访客、邀请与罗德岛的位置由 _project_travel 记下。
+    角色的能力、经验、宝珠与素质表由 chara_abilities.project 记下。
     Keyword arguments:
     cache -- 游戏缓存
     state -- 快照，原地补上
@@ -358,7 +346,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         work,
     )
     from Script.Modules.save_load import upgrade
-    from tests import base_projection, kernel_project
+    from tests import base_projection, chara_abilities, kernel_project
     from tests.snapshot import flatten
 
     names = {"tired": "tired_point", "hunger": "hunger_point"}
@@ -417,6 +405,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     base_projection.project(state)
     kernel_project.project_world_misc(state)
     kernel_project.project_base_tallies(state)
+    chara_abilities.project(cache, state)
 
 
 def _project_travel(state: dict[str, object]) -> None:

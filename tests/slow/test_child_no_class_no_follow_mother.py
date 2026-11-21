@@ -16,7 +16,7 @@ import datetime
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
-from tests import kernel_data, world
+from tests import chara_abilities as ca, kernel_data, world
 
 BABY = 101
 """ 婴儿素质 """
@@ -85,7 +85,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         child_id = kernel_data.born(self.mother_id, "测试女儿")
         child = self.cache.character_data[child_id]
         child.pregnancy.born_time = game_time.now()
-        self.assertEqual(child.talent[BABY], 1, "出生时是婴儿")
+        self.assertEqual(ca.talent(child_id)[BABY], 1, "出生时是婴儿")
         self.assertEqual(
             self.scene_list_with(child_id), [], "出生后不在任何场景"
         )
@@ -93,14 +93,14 @@ class ChildStagesOfflineTest(SlowTestCase):
             child_id, self.cache.npc_id_got, "出生后不在 npc_id_got"
         )
 
-        self.mother.talent[REARING_TALENT] = 1
+        ca.talent(self.mother)[REARING_TALENT] = 1
         with mock.patch.object(
             pregnancy_handle,
             "get_child_grow_day",
             return_value=pregnancy_constant.REARING_COMPLETE_DAY,
-        ):
+        ), kernel_data.writing():
             pregnancy_handle.check_rearing_complete(self.mother_id)
-        self.assertEqual(child.talent[CHILD], 1, "婴儿长成了幼女")
+        self.assertEqual(ca.talent(child_id)[CHILD], 1, "婴儿长成了幼女")
         self.assertEqual(
             self.scene_list_with(child_id), [], "长成幼女后不在任何场景"
         )
@@ -131,7 +131,7 @@ class ChildStagesOfflineTest(SlowTestCase):
             pregnancy_handle, "chest_grow", return_value=""
         ), kernel_data.writing():
             pregnancy_handle.check_all_child_grow_to_loli()
-        self.assertEqual(child.talent[TRAINEE], 1, "幼女长成了学员")
+        self.assertEqual(ca.talent(child_id)[TRAINEE], 1, "幼女长成了学员")
         self.assertIn(
             child_id, self.cache.npc_id_got, "长成学员后进了 npc_id_got"
         )
@@ -177,14 +177,14 @@ class ChildStagesOfflineTest(SlowTestCase):
         child_id = kernel_data.born(self.mother_id, "测试女儿")
         child = self.cache.character_data[child_id]
         child.pregnancy.born_time = game_time.now()
-        self.mother.talent[REARING_TALENT] = 1
+        ca.talent(self.mother)[REARING_TALENT] = 1
         with mock.patch.object(
             pregnancy_handle,
             "get_child_grow_day",
             return_value=pregnancy_constant.REARING_COMPLETE_DAY,
-        ):
+        ), kernel_data.writing():
             pregnancy_handle.check_rearing_complete(self.mother_id)
-        self.assertEqual(child.talent[CHILD], 1, "婴儿长成了幼女")
+        self.assertEqual(ca.talent(child_id)[CHILD], 1, "婴儿长成了幼女")
         self.assertNotIn(child_id, self.cache.npc_id_got, "幼女不在 npc_id_got")
 
         # 每日派发每个女儿只按一定概率派，这里让概率判定必过
@@ -267,7 +267,9 @@ class ChildStagesOfflineTest(SlowTestCase):
             )
         for talent_id in (CHILD, TRAINEE):
             for stage_id in (BABY, CHILD, TRAINEE):
-                daughter.talent[stage_id] = 1 if stage_id == talent_id else 0
+                ca.talent(daughter_id)[stage_id] = (
+                    1 if stage_id == talent_id else 0
+                )
             daughter.work.work_type = (
                 education_constant.STUDENT_WORK_TYPE
                 if talent_id == TRAINEE

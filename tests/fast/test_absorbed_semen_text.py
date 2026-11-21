@@ -11,6 +11,7 @@ from fractions import Fraction
 from Script.Design import handle_talent
 from Script.System.First_Record_System import first_record_panel
 from tests.fast.base import FastTestCase
+from tests import chara_abilities as ca, kernel_data
 
 TALENT_CUMFLATION = 32
 """ 素质：精液膨腹 """
@@ -38,8 +39,8 @@ class AbsorbedSemenTextTest(FastTestCase):
 
     def test_cumflation_record_is_whole(self) -> None:
         """获得精液膨腹时，特殊履历里记的是 6000ml"""
-        self.chara.talent[TALENT_CUMFLATION] = 0
-        handle_talent.npc_gain_and_lost_cumflation(1)
+        ca.talent(self.chara)[TALENT_CUMFLATION] = 0
+        kernel_data.written(handle_talent.npc_gain_and_lost_cumflation, 1)
         record = self.chara.first_record.first_special_record_dict.get(
             SPECIAL_CUMFLATION
         )

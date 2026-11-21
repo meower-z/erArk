@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from tests.slow.base import SlowTestCase
 from tests.world import UnplannedInput
+from tests import chara_abilities as ca
 
 if TYPE_CHECKING:
     from Script.UI.Panel.draw_event_text_panel import DrawEventTextPanel
@@ -50,7 +51,7 @@ class MoveOptionEventListsChildTest(SlowTestCase):
         npc_id = min(cid for cid in self.cache.npc_id_got if cid)
         npc = self.cache.character_data[npc_id]
         self.world.move(npc_id, LADIES_ONLY)
-        npc.talent[FALL_2_TALENT] = 1
+        ca.talent(npc_id)[FALL_2_TALENT] = 1
         npc.behavior.behavior_id = constant.Behavior.WAIT
         npc.state = constant.CharacterStatus.STATUS_WAIT
         npc.behavior.start_time = game_time.now()

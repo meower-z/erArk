@@ -10,6 +10,7 @@
 import importlib
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 MALE_ONLY_EXPERIENCE = (3, 13, 21, 73)
 """ 男性器官的经验id """
@@ -36,7 +37,7 @@ class NewRoundExperienceBySexTest(SlowTestCase):
         player = self.cache.character_data[0]
         player.sex = sex
         for experience_id in MALE_ONLY_EXPERIENCE + FEMALE_ONLY_EXPERIENCE:
-            player.experience[experience_id] = 10
+            ca.experience(0)[experience_id] = 10
         experience_panel = new_round.CharacterExperienceText(
             0, PANEL_WIDTH, 8, INHERIT_RATE
         )

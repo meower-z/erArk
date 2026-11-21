@@ -40,7 +40,9 @@ class BlockheadNpcWaitsTest(FastTestCase):
             core.GameState(
                 clock,
                 MappingProxyType({}),
-                MappingProxyType({actions.TICKED: clock - 2}),
+                MappingProxyType(
+                    {**core.state().data, actions.TICKED: clock - 2}
+                ),
             )
         )
         wait_target = config_def.Target()

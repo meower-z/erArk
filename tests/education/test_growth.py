@@ -26,7 +26,7 @@ from Script.System.Pregnancy_System import pregnancy_constant  # noqa: E402
 from Script.Design import handle_ability
 import inspect
 from Script.System.Official_Event_System import official_event_handle
-from tests import kernel_data, world
+from tests import chara_abilities as ca, kernel_data, world
 from Script.Modules.domains import library
 
 open_all_classroom()
@@ -69,14 +69,14 @@ check(
 kernel_data.set_facility_level(education_constant.EDUCATION_ZONE_CID, 1)
 
 section("成长停滞（口径 27）")
-teacher.ability[45] = 4
+ca.ability(teacher)[45] = 4
 check("无停滞倍率 1.0", growth_handle.get_growth_stop_adjust(201) == 1.0)
 check("不存在的角色 1.0", growth_handle.get_growth_stop_adjust(999) == 1.0)
 check(
     "总倍率 = 速度 × 加成",
     abs(growth_handle.get_class_adjust(45, 201, 101) - 2.0) < 1e-9,
 )
-student.talent[education_constant.GROWTH_STOP_TALENT_ID] = 1
+ca.talent(student)[education_constant.GROWTH_STOP_TALENT_ID] = 1
 check(
     "停滞倍率 0.5",
     growth_handle.get_growth_stop_adjust(201)
@@ -89,27 +89,27 @@ check(
 check(
     "自习也减半", abs(growth_handle.get_class_adjust(45, 201, -1) - 0.5) < 1e-9
 )
-teacher.talent[28] = 1
+ca.talent(teacher)[28] = 1
 check(
     "教师自己停滞不影响教学",
     abs(growth_handle.get_class_adjust(45, 202, 101) - 2.0) < 1e-9,
 )
-teacher.talent[28] = 0
-student.talent[28] = 0
+ca.talent(teacher)[28] = 0
+ca.talent(student)[28] = 0
 
 section("学生侧结算")
 set_time(period_time(0))
 exp_id = growth_handle.get_subject_exp_id(45)
 check("学识科目的经验 id 能从 AbilityUp.csv 解出", exp_id > 0, exp_id)
 state_before = student.status_data.get(education_constant.LEARN_STATE_ID, 0)
-exp_before = student.experience.get(exp_id, 0)
+exp_before = ca.experience(student).get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, 101, 45, education_constant.COURSE_TYPE_THEORY, 45
 )
 state_gain = (
     student.status_data.get(education_constant.LEARN_STATE_ID, 0) - state_before
 )
-exp_gain = student.experience.get(exp_id, 0) - exp_before
+exp_gain = ca.experience(student).get(exp_id, 0) - exp_before
 check("习得状态增加", state_gain > 0, state_gain)
 check(
     "科目经验 = 基础值 × 总倍率",
@@ -131,7 +131,7 @@ check(
     student_growth.last_attend_period,
 )
 # 同一节再结算一次：广播（512）与学生侧补结算（557）都会走到这里，第二次必须是空操作（第五轮）
-exp_before = student.experience.get(exp_id, 0)
+exp_before = ca.experience(student).get(exp_id, 0)
 check(
     "同一节第二次结算返回 False",
     growth_handle.settle_student_class_gain(
@@ -141,19 +141,19 @@ check(
 )
 check(
     "同一节不重复发收益与出勤",
-    student.experience.get(exp_id, 0) == exp_before
+    ca.experience(student).get(exp_id, 0) == exp_before
     and student_growth.attend_class_count == 1,
 )
 # 以下几条都在同一节里验数值，每次先清掉去重标记
 student_growth.last_attend_period = []
-student.talent[28] = 1
-exp_before = student.experience.get(exp_id, 0)
+ca.talent(student)[28] = 1
+exp_before = ca.experience(student).get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, 101, 45, education_constant.COURSE_TYPE_THEORY, 45
 )
 check(
     "停滞后经验减半",
-    student.experience.get(exp_id, 0) - exp_before
+    ca.experience(student).get(exp_id, 0) - exp_before
     == int(
         education_constant.COURSE_EXP_BASE[
             education_constant.COURSE_TYPE_THEORY
@@ -161,34 +161,34 @@ check(
         * 1.0
     ),
 )
-student.talent[28] = 0
+ca.talent(student)[28] = 0
 student_growth.last_attend_period = []
-exp_before = student.experience.get(exp_id, 0)
+exp_before = ca.experience(student).get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, 101, 45, education_constant.COURSE_TYPE_THEORY, 0
 )
 check(
     "add_time=0 不结算",
-    student.experience.get(exp_id, 0) == exp_before
+    ca.experience(student).get(exp_id, 0) == exp_before
     and student_growth.attend_class_count == 2,
 )
-exp_before = student.experience.get(exp_id, 0)
+exp_before = ca.experience(student).get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, -1, 45, education_constant.COURSE_TYPE_THEORY, 45
 )
 check(
     "自习：经验按自习基础值",
-    student.experience.get(exp_id, 0) - exp_before
+    ca.experience(student).get(exp_id, 0) - exp_before
     == education_constant.SELF_STUDY_EXP_BASE,
 )
 student_growth.last_attend_period = []
-exp_before = student.experience.get(exp_id, 0)
+exp_before = ca.experience(student).get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, -1, 45, education_constant.COURSE_TYPE_INTERN, 45
 )
 check(
     "实习无导师：见习基础值减半",
-    student.experience.get(exp_id, 0) - exp_before
+    ca.experience(student).get(exp_id, 0) - exp_before
     == max(
         1,
         education_constant.COURSE_EXP_BASE[
@@ -199,13 +199,13 @@ check(
 )
 student_growth.last_attend_period = []
 attend_before = student_growth.attend_class_count
-exp_before = student.experience.get(exp_id, 0)
+exp_before = ca.experience(student).get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, -1, 45, education_constant.COURSE_TYPE_THEORY, 45, count_attend=False
 )
 check(
     "count_attend=False：给收益不计出勤",
-    student.experience.get(exp_id, 0) > exp_before
+    ca.experience(student).get(exp_id, 0) > exp_before
     and student_growth.attend_class_count == attend_before,
 )
 set_time(period_time(0).replace(hour=12, minute=30))
@@ -223,12 +223,12 @@ check(
 set_time(period_time(0))
 
 section("教师侧结算")
-t_exp_before = teacher.experience.get(exp_id, 0)
+t_exp_before = ca.experience(teacher).get(exp_id, 0)
 t_state_before = teacher.status_data.get(education_constant.LEARN_STATE_ID, 0)
 growth_handle.settle_teacher_class_gain(101, 45, 45)
 check(
     "教学相长：教师加该科经验与习得",
-    teacher.experience.get(exp_id, 0) > t_exp_before
+    ca.experience(teacher).get(exp_id, 0) > t_exp_before
     and teacher.status_data.get(education_constant.LEARN_STATE_ID, 0)
     > t_state_before,
 )
@@ -250,16 +250,16 @@ g.personality_point = {0: 1.5, 1: -2.0, 2: 0.0}
 text = growth_handle.settle_personality_talent(201)
 check(
     "正数选前者、负数选后者、0 不选",
-    student.talent[271] == 1
-    and student.talent[272] == 0
-    and student.talent[273] == 1
-    and student.talent[274] == 0
-    and student.talent[275] == 0
-    and student.talent[276] == 0,
+    ca.talent(student)[271] == 1
+    and ca.talent(student)[272] == 0
+    and ca.talent(student)[273] == 1
+    and ca.talent(student)[274] == 0
+    and ca.talent(student)[275] == 0
+    and ca.talent(student)[276] == 0,
     text,
 )
 check("文本列出定型的性格", "勤劳" in text and "脆弱" in text)
-student.ability[43] = 3
+ca.ability(student)[43] = 3
 career = growth_handle.get_career_suggestion_text(201)
 check(
     "职业倾向按最高科目反查岗位",
@@ -398,10 +398,10 @@ section("待炫耀只记课程科目、只记幼女/萝莉期的女儿（第五�
 
 for one in (student, adult):
     growth_handle.get_child_growth(one.cid).show_off_ability = {}
-    for juel_id in list(one.juel):
-        one.juel[juel_id] = 10**7
-    for exp_id_one in list(one.experience):
-        one.experience[exp_id_one] = 10**7
+    for juel_id in list(ca.juel(one)):
+        ca.juel(one)[juel_id] = 10**7
+    for exp_id_one in list(ca.experience(one)):
+        ca.experience(one)[exp_id_one] = 10**7
     handle_ability.gain_ability(one.cid)
 student_show = growth_handle.get_child_growth(201).show_off_ability
 check(
@@ -461,18 +461,18 @@ real_sex_exp = {
 growth_handle.settle_student_class_gain(205, 101, 71, E6.COURSE_TYPE_THEORY, 45)
 check(
     "学生上舌技课：口交理论经验增加，任何真实性交经验都是 0，没有口交初体验",
-    theory_student.experience.get(171, 0) > 0
-    and all(theory_student.experience.get(e, 0) == 0 for e in real_sex_exp)
+    ca.experience(theory_student).get(171, 0) > 0
+    and all(ca.experience(theory_student).get(e, 0) == 0 for e in real_sex_exp)
     and 2 not in theory_student.first_record.first_part_sex_dict,
 )
-teacher_sex_before = {e: teacher.experience.get(e, 0) for e in real_sex_exp}
-teacher_theory_before = teacher.experience.get(171, 0)
+teacher_sex_before = {e: ca.experience(teacher).get(e, 0) for e in real_sex_exp}
+teacher_theory_before = ca.experience(teacher).get(171, 0)
 growth_handle.settle_teacher_class_gain(101, 71, 45)
 check(
     "教师教舌技：理论经验增加、真实性交经验不变",
-    teacher.experience.get(171, 0) > teacher_theory_before
+    ca.experience(teacher).get(171, 0) > teacher_theory_before
     and all(
-        teacher.experience.get(e, 0) == teacher_sex_before[e]
+        ca.experience(teacher).get(e, 0) == teacher_sex_before[e]
         for e in real_sex_exp
     ),
 )
@@ -480,12 +480,12 @@ theory_growth = theory_student.child_growth
 assert theory_growth is not None
 theory_growth.last_attend_period = []
 learn_before = theory_student.status_data.get(E6.LEARN_STATE_ID, 0)
-exp_snapshot = dict(theory_student.experience)
+exp_snapshot = dict(ca.experience(theory_student))
 growth_handle.settle_student_class_gain(205, 101, 76, E6.COURSE_TYPE_THEORY, 45)
 check(
     "腰技课只给习得、不给任何经验",
     theory_student.status_data.get(E6.LEARN_STATE_ID, 0) > learn_before
-    and dict(theory_student.experience) == exp_snapshot,
+    and dict(ca.experience(theory_student)) == exp_snapshot,
 )
 remove_character(205)
 
@@ -846,7 +846,7 @@ _g_grown.personality_point = {1: -1.0}
 growth_handle.settle_personality_talent(210)
 check(
     "M3 前提：成年结算按倾向 -1 给了脆弱（273）、没有坚强（274）",
-    grown.talent[273] == 1 and grown.talent[274] == 0,
+    ca.talent(grown)[273] == 1 and ca.talent(grown)[274] == 0,
 )
 official_event_handle.settle_official_event_option(
     E6.GRADUATION_EVENT_UID, 210, 0, 2
@@ -857,9 +857,9 @@ check(
         "脆弱清掉（此前只加倾向值，素质仍是脆弱）"
     ),
     _g_grown.personality_point.get(1) == 3.0
-    and grown.talent[274] == 1
-    and grown.talent[273] == 0,
-    (_g_grown.personality_point, grown.talent[274], grown.talent[273]),
+    and ca.talent(grown)[274] == 1
+    and ca.talent(grown)[273] == 0,
+    (_g_grown.personality_point, ca.talent(grown)[274], ca.talent(grown)[273]),
 )
 growth_handle.change_growth_value(
     210, V.GROWTH_VALUE_PERSONALITY_BASE + 1, -3.0
@@ -867,13 +867,13 @@ growth_handle.change_growth_value(
 check(
     "M3 倾向改回 0：两侧都不动（坚强仍在）",
     _g_grown.personality_point.get(1) == 0.0
-    and grown.talent[274] == 1
-    and grown.talent[273] == 0,
+    and ca.talent(grown)[274] == 1
+    and ca.talent(grown)[273] == 0,
 )
 growth_handle.set_growth_value(210, V.GROWTH_VALUE_PERSONALITY_BASE + 1, -2.0)
 check(
     "M3 CVE 的 E 运算（set_growth_value）设成 -2：翻到脆弱、清掉坚强",
-    grown.talent[273] == 1 and grown.talent[274] == 0,
+    ca.talent(grown)[273] == 1 and ca.talent(grown)[274] == 0,
 )
 official_event_handle.settle_official_event_option("萝莉38", 210, 0, 1)
 check(
@@ -882,31 +882,31 @@ check(
         "1，坚强落上"
     ),
     _g_grown.personality_point.get(1) == 1.0
-    and grown.talent[274] == 1
-    and grown.talent[273] == 0,
-    (_g_grown.personality_point, grown.talent[274], grown.talent[273]),
+    and ca.talent(grown)[274] == 1
+    and ca.talent(grown)[273] == 0,
+    (_g_grown.personality_point, ca.talent(grown)[274], ca.talent(grown)[273]),
 )
 check(
     "M3 只重选改写的那一对：其余三对素质都没动",
     all(
-        grown.talent[talent_id] == 0
+        ca.talent(grown)[talent_id] == 0
         for talent_id in (271, 272, 275, 276, 277, 278)
     ),
 )
-_minor_before = (student.talent[274], student.talent[273])
+_minor_before = (ca.talent(student)[274], ca.talent(student)[273])
 growth_handle.change_growth_value(
     201, V.GROWTH_VALUE_PERSONALITY_BASE + 1, 10.0
 )
 check(
     "M3 未成年（萝莉）的女儿改倾向：只改倾向值、不选边（留到成年结算）",
     g.personality_point.get(1, 0.0) > 0
-    and (student.talent[274], student.talent[273]) == _minor_before,
+    and (ca.talent(student)[274], ca.talent(student)[273]) == _minor_before,
     (g.personality_point.get(1), _minor_before),
 )
 growth_handle.change_growth_value(301, V.GROWTH_VALUE_PERSONALITY_BASE + 1, 5.0)
 check(
     "M3 成年学生（不是女儿）改倾向：不选边",
-    adult.talent[274] == 0 and adult.talent[273] == 0,
+    ca.talent(adult)[274] == 0 and ca.talent(adult)[273] == 0,
 )
 no_growth_m3 = make_character(211, "没有养成数据的干员", 21)
 check(
@@ -1132,12 +1132,12 @@ _pair_talent = E6.PERSONALITY_PAIR_TALENT
 _g_grown_b.personality_point = {0: 2.0, 1: -1.0, 2: -3.0}
 for _pair_id in _pair_talent:
     for _talent_id in _pair_talent[_pair_id]:
-        grown_b.talent[_talent_id] = 0
+        ca.talent(grown_b)[_talent_id] = 0
 check(
     "M3 前提：成年女儿乙四对素质都是 0；勤劳 / 懒散一对倾向 +2、热情 / 孤僻一对 -3（逐对选边的话这两对都会写上）",
     growth_handle.get_character_stage(213) == 104
     and all(
-        grown_b.talent[_talent_id] == 0
+        ca.talent(grown_b)[_talent_id] == 0
         for _pair_id in _pair_talent
         for _talent_id in _pair_talent[_pair_id]
     ),
@@ -1148,15 +1148,15 @@ check(
         "M3 只重选改写的那一对：坚强 / 脆弱一对 -1 → +3，落上坚强；倾向 +2 的勤劳 / 懒散、-3 的热情 / 孤僻两对素质仍为 "
         "0（原「其余三对都没动」在它们本就为 0、倾向也为 0 时恒真）"
     ),
-    grown_b.talent[_pair_talent[1][0]] == 1
-    and grown_b.talent[_pair_talent[1][1]] == 0
+    ca.talent(grown_b)[_pair_talent[1][0]] == 1
+    and ca.talent(grown_b)[_pair_talent[1][1]] == 0
     and all(
-        grown_b.talent[_talent_id] == 0
+        ca.talent(grown_b)[_talent_id] == 0
         for _pair_id in (0, 2, 3)
         for _talent_id in _pair_talent[_pair_id]
     ),
     {
-        _talent_id: grown_b.talent[_talent_id]
+        _talent_id: ca.talent(grown_b)[_talent_id]
         for _pair_id in _pair_talent
         for _talent_id in _pair_talent[_pair_id]
     },
@@ -1164,16 +1164,16 @@ check(
 growth_handle.set_growth_value(213, V.GROWTH_VALUE_PERSONALITY_BASE + 3, -1.0)
 check(
     "M3 set_growth_value 同理：改写开放 / 羞耻一对只落羞耻一侧，勤劳 / 懒散、热情 / 孤僻两对仍为 0，坚强不动",
-    grown_b.talent[_pair_talent[3][1]] == 1
-    and grown_b.talent[_pair_talent[3][0]] == 0
-    and grown_b.talent[_pair_talent[1][0]] == 1
+    ca.talent(grown_b)[_pair_talent[3][1]] == 1
+    and ca.talent(grown_b)[_pair_talent[3][0]] == 0
+    and ca.talent(grown_b)[_pair_talent[1][0]] == 1
     and all(
-        grown_b.talent[_talent_id] == 0
+        ca.talent(grown_b)[_talent_id] == 0
         for _pair_id in (0, 2)
         for _talent_id in _pair_talent[_pair_id]
     ),
     {
-        _talent_id: grown_b.talent[_talent_id]
+        _talent_id: ca.talent(grown_b)[_talent_id]
         for _pair_id in _pair_talent
         for _talent_id in _pair_talent[_pair_id]
     },
@@ -1181,7 +1181,7 @@ check(
 check(
     "M3 对照：勤劳 / 懒散一对的倾向确实为正，单独对它逐对选边（settle_personality_pair）就会写上勤劳",
     growth_handle.settle_personality_pair(213, 0) == _pair_talent[0][0]
-    and grown_b.talent[_pair_talent[0][0]] == 1,
+    and ca.talent(grown_b)[_pair_talent[0][0]] == 1,
 )
 remove_character(213)
 

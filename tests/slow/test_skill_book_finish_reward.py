@@ -9,6 +9,7 @@
 """
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca, kernel_data
 
 FINISH_REWARD = {0: 5, 1: 10, 2: 20, 3: 40}
 """ 书的难度 -> 读完技能书时加的对应经验 """
@@ -35,20 +36,22 @@ class SkillBookFinishRewardTest(SlowTestCase):
         from Script.Core import game_type
         from Script.Settle import default
 
+        experience = ca.experience(character_id)
         character_data = self.cache.character_data[character_id]
         exp_id = game_config.config_book_type[
             game_config.config_book[book_id].type
         ].exp_id
         character_data.behavior.book_id = book_id
         character_data.entertainment.read_book_progress[book_id] = progress
-        before = character_data.experience.get(exp_id, 0)
-        default.handle_read_add_adjust(
+        before = experience.get(exp_id, 0)
+        kernel_data.written(
+            default.handle_read_add_adjust,
             character_id,
             READ_MINUTES,
             game_type.CharacterStatusChange(),
             game_time.now(),
         )
-        return character_data.experience.get(exp_id, 0) - before
+        return experience.get(exp_id, 0) - before
 
     def test_finish_reward_by_difficulty(self) -> None:
         """每本技能书读完时加的对应经验，等于它的难度在 FINISH_REWARD 里的值"""
