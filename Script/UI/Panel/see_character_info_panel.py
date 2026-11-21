@@ -6,30 +6,16 @@
 import os
 from types import FunctionType
 from Script.UI.Moudle import draw, panel, view
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    text_handle,
-    py_cmd,
-    flow_handle,
-    constant,
-    num,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text, num, py_cmd, text_handle
 from Script.Config import game_config, normal_config
-from Script.Design import (
-    attr_text,
-    map_handle,
-    attr_calculation,
-    game_time,
-    instuct_judege,
-    character_image,
-)
+from Script.Design import attr_calculation, attr_text, character_image
+from Script.Design import game_time, instuct_judege, map_handle
 from Script.UI.Panel import body_info_panel, character_info_head
 from Script.System.First_Record_System import first_record_panel
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, visitor
+from Script.Modules.domains import abilities, player_collection, visitor
 
 panel_info_data: dict[str, object] = {}
 
@@ -49,9 +35,11 @@ window_width = normal_config.config_normal.text_width
 @reset.repair
 def repair_eqip_token() -> None:
     """读档时修补旧版本的信物数据：[0, [0]] 改为 [1, []]"""
-    player = cache.character_data.get(0)
-    if player is not None and player.pl_collection.eqip_token == [0, [0]]:
-        player.pl_collection.eqip_token = [1, []]
+    if 0 in cache.character_data and player_collection.get("eqip_token") == [
+        0,
+        [0],
+    ]:
+        player_collection.set_eqip_token(1, [])
 
 
 class SeeCharacterInfoPanel:
@@ -1207,15 +1195,15 @@ class CharacterTokenText:
         """ 当前面板监听的按钮列表 """
         self.center_status: bool = center_status
         """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
         type_data = _("信物")
         type_line = draw.LittleTitleLineDraw(type_data, width, ":")
         self.draw_list.append(type_line)
         token_text_list = []
-        for token_id in range(len(character_data.pl_collection.token_list)):
+        token_list = player_collection.get("token_list", character_id)
+        for token_id in range(len(token_list)):
             if token_id == 0:
                 continue
-            if character_data.pl_collection.token_list[token_id] == 1:
+            if token_list.get(token_id) == 1:
                 target_character_data = cache.character_data[token_id]
                 character_name = target_character_data.name
                 token_text = target_character_data.token_text
@@ -1315,12 +1303,12 @@ class PlayerAbilityText:
             "○装备信物时，信物干员正面数值结算+10%，负面数值结算-10%，其他干员为+1%和-1%（可叠加，上限同装备信物上限）\n"
         )
         # 可装备数量
-        pl_character_data = cache.character_data[0]
-        equip_number = pl_character_data.pl_collection.eqip_token[0]
+        eqip = player_collection.get("eqip_token")
+        equip_number = eqip[0]
         now_text += _("  当前最大可装备数量：{0}\n\n").format(equip_number)
         now_text += _("  当前装备的信物：\n")
         # 当前正在装备的信物展示
-        for chara_id in pl_character_data.pl_collection.eqip_token[1]:
+        for chara_id in eqip[1]:
             if chara_id == 0:
                 continue
             now_text += f"  {cache.character_data[chara_id].name}："
@@ -1353,12 +1341,12 @@ class PlayerAbilityText:
 
     def change_token(self) -> None:
         """更改装备信物"""
-        pl_character_data = cache.character_data[0]
-        equip_number = pl_character_data.pl_collection.eqip_token[0]
+        equip_number = player_collection.get("eqip_token")[0]
 
         while 1:
             # 初始化变量
-            now_equiped = pl_character_data.pl_collection.eqip_token[1]
+            now_equiped = player_collection.get("eqip_token")[1]
+            tokens = player_collection.get("token_list")
             return_list = []
             # 横线
             line = draw.LineDraw("-", self.width)
@@ -1380,10 +1368,7 @@ class PlayerAbilityText:
                 if character_id == 0:
                     continue
                 # 跳过未拥有信物的
-                if (
-                    pl_character_data.pl_collection.token_list[character_id]
-                    == 0
-                ):
+                if not tokens.get(character_id):
                     continue
                 draw_style = "standard"
                 # 如果已经选择，则绘制为金色
@@ -1439,11 +1424,12 @@ class PlayerAbilityText:
 
     def select_this_token(self, character_id: int) -> None:
         """选择信物"""
-        pl_character_data = cache.character_data[0]
-        if character_id in pl_character_data.pl_collection.eqip_token[1]:
-            pl_character_data.pl_collection.eqip_token[1].remove(character_id)
+        limit, equipped = player_collection.get("eqip_token")
+        if character_id in equipped:
+            equipped.remove(character_id)
         else:
-            pl_character_data.pl_collection.eqip_token[1].append(character_id)
+            equipped.append(character_id)
+        player_collection.set_eqip_token(limit, equipped)
 
 
 # class SeeCharacterSocialContact:

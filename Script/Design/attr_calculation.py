@@ -229,16 +229,6 @@ def get_time_zero() -> datetime.datetime:
     return game_time.now()
 
 
-def get_token_zero(token_dict: dict[int, bool]) -> dict[int, bool]:
-    """
-    直接将初始信物归为全员0
-    """
-    token_list = token_dict
-    for i in range(len(cache.npc_tem_data) + 1):
-        token_list[i] = False
-    return token_list
-
-
 def get_dirty_reset(old_dirty_data: game_type.DIRTY) -> game_type.DIRTY:
     """
     重置污浊情况
@@ -384,34 +374,6 @@ def get_first_record_zero() -> game_type.FIRST_RECORD:
     return first_record_data
 
 
-def get_pl_ability_zero() -> game_type.PLAYER_ABILITY:
-    """
-    直接将玩家能力结构体归0
-    """
-    pl_ability_data = game_type.PLAYER_ABILITY()
-
-    return pl_ability_data
-
-
-def get_action_info_state_zero() -> game_type.ACTION_INFO:
-    """
-    直接将行动信息结构体归0
-    """
-    action_info_data = game_type.ACTION_INFO()
-    action_info_data.talk_time = game_time.now()
-    action_info_data.last_move_time = game_time.now()
-    if game_time.now().day != 1:
-        action_info_data.last_training_time = game_time.get_sub_date(day=-1)
-        action_info_data.last_shower_time = game_time.get_sub_date(day=-1)
-    else:
-        action_info_data.last_training_time = game_time.now()
-        action_info_data.last_shower_time = game_time.now()
-    action_info_data.wake_time = game_time.now()
-    action_info_data.sleep_time = game_time.now()
-
-    return action_info_data
-
-
 def get_cloth_zero() -> game_type.CLOTH:
     """
     遍历全服装类型，包括穿、脱、全衣柜，都设为空
@@ -463,25 +425,6 @@ def get_cloth_locker_in_dormitory_zero() -> dict:
         cloth_locker_data[clothing_type] = []
 
     return cloth_locker_data
-
-
-def get_collection_zero() -> game_type.PLAYER_COLLECTION:
-    """
-    遍历玩家的收藏品结构体，设为空
-    """
-
-    collection_data = game_type.PLAYER_COLLECTION()
-    for cid in game_config.config_collection_bonus_data:
-        collection_data.collection_bonus[cid] = False
-
-    for adv_id in cache.npc_tem_data.keys():
-        npc_id = adv_id
-        collection_data.token_list[npc_id] = False
-        collection_data.first_panties[npc_id] = ""
-        collection_data.npc_panties[npc_id] = []
-        collection_data.npc_socks[npc_id] = []
-
-    return collection_data
 
 
 def get_item_zero(item_dict: dict[int, int]) -> dict[int, int]:

@@ -6,8 +6,9 @@ LOAD_ORDER 由内到外列出各模块的文件。core.load 之后，内核只�
 一个输入钩子截下调用（Intercept）时，内层的钩子都不调用，只调用更外层的模块的输出钩子。
 domains 的 medical、power、needs、pregnancy、abilities、facility、economy、work、warehouse、production、kitchen、
 commission、location、visitor、recruit、official、diplomacy、dormitory、library、playthrough、country、modes、
-achievement、history、plan、entertainment、tallies、fridge、prison、education、maintenance 与 physical_exam 排在最内，
-不挂钩子。它们登记 working 的键：medical、power、facility、official、modes、history、plan 与 education 各三个，
+achievement、history、plan、entertainment、tallies、fridge、prison、education、maintenance、physical_exam、flags、
+action_info、player_ability 与 player_collection 排在最内，不挂钩子。它们登记 working 的键：
+medical、power、facility、official、modes、history、plan 与 education 各三个，
 needs、work、warehouse、commission、recruit、library、playthrough、entertainment 与 prison 各两个，
 abilities 四个，economy 与 physical_exam 各七个，maintenance 五个，其余各一个。
 needs 还登记它的键 body.needs 的规则。economy 还登记今日收入与今日买卖总量两个键的规则。warehouse 还登记库存的规则。
@@ -24,40 +25,16 @@ save_load 的 reset 排在最外，它在 kernel.Reset 上的输入钩子最先�
 
 from types import ModuleType
 
-from Script.Modules.domains import (
-    abilities,
-    achievement,
-    commission,
-    country,
-    diplomacy,
-    dormitory,
-    economy,
-    education,
-    entertainment,
-    facility,
-    fridge,
-    history,
-    kitchen,
-    library,
-    location,
-    maintenance,
-    medical,
-    modes,
-    needs,
-    official,
-    physical_exam,
-    plan,
-    playthrough,
-    power,
-    pregnancy,
-    prison,
-    production,
-    recruit,
-    tallies,
-    visitor,
-    warehouse,
-    work,
-)
+from Script.Modules.domains import abilities, achievement, action_info
+from Script.Modules.domains import commission, country, diplomacy, dormitory
+from Script.Modules.domains import economy, education, entertainment, facility
+from Script.Modules.domains import flags, fridge, history, kitchen, library
+from Script.Modules.domains import location, maintenance, medical, modes, needs
+from Script.Modules.domains import official, physical_exam, plan
+from Script.Modules.domains import player_ability, player_collection
+from Script.Modules.domains import playthrough, power, pregnancy, prison
+from Script.Modules.domains import production, recruit, tallies, visitor
+from Script.Modules.domains import warehouse, work
 from Script.Modules.gameplay_resolution import (
     actions,
     edits,
@@ -108,6 +85,10 @@ LOAD_ORDER: tuple[ModuleType, ...] = (
     education,
     maintenance,
     physical_exam,
+    flags,
+    action_info,
+    player_ability,
+    player_collection,
     actions,
     starts,
     npc_starters,

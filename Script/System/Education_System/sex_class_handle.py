@@ -22,7 +22,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
-from Script.Modules.domains import abilities, education, modes, needs
+from Script.Modules.domains import abilities, education, flags, modes, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -440,7 +440,7 @@ def judge_sex_class_state_ok(character_id: int) -> bool:
             character_id
         ):
             return False
-    return not cache.character_data[character_id].sp_flag.imprisonment
+    return not flags.get(character_id, "imprisonment")
 
 
 def get_scene_student_list(scene_path: list | None = None) -> list[int]:
@@ -499,7 +499,7 @@ def get_class_member_list() -> list[int]:
         if not character_id or character_id not in cache.character_data:
             continue
         character_data: game_type.Character = cache.character_data[character_id]
-        if not character_data.sp_flag.is_h:
+        if not flags.get(character_data.cid, "is_h"):
             continue
         # 身份：学生岗，或玩家的女儿
         if (
@@ -987,7 +987,7 @@ def settle_orphan_class() -> bool:
     """
     if not modes.sex_class():
         return False
-    if 0 not in cache.character_data or cache.character_data[0].sp_flag.is_h:
+    if 0 not in cache.character_data or flags.get(0, "is_h"):
         return False
     modes.set_sex_class(False)
     end_sex_class()
@@ -1032,11 +1032,10 @@ def pull_student_into_class(student_id: int) -> None:
     from Script.Core import constant
     from Script.Design import character_move, second_behavior
 
-    student_data: game_type.Character = cache.character_data[student_id]
-    if not student_data.sp_flag.is_h:
+    if not flags.get(student_id, "is_h"):
         character_move.cancel_movement_plan(student_id)
-    student_data.sp_flag.is_h = True
-    student_data.sp_flag.see_pl_h = True
+    flags.set(student_id, is_h=True)
+    flags.set(student_id, see_pl_h=True)
     # 到场的口上走二段行为：一段行为得靠NPC AI派发，而H中的NPC完全不进AI链（handle_npc_ai.find_character_target 开头）
     second_behavior.character_get_second_behavior(
         student_id, constant.Behavior.JOIN_SEX_CLASS

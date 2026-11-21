@@ -24,36 +24,15 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import (
-    abilities,
-    achievement,
-    commission,
-    country,
-    diplomacy,
-    dormitory,
-    education,
-    entertainment,
-    facility,
-    fridge,
-    history,
-    kitchen,
-    library,
-    location,
-    maintenance,
-    medical,
-    modes,
-    needs,
-    official,
-    physical_exam,
-    plan,
-    playthrough,
-    prison,
-    production,
-    recruit,
-    tallies,
-    visitor,
-    warehouse,
-)
+from Script.Modules.domains import abilities, achievement, action_info
+from Script.Modules.domains import commission, country, diplomacy, dormitory
+from Script.Modules.domains import education, entertainment, facility, flags
+from Script.Modules.domains import fridge, history, kitchen, library, location
+from Script.Modules.domains import maintenance, medical, modes, needs, official
+from Script.Modules.domains import physical_exam, plan, player_ability
+from Script.Modules.domains import player_collection, playthrough, prison
+from Script.Modules.domains import production, recruit, tallies, visitor
+from Script.Modules.domains import warehouse
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -737,7 +716,8 @@ def install_save(save_id: str, version: int) -> None:
     读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
     版本 0 先补齐生理需求与供电策略属性。随后二十三个 adopt 函数搬走罗德岛对象的属性，其中十八个的条数计入跨版本更新。
     修正编号后、角色替换前，abilities.adopt_old_save 把角色的四张表搬进 GameState。它去掉的素质项数也计入跨版本更新。
-    重建角色后 adopt_pickled 搬走角色的数值属性。补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
+    ID 迁移后四个角色域搬走标记、行动记录与玩家数据，重建角色后 adopt_pickled 搬走角色的数值属性。
+    补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -791,6 +771,9 @@ def install_save(save_id: str, version: int) -> None:
         now_draw.text = draw_text
         now_draw.draw()
         update_count += migrate_count
+
+    for chara_domain in (flags, action_info, player_ability, player_collection):
+        chara_domain.adopt_old_save(loaded_dict)
 
     # 缓存文件不写的字段先取新缓存的值，不算作跨版本更新
     unsaved.fill_defaults(loaded_dict, new_cache)
@@ -918,28 +901,14 @@ def install_save(save_id: str, version: int) -> None:
             )
             update_count += 1
         # 更新到玩家收藏品列表
-        if (
-            new_character_data.cid != 0
-            and new_character_data.cid
-            not in loaded_dict["character_data"][0].pl_collection.token_list
+        if new_character_data.cid != 0 and player_collection.ensure_npc(
+            new_character_data.cid
         ):
-            loaded_dict["character_data"][0].pl_collection.token_list[
-                new_character_data.cid
-            ] = False
-            loaded_dict["character_data"][0].pl_collection.first_panties[
-                new_character_data.cid
-            ] = ""
-            loaded_dict["character_data"][0].pl_collection.npc_panties[
-                new_character_data.cid
-            ] = []
-            loaded_dict["character_data"][0].pl_collection.npc_socks[
-                new_character_data.cid
-            ] = []
             update_count += 1
         # 被监禁的角色检查是否在囚犯列表中，需要排除正在逃跑的人
         if (
-            new_character_data.sp_flag.imprisonment
-            and not new_character_data.sp_flag.escaping
+            flags.get(new_character_data.cid, "imprisonment")
+            and not flags.get(new_character_data.cid, "escaping")
             and not prison.is_prisoner(new_character_data.cid)
         ):
             prison.imprison(new_character_data.cid, game_time.now(), 0)
@@ -1055,8 +1024,8 @@ CHARACTER_NUM_FIELDS = ("eja_point", "semen_point")
 def exact_stats() -> None:
     """
     读档的 Reset 步骤：装好的缓存里随时间结算的数值是 float 时换成精确值（num.exact），int 与 Fraction 不动。
-    数值有角色的 CHARACTER_NUM_FIELDS、状态值、污浊的累计吸收精液量、身体各部位的当前精液量、
-    精液流通的剩余量与玩家能力的当日理智消耗。body.needs 不在这里，见 upgrade.adopt_v0 与 upgrade.adopt_pickled。
+    数值有角色的 CHARACTER_NUM_FIELDS、状态值、污浊的累计吸收精液量、身体各部位的当前精液量与
+    精液流通的剩余量。body.needs 与 player.ability 在读档导入时已换成精确值。
     """
     for character in cache.character_data.values():
         for name in CHARACTER_NUM_FIELDS:
@@ -1074,10 +1043,6 @@ def exact_stats() -> None:
                     target["remaining_volume"] = num.exact(
                         target["remaining_volume"]
                     )
-        ability = character.pl_ability
-        ability.today_sanity_point_cost = num.exact(
-            ability.today_sanity_point_cost
-        )
 
 
 def repair_installed() -> None:

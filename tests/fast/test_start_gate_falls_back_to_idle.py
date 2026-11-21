@@ -21,7 +21,7 @@ from collections.abc import Mapping
 from Script.Core import constant, constant_promise
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, intent, start_gate
-from Script.Modules.domains import modes
+from Script.Modules.domains import flags, modes
 from tests import chara_abilities as ca, kernel_data
 from tests.fast.base import FastTestCase
 
@@ -125,7 +125,7 @@ class StartGateTest(FastTestCase):
 
     def test_stale_queued_action_falls_back_to_idle(self) -> None:
         """排下后续行动后H结束了：开始时换成 1 分钟的发呆，交互对象改回自己"""
-        self.amiya.sp_flag.is_h = False
+        kernel_data.put(flags.set, self.amiya.cid, is_h=False)
         self.assertEqual(
             self.started(self.queued_h_follow_up(), AMIYA),
             (
@@ -139,7 +139,7 @@ class StartGateTest(FastTestCase):
 
     def test_queued_action_still_valid_starts_as_planned(self) -> None:
         """H还没结束：后续行动原样开始"""
-        self.amiya.sp_flag.is_h = True
+        kernel_data.put(flags.set, self.amiya.cid, is_h=True)
         self.assertEqual(
             self.started(self.queued_h_follow_up(), AMIYA),
             (

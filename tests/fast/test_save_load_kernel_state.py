@@ -25,7 +25,7 @@ from Script.Core import save_handle
 from Script.Kernel import core
 from Script.Modules import load_order
 from Script.Modules.domains import abilities, country, medical, physical_exam
-from Script.Modules.domains import playthrough, warehouse
+from Script.Modules.domains import player_collection, playthrough, warehouse
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
 from tests import kernel_data
@@ -190,7 +190,13 @@ class KernelStateTest(FastTestCase):
         tables = abilities.PICKLED.values()
         characters = {
             who: replace(
-                c, data={k: v for k, v in c.data.items() if k not in tables}
+                c,
+                data={
+                    k: v
+                    for k, v in c.data.items()
+                    if k not in tables
+                    and not (who == "0" and k == player_collection.KEY)
+                },
             )
             for who, c in loaded.characters.items()
         }

@@ -17,6 +17,7 @@
 from collections.abc import Callable
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 VISITOR_ZONE = 13
 """ 访客区的设施id """
@@ -193,7 +194,9 @@ class ZeroMinuteEditTest(SlowTestCase):
         pl.target_character_id = target
         scene = map_handle.get_map_system_path_str_for_list(pl.position)
         self.cache.scene_data[scene].close_flag = 1
-        self.cache.character_data[target].sp_flag.unconscious_h = 0
+        kernel_data.put(
+            kernel_data.domain("flags").set, target, unconscious_h=0
+        )
         start, end, changed = self.run_pick(
             lambda: handle_instruct.handle_instruct(
                 constant.Instruct.SLEEP_OBSCENITY
@@ -203,5 +206,5 @@ class ZeroMinuteEditTest(SlowTestCase):
         self.assertEqual(end, start)
         self.assertFalse(changed)
         self.assertEqual(
-            self.cache.character_data[target].sp_flag.unconscious_h, 1
+            kernel_data.domain("flags").get(target, "unconscious_h"), 1
         )

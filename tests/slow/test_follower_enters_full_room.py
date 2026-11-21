@@ -41,7 +41,9 @@ class FollowerEntersFullRoomTest(SlowTestCase):
         # 在场景里点选杜宾，再点「邀请同行」
         self.cache.character_data[0].target_character_id = follower_id
         self.instruct(constant.Instruct.FOLLOW)
-        self.assertEqual(follower.sp_flag.is_follow, 1)
+        self.assertEqual(
+            kernel_data.domain("flags").get(follower_id, "is_follow"), 1
+        )
         self.walk(DR_OFFICE)
         self.assertEqual(self.cache.character_data[0].position, DR_OFFICE)
         self.assertEqual(follower.position, DR_OFFICE)

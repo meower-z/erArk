@@ -418,20 +418,18 @@ class MinimalWorld:
         return self.cache.scene_data[key]
 
     def move(self, cid: int, path: list) -> None:
-        """
-        用游戏的移动函数把角色从当前位置移到 path
-        Keyword arguments:
-        cid -- 角色id
-        path -- 目标场景路径列表
-        Return arguments:
-        无
-        """
+        """用游戏的移动函数把角色从当前位置移到 path（cid: 角色id；path: 目标场景路径列表）"""
         from Script.Design import map_handle
+        from Script.Modules.gameplay_resolution import working
 
         self.scene(path)
-        map_handle.character_move_scene(
-            self.cache.character_data[cid].position, list(path), cid
-        )
+        pos = self.cache.character_data[cid].position
+        with (
+            contextlib.nullcontext()
+            if working.active()
+            else kernel_data.writing()
+        ):
+            map_handle.character_move_scene(pos, list(path), cid)
 
     def chara(
         self,

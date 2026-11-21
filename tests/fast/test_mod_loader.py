@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch
 
 from Script.Config import game_config
 from Script.Core import mod_manager
-from Script.Modules.domains import tallies
+from Script.Modules.domains import action_info, tallies
 from Script.Design import handle_premise
 from tests import kernel_data
 from tests.fast.base import FastTestCase
@@ -114,7 +114,9 @@ class ModLoaderTest(FastTestCase):
         player.target_character_id = 0
         player.semen_point = 50
         player.tem_extra_semen_point = 0
-        player.action_info.day_first_shoot_semen = False
+        kernel_data.put(
+            action_info.set, player.cid, "day_first_shoot_semen", False
+        )
         player.h_state.endure_not_shot_count = 0
         for flag in ("p_orgasm_strong", "p_orgasm_normal"):
             player.second_behavior[flag] = 0

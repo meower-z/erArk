@@ -4,46 +4,19 @@
 from functools import partial
 from typing import Any
 
-from _bootstrap import (
-    DEFAULT_TIME,
-    SCENE_DORM,
-    _,
-    cache,
-    check,
-    class_ai,
-    classroom_path,
-    clear_schedules,
-    constant,
-    constant_effect,
-    datetime,
-    drawn_text,
-    education,
-    education_constant,
-    finish,
-    game_config,
-    game_time,
-    game_type,
-    growth_handle,
-    handle_premise,
-    make_character,
-    move_to,
-    open_all_classroom,
-    period_time,
-    pl,
-    remove_character,
-    schedule_handle,
-    schedule_template_handle,
-    section,
-    semester_handle,
-    play,
-    set_time,
-    sex_class_handle,
-    start,
-)
+from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, cache, check, class_ai
+from _bootstrap import classroom_path, clear_schedules, constant
+from _bootstrap import constant_effect, datetime, drawn_text, education
+from _bootstrap import education_constant, finish, game_config, game_time
+from _bootstrap import game_type, growth_handle, handle_premise, make_character
+from _bootstrap import move_to, open_all_classroom, period_time, pl, play
+from _bootstrap import remove_character, schedule_handle
+from _bootstrap import schedule_template_handle, section, semester_handle
+from _bootstrap import set_time, sex_class_handle, start
 from Script.Settle import common_default, default as settle_default
 from Script.System.Instruct_System import handle_instruct
 from Script.Design import character_behavior, second_behavior
-from Script.Modules.domains import modes
+from Script.Modules.domains import flags, modes
 from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
@@ -271,7 +244,7 @@ check(
 )
 # 教师判来不了：学生这一节该降级自习（548），557 不结算
 reset_mark(202)
-teacher.sp_flag.is_h = True
+kernel_data.put(flags.set, teacher.cid, is_h=True)
 before = ca.experience(student_b).get(exp_45, 0)
 EFFECT[557](202, 45, change, game_time.now())
 check(
@@ -279,9 +252,9 @@ check(
     ca.experience(student_b).get(exp_45, 0) == before
     and student_b_growth.last_attend_period == [],
 )
-teacher.sp_flag.is_h = False
+kernel_data.put(flags.set, teacher.cid, is_h=False)
 # 空气催眠只在人已在本节教室时算能到岗，木头人一律来不了
-teacher.sp_flag.unconscious_h = 5
+kernel_data.put(flags.set, teacher.cid, unconscious_h=5)
 move_to(101, SCENE_DORM)
 EFFECT[557](202, 45, change, game_time.now())
 check(
@@ -296,7 +269,7 @@ check(
     student_b_growth.last_attend_period,
 )
 reset_mark(202)
-teacher.sp_flag.unconscious_h = 6
+kernel_data.put(flags.set, teacher.cid, unconscious_h=6)
 teacher.hypnosis.blockhead = True
 EFFECT[557](202, 45, change, game_time.now())
 check(
@@ -304,7 +277,7 @@ check(
     student_b_growth.last_attend_period == [],
 )
 teacher.hypnosis.blockhead = False
-teacher.sp_flag.unconscious_h = 0
+kernel_data.put(flags.set, teacher.cid, unconscious_h=0)
 # 授课者是玩家（当天的临时实操课）：那是课堂 H，不是授课
 sex_class_handle.set_temp_class(
     game_time.now().date().toordinal(), 0, ROOM_P, 70, must_attend=[202]
@@ -509,7 +482,10 @@ attend_before = student_a_growth.attend_class_count
 sex_class_handle.start_sex_class(70)
 EFFECT[10014](0, 5, change, game_time.now())
 check("开课：两个标志都置位", modes.sex_class() and modes.group_sex())
-check("在场学生进 H 状态", student_a.sp_flag.is_h and student_b.sp_flag.is_h)
+check(
+    "在场学生进 H 状态",
+    flags.get(student_a.cid, "is_h") and flags.get(student_b.cid, "is_h"),
+)
 check(
     "开课整条链路每个学生只记一节出勤（第五轮修正 +2）",
     student_a_growth.attend_class_count == attend_before + 1,
@@ -675,13 +651,13 @@ move_to(0, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 move_to(202, classroom_path(ROOM1))
 set_time(period_time(0) + datetime.timedelta(minutes=30))
-student_a.sp_flag.is_h = False
-student_b.sp_flag.is_h = False
+kernel_data.put(flags.set, student_a.cid, is_h=False)
+kernel_data.put(flags.set, student_b.cid, is_h=False)
 student_a.behavior.behavior_id = constant.Behavior.SELF_STUDY
 student_a.behavior.duration = 45
 student_b.behavior.behavior_id = constant.Behavior.SLEEP
 student_b.behavior.duration = 480
-student_b.sp_flag.sleep = False
+kernel_data.put(flags.set, student_b.cid, sleep=False)
 start(handle_instruct.handle_teach)
 check(
     "9:30 开讲：学生听到 9:45 本节下课（15 分钟，此前固定 45 分钟、压进下一节），玩家自己仍是 45 分钟",
@@ -1067,8 +1043,8 @@ for _l13_room, _l13_type in (
     move_to(201, classroom_path(_l13_room))
     move_to(202, SCENE_DORM)
     set_time(DEFAULT_TIME.replace(hour=12, minute=30))
-    student_a.sp_flag.is_h = False
-    student_a.sp_flag.sleep = False
+    kernel_data.put(flags.set, student_a.cid, is_h=False)
+    kernel_data.put(flags.set, student_a.cid, sleep=False)
     student_a.behavior.behavior_id = constant.Behavior.SELF_STUDY
     student_a.behavior.duration = 45
     reset_mark(201)
@@ -1148,8 +1124,8 @@ set_time(DEFAULT_TIME.replace(hour=9, minute=30))
 pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 pl.behavior.duration = 1
 pl.behavior.start_time = DEFAULT_TIME.replace(hour=9, minute=29)
-student_a.sp_flag.is_h = False
-student_a.sp_flag.sleep = False
+kernel_data.put(flags.set, student_a.cid, is_h=False)
+kernel_data.put(flags.set, student_a.cid, sleep=False)
 student_a.behavior.behavior_id = constant.Behavior.SELF_STUDY
 student_a.behavior.duration = 45
 student_a.behavior.start_time = DEFAULT_TIME.replace(hour=9, minute=10)
@@ -1205,8 +1181,8 @@ for _l13_before, _l13_label in (
     pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     pl.behavior.duration = 1
     pl.behavior.start_time = DEFAULT_TIME.replace(hour=12, minute=29)
-    student_a.sp_flag.is_h = False
-    student_a.sp_flag.sleep = False
+    kernel_data.put(flags.set, student_a.cid, is_h=False)
+    kernel_data.put(flags.set, student_a.cid, sleep=False)
     student_a.behavior.behavior_id = _l13_before
     student_a.behavior.duration = 45
     student_a.behavior.start_time = DEFAULT_TIME.replace(hour=12, minute=20)

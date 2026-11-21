@@ -17,6 +17,7 @@ from tests.slow.health_check import (
     SLOT_START,
     HealthCheckTestCase,
 )
+from tests import kernel_data
 
 
 class BookedExamOperatorGoesInSlotTest(HealthCheckTestCase):
@@ -30,7 +31,9 @@ class BookedExamOperatorGoesInSlotTest(HealthCheckTestCase):
         operator = self.cache.character_data[operator_id]
         picks = self.record_picks(operator_id)
         self.sleep_through_midnight()
-        slot = operator.action_info.health_check_today
+        slot = kernel_data.domain("action_info").get(
+            operator_id, "health_check_today"
+        )
         self.assertIn(slot, SLOT_START, "午夜抽签给她排了上午或下午体检")
         slot_time = game_time.now().replace(hour=SLOT_START[slot], minute=0)
         self.wait_until_hour(slot_time.hour)

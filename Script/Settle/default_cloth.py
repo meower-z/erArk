@@ -2,16 +2,12 @@
 
 import datetime
 from types import FunctionType
-from Script.Design import (
-    settle_behavior,
-    attr_calculation,
-    clothing,
-    map_handle,
-    handle_premise,
-)
+from Script.Design import attr_calculation, clothing, handle_premise
+from Script.Design import map_handle, settle_behavior
 from Script.Core import cache_control, constant_effect, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
+from Script.Modules.domains import flags
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -385,7 +381,7 @@ def handle_self_cloth_back(
     if wear_flag:
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
-        if character_data.sp_flag.unconscious_h:
+        if flags.get(character_id, "unconscious_h"):
             now_draw.text = _(
                 "\n给{0}穿上了脱下的衣服，并尽量整理成H前的样子\n"
             ).format(character_data.name)

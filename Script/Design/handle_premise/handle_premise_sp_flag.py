@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import location, needs
+from Script.Modules.domains import flags, location, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -20,8 +20,7 @@ def handle_self_tired(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.tired == 1:
+    if flags.get(character_id, "tired") == 1:
         return 999
     else:
         return 0
@@ -38,12 +37,11 @@ def handle_self_exhausted(character_id: int) -> int:
     """
     from Script.Design import attr_calculation
 
-    character_data: game_type.Character = cache.character_data[character_id]
     # 体力耗尽（力竭）
     if needs.of(character_id)["hit"] <= 1:
         return 1
     # 疲劳状态
-    if character_data.sp_flag.tired:
+    if flags.get(character_id, "tired"):
         return 1
     # 重度困倦（困倦等级≥2）
     if attr_calculation.get_tired_level(needs.of(character_id)["tired"]) >= 2:
@@ -60,8 +58,7 @@ def handle_self_not_tired(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.tired == 1:
+    if flags.get(character_id, "tired") == 1:
         return 0
     else:
         return 1
@@ -80,7 +77,7 @@ def handle_target_hp_1(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.sp_flag.tired == 1:
+    if flags.get(target_data.cid, "tired") == 1:
         return 1
     else:
         return 0
@@ -111,9 +108,9 @@ def handle_self_or_target_tired(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if character_data.sp_flag.tired == 1:
+    if flags.get(character_id, "tired") == 1:
         return 1
-    elif target_data.sp_flag.tired == 1:
+    elif flags.get(target_data.cid, "tired") == 1:
         return 1
     else:
         return 0
@@ -143,8 +140,7 @@ def handle_shower_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.shower == 0:
+    if flags.get(character_id, "shower") == 0:
         return 1
     else:
         return 0
@@ -159,8 +155,7 @@ def handle_shower_flag_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.shower >= 1:
+    if flags.get(character_id, "shower") >= 1:
         return 1
     else:
         return 0
@@ -175,8 +170,7 @@ def handle_shower_flag_123(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.shower in {1, 2, 3}:
+    if flags.get(character_id, "shower") in {1, 2, 3}:
         return 1
     else:
         return 0
@@ -191,8 +185,7 @@ def handle_shower_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.shower == 1:
+    if flags.get(character_id, "shower") == 1:
         return 400
     else:
         return 0
@@ -207,8 +200,7 @@ def handle_shower_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.shower == 2:
+    if flags.get(character_id, "shower") == 2:
         return 400
     else:
         return 0
@@ -223,8 +215,7 @@ def handle_shower_flag_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.shower == 3:
+    if flags.get(character_id, "shower") == 3:
         return 400
     else:
         return 0
@@ -239,8 +230,7 @@ def handle_shower_flag_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.shower == 4:
+    if flags.get(character_id, "shower") == 4:
         return 400
     else:
         return 0
@@ -255,12 +245,11 @@ def handle_eat_food_flag_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.eat_food >= 1:
+    if flags.get(character_id, "eat_food") >= 1:
         return 1
-    elif character_data.sp_flag.help_buy_food >= 1:
+    elif flags.get(character_id, "help_buy_food") >= 1:
         return 1
-    elif character_data.sp_flag.help_make_food >= 1:
+    elif flags.get(character_id, "help_make_food") >= 1:
         return 1
     else:
         return 0
@@ -275,8 +264,7 @@ def handle_eat_food_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.eat_food == 1:
+    if flags.get(character_id, "eat_food") == 1:
         return 400
     else:
         return 0
@@ -291,8 +279,7 @@ def handle_eat_food_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.eat_food == 2:
+    if flags.get(character_id, "eat_food") == 2:
         return 400
     else:
         return 0
@@ -307,8 +294,7 @@ def handle_sleep_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.sleep == 0:
+    if flags.get(character_id, "sleep") == 0:
         return 400
     else:
         return 0
@@ -323,8 +309,7 @@ def handle_sleep_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.sleep == 1:
+    if flags.get(character_id, "sleep") == 1:
         return 400
     else:
         return 0
@@ -339,8 +324,7 @@ def handle_rest_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.rest == 1:
+    if flags.get(character_id, "rest") == 1:
         return 400
     else:
         return 0
@@ -355,8 +339,7 @@ def handle_pee_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.pee == 1:
+    if flags.get(character_id, "pee") == 1:
         return 400
     else:
         return 0
@@ -371,8 +354,7 @@ def handle_milk_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.milk == 1:
+    if flags.get(character_id, "milk") == 1:
         return 400
     else:
         return 0
@@ -387,8 +369,7 @@ def handle_swim_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.swim == 0:
+    if flags.get(character_id, "swim") == 0:
         return 1
     else:
         return 0
@@ -403,8 +384,7 @@ def handle_swim_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.swim == 1:
+    if flags.get(character_id, "swim") == 1:
         return 1
     else:
         return 0
@@ -419,8 +399,7 @@ def handle_swim_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.swim == 2:
+    if flags.get(character_id, "swim") == 2:
         return 1
     else:
         return 0
@@ -435,8 +414,7 @@ def handle_bathhouse_entertainment_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.bathhouse_entertainment == 0:
+    if flags.get(character_id, "bathhouse_entertainment") == 0:
         return 1
     else:
         return 0
@@ -451,8 +429,7 @@ def handle_bathhouse_entertainment_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.bathhouse_entertainment == 1:
+    if flags.get(character_id, "bathhouse_entertainment") == 1:
         return 1
     else:
         return 0
@@ -467,8 +444,7 @@ def handle_bathhouse_entertainment_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.bathhouse_entertainment == 2:
+    if flags.get(character_id, "bathhouse_entertainment") == 2:
         return 1
     else:
         return 0
@@ -483,8 +459,7 @@ def handle_work_maintenance_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.work_maintenance == 1:
+    if flags.get(character_id, "work_maintenance") == 1:
         return 0
     else:
         return 1
@@ -499,8 +474,7 @@ def handle_work_maintenance_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.work_maintenance == 1:
+    if flags.get(character_id, "work_maintenance") == 1:
         return 1
     else:
         return 0
@@ -515,8 +489,7 @@ def handle_field_commission_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.sp_flag.field_commission == 0:
+    if flags.get(character_id, "field_commission") == 0:
         return 1
     return 0
 
@@ -544,8 +517,7 @@ def handle_in_diplomatic_visit_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.sp_flag.in_diplomatic_visit == 0:
+    if flags.get(character_id, "in_diplomatic_visit") == 0:
         return 1
     return 0
 
@@ -574,9 +546,7 @@ def handle_in_diplomatic_visit_1_and_other_country(character_id: int) -> int:
     int -- 权重
     """
     if handle_in_diplomatic_visit_1(character_id):
-        target_coutry_cid = cache.character_data[
-            character_id
-        ].sp_flag.in_diplomatic_visit
+        target_coutry_cid = flags.get(character_id, "in_diplomatic_visit")
         if target_coutry_cid != location.country():
             return 1
     return 0
@@ -591,8 +561,7 @@ def handle_self_visitor_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.vistor == 1
+    return flags.get(character_id, "vistor") == 1
 
 
 @add_premise(constant_promise.Premise.TARGET_VISITOR_FLAG_1)
@@ -630,8 +599,7 @@ def handle_is_follow(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.is_follow:
+    if flags.get(character_id, "is_follow"):
         return 1
     return 0
 
@@ -657,8 +625,7 @@ def handle_is_follow_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.is_follow == 1:
+    if flags.get(character_id, "is_follow") == 1:
         return 20
     return 0
 
@@ -672,8 +639,7 @@ def handle_not_follow_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not character_data.sp_flag.is_follow == 1
+    return not flags.get(character_id, "is_follow") == 1
 
 
 @add_premise(constant_promise.Premise.IS_FOLLOW_3)
@@ -685,8 +651,7 @@ def handle_is_follow_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.is_follow == 3:
+    if flags.get(character_id, "is_follow") == 3:
         return 100
     return 0
 
@@ -700,8 +665,7 @@ def handle_is_follow_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.is_follow == 4:
+    if flags.get(character_id, "is_follow") == 4:
         return 100
     return 0
 
@@ -719,7 +683,7 @@ def handle_target_is_follow(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.sp_flag.is_follow
+    return flags.get(target_data.cid, "is_follow")
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_FOLLOW)
@@ -735,7 +699,7 @@ def handle_target_not_follow(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.sp_flag.is_follow
+    return not flags.get(target_data.cid, "is_follow")
 
 
 @add_premise(constant_promise.Premise.HELP_BUY_FOOD_FLAG_0)
@@ -747,8 +711,7 @@ def handle_help_buy_food_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.help_buy_food == 0:
+    if flags.get(character_id, "help_buy_food") == 0:
         return 1
     else:
         return 0
@@ -763,8 +726,7 @@ def handle_help_buy_food_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.help_buy_food == 1:
+    if flags.get(character_id, "help_buy_food") == 1:
         return 1
     else:
         return 0
@@ -779,8 +741,7 @@ def handle_help_buy_food_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.help_buy_food == 2:
+    if flags.get(character_id, "help_buy_food") == 2:
         return 1
     else:
         return 0
@@ -795,8 +756,7 @@ def handle_help_buy_food_flag_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.help_buy_food == 3:
+    if flags.get(character_id, "help_buy_food") == 3:
         return 1
     else:
         return 0
@@ -811,8 +771,7 @@ def handle_help_make_food_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.help_make_food == 0:
+    if flags.get(character_id, "help_make_food") == 0:
         return 1
     else:
         return 0
@@ -827,8 +786,7 @@ def handle_help_make_food_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.help_make_food == 1:
+    if flags.get(character_id, "help_make_food") == 1:
         return 1
     else:
         return 0
@@ -843,8 +801,7 @@ def handle_help_make_food_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.help_make_food == 2:
+    if flags.get(character_id, "help_make_food") == 2:
         return 1
     else:
         return 0
@@ -859,8 +816,7 @@ def handle_morning_salutation_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.morning_salutation == 0:
+    if flags.get(character_id, "morning_salutation") == 0:
         return 1
     else:
         return 0
@@ -877,8 +833,7 @@ def handle_morning_salutation_flag_1(character_id: int) -> int:
     """
     from Script.Design.handle_premise import handle_morning_salutation_time
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.morning_salutation == 1:
+    if flags.get(character_id, "morning_salutation") == 1:
         weight = handle_morning_salutation_time(character_id)
         return 100 + weight
     else:
@@ -894,8 +849,7 @@ def handle_morning_salutation_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.morning_salutation == 2:
+    if flags.get(character_id, "morning_salutation") == 2:
         return 100
     else:
         return 0
@@ -910,8 +864,7 @@ def handle_night_salutation_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.night_salutation == 0:
+    if flags.get(character_id, "night_salutation") == 0:
         return 1
     else:
         return 0
@@ -926,8 +879,7 @@ def handle_night_salutation_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.night_salutation == 1:
+    if flags.get(character_id, "night_salutation") == 1:
         return 100
     else:
         return 0
@@ -942,8 +894,7 @@ def handle_night_salutation_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.night_salutation == 2:
+    if flags.get(character_id, "night_salutation") == 2:
         return 1
     else:
         return 0
@@ -986,8 +937,7 @@ def handle_be_bagged_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.be_bagged == 1:
+    if flags.get(character_id, "be_bagged") == 1:
         return 0
     else:
         return 1
@@ -1002,8 +952,7 @@ def handle_be_bagged_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.be_bagged == 1:
+    if flags.get(character_id, "be_bagged") == 1:
         return 1
     else:
         return 0
@@ -1018,8 +967,7 @@ def handle_pl_bagging_chara(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    if character_data.sp_flag.bagging_chara_id:
+    if flags.get(0, "bagging_chara_id"):
         return 1
     else:
         return 0
@@ -1034,8 +982,7 @@ def handle_pl_not_bagging_chara(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    if character_data.sp_flag.bagging_chara_id:
+    if flags.get(0, "bagging_chara_id"):
         return 0
     else:
         return 1
@@ -1050,8 +997,7 @@ def handle_imprisonment_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.imprisonment == 1:
+    if flags.get(character_id, "imprisonment") == 1:
         return 1
     else:
         return 0
@@ -1104,8 +1050,7 @@ def handle_escaping_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.escaping
+    return flags.get(character_id, "escaping")
 
 
 @add_premise(constant_promise.Premise.ESCAPING_0)
@@ -1155,8 +1100,7 @@ def handle_aromatherapy_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.aromatherapy == 0:
+    if flags.get(character_id, "aromatherapy") == 0:
         return 1
     else:
         return 0
@@ -1171,8 +1115,7 @@ def handle_aromatherapy_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.aromatherapy == 1:
+    if flags.get(character_id, "aromatherapy") == 1:
         return 1
     else:
         return 0
@@ -1187,8 +1130,7 @@ def handle_aromatherapy_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.aromatherapy == 2:
+    if flags.get(character_id, "aromatherapy") == 2:
         return 1
     else:
         return 0
@@ -1203,8 +1145,7 @@ def handle_aromatherapy_flag_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.aromatherapy == 3:
+    if flags.get(character_id, "aromatherapy") == 3:
         return 1
     else:
         return 0
@@ -1219,8 +1160,7 @@ def handle_aromatherapy_flag_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.aromatherapy == 4:
+    if flags.get(character_id, "aromatherapy") == 4:
         return 1
     else:
         return 0
@@ -1235,8 +1175,7 @@ def handle_aromatherapy_flag_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.aromatherapy == 5:
+    if flags.get(character_id, "aromatherapy") == 5:
         return 1
     else:
         return 0
@@ -1251,8 +1190,7 @@ def handle_aromatherapy_flag_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.aromatherapy == 6:
+    if flags.get(character_id, "aromatherapy") == 6:
         return 1
     else:
         return 0
@@ -1267,8 +1205,7 @@ def handle_aromatherapy_flag_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.aromatherapy == 7:
+    if flags.get(character_id, "aromatherapy") == 7:
         return 1
     else:
         return 0
@@ -1283,8 +1220,7 @@ def handle_aromatherapy_flag_8(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.aromatherapy == 8:
+    if flags.get(character_id, "aromatherapy") == 8:
         return 1
     else:
         return 0
@@ -1458,10 +1394,8 @@ def handle_masturebate_flag_g_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if (
-        character_data.sp_flag.masturebate > 0
-        or character_data.sp_flag.npc_masturebate_for_player
+    if flags.get(character_id, "masturebate") > 0 or flags.get(
+        character_id, "npc_masturebate_for_player"
     ):
         return 400
     else:
@@ -1477,8 +1411,7 @@ def handle_masturebate_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.masturebate == 1:
+    if flags.get(character_id, "masturebate") == 1:
         return 400
     else:
         return 0
@@ -1493,8 +1426,7 @@ def handle_masturebate_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.masturebate == 2:
+    if flags.get(character_id, "masturebate") == 2:
         return 400
     else:
         return 0
@@ -1509,8 +1441,7 @@ def handle_masturebate_flag_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.masturebate == 3:
+    if flags.get(character_id, "masturebate") == 3:
         return 400
     else:
         return 0
@@ -1525,8 +1456,7 @@ def handle_masturebate_bofore_sleep_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.masturebate_before_sleep == 0:
+    if flags.get(character_id, "masturebate_before_sleep") == 0:
         return 1
     else:
         return 0
@@ -1541,8 +1471,7 @@ def handle_masturebate_bofore_sleep_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.masturebate_before_sleep == 1:
+    if flags.get(character_id, "masturebate_before_sleep") == 1:
         return 1
     else:
         return 0
@@ -1557,8 +1486,7 @@ def handle_masturebate_bofore_sleep_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.masturebate_before_sleep == 2:
+    if flags.get(character_id, "masturebate_before_sleep") == 2:
         return 1
     else:
         return 0
@@ -1597,8 +1525,7 @@ def handle_masturebate_to_pl_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.npc_masturebate_for_player
+    return flags.get(character_id, "npc_masturebate_for_player")
 
 
 @add_premise(constant_promise.Premise.MASTUREBATE_TO_PL_FLAG_0)
@@ -1624,9 +1551,8 @@ def handle_is_unconscious_h(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[0]
     target_data = cache.character_data[character_data.target_character_id]
-    if (
-        target_data.sp_flag.unconscious_h
-        or character_data.sp_flag.unconscious_h
+    if flags.get(target_data.cid, "unconscious_h") or flags.get(
+        0, "unconscious_h"
     ):
         return 1
     return 0
@@ -1667,8 +1593,7 @@ def handle_unconscious_flag_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.unconscious_h
+    return flags.get(character_id, "unconscious_h")
 
 
 @add_premise(constant_promise.Premise.UNCONSCIOUS_HYPNOSIS_FLAG)
@@ -1680,8 +1605,7 @@ def handle_unconscious_hypnosis_flag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h in {4, 5, 6, 7}:
+    if flags.get(character_id, "unconscious_h") in {4, 5, 6, 7}:
         return 1
     return 0
 
@@ -1695,8 +1619,7 @@ def handle_unconscious_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h == 1:
+    if flags.get(character_id, "unconscious_h") == 1:
         return 1
     else:
         return 0
@@ -1711,8 +1634,7 @@ def handle_unconscious_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h == 2:
+    if flags.get(character_id, "unconscious_h") == 2:
         return 1
     else:
         return 0
@@ -1727,8 +1649,7 @@ def handle_unconscious_flag_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h == 3:
+    if flags.get(character_id, "unconscious_h") == 3:
         return 1
     else:
         return 0
@@ -1743,8 +1664,7 @@ def handle_unconscious_flag_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h == 4:
+    if flags.get(character_id, "unconscious_h") == 4:
         return 1
     else:
         return 0
@@ -1759,8 +1679,7 @@ def handle_unconscious_flag_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h == 5:
+    if flags.get(character_id, "unconscious_h") == 5:
         return 1
     else:
         return 0
@@ -1775,8 +1694,7 @@ def handle_not_unconscious_flag_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h == 5:
+    if flags.get(character_id, "unconscious_h") == 5:
         return 0
     else:
         return 1
@@ -1791,8 +1709,7 @@ def handle_unconscious_flag_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h == 6:
+    if flags.get(character_id, "unconscious_h") == 6:
         return 1
     else:
         return 0
@@ -1807,8 +1724,7 @@ def handle_unconscious_flag_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h == 7:
+    if flags.get(character_id, "unconscious_h") == 7:
         return 1
     else:
         return 0
@@ -1825,7 +1741,7 @@ def handle_t_unconscious_flag_0(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h:
+    if flags.get(target_data.cid, "unconscious_h"):
         return 0
     else:
         return 1
@@ -1842,7 +1758,7 @@ def handle_t_unconscious_flag(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h:
+    if flags.get(target_data.cid, "unconscious_h"):
         return 1
     else:
         return 0
@@ -1872,7 +1788,7 @@ def handle_t_unconscious_flag_1(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 1:
+    if flags.get(target_data.cid, "unconscious_h") == 1:
         return 1
     else:
         return 0
@@ -1901,7 +1817,7 @@ def handle_t_unconscious_flag_2(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 2:
+    if flags.get(target_data.cid, "unconscious_h") == 2:
         return 1
     else:
         return 0
@@ -1918,7 +1834,7 @@ def handle_t_unconscious_flag_3(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 3:
+    if flags.get(target_data.cid, "unconscious_h") == 3:
         return 1
     else:
         return 0
@@ -1935,7 +1851,7 @@ def handle_t_unconscious_flag_4(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 4:
+    if flags.get(target_data.cid, "unconscious_h") == 4:
         return 1
     else:
         return 0
@@ -1952,7 +1868,7 @@ def handle_t_not_unconscious_flag_4(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 4:
+    if flags.get(target_data.cid, "unconscious_h") == 4:
         return 0
     else:
         return 1
@@ -1969,7 +1885,7 @@ def handle_t_unconscious_flag_5(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 5:
+    if flags.get(target_data.cid, "unconscious_h") == 5:
         return 1
     else:
         return 0
@@ -1986,7 +1902,7 @@ def handle_t_not_unconscious_flag_5(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 5:
+    if flags.get(target_data.cid, "unconscious_h") == 5:
         return 0
     else:
         return 1
@@ -2003,7 +1919,7 @@ def handle_t_unconscious_flag_6(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 6:
+    if flags.get(target_data.cid, "unconscious_h") == 6:
         return 1
     else:
         return 0
@@ -2020,7 +1936,7 @@ def handle_t_not_unconscious_flag_6(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 6:
+    if flags.get(target_data.cid, "unconscious_h") == 6:
         return 0
     else:
         return 1
@@ -2037,7 +1953,7 @@ def handle_t_unconscious_flag_7(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 7:
+    if flags.get(target_data.cid, "unconscious_h") == 7:
         return 1
     else:
         return 0
@@ -2054,7 +1970,7 @@ def handle_t_not_unconscious_flag_7(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.unconscious_h == 7:
+    if flags.get(target_data.cid, "unconscious_h") == 7:
         return 0
     else:
         return 1
@@ -2069,8 +1985,7 @@ def handle_sleep_h_awake_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.sp_flag.sleep_h_awake == 0:
+    if flags.get(character_id, "sleep_h_awake") == 0:
         return 1
     return 0
 
@@ -2130,8 +2045,7 @@ def handle_hidden_sex_mode_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.hidden_sex_mode == 0
+    return flags.get(character_id, "hidden_sex_mode") == 0
 
 
 @add_premise(constant_promise.Premise.PLAYER_IN_HIDDEN_SEX_MODE)
@@ -2180,8 +2094,7 @@ def handle_hidden_sex_mode_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.hidden_sex_mode > 0
+    return flags.get(character_id, "hidden_sex_mode") > 0
 
 
 @add_premise(constant_promise.Premise.TARGET_HIDDEN_SEX_MODE_GE_1)
@@ -2206,8 +2119,7 @@ def handle_hidden_sex_mode_1(character_id: int) -> int:
     返回:
         int: 权重，若角色处于双不隐模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.hidden_sex_mode == 1
+    return flags.get(character_id, "hidden_sex_mode") == 1
 
 
 @add_premise(constant_promise.Premise.TARGET_HIDDEN_SEX_MODE_1)
@@ -2232,8 +2144,7 @@ def handle_hidden_sex_mode_2(character_id: int) -> int:
     返回:
         int: 权重，若角色处于女隐模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.hidden_sex_mode == 2
+    return flags.get(character_id, "hidden_sex_mode") == 2
 
 
 @add_premise(constant_promise.Premise.TARGET_HIDDEN_SEX_MODE_2)
@@ -2258,8 +2169,7 @@ def handle_hidden_sex_mode_3(character_id: int) -> int:
     返回:
         int: 权重，若角色处于男隐模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.hidden_sex_mode == 3
+    return flags.get(character_id, "hidden_sex_mode") == 3
 
 
 @add_premise(constant_promise.Premise.TARGET_HIDDEN_SEX_MODE_3)
@@ -2284,8 +2194,7 @@ def handle_hidden_sex_mode_4(character_id: int) -> int:
     返回:
         int: 权重，若角色处于双隐模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.hidden_sex_mode == 4
+    return flags.get(character_id, "hidden_sex_mode") == 4
 
 
 @add_premise(constant_promise.Premise.TARGET_HIDDEN_SEX_MODE_4)
@@ -2310,8 +2219,7 @@ def handle_hidden_sex_mode_5(character_id: int) -> int:
     返回:
         int: 权重，若角色处于携带模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.hidden_sex_mode == 5
+    return flags.get(character_id, "hidden_sex_mode") == 5
 
 
 @add_premise(constant_promise.Premise.NOT_HIDDEN_SEX_MODE_5)
@@ -2505,8 +2413,7 @@ def handle_exhibitionism_sex_mode_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.exhibitionism_sex_mode == 0
+    return flags.get(character_id, "exhibitionism_sex_mode") == 0
 
 
 @add_premise(constant_promise.Premise.PLAYER_NOT_IN_EXHIBITIONISM_SEX_MODE)
@@ -2543,8 +2450,7 @@ def handle_exhibitionism_sex_mode_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.exhibitionism_sex_mode > 0
+    return flags.get(character_id, "exhibitionism_sex_mode") > 0
 
 
 @add_premise(constant_promise.Premise.TARGET_EXHIBITIONISM_SEX_MODE_GE_1)
@@ -2571,8 +2477,7 @@ def handle_exhibitionism_sex_mode_1(character_id: int) -> int:
     返回:
         int: 权重，若角色处于无人室内露出模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.exhibitionism_sex_mode == 1
+    return flags.get(character_id, "exhibitionism_sex_mode") == 1
 
 
 @add_premise(constant_promise.Premise.TARGET_EXHIBITIONISM_SEX_MODE_1)
@@ -2597,8 +2502,7 @@ def handle_exhibitionism_sex_mode_2(character_id: int) -> int:
     返回:
         int: 权重，若角色处于无人室外露出模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.exhibitionism_sex_mode == 2
+    return flags.get(character_id, "exhibitionism_sex_mode") == 2
 
 
 @add_premise(constant_promise.Premise.TARGET_EXHIBITIONISM_SEX_MODE_2)
@@ -2623,8 +2527,7 @@ def handle_exhibitionism_sex_mode_3(character_id: int) -> int:
     返回:
         int: 权重，若角色处于人前露出模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.exhibitionism_sex_mode == 3
+    return flags.get(character_id, "exhibitionism_sex_mode") == 3
 
 
 @add_premise(constant_promise.Premise.TARGET_EXHIBITIONISM_SEX_MODE_3)
@@ -2649,8 +2552,7 @@ def handle_exhibitionism_sex_mode_4(character_id: int) -> int:
     返回:
         int: 权重，若角色处于无意识人前露出模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.exhibitionism_sex_mode == 4
+    return flags.get(character_id, "exhibitionism_sex_mode") == 4
 
 
 @add_premise(constant_promise.Premise.TARGET_EXHIBITIONISM_SEX_MODE_4)
@@ -2687,8 +2589,7 @@ def handle_find_witness_pl_h_with_others(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.see_pl_h
+    return flags.get(character_id, "see_pl_h")
 
 
 @add_premise(constant_promise.Premise.SELF_IS_FAVORITE)

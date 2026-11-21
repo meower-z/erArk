@@ -26,7 +26,7 @@ from typing import cast
 from Script.Core import cache_control, game_type
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import modes, needs
+from Script.Modules.domains import flags, modes, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -293,7 +293,7 @@ def _orphan_class_due(game: core.GameState) -> bool | None:
         clock_settled(game)
         and modes.sex_class(game)
         and player is not None
-        and not player.sp_flag.is_h
+        and not flags.get(player.cid, "is_h", game)
     ):
         return True
     return None

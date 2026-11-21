@@ -14,14 +14,8 @@ from Script.Design import attr_calculation, handle_ability
 import random
 from Script.Design import game_time
 from Script.Modules.save_load import reset
-from Script.Modules.domains import (
-    country,
-    diplomacy,
-    facility,
-    location,
-    medical,
-)
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, country, diplomacy, facility
+from Script.Modules.domains import flags, location, medical
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -724,7 +718,7 @@ class Nation_Diplomacy_Panel:
             old_diplomat_chara_data = cache.character_data[old_diplomat_id]
             # 取消外交官的工作类型和负责区域数据
             old_diplomat_chara_data.work.work_type = 0
-            old_diplomat_chara_data.sp_flag.in_diplomatic_visit = 0
+            flags.set(old_diplomat_id, in_diplomatic_visit=0)
             diplomacy.set_post(country_id, diplomat=0)
             # 如果是离线状态，则上线
             if not handle_premise.handle_normal_7(old_diplomat_id):
@@ -751,7 +745,7 @@ class Nation_Diplomacy_Panel:
             # 设置外交官的工作类型和负责区域数据
             new_diplomat_chara_data.work.work_type = 131
             diplomacy.set_post(country_id, diplomat=character_id)
-            new_diplomat_chara_data.sp_flag.in_diplomatic_visit = country_id
+            flags.set(character_id, in_diplomatic_visit=country_id)
             # 根据是本地还是外派，赋予对应的二段行为结算
             if location.country() == country_id:
                 second_behavior.character_get_second_behavior(

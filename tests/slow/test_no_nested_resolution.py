@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 if TYPE_CHECKING:
     from typing import Any
@@ -215,7 +216,7 @@ class NoNestedResolutionTest(SlowTestCase):
         partner.trust = TRUST
         player.target_character_id = partner_id
         self.instruct(constant.Instruct.DO_H)
-        self.assertTrue(player.sp_flag.is_h, "博士在H中")
+        self.assertTrue(kernel_data.domain("flags").get(0, "is_h"), "博士在H中")
         return partner_id
 
     def test_sites_plan_instead_of_nesting(self) -> None:
@@ -275,7 +276,7 @@ class NoNestedResolutionTest(SlowTestCase):
         with self.watching():
             for site in (wait_partner, active_h_switch, discovery):
                 self.wait_running(site)
-            self.cache.character_data[0].sp_flag.is_h = False
+            kernel_data.put(kernel_data.domain("flags").set, 0, is_h=False)
             self.cache.character_data[0].behavior.behavior_id = (
                 constant.Behavior.SHARE_BLANKLY
             )

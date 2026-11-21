@@ -19,6 +19,7 @@ from tests.slow.health_check import (
     SLOT_START,
     HealthCheckTestCase,
 )
+from tests import kernel_data
 
 FOLLOW_MINUTES = 90
 """ 博士带着她在办公室里等待的分钟数 """
@@ -39,7 +40,11 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
         self.operator_id = self.book_daily_exam("可露希尔")
         self.operator = self.cache.character_data[self.operator_id]
         self.sleep_through_midnight()
-        self.start = SLOT_START[self.operator.action_info.health_check_today]
+        self.start = SLOT_START[
+            kernel_data.domain("action_info").get(
+                self.operator.cid, "health_check_today"
+            )
+        ]
 
     def follow_doctor_in_office(self) -> None:
         """
@@ -57,7 +62,9 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
         # 在场景里点选她，再点「邀请同行」
         pl.target_character_id = self.operator_id
         self.instruct(constant.Instruct.FOLLOW)
-        self.assertEqual(self.operator.sp_flag.is_follow, 1)
+        self.assertEqual(
+            kernel_data.domain("flags").get(self.operator.cid, "is_follow"), 1
+        )
         if pl.position != DR_OFFICE:
             self.walk(DR_OFFICE)
         for _ in range(FOLLOW_MINUTES // 5):
@@ -67,7 +74,11 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
             self.wait_until(lambda: self.operator.position == DR_OFFICE, 60),
             f"她在 {self.operator.position}",
         )
-        self.assertEqual(self.operator.sp_flag.is_follow, 1, "她一直在跟随")
+        self.assertEqual(
+            kernel_data.domain("flags").get(self.operator.cid, "is_follow"),
+            1,
+            "她一直在跟随",
+        )
         self.assertNotIn(
             MOVE_TO_EXAM,
             [state_machine for _, state_machine in picks],
@@ -75,7 +86,9 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
         )
         pl.target_character_id = self.operator_id
         self.instruct(constant.Instruct.END_FOLLOW)
-        self.assertEqual(self.operator.sp_flag.is_follow, 0)
+        self.assertEqual(
+            kernel_data.domain("flags").get(self.operator.cid, "is_follow"), 0
+        )
 
     def test_booked_follower_waits_until_follow_ends(self) -> None:
         """排了体检、还没进等待名单（目标 210500）：时段前开始跟随，时段内不去体检科，结束同行后去"""

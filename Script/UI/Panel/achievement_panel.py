@@ -15,8 +15,9 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import achievement, commission, needs, playthrough
-from Script.Modules.domains import abilities, prison, warehouse
+from Script.Modules.domains import abilities, achievement, commission, flags
+from Script.Modules.domains import needs, player_collection, playthrough
+from Script.Modules.domains import prison, warehouse
 
 if TYPE_CHECKING:
     from typing import Any
@@ -327,7 +328,7 @@ def settle_chara_visitor() -> list[int]:
         if chara_id == 0:
             continue
         # 如果当前或曾经是访客，则增加访客数量
-        if now_character_data.sp_flag.vistor > 0:
+        if flags.get(now_character_data.cid, "vistor") > 0:
             visitor_count += 1
     return_list: list[int] = []
     # 统一调用settle_achievement进行批量结算
@@ -384,20 +385,13 @@ def settle_chara_clothing() -> list[int]:
     return_list: list[int] = []
     # 统计服装数量
     clothing_count = 0
-    pl_character_data: game_type.Character = cache.character_data[0]
     # 统计干员服装数量
-    for chara_id in pl_character_data.pl_collection.first_panties:
-        clothing_count += len(
-            pl_character_data.pl_collection.first_panties[chara_id]
-        )
-    for chara_id in pl_character_data.pl_collection.npc_panties:
-        clothing_count += len(
-            pl_character_data.pl_collection.npc_panties[chara_id]
-        )
-    for chara_id in pl_character_data.pl_collection.npc_socks:
-        clothing_count += len(
-            pl_character_data.pl_collection.npc_socks[chara_id]
-        )
+    for items in player_collection.get("first_panties").values():
+        clothing_count += len(items)
+    for items in player_collection.get("npc_panties").values():
+        clothing_count += len(items)
+    for items in player_collection.get("npc_socks").values():
+        clothing_count += len(items)
     # 构建成就结算列表
     return_list = settle_achievement(clothing_count, [221, 222, 223])
     return return_list

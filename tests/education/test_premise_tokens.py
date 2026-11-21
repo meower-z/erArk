@@ -35,7 +35,7 @@ from _bootstrap import (
     sex_class_handle,
 )
 from Script.Design import handle_ability, second_behavior
-from Script.Modules.domains import modes
+from Script.Modules.domains import flags, modes
 from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
@@ -342,12 +342,12 @@ check(
     and HP("self_sex_class_elective", 201) == 0
     and HP("self_sex_class_elective", 202) == 1,
 )
-student.sp_flag.is_h = True
+kernel_data.put(flags.set, student.cid, is_h=True)
 check(
     "自己在课中（在场且已进 H 状态）",
     HP("self_in_sex_class", 201) == 1 and HP("self_in_sex_class", 202) == 0,
 )
-student.sp_flag.is_h = False
+kernel_data.put(flags.set, student.cid, is_h=False)
 check("没进 H 状态不算在课中", HP("self_in_sex_class", 201) == 0)
 set_time(period_time(5) + datetime.timedelta(minutes=10))
 check(
@@ -430,9 +430,9 @@ check(
 student.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
 check("她已经在听课 → 不成立", HP("student_not_study_in_classroom", 0) == 0)
 student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-student.sp_flag.sleep = True
+kernel_data.put(flags.set, student.cid, sleep=True)
 check("她在睡觉 → 不成立", HP("student_not_study_in_classroom", 0) == 0)
-student.sp_flag.sleep = False
+kernel_data.put(flags.set, student.cid, sleep=False)
 student.behavior.behavior_id = constant.Behavior.SLEEP
 check(
     "她当场爆睡（行为是睡觉、没挂要睡觉标记）→ 不成立（Plan 27 §3.7）",
@@ -745,7 +745,7 @@ check(
     teacher_premise_pair() == (1, 0),
     teacher_premise_pair(),
 )
-teacher.sp_flag.unconscious_h = 5
+kernel_data.put(flags.set, teacher.cid, unconscious_h=5)
 check(
     "M3 空气催眠、人已在本节教室：仍算能到岗（前提传了教室，授课行照样成立）",
     teacher_premise_pair() == (1, 0),
@@ -757,7 +757,7 @@ check(
     teacher_premise_pair() == (0, 1),
     teacher_premise_pair(),
 )
-teacher.sp_flag.unconscious_h = 0
+kernel_data.put(flags.set, teacher.cid, unconscious_h=0)
 teacher.hypnosis.blockhead = True
 move_to(101, classroom_path(ROOM1))
 check(
@@ -1019,7 +1019,7 @@ _g201.skip_class_flag = True
 _g201.skip_class_day = game_time.now().toordinal()
 _g201.show_off_ability = {45: 2}
 student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-student.sp_flag.is_h = False
+kernel_data.put(flags.set, student.cid, is_h=False)
 _pl_behavior = pl.behavior.behavior_id
 pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 move_to(0, SCENE_DORM)
@@ -1048,14 +1048,14 @@ check(
     _r == (True, False),
     _r,
 )
-student.sp_flag.is_h = True
+kernel_data.put(flags.set, student.cid, is_h=True)
 _r = caught_dispatch()
 check(
     "L2 她在 H 中（课堂 H、被玩家带进 H）：不派翘课被抓，也不炫耀（此前照派）",
     _r == (False, False),
     _r,
 )
-student.sp_flag.is_h = False
+kernel_data.put(flags.set, student.cid, is_h=False)
 set_time(period_time(5))
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))

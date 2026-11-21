@@ -1,24 +1,13 @@
 """角色服装、脱衣服及穿脱切换相关的面板"""
 
 from types import FunctionType
-from Script.Core import (
-    game_type,
-    cache_control,
-    rich_text,
-    get_text,
-    constant,
-    py_cmd,
-    text_handle,
-    flow_handle,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text, py_cmd, rich_text, text_handle
 from Script.Config import game_config, normal_config
-from Script.Design import (
-    attr_calculation,
-    handle_premise,
-)
+from Script.Design import attr_calculation, handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, player_ability
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -102,7 +91,7 @@ class SeeCharacterClothPanel:
                 # 正常情况下不显示胸部和内裤的服装,debug或该部位可以显示则显示
                 if clothing_type in {6, 9} and not cache.debug_mode:
                     if not (
-                        character_data.pl_ability.visual
+                        player_ability.get(0, "visual")
                         and abilities.talent(0)[307]
                     ) and len(
                         target_character_data.cloth.cloth_wear[
@@ -524,7 +513,7 @@ class SwitchCharacterClothPanel:
                 # 处理胸部和内裤的特殊显示逻辑
                 if clothing_type in {6, 9} and not cache.debug_mode:
                     if (
-                        character_data.pl_ability.visual
+                        player_ability.get(0, "visual")
                         and abilities.talent(0)[307]
                     ) or len(
                         target_character_data.cloth.cloth_wear[

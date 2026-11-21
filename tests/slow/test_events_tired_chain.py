@@ -46,13 +46,19 @@ class EventsTiredChainTest(SlowTestCase):
             self.assertIn(cid, self.cache.npc_id_got, f"本局应有干员 {cid}")
             self.world.move(cid, list(self.pl.position))
         self.pl.target_character_id = AMIYA_ID
-        self.pl.sp_flag.is_h = True
-        self.amiya.sp_flag.is_h = True
-        self.kaltsit.sp_flag.is_follow = 1
+        kernel_data.put(kernel_data.domain("flags").set, self.pl.cid, is_h=True)
+        kernel_data.put(
+            kernel_data.domain("flags").set, self.amiya.cid, is_h=True
+        )
+        kernel_data.put(
+            kernel_data.domain("flags").set, self.kaltsit.cid, is_follow=1
+        )
         self.kaltsit.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
         for chara in (self.amiya, self.kaltsit):
             kernel_data.set_needs(chara.cid, hit=1)
-            chara.sp_flag.tired = False
+            kernel_data.put(
+                kernel_data.domain("flags").set, chara.cid, tired=False
+            )
         history = importlib.import_module("Script.Modules.domains.history")
         kernel_data.set_world(history.set_recent, [])
         from Script.UI.Moudle import draw
@@ -107,8 +113,15 @@ class EventsTiredChainTest(SlowTestCase):
             [constant.Behavior.T_H_HP_0],
             "博士接下来开始的行动是 T_H_HP_0",
         )
-        self.assertFalse(self.amiya.sp_flag.is_h, "阿米娅不在 H 中")
-        self.assertEqual(self.kaltsit.sp_flag.is_follow, 0, "凯尔希不再跟随")
+        self.assertFalse(
+            kernel_data.domain("flags").get(self.amiya.cid, "is_h"),
+            "阿米娅不在 H 中",
+        )
+        self.assertEqual(
+            kernel_data.domain("flags").get(self.kaltsit.cid, "is_follow"),
+            0,
+            "凯尔希不再跟随",
+        )
 
     def test_event_cycle_raises(self) -> None:
         """
@@ -121,9 +134,15 @@ class EventsTiredChainTest(SlowTestCase):
         from Script.Core import constant
         from Script.Kernel import core
 
-        self.pl.sp_flag.is_h = False
-        self.amiya.sp_flag.is_h = False
-        self.kaltsit.sp_flag.is_follow = 0
+        kernel_data.put(
+            kernel_data.domain("flags").set, self.pl.cid, is_h=False
+        )
+        kernel_data.put(
+            kernel_data.domain("flags").set, self.amiya.cid, is_h=False
+        )
+        kernel_data.put(
+            kernel_data.domain("flags").set, self.kaltsit.cid, is_follow=0
+        )
         flip = {"a": True}
 
         def a_holds(game: core.GameState) -> bool | None:
@@ -189,8 +208,12 @@ class EventsTiredChainTest(SlowTestCase):
 
         modes = importlib.import_module("Script.Modules.domains.modes")
         kernel_data.set_world(modes.set_group_sex, True)
-        self.kaltsit.sp_flag.is_follow = 0
-        self.kaltsit.sp_flag.is_h = True
+        kernel_data.put(
+            kernel_data.domain("flags").set, self.kaltsit.cid, is_follow=0
+        )
+        kernel_data.put(
+            kernel_data.domain("flags").set, self.kaltsit.cid, is_h=True
+        )
         with kernel_data.writing():
             plan_queue.plan_next(
                 KALTSIT_ID, constant.Behavior.GROUP_SEX_NPC_HP_0_END, 1

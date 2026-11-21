@@ -10,20 +10,15 @@ from Script.Core import (
     flow_handle,
     constant,
 )
-from Script.Design import (
-    basement,
-    handle_premise,
-    attr_calculation,
-    map_handle,
-    virgin_break_gate,
-)
+from Script.Design import attr_calculation, basement, game_time, handle_premise
+from Script.Design import map_handle, virgin_break_gate
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 import random
-from Script.Design import game_time
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, facility, needs, prison, work
+from Script.Modules.domains import abilities, facility, flags, needs, prison
+from Script.Modules.domains import work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -176,7 +171,7 @@ def escape_success(character_id: int) -> None:
     escape_draw.width = window_width
     escape_draw.draw()
     # 进入逃跑中的状态
-    character_data.sp_flag.escaping = True
+    flags.set(character_id, escaping=True)
     # 移除囚犯信息
     prison.release(character_id)
     # 囚犯离线
@@ -221,9 +216,9 @@ def chara_become_prisoner(character_id: int) -> None:
     character_data = cache.character_data[character_id]
 
     # flag结算
-    character_data.sp_flag.be_bagged = False
-    character_data.sp_flag.imprisonment = True
-    character_data.sp_flag.escaping = False
+    flags.set(character_id, be_bagged=False)
+    flags.set(character_id, imprisonment=True)
+    flags.set(character_id, escaping=False)
     # 重置身体管理
     character_data.body_manage = attr_calculation.get_body_manage_zero()
     # 加入囚犯数据

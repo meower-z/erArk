@@ -6,7 +6,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
 from Script.Modules.domains import abilities, achievement, commission, country
-from Script.Modules.domains import location, recruit, warehouse
+from Script.Modules.domains import flags, location, recruit, warehouse
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -473,7 +473,7 @@ def judge_field_commission_finish() -> None:
                 talk.must_show_talk_check(leader_id)
             # 遍历派遣人员
             for character_id in send_npc_list:
-                cache.character_data[character_id].sp_flag.field_commission = 0
+                flags.set(character_id, field_commission=0)
                 # 派遣人员上线
                 default.handle_chara_on_line(
                     character_id,

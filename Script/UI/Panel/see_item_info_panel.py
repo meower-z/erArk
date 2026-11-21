@@ -15,7 +15,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import needs, warehouse
+from Script.Modules.domains import needs, player_ability, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -111,12 +111,11 @@ def use_drug(item_id: int) -> None:
             )
     # 阴茎增大
     elif item_id == 16:
-        pl_character_data.pl_ability.jj_size += 1
-        pl_character_data.pl_ability.jj_size = min(
-            pl_character_data.pl_ability.jj_size, 3
+        player_ability.set(
+            0, jj_size=min(player_ability.get(0, "jj_size") + 1, 3)
         )
         size_name = game_config.config_jj_tem[
-            pl_character_data.pl_ability.jj_size
+            player_ability.get(0, "jj_size")
         ].name
         now_draw_text = _(
             "{0}的阴茎尺寸增加了，现在是{1}\n".format(
@@ -125,12 +124,11 @@ def use_drug(item_id: int) -> None:
         )
     # 阴茎缩小（17 号）
     else:
-        pl_character_data.pl_ability.jj_size -= 1
-        pl_character_data.pl_ability.jj_size = max(
-            pl_character_data.pl_ability.jj_size, 0
+        player_ability.set(
+            0, jj_size=max(player_ability.get(0, "jj_size") - 1, 0)
         )
         size_name = game_config.config_jj_tem[
-            pl_character_data.pl_ability.jj_size
+            player_ability.get(0, "jj_size")
         ].name
         now_draw_text = _(
             "{0}的阴茎尺寸减小了，现在是{1}\n".format(

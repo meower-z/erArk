@@ -3,21 +3,10 @@
 """
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-    py_cmd,
-    num,
-)
-from Script.Design import (
-    attr_calculation,
-    handle_premise,
-    map_handle,
-    handle_ability,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text, num, py_cmd
+from Script.Design import attr_calculation, handle_ability, handle_premise
+from Script.Design import map_handle
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 
@@ -25,7 +14,8 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement, modes, tallies
+from Script.Modules.domains import abilities, achievement, action_info, flags
+from Script.Modules.domains import modes, tallies
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -196,9 +186,9 @@ def common_ejaculation() -> tuple[str, int]:
                 extra_text += _("（{0}榨精+）").format(target_data.name)
 
         # 每日首次射精量翻倍
-        if character_data.action_info.day_first_shoot_semen:
+        if action_info.get(0, "day_first_shoot_semen"):
             semen_count *= 2
-            character_data.action_info.day_first_shoot_semen = False
+            action_info.set(0, "day_first_shoot_semen", False)
             extra_text += _("（醒来第一发+）")
 
         # 如果使用了精液精力剂，则本次射精量翻倍
@@ -542,7 +532,7 @@ def ejaculation_flow(
                     # 更新无意识妊娠flag
                     if (
                         part_cid in [6, 7]
-                        and target_data.sp_flag.unconscious_h == 0
+                        and flags.get(target_character_id, "unconscious_h") == 0
                     ):
                         target_data.pregnancy.unconscious_fertilization = False
                 else:

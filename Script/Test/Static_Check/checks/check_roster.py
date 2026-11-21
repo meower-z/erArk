@@ -19,9 +19,9 @@ import os
 
 from Script.Config import game_config
 from Script.Core import cache_control
-from Script.Modules.domains import commission, diplomacy, facility, location
-from Script.Modules.domains import modes, playthrough, prison, recruit, visitor
-from Script.Modules.domains import abilities, work
+from Script.Modules.domains import abilities, commission, diplomacy, facility
+from Script.Modules.domains import flags, location, modes, playthrough, prison
+from Script.Modules.domains import recruit, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -212,10 +212,10 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
         if cid == 0:
             continue
         paths = membership.get(cid, [])
-        sp = c.sp_flag
         ctx = (
-            f"field_commission={sp.field_commission}, escaping={sp.escaping}, be_bagged={sp.be_bagged}, "
-            f"in_diplomatic_visit={sp.in_diplomatic_visit}, vistor={sp.vistor}"
+            f"field_commission={flags.get(cid, 'field_commission')}, "
+            f"escaping={flags.get(cid, 'escaping')}, be_bagged={flags.get(cid, 'be_bagged')}, "
+            f"in_diplomatic_visit={flags.get(cid, 'in_diplomatic_visit')}, vistor={flags.get(cid, 'vistor')}"
         )
         if cid in cache.npc_id_got:
             pos = getattr(c, "position", None)
@@ -293,11 +293,9 @@ def check_offline_source_flag_matches_real_offline_state() -> (
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     membership = _scene_membership(cache)
+    off = ("field_commission", "escaping", "be_bagged")
     for cid, c in cd.items():
-        if cid == 0:
-            continue
-        sp = c.sp_flag
-        if not (sp.field_commission or sp.escaping or sp.be_bagged):
+        if cid == 0 or not any(flags.get(cid, k) for k in off):
             continue
         problems = []
         if cid in cache.npc_id_got:
@@ -314,9 +312,10 @@ def check_offline_source_flag_matches_real_offline_state() -> (
                     "ROSTER-04",
                     "离线来源flag必须对应真正的离线态",
                     (
-                        f"{warn}角色cid={cid} name={c.name!r} 三源flag(field_commission={sp.field_commission}, "
-                        f"escaping={sp.escaping}, "
-                        f"be_bagged={sp.be_bagged})指示应离线，但{'; '.join(problems)}；state={c.state}，"
+                        f"{warn}角色cid={cid} name={c.name!r} 三源flag("
+                        f"field_commission={flags.get(cid, 'field_commission')}, "
+                        f"escaping={flags.get(cid, 'escaping')}, be_bagged={flags.get(cid, 'be_bagged')})"
+                        f"指示应离线，但{'; '.join(problems)}；state={c.state}，"
                         f"behavior.behavior_id={c.behavior.behavior_id!r}"
                     ),
                     [cid],
@@ -337,8 +336,8 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
     cd = cache.character_data
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    imp = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.imprisonment}
-    esc = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.escaping}
+    imp = {cid for cid in cd if cid != 0 and flags.get(cid, "imprisonment")}
+    esc = {cid for cid in cd if cid != 0 and flags.get(cid, "escaping")}
     prisoners_map = prison.prisoners()
     prisoners = set(prisoners_map)
     union = prisoners | esc
@@ -430,9 +429,9 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
                 problems.append(
                     f"逃脱概率rec[1]={prob}超出[0,100]范围或非有限数"
                 )
-        if not c.sp_flag.imprisonment:
+        if not flags.get(c.cid, "imprisonment"):
             problems.append("sp_flag.imprisonment为False")
-        if c.sp_flag.escaping:
+        if flags.get(c.cid, "escaping"):
             problems.append("sp_flag.escaping为True(不应与在册囚犯并存)")
         if problems:
             failures.append(
@@ -516,9 +515,9 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
             continue
         c = cd[cid]
         problems = []
-        if c.sp_flag.be_bagged:
+        if flags.get(c.cid, "be_bagged"):
             problems.append("同时被装袋(be_bagged=True)")
-        if not c.sp_flag.is_h:
+        if not flags.get(c.cid, "is_h"):
             pos = getattr(c, "position", None)
             if not (
                 isinstance(pos, list) and len(pos) >= 1 and pos[0] == "关押"
@@ -532,7 +531,7 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
                     (
                         f"{warn}囚犯cid={cid} name={c.name!r} {'; '.join(problems)}；position={c.position}，"
                         f"dormitory={c.dormitory!r}，"
-                        f"is_h={c.sp_flag.is_h}，玩家position={getattr(player, 'position', None)}"
+                        f"is_h={flags.get(c.cid, "is_h")}，玩家position={getattr(player, 'position', None)}"
                     ),
                     [cid],
                 )
@@ -554,10 +553,10 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
     failures: list[CheckFailure] = []
     membership = _scene_membership(cache)
     for cid, c in cd.items():
-        if cid == 0 or not c.sp_flag.escaping:
+        if cid == 0 or not flags.get(c.cid, "escaping"):
             continue
         problems = []
-        if not c.sp_flag.imprisonment:
+        if not flags.get(c.cid, "imprisonment"):
             problems.append("imprisonment应保留为True但为False")
         if prison.is_prisoner(cid):
             problems.append("仍残留在base.prisoners囚犯名册中")
@@ -568,9 +567,9 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
             problems.append(f"仍残留在场景{hit}中")
         if c.position != ["0", "0"]:
             problems.append(f"position={c.position!r}未归零")
-        if c.sp_flag.field_commission:
+        if flags.get(c.cid, "field_commission"):
             problems.append(
-                f"field_commission={c.sp_flag.field_commission}非零(逃犯不应挂外勤)"
+                f"field_commission={flags.get(c.cid, "field_commission")}非零(逃犯不应挂外勤)"
             )
         if problems:
             failures.append(
@@ -601,7 +600,7 @@ def check_escapee_has_executable_capture_commission() -> list[CheckFailure]:
         return failures
     finished = commission.finished()
     for cid, c in cd.items():
-        if cid == 0 or not c.sp_flag.escaping:
+        if cid == 0 or not flags.get(c.cid, "escaping"):
             continue
         target_reward = f"追捕_{cid}_1"
         candidates = [
@@ -719,13 +718,13 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
         )
     if prison.is_prisoner(wid):
         problems.append("是当前囚犯(在base.prisoners中)")
-    if w.sp_flag.vistor == 1:
+    if flags.get(w.cid, "vistor") == 1:
         problems.append("当前是在岛访客(vistor==1)")
-    if w.sp_flag.field_commission:
+    if flags.get(w.cid, "field_commission"):
         problems.append(
-            f"field_commission={w.sp_flag.field_commission}非零(在外勤中)"
+            f"field_commission={flags.get(w.cid, "field_commission")}非零(在外勤中)"
         )
-    if w.sp_flag.be_bagged:
+    if flags.get(w.cid, "be_bagged"):
         problems.append("被装袋(be_bagged=True)")
     if problems:
         player = cd.get(0)
@@ -736,7 +735,7 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
                 (
                     f"{warn}监狱长wid={wid} name={w.name!r} 偏离期望状态: {'; '.join(problems)}；"
                     f"permanent_dormitory={w.permanent_dormitory!r}，"
-                    f"玩家bagging_chara_id={getattr(getattr(player, 'sp_flag', None), 'bagging_chara_id', None)}"
+                    f"玩家bagging_chara_id={flags.get(0, 'bagging_chara_id') if player is not None else None}"
                 ),
                 [wid],
             )
@@ -806,13 +805,11 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
     cd = cache.character_data
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    vis_flag = {
-        cid for cid, c in cd.items() if cid != 0 and c.sp_flag.vistor == 1
-    }
+    vis_flag = {cid for cid in cd if cid != 0 and flags.get(cid, "vistor") == 1}
     vis_reg = set(visitor.visitors())
     for cid in vis_reg - vis_flag:
         c = cd.get(cid)
-        v = c.sp_flag.vistor if c is not None else None
+        v = flags.get(c.cid, "vistor") if c is not None else None
         failures.append(
             make_failure(
                 "ROSTER-14",
@@ -1038,15 +1035,15 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
         problems.append("已在recruit.pending()待确认招募名单中")
     if prison.is_prisoner(t):
         problems.append("已在base.prisoners囚犯名册中")
-    if c.sp_flag.vistor == 1:
+    if flags.get(c.cid, "vistor") == 1:
         problems.append("当前是在岛访客(vistor==1)")
-    if c.sp_flag.imprisonment:
+    if flags.get(c.cid, "imprisonment"):
         problems.append("sp_flag.imprisonment为True")
-    if c.sp_flag.escaping:
+    if flags.get(c.cid, "escaping"):
         problems.append("sp_flag.escaping为True")
-    if c.sp_flag.field_commission:
+    if flags.get(c.cid, "field_commission"):
         problems.append(
-            f"sp_flag.field_commission={c.sp_flag.field_commission}非零"
+            f"sp_flag.field_commission={flags.get(c.cid, "field_commission")}非零"
         )
     if c.position != ["0", "0"]:
         problems.append(f"position={c.position!r}未归零(未入编角色的必要属性)")
@@ -1096,15 +1093,15 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
             problems.append("已在npc_id_got在编名册中")
         if visitor.is_visitor(cid):
             problems.append("已在访客名册中")
-        if c.sp_flag.vistor == 1:
+        if flags.get(c.cid, "vistor") == 1:
             problems.append("当前是在岛访客(vistor==1)")
-        if c.sp_flag.imprisonment:
+        if flags.get(c.cid, "imprisonment"):
             problems.append("sp_flag.imprisonment为True")
-        if c.sp_flag.escaping:
+        if flags.get(c.cid, "escaping"):
             problems.append("sp_flag.escaping为True")
-        if c.sp_flag.field_commission:
+        if flags.get(c.cid, "field_commission"):
             problems.append(
-                f"sp_flag.field_commission={c.sp_flag.field_commission}非零"
+                f"sp_flag.field_commission={flags.get(c.cid, "field_commission")}非零"
             )
         if c.position != ["0", "0"]:
             problems.append(f"position={c.position!r}未归零")
@@ -1141,7 +1138,7 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
     for r in commission.ongoing().values():
         C |= set(r.team)
     R = set(prison.prisoner_ids())
-    E = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.escaping}
+    E = {cid for cid in cd if cid != 0 and flags.get(cid, "escaping")}
     named = {
         "待确认招募(recruited_id)": P,
         "邀请目标(invite_visitor)": invited,
@@ -1158,7 +1155,7 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
                     "ROSTER-21",
                     "当前访客与其它名册身份互斥",
                     f"{warn}访客cid={cid} name={getattr(c, 'name', '?')!r} 同时命中身份集合: {hit_names}；"
-                    f"vistor={getattr(getattr(c, 'sp_flag', None), 'vistor', None)}，recruited_id={sorted(P)}，"
+                    f"vistor={flags.get(cid, 'vistor') if c is not None else None}，recruited_id={sorted(P)}，"
                     f"邀请(目标, 进度)={visitor.invite()!r}，cid in npc_id_got={cid in cache.npc_id_got}",
                     [cid],
                 )
@@ -1262,7 +1259,7 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
                     "ROSTER-23",
                     "招募线主专员真实可用且不重复",
                     f"{warn}主专员cid={cid} name={getattr(c, 'name', '?')!r} {'; '.join(problems)}；"
-                    f"field_commission={getattr(getattr(c, 'sp_flag', None), 'field_commission', None)}，"
+                    f"field_commission={flags.get(cid, 'field_commission') if c is not None else None}，"
                     f"cid in npc_id_got={cid in cache.npc_id_got}，work.roster(71)={work.roster(work.HR_WORK)}",
                     [cid],
                 )
@@ -1322,7 +1319,8 @@ def check_hr_operator_list_integrity() -> list[CheckFailure]:
                 "ROSTER-24",
                 "招聘专员列表无重复、成员岗位正确、在编71全部在内",
                 f"{warn}在编71号岗位角色cid={cid} name={c.name!r} 未被收录进work.roster(71)；"
-                f"field_commission={c.sp_flag.field_commission}，in_diplomatic_visit={c.sp_flag.in_diplomatic_visit}",
+                f"field_commission={flags.get(c.cid, 'field_commission')}，"
+                f"in_diplomatic_visit={flags.get(c.cid, 'in_diplomatic_visit')}",
                 [cid],
             )
         )
@@ -1396,14 +1394,14 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
                 )
                 continue
             c = cd[cid]
-            if c.sp_flag.field_commission != mid:
+            if flags.get(c.cid, "field_commission") != mid:
                 failures.append(
                     make_failure(
                         "ROSTER-26",
                         "外勤名单与角色外勤flag双向一致",
                         (
                             f"{warn}委托mid={mid}人员cid={cid} name={c.name!r} "
-                            f"的sp_flag.field_commission={c.sp_flag.field_commission}"
+                            f"的sp_flag.field_commission={flags.get(c.cid, "field_commission")}"
                             f"与所属委托不一致；cid in npc_id_got={cid in cache.npc_id_got}，position={c.position}，"
                             f"命中场景={membership_scene.get(cid, [])}"
                         ),
@@ -1412,7 +1410,7 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
                 )
             membership[cid] = mid
     flagged = {
-        cid for cid, c in cd.items() if cid != 0 and c.sp_flag.field_commission
+        cid for cid in cd if cid != 0 and flags.get(cid, "field_commission")
     }
     for cid in flagged - set(membership):
         c = cd[cid]
@@ -1421,7 +1419,8 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
                 "ROSTER-26",
                 "外勤名单与角色外勤flag双向一致",
                 (
-                    f"{warn}角色cid={cid} name={c.name!r} sp_flag.field_commission={c.sp_flag.field_commission}非零，"
+                    f"{warn}角色cid={cid} name={c.name!r} "
+                    f"sp_flag.field_commission={flags.get(c.cid, 'field_commission')}非零，"
                     f"但未出现在任何委托记录的人员列表中；cid in npc_id_got={cid in cache.npc_id_got}，"
                     f"position={c.position}，"
                     f"命中场景={membership_scene.get(cid, [])}"
@@ -1464,7 +1463,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
         "邀请目标(invite_visitor)": {t} if t else set(),
         "监狱长(work.warden)": {work.warden()} if work.warden() else set(),
         "逃跑者(escaping)": {
-            cid for cid, c in cd.items() if cid != 0 and c.sp_flag.escaping
+            cid for cid in cd if cid != 0 and flags.get(cid, "escaping")
         },
         "助理(assistant_character_id)": {assistant} if assistant else set(),
     }
@@ -1487,7 +1486,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
                 )
             )
         if c is not None:
-            if c.sp_flag.vistor == 1:
+            if flags.get(c.cid, "vistor") == 1:
                 failures.append(
                     make_failure(
                         "ROSTER-27",
@@ -1499,7 +1498,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
                         [cid],
                     )
                 )
-            if c.sp_flag.imprisonment:
+            if flags.get(c.cid, "imprisonment"):
                 failures.append(
                     make_failure(
                         "ROSTER-27",
@@ -1646,9 +1645,9 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
             continue
         c = cd[did]
         problems = []
-        if c.sp_flag.in_diplomatic_visit != country:
+        if flags.get(c.cid, "in_diplomatic_visit") != country:
             problems.append(
-                f"sp_flag.in_diplomatic_visit={c.sp_flag.in_diplomatic_visit}与所属国家{country}不一致"
+                f"sp_flag.in_diplomatic_visit={flags.get(c.cid, "in_diplomatic_visit")}与所属国家{country}不一致"
             )
         if current_country is not None:
             if country != current_country:
@@ -1672,16 +1671,17 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
                 )
             )
     for cid, c in cd.items():
-        if cid == 0 or not c.sp_flag.in_diplomatic_visit:
+        visit = flags.get(c.cid, "in_diplomatic_visit")
+        if cid == 0 or not visit:
             continue
-        slot = posts.get(c.sp_flag.in_diplomatic_visit, diplomacy.VACANT)
+        slot = posts.get(visit, diplomacy.VACANT)
         if slot["diplomat"] != cid:
             failures.append(
                 make_failure(
                     "ROSTER-30",
                     "外交官表与角色外派flag双向一致",
-                    f"{warn}角色cid={cid} name={c.name!r} sp_flag.in_diplomatic_visit={c.sp_flag.in_diplomatic_visit}，"
-                    f"但diplomacy[{c.sp_flag.in_diplomatic_visit}]={slot!r}的外交官不指回该角色",
+                    f"{warn}角色cid={cid} name={c.name!r} sp_flag.in_diplomatic_visit={visit}，"
+                    f"但diplomacy[{visit}]={slot!r}的外交官不指回该角色",
                     [cid],
                 )
             )
@@ -1730,21 +1730,21 @@ def check_assistant_identity_exclusion() -> list[CheckFailure]:
     problems = []
     if a not in cache.npc_id_got:
         problems.append("不在npc_id_got在编名册中")
-    if visitor.is_visitor(a) or ca.sp_flag.vistor == 1:
+    if visitor.is_visitor(a) or flags.get(ca.cid, "vistor") == 1:
         problems.append(
-            f"当前是访客(在访客名册={visitor.is_visitor(a)}, vistor={ca.sp_flag.vistor})"
+            f"当前是访客(在访客名册={visitor.is_visitor(a)}, vistor={flags.get(ca.cid, "vistor")})"
         )
     if a == work.warden():
         problems.append("同时是监狱长(work.warden)")
-    if prison.is_prisoner(a) or ca.sp_flag.imprisonment:
+    if prison.is_prisoner(a) or flags.get(ca.cid, "imprisonment"):
         problems.append("同时是囚犯(在base.prisoners中或imprisonment为True)")
-    if ca.sp_flag.field_commission:
+    if flags.get(ca.cid, "field_commission"):
         problems.append(
-            f"field_commission={ca.sp_flag.field_commission}非零(外勤中)"
+            f"field_commission={flags.get(ca.cid, "field_commission")}非零(外勤中)"
         )
-    if ca.sp_flag.escaping:
+    if flags.get(ca.cid, "escaping"):
         problems.append("sp_flag.escaping为True")
-    if ca.sp_flag.be_bagged:
+    if flags.get(ca.cid, "be_bagged"):
         problems.append("sp_flag.be_bagged为True")
     if problems:
         failures.append(
@@ -1773,7 +1773,7 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
     player = cd.get(0)
     if player is None:
         return failures
-    b = getattr(player.sp_flag, "bagging_chara_id", 0)
+    b = flags.get(player.cid, "bagging_chara_id")
     if type(b) is not int:
         failures.append(
             make_failure(
@@ -1784,7 +1784,7 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
             )
         )
         return failures
-    bagged = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.be_bagged}
+    bagged = {cid for cid in cd if cid != 0 and flags.get(cid, "be_bagged")}
     expected = {b} if b else set()
     for cid in bagged - expected:
         c = cd[cid]
@@ -1820,15 +1820,15 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
             problems.append(f"仍残留在场景{hit}中")
         if c.position != ["0", "0"]:
             problems.append(f"position={c.position!r}未归零")
-        if prison.is_prisoner(b) or c.sp_flag.imprisonment:
+        if prison.is_prisoner(b) or flags.get(c.cid, "imprisonment"):
             problems.append("同时是囚犯(base.prisoners或imprisonment)")
-        if visitor.is_visitor(b) or c.sp_flag.vistor == 1:
+        if visitor.is_visitor(b) or flags.get(c.cid, "vistor") == 1:
             problems.append("同时是访客(访客名册或vistor==1)")
-        if c.sp_flag.field_commission:
+        if flags.get(c.cid, "field_commission"):
             problems.append(
-                f"field_commission={c.sp_flag.field_commission}非零"
+                f"field_commission={flags.get(c.cid, "field_commission")}非零"
             )
-        if c.sp_flag.escaping:
+        if flags.get(c.cid, "escaping"):
             problems.append("sp_flag.escaping为True")
         if problems:
             failures.append(

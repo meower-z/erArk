@@ -6,7 +6,7 @@ from Script.Design import map_handle, clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, needs
+from Script.Modules.domains import abilities, flags, needs, player_ability
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -125,7 +125,7 @@ class SeeCharacterBodyPanel:
 
         # 是否透视中
         visual_flag = 0
-        if character_data.pl_ability.visual:
+        if player_ability.get(0, "visual"):
             # 生理透视
             if abilities.talent(0)[309]:
                 visual_flag = 3
@@ -456,7 +456,7 @@ class SeeCharacterBodyPanel:
         # H道具文本
         now_text = ""
         # 情趣玩具档位文本
-        sex_toy_level = target_character_data.sp_flag.sex_toy_level
+        sex_toy_level = flags.get(target_character_data.cid, "sex_toy_level")
         if sex_toy_level == 0:
             sex_toy_lv_text = _("(关)")
         elif sex_toy_level == 1:
@@ -491,9 +491,9 @@ class SeeCharacterBodyPanel:
             all_part_text_list.append(pool_text)
 
         # 香薰疗愈文本
-        if target_character_data.sp_flag.aromatherapy != 0:
+        if flags.get(target_character_data.cid, "aromatherapy") != 0:
             aromatherapy_text = game_config.config_aromatherapy_recipes[
-                target_character_data.sp_flag.aromatherapy
+                flags.get(target_character_data.cid, "aromatherapy")
             ].name
             all_part_text_list.append(f" <{aromatherapy_text}>")
 

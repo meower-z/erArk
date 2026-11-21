@@ -2,23 +2,13 @@
 
 from types import FunctionType
 import random
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
-from Script.Design import (
-    handle_premise,
-    handle_talent,
-    map_handle,
-    handle_ability,
-    hypnosis_state,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text
+from Script.Design import handle_ability, handle_premise, handle_talent
+from Script.Design import hypnosis_state, map_handle
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, flags, player_ability
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -95,7 +85,7 @@ def hypnosis_degree_calculation(target_character_id: int) -> float:
         hypnosis_degree_adjust = 4
 
     # 调香的加成
-    if target_character_data.sp_flag.aromatherapy == 6:
+    if flags.get(target_character_id, "aromatherapy") == 6:
         hypnosis_degree_adjust += 5
 
     # 根据无觉刻印的等级，计算催眠增长系数
@@ -148,7 +138,7 @@ def evaluate_hypnosis_completion(character_id: int) -> int:
     # 进行素质获得检测
     handle_talent.npc_gain_hypnosis_talent(character_id)
     # 计算催眠完成度
-    now_hypnosis_type = pl_character_data.pl_ability.hypnosis_type
+    now_hypnosis_type = player_ability.get(0, "hypnosis_type")
     hypnosis_degree_need = game_config.config_hypnosis_type[
         now_hypnosis_type
     ].hypnosis_degree
@@ -177,12 +167,12 @@ def evaluate_hypnosis_completion(character_id: int) -> int:
                 now_draw.text = draw_text
                 now_draw.draw()
             # 更新记录当前地点
-            pl_character_data.pl_ability.air_hypnosis_position = (
-                pl_character_data.position
+            player_ability.set(
+                0, air_hypnosis_position=pl_character_data.position
             )
         if now_hypnosis_type == 1 or now_hypnosis_type == 2:
             hypnosis_state.clear_hypnosis_behavior_mode(character_id)
-            character_data.sp_flag.unconscious_h = now_hypnosis_type + 3
+            flags.set(character_id, unconscious_h=now_hypnosis_type + 3)
         # print(f"debug {character_data.name} unconscious_h = {character_data.sp_flag.unconscious_h}")
         return 1
     # 未完成催眠
@@ -341,7 +331,7 @@ class Chose_Hypnosis_Type_Panel:
     def change_hypnosis_type(self, hypnosis_type_cid: int) -> None:
         """改变当前的催眠类型"""
         pl_character_data: game_type.Character = cache.character_data[0]
-        pl_character_data.pl_ability.hypnosis_type = hypnosis_type_cid
+        player_ability.set(0, hypnosis_type=hypnosis_type_cid)
         target_data: game_type.Character = cache.character_data[
             pl_character_data.target_character_id
         ]
@@ -995,8 +985,8 @@ class Chose_Roleplay_Type_Panel:
         if not target_data.hypnosis.roleplay:
             info_text += _("无\n")
             # 如果原本是心控催眠，则取消心控催眠状态
-            if target_data.sp_flag.unconscious_h == 7:
-                target_data.sp_flag.unconscious_h = 0
+            if flags.get(target_data.cid, "unconscious_h") == 7:
+                flags.set(target_data.cid, unconscious_h=0)
         else:
             for cid in target_data.hypnosis.roleplay:
                 if cid in game_config.config_roleplay:
@@ -1005,6 +995,6 @@ class Chose_Roleplay_Type_Panel:
                     )
             info_text += "\n"
             # 设置目标角色的催眠状态为心控催眠
-            target_data.sp_flag.unconscious_h = 7
+            flags.set(target_data.cid, unconscious_h=7)
         info_draw.text = info_text
         info_draw.draw()

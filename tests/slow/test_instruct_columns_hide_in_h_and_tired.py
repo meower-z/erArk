@@ -13,6 +13,7 @@ H中的测试照搬 test_ambush_event_keeps_door_locked 的开场，让博士与
 import importlib
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 ROOM = ["中枢", "会议室"]
 PANEL_WIDTH = 100
@@ -59,9 +60,11 @@ class InstructColumnsHideTest(SlowTestCase):
         self.walk(ROOM)
         operator_id = self.npc("杜宾")
         self.world.move(operator_id, ROOM)
-        self.cache.character_data[
-            operator_id
-        ].sp_flag.npc_masturebate_for_player = True
+        kernel_data.put(
+            kernel_data.domain("flags").set,
+            operator_id,
+            npc_masturebate_for_player=True,
+        )
         self.world.player.press("逆来顺受")
         self.instruct(constant.Instruct.DOOR_LOCK_INNER)
         self.world.player.check_done()

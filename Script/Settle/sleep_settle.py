@@ -19,7 +19,8 @@ from Script.System.Pregnancy_System import pregnancy_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import abilities, needs, plan
+from Script.Modules.domains import abilities, action_info, flags, needs, plan
+from Script.Modules.domains import player_ability
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -59,31 +60,27 @@ def update_sleep() -> None:
         if character_id == 0:
             sanity_point_grow()  # 玩家理智成长
             character_data.eja_point = 0  # 清零射精槽
-            character_data.action_info.day_first_shoot_semen = (
-                True  # 重置今日射精标记
-            )
+            action_info.set(character_data.cid, "day_first_shoot_semen", True)
             assistant_id = character_data.assistant_character_id
             # 对玩家助理结算
             if assistant_id > 0:
-                assistant_character_data: game_type.Character = (
-                    cache.character_data[assistant_id]
-                )
                 # 如果助理的早安问候已开启，则清零助理早安问候
                 if handle_premise.handle_assistant_morning_salutation_on(
                     assistant_id
                 ):
-                    assistant_character_data.sp_flag.morning_salutation = 0
+                    flags.set(assistant_id, morning_salutation=0)
                 # 如果此时助理在睡眠中，则清零助理晚安问候
                 if handle_premise.handle_assistant_night_salutation_on(
                     assistant_id
                 ) and handle_premise.handle_action_sleep(assistant_id):
-                    assistant_character_data.sp_flag.night_salutation = 0
+                    flags.set(assistant_id, night_salutation=0)
                 # 如果助理的跟随服务已开启，且没有在跟随，则让助理跟随
-                if (
-                    assistant_character_data.sp_flag.is_follow != 1
-                    and handle_premise.handle_assistant_follow_1(assistant_id)
+                if flags.get(
+                    assistant_id, "is_follow"
+                ) != 1 and handle_premise.handle_assistant_follow_1(
+                    assistant_id
                 ):
-                    assistant_character_data.sp_flag.is_follow = 1
+                    flags.set(assistant_id, is_follow=1)
                 # 助理成就
                 achievement_panel.achievement_flow(_("助理"))
             # 体外无壳卵：长时间睡眠期间到期的卵进行受精判定（先于各NPC的破壳判定）
@@ -100,7 +97,7 @@ def update_sleep() -> None:
             # 清零并随机重置生气程度
             needs.set(character_id, angry=random.randrange(1, 35))
             # 清零H被撞破的flag
-            character_data.action_info.h_interrupt = 0
+            action_info.set(character_data.cid, "h_interrupt", 0)
             # 重置每天第一次见面
             character_data.first_record.day_first_meet = 1
             # 新：改为洗澡时清零（清零污浊状态）
@@ -117,7 +114,7 @@ def update_sleep() -> None:
                 character_data.h_state
             )
             # 清零睡奸中醒来状态
-            character_data.sp_flag.sleep_h_awake = False
+            flags.set(character_data.cid, sleep_h_awake=False)
 
     # 非角色部分
     plan.set_sleep_save(True)
@@ -209,8 +206,8 @@ def sanity_point_grow() -> None:
     无
     """
     character_data: game_type.Character = cache.character_data[0]
-    today_cost = character_data.pl_ability.today_sanity_point_cost
-    character_data.pl_ability.today_sanity_point_cost = 0
+    today_cost = player_ability.get(0, "today_sanity_point_cost")
+    player_ability.set(0, today_sanity_point_cost=0)
     # 消耗超过90时进行成长
     if today_cost >= 50 and needs.of(character_data.cid)["sanity_max"] < 9999:
         # 成长值为消耗值的1/50，四舍五入取整

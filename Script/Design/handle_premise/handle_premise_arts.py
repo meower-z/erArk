@@ -4,7 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities, modes
+from Script.Modules.domains import abilities, flags, modes, player_ability
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -276,8 +276,7 @@ def handle_in_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h in [4, 5, 6, 7]:
+    if flags.get(character_id, "unconscious_h") in [4, 5, 6, 7]:
         return 1
     return 0
 
@@ -291,8 +290,7 @@ def handle_not_in_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h in [4, 5, 6, 7]:
+    if flags.get(character_id, "unconscious_h") in [4, 5, 6, 7]:
         return 0
     return 1
 
@@ -310,7 +308,7 @@ def handle_target_in_hypnosis(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.sp_flag.unconscious_h in [4, 5, 6, 7]:
+    if flags.get(target_data.cid, "unconscious_h") in [4, 5, 6, 7]:
         return 1
     return 0
 
@@ -328,7 +326,7 @@ def handle_target_not_in_hypnosis(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.sp_flag.unconscious_h in [4, 5, 6, 7]:
+    if flags.get(target_data.cid, "unconscious_h") in [4, 5, 6, 7]:
         return 0
     return 1
 
@@ -378,8 +376,7 @@ def handle_penetrating_vision_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.pl_ability.visual
+    return player_ability.get(character_id, "visual")
 
 
 @add_premise(constant_promise.Premise.PENETRATING_VISION_OFF)
@@ -391,8 +388,7 @@ def handle_penetrating_vision_off(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not character_data.pl_ability.visual
+    return not player_ability.get(character_id, "visual")
 
 
 @add_premise(constant_promise.Premise.PRIMARY_HORMONE)
@@ -440,8 +436,7 @@ def handle_hormone_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.pl_ability.hormone
+    return player_ability.get(character_id, "hormone")
 
 
 @add_premise(constant_promise.Premise.HORMONE_OFF)
@@ -453,8 +448,7 @@ def handle_hormone_off(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not character_data.pl_ability.hormone
+    return not player_ability.get(character_id, "hormone")
 
 
 @add_premise(constant_promise.Premise.PRIMARY_TELEKINESIS)
@@ -1029,8 +1023,7 @@ def handle_nobody_free_in_time_stop(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
-    if pl_character_data.pl_ability.free_in_time_stop_chara_id > 0:
+    if player_ability.get(0, "free_in_time_stop_chara_id") > 0:
         return 0
     return 1
 
@@ -1044,8 +1037,7 @@ def handle_not_carry_anybody_in_time_stop(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
-    if pl_character_data.pl_ability.carry_chara_id_in_time_stop > 0:
+    if player_ability.get(0, "carry_chara_id_in_time_stop") > 0:
         return 0
     return 1
 
@@ -1072,10 +1064,9 @@ def handle_target_is_carried_in_time_stop(character_id: int) -> int:
     int -- 权重
     """
     pl_character_data = cache.character_data[0]
-    if pl_character_data.pl_ability.carry_chara_id_in_time_stop > 0:
-        if (
-            pl_character_data.target_character_id
-            == pl_character_data.pl_ability.carry_chara_id_in_time_stop
+    if player_ability.get(0, "carry_chara_id_in_time_stop") > 0:
+        if pl_character_data.target_character_id == player_ability.get(
+            0, "carry_chara_id_in_time_stop"
         ):
             return 1
     return 0
@@ -1104,11 +1095,8 @@ def handle_self_free_in_time_stop(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
-    if (
-        character_id > 0
-        and character_id
-        == pl_character_data.pl_ability.free_in_time_stop_chara_id
+    if character_id > 0 and character_id == player_ability.get(
+        0, "free_in_time_stop_chara_id"
     ):
         return 1
     return 0

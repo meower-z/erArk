@@ -3,39 +3,19 @@
 只读：读档只用 input_load_save，绝不 establish_save；行为循环是自建的带轮数上限的副本，
 不 inline 调用 init_character_behavior()（其结尾的成就结算可能写文件）。"""
 
-from _bootstrap import (
-    ROOT,
-    SCENE_EDU_ENTRY,
-    auto_schedule,
-    cache,
-    check,
-    class_ai,
-    constant,
-    datetime,
-    education,
-    education_constant,
-    finish,
-    game_time,
-    growth_handle,
-    handle_premise,
-    make_character,
-    map_handle,
-    move_to,
-    os,
-    save_handle,
-    schedule_handle,
-    section,
-    semester_handle,
-    set_time,
-    sex_class_handle,
-    wait,
-)
+from _bootstrap import ROOT, SCENE_EDU_ENTRY, auto_schedule, cache, check
+from _bootstrap import class_ai, constant, datetime, education
+from _bootstrap import education_constant, finish, game_time, growth_handle
+from _bootstrap import handle_premise, make_character, map_handle, move_to, os
+from _bootstrap import save_handle, schedule_handle, section, semester_handle
+from _bootstrap import set_time, sex_class_handle, wait
 from tests.education._skip import skip
 from Script.Design import clothing
 from Script.Kernel import core
 from Script.Settle import past_day_settle, realtime_settle
 from Script.UI.Panel import character_info_head
 from tests import kernel_data, world
+from Script.Modules.domains import action_info, flags
 
 E = education_constant
 
@@ -125,14 +105,17 @@ def clear_need(cid: int) -> None:
     Return arguments:
     无
     """
-    cd = cache.character_data[cid]
     kernel_data.set_needs(cid, hunger=0, urine=0, tired=0)
     kernel_data.set_needs(cid, sleep=0)
-    for name in ("eat_food", "rest", "pee"):
-        if hasattr(cd.sp_flag, name):
-            setattr(cd.sp_flag, name, 0)
-    cd.sp_flag.sleep = False
-    cd.sp_flag.tired = False
+    kernel_data.put(
+        flags.set,
+        cid,
+        eat_food=0,
+        rest=False,
+        pee=False,
+        sleep=False,
+        tired=False,
+    )
     kernel_data.set_needs(cid, hit=kernel_data.needs_of(cid)["hit_max"])
     kernel_data.set_needs(cid, mana=kernel_data.needs_of(cid)["mana_max"])
 
@@ -167,10 +150,10 @@ set_time(day)
 # 女儿与教师都从空闲、没有生理需求开始：存档里带进来的半截行为（睡觉、吃饭、H）和饥饿会让开头几十分钟的取样全是噪声
 for cid in daughter_list + teacher_list:
     cd = cache.character_data[cid]
-    cd.sp_flag.is_h = False
-    cd.sp_flag.imprisonment = False
+    kernel_data.put(flags.set, cd.cid, is_h=False)
+    kernel_data.put(flags.set, cd.cid, imprisonment=False)
     clear_need(cid)
-    cd.sp_flag.is_follow = 0
+    kernel_data.put(flags.set, cd.cid, is_follow=0)
     cd.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     cd.behavior.duration = 0
     cd.state = constant.CharacterStatus.STATUS_ARDER
@@ -398,7 +381,7 @@ l4_id = -1
 for cid in daughter_list:
     if cid == cache.character_data[0].assistant_character_id:
         continue
-    cache.character_data[cid].sp_flag.is_follow = 0
+    kernel_data.put(flags.set, cid, is_follow=0)
     clear_need(cid)
     # 夹具前提：她没有大致全裸，否则 normal_all 里的 normal_4 不成立
     if handle_premise.handle_cloth_most_off(cid):
@@ -465,8 +448,8 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
         )
     step_start = game_time.now()
     move_to(l4_id, l4_home)
-    cd.sp_flag.is_h = False
-    cd.sp_flag.is_follow = 0
+    kernel_data.put(flags.set, l4_id, is_h=False)
+    kernel_data.put(flags.set, l4_id, is_follow=0)
     cd.behavior.behavior_id = constant.Behavior.PLAY_HOUSE
     cd.behavior.start_time = step_start
     cd.behavior.duration = minute
@@ -474,7 +457,7 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
     cd.behavior.move_final_target = []
     cd.state = constant.CharacterStatus.STATUS_ARDER
     cd.target_character_id = l4_id
-    cd.action_info.wake_time = step_start
+    kernel_data.put(action_info.set, l4_id, "wake_time", step_start)
     clear_need(l4_id)
     world.set_clock(step_start)
     L4_RT_LOG.clear()

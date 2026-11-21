@@ -20,7 +20,8 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, entertainment, facility, needs
+from Script.Modules.domains import abilities, action_info, entertainment
+from Script.Modules.domains import facility, flags, needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -126,7 +127,7 @@ def commit_group_sex_tired_exit(character_id: int) -> None:
         for chara_id in scene_data.character_list
         if chara_id
         and chara_id != character_id
-        and cache.character_data[chara_id].sp_flag.is_h
+        and flags.get(chara_id, "is_h")
         and not plan_queue.plan_has(
             chara_id, constant.Behavior.GROUP_SEX_NPC_HP_0_END
         )
@@ -162,13 +163,13 @@ def judge_assistant_character(character_id: int) -> int:
     now_time_hour = game_time.now().hour
     # 如果超过了12点，则将早安问候设为已问候
     if start_time_hour >= 12 and now_time_hour >= 12:
-        character_data.sp_flag.morning_salutation = 2
+        flags.set(character_id, morning_salutation=2)
     # 如果早于18点且不是睡觉时间，则清零晚安问候
     if (
         start_time_hour < 18
         and not handle_premise.handle_game_time_is_sleep_time(character_id)
     ):
-        character_data.sp_flag.night_salutation = 0
+        flags.set(character_id, night_salutation=0)
     return 1
 
 
@@ -185,7 +186,7 @@ def judge_character_follow(character_id: int) -> int:
     character_data: game_type.Character = cache.character_data[character_id]
 
     # 智能跟随
-    if character_data.sp_flag.is_follow == 1:
+    if flags.get(character_id, "is_follow") == 1:
         # 取消所有工作和娱乐状态
         default.handle_cancel_all_work_and_entertainment_flag(
             character_id,
@@ -196,7 +197,7 @@ def judge_character_follow(character_id: int) -> int:
         return 1
 
     # 维持强制跟随的状态：跟随，不在玩家身边时先走向玩家
-    if character_data.sp_flag.is_follow == 2:
+    if flags.get(character_id, "is_follow") == 2:
         from Script.Modules.gameplay_resolution import plan_queue
 
         if character_data.position == cache.character_data[0].position:
@@ -237,13 +238,13 @@ def judge_character_cant_move(character_id: int) -> int:
     cant_move_flag = False
 
     # 被囚禁
-    if character_data.sp_flag.imprisonment:
+    if flags.get(character_id, "imprisonment"):
         cant_move_flag = True
         # 如果不在自己的监狱，且玩家不在关押区，不在H中，则瞬移回自己的监狱
         if (
             not handle_premise.handle_in_detention_area(0)
             and handle_premise.handle_not_in_dormitory(character_id)
-            and not character_data.sp_flag.is_h
+            and not flags.get(character_id, "is_h")
         ):
             dormitory_list = map_handle.get_map_system_path_for_str(
                 character_data.dormitory
@@ -296,7 +297,7 @@ def choose_state_machine(character_id: int) -> int | None:
     ):
         return None
     # 如果该NPC在H模式
-    if character_data.sp_flag.is_h:
+    if flags.get(character_id, "is_h"):
         # 群交中+要群交自慰时，才能继续下去
         if handle_premise.handle_group_sex_mode_on(
             character_id
@@ -810,9 +811,7 @@ def get_salutation_wake_time(character_id: int) -> datetime.datetime | None:
         minute=character_data.behavior.duration,
         old_date=character_data.behavior.start_time,
     )
-    wake_hour, wake_minute = cache.character_data[
-        0
-    ].action_info.plan_to_wake_time[:2]
+    wake_hour, wake_minute = action_info.get(0, "plan_to_wake_time")[:2]
     wake_up_time = end_time.replace(hour=wake_hour, minute=wake_minute)
     if not game_time.judge_date_big_or_small(end_time, wake_up_time):
         return None
@@ -910,10 +909,9 @@ def judge_same_position_npc_follow() -> None:
         if character_data.position != pl_character_data.position:
             continue
         # 智能跟随、异常状态267正常
-        if (
-            character_data.sp_flag.is_follow == 1
-            and handle_premise.handle_normal_267(character_id)
-        ):
+        if flags.get(
+            character_data.cid, "is_follow"
+        ) == 1 and handle_premise.handle_normal_267(character_id):
 
             # 变成移动状态，目标为玩家位置
             _move_type, _path, move_path, move_time = (
@@ -941,7 +939,7 @@ def judge_same_position_npc_follow() -> None:
                         ),
                     },
                 )
-                character_data.action_info.follow_wait_time = 0
+                action_info.set(character_data.cid, "follow_wait_time", 0)
             elif wait_flag:
                 plan_queue.plan_next(
                     character_id,
@@ -950,8 +948,8 @@ def judge_same_position_npc_follow() -> None:
                     state=constant.CharacterStatus.STATUS_WAIT,
                     interrupt=True,
                 )
-                character_data.action_info.follow_wait_time += 5
-        elif character_data.sp_flag.hidden_sex_mode == 5:
+                action_info.add(character_data.cid, "follow_wait_time", 5)
+        elif flags.get(character_data.cid, "hidden_sex_mode") == 5:
             if (
                 len(pl_character_data.behavior.move_target)
                 and character_data.position
@@ -974,7 +972,7 @@ def get_chara_entertainment(character_id: int) -> None:
     character_data: game_type.Character = cache.character_data[character_id]
     if character_id:
         # 重置基础数据
-        character_data.sp_flag.swim = 0
+        flags.set(character_id, swim=0)
 
         # 如果当天有派对的话，则全员当天娱乐为该娱乐
         if entertainment.party_day(week_day):
@@ -1085,7 +1083,7 @@ def select_random_free_character(character_id: int) -> int:
             continue
         now_character_data = cache.character_data[chara_id]
         # 跳过H状态
-        if now_character_data.sp_flag.is_h:
+        if flags.get(now_character_data.cid, "is_h"):
             continue
         # 跳过正在移动的
         if handle_premise.handle_action_move(chara_id):
@@ -1103,8 +1101,8 @@ def select_random_free_character(character_id: int) -> int:
         if chara_id != 0 and handle_premise.handle_hidden_sex_mode_2(chara_id):
             continue
         # 检查是否有人正在对其互动
-        interacting_character_end_info = (
-            now_character_data.action_info.interacting_character_end_info
+        interacting_character_end_info = action_info.get(
+            now_character_data.cid, "interacting_character_end_info"
         )
         # 如果有人正在对其互动，且不是自己的话
         if (

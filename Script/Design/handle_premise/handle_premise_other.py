@@ -18,8 +18,9 @@ from Script.Design import (
 from Script.Config import normal_config, game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.UI.Moudle import view
-from Script.Modules.domains import facility, history, modes, needs, visitor
-from Script.Modules.domains import abilities, physical_exam
+from Script.Modules.domains import abilities, action_info, facility, flags
+from Script.Modules.domains import history, modes, needs, physical_exam
+from Script.Modules.domains import player_ability, player_collection, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -172,7 +173,7 @@ def handle_have_moved(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     now_time: datetime.datetime = character_data.behavior.start_time
-    last_move_time = character_data.action_info.last_move_time
+    last_move_time = action_info.get(character_id, "last_move_time")
     # 不同天，或同一天里已到了下一个小时
     if now_time.day != last_move_time.day:
         return 1
@@ -188,8 +189,7 @@ def handle_ai_wait(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.sp_flag.wait_flag:
+    if flags.get(character_id, "wait_flag"):
         return 999
     else:
         return 0
@@ -204,9 +204,8 @@ def handle_have_trained(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     now_time = game_time.now()
-    train_time = character_data.action_info.last_training_time
+    train_time = action_info.get(character_id, "last_training_time")
     add_day = int((now_time - train_time).days)
     if add_day >= 2:
         return (add_day - 1) * 10
@@ -222,9 +221,8 @@ def handle_not_shower(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     now_time = game_time.now()
-    shower_time = character_data.action_info.last_shower_time
+    shower_time = action_info.get(character_id, "last_shower_time")
     if shower_time.day == now_time.day:
         return 0
     elif now_time.hour <= 6 and (
@@ -243,9 +241,8 @@ def handle_have_showered(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     now_time = game_time.now()
-    shower_time = character_data.action_info.last_shower_time
+    shower_time = action_info.get(character_id, "last_shower_time")
     if shower_time.day == now_time.day:
         return 1
     elif now_time.hour <= 6 and (
@@ -266,7 +263,7 @@ def handle_have_not_wake_up(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     now_time = game_time.now()
-    wake_up_time = character_data.action_info.wake_time
+    wake_up_time = action_info.get(character_id, "wake_time")
     if (
         wake_up_time.day != now_time.day
         and wake_up_time.day != character_data.behavior.start_time.day
@@ -284,8 +281,7 @@ def handle_self_need_health_check_today(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.action_info.health_check_today > 0
+    return action_info.get(character_id, "health_check_today") > 0
 
 
 @add_premise(constant_promise.Premise.SELF_NEED_HEALTH_CHECK_MORNING)
@@ -297,8 +293,7 @@ def handle_self_need_health_check_morning(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.action_info.health_check_today == 1
+    return action_info.get(character_id, "health_check_today") == 1
 
 
 @add_premise(constant_promise.Premise.SELF_NEED_HEALTH_CHECK_AFTERNOON)
@@ -310,8 +305,7 @@ def handle_self_need_health_check_afternoon(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.action_info.health_check_today == 2
+    return action_info.get(character_id, "health_check_today") == 2
 
 
 @add_premise(constant_promise.Premise.SELF_NEED_HEALTH_CHECK_NOW)
@@ -323,8 +317,7 @@ def handle_self_need_health_check_now(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.action_info.health_check_today == 3
+    return action_info.get(character_id, "health_check_today") == 3
 
 
 @add_premise(constant_promise.Premise.SELF_HAVE_CONSCIOUS_H_TODAY)
@@ -338,7 +331,9 @@ def handle_self_have_conscious_h_today(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     now_time = character_data.behavior.start_time
-    last_conscious_h_time = character_data.action_info.last_conscious_h_time
+    last_conscious_h_time = action_info.get(
+        character_id, "last_conscious_h_time"
+    )
     if (
         last_conscious_h_time.day == now_time.day
         and last_conscious_h_time.month == now_time.month
@@ -371,7 +366,9 @@ def handle_self_have_unconscious_h_today(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     now_time = character_data.behavior.start_time
-    last_unconscious_h_time = character_data.action_info.last_unconscious_h_time
+    last_unconscious_h_time = action_info.get(
+        character_id, "last_unconscious_h_time"
+    )
     if (
         last_unconscious_h_time.day == now_time.day
         and last_unconscious_h_time.month == now_time.month
@@ -523,13 +520,7 @@ def handle_sleep_disturbed_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    end_time = getattr(
-        character_data.action_info, "sleep_disturbed_end_time", None
-    )
-    # 旧存档缺字段时视为没有该状态
-    if end_time is None:
-        return 0
+    end_time = action_info.get(character_id, "sleep_disturbed_end_time")
     # 结束时间晚于当前游戏时间才算处于该状态，时间相等即已到期
     if game_time.judge_date_big_or_small(end_time, game_time.now()) == 1:
         return 1
@@ -679,8 +670,7 @@ def handle_self_angry_with_player(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.angry_with_player
+    return flags.get(character_id, "angry_with_player")
 
 
 @add_premise(constant_promise.Premise.SELF_NOT_ANGRY_WITH_PLAYER)
@@ -788,7 +778,7 @@ def handle_target_angry_with_player(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.angry_with_player:
+    if flags.get(target_data.cid, "angry_with_player"):
         return 1
     else:
         return 0
@@ -805,7 +795,7 @@ def handle_target_not_angry_with_player(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.angry_with_player:
+    if flags.get(target_data.cid, "angry_with_player"):
         return 0
     else:
         return 1
@@ -820,8 +810,7 @@ def handle_collect_bonus_102(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[0]
-    if character_data.pl_collection.collection_bonus[102]:
+    if player_collection.bonus(102):
         return 1
     return 0
 
@@ -835,8 +824,7 @@ def handle_collect_bonus_202(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[0]
-    if character_data.pl_collection.collection_bonus[202]:
+    if player_collection.bonus(202):
         return 1
     return 0
 
@@ -1759,8 +1747,7 @@ def handle_player_held_eggs_not_empty(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
-    return len(pl_character_data.pl_collection.held_eggs) > 0
+    return len(player_collection.get("held_eggs")) > 0
 
 
 # @add_premise(constant_promise.Premise.TARGET_AGE_SIMILAR)
@@ -1995,10 +1982,9 @@ def handle_have_collection(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[0]
-    if len(character_data.pl_collection.npc_panties_tem):
+    if len(player_collection.get("npc_panties_tem")):
         return 1
-    if len(character_data.pl_collection.npc_socks_tem):
+    if len(player_collection.get("npc_socks_tem")):
         return 1
     else:
         return 0
@@ -2015,7 +2001,7 @@ def handle_is_h(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[0]
     target_data = cache.character_data[character_data.target_character_id]
-    if character_data.sp_flag.is_h or target_data.sp_flag.is_h:
+    if flags.get(0, "is_h") or flags.get(target_data.cid, "is_h"):
         return 1
     return 0
 
@@ -2031,7 +2017,7 @@ def handle_not_h(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[0]
     target_data = cache.character_data[character_data.target_character_id]
-    if character_data.sp_flag.is_h or target_data.sp_flag.is_h:
+    if flags.get(0, "is_h") or flags.get(target_data.cid, "is_h"):
         return 0
     return 1
 
@@ -2045,8 +2031,7 @@ def handle_self_is_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.is_h
+    return flags.get(character_id, "is_h")
 
 
 @add_premise(constant_promise.Premise.SELF_NOT_H)
@@ -2587,8 +2572,7 @@ def handle_jj_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.pl_ability.jj_size == 0:
+    if player_ability.get(character_id, "jj_size") == 0:
         return 1
     return 0
 
@@ -2602,8 +2586,7 @@ def handle_jj_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.pl_ability.jj_size == 1:
+    if player_ability.get(character_id, "jj_size") == 1:
         return 1
     return 0
 
@@ -2617,8 +2600,7 @@ def handle_jj_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.pl_ability.jj_size == 2:
+    if player_ability.get(character_id, "jj_size") == 2:
         return 1
     return 0
 
@@ -2632,8 +2614,7 @@ def handle_jj_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.pl_ability.jj_size == 3:
+    if player_ability.get(character_id, "jj_size") == 3:
         return 1
     return 0
 
@@ -3669,8 +3650,7 @@ def handle_ai_eat_in_restaurant(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.action_info.eat_food_restaurant >= 0:
+    if action_info.get(character_id, "eat_food_restaurant") >= 0:
         return 1
     return 0
 
@@ -3710,8 +3690,7 @@ def handle_carry_somebody(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
-    if pl_character_data.action_info.carry_chara_id > 0:
+    if action_info.get(0, "carry_chara_id") > 0:
         return 1
     return 0
 
@@ -3726,10 +3705,9 @@ def handle_target_is_carried(character_id: int) -> int:
     int -- 权重
     """
     pl_character_data = cache.character_data[0]
-    if pl_character_data.action_info.carry_chara_id > 0:
-        if (
-            pl_character_data.target_character_id
-            == pl_character_data.action_info.carry_chara_id
+    if action_info.get(0, "carry_chara_id") > 0:
+        if pl_character_data.target_character_id == action_info.get(
+            0, "carry_chara_id"
         ):
             return 1
     return 0

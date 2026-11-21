@@ -28,7 +28,8 @@ from Script.Kernel import core
 from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, realtime_settle
-from Script.Modules.domains import achievement, history, modes, plan
+from Script.Modules.domains import achievement, action_info, flags, history
+from Script.Modules.domains import modes, plan
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -57,11 +58,11 @@ def settle_start(character_id: int, minutes: int) -> None:
     behavior_id = character_data.behavior.behavior_id
     if character_id:
         if (
-            not character_data.sp_flag.see_h_reaction_settled
+            not flags.get(character_id, "see_h_reaction_settled")
             or behavior_id == constant.Behavior.MOVE
         ):
             judge_character_status(character_id)
-        character_data.sp_flag.see_h_reaction_settled = False
+        flags.set(character_id, see_h_reaction_settled=False)
         return
     history.note_instruction(character_instruct_record(0), behavior_id)
     if behavior_id == constant.Behavior.SHARE_BLANKLY:
@@ -71,7 +72,7 @@ def settle_start(character_id: int, minutes: int) -> None:
         handle_npc_ai.judge_same_position_npc_follow()
         # 全角色重置目击玩玩家H
         for npc_id in cache.npc_id_got:
-            cache.character_data[npc_id].sp_flag.see_pl_h = False
+            flags.set(npc_id, see_pl_h=False)
     judge_before_pl_behavior()
     judge_character_status(0)
     if character_data.behavior.behavior_id == constant.Behavior.SLEEP:
@@ -176,7 +177,7 @@ def target_left(character_id: int) -> bool:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target = character_data.target_character_id
-    if target in (character_id, character_data.sp_flag.bagging_chara_id):
+    if target in (character_id, flags.get(character_id, "bagging_chara_id")):
         return False
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         character_data.position
@@ -336,7 +337,9 @@ def judge_before_pl_behavior() -> None:
         if character_id == 0:
             continue
         character_data: game_type.Character = cache.character_data[character_id]
-        character_data.action_info.have_shown_waiting_in_now_instruct = False
+        action_info.set(
+            character_data.cid, "have_shown_waiting_in_now_instruct", False
+        )
 
     # 隐奸的被察觉情况结算，需要玩家的行为不是结束H
     if (

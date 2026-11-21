@@ -19,7 +19,8 @@ from typing import TypeGuard
 from Script.Core import cache_control, num
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import facility, needs, playthrough, warehouse
+from Script.Modules.domains import facility, flags, needs, player_ability
+from Script.Modules.domains import playthrough, warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 from Script.Modules.domains import abilities
 
@@ -910,8 +911,7 @@ def check_num_22_sanity_point_range() -> list[CheckFailure]:
         ):
             extra = ""
             if cid == 0:
-                pl_ability = getattr(chara, "pl_ability", None)
-                extra = f" today_sanity_point_cost={getattr(pl_ability, 'today_sanity_point_cost', '?')}"
+                extra = f" today_sanity_point_cost={num.shown(player_ability.get(0, 'today_sanity_point_cost'))}"
             failures.append(
                 make_failure(
                     "NUM-22",
@@ -943,7 +943,6 @@ def check_num_23_eja_point_non_negative() -> list[CheckFailure]:
         eja = getattr(chara, "eja_point", None)
         if not ((_exact(eja) or type(eja) is float) and eja >= 0):
             h_state = getattr(chara, "h_state", None)
-            sp_flag = getattr(chara, "sp_flag", None)
             failures.append(
                 make_failure(
                     "NUM-23",
@@ -952,7 +951,7 @@ def check_num_23_eja_point_non_negative() -> list[CheckFailure]:
                         f"角色cid={cid} name={_chara_name(chara)} eja_point={eja!r} "
                         f"eja_point_max={getattr(chara, 'eja_point_max', '?')} "
                         f"endure_not_shot_count={getattr(h_state, 'endure_not_shot_count', '?')} "
-                        f"is_h={getattr(sp_flag, 'is_h', '?')}"
+                        f"is_h={flags.get(cid, 'is_h')}"
                     ),
                     [cid],
                 )
@@ -1117,7 +1116,7 @@ def check_num_27_fatigue_family_range() -> list[CheckFailure]:
                         f"角色cid={cid} name={_chara_name(chara)} 越界字段={bad_fields} "
                         f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')} "
                         f"state={getattr(chara, 'state', '?')} "
-                        f"unconscious_h={getattr(getattr(chara, 'sp_flag', None), 'unconscious_h', '?')}"
+                        f"unconscious_h={flags.get(chara.cid, "unconscious_h")}"
                     ),
                     [cid],
                 )

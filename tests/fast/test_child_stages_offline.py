@@ -15,6 +15,8 @@ from unittest import mock
 from Script.Config import game_config
 from Script.Core import constant_promise
 from Script.Design import attr_calculation, clothing, handle_premise
+from Script.Modules.domains import player_collection
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
 
@@ -141,8 +143,8 @@ class ChildStagesOfflineTest(FastTestCase):
             and cloth.npc in (0, self.daughter.adv)
         }
         self.assertTrue(h_id_set, "服装表里有情趣内衣")
-        self.pl.pl_collection = attr_calculation.get_collection_zero()
-        self.pl.pl_collection.collection_bonus[H_UNDERWEAR_BONUS_ID] = True
+        kernel_data.put(player_collection.init_zero, 0)
+        kernel_data.put(player_collection.set_bonus, H_UNDERWEAR_BONUS_ID, True)
         picked = set()
         with mock.patch.object(
             attr_calculation, "get_character_fall_level", return_value=2

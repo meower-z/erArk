@@ -24,8 +24,10 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import entertainment, facility, modes, needs
-from Script.Modules.domains import abilities, playthrough, pregnancy, prison
+from Script.Modules.domains import abilities, action_info, entertainment
+from Script.Modules.domains import facility, flags, modes, needs
+from Script.Modules.domains import player_ability, playthrough, pregnancy
+from Script.Modules.domains import prison
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -72,14 +74,13 @@ def judge_pl_real_time_data() -> None:
     无
     """
 
-    pl_character_data: game_type.Character = cache.character_data[0]
     love_hotel_room_lv = entertainment.hotel_room()
 
     # 酒店退房时间到了则退房
     if love_hotel_room_lv > 0:
         if (
             game_time.judge_date_big_or_small(
-                game_time.now(), pl_character_data.action_info.check_out_time
+                game_time.now(), action_info.get(0, "check_out_time")
             )
             > 0
         ):
@@ -92,9 +93,7 @@ def judge_pl_real_time_data() -> None:
             now_draw.draw()
             # 结算
             entertainment.set_hotel_room(0)
-            pl_character_data.action_info.check_out_time = datetime.datetime(
-                1, 1, 1
-            )
+            action_info.set(0, "check_out_time", datetime.datetime(1, 1, 1))
 
     # 体外无壳卵：排出满1小时的卵进行受精判定
     from Script.System.Pregnancy_System import soft_egg_handle
@@ -182,9 +181,9 @@ def character_aotu_change_value(
     # 结算玩家
     if character_id == 0:
         # 非H模式下结算玩家的射精值减少
-        if not now_character_data.sp_flag.is_h:
+        if not flags.get(character_id, "is_h"):
             # 上次射精时间距离现在超过30分钟则射精值减少
-            last_time = now_character_data.action_info.last_eaj_add_time
+            last_time = action_info.get(character_id, "last_eaj_add_time")
             if (game_time.now() - last_time) > datetime.timedelta(minutes=30):
                 new_eja = max(
                     now_character_data.eja_point - true_add_time * 10, 0
@@ -423,7 +422,7 @@ def change_character_persistent_state(character_id: int) -> None:
     now_time = game_time.now()
 
     # H下结算全部持续状态
-    if now_character_data.sp_flag.is_h:
+    if flags.get(character_id, "is_h"):
         # 结算H状态的持续时间
         for i in range(len(now_character_data.h_state.body_item)):
             if now_character_data.h_state.body_item[i][1]:
@@ -570,7 +569,7 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
             if (
                 pl_character_data.position == now_char.position
                 and pl_character_data.target_character_id == character_id
-                and now_char.sp_flag.unconscious_h == 1
+                and flags.get(character_id, "unconscious_h") == 1
             ):
                 info_text = _("\n{0}已经睡饱了，从睡梦中自然苏醒过来\n").format(
                     now_char.name
@@ -628,21 +627,20 @@ def settle_player_ability(character_id: int, true_add_time: int) -> None:
         None
     """
     talent = abilities.talent(character_id)
-    character_data = cache.character_data[character_id]
     # 视觉系技艺消耗
-    if character_data.pl_ability.visual:
+    if player_ability.get(character_id, "visual"):
         multiple = talent[307] + talent[308] + talent[309]
         down_sp = min(
             Fraction(true_add_time, 12) * max(multiple, 1),
             needs.of(character_id)["sanity"],
         )
         needs.add(character_id, "sanity", -down_sp)
-        character_data.pl_ability.today_sanity_point_cost += down_sp
+        player_ability.add_sanity_cost(character_id, down_sp)
     # 时停系技艺消耗
     if handle_premise.handle_time_stop_on(character_id):
         down_sp = min(true_add_time * 2, needs.of(character_id)["sanity"])
         needs.add(character_id, "sanity", -down_sp)
-        character_data.pl_ability.today_sanity_point_cost += down_sp
+        player_ability.add_sanity_cost(character_id, down_sp)
 
 
 ARTS_BREAK_EXEMPT = frozenset(
@@ -681,13 +679,14 @@ def arts_break_due(game: "core.GameState | None" = None) -> bool:
     Return arguments:
     bool -- 该中断技艺时为真
     """
-    character_data = cache.character_data[0]
     if (
-        needs.of(character_data.cid, game)["sanity"] > 0
-        or character_data.behavior.behavior_id in ARTS_BREAK_EXEMPT
+        needs.of(0, game)["sanity"] > 0
+        or cache.character_data[0].behavior.behavior_id in ARTS_BREAK_EXEMPT
     ):
         return False
-    return bool(character_data.pl_ability.visual or _arts_ends_to_plan(game))
+    return bool(
+        player_ability.get(0, "visual", game) or _arts_ends_to_plan(game)
+    )
 
 
 def break_arts() -> "core.Effects":
@@ -703,9 +702,8 @@ def break_arts() -> "core.Effects":
     draw_wait.style = "red"
     draw_wait.text = _("\n理智值不足，开启的源石技艺已全部中断\n")
     draw_wait.draw()
-    character_data = cache.character_data[0]
-    needs.set(character_data.cid, sanity=0)
-    character_data.pl_ability.visual = False
+    needs.set(0, sanity=0)
+    player_ability.set(0, visual=False)
     items: list[core.Effect] = []
     for behavior_id in _arts_ends_to_plan():
         items.extend(handle_instruct.plan_instruct_common_settle(behavior_id))
@@ -805,7 +803,7 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
         # 仅玩家当前睡奸目标使用完整影响，非睡奸目标影响减半
         is_sleep_h_target = (
             sleeper_id == now_character_data.target_character_id
-            and sleeper_data.sp_flag.unconscious_h == 1
+            and flags.get(sleeper_data.cid, "unconscious_h") == 1
         )
         if not is_sleep_h_target:
             down_sleep = Fraction(down_sleep, 2)
@@ -906,7 +904,7 @@ def settle_conscious_continuous(character_id: int, true_add_time: int) -> None:
                 )
             # 隐奸中增加羞耻和心理快感
             if handle_premise.handle_hidden_sex_mode_ge_1(character_id):
-                hidden_sex_mode = now_char.sp_flag.hidden_sex_mode
+                hidden_sex_mode = flags.get(character_id, "hidden_sex_mode")
                 extra_add = 4 - hidden_sex_mode + Fraction(others_count, 10)
                 base_chara_state_common_settle(
                     character_id,

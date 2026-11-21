@@ -19,6 +19,7 @@ from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct, see_instruct_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import flags
 
 LOADED_FIRST = (update, handle_instruct)
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行；
@@ -36,8 +37,8 @@ class NpcActiveHPicksPlayerActionTest(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
         self.player.target_character_id = NPC
-        self.player.sp_flag.is_h = True
-        self.npc.sp_flag.is_h = True
+        kernel_data.put(flags.set, self.player.cid, is_h=True)
+        kernel_data.put(flags.set, self.npc.cid, is_h=True)
         core.reset_state(kernel_data.reprojected(core.state()))
         patch = mock.patch.object(
             see_instruct_panel,

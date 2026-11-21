@@ -26,7 +26,7 @@ from tests import chara_abilities as ca, pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
-from Script.Modules.domains import history
+from Script.Modules.domains import action_info, history
 
 NPC = 1
 """ 玩家的交互对象 """
@@ -129,13 +129,16 @@ class InstructSubMenuTest(FastTestCase):
 
     def test_condom_decoration(self) -> None:
         """挂上避孕套装饰：选套、选部位两层都能取消；确定后避孕套在行动开始时才挂上"""
+        from Script.Modules.domains import player_collection
+        from tests import kernel_data
+
         self.cache.debug_mode = True
-        self.player.pl_collection.used_condoms = [10, 20]
+        kernel_data.put(player_collection.put, "used_condoms", [10, 20])
         hang = self.instruct(constant.Instruct.HANG_CONDOM_DECORATION)
         self.assert_backs_out(hang, "cancel")
         self.assert_backs_out(hang, "condom_0", "confirm", "cancel")
         self.assert_commits(hang, "condom_0", "confirm", "part_0")
-        self.assertEqual(self.player.pl_collection.used_condoms, [20])
+        self.assertEqual(player_collection.get("used_condoms"), [20])
         self.assertEqual(self.npc.dirty.condom_decoration, {(0, 0): [10]})
 
     def test_close_door(self) -> None:
@@ -145,11 +148,13 @@ class InstructSubMenuTest(FastTestCase):
         hypnosis = self.instruct(constant.Instruct.HYPNOSIS_ONE)
         scene.close_type = 0
         self.assert_backs_out(hypnosis, NO)
-        self.assertFalse(self.player.action_info.ask_close_door_flag)
+        self.assertFalse(
+            action_info.get(self.player.cid, "ask_close_door_flag")
+        )
         scene.close_type = 1
         self.assert_commits(hypnosis, YES)
         self.assertEqual(scene.close_flag, 1)
-        self.assertTrue(self.player.action_info.ask_close_door_flag)
+        self.assertTrue(action_info.get(self.player.cid, "ask_close_door_flag"))
 
     def test_bondage(self) -> None:
         """捆绑：判定通过时捆绑在行动开始时换上；判定没过时开始的是失败的行为，不换上捆绑"""

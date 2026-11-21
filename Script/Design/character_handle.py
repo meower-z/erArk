@@ -17,8 +17,9 @@ from Script.Design import (
     game_time,
 )
 from Script.Config import game_config, character_config, normal_config
-from Script.Modules.domains import abilities, facility, needs, playthrough
-from Script.Modules.domains import tallies, visitor
+from Script.Modules.domains import abilities, facility, flags, needs
+from Script.Modules.domains import player_collection, playthrough, tallies
+from Script.Modules.domains import visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -32,7 +33,7 @@ def init_character_list() -> None:
     """
     for adv_id, now_npc_data in cache.npc_tem_data.items():
         # print("adv_id=",adv_id,". now_npc_data:",now_npc_data)
-        init_character(adv_id, now_npc_data)
+        init_character(adv_id, now_npc_data, collect_reset=False)
 
 
 def init_character(
@@ -95,11 +96,7 @@ def init_character(
     # print(f"debug {character_tem.Name} cloth_wear = {now_character.cloth.cloth_wear}")
     # 生成藏品
     if collect_reset and 0 in cache.character_data:
-        pl_character_data = cache.character_data[0]
-        pl_character_data.pl_collection.token_list[character_id] = False
-        pl_character_data.pl_collection.first_panties[character_id] = ""
-        pl_character_data.pl_collection.npc_panties[character_id] = []
-        pl_character_data.pl_collection.npc_socks[character_id] = []
+        player_collection.set_npc_entries(character_id)
     # 文本颜色
     if character_tem.TextColor:
         now_character.text_color = character_tem.TextColor
@@ -283,7 +280,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
 
     character_data = cache.character_data[character_id]
     # 清零全特殊状态flag
-    character_data.sp_flag = game_type.SPECIAL_FLAG()
+    flags.reset(character_id)
 
     if visitor_flag:
         # 根据访客区的等级，赋予对应的停留时间
@@ -300,7 +297,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
         )
         visitor.arrive(character_id, end_time)
         # 赋予访客flag
-        character_data.sp_flag.vistor = 1
+        flags.set(character_id, vistor=1)
     else:
         # 如果满足设施开放的前提条件，则开放该设施
         for open_cid in game_config.config_facility_open:

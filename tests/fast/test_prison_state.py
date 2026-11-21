@@ -14,11 +14,12 @@ from types import SimpleNamespace
 from Script.Config import game_config
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import prison
+from Script.Modules.domains import flags, prison
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state, upgrade
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 
 class PrisonStateTest(FastTestCase):
@@ -168,10 +169,9 @@ class PrisonStateTest(FastTestCase):
         """合法时四项自检通过，违规时各报对应检查"""
         self.world.chara(1, "干员1")
         self.cache.npc_id_got.add(1)
-        chara = self.cache.character_data[1]
         now = game_time.now()
         prison.reset_settings()
-        chara.sp_flag.imprisonment = True
+        kernel_data.put(flags.set, 1, imprisonment=True)
         prison.imprison(1, now, 10)
         self.assertFalse(self.flagged("ISLAND-29"))
         self.assertFalse(self.flagged("ROSTER-05"))
@@ -183,9 +183,9 @@ class PrisonStateTest(FastTestCase):
         self.assertTrue(self.flagged("ROSTER-06"))
 
         prison.set_escape_probability(1, 10)
-        chara.sp_flag.imprisonment = False
+        kernel_data.put(flags.set, 1, imprisonment=False)
         self.assertTrue(self.flagged("ROSTER-05"))
-        chara.sp_flag.imprisonment = True
+        kernel_data.put(flags.set, 1, imprisonment=True)
 
         future = now + datetime.timedelta(hours=1)
         prison.imprison(1, future, 10)

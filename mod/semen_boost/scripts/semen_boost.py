@@ -185,7 +185,7 @@ def modded_common_ejaculation() -> tuple[str, int]:
         semen_count:  射精量
     """
     from Script.Design import handle_premise, handle_ability
-    from Script.Modules.domains import tallies
+    from Script.Modules.domains import action_info, tallies
 
     character_data = cache.character_data[0]
 
@@ -242,9 +242,9 @@ def modded_common_ejaculation() -> tuple[str, int]:
             extra_text += _("（{0}榨精+）").format(target_data.name)
 
     # 每日首次射精量翻倍
-    if character_data.action_info.day_first_shoot_semen:
+    if action_info.get(0, "day_first_shoot_semen"):
         semen_count *= 2
-        character_data.action_info.day_first_shoot_semen = False
+        action_info.set(0, "day_first_shoot_semen", False)
         extra_text += _("（醒来第一发+）")
 
     # 如果使用了精液精力剂，则本次射精量翻倍

@@ -14,7 +14,8 @@ from Script.Design import handle_talent, character_handle
 from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
 import copy
-from Script.Modules.domains import abilities, facility, needs, playthrough
+from Script.Modules.domains import abilities, facility, needs
+from Script.Modules.domains import player_collection, playthrough
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -146,15 +147,14 @@ class New_Round_Handle:
 
             # 收藏品
             info_text = _("○全收藏品")
-            now_pan_count, now_socks_count = 0, 0
-            for chara_cid in pl_character_data.pl_collection.npc_panties:
-                now_pan_count += len(
-                    pl_character_data.pl_collection.npc_panties[chara_cid]
-                )
-            for chara_cid in pl_character_data.pl_collection.npc_socks:
-                now_socks_count += len(
-                    pl_character_data.pl_collection.npc_socks[chara_cid]
-                )
+            now_pan_count = sum(
+                len(items)
+                for items in player_collection.get("npc_panties").values()
+            )
+            now_socks_count = sum(
+                len(items)
+                for items in player_collection.get("npc_socks").values()
+            )
             collection_point = now_pan_count + now_socks_count
             self.round_point_all += collection_point
             info_text += _(
@@ -896,6 +896,9 @@ class New_Round_Handle:
             "abilities": abilities.carry(
                 [0, *self.all_fall_chara_list], core.state()
             ),
+            "carried_collection": player_collection.carry_for_new_round(
+                core.state()
+            ),
         }
 
     def start_new_round(self) -> None:
@@ -1067,41 +1070,36 @@ def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
 
     # 玩家收藏品
     now_rate = _inherit_rate(3, _count(inherit, "pl_collection_count"))
-    # 首先计算旧的收藏品数量和新的收藏品数量
-    old_pan_count, old_socks_count = 0, 0
-    for chara_cid in old_pl_character_data.pl_collection.npc_panties:
-        old_pan_count += len(
-            old_pl_character_data.pl_collection.npc_panties[chara_cid]
-        )
-    for chara_cid in old_pl_character_data.pl_collection.npc_socks:
-        old_socks_count += len(
-            old_pl_character_data.pl_collection.npc_socks[chara_cid]
-        )
+    carried_col = cast(
+        Mapping[str, Mapping[str, tuple[str, ...]]],
+        inherit.get("carried_collection", {}),
+    )
+    old_panties = {
+        int(k): list(v) for k, v in carried_col.get("npc_panties", {}).items()
+    }
+    old_socks = {
+        int(k): list(v) for k, v in carried_col.get("npc_socks", {}).items()
+    }
+    old_pan_count = sum(len(v) for v in old_panties.values())
+    old_socks_count = sum(len(v) for v in old_socks.values())
     new_pan_count = int(old_pan_count * now_rate / 100)
     new_socks_count = int(old_socks_count * now_rate / 100)
 
     # 在当前计数收藏品不超过新的数量的情况下，进行收藏品继承
     now_pan_count, now_socks_count = 0, 0
-    for chara_cid in old_pl_character_data.pl_collection.npc_panties:
-        pan_count = len(
-            old_pl_character_data.pl_collection.npc_panties[chara_cid]
-        )
-        now_pan_count += pan_count
-        new_pl_character_data.pl_collection.npc_panties[chara_cid] = (
-            old_pl_character_data.pl_collection.npc_panties[chara_cid]
-        )
+    new_panties = player_collection.get("npc_panties")
+    for chara_cid, items in old_panties.items():
+        now_pan_count += len(items)
+        new_panties[chara_cid] = items
         if now_pan_count > new_pan_count:
             break
-    for chara_cid in old_pl_character_data.pl_collection.npc_socks:
-        socks_count = len(
-            old_pl_character_data.pl_collection.npc_socks[chara_cid]
-        )
-        now_socks_count += socks_count
-        new_pl_character_data.pl_collection.npc_socks[chara_cid] = (
-            old_pl_character_data.pl_collection.npc_socks[chara_cid]
-        )
+    new_socks = player_collection.get("npc_socks")
+    for chara_cid, items in old_socks.items():
+        now_socks_count += len(items)
+        new_socks[chara_cid] = items
         if now_socks_count > new_socks_count:
             break
+    player_collection.update(npc_panties=new_panties, npc_socks=new_socks)
     info_draw_text += _("玩家收藏品继承完毕\n")
     info_draw.text = info_draw_text
     info_draw.draw()

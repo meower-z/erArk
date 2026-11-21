@@ -88,7 +88,7 @@ cache = world.cache
 from Script.Core import io_init, save_handle
 from Script.Design import character_behavior, game_time, handle_npc_ai
 from Script.Kernel import core
-from Script.Modules.domains import modes, needs
+from Script.Modules.domains import flags, modes, needs
 from Script.System.Field_Commission_System import field_commission_function
 from Script.System.Instruct_System import handle_instruct
 from tests.world import act
@@ -140,7 +140,6 @@ def describe(cid):
     str -- 状态描述
     """
     cd = cache.character_data[cid]
-    flag = cd.sp_flag
     kernel = core.state().characters.get(str(cid))
     end = (
         game_time.at(kernel.action.start + kernel.action.duration)
@@ -152,7 +151,8 @@ def describe(cid):
         f"{cd.name}(id{cid}) 位置={cd.position} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
         f" start={cd.behavior.start_time} state={cd.state} tired={n['tired']} sleep={n['sleep']}"
         f" hp={n['hit']}/{n['hit_max']} mp={n['mana']}/{n['mana_max']}"
-        f" sp_flag(sleep={flag.sleep} unconscious_h={flag.unconscious_h} is_h={flag.is_h} is_follow={flag.is_follow})"
+        f" sp_flag(sleep={flags.get(cid, 'sleep')} unconscious_h={flags.get(cid, 'unconscious_h')}"
+        f" is_h={flags.get(cid, 'is_h')} is_follow={flags.get(cid, 'is_follow')})"
         f" 内核行动结束于={end}"
     )
 

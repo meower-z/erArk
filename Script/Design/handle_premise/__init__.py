@@ -28,7 +28,8 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities, history, needs, physical_exam
+from Script.Modules.domains import abilities, action_info, flags, history
+from Script.Modules.domains import needs, physical_exam
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1204,7 +1205,7 @@ def handle_normal_3(character_id: int) -> int:
         return 0
     # 今天没排体检、也不在等待名单上时，不可能在体检行动链中
     if (
-        cache.character_data[character_id].action_info.health_check_today
+        action_info.get(character_id, "health_check_today")
         or physical_exam.has(physical_exam.WAITING, character_id)
     ) and handle_self_in_health_check_action_chain(character_id):
         return 0
@@ -1708,7 +1709,7 @@ def handle_t_normal_256_or_unconscious_flag(character_id: int) -> int:
     target_chara_id = character_data.target_character_id
     if _check_normal_combo(target_chara_id, (2, 5, 6)):
         return 1
-    if target_data.sp_flag.unconscious_h != 0:
+    if flags.get(target_data.cid, "unconscious_h") != 0:
         return 1
     return 0
 
@@ -1729,7 +1730,7 @@ def handle_t_normal_56_or_unconscious_flag(character_id: int) -> int:
     target_chara_id = character_data.target_character_id
     if _check_normal_combo(target_chara_id, (5, 6)):
         return 1
-    if target_data.sp_flag.unconscious_h != 0:
+    if flags.get(target_data.cid, "unconscious_h") != 0:
         return 1
     return 0
 
@@ -1745,8 +1746,7 @@ def handle_t_normal_56_or_h_or_unconscious(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.is_h:
+    if flags.get(character_data.target_character_id, "is_h"):
         return 1
     return handle_t_normal_56_or_unconscious_flag(character_id)
 

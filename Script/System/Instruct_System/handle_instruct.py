@@ -28,7 +28,8 @@ from Script.UI.Moudle import draw, view
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, achievement, needs
+from Script.Modules.domains import abilities, achievement, action_info, flags
+from Script.Modules.domains import needs, player_collection
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -663,7 +664,10 @@ def handle_chat() -> None:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.action_info.talk_count > abilities.ability(0)[40] + 1:
+    if (
+        action_info.get(target_data.cid, "talk_count")
+        > abilities.ability(0)[40] + 1
+    ):
         chara_handle_instruct_common_settle(
             constant.Behavior.CHAT_FAILED, start="count_talk"
         )
@@ -681,7 +685,7 @@ def _count_talk(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    cache.character_data[chosen["target"]].action_info.talk_count += 1
+    action_info.add(chosen["target"], "talk_count", 1)
 
 
 @add_instruct(constant.Instruct.BUY_H_ITEM)
@@ -1178,8 +1182,8 @@ def _start_follow(who: int, chosen: intent.Intent) -> None:
                 character_data.assistant_character_id,
             }:
                 other_character_data = cache.character_data[npc_id]
-                if other_character_data.sp_flag.is_follow:
-                    other_character_data.sp_flag.is_follow = 0
+                if flags.get(other_character_data.cid, "is_follow"):
+                    flags.set(other_character_data.cid, is_follow=0)
                     now_draw.text += _(
                         "当前最大跟随数量：1人，{0}退出跟随模式\n"
                     ).format(other_character_data.name)
@@ -1224,8 +1228,7 @@ def _set_target_sp_flag(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    target_data = cache.character_data[chosen["target"]]
-    setattr(target_data.sp_flag, str(chosen["args"]["flag"]), True)
+    flags.set(chosen["target"], **{str(chosen["args"]["flag"]): True})
 
 
 @add_instruct(constant.Instruct.APOLOGIZE)
@@ -1338,7 +1341,7 @@ def _close_door(who: int, close: bool) -> None:
     close -- 是否关门
     """
     character_data = cache.character_data[who]
-    character_data.action_info.ask_close_door_flag = True
+    action_info.set(who, "ask_close_door_flag", True)
     if close:
         now_scene_data = cache.scene_data[
             map_handle.get_map_system_path_str_for_list(character_data.position)
@@ -1598,7 +1601,6 @@ def _give_token(who: int, chosen: intent.Intent) -> None:
     """
     from Script.Design import handle_talent
 
-    character_data: game_type.Character = cache.character_data[who]
     target_id = chosen["target"]
     target_data = cache.character_data[target_id]
     now_draw = draw.WaitDraw()
@@ -1631,7 +1633,7 @@ def _give_token(who: int, chosen: intent.Intent) -> None:
     handle_talent.record_fall_talent_time(target_id, new)
     abilities.talent(target_id)[mark] = 1
     abilities.talent(target_id)[411] = 1
-    character_data.pl_collection.token_list[target_id] = True
+    player_collection.set_token(target_id, True)
     now_draw.text += _("\n获得了{0}的信物：{1}\n").format(
         target_data.name, target_data.token_text
     )
@@ -1713,8 +1715,8 @@ def _start_do_h(who: int, chosen: intent.Intent) -> None:
             now_scene_str
         ].close_type
         now_draw_text += _("已自动关门\n")
-    target_data.sp_flag.is_follow = 0
-    target_data.action_info.last_conscious_h_time = game_time.now()
+    flags.set(target_data.cid, is_follow=0)
+    action_info.set(target_data.cid, "last_conscious_h_time", game_time.now())
     now_draw_text += _("进入H模式\n\n")
     now_draw.text = now_draw_text
     now_draw.style = "gold_enrod"
@@ -1780,7 +1782,7 @@ def handle_sleep_obscenity() -> None:
         door = ask_close_door()
         if door:
             _close_door(0, bool(door[CLOSE_DOOR]))
-    target_data.sp_flag.unconscious_h = 1
+    flags.set(target_data.cid, unconscious_h=1)
     now_draw = draw.WaitDraw()
     now_draw.width = width
     now_draw.text = _("\n进入睡眠猥亵模式\n")
@@ -1796,7 +1798,7 @@ def handle_stop_sleep_obscenity() -> None:
 
     character_data: game_type.Character = cache.character_data[0]
     target_data = cache.character_data[character_data.target_character_id]
-    target_data.sp_flag.unconscious_h = 0
+    flags.set(target_data.cid, unconscious_h=0)
     now_draw = draw.WaitDraw()
     now_draw.width = width
     now_draw.text = _("\n退出睡眠猥亵模式\n")
@@ -1845,10 +1847,9 @@ def _start_unconscious_h(who: int, chosen: intent.Intent) -> None:
     from Script.Settle import default
 
     target_id = chosen["target"]
-    target_data = cache.character_data[target_id]
     type_name = chosen["args"]["type"]
-    target_data.action_info.last_unconscious_h_time = game_time.now()
-    target_data.sp_flag.is_follow = 0
+    action_info.set(target_id, "last_unconscious_h_time", game_time.now())
+    flags.set(target_id, is_follow=0)
     now_draw = draw.WaitDraw()
     now_draw.width = width
     if type_name == "sleep":
@@ -1981,9 +1982,7 @@ def _judged_group_sex(behavior_id: str, character_id: int) -> str:
     ]
     if not refused:
         return behavior_id
-    cache.character_data[
-        character_id
-    ].action_info.ask_group_sex_refuse_chara_id_list = refused
+    action_info.set(character_id, "ask_group_sex_refuse_chara_id_list", refused)
     return constant.Behavior.ASK_GROUP_SEX_FAIL
 
 
@@ -2035,9 +2034,7 @@ def _start_ask_group_sex_fail(who: int, chosen: intent.Intent) -> None:
     now_draw = draw.WaitDraw()
     now_draw.width = width
     now_draw.text = _("\n进入群交模式失败\n")
-    for chara_id in cache.character_data[
-        who
-    ].action_info.ask_group_sex_refuse_chara_id_list:
+    for chara_id in action_info.get(who, "ask_group_sex_refuse_chara_id_list"):
         now_draw.text += _("{0}拒绝了群交\n").format(
             cache.character_data[chara_id].name
         )
@@ -2137,7 +2134,7 @@ def _h_end_follow(target_character_id: int) -> None:
         and handle_premise.handle_normal_2(target_character_id)
         and handle_premise.handle_normal_6(target_character_id)
     ):
-        cache.character_data[target_character_id].sp_flag.is_follow = 1
+        flags.set(target_character_id, is_follow=1)
 
 
 def _draw_end_text(text: str) -> None:
@@ -3205,7 +3202,7 @@ def handle_release_from_bag() -> None:
     """处理从袋中放出来指令"""
     chara_handle_instruct_common_settle(
         constant.Behavior.RELEASE_FROM_BAG,
-        target_character_id=cache.character_data[0].sp_flag.bagging_chara_id,
+        target_character_id=flags.get(0, "bagging_chara_id"),
         force_taget_wait=True,
     )
 
@@ -3215,7 +3212,7 @@ def handle_put_into_prision() -> None:
     """处理投入监牢指令"""
     chara_handle_instruct_common_settle(
         constant.Behavior.PUT_INTO_PRISON,
-        target_character_id=cache.character_data[0].sp_flag.bagging_chara_id,
+        target_character_id=flags.get(0, "bagging_chara_id"),
         force_taget_wait=True,
     )
 

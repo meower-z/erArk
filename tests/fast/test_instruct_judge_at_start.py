@@ -32,6 +32,7 @@ from Script.System.Item_System import condom_panel
 from Script.System.Sex_System import group_sex_panel
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
+from Script.Modules.domains import action_info, flags
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
@@ -62,7 +63,7 @@ class InstructJudgeAtStartTest(FastTestCase):
         self.npc = self.world.chara(NPC, "干员")
         self.player.target_character_id = NPC
         kernel_data.set_needs(self.player.cid, sanity=SANITY, sanity_max=SANITY)
-        self.npc.sp_flag.unconscious_h = IN_HYPNOSIS
+        kernel_data.put(flags.set, self.npc.cid, unconscious_h=IN_HYPNOSIS)
         core.reset_state(kernel_data.reprojected(core.state()))
 
     def pick(self, instruct_id: str) -> core.Action:
@@ -191,7 +192,7 @@ class InstructJudgeAtStartTest(FastTestCase):
         self.deep_hypnosis()
         self.passes_by_hypnosis_only(_("群交"))
         self.invite_from_editor()
-        self.assertTrue(self.npc.sp_flag.go_to_join_group_sex)
+        self.assertTrue(flags.get(self.npc.cid, "go_to_join_group_sex"))
         self.assertLess(kernel_data.needs_of(self.player.cid)["sanity"], SANITY)
 
     def test_editor_invite_refused_without_sanity(self) -> None:
@@ -200,14 +201,14 @@ class InstructJudgeAtStartTest(FastTestCase):
         self.passes_by_hypnosis_only(_("群交"))
         kernel_data.set_needs(self.player.cid, sanity=0)
         self.invite_from_editor()
-        self.assertFalse(self.npc.sp_flag.go_to_join_group_sex)
+        self.assertFalse(flags.get(self.npc.cid, "go_to_join_group_sex"))
 
     def test_group_sex_judged_once_against_remaining_sanity(self) -> None:
         """两名干员都靠催眠补正通过，理智只够一人：开始的是邀请群交失败，恰好一人拒绝，理智扣完一人的代价"""
         self.deep_hypnosis()
         self.passes_by_hypnosis_only(_("群交"))
         other = self.world.chara(OTHER_NPC, "干员2")
-        other.sp_flag.unconscious_h = IN_HYPNOSIS
+        kernel_data.put(flags.set, other.cid, unconscious_h=IN_HYPNOSIS)
         ca.talent(other)[BEEN_DEEP_HYPNOSIS] = 1
         core.reset_state(kernel_data.reprojected(core.state()))
         with kernel_data.writing():
@@ -227,7 +228,9 @@ class InstructJudgeAtStartTest(FastTestCase):
         gated = self.start(act)
         data = gated.action_data
         assert isinstance(data, Mapping)
-        refused = self.player.action_info.ask_group_sex_refuse_chara_id_list
+        refused = action_info.get(
+            self.player.cid, "ask_group_sex_refuse_chara_id_list"
+        )
         self.assertEqual(
             (
                 data["behavior_id"],

@@ -17,7 +17,8 @@ from Script.Design import handle_premise
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
-from Script.Modules.domains import abilities, entertainment, playthrough
+from Script.Modules.domains import abilities, entertainment, flags
+from Script.Modules.domains import player_collection, playthrough
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -141,8 +142,6 @@ def clear_birth_type_data(birth_type: int) -> str:
     """
     from Script.Design import handle_npc_ai
 
-    pl_character_data: game_type.Character = cache.character_data[0]
-    pl_collection = pl_character_data.pl_collection
     chara_count = 0
     egg_count = 0
     held_egg_count = 0
@@ -178,10 +177,8 @@ def clear_birth_type_data(birth_type: int) -> str:
         ):
             handle_npc_ai.get_chara_entertainment(character_id)
     # 博士已拿走的卵索引：值为(角色id, 卵编号)，按母亲的原始生育方式过滤
-    held_eggs = getattr(pl_collection, "held_eggs", None)
-    if birth_type != pregnancy_constant.BIRTH_TYPE_MULTIPLE and isinstance(
-        held_eggs, dict
-    ):
+    if birth_type != pregnancy_constant.BIRTH_TYPE_MULTIPLE:
+        held_eggs = player_collection.get("held_eggs")
         for held_id in list(held_eggs.keys()):
             mother_id = held_eggs[held_id][0]
             if mother_id not in cache.character_data:
@@ -190,11 +187,11 @@ def clear_birth_type_data(birth_type: int) -> str:
                 continue
             del held_eggs[held_id]
             held_egg_count += 1
+        if held_egg_count:
+            player_collection.put("held_eggs", held_eggs)
     # 博士持有的体外无壳卵块
-    soft_eggs = getattr(pl_collection, "soft_eggs", None)
-    if birth_type == pregnancy_constant.BIRTH_TYPE_EGG_SOFT and isinstance(
-        soft_eggs, dict
-    ):
+    if birth_type == pregnancy_constant.BIRTH_TYPE_EGG_SOFT:
+        soft_eggs = player_collection.get("soft_eggs")
         for soft_egg_id in list(soft_eggs.keys()):
             mother_id = soft_eggs[soft_egg_id].get("mother_id", -1)
             if (
@@ -204,6 +201,8 @@ def clear_birth_type_data(birth_type: int) -> str:
                 continue
             del soft_eggs[soft_egg_id]
             soft_egg_count += 1
+        if soft_egg_count:
+            player_collection.put("soft_eggs", soft_eggs)
     # 汇报文案
     if birth_type == pregnancy_constant.BIRTH_TYPE_MULTIPLE:
         if fetus_chara_count:
@@ -579,17 +578,11 @@ def take_eggs_from_chara(target_character_id: int) -> int:
     Return arguments:
     int -- 拿走的卵数量
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
     target_data: game_type.Character = cache.character_data[target_character_id]
     take_count = 0
     for egg_id, egg_data in get_unidentified_eggs(target_character_id).items():
         egg_data["held_by_player"] = True
-        held_id = pl_character_data.pl_collection.next_held_egg_id
-        pl_character_data.pl_collection.held_eggs[held_id] = (
-            target_character_id,
-            egg_id,
-        )
-        pl_character_data.pl_collection.next_held_egg_id += 1
+        player_collection.add_held_egg(target_character_id, egg_id)
         take_count += 1
     if take_count:
         draw_text = _("\n从{0}处拿走了{1}枚未鉴定的卵\n").format(
@@ -607,12 +600,11 @@ def identify_held_eggs_settle() -> None:
     鉴定玩家临时持有的全部卵，并经索引同步回写原角色的卵数据
     \n未受精则删除原角色的该卵；受精则置已鉴定并进入孵化流程（回到原角色的常规孵化轨道）
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
-    held_eggs = dict(pl_character_data.pl_collection.held_eggs)
+    held_eggs = player_collection.get("held_eggs")
     fertilized_chara_count: dict[int, int] = {}
-    for held_id, (chara_id, egg_id) in held_eggs.items():
-        # 索引即将消耗，先行删除
-        del pl_character_data.pl_collection.held_eggs[held_id]
+    if held_eggs:
+        player_collection.put("held_eggs", {})
+    for _held_id, (chara_id, egg_id) in held_eggs.items():
         # 原角色或卵已不存在时静默清理索引
         if chara_id not in cache.character_data:
             continue
@@ -662,7 +654,7 @@ def replace_entertainment_for_eggs(character_id: int) -> None:
         return
     character_data: game_type.Character = cache.character_data[character_id]
     # 监禁中的角色跳过（其未鉴定卵由玩家指令代办）
-    if character_data.sp_flag.imprisonment:
+    if flags.get(character_id, "imprisonment"):
         return
     # 派对日全时段为派对娱乐，跳过
     week_day = game_time.now().weekday()

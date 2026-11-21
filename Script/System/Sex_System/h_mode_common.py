@@ -3,6 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import handle_premise
+from Script.Modules.domains import flags
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -18,7 +19,6 @@ def get_current_h_mode_text(character_id: int) -> str:
     Return arguments:
     str -- 非H/正常H/各特殊H模式名（同时处于多个特殊模式时以顿号连接）
     """
-    character_data = cache.character_data[character_id]
     if not handle_premise.handle_self_is_h(character_id):
         return _("非H")
     mode_text_list = []
@@ -30,7 +30,7 @@ def get_current_h_mode_text(character_id: int) -> str:
         mode_text_list.append(
             _("{0}H").format(
                 hypnosis_panel.unconscious_list[
-                    character_data.sp_flag.unconscious_h
+                    flags.get(character_id, "unconscious_h")
                 ]
             )
         )

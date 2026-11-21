@@ -32,7 +32,7 @@ from _bootstrap import (
 )
 import inspect
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import library
+from Script.Modules.domains import flags, library
 
 section("教室列表与开放判定")
 clear_schedules()
@@ -792,7 +792,7 @@ check(
     sorted(schedule_handle.get_teacher_candidate_list()) == [101, 102],
     sorted(schedule_handle.get_teacher_candidate_list()),
 )
-teacher_b.sp_flag.imprisonment = True
+kernel_data.put(flags.set, teacher_b.cid, imprisonment=True)
 check(
     (
         "L21 被监禁的教师不在候选里（此前在岛、在岗照列，一键排课与选教师页会把她排进空格子，"
@@ -813,7 +813,7 @@ check(
     101 in _l21_teacher_set and 102 not in _l21_teacher_set,
     _l21_teacher_set,
 )
-teacher_b.sp_flag.imprisonment = False
+kernel_data.put(flags.set, teacher_b.cid, imprisonment=False)
 check(
     "L21 放出来之后回到候选名单",
     sorted(schedule_handle.get_teacher_candidate_list()) == [101, 102],

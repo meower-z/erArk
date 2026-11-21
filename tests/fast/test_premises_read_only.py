@@ -17,6 +17,7 @@ from typing import Any
 from Script.Core import constant
 from Script.Design import handle_premise
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import flags
 
 LOADED = handle_premise
 """ 导入即注册全部前提 """
@@ -164,7 +165,7 @@ class PremisesReadOnlyTest(FastTestCase):
         """
 
         def prepare() -> None:
-            self.npc.sp_flag.unconscious_h = 4
+            kernel_data.put(flags.set, self.npc.cid, unconscious_h=4)
             ca.talent(self.npc)[71] = ca.talent(self.npc)[72] = 1
             ca.talent(self.player)[332] = 1
             kernel_data.set_needs(self.player.cid, sanity=100, sanity_max=100)

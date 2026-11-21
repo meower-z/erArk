@@ -2,19 +2,13 @@
 
 from types import FunctionType
 from Script.UI.Moudle import draw
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    text_handle,
-    constant,
-    num,
-)
+from Script.Core import cache_control, constant, game_type, get_text, num
+from Script.Core import text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Panel import hypnosis_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, needs
+from Script.Modules.domains import abilities, action_info, flags, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -54,7 +48,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
 
     if (
         period != -1
-        and not character_data.sp_flag.is_h
+        and not flags.get(character_id, "is_h")
         and class_ai.judge_skip_class_today(character_id)
         and class_ai.get_course_stage(character_id)
         == education_constant.COURSE_STAGE_SKIP
@@ -160,7 +154,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
             now_time = character_data.behavior.start_time or game_time.now()
             if (
                 behavior_id == constant.Behavior.REST
-                or character_data.sp_flag.is_h
+                or flags.get(character_id, "is_h")
                 or growth_handle.judge_absent_this_period(
                     character_id, now_time
                 )
@@ -388,7 +382,7 @@ def get_character_status_list(
             sleep_text = _(" <被吵醒>")
             left_minute = int(
                 (
-                    character_data.action_info.sleep_disturbed_end_time
+                    action_info.get(character_id, "sleep_disturbed_end_time")
                     - game_time.now()
                 ).total_seconds()
                 // 60
@@ -448,7 +442,7 @@ def get_character_status_list(
             )
         # 是否显示催眠类型
         if handle_premise.handle_unconscious_hypnosis_flag(character_id):
-            hypnosis_cid = character_data.sp_flag.unconscious_h - 3
+            hypnosis_cid = flags.get(character_id, "unconscious_h") - 3
             hypnosis_name = game_config.config_hypnosis_type[hypnosis_cid].name
             hypnosis_text += _(":{0}").format(hypnosis_name)
             hypnosis_draw.tooltip = game_config.config_hypnosis_type[
@@ -498,9 +492,11 @@ def get_character_status_list(
     # 携袋状态进行提示
     bag_text = ""
     bag_draw = draw.LeftDraw()
-    if character_data.sp_flag.bagging_chara_id:
+    if flags.get(character_id, "bagging_chara_id"):
         bag_text = _(" <携袋:{0}>").format(
-            cache.character_data[character_data.sp_flag.bagging_chara_id].name
+            cache.character_data[
+                flags.get(character_id, "bagging_chara_id")
+            ].name
         )
         bag_draw.tooltip = _(
             "将失去意识的干员装进了袋子中，用于在关押区监禁到牢房里"
@@ -512,7 +508,7 @@ def get_character_status_list(
     # 访客
     visitor_text = ""
     visitor_draw = draw.LeftDraw()
-    if character_data.sp_flag.vistor == 1:
+    if flags.get(character_id, "vistor") == 1:
         visitor_text = _(" <访>")
         visitor_draw.tooltip = _(
             "作为访客来罗德岛参观，不会参与工作和常规活动，在访问期结束后会离开罗德岛或留下成为干员"

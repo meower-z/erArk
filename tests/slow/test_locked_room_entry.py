@@ -9,6 +9,7 @@
 """
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 ROOM = ["中枢", "会议室"]
 DR_ROOM = ["中枢", "博士房间"]
@@ -31,7 +32,9 @@ class LockedRoomEntryTest(SlowTestCase):
         self.world.player.press("召集到自己当前位置", "杜宾", "返回")
         self.instruct(constant.Instruct.ALL_NPC_POSITION)
         self.show_panel()
-        self.assertEqual(operator.sp_flag.is_follow, 4)
+        self.assertEqual(
+            kernel_data.domain("flags").get(operator.cid, "is_follow"), 4
+        )
         self.assertTrue(
             self.wait_until(lambda: operator.position == ROOM, 60),
             f"杜宾在 {operator.position}",

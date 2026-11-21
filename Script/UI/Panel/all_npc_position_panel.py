@@ -12,7 +12,7 @@ from Script.Core import (
 from Script.Design import map_handle, handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import visitor
+from Script.Modules.domains import flags, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -256,7 +256,7 @@ class All_Npc_Position_Panel:
         for npc_id in cache.npc_id_got:
             if npc_id != 0:
                 character_data = cache.character_data[npc_id]
-                character_data.sp_flag.is_follow = 1
+                flags.set(character_data.cid, is_follow=1)
 
     def move_type_change(self, new_type: int) -> None:
         """移动类型切换"""
@@ -396,17 +396,17 @@ class MoveSonPanel:
                     character_data.name
                 )
             elif self.move_type == 0:
-                character_data.sp_flag.is_follow = 3
+                flags.set(character_id, is_follow=3)
                 now_draw.text = character_data.name + _(
                     "收到了博士的信息，接下来会前往博士办公室\n"
                 )
             elif self.move_type == 1:
-                character_data.sp_flag.is_follow = 4
+                flags.set(character_id, is_follow=4)
                 now_draw.text = character_data.name + _(
                     "收到了博士的信息，询问了博士的位置之后开始移动\n"
                 )
             elif self.move_type == 3:
-                character_data.sp_flag.is_follow = 1
+                flags.set(character_id, is_follow=1)
                 now_draw.text = character_data.name + _(
                     "收到了博士的信息，开始智能跟随\n"
                 )

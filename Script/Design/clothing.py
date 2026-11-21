@@ -317,11 +317,9 @@ def get_underwear(
         character_id
     )
     if character_fall_level >= 2:
-        if cache.character_data[0].pl_collection.collection_bonus == {}:
-            cache.character_data[0].pl_collection = (
-                attr_calculation.get_collection_zero()
-            )
-        if cache.character_data[0].pl_collection.collection_bonus[102]:
+        from Script.Modules.domains import player_collection
+
+        if player_collection.bonus(102):
             bra_nor_list += bra_H_list
             pan_nor_list += pan_H_list
 
@@ -437,12 +435,11 @@ def pl_get_chara_pan(character_id: int) -> None:
             TagetPanId = character_data.cloth.cloth_wear[9][-1]
             cloth_use_type = game_config.config_clothing_tem[TagetPanId].tag
             # 加到玩家的内裤收藏里
-            pl_character_data.pl_collection.npc_panties_tem.setdefault(
-                character_id, []
+            from Script.Modules.domains import player_collection
+
+            player_collection.append_list_map(
+                "npc_panties_tem", character_id, TagetPanId
             )
-            pl_character_data.pl_collection.npc_panties_tem[
-                character_id
-            ].append(TagetPanId)
             # 加到玩家的行动记录里
             TPanName = game_config.config_clothing_tem[TagetPanId].name
             pl_character_data.behavior.pan_name = TPanName
@@ -480,11 +477,10 @@ def pl_get_chara_socks(character_id: int) -> None:
         if len(character_data.cloth.cloth_wear[10]):
             TagetSocId = character_data.cloth.cloth_wear[10][-1]
             # 加到玩家的袜子收藏里
-            pl_character_data.pl_collection.npc_socks_tem.setdefault(
-                character_id, []
-            )
-            pl_character_data.pl_collection.npc_socks_tem[character_id].append(
-                TagetSocId
+            from Script.Modules.domains import player_collection
+
+            player_collection.append_list_map(
+                "npc_socks_tem", character_id, TagetSocId
             )
             # 加到玩家的行动记录里
             TSocName = game_config.config_clothing_tem[TagetSocId].name

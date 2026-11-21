@@ -11,22 +11,10 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
-from Script.Modules.domains import (
-    diplomacy,
-    economy,
-    facility,
-    fridge,
-    maintenance,
-    official,
-    physical_exam,
-    power,
-    production,
-    recruit,
-    tallies,
-    warehouse,
-    work,
-)
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, diplomacy, economy, facility
+from Script.Modules.domains import flags, fridge, maintenance, official
+from Script.Modules.domains import physical_exam, power, production, recruit
+from Script.Modules.domains import tallies, warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -365,12 +353,14 @@ def update_work_people() -> None:
             # 外交官丢失了驻在国信息时的数据修复
             if (
                 work_type == 131
-                and character_data.sp_flag.in_diplomatic_visit == 0
+                and flags.get(character_data.cid, "in_diplomatic_visit") == 0
             ):
                 for country_id, post in diplomacy.table().items():
                     # 仍在外交官名册上的，补回驻在国信息
                     if post["diplomat"] == chara_id:
-                        character_data.sp_flag.in_diplomatic_visit = country_id
+                        flags.set(
+                            character_data.cid, in_diplomatic_visit=country_id
+                        )
                         break
                 else:
                     # 名册上没有的，视为旧版本的外交官数据，改为新的邀请专员

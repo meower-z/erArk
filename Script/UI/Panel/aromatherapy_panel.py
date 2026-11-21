@@ -11,7 +11,8 @@ from Script.Core import (
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, facility, tallies, warehouse
+from Script.Modules.domains import abilities, facility, flags, tallies
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -92,11 +93,11 @@ class Aromatherapy_Panel:
                 target_character_data.name
             )
             # 判断对方今日是否已调香
-            if target_character_data.sp_flag.aromatherapy != 0:
+            if flags.get(target_character_data.cid, "aromatherapy") != 0:
                 # 输出调香状态
                 now_text += _("(今日已调香-{0})").format(
                     game_config.config_aromatherapy_recipes[
-                        target_character_data.sp_flag.aromatherapy
+                        flags.get(target_character_data.cid, "aromatherapy")
                     ].name
                 )
             all_info_draw.text = now_text
@@ -151,7 +152,7 @@ class Aromatherapy_Panel:
             if (
                 self.now_choice_recipe_id != 0
                 and tallies.get(tallies.AROMATHERAPY) > 0
-                and target_character_data.sp_flag.aromatherapy == 0
+                and flags.get(target_character_data.cid, "aromatherapy") == 0
             ):
                 yes_show_flag = True
             if yes_show_flag:

@@ -259,12 +259,15 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
 
         self.walk(ROOM)
         operator_id = self.npc("杜宾")
-        operator = self.cache.character_data[operator_id]
         self.world.move(operator_id, ROOM)
-        operator.sp_flag.npc_masturebate_for_player = True
+        kernel_data.put(
+            kernel_data.domain("flags").set,
+            operator_id,
+            npc_masturebate_for_player=True,
+        )
         self.world.player.press("逆来顺受")
         self.instruct(constant.Instruct.DOOR_LOCK_INNER)
-        self.assertTrue(operator.sp_flag.is_h)
+        self.assertTrue(kernel_data.domain("flags").get(operator_id, "is_h"))
         prison = importlib.import_module("Script.Modules.domains.prison")
         # 12：调教助手与博士同部位；13：调教对象不限于囚犯
         with kernel_data.writing():

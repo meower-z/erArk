@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from typing import cast
 
 from tests.slow.base import SlowTestCase
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
 
 BABY = 101
 """ 婴儿素质的id """
@@ -110,11 +110,14 @@ class OfflineTargetActionsTest(SlowTestCase):
 
         bagged_id = sorted(i for i in self.cache.npc_id_got if i)[0]
         player = self.cache.character_data[0]
-        bagged = self.cache.character_data[bagged_id]
         self.world.move(bagged_id, player.position)
         player.target_character_id = bagged_id
-        player.sp_flag.bagging_chara_id = bagged_id
-        bagged.sp_flag.be_bagged = True
+        kernel_data.put(
+            kernel_data.domain("flags").set, 0, bagging_chara_id=bagged_id
+        )
+        kernel_data.put(
+            kernel_data.domain("flags").set, bagged_id, be_bagged=True
+        )
         default.handle_chara_off_line(
             bagged_id, 1, game_type.CharacterStatusChange(), game_time.now()
         )
@@ -130,7 +133,10 @@ class OfflineTargetActionsTest(SlowTestCase):
             [(constant.Behavior.RELEASE_FROM_BAG, 10, None)],
         )
         self.assertEqual(
-            (bagged_id in self.cache.npc_id_got, bagged.sp_flag.be_bagged),
+            (
+                bagged_id in self.cache.npc_id_got,
+                kernel_data.domain("flags").get(bagged_id, "be_bagged"),
+            ),
             (True, False),
             "（在场，被装袋）",
         )

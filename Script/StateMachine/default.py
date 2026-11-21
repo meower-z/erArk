@@ -17,7 +17,8 @@ from Script.Design import (
     basement,
 )
 from Script.Core import get_text, cache_control, game_type, constant
-from Script.Modules.domains import abilities, kitchen, maintenance, modes
+from Script.Modules.domains import abilities, action_info, kitchen, maintenance
+from Script.Modules.domains import modes
 from Script.Modules.domains import production
 from Script.UI.Moudle import draw
 from Script.Modules.domains import economy
@@ -243,10 +244,9 @@ def character_sleep(character_id: int) -> choice.Plan:
     if handle_premise.handle_is_assistant(
         character_id
     ) and handle_premise.handle_assistant_live_together_on(character_id):
-        pl_character_data: game_type.Character = cache.character_data[0]
         min_to_wake_time = int(
             (
-                pl_character_data.action_info.wake_time
+                action_info.get(0, "wake_time")
                 - character_data.behavior.start_time
             ).seconds
             / 60
@@ -3023,12 +3023,11 @@ def character_buy_rand_food_at_foodshop(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     plan.set("target_character_id", character_id)
     all_food_list = []
     make_food_list = []
     # 在食堂购买
-    if character_data.action_info.eat_food_restaurant == -1:
+    if action_info.get(character_id, "eat_food_restaurant") == -1:
         # 收集还有食物的货架的食谱id
         shelves = kitchen.shelves()
         for recipes_id, foods in shelves.items():
@@ -3058,7 +3057,7 @@ def character_buy_rand_food_at_foodshop(character_id: int) -> choice.Plan:
         _buy_food(plan, -1, now_food_id, now_food.uid)
     # 在指定餐厅购买
     else:
-        restaurant_id = character_data.action_info.eat_food_restaurant
+        restaurant_id = action_info.get(character_id, "eat_food_restaurant")
         shelf = economy.shelf(restaurant_id)
         all_food_list = [recipe for recipe, foods in shelf.items() if foods]
         if not len(all_food_list):

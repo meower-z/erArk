@@ -12,7 +12,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle, virgin_break_gate
-from Script.Modules.domains import abilities, modes
+from Script.Modules.domains import abilities, flags, modes
 
 panel_info_data: dict[str, object] = {}
 
@@ -1076,8 +1076,8 @@ class Edit_Group_Sex_Temple_Panel:
                 character_data.name
             )
         # 如果已经邀请，则取消邀请
-        elif character_data.sp_flag.go_to_join_group_sex:
-            character_data.sp_flag.go_to_join_group_sex = False
+        elif flags.get(character_id, "go_to_join_group_sex"):
+            flags.set(character_id, go_to_join_group_sex=False)
             info_draw_text = _(
                 "\n已取消对{0}的群交邀请，{0}不会来这里参加群交了\n"
             ).format(character_data.name)
@@ -1107,7 +1107,7 @@ class Edit_Group_Sex_Temple_Panel:
             )
         # 否则邀请
         else:
-            character_data.sp_flag.go_to_join_group_sex = True
+            flags.set(character_id, go_to_join_group_sex=True)
             info_draw_text = _("\n已邀请{0}来这里参加群交\n").format(
                 character_data.name
             )

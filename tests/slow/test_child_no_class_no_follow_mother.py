@@ -260,7 +260,8 @@ class ChildStagesOfflineTest(SlowTestCase):
                     daughter.position
                 )
             )
-            map_handle.character_move_scene(
+            kernel_data.written(
+                map_handle.character_move_scene,
                 self.mother.position,
                 map_handle.get_map_system_path_for_str(other_scene),
                 self.mother_id,

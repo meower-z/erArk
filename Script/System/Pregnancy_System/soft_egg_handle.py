@@ -25,7 +25,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant, egg_handle
 from Script.Design import game_time
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, player_collection
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -138,8 +138,6 @@ def lay_soft_egg(character_id: int) -> int:
     int -- 新卵的编号
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
-    pl_collection = pl_character_data.pl_collection
     # 精液转移：子宫(7)与小穴(6)各转移八成，部位剩余量与等级同步刷新（累计量不动）
     transfer_count = 0
     for part_cid in (6, 7):
@@ -155,14 +153,12 @@ def lay_soft_egg(character_id: int) -> int:
         )
         transfer_count += move_count
     # 登记体外卵
-    egg_id = pl_collection.next_soft_egg_id
-    pl_collection.soft_eggs[egg_id] = {
-        "mother_id": character_id,
-        "lay_time": game_time.now(),
-        "position": list(character_data.position),
-        "semen_count": float(transfer_count),
-    }
-    pl_collection.next_soft_egg_id += 1
+    egg_id = player_collection.add_soft_egg(
+        character_id,
+        game_time.now(),
+        character_data.position,
+        float(transfer_count),
+    )
     # 提示玩家
     draw_text = "\n※※※※※※※※※\n"
     if transfer_count > 0:
@@ -192,8 +188,9 @@ def get_soft_eggs_in_scene(position: list) -> dict:
     Return arguments:
     dict -- {卵编号: 卵数据}
     """
-    pl_collection = cache.character_data[0].pl_collection
-    soft_eggs = getattr(pl_collection, "soft_eggs", {})
+    if not player_collection.has_soft_eggs():
+        return {}
+    soft_eggs = player_collection.get("soft_eggs")
     return {
         egg_id: egg_data
         for egg_id, egg_data in soft_eggs.items()
@@ -209,8 +206,9 @@ def get_mother_soft_eggs(mother_id: int) -> dict:
     Return arguments:
     dict -- {卵编号: 卵数据}
     """
-    pl_collection = cache.character_data[0].pl_collection
-    soft_eggs = getattr(pl_collection, "soft_eggs", {})
+    if not player_collection.has_soft_eggs():
+        return {}
+    soft_eggs = player_collection.get("soft_eggs")
     return {
         egg_id: egg_data
         for egg_id, egg_data in soft_eggs.items()
@@ -225,12 +223,7 @@ def add_semen_to_soft_egg(egg_id: int, semen_count: int) -> None:
     egg_id -- 卵编号
     semen_count -- 精液量（毫升）
     """
-    soft_eggs = cache.character_data[0].pl_collection.soft_eggs
-    if egg_id not in soft_eggs:
-        return
-    soft_eggs[egg_id]["semen_count"] = max(
-        soft_eggs[egg_id]["semen_count"] + semen_count, 0
-    )
+    player_collection.add_soft_egg_semen(egg_id, semen_count)
 
 
 def get_soft_egg_semen_level(semen_count: float) -> int:
@@ -264,7 +257,7 @@ def get_soft_egg_name(egg_id: int) -> str:
     Return arguments:
     str -- 显示名
     """
-    soft_eggs = cache.character_data[0].pl_collection.soft_eggs
+    soft_eggs = player_collection.get("soft_eggs")
     if egg_id not in soft_eggs:
         return _("无壳卵块")
     mother_id = soft_eggs[egg_id]["mother_id"]
@@ -331,11 +324,9 @@ def check_soft_eggs_fertilization() -> None:
     \n每一轮成功即为一枚受精卵回写母亲的卵字典（已鉴定、无壳、孵化计时自体外排出起算）；无论结果都从玩家收藏品中删除该卵并提示
     \n挂钩于每次玩家行动后的实时结算与睡眠结算
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
-    pl_collection = pl_character_data.pl_collection
-    soft_eggs = getattr(pl_collection, "soft_eggs", None)
-    if not soft_eggs:
+    if not player_collection.has_soft_eggs():
         return
+    soft_eggs = player_collection.get("soft_eggs")
     for egg_id in list(soft_eggs.keys()):
         egg_data = soft_eggs[egg_id]
         if get_soft_egg_remain_minute(egg_data) > 0:
@@ -352,7 +343,7 @@ def check_soft_eggs_fertilization() -> None:
                 success_count += 1
             now_semen *= 1 - pregnancy_constant.MULTIPLE_BIRTH_SEMEN_DECAY
         egg_name = get_soft_egg_name(egg_id)
-        del soft_eggs[egg_id]
+        player_collection.remove_soft_egg(egg_id)
         draw_text = "\n※※※※※※※※※\n"
         if success_count >= 1 and mother_id in cache.character_data:
             mother_character_data: game_type.Character = cache.character_data[

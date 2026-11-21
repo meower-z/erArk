@@ -3,23 +3,14 @@
 from __future__ import annotations
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
-from Script.Design import (
-    attr_calculation,
-    basement,
-    handle_premise,
-    handle_talent,
-    handle_ability,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text
+from Script.Design import attr_calculation, basement, handle_ability
+from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import diplomacy, location, recruit, visitor, work
+from Script.Modules.domains import diplomacy, flags, location, recruit, visitor
+from Script.Modules.domains import work
 from Script.Modules.save_load import reset
 
 import random
@@ -148,7 +139,7 @@ def find_recruitable_npc() -> list[int]:
         if chara_id not in cache.character_data:
             continue
         # 跳过访客
-        if cache.character_data[chara_id].sp_flag.vistor == 1:
+        if flags.get(chara_id, "vistor") == 1:
             continue
         # 跳过离线异常
         if not handle_premise.handle_normal_7(chara_id):

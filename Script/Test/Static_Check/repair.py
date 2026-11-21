@@ -18,7 +18,7 @@ from collections.abc import Callable
 from fractions import Fraction
 
 from Script.Config import game_config
-from Script.Modules.domains import modes, needs, power, work
+from Script.Modules.domains import flags, modes, needs, power, work
 
 from . import check_log
 
@@ -480,15 +480,10 @@ def repair_masturebate_stale_group_flag(cache: game_type.Cache) -> list[dict]:
         return []
     records = []
     for cid, chara in cache.character_data.items():
-        sp = getattr(chara, "sp_flag", None)
-        if (
-            sp is None
-            or getattr(sp, "masturebate", 0) != 3
-            or getattr(sp, "is_h", False)
-        ):
+        old_v = flags.get(cid, "masturebate")
+        if old_v != 3 or flags.get(cid, "is_h"):
             continue
-        old_v = sp.masturebate
-        sp.masturebate = 0
+        flags.set(cid, masturebate=0)
         records.append(
             _record(
                 "HGROUP-12",

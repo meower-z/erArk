@@ -4,24 +4,14 @@
 
 import datetime
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    num,
-    text_handle,
-    flow_handle,
-)
-from Script.Design import (
-    handle_ability,
-    map_handle,
-    attr_calculation,
-    handle_talent,
-    handle_premise,
-)
+from Script.Core import cache_control, flow_handle, game_type, get_text, num
+from Script.Core import text_handle
+from Script.Design import attr_calculation, handle_ability, handle_premise
+from Script.Design import handle_talent, map_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities, entertainment, needs
+from Script.Modules.domains import abilities, action_info, entertainment, flags
+from Script.Modules.domains import needs, player_ability
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -291,12 +281,12 @@ def calculation_instuct_judege(
                 judge += 100
                 calculation_text += _("+顶级套房(+100)")
         # 找博士逆推自慰修正
-        if target_data.sp_flag.npc_masturebate_for_player:
+        if flags.get(target_character_id, "npc_masturebate_for_player"):
             judge += 50
             calculation_text += _("+找博士逆推(+50)")
 
     # 激素系能力修正#
-    if character_data.pl_ability.hormone:
+    if player_ability.get(character_id, "hormone"):
         judge_information = (
             abilities.talent(character_id)[304] * 25
             + abilities.talent(character_id)[305] * 50
@@ -351,7 +341,9 @@ def calculation_instuct_judege(
 
         # 今天H被打断了修正
         if judge_data_type == "S":
-            judge_h_interrupt = target_data.action_info.h_interrupt * 50
+            judge_h_interrupt = (
+                action_info.get(target_character_id, "h_interrupt") * 50
+            )
             judge -= judge_h_interrupt
             if judge_h_interrupt:
                 calculation_text += (
@@ -472,7 +464,7 @@ def calculation_instuct_judege(
     judge_hypnosis = 0  # 初始为零，方便其他修正判断是否进行了催眠
     # 需要在催眠状态中，性爱判定
     if (
-        target_data.sp_flag.unconscious_h in {4, 5, 6, 7}
+        flags.get(target_character_id, "unconscious_h") in {4, 5, 6, 7}
         and judge_data_type == "S"
     ):
         # 完全催眠直接通过
@@ -523,8 +515,8 @@ def calculation_instuct_judege(
                             judge_hypnosis, sanity_point_cost
                         )
                         needs.add(character_id, "sanity", -sanity_point_cost)
-                        character_data.pl_ability.today_sanity_point_cost += (
-                            sanity_point_cost
+                        player_ability.add_sanity_cost(
+                            character_id, sanity_point_cost
                         )
                     else:
                         calculation_text += _("+催眠(+{0},需{1}理智)").format(
@@ -532,7 +524,7 @@ def calculation_instuct_judege(
                         )
                 elif settle_hypnosis:
                     calculation_text += _("+催眠(+0,理智不足,催眠解除)")
-                    target_data.sp_flag.unconscious_h = 0
+                    flags.set(target_character_id, unconscious_h=0)
                 else:
                     calculation_text += _("+催眠(+0,理智不足)")
 
@@ -688,7 +680,7 @@ def ask_text(
         text += _("\n\n 是否要夺走{0}的子宫处女？").format(target_data.name)
     if _asks_condom(character_data, target_data, instruct_name):
         # 无意识
-        if target_data.sp_flag.unconscious_h:
+        if flags.get(target_character_id, "unconscious_h"):
             text += _("当前正在对{0}无意识奸，是否不戴套？\n").format(
                 target_data.name
             )

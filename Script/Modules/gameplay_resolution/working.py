@@ -200,6 +200,11 @@ _stack: list[_Buffer] = []
 _step = _Buffer(None)
 
 
+def active() -> bool:
+    """当前是否处于可写 GameState 数据的步、挑选或缓冲区内"""
+    return bool(_stack) or core.in_settlement()
+
+
 def _active() -> _Buffer:
     if _stack:
         return _stack[-1]

@@ -17,7 +17,7 @@ from google.genai import types as genai_types
 import os
 import re
 from typing import Any, Callable, Iterable, TypedDict
-from Script.Modules.domains import abilities, needs
+from Script.Modules.domains import abilities, flags, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -376,7 +376,7 @@ def build_user_prompt(
     # 催眠
     hypnosis_name, hypnosis_effect = "", ""
     if tem_send_data_flags[61]:
-        hypnosis_id = npc_character_data.sp_flag.unconscious_h - 3
+        hypnosis_id = flags.get(npc_character_data.cid, "unconscious_h") - 3
         if hypnosis_id in game_config.config_hypnosis_type:
             hypnosis_data = game_config.config_hypnosis_type[hypnosis_id]
             hypnosis_name = hypnosis_data.name

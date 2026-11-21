@@ -24,8 +24,8 @@ from collections.abc import Iterator
 
 from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
-from Script.Modules.domains import abilities, history, modes, needs, prison
-from Script.Modules.domains import work
+from Script.Modules.domains import abilities, flags, history, modes, needs
+from Script.Modules.domains import player_ability, prison, work
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
@@ -112,15 +112,6 @@ def _name(chara: object) -> str:
     return str(getattr(chara, "name", "?"))
 
 
-def _sp(chara: object) -> game_type.SPECIAL_FLAG | None:
-    """
-    参数: chara 角色对象
-    返回值: 角色 sp_flag 对象，缺失时返回 None
-    功能: 缩短防御式特殊标记读取链。
-    """
-    return getattr(chara, "sp_flag", None)
-
-
 def _hs(chara: object) -> game_type.BODY_H_STATE | None:
     """
     参数: chara 角色对象
@@ -145,12 +136,12 @@ def _fully_out_of_h(chara: object) -> bool:
     返回值: bool，角色完全脱离普通H、无意识H、隐奸与露出时为 True
     功能: 复用 HGROUP-31 的完全脱离 H 四字段口径。
     """
-    sp = _sp(chara)
-    return sp is not None and not (
-        getattr(sp, "is_h", False)
-        or getattr(sp, "unconscious_h", 0) != 0
-        or getattr(sp, "hidden_sex_mode", 0) != 0
-        or getattr(sp, "exhibitionism_sex_mode", 0) != 0
+    cid = getattr(chara, "cid", None)
+    return isinstance(cid, int) and not (
+        flags.get(cid, "is_h")
+        or flags.get(cid, "unconscious_h") != 0
+        or flags.get(cid, "hidden_sex_mode") != 0
+        or flags.get(cid, "exhibitionism_sex_mode") != 0
     )
 
 
@@ -209,11 +200,16 @@ def _offline_context(chara: object) -> str:
     返回值: str 离线来源标记摘要
     功能: 仅把装袋、外勤、外交访问、逃跑等来源标记写入消息上下文，不把坐标误当离线哨兵。
     """
-    sp = _sp(chara)
+    cid = getattr(chara, "cid", None)
+    if not isinstance(cid, int):
+        return (
+            "be_bagged=None, field_commission=None, in_diplomatic_visit=None, "
+            "escaping=None, vistor=None"
+        )
     return (
-        f"be_bagged={getattr(sp, 'be_bagged', None)}, field_commission={getattr(sp, 'field_commission', None)}, "
-        f"in_diplomatic_visit={getattr(sp, 'in_diplomatic_visit', None)}, escaping={getattr(sp, 'escaping', None)}, "
-        f"vistor={getattr(sp, 'vistor', None)}"
+        f"be_bagged={flags.get(cid, 'be_bagged')}, field_commission={flags.get(cid, 'field_commission')}, "
+        f"in_diplomatic_visit={flags.get(cid, 'in_diplomatic_visit')}, escaping={flags.get(cid, 'escaping')}, "
+        f"vistor={flags.get(cid, 'vistor')}"
     )
 
 
@@ -234,18 +230,13 @@ def check_observable_01() -> list[CheckFailure]:
         or modes.group_sex()
     ):
         return []
-    pl_sp = _sp(pl)
-    if (
-        pl_sp is None
-        or getattr(pl_sp, "is_h", False)
-        or getattr(pl_sp, "hidden_sex_mode", 0) != 0
-    ):
+    if flags.get(0, "is_h") or flags.get(0, "hidden_sex_mode") != 0:
         return []
     bad = []
     for cid, chara in _iter_npcs(cache):
         if getattr(chara, "position", None) == getattr(
             pl, "position", None
-        ) and getattr(_sp(chara), "is_h", False):
+        ) and flags.get(cid, "is_h"):
             bad.append(cid)
     if not bad:
         return []
@@ -294,7 +285,7 @@ def check_observable_02() -> list[CheckFailure]:
         pos = getattr(_hs(chara), "insert_position", None)
         if isinstance(pos, int) and not isinstance(pos, bool):
             insertions.append((cid, pos))
-        if getattr(_sp(chara), "is_h", False):
+        if flags.get(cid, "is_h"):
             h_in_scene.append(cid)
     bad = []
     if (
@@ -381,14 +372,11 @@ def check_observable_04() -> list[CheckFailure]:
     pl = _pl(cache)
     if pl is None or getattr(cache, "debug_mode", False):
         return []
-    ability = getattr(pl, "pl_ability", None)
     talent = abilities.talent(pl.cid)
-    if ability is None:
-        return []
     bad = []
-    if getattr(ability, "visual", False) and not talent.get(307, 0):
+    if player_ability.get(0, "visual") and not talent.get(307, 0):
         bad.append("透视开关visual=True但基础透视素质307缺失，关闭指令不可用")
-    if getattr(ability, "hormone", False) and not talent.get(304, 0):
+    if player_ability.get(0, "hormone") and not talent.get(304, 0):
         bad.append(
             "信息素开关hormone=True但基础信息素素质304缺失，关闭指令不可用"
         )
@@ -423,7 +411,7 @@ def check_observable_05() -> list[CheckFailure]:
         or isinstance(target_id, bool)
         or target_id == 0
         or target_id not in data
-        or target_id == getattr(_sp(pl), "bagging_chara_id", None)
+        or target_id == flags.get(0, "bagging_chara_id")
     ):
         return []
     scene = _scene(cache, getattr(pl, "position", None))
@@ -463,9 +451,8 @@ def check_observable_06() -> list[CheckFailure]:
     bad = []
     details = []
     for cid, chara in _iter_live(cache):
-        sp = _sp(chara)
-        hidden = getattr(sp, "hidden_sex_mode", 0)
-        exhibitionism = getattr(sp, "exhibitionism_sex_mode", 0)
+        hidden = flags.get(cid, "hidden_sex_mode")
+        exhibitionism = flags.get(cid, "exhibitionism_sex_mode")
         if (
             isinstance(hidden, (int, float))
             and isinstance(exhibitionism, (int, float))
@@ -556,7 +543,7 @@ def check_observable_08() -> list[CheckFailure]:
     details = []
     for cid, chara in _iter_live(cache):
         drunk_point = needs.of(cid)["drunk"]
-        if getattr(_sp(chara), "unconscious_h", 0) == 2 and drunk_point <= 0:
+        if flags.get(cid, "unconscious_h") == 2 and drunk_point <= 0:
             bad.append(cid)
             details.append(
                 f"cid={cid}({_name(chara)}) drunk_point={drunk_point}"
@@ -656,8 +643,7 @@ def check_observable_12() -> list[CheckFailure]:
     services = getattr(assistant, "assistant_services", None)
     if not isinstance(services, dict) or not bool(services.get(2, 0)):
         return []
-    sp = _sp(assistant)
-    follow = getattr(sp, "is_follow", None)
+    follow = flags.get(assistant_id, "is_follow")
     if (
         follow in {2, 3, 4}
         or follow != 0
@@ -666,31 +652,35 @@ def check_observable_12() -> list[CheckFailure]:
     ):
         return []
     sleep_level = _sleep_level(assistant_id)
-    if sleep_level is None or getattr(sp, "tired", False) or sleep_level >= 2:
+    if (
+        sleep_level is None
+        or flags.get(assistant_id, "tired")
+        or sleep_level >= 2
+    ):
         return []
     physiological = (
-        getattr(sp, "rest", False)
-        or getattr(sp, "sleep", False)
-        or getattr(sp, "pee", False)
-        or _positive_number(getattr(sp, "eat_food", 0))
-        or _positive_number(getattr(sp, "help_buy_food", 0))
-        or _positive_number(getattr(sp, "help_make_food", 0))
-        or _positive_number(getattr(sp, "shower", 0))
-        or getattr(sp, "milk", False)
-        or _positive_number(getattr(sp, "masturebate", 0))
-        or getattr(sp, "npc_masturebate_for_player", False)
+        flags.get(assistant_id, "rest")
+        or flags.get(assistant_id, "sleep")
+        or flags.get(assistant_id, "pee")
+        or _positive_number(flags.get(assistant_id, "eat_food"))
+        or _positive_number(flags.get(assistant_id, "help_buy_food"))
+        or _positive_number(flags.get(assistant_id, "help_make_food"))
+        or _positive_number(flags.get(assistant_id, "shower"))
+        or flags.get(assistant_id, "milk")
+        or _positive_number(flags.get(assistant_id, "masturebate"))
+        or flags.get(assistant_id, "npc_masturebate_for_player")
     )
     if (
         physiological
-        or getattr(sp, "is_h", False)
-        or getattr(sp, "unconscious_h", 0) != 0
+        or flags.get(assistant_id, "is_h")
+        or flags.get(assistant_id, "unconscious_h") != 0
     ):
         return []
     if (
-        getattr(sp, "be_bagged", False)
-        or getattr(sp, "field_commission", 0)
-        or getattr(sp, "escaping", False)
-        or getattr(sp, "in_diplomatic_visit", 0)
+        flags.get(assistant_id, "be_bagged")
+        or flags.get(assistant_id, "field_commission")
+        or flags.get(assistant_id, "escaping")
+        or flags.get(assistant_id, "in_diplomatic_visit")
     ):
         return []
     return [
@@ -829,7 +819,7 @@ def check_observable_17() -> list[CheckFailure]:
                 f"move_src={getattr(behavior, 'move_src', None)} "
                 f"move_target={getattr(behavior, 'move_target', None)} duration={getattr(behavior, 'duration', None)} "
                 f"start_time={getattr(behavior, 'start_time', None)} "
-                f"is_follow={getattr(_sp(chara), 'is_follow', None)} is_h={getattr(_sp(chara), 'is_h', None)}"
+                f"is_follow={flags.get(cid, 'is_follow')} is_h={flags.get(cid, 'is_h')}"
             )
     if not bad:
         return []

@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -75,7 +76,9 @@ def num_fields(
                 target["remaining_volume"],
             )
     yield "pl_ability.today_sanity_point_cost", (
-        character.pl_ability.today_sanity_point_cost
+        kernel_data.domain("player_ability").get(
+            character.cid, "today_sanity_point_cost"
+        )
     )
 
 

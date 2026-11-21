@@ -17,7 +17,7 @@ from Script.Config import game_config
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
 from typing import TYPE_CHECKING
-from Script.Modules.domains import education, facility
+from Script.Modules.domains import education, facility, flags
 
 if TYPE_CHECKING:
     import datetime
@@ -637,7 +637,7 @@ def get_teacher_candidate_list() -> list[int]:
             != education_constant.TEACHER_WORK_TYPE
         ):
             continue
-        if character_data.sp_flag.imprisonment:
+        if flags.get(character_data.cid, "imprisonment"):
             continue
         result.append(character_id)
     return result

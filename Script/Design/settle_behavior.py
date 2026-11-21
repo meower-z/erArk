@@ -7,29 +7,16 @@ import random
 from functools import wraps
 from types import FunctionType
 from typing import TYPE_CHECKING, Callable, ParamSpec, Protocol, TypeVar
-from Script.Core import (
-    cache_control,
-    constant,
-    constant_effect,
-    game_type,
-    get_text,
-    text_handle,
-    rich_text,
-    num,
-)
-from Script.Design import (
-    attr_text,
-    attr_calculation,
-    handle_premise,
-    talk,
-    game_time,
-    second_behavior,
-)
+from Script.Core import cache_control, constant, constant_effect, game_type
+from Script.Core import get_text, num, rich_text, text_handle
+from Script.Design import attr_calculation, attr_text, game_time
+from Script.Design import handle_premise, second_behavior, talk
 from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
-from Script.Modules.domains import abilities, modes, needs, work
+from Script.Modules.domains import abilities, action_info, flags, modes, needs
+from Script.Modules.domains import work
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -424,7 +411,7 @@ def handle_settle_behavior(
                     color_name = target_data.name
                 name = f"\n<{color_name}>{target_data.name}</{color_name}>"
                 # 输出无意识状态的提示信息
-                now_unconscious_h = target_data.sp_flag.unconscious_h
+                now_unconscious_h = flags.get(target_data.cid, "unconscious_h")
                 if now_unconscious_h:
                     # 催眠颜色
                     if handle_premise.handle_unconscious_hypnosis_flag(
@@ -699,10 +686,14 @@ def handle_instruct_data(
             target_character_data: game_type.Character = cache.character_data[
                 now_character_data.target_character_id
             ]
-            target_character_data.action_info.interacting_character_end_info = [
-                character_id,
-                end_time,
-            ]
+            action_info.set(
+                target_character_data.cid,
+                "interacting_character_end_info",
+                [
+                    character_id,
+                    end_time,
+                ],
+            )
         # 娱乐和工作类的指令则进行一次设施损坏检测
         if behavior_id in game_config.config_behavior:
             behavior_data = game_config.config_behavior[behavior_id]
@@ -902,23 +893,28 @@ def change_character_talkcount_for_time(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if not target_data.action_info.talk_time:
-        target_data.action_info.talk_time = now_time
+    if not action_info.get(target_data.cid, "talk_time"):
+        action_info.set(target_data.cid, "talk_time", now_time)
     if (
-        now_time.day == target_data.action_info.talk_time.day
-        and now_time.hour > target_data.action_info.talk_time.hour
+        now_time.day == action_info.get(target_data.cid, "talk_time").day
+        and now_time.hour > action_info.get(target_data.cid, "talk_time").hour
     ):
-        target_data.action_info.talk_count -= (
-            now_time.hour - target_data.action_info.talk_time.hour
+        action_info.add(
+            target_data.cid,
+            "talk_count",
+            -(
+                now_time.hour
+                - action_info.get(target_data.cid, "talk_time").hour
+            ),
         )
-        target_data.action_info.talk_time = now_time
+        action_info.set(target_data.cid, "talk_time", now_time)
         # print("检测到时间前进了至少一小时，聊天计数器-1")
-    elif now_time.day != target_data.action_info.talk_time.day:
-        target_data.action_info.talk_count = 0
-        target_data.action_info.talk_time = now_time
+    elif now_time.day != action_info.get(target_data.cid, "talk_time").day:
+        action_info.set(target_data.cid, "talk_count", 0)
+        action_info.set(target_data.cid, "talk_time", now_time)
         # print("检测到时间前进了至少一天，聊天计数器归零")
-    if target_data.action_info.talk_count < 0:
-        target_data.action_info.talk_count = 0
+    if action_info.get(target_data.cid, "talk_count") < 0:
+        action_info.set(target_data.cid, "talk_count", 0)
     # print("target_data.action_info.talk_count :",target_data.action_info.talk_count)
 
 

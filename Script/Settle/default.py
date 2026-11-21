@@ -48,9 +48,11 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import achievement, facility, fridge, history, modes
-from Script.Modules.domains import maintenance, medical, needs, official, prison
-from Script.Modules.domains import abilities, physical_exam, recruit, visitor
+from Script.Modules.domains import abilities, achievement, action_info
+from Script.Modules.domains import facility, flags, fridge, history
+from Script.Modules.domains import maintenance, medical, modes, needs, official
+from Script.Modules.domains import physical_exam, player_ability
+from Script.Modules.domains import player_collection, prison, recruit, visitor
 from Script.Modules.domains import warehouse
 
 _: FunctionType = get_text._
@@ -1119,12 +1121,10 @@ def handle_first_sex(
         elif len(target_data.cloth.cloth_off[9]):
             pan_id = target_data.cloth.cloth_off[9][-1]
         # BUG 这一块疑似有BUG，但是未能确定来源，所以先多加个限制条件
-        elif character_data.pl_collection.npc_panties_tem.get(
+        elif panties_tem := player_collection.get("npc_panties_tem").get(
             character_data.target_character_id
         ):
-            pan_id = character_data.pl_collection.npc_panties_tem[
-                character_data.target_character_id
-            ][-1]
+            pan_id = panties_tem[-1]
         if pan_id is not None:
             pan_name = game_config.config_clothing_tem[pan_id].name
             target_data.cloth.cloth_wear[9] = []
@@ -1132,16 +1132,18 @@ def handle_first_sex(
                 "\n获得了{0}穿着的{1}(沾有处子血)，已自动存入收藏品列表，可在藏物馆查看\n\n"
             ).format(target_data.name, pan_name)
             now_draw.draw()
-            character_data.pl_collection.first_panties[
-                character_data.target_character_id
-            ] = _("{0}(沾有处子血)").format(pan_name)
+            player_collection.set_first_panty(
+                character_data.target_character_id,
+                _("{0}(沾有处子血)").format(pan_name),
+            )
         else:
             now_draw.text = _(
                 "\n{0}的处子血滴了下去，被你谨慎地用试管接了一滴，已自动存入收藏品列表，可在藏物馆查看\n\n"
             ).format(target_data.name)
-            character_data.pl_collection.first_panties[
-                character_data.target_character_id
-            ] = _("一滴{0}的处子血").format(target_data.name)
+            player_collection.set_first_panty(
+                character_data.target_character_id,
+                _("一滴{0}的处子血").format(target_data.name),
+            )
             now_draw.draw()
 
 
@@ -1425,10 +1427,10 @@ def handle_penetrating_vision_on(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.pl_ability.visual = True
+    player_ability.set(character_id, visual=True)
     needs.add(character_id, "sanity", -1, min=0)
     change_data.sanity_point -= 1
-    character_data.pl_ability.today_sanity_point_cost += 1
+    player_ability.add_sanity_cost(character_id, 1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1453,7 +1455,7 @@ def handle_penetrating_vision_off(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.pl_ability.visual = False
+    player_ability.set(character_id, visual=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1478,7 +1480,7 @@ def handle_hormone_on(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.pl_ability.hormone = True
+    player_ability.set(character_id, hormone=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1503,7 +1505,7 @@ def handle_hormone_off(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.pl_ability.hormone = False
+    player_ability.set(character_id, hormone=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1543,7 +1545,7 @@ def handle_hypnosis_one(
     )
     needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
-    character_data.pl_ability.today_sanity_point_cost += santi_down
+    player_ability.add_sanity_cost(character_id, santi_down)
     # 结算催眠度增加
     hypnosis_degree_grow = hypnosis_panel.hypnosis_degree_calculation(
         character_data.target_character_id
@@ -1564,14 +1566,13 @@ def handle_hypnosis_one(
         character_data.target_character_id
     )
     # 判断是否理智已耗尽导致催眠结束
-    if (
-        needs.of(character_id)["sanity"] == 0
-        and target_character_data.sp_flag.unconscious_h
+    if needs.of(character_id)["sanity"] == 0 and flags.get(
+        target_character_data.cid, "unconscious_h"
     ):
         # 空气催眠则重置催眠地点和解开门锁
-        if target_character_data.sp_flag.unconscious_h == 5:
-            character_data.pl_ability.air_hypnosis_position = ""
-        target_character_data.sp_flag.unconscious_h = 0
+        if flags.get(target_character_data.cid, "unconscious_h") == 5:
+            player_ability.set(character_id, air_hypnosis_position="")
+        flags.set(target_character_data.cid, unconscious_h=0)
         hypnosis_state.clear_hypnosis_sub_states(
             character_data.target_character_id
         )
@@ -1633,7 +1634,7 @@ def handle_hypnosis_all(
     # 结算理智消耗
     needs.add(character_data.cid, "sanity", -sanity_point_cost, min=0)
     change_data.sanity_point -= sanity_point_cost
-    character_data.pl_ability.today_sanity_point_cost += sanity_point_cost
+    player_ability.add_sanity_cost(character_data.cid, sanity_point_cost)
     # 遍历催眠角色列表
     for target_id in hypnosis_character_list:
         target_character_data = cache.character_data[target_id]
@@ -1669,9 +1670,9 @@ def handle_hypnosis_all(
         for target_id in scene_character_list:
             target_character_data = cache.character_data[target_id]
             # 空气催眠则重置催眠地点和解开门锁
-            if target_character_data.sp_flag.unconscious_h == 5:
-                character_data.pl_ability.air_hypnosis_position = ""
-            target_character_data.sp_flag.unconscious_h = 0
+            if flags.get(target_character_data.cid, "unconscious_h") == 5:
+                player_ability.set(character_data.cid, air_hypnosis_position="")
+            flags.set(target_character_data.cid, unconscious_h=0)
             hypnosis_state.clear_hypnosis_sub_states(target_id)
             now_draw = draw.NormalDraw()
             now_draw.text = _("\n{0}的理智耗尽，催眠结束\n\n").format(
@@ -1706,11 +1707,11 @@ def handle_hypnosis_cancel(
     if character_data.dead:
         return
     # 空气催眠则重置催眠地点和解开门锁
-    if target_character_data.sp_flag.unconscious_h == 5:
-        character_data.pl_ability.air_hypnosis_position = ""
+    if flags.get(target_character_data.cid, "unconscious_h") == 5:
+        player_ability.set(character_id, air_hypnosis_position="")
     # 清零催眠H状态
-    if target_character_data.sp_flag.unconscious_h >= 4:
-        target_character_data.sp_flag.unconscious_h = 0
+    if flags.get(target_character_data.cid, "unconscious_h") >= 4:
+        flags.set(target_character_data.cid, unconscious_h=0)
     # 去掉大部分的心体催眠状态
     hypnosis_state.clear_hypnosis_sub_states(character_data.target_character_id)
     # 结算二段行为
@@ -1746,7 +1747,7 @@ def handle_target_hypnosis_increase_body_sensitivity_on(
     target_character_data.hypnosis.increase_body_sensitivity = True
     needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
-    character_data.pl_ability.today_sanity_point_cost += santi_down
+    player_ability.add_sanity_cost(character_id, santi_down)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1801,7 +1802,7 @@ def handle_target_hypnosis_force_climax(
         return
     needs.add(character_id, "sanity", -50, min=0)
     change_data.sanity_point -= 50
-    character_data.pl_ability.today_sanity_point_cost += 50
+    player_ability.add_sanity_cost(character_id, 50)
 
     base_chara_climix_common_settle(
         character_data.target_character_id,
@@ -1845,7 +1846,7 @@ def handle_target_hypnosis_force_ovulation_on(
         target_character_data.pregnancy.external_ovulation_chance = True
     needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
-    character_data.pl_ability.today_sanity_point_cost += santi_down
+    player_ability.add_sanity_cost(character_id, santi_down)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1908,11 +1909,11 @@ def handle_target_hypnosis_blockhead_switch_change(
     )
     if not target_in_blockhead:
         target_character_data.hypnosis.blockhead = True
-        target_character_data.sp_flag.unconscious_h = 6
+        flags.set(target_character_data.cid, unconscious_h=6)
         santi_down = 10
         needs.add(character_id, "sanity", -santi_down, min=0)
         change_data.sanity_point -= santi_down
-        character_data.pl_ability.today_sanity_point_cost += santi_down
+        player_ability.add_sanity_cost(character_id, santi_down)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1942,7 +1943,7 @@ def handle_target_hypnosis_blockhead_off(
         return
     if target_character_data.hypnosis.blockhead:
         target_character_data.hypnosis.blockhead = False
-        target_character_data.sp_flag.unconscious_h = 0
+        flags.set(target_character_data.cid, unconscious_h=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1978,11 +1979,11 @@ def handle_target_hypnosis_active_h_switch_change(
     if not target_in_active_h:
         target_character_data.hypnosis.active_h = True
         target_character_data.h_state.npc_active_h = True
-        target_character_data.sp_flag.unconscious_h = 6
+        flags.set(target_character_data.cid, unconscious_h=6)
         santi_down = 10
         needs.add(character_id, "sanity", -santi_down, min=0)
         change_data.sanity_point -= santi_down
-        character_data.pl_ability.today_sanity_point_cost += santi_down
+        player_ability.add_sanity_cost(character_id, santi_down)
         handle_instruct.plan_instruct_common_settle(constant.Behavior.H)
 
 
@@ -2014,7 +2015,7 @@ def handle_target_hypnosis_active_h_off(
     if target_character_data.hypnosis.active_h:
         target_character_data.hypnosis.active_h = False
         target_character_data.h_state.npc_active_h = False
-        target_character_data.sp_flag.unconscious_h = 0
+        flags.set(target_character_data.cid, unconscious_h=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2049,7 +2050,7 @@ def handle_target_hypnosis_pain_as_pleasure_switch_change(
         santi_down = 10
         needs.add(character_id, "sanity", -santi_down, min=0)
         change_data.sanity_point -= santi_down
-        character_data.pl_ability.today_sanity_point_cost += santi_down
+        player_ability.add_sanity_cost(character_id, santi_down)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2102,7 +2103,7 @@ def handle_time_stop_on(
     target_chara_set.add(0)
     for chara_id in target_chara_set:
         chara_data = cache.character_data[chara_id]
-        chara_data.sp_flag.unconscious_h = 3
+        flags.set(chara_data.cid, unconscious_h=3)
         # 重置时停中的角色的时停高潮计数
         for state_id in game_config.config_character_state:
             if game_config.config_character_state[state_id].type == 0:
@@ -2131,7 +2132,7 @@ def handle_time_stop_off(
     target_chara_set.add(0)
     for chara_id in target_chara_set:
         chara_data = cache.character_data[chara_id]
-        chara_data.sp_flag.unconscious_h = 0
+        flags.set(chara_data.cid, unconscious_h=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2156,8 +2157,9 @@ def handle_target_be_carried_in_time_stop(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.target_character_id == character_id:
         return
-    character_data.pl_ability.carry_chara_id_in_time_stop = (
-        character_data.target_character_id
+    player_ability.set(
+        character_id,
+        carry_chara_id_in_time_stop=character_data.target_character_id,
     )
 
 
@@ -2180,8 +2182,7 @@ def handle_target_not_be_carried_in_time_stop(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.pl_ability.carry_chara_id_in_time_stop = 0
+    player_ability.set(character_id, carry_chara_id_in_time_stop=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2204,12 +2205,13 @@ def handle_target_be_free_in_time_stop(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    character_data.pl_ability.free_in_time_stop_chara_id = (
-        character_data.target_character_id
+    player_ability.set(
+        character_id,
+        free_in_time_stop_chara_id=character_data.target_character_id,
     )
     needs.add(character_id, "sanity", -50, min=0)
     change_data.sanity_point -= 50
-    character_data.pl_ability.today_sanity_point_cost += 50
+    player_ability.add_sanity_cost(character_id, 50)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2231,8 +2233,7 @@ def handle_target_not_be_free_in_time_stop(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.pl_ability.free_in_time_stop_chara_id = 0
+    player_ability.set(character_id, free_in_time_stop_chara_id=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2654,8 +2655,7 @@ def handle_self_join_group_sex_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.go_to_join_group_sex = True
+    flags.set(character_id, go_to_join_group_sex=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2677,8 +2677,7 @@ def handle_self_join_group_sex_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.go_to_join_group_sex = False
+    flags.set(character_id, go_to_join_group_sex=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2940,8 +2939,7 @@ def handle_clear_target_toilet_path(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.action_info.find_another_toilet = []
+    action_info.set(character_id, "find_another_toilet", [])
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3017,8 +3015,8 @@ def handle_target_be_carried(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.target_character_id == character_id:
         return
-    character_data.action_info.carry_chara_id = (
-        character_data.target_character_id
+    action_info.set(
+        character_id, "carry_chara_id", character_data.target_character_id
     )
 
 
@@ -3044,7 +3042,7 @@ def handle_target_not_be_carried(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.target_character_id == character_id:
         return
-    character_data.action_info.carry_chara_id = 0
+    action_info.set(character_id, "carry_chara_id", 0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3066,9 +3064,10 @@ def handle_get_sleep_disturbed_state(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.action_info.sleep_disturbed_end_time = (
-        game_time.get_sub_date(minute=60, old_date=game_time.now())
+    action_info.set(
+        character_id,
+        "sleep_disturbed_end_time",
+        game_time.get_sub_date(minute=60, old_date=game_time.now()),
     )
 
 
@@ -3632,8 +3631,7 @@ def handle_not_tired(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.tired = False
+    flags.set(character_id, tired=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3756,7 +3754,7 @@ def handle_target_add_small_p_feel(
     )
     now_add_lust *= adjust
     target_data.eja_point += num.exact(now_add_lust)
-    target_data.action_info.last_eaj_add_time = now_time
+    action_info.set(target_data.cid, "last_eaj_add_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -4338,7 +4336,7 @@ def handle_add_small_p_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = now_time
+    action_info.set(character_id, "last_eaj_add_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -4833,22 +4831,18 @@ def handle_move_to_pre_scene(
     if character_data.dead:
         return
     # 如果前一场景的移动数据与当前场景相同，则删除掉前一场景的移动数据
-    while (
-        character_data.action_info.past_move_position_list
-        and character_data.action_info.past_move_position_list[-1]
-        == character_data.position
-    ):
-        character_data.action_info.past_move_position_list.pop(-1)
+    past_moves = action_info.get(character_id, "past_move_position_list")
+    while past_moves and past_moves[-1] == character_data.position:
+        past_moves.pop(-1)
+    action_info.set(character_id, "past_move_position_list", past_moves)
     # 然后再判断是否还有前一场景的移动数据，如果有则移动至前一场景
-    if len(character_data.action_info.past_move_position_list):
-        character_data.behavior.move_target = (
-            character_data.action_info.past_move_position_list[-1]
-        )
+    if past_moves:
+        character_data.behavior.move_target = past_moves[-1]
         handle_move_to_target_scene(
             character_id, add_time, change_data, now_time
         )
         # 删除掉前一场景的移动数据
-        character_data.action_info.past_move_position_list.pop(-1)
+        action_info.pop_past_move(character_id, -1)
     # 博士被赶回前一场景后，原寻路目标已不可达，取消本次连续寻路以避免再次进入并触发循环。
     if character_id == 0:
         character_data.behavior.move_final_target = []
@@ -5012,18 +5006,18 @@ def handle_self_h_state_reset(
     # 清零阴茎位置
     character_data.h_state.insert_position = -1
     # 清零自慰状态
-    character_data.sp_flag.masturebate = 0
-    character_data.sp_flag.npc_masturebate_for_player = False
+    flags.set(character_id, masturebate=0)
+    flags.set(character_id, npc_masturebate_for_player=False)
     # 清零前往群交
-    character_data.sp_flag.go_to_join_group_sex = False
+    flags.set(character_id, go_to_join_group_sex=False)
     # 清零自己在群交模板中的数据
     group_sex_panel.clear_character_data_in_group_sex_template(character_id)
     # 清零隐奸模式
-    character_data.sp_flag.hidden_sex_mode = 0
+    flags.set(character_id, hidden_sex_mode=0)
     # 清零露出模式
-    character_data.sp_flag.exhibitionism_sex_mode = 0
+    flags.set(character_id, exhibitionism_sex_mode=0)
     # 清零玩具档位
-    character_data.sp_flag.sex_toy_level = 0
+    flags.set(character_id, sex_toy_level=0)
     # 记录高潮进度
     for state_id in game_config.config_character_state:
         if game_config.config_character_state[state_id].type == 0:
@@ -5053,7 +5047,7 @@ def handle_self_h_state_reset(
             character_data.position, dormitory_list, character_id
         )
     # 退出H模式
-    character_data.sp_flag.is_h = False
+    flags.set(character_id, is_h=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5239,7 +5233,7 @@ def handle_chara_off_line(
         if game_config.config_character_state[state_id].type == 0:
             character_data.status_data[state_id] = 0
     # 清零跟随数据
-    character_data.sp_flag.is_follow = 0
+    flags.set(character_id, is_follow=0)
     # 从当前干员列表中移除
     if character_id in cache.npc_id_got:
         cache.npc_id_got.remove(character_id)
@@ -5277,13 +5271,13 @@ def handle_chara_on_line(
     needs.set(character_id, mana=needs.of(character_id)["mana_max"])
     needs.set(character_id, hunger=0, tired=0, urine=0, sleep=0)
     # 清零各特殊状态flag
-    old_imprisonment = character_data.sp_flag.imprisonment
+    old_imprisonment = flags.get(character_id, "imprisonment")
     # 外交访问状态需要跨上线保留，否则外交官随罗德岛抵达驻在国回岛后会丢失驻在国信息
-    old_in_diplomatic_visit = character_data.sp_flag.in_diplomatic_visit
-    character_data.sp_flag = game_type.SPECIAL_FLAG()
-    character_data.sp_flag.in_diplomatic_visit = old_in_diplomatic_visit
+    old_in_diplomatic_visit = flags.get(character_id, "in_diplomatic_visit")
+    flags.reset(character_id)
+    flags.set(character_id, in_diplomatic_visit=old_in_diplomatic_visit)
     if old_imprisonment:
-        character_data.sp_flag.imprisonment = True
+        flags.set(character_id, imprisonment=True)
     # 赋予默认行动数据：与内核加入角色时给的空闲一致，此刻开始、0分钟；已在内核里的角色当前的行动被打断
     from Script.Modules.gameplay_resolution import plan_queue
 
@@ -5327,7 +5321,7 @@ def handle_t_be_bagged(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.sp_flag.be_bagged = True
+    flags.set(target_data.cid, be_bagged=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5353,7 +5347,7 @@ def handle_t_be_imprisonment(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.sp_flag.imprisonment = True
+    flags.set(target_data.cid, imprisonment=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5375,8 +5369,7 @@ def handle_shower_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.shower = 1
+    flags.set(character_id, shower=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5435,8 +5428,7 @@ def handle_shower_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.shower = 0
+    flags.set(character_id, shower=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5458,8 +5450,7 @@ def handle_shower_flag_to_2(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.shower = 2
+    flags.set(character_id, shower=2)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5481,8 +5472,7 @@ def handle_shower_flag_to_3(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.shower = 3
+    flags.set(character_id, shower=3)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5504,8 +5494,7 @@ def handle_shower_flag_to_4(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.shower = 4
+    flags.set(character_id, shower=4)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5527,8 +5516,7 @@ def handle_eat_food_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.eat_food = 0
+    flags.set(character_id, eat_food=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5550,8 +5538,7 @@ def handle_eat_food_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.eat_food = 1
+    flags.set(character_id, eat_food=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5573,8 +5560,7 @@ def handle_eat_food_flag_to_2(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.eat_food = 2
+    flags.set(character_id, eat_food=2)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5596,8 +5582,7 @@ def handle_sleep_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.sleep = False
+    flags.set(character_id, sleep=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5619,8 +5604,7 @@ def handle_sleep_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.sleep = True
+    flags.set(character_id, sleep=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5642,8 +5626,7 @@ def handle_rest_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.rest = False
+    flags.set(character_id, rest=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5665,8 +5648,7 @@ def handle_rest_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.rest = True
+    flags.set(character_id, rest=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5688,8 +5670,7 @@ def handle_pee_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.pee = False
+    flags.set(character_id, pee=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5711,8 +5692,7 @@ def handle_pee_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.pee = True
+    flags.set(character_id, pee=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5734,8 +5714,7 @@ def handle_swim_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.swim = 1
+    flags.set(character_id, swim=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5757,8 +5736,7 @@ def handle_swim_flag_to_2(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.swim = 2
+    flags.set(character_id, swim=2)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5780,8 +5758,7 @@ def handle_maintenance_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.work_maintenance = False
+    flags.set(character_id, work_maintenance=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5803,8 +5780,7 @@ def handle_morning_salutation_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.morning_salutation = 0
+    flags.set(character_id, morning_salutation=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5872,10 +5848,9 @@ def handle_cancel_all_work_and_entertainment_flag(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.swim = 0
-    character_data.sp_flag.bathhouse_entertainment = 0
-    character_data.sp_flag.work_maintenance = False
+    flags.set(character_id, swim=0)
+    flags.set(character_id, bathhouse_entertainment=0)
+    flags.set(character_id, work_maintenance=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5897,8 +5872,7 @@ def handle_self_intelligent_follow_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.is_follow = 1
+    flags.set(character_id, is_follow=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5945,8 +5919,7 @@ def handle_self_intelligent_follow_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.is_follow = 0
+    flags.set(character_id, is_follow=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6020,8 +5993,7 @@ def handle_self_stop_move(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.move_stop = True
+    flags.set(character_id, move_stop=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6043,8 +6015,7 @@ def handle_h_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.is_h = False
+    flags.set(character_id, is_h=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6066,14 +6037,13 @@ def handle_h_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 只在从非H状态首次进入H时撤销旧移动计划；H状态中本effect仍会被反复结算，
     # 此时is_h已为真而跳过，避免误删进入H后角色新下达的移动指令
-    if not character_data.sp_flag.is_h:
+    if not flags.get(character_id, "is_h"):
         character_move.cancel_movement_plan(character_id)
-    character_data.sp_flag.is_h = True
+    flags.set(character_id, is_h=True)
     # 进入H即视为已目击本场H：即使之后合法离场(如力竭)清了is_h，回场也不会被当作新旁观者而重复触发"H中被发现"面板
-    character_data.sp_flag.see_pl_h = True
+    flags.set(character_id, see_pl_h=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6175,8 +6145,7 @@ def handle_self_hidden_sex_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.hidden_sex_mode = 0
+    flags.set(character_id, hidden_sex_mode=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6251,8 +6220,7 @@ def handle_self_exhibitionism_sex_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.exhibitionism_sex_mode = 0
+    flags.set(character_id, exhibitionism_sex_mode=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6327,8 +6295,7 @@ def handle_unconscious_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.unconscious_h = 0
+    flags.set(character_id, unconscious_h=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6350,8 +6317,7 @@ def handle_unconscious_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.unconscious_h = 1
+    flags.set(character_id, unconscious_h=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6373,8 +6339,7 @@ def handle_unconscious_flag_to_2(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.unconscious_h = 2
+    flags.set(character_id, unconscious_h=2)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6396,8 +6361,7 @@ def handle_unconscious_flag_to_3(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.unconscious_h = 3
+    flags.set(character_id, unconscious_h=3)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6419,8 +6383,7 @@ def handle_unconscious_flag_to_4(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.unconscious_h = 4
+    flags.set(character_id, unconscious_h=4)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6442,8 +6405,7 @@ def handle_unconscious_flag_to_5(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.unconscious_h = 5
+    flags.set(character_id, unconscious_h=5)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6465,8 +6427,7 @@ def handle_unconscious_flag_to_6(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.unconscious_h = 6
+    flags.set(character_id, unconscious_h=6)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6488,8 +6449,7 @@ def handle_unconscious_flag_to_7(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.unconscious_h = 7
+    flags.set(character_id, unconscious_h=7)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6511,8 +6471,7 @@ def handle_help_buy_food_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.help_buy_food = 0
+    flags.set(character_id, help_buy_food=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6534,8 +6493,7 @@ def handle_bathhouse_entertainment_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.bathhouse_entertainment = 0
+    flags.set(character_id, bathhouse_entertainment=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6557,8 +6515,7 @@ def handle_bathhouse_entertainment_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.bathhouse_entertainment = 1
+    flags.set(character_id, bathhouse_entertainment=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6580,8 +6537,7 @@ def handle_bathhouse_entertainment_flag_to_2(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.bathhouse_entertainment = 2
+    flags.set(character_id, bathhouse_entertainment=2)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6603,8 +6559,7 @@ def handle_milk_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.milk = False
+    flags.set(character_id, milk=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6626,9 +6581,8 @@ def handle_hypnosis_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.sp_flag.unconscious_h in [4, 5, 6, 7]:
-        character_data.sp_flag.unconscious_h = 0
+    if flags.get(character_id, "unconscious_h") in [4, 5, 6, 7]:
+        flags.set(character_id, unconscious_h=0)
     hypnosis_state.clear_hypnosis_sub_states(character_id)
 
 
@@ -6653,7 +6607,7 @@ def handle_target_angry_with_player_flag_to_0(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     target_character = cache.character_data[character_data.target_character_id]
-    target_character.sp_flag.angry_with_player = False
+    flags.set(target_character.cid, angry_with_player=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6675,8 +6629,7 @@ def handle_see_pl_h(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.see_pl_h = True
+    flags.set(character_id, see_pl_h=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6698,8 +6651,7 @@ def handle_cancel_see_pl_h(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.see_pl_h = False
+    flags.set(character_id, see_pl_h=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6721,8 +6673,7 @@ def handle_masturebate_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.masturebate = 0
+    flags.set(character_id, masturebate=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6744,8 +6695,7 @@ def handle_masturebate_before_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.masturebate_before_sleep = 0
+    flags.set(character_id, masturebate_before_sleep=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6767,8 +6717,7 @@ def handle_masturebate_before_flag_to_2(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.masturebate_before_sleep = 2
+    flags.set(character_id, masturebate_before_sleep=2)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6790,8 +6739,7 @@ def handle_masturebate_to_pl_flag_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.npc_masturebate_for_player = False
+    flags.set(character_id, npc_masturebate_for_player=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6816,7 +6764,7 @@ def handle_all_chara_masturebate_in_group_sex_flag_0(
     for chara_id in cache.npc_id_got:
         character_data: game_type.Character = cache.character_data[chara_id]
         if handle_premise.handle_masturebate_flag_3(chara_id):
-            character_data.sp_flag.masturebate = 0
+            flags.set(character_data.cid, masturebate=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6838,8 +6786,7 @@ def handle_help_make_food_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sp_flag.help_make_food = 0
+    flags.set(character_id, help_make_food=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6898,7 +6845,7 @@ def handle_talk_add_adjust(
             change_data_to_target_change=change_data,
         )
         # 记录谈话时间#
-        target_data.action_info.talk_time = now_time
+        action_info.set(target_data.cid, "talk_time", now_time)
         # print("聊天计数器时间变为 ：",target_data.action_info.talk_time)
 
 
@@ -7646,17 +7593,13 @@ def handle_milk_add_adjust(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
 
     now_milk = int(needs.of(character_data.target_character_id)["milk"])
     character_data.behavior.milk_ml += now_milk
     fridge.add(fridge.MILK, character_data.target_character_id, now_milk)
-    pl_character_data.pl_collection.milk_total.setdefault(
-        character_data.target_character_id, 0
+    player_collection.add_total(
+        "milk_total", character_data.target_character_id, now_milk
     )
-    pl_character_data.pl_collection.milk_total[
-        character_data.target_character_id
-    ] += now_milk
     needs.set(character_data.target_character_id, milk=0)
 
 
@@ -7707,11 +7650,11 @@ def handle_aromatherapy_add_adjust(
     ]
 
     # 如果没有选择配方则直接返回
-    if target_character_data.sp_flag.aromatherapy == 0:
+    if flags.get(target_character_data.cid, "aromatherapy") == 0:
         return
 
     # 回复
-    if target_character_data.sp_flag.aromatherapy == 1:
+    if flags.get(target_character_data.cid, "aromatherapy") == 1:
         needs.set(
             target_character_data.cid,
             hit=needs.of(target_character_data.cid)["hit_max"],
@@ -8728,7 +8671,7 @@ def handle_give_gift_add_adjust(
             abilities.ability(character_id)[40]
         )
         # 更新最后赠送时间
-        target_data.action_info.last_gift_time = game_time.now()
+        action_info.set(target_data.cid, "last_gift_time", game_time.now())
         # 好感礼物小
         if gift_data.item_id == 172:
             base_chara_favorability_and_trust_common_settle(
@@ -9523,9 +9466,9 @@ def handle_bagging_and_moving_add_just(
         character_data.target_character_id
     ]
     # 玩家数据结算
-    character_data.sp_flag.bagging_chara_id = character_data.target_character_id
+    flags.set(character_id, bagging_chara_id=character_data.target_character_id)
     # 对方数据结算
-    target_data.sp_flag.be_bagged = True
+    flags.set(target_data.cid, be_bagged=True)
     handle_chara_off_line(
         character_data.target_character_id, add_time, change_data, now_time
     )
@@ -9556,15 +9499,15 @@ def handle_release_from_bag_add_just(
         character_data.target_character_id
     ]
     # 玩家数据结算
-    character_data.sp_flag.bagging_chara_id = 0
+    flags.set(character_id, bagging_chara_id=0)
     # 对方数据结算
-    target_data.sp_flag.be_bagged = False
+    flags.set(target_data.cid, be_bagged=False)
     handle_chara_on_line(
         character_data.target_character_id, add_time, change_data, now_time
     )
     # 如果当时是时间停止H中，则刷新时停状态
     if handle_premise.handle_time_stop_on(character_id):
-        target_data.sp_flag.unconscious_h = 3
+        flags.set(target_data.cid, unconscious_h=3)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -9590,10 +9533,10 @@ def handle_put_into_prison_add_just(
         return
     # 获取角色数据
     character_data: game_type.Character = cache.character_data[0]
-    target_id = character_data.sp_flag.bagging_chara_id
+    target_id = flags.get(0, "bagging_chara_id")
     target_data: game_type.Character = cache.character_data[target_id]
     # 玩家数据结算
-    character_data.sp_flag.bagging_chara_id = 0
+    flags.set(0, bagging_chara_id=0)
     # 对方位置结算
     target_data.position = character_data.position
     target_data.behavior.move_src = character_data.position
@@ -9604,7 +9547,7 @@ def handle_put_into_prison_add_just(
     handle_chara_on_line(target_id, add_time, change_data, now_time)
     # 如果当时是时间停止H中，则刷新时停状态
     if handle_premise.handle_time_stop_on(character_id):
-        target_data.sp_flag.unconscious_h = 3
+        flags.set(target_id, unconscious_h=3)
     # 囚犯成就
     achievement_panel.achievement_flow(_("囚犯"))
 
@@ -9633,7 +9576,7 @@ def handle_set_free_add_just(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.sp_flag.imprisonment = False
+    flags.set(target_data.cid, imprisonment=False)
     from Script.System.Dormitory_System import common as dormitory_common
 
     # 回到旧宿舍
@@ -10445,7 +10388,7 @@ def handle_tech_add_p_adjust(
         # target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
         # target_change.status_data.setdefault(3, 0)
         # target_change.status_data[3] += now_add_lust
-        target_data.action_info.last_eaj_add_time = now_time
+        action_info.set(target_data.cid, "last_eaj_add_time", now_time)
         # 欲情变化#
         target_data.status_data.setdefault(12, 0)
         now_lust = target_data.status_data[12]
@@ -10817,7 +10760,7 @@ def handle_tech_add_pl_p_adjust(
         now_add_lust = int(now_add_lust)
         character_data.eja_point += now_add_lust
         change_data.eja_point += now_add_lust
-        character_data.action_info.last_eaj_add_time = now_time
+        action_info.set(character_id, "last_eaj_add_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -10907,7 +10850,7 @@ def handle_target_v_adjust_add_pain(
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) - 1
 
         # 扩长等级相对于阴茎等级的调整，因为阴茎等级默认为1，所以再加1
-        jj_size = character_data.pl_ability.jj_size
+        jj_size = player_ability.get(character_id, "jj_size")
         dilate_level = abilities.ability(target_data.cid)[9]
         final_level = dilate_level - jj_size + 1
         size_adjust = attr_calculation.get_pain_adjust(
@@ -10968,7 +10911,7 @@ def handle_target_a_adjust_add_pain(
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) - 1
 
         # 扩长等级相对于阴茎等级的调整，因为阴茎等级默认为1，所以再加1
-        jj_size = character_data.pl_ability.jj_size
+        jj_size = player_ability.get(character_id, "jj_size")
         dilate_level = abilities.ability(target_data.cid)[10]
         final_level = dilate_level - jj_size + 1
         size_adjust = attr_calculation.get_pain_adjust(
@@ -11029,7 +10972,7 @@ def handle_target_u_adjust_add_pain(
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) - 1
 
         # 扩长等级相对于阴茎等级的调整，因为尿道非常小，所以相对于V和A，初始+1-4 = -3
-        jj_size = character_data.pl_ability.jj_size
+        jj_size = player_ability.get(character_id, "jj_size")
         dilate_level = abilities.ability(target_data.cid)[11]
         final_level = dilate_level - jj_size - 3
         size_adjust = attr_calculation.get_pain_adjust(
@@ -11091,7 +11034,7 @@ def handle_target_w_adjust_add_pain(
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) - 1
 
         # 扩长等级相对于阴茎等级的调整，因为子宫较小，所以相对于V和A，初始+1-2=-1
-        jj_size = character_data.pl_ability.jj_size
+        jj_size = player_ability.get(character_id, "jj_size")
         dilate_level = abilities.ability(target_data.cid)[12]
         final_level = dilate_level - jj_size - 1
         size_adjust = attr_calculation.get_pain_adjust(
@@ -11149,7 +11092,7 @@ def handle_target_v_adjust_add_by_sex(
             return
 
         # 阴茎大小的调整
-        jj_size = character_data.pl_ability.jj_size
+        jj_size = player_ability.get(character_id, "jj_size")
         size_adjust = handle_ability.get_ability_adjust(jj_size) / 2
         # 腰技的调整
         waist_tech = abilities.ability(character_id)[76]
@@ -11212,7 +11155,7 @@ def handle_target_a_adjust_add_by_sex(
             return
 
         # 阴茎大小的调整
-        jj_size = character_data.pl_ability.jj_size
+        jj_size = player_ability.get(character_id, "jj_size")
         size_adjust = handle_ability.get_ability_adjust(jj_size) / 2
         # 腰技的调整
         waist_tech = abilities.ability(character_id)[76]
@@ -11275,7 +11218,7 @@ def handle_target_u_adjust_add_by_sex(
             return
 
         # 阴茎大小的调整
-        jj_size = character_data.pl_ability.jj_size
+        jj_size = player_ability.get(character_id, "jj_size")
         size_adjust = handle_ability.get_ability_adjust(jj_size) / 2
         # 腰技的调整
         waist_tech = abilities.ability(character_id)[76]
@@ -11338,7 +11281,7 @@ def handle_target_w_adjust_add_by_sex(
             return
 
         # 阴茎大小的调整
-        jj_size = character_data.pl_ability.jj_size
+        jj_size = player_ability.get(character_id, "jj_size")
         size_adjust = handle_ability.get_ability_adjust(jj_size) / 2
         # 腰技的调整
         waist_tech = abilities.ability(character_id)[76]
@@ -11488,7 +11431,7 @@ def handle_finger_tech_add_pl_p_adjust(
         now_add_lust = int(now_add_lust)
         character_data.eja_point += now_add_lust
         change_data.eja_point += now_add_lust
-        character_data.action_info.last_eaj_add_time = now_time
+        action_info.set(character_id, "last_eaj_add_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -11538,7 +11481,7 @@ def handle_tongue_tech_add_pl_p_adjust(
         now_add_lust = int(now_add_lust)
         character_data.eja_point += now_add_lust
         change_data.eja_point += now_add_lust
-        character_data.action_info.last_eaj_add_time = now_time
+        action_info.set(character_id, "last_eaj_add_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -11588,7 +11531,7 @@ def handle_feet_tech_add_pl_p_adjust(
         now_add_lust = int(now_add_lust)
         character_data.eja_point += now_add_lust
         change_data.eja_point += now_add_lust
-        character_data.action_info.last_eaj_add_time = now_time
+        action_info.set(character_id, "last_eaj_add_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -11638,7 +11581,7 @@ def handle_breast_tech_add_pl_p_adjust(
         now_add_lust = int(now_add_lust)
         character_data.eja_point += now_add_lust
         change_data.eja_point += now_add_lust
-        character_data.action_info.last_eaj_add_time = now_time
+        action_info.set(character_id, "last_eaj_add_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -11688,7 +11631,7 @@ def handle_vagina_tech_add_pl_p_adjust(
         now_add_lust = int(now_add_lust)
         character_data.eja_point += now_add_lust
         change_data.eja_point += now_add_lust
-        character_data.action_info.last_eaj_add_time = now_time
+        action_info.set(character_id, "last_eaj_add_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -11738,7 +11681,7 @@ def handle_anus_tech_add_pl_p_adjust(
         now_add_lust = int(now_add_lust)
         character_data.eja_point += now_add_lust
         change_data.eja_point += now_add_lust
-        character_data.action_info.last_eaj_add_time = now_time
+        action_info.set(character_id, "last_eaj_add_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -11783,7 +11726,7 @@ def handle_low_obscenity_failed_adjust(
         )
         # 加愤怒
         needs.add(target_data.cid, "angry", 50)
-        target_data.sp_flag.angry_with_player = True
+        flags.set(target_data.cid, angry_with_player=True)
         # 降好感
         base_chara_favorability_and_trust_common_settle(
             character_id, add_time, True, 0, -1, change_data
@@ -11842,7 +11785,7 @@ def handle_high_obscenity_failed_adjust(
         target_change.status_data[20] = now_add_lust
         # 加愤怒
         needs.add(target_data.cid, "angry", 100)
-        target_data.sp_flag.angry_with_player = True
+        flags.set(target_data.cid, angry_with_player=True)
         # 降好感
         base_chara_favorability_and_trust_common_settle(
             character_id, add_time, True, 0, -3, change_data
@@ -11915,7 +11858,7 @@ def handle_do_h_failed_adjust(
         target_change.status_data[20] = now_add_lust
         # 加愤怒
         needs.add(target_data.cid, "angry", 100)
-        target_data.sp_flag.angry_with_player = True
+        flags.set(target_data.cid, angry_with_player=True)
         # 降好感
         base_chara_favorability_and_trust_common_settle(
             character_id, add_time, True, 0, -15, change_data
@@ -12328,8 +12271,7 @@ def handle_record_training_time(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.action_info.last_training_time = now_time
+    action_info.set(character_id, "last_training_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12351,8 +12293,7 @@ def handle_record_shower_time(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.action_info.last_shower_time = now_time
+    action_info.set(character_id, "last_shower_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12374,8 +12315,7 @@ def handle_record_wake_time(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.action_info.wake_time = now_time
+    action_info.set(character_id, "wake_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12397,8 +12337,7 @@ def handle_record_conscious_h_time(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.action_info.last_conscious_h_time = now_time
+    action_info.set(character_id, "last_conscious_h_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12420,8 +12359,7 @@ def handle_record_unconscious_h_time(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.action_info.last_unconscious_h_time = now_time
+    action_info.set(character_id, "last_unconscious_h_time", now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(

@@ -7,21 +7,9 @@ from collections.abc import Mapping
 from types import FunctionType
 from typing import cast
 
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    text_handle,
-    constant,
-    py_cmd,
-)
-from Script.Design import (
-    map_handle,
-    attr_text,
-    handle_premise,
-    clothing,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text, py_cmd, text_handle
+from Script.Design import attr_text, clothing, handle_premise, map_handle
 from Script.UI.Moudle import draw, panel, view
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import edits
@@ -182,7 +170,6 @@ class Check_locker_Panel:
         self, npc_id_list: list[int], map_data: game_type.Scene
     ) -> None:
         """结算：偷取所有内裤"""
-        pl_data: game_type.Character = cache.character_data[0]
         count = 0
         show_text = "\n"
         for npc_id in npc_id_list:
@@ -193,12 +180,15 @@ class Check_locker_Panel:
             )
 
             if len(now_locker[9]):
-                pl_data.pl_collection.npc_panties_tem.setdefault(npc_id, [])
+                from Script.Modules.domains import player_collection
+
                 for pan_id in now_locker[9]:
                     # 跳过序号不存在的服装
                     if pan_id not in game_config.config_clothing_tem:
                         continue
-                    pl_data.pl_collection.npc_panties_tem[npc_id].append(pan_id)
+                    player_collection.append_list_map(
+                        "npc_panties_tem", npc_id, pan_id
+                    )
                     pan_name = game_config.config_clothing_tem[pan_id].name
                     show_text += _("获得了{0}的{1}\n").format(
                         character_data.name, pan_name
@@ -216,7 +206,6 @@ class Check_locker_Panel:
         self, npc_id_list: list[int], map_data: game_type.Scene
     ) -> None:
         """结算：偷取所有袜子"""
-        pl_data: game_type.Character = cache.character_data[0]
         count = 0
         show_text = "\n"
         for npc_id in npc_id_list:
@@ -227,12 +216,15 @@ class Check_locker_Panel:
             )
 
             if len(now_locker[10]):
-                pl_data.pl_collection.npc_socks_tem.setdefault(npc_id, [])
+                from Script.Modules.domains import player_collection
+
                 for socks_id in now_locker[10]:
                     # 跳过序号不存在的服装
                     if socks_id not in game_config.config_clothing_tem:
                         continue
-                    pl_data.pl_collection.npc_socks_tem[npc_id].append(socks_id)
+                    player_collection.append_list_map(
+                        "npc_socks_tem", npc_id, socks_id
+                    )
                     socks_name = game_config.config_clothing_tem[socks_id].name
                     show_text += _("获得了{0}的{1}\n").format(
                         character_data.name, socks_name
@@ -454,8 +446,11 @@ class FindDraw:
 
         pan_id = self.now_locker[9][-1]
         pan_name = game_config.config_clothing_tem[pan_id].name
-        self.pl_data.pl_collection.npc_panties_tem.setdefault(self.npc_id, [])
-        self.pl_data.pl_collection.npc_panties_tem[self.npc_id].append(pan_id)
+        from Script.Modules.domains import player_collection
+
+        player_collection.append_list_map(
+            "npc_panties_tem", self.npc_id, pan_id
+        )
         self.now_locker[9] = []
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
@@ -472,8 +467,11 @@ class FindDraw:
 
         socks_id = self.now_locker[10][-1]
         socks_name = game_config.config_clothing_tem[socks_id].name
-        self.pl_data.pl_collection.npc_socks_tem.setdefault(self.npc_id, [])
-        self.pl_data.pl_collection.npc_socks_tem[self.npc_id].append(socks_id)
+        from Script.Modules.domains import player_collection
+
+        player_collection.append_list_map(
+            "npc_socks_tem", self.npc_id, socks_id
+        )
         self.now_locker[10] = []
         now_draw = draw.WaitDraw()
         now_draw.width = window_width

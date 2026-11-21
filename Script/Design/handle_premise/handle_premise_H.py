@@ -4,7 +4,8 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import entertainment, modes, prison
+from Script.Modules.domains import action_info, entertainment, flags, modes
+from Script.Modules.domains import prison
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -2098,11 +2099,7 @@ def handle_group_sex_fail_and_self_agree(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
-    if (
-        character_id
-        in pl_character_data.action_info.ask_group_sex_refuse_chara_id_list
-    ):
+    if character_id in action_info.get(0, "ask_group_sex_refuse_chara_id_list"):
         return 0
     return 1
 
@@ -2375,8 +2372,7 @@ def handle_self_in_sex_class(character_id: int) -> int:
 
     if not modes.sex_class():
         return 0
-    character_data: game_type.Character = cache.character_data[character_id]
-    if not character_data.sp_flag.is_h:
+    if not flags.get(character_id, "is_h"):
         return 0
     return character_id in sex_class_handle.get_class_member_list()
 
@@ -2464,8 +2460,7 @@ def handle_self_now_go_to_join_group_sex(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.sp_flag.go_to_join_group_sex
+    return flags.get(character_id, "go_to_join_group_sex")
 
 
 @add_premise(constant_promise.Premise.SLEF_NOT_GO_TO_JOIN_GROUP_SEX)
@@ -3397,7 +3392,7 @@ def handle_condom_operation_to_body(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if getattr(cache.character_data[0].sp_flag, "condom_cloth_flag", 0) == 0:
+    if flags.get(0, "condom_cloth_flag") == 0:
         return 1
     return 0
 
@@ -3411,7 +3406,7 @@ def handle_condom_operation_to_cloth(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if getattr(cache.character_data[0].sp_flag, "condom_cloth_flag", 0) == 1:
+    if flags.get(0, "condom_cloth_flag") == 1:
         return 1
     return 0
 
@@ -3535,8 +3530,7 @@ def handle_self_now_sex_toy_off(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.sex_toy_level == 0
+    return flags.get(character_id, "sex_toy_level") == 0
 
 
 @add_premise(constant_promise.Premise.SELF_NOW_SEX_TOY_ON)
@@ -3548,8 +3542,7 @@ def handle_self_now_sex_toy_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.sex_toy_level > 0
+    return flags.get(character_id, "sex_toy_level") > 0
 
 
 @add_premise(constant_promise.Premise.SELF_NOW_SEX_TOY_WEAK)
@@ -3561,8 +3554,7 @@ def handle_self_now_sex_toy_weak(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.sex_toy_level == 1
+    return flags.get(character_id, "sex_toy_level") == 1
 
 
 @add_premise(constant_promise.Premise.SELF_NOW_SEX_TOY_NOT_WEAK)
@@ -3586,8 +3578,7 @@ def handle_self_now_sex_toy_middle(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.sex_toy_level == 2
+    return flags.get(character_id, "sex_toy_level") == 2
 
 
 @add_premise(constant_promise.Premise.SELF_NOW_SEX_TOY_STRONG)
@@ -3599,8 +3590,7 @@ def handle_self_now_sex_toy_strong(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.sp_flag.sex_toy_level == 3
+    return flags.get(character_id, "sex_toy_level") == 3
 
 
 @add_premise(constant_promise.Premise.SELF_NOW_SEX_TOY_NOT_STRONG)
