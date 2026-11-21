@@ -24,7 +24,7 @@ from Script.Config import game_config
 from Script.Core import game_type
 from Script.Design import basement
 from Script.Kernel import core
-from Script.Modules.domains import economy
+from Script.Modules.domains import economy, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state, upgrade
 from Script.System.Cooking_System import cooking
@@ -188,7 +188,7 @@ class EconomyStateTest(FastTestCase):
     def test_trader_order_follows_recruits(self) -> None:
         """已招募干员是 1 到 39 与 1050，其中 3 与 1050 是交易员：交易员名单按已招募干员集合的遍历顺序排列"""
         self.cache.npc_id_got = {*range(1, 40), 1050}
-        self.island.all_work_npc_set[economy.TRADER_WORK] = {3, 1050}
+        work.set_rosters({economy.TRADER_WORK: [1050, 3]})
         expected = [cid for cid in self.cache.npc_id_got if cid in (3, 1050)]
         self.assertEqual(economy.trade_operator_ids(), expected)
 

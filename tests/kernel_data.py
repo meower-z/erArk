@@ -9,7 +9,7 @@
 - set_facility_level 改设施等级。set_room_open 改待开放设施的开放情况。
 - set_needs 与 needs_of 改、读角色的 body.needs，set_milk_max 与 milk_max_of 改、读角色的乳汁上限（body.pregnancy）。
 - reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
-- project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力与设施的值，
+- project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册与监狱长的值，
   快照因此能与按缓存属性录下的快照比较。
 """
 
@@ -258,13 +258,14 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     facility_open.<待开放设施id> 与 effectiveness。
     动力记在 world.base 下，名字为 power_storage、power_storage_max、power_operator_ids_list、
     main_power_facility_operator_ids、orundum_reactor_list（主反应炉等级与副反应炉数量）、other_power_facility_list
-    与 battery_list。
+    与 battery_list。岗位名册与监狱长记在 world.base 下，名字为 all_work_npc_set（岗位id到角色id的集合）、
+    work_people_now、hr_operator_ids_list 与 current_warden_id。
     Keyword arguments:
     cache -- 游戏缓存
     state -- 快照，原地补上
     """
     from Script.Config import game_config
-    from Script.Modules.domains import facility, needs, power, pregnancy
+    from Script.Modules.domains import facility, needs, power, pregnancy, work
     from Script.Modules.save_load import upgrade
     from tests.snapshot import flatten
 
@@ -295,6 +296,10 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         "facility_level": facility.levels(),
         "facility_open": facility.opens(),
         "effectiveness": facility.effectiveness(),
+        "all_work_npc_set": {w: set(ids) for w, ids in work.rosters().items()},
+        "work_people_now": work.people_now(),
+        "hr_operator_ids_list": list(work.roster(work.HR_WORK)),
+        "current_warden_id": work.warden(),
     }
     for field, value in island.items():
         flatten(f"world.base.{field}", value, state)

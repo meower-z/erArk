@@ -268,10 +268,9 @@ check(
 section(
     "Plan 32 L19 / L16：婴儿长成幼女（真实的 pregnancy_handle._settle_baby_grow_up）"
 )
-# 上线时刷娱乐走成年随机池，要读场所开放表与派对日表；长大提示要读教师岗名单——夹具里这三样默认都是空的
+# 上线时刷娱乐走成年随机池，要读场所开放表与派对日表——夹具里这两样默认都是空的
 open_all_classroom()
 cache.rhodes_island.party_day_of_week = {day: 0 for day in range(7)}
-cache.rhodes_island.all_work_npc_set.setdefault(E.TEACHER_WORK_TYPE, set())
 clear_schedules()
 official_event_handle.push_official_event("婴儿5", 203)
 official_event_handle.push_official_event("通用27", 203)
