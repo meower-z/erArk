@@ -9,6 +9,7 @@ from Script.Core import (
     constant,
 )
 from Script.Design import attr_calculation
+from Script.Modules.domains import economy
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 import random
@@ -25,40 +26,10 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def _ensure_trade_setting(res_id: int) -> dict[str, int]:
-    """确保指定id资源的自动交易配置存在"""
-
-    settings = cache.rhodes_island.resource_type_auto_trade_setting.setdefault(
-        res_id,
-        {
-            "buy_on": False,
-            "buy_stock": 0,
-            "buy_price_percent": 100,
-            "sell_on": False,
-            "sell_stock": 0,
-            "sell_price_percent": 100,
-        },
-    )
-    for key in (
-        "buy_on",
-        "buy_stock",
-        "buy_price_percent",
-        "sell_on",
-        "sell_stock",
-        "sell_price_percent",
-    ):
-        settings.setdefault(key, 0)
-    return settings
-
-
 def _get_resource_type_key(resouce_id: int) -> str:
-    """获取资源类型并保证相关字典已初始化"""
+    """获取资源的类型"""
 
-    resouce_data = game_config.config_resouce[resouce_id]
-    res_type = resouce_data.type
-    cache.rhodes_island.resource_type_main_trader.setdefault(res_type, 0)
-    _ensure_trade_setting(resouce_id)
-    return res_type
+    return game_config.config_resouce[resouce_id].type
 
 
 def get_trade_resource_types() -> list[str]:
@@ -73,8 +44,6 @@ def get_trade_resource_types() -> list[str]:
         if res_type in seen_type:
             continue
         seen_type.add(res_type)
-        cache.rhodes_island.resource_type_main_trader.setdefault(res_type, 0)
-        _ensure_trade_setting(res_id)
         res_types.append(res_type)
     return res_types
 
@@ -98,8 +67,8 @@ def calculate_trade_multiplier(
     """ 交易员调整的卖出价格上限（为基础价格的百分比） """
 
     res_type = _get_resource_type_key(resouce_id)
-    trade_ids = cache.rhodes_island.trade_operator_ids_list
-    main_id = cache.rhodes_island.resource_type_main_trader.get(res_type, 0)
+    trade_ids = economy.trade_operator_ids()
+    main_id = economy.main_trader(res_type)
     main_bonus = 0.0
     sub_bonus = 0.0
     if main_id in trade_ids and main_id > 0:
@@ -125,27 +94,24 @@ def _adjust_supply_demand_after_trade(
 
     if quantity <= 0:
         return
-    cache.rhodes_island.supply_demand_dict.setdefault(resouce_id, 1)
-    steps = quantity // 50
-    if steps <= 0:
-        return
-    for _step in range(steps):
-        cur_sd = cache.rhodes_island.supply_demand_dict[resouce_id]
-        today_total = cache.rhodes_island.today_trade_resource_count.get(
-            resouce_id, 0
-        )
+    supply_demand_dict = economy.supply_demand()
+    supply_demand_dict.setdefault(resouce_id, 1)
+    today_total = economy.traded_today().get(resouce_id, 0)
+    for _step in range(quantity // 50):
+        cur_sd = supply_demand_dict[resouce_id]
         if buy_flag:
             delta_sd = 0.001 * 10 * (1 / cur_sd)
             delta_sd *= 1 + (today_total / 1000)
-            cache.rhodes_island.supply_demand_dict[resouce_id] = round(
+            supply_demand_dict[resouce_id] = round(
                 min(5.0, cur_sd + delta_sd), 4
             )
         else:
             delta_sd = 0.001 * 10 * cur_sd
             delta_sd /= 1 + (today_total / 1000)
-            cache.rhodes_island.supply_demand_dict[resouce_id] = round(
+            supply_demand_dict[resouce_id] = round(
                 max(0.1, cur_sd - delta_sd), 4
             )
+    economy.set_supply_demand(supply_demand_dict)
 
 
 def perform_trade(
@@ -196,10 +162,7 @@ def perform_trade(
         cache.rhodes_island.materials_resouce[1] += total_price
         _adjust_supply_demand_after_trade(resouce_id, result_quantity, False)
 
-    cache.rhodes_island.today_trade_resource_count.setdefault(resouce_id, 0)
-    cache.rhodes_island.today_trade_resource_count[
-        resouce_id
-    ] += result_quantity
+    economy.add_traded(resouce_id, result_quantity)
 
     return {
         "quantity": result_quantity,
@@ -211,7 +174,7 @@ def perform_trade(
 def auto_trade_resources() -> None:
     """根据自动交易设置执行买卖"""
 
-    if not cache.rhodes_island.trade_operator_ids_list:
+    if not economy.trade_operator_ids():
         return
 
     summary_lines: list[str] = []
@@ -219,14 +182,13 @@ def auto_trade_resources() -> None:
         # 跳过无效或货币类资源
         if res_type in {"无", "货币"}:
             continue
-        main_id = cache.rhodes_island.resource_type_main_trader.get(res_type, 0)
-        if not main_id:
+        if not economy.main_trader(res_type):
             continue
 
         for resouce_id, resouce_data in game_config.config_resouce.items():
             if resouce_id == 0 or resouce_data.type != res_type:
                 continue
-            settings = _ensure_trade_setting(resouce_id)
+            settings = economy.auto_trade(resouce_id)
             buy_on = settings.get("buy_on", False)
             buy_stock = settings.get("buy_stock", 0)
             buy_percent = settings.get("buy_price_percent", 0)
@@ -318,7 +280,7 @@ def get_resouce_price(
     else:
         base_price = 1.1 * base_price if buy_or_sell_flag else 0.9 * base_price
     # 供需影响
-    supply_demand = cache.rhodes_island.supply_demand_dict.get(resouce_id, 1)
+    supply_demand = economy.supply_demand().get(resouce_id, 1)
     # 交易员影响
     multiplier, _tem1, _tem2 = calculate_trade_multiplier(
         resouce_id, buy_or_sell_flag
@@ -348,14 +310,14 @@ def daily_supply_demand_fluctuation() -> None:
     输出: 无
     功能: 按当前供需系数，随机调整每种资源的供需，模拟经济学规律
     """
-    # 供需字典初始化
-    supply_demand_dict = cache.rhodes_island.supply_demand_dict
+    supply_demand_dict = economy.supply_demand()
+    traded_reset: dict[int, int] = {}
     for res_id in game_config.config_resouce:
         # 跳过货币类（如龙门币）
         if res_id == 1:
             continue
         # 今日买入卖出数量归零
-        cache.rhodes_island.today_trade_resource_count[res_id] = 0
+        traded_reset[res_id] = 0
         # 当前供需系数
         cur = supply_demand_dict.get(res_id, 1)
         # 经济学规律：
@@ -372,6 +334,8 @@ def daily_supply_demand_fluctuation() -> None:
         delta = revert + rand_fluct
         new_val = max(0.1, cur + delta)
         supply_demand_dict[res_id] = round(new_val, 4)
+    economy.set_traded(traded_reset)
+    economy.set_supply_demand(supply_demand_dict)
 
     # 供需波动后尝试执行自动交易
     auto_trade_resources()
@@ -484,10 +448,8 @@ class Resource_Exchange_Line_Panel:
             # 自动交易信息
             auto_draw = draw.NormalDraw()
             res_type_key = _get_resource_type_key(self.now_select_resouce_id)
-            settings = _ensure_trade_setting(self.now_select_resouce_id)
-            main_id = cache.rhodes_island.resource_type_main_trader.get(
-                res_type_key, 0
-            )
+            settings = economy.auto_trade(self.now_select_resouce_id)
+            main_id = economy.main_trader(res_type_key)
 
             auto_text = _("  自动交易   : ")
             if main_id:
@@ -570,7 +532,7 @@ class Resource_Exchange_Line_Panel:
 
             sub_ops = [
                 cid
-                for cid in cache.rhodes_island.trade_operator_ids_list
+                for cid in economy.trade_operator_ids()
                 if cid != main_id and cid in cache.character_data
             ]
             sub_trader_info = draw.NormalDraw()
@@ -936,7 +898,7 @@ class Resource_Exchange_Line_Panel:
 
             info = draw.NormalDraw()
             info.text = _("当前交易相关干员数量：{0}").format(
-                len(cache.rhodes_island.trade_operator_ids_list)
+                len(economy.trade_operator_ids())
             )
             info.draw()
             line_feed.draw()
@@ -963,9 +925,7 @@ class Resource_Exchange_Line_Panel:
                 res_type_name = attr_calculation.pad_display_width(
                     res_type, 8, align="center"
                 )
-                main_id = cache.rhodes_island.resource_type_main_trader.get(
-                    res_type, 0
-                )
+                main_id = economy.main_trader(res_type)
                 if main_id:
                     main_ids.add(main_id)
                 main_name = (
@@ -1007,7 +967,7 @@ class Resource_Exchange_Line_Panel:
             line_feed.draw()
             other_ops = [
                 cid
-                for cid in cache.rhodes_island.trade_operator_ids_list
+                for cid in economy.trade_operator_ids()
                 if cid not in main_ids and cid in cache.character_data
             ]
             sub_draw = draw.NormalDraw()
@@ -1039,7 +999,7 @@ class Resource_Exchange_Line_Panel:
     def clear_main_trader(self, res_type: str) -> None:
         """清空指定资源类型的主交易员"""
 
-        cache.rhodes_island.resource_type_main_trader[res_type] = 0
+        economy.set_main_trader(res_type, 0)
 
     def assign_main_trader(self, res_type: str) -> None:
         """任命指定资源类型的主交易员"""
@@ -1050,9 +1010,7 @@ class Resource_Exchange_Line_Panel:
 
         basement.update_work_people()
         target_type = res_type
-        current_main = cache.rhodes_island.resource_type_main_trader.get(
-            target_type, 0
-        )
+        current_main = economy.main_trader(target_type)
 
         def _make(chara_id: int) -> None:
             self._do_assign_main_trader(target_type, chara_id)
@@ -1074,7 +1032,7 @@ class Resource_Exchange_Line_Panel:
                 _(target_type)
             )
             candidate_list = []
-            for npc_id in cache.rhodes_island.trade_operator_ids_list:
+            for npc_id in economy.trade_operator_ids():
                 if npc_id == 0:
                     continue
                 candidate_list.append([npc_id, _make, [current_main]])
@@ -1094,37 +1052,32 @@ class Resource_Exchange_Line_Panel:
             choice = flow_handle.askfor_all(return_list)
             if choice == _("返回"):
                 break
-            current_main = cache.rhodes_island.resource_type_main_trader.get(
-                target_type, 0
-            )
+            current_main = economy.main_trader(target_type)
 
     def _do_assign_main_trader(self, res_type: str, chara_id: int) -> None:
         """执行主交易员任命/撤销操作"""
 
-        if chara_id not in cache.rhodes_island.trade_operator_ids_list:
+        if chara_id not in economy.trade_operator_ids():
             return
-        current = cache.rhodes_island.resource_type_main_trader.get(res_type, 0)
-        if current == chara_id:
-            cache.rhodes_island.resource_type_main_trader[res_type] = 0
-        else:
-            cache.rhodes_island.resource_type_main_trader[res_type] = chara_id
+        current = economy.main_trader(res_type)
+        economy.set_main_trader(
+            res_type, 0 if current == chara_id else chara_id
+        )
 
     def auto_trade_setting(self, res_id: int) -> None:
-        """调整指定资源类型的自动交易设置"""
+        """调整一种资源的自动交易设置"""
 
         target_type = _get_resource_type_key(res_id)
         resource_data = game_config.config_resouce[res_id]
         while 1:
-            settings = _ensure_trade_setting(res_id)
+            settings = economy.auto_trade(res_id)
             title = draw.TitleLineDraw(
                 _("自动交易设置 - {0}").format(resource_data.name), self.width
             )
             title.draw()
             return_list = []
 
-            main_id = cache.rhodes_island.resource_type_main_trader.get(
-                target_type, 0
-            )
+            main_id = economy.main_trader(target_type)
             info_draw = draw.NormalDraw()
             if not main_id:
                 info_draw.text = _(
@@ -1366,8 +1319,9 @@ class Resource_Exchange_Line_Panel:
     def toggle_auto_trade(self, res_id: int, key: str) -> None:
         """切换自动交易配置的开关状态"""
 
-        settings = _ensure_trade_setting(res_id)
+        settings = economy.auto_trade(res_id)
         settings[key] = not settings.get(key, False)
+        economy.set_auto_trade(res_id, settings)
 
     def adjust_auto_trade_value(
         self,
@@ -1379,9 +1333,10 @@ class Resource_Exchange_Line_Panel:
     ) -> None:
         """调整自动交易配置的单个数值"""
 
-        settings = _ensure_trade_setting(res_id)
+        settings = economy.auto_trade(res_id)
         if reset:
             settings[key] = 0
+            economy.set_auto_trade(res_id, settings)
             return
 
         new_value = settings.get(key, 0) + delta
@@ -1394,6 +1349,7 @@ class Resource_Exchange_Line_Panel:
             if max_capacity > 0:
                 new_value = min(max_capacity, new_value)
         settings[key] = new_value
+        economy.set_auto_trade(res_id, settings)
 
     def select_exchange_resouce(self) -> None:
         """选择交易资源"""

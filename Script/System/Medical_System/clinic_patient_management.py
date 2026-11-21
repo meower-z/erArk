@@ -15,6 +15,7 @@ from types import FunctionType
 from Script.Config import config_def, game_config
 from Script.Core import cache_control, game_type, get_text, value_handle
 from Script.Design import handle_ability
+from Script.Modules.domains import economy
 from Script.System.Medical_System import medical_constant, medical_core
 
 _: FunctionType = get_text._
@@ -399,10 +400,7 @@ def _resolve_patient_system_keys(
             if comp is not None:
                 system_keys.add(str(comp.system_id))
 
-    if system_keys:
-        patient.system_keys = sorted(system_keys)
-    else:
-        patient.system_keys = []
+    patient.system_keys = sorted(system_keys)
     return system_keys
 
 
@@ -666,7 +664,7 @@ def finalize_patient_after_diagnose(
     if diagnose_income > 0:
         rhodes_island.medical_income_today += diagnose_income
         rhodes_island.medical_income_total += diagnose_income
-        rhodes_island.all_income += diagnose_income
+        economy.add_income(diagnose_income)
         rhodes_island.materials_resouce[1] = (
             rhodes_island.materials_resouce.get(1, 0) + diagnose_income
         )

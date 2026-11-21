@@ -13,6 +13,7 @@ from types import FunctionType
 
 from Script.Config import normal_config
 from Script.Core import game_type, get_text
+from Script.Modules.domains import economy
 
 from Script.System.Medical_System import (
     clinic_doctor_service,
@@ -381,7 +382,7 @@ def settle_medical_department(
 
     # 结算结束后重置当日收入与计数器，等待下一轮业务累计。
     rhodes_island.medical_income_today = 0
-    rhodes_island.all_income = 0
+    economy.set_income(0)
     rhodes_island.medical_daily_counters = (
         medical_constant.MedicalDailyCounters()
     )

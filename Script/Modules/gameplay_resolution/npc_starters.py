@@ -12,6 +12,7 @@ from uuid import UUID
 
 from Script.Core import cache_control, constant, game_type
 from Script.Kernel import core
+from Script.Modules.domains import economy
 from Script.Modules.gameplay_resolution import intent, starts
 
 cache: game_type.Cache = cache_control.cache
@@ -150,41 +151,44 @@ def _find(
     return None
 
 
-def _shop_foods(args: Mapping[str, core.JSON]) -> dict | None:
+def _dining_foods(args: Mapping[str, core.JSON]) -> dict | None:
     """
-    食堂或餐厅里一种食谱的食物
+    食堂里一种食谱的食物
     Keyword arguments:
-    args -- buy_food 的参数：shop、recipe_id
+    args -- buy_food 的参数，这里只用 recipe_id
     Return arguments:
-    dict | None -- 食物uid到食物，没有这种食谱时为 None
+    dict | None -- 食物uid到食物，食堂没有这种食谱时为 None
     """
-    shop = int(str(args["shop"]))
-    shelves: dict = (
-        cache.rhodes_island.dining_hall_data
-        if shop == -1
-        else cache.rhodes_island.restaurant_data.get(shop, {})
-    )
-    return shelves.get(args["recipe_id"])
+    return cache.rhodes_island.dining_hall_data.get(str(args["recipe_id"]))
 
 
 @starts.check("buy_food")
 def food_still_there(who: int, data: intent.Intent) -> core.Action | None:
     """选中的食物已被买走时等1分钟"""
     args = _args(data)
-    if _find(_shop_foods(args), args["food_uid"]) is not None:
-        return None
-    return _wait_one_minute(who)
+    shop, uid = int(str(args["shop"])), str(args["food_uid"])
+    if shop == -1:
+        there = _find(_dining_foods(args), uid) is not None
+    else:
+        there = uid in economy.shelf(shop).get(str(args["recipe_id"]), {})
+    return None if there else _wait_one_minute(who)
 
 
 @starts.starter("buy_food")
 def buy_food(who: int, data: intent.Intent) -> None:
     """把选中的食物从食堂或餐厅拿进背包，并作为行为的目标食物"""
     args = _args(data)
-    foods = _shop_foods(args)
-    found = _find(foods, args["food_uid"])
-    assert foods is not None and found is not None
-    key, food = found
-    del foods[key]
+    shop, uid = int(str(args["shop"])), str(args["food_uid"])
+    if shop == -1:
+        foods = _dining_foods(args)
+        found = _find(foods, uid)
+        assert foods is not None and found is not None
+        key, food = found
+        del foods[key]
+    else:
+        taken = economy.take(shop, str(args["recipe_id"]), uid)
+        assert taken is not None
+        key, food = taken.uid, taken
     character_data = cache.character_data[who]
     character_data.food_bag[key] = food
     character_data.behavior.target_food = food

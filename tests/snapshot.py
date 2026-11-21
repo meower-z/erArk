@@ -82,8 +82,6 @@ WORLD_AREAS = {
     "book_borrow_dict": "library",
     "recommend_book_type_set": "library",
     "dining_hall_data": "cooking",
-    "restaurant_data": "cooking",
-    "stall_vendor_data": "cooking",
     "milk_in_fridge": "cooking",
     "urine_in_fridge": "cooking",
 }

@@ -13,6 +13,7 @@ from Script.Core import (
     py_cmd,
 )
 from Script.Design import map_handle, attr_calculation
+from Script.Modules.domains import economy
 from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw, panel, view
@@ -264,22 +265,17 @@ class SeeFoodListByFoodNameDraw:
             self.now_restaurant_id = "Stall_Vendor"
 
         # 根据食物商店id获取食物列表
+        self.now_food_list: list[tuple[str, UUID | str]]
+        """ 这种食物的 (食谱id, 食物uid) 列表。食堂里的 uid 是 UUID，餐馆与地摊小贩的是字符串 """
         if self.now_restaurant_id is None:
             self.now_food_list = [
                 (self.cid, x)
                 for x in cache.rhodes_island.dining_hall_data[self.cid]
             ]
-        elif self.now_restaurant_id == "Stall_Vendor":
-            self.now_food_list = [
-                (self.cid, x)
-                for x in cache.rhodes_island.stall_vendor_data[0][self.cid]
-            ]
         else:
             self.now_food_list = [
                 (self.cid, x)
-                for x in cache.rhodes_island.restaurant_data[
-                    self.now_restaurant_id
-                ][self.cid]
+                for x in economy.shelf(self.now_restaurant_id)[self.cid]
             ]
 
         # 如果食物列表为空，则返回
@@ -298,18 +294,7 @@ class SeeFoodListByFoodNameDraw:
         max_quality = 0
         for now_cid, now_uid in self.now_food_list:
             # 获取食物数据
-            if self.now_restaurant_id is None:
-                food_data: game_type.Food = (
-                    cache.rhodes_island.dining_hall_data[now_cid][now_uid]
-                )
-            elif self.now_restaurant_id == "Stall_Vendor":
-                food_data = cache.rhodes_island.stall_vendor_data[0][now_cid][
-                    now_uid
-                ]
-            else:
-                food_data = cache.rhodes_island.restaurant_data[
-                    self.now_restaurant_id
-                ][now_cid][now_uid]
+            food_data = self.food_at(now_cid, now_uid)
             # 检查是否有制作者
             if food_data.maker != "":
                 maker_flag = True
@@ -366,6 +351,20 @@ class SeeFoodListByFoodNameDraw:
         self.now_draw = name_draw
         """ 绘制的对象 """
 
+    def food_at(self, cid: str, uid: UUID | str) -> game_type.Food:
+        """
+        当前商店里的一份食物。食堂交出货架上的那个对象，餐馆与地摊小贩由 economy.food 按货架记录新建一个
+        Keyword arguments:
+        cid -- 食谱id的字符串
+        uid -- 食物uid，食堂为 UUID，餐馆与地摊小贩为字符串
+        Return arguments:
+        Food -- 食物
+        """
+        if self.now_restaurant_id is None:
+            return cache.rhodes_island.dining_hall_data[cid][UUID(str(uid))]
+        shelf = economy.shelf(self.now_restaurant_id)
+        return economy.food(cid, str(uid), shelf[cid][str(uid)])
+
     def draw(self) -> None:
         """绘制对象"""
         # 如果食物列表为空，则返回
@@ -390,18 +389,7 @@ class SeeFoodListByFoodNameDraw:
 
             for now_cid, now_uid in self.now_food_list:
 
-                if self.now_restaurant_id is None:
-                    food_data: game_type.Food = (
-                        cache.rhodes_island.dining_hall_data[now_cid][now_uid]
-                    )
-                elif self.now_restaurant_id == "Stall_Vendor":
-                    food_data = cache.rhodes_island.stall_vendor_data[0][
-                        now_cid
-                    ][now_uid]
-                else:
-                    food_data = cache.rhodes_island.restaurant_data[
-                        self.now_restaurant_id
-                    ][now_cid][now_uid]
+                food_data = self.food_at(now_cid, now_uid)
                 self.food_name = ""
                 if isinstance(now_cid, str):
                     food_recipe = game_config.config_recipes[int(now_cid)]

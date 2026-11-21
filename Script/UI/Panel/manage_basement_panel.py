@@ -13,7 +13,7 @@ from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import facility, needs
+from Script.Modules.domains import economy, facility, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -330,7 +330,7 @@ class Manage_Basement_Panel:
                     line_feed.draw()
 
                 # 收入
-                all_income = str(cache.rhodes_island.all_income)
+                all_income = str(economy.income())
                 all_info_draw.text = _(
                     "\n  截至目前为止，今日各部门龙门币总收入为：{0}\n\n"
                 ).format(all_income)
