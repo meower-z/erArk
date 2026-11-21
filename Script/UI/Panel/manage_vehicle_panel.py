@@ -12,6 +12,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.save_load import reset
 import random
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -153,9 +154,8 @@ class Manage_Vehicle_Panel:
             line.draw()
 
             # 设施信息
-            facility_data = game_config.config_facility[14]
-            facility_name = facility_data.name
-            now_level = str(cache.rhodes_island.facility_level[14])
+            facility_name = game_config.config_facility[14].name
+            now_level = str(facility.level(14))
             facility_cid = game_config.config_facility_effect_data[
                 facility_name
             ][int(now_level)]
@@ -479,9 +479,8 @@ class Manage_Vehicle_Panel:
             info_draw.draw()
 
             # 设施信息(提前获取设施上限以便计算空间)
-            facility_data = game_config.config_facility[14]
-            facility_name = facility_data.name
-            now_level = cache.rhodes_island.facility_level[14]
+            facility_name = game_config.config_facility[14].name
+            now_level = facility.level(14)
             facility_cid = game_config.config_facility_effect_data[
                 facility_name
             ][now_level]

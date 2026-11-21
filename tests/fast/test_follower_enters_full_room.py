@@ -13,6 +13,7 @@ from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import map_handle
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 ROOM = ["医疗", "体检科"]
 DOOR = ["医疗", "内走廊"]
@@ -32,9 +33,9 @@ class FollowerEntersFullRoomTest(FastTestCase):
         """
         super().setUp()
         room_name = self.world.scene(ROOM).scene_name
-        self.cache.rhodes_island.facility_open[
-            game_config.config_facility_open_name_to_cid[room_name]
-        ] = True
+        kernel_data.set_room_open(
+            game_config.config_facility_open_name_to_cid[room_name], True
+        )
         self.pl = self.world.chara(0, "博士", position=DOOR)
         self.follower = self.world.chara(1, "跟随者", position=DOOR)
         self.world.chara(2, "路人", position=DOOR)

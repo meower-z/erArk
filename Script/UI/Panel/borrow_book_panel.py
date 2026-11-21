@@ -11,9 +11,9 @@ from Script.Core import (
 from Script.UI.Moudle import draw, view
 from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
-
 import random
 from Script.Design import game_time
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -34,7 +34,7 @@ def settle_library_book() -> None:
 
     for book_type_cid in game_config.config_book_type:
         game_config.config_book_type_data.setdefault(book_type_cid, set())
-        level = cache.rhodes_island.facility_level[10]
+        level = facility.level(10)
         now_choose_list = []
         # 遍历书籍
         for book_id in game_config.config_book_type_data[book_type_cid]:

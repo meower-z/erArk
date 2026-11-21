@@ -26,6 +26,7 @@ from Script.Design import (
     handle_ability,
     second_behavior,
 )
+from Script.Modules.domains import facility
 
 panel_info_data: dict[str, object] = {}
 
@@ -351,7 +352,7 @@ class Characterabi_show_Text:
             juel_type_id_list = expand_juel_entries(juel_type_id_list)
         self.jewel_use_dict: dict[int, int] = {}
         # 关押区的等级效果
-        now_level = cache.rhodes_island.facility_level[19]
+        now_level = facility.level(19)
         facility_cid = game_config.config_facility_effect_data[_("关押区")][
             int(now_level)
         ]
@@ -646,9 +647,7 @@ class Characterabi_show_Text:
                         if handle_premise.handle_imprisonment_1(
                             self.character_id
                         ):
-                            now_level_fac = cache.rhodes_island.facility_level[
-                                19
-                            ]
+                            now_level_fac = facility.level(19)
                             facility_cid = (
                                 game_config.config_facility_effect_data[
                                     _("关押区")

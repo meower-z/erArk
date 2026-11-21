@@ -16,6 +16,7 @@ from Script.Config import game_config
 from Script.Core import cache_control
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
+from Script.Modules.domains import facility
 
 KEY = "base.power_strategy"
 """ 供电策略在全局数据里的键 """
@@ -207,7 +208,7 @@ def main_reactor_level() -> int:
     Return arguments:
     int -- 等级
     """
-    return cache_control.cache.rhodes_island.facility_level.get(1, 1)
+    return facility.level(1, 1)
 
 
 def operator_ids() -> list[int]:

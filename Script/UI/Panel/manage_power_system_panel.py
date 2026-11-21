@@ -15,7 +15,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Moudle import draw, panel, view
-from Script.Modules.domains import power, power_supply
+from Script.Modules.domains import facility, power, power_supply
 
 from typing import TYPE_CHECKING
 
@@ -446,7 +446,7 @@ class Manage_Power_System_Panel:
     def _panel_facilities(self) -> None:
         """发电设施管理子界面"""
         ri = cache.rhodes_island
-        fac_lv = ri.facility_level.get(1, 1)
+        fac_lv = facility.level(1, 1)
         # 计算区块等级提供的基础发电设施数量
         base_power_facility_by_fac_lv = fac_lv * 2 + 3
         while 1:
@@ -708,7 +708,7 @@ class Manage_Power_System_Panel:
     def _panel_battery(self) -> None:
         """蓄电池管理子界面"""
         ri = cache.rhodes_island
-        fac_lv = ri.facility_level.get(1, 1)
+        fac_lv = facility.level(1, 1)
         # 设施等级提供的基础上限
         base_battery_by_fac_lv = fac_lv * 2 + 8
         while 1:

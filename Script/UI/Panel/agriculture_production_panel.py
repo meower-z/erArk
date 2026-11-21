@@ -16,9 +16,9 @@ from Script.Design import handle_ability, basement
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-
 from typing import TYPE_CHECKING
 from Script.Design import game_time
+from Script.Modules.domains import facility
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -321,7 +321,7 @@ class Agriculture_Production_Panel:
             now_text += _(
                 " 当前仓库等级：{0}，容量（单资源存放上限）：{1}\n"
             ).format(
-                cache.rhodes_island.facility_level[3],
+                facility.level(3),
                 cache.rhodes_island.warehouse_capacity,
             )
 
@@ -375,7 +375,7 @@ class Agriculture_Production_Panel:
                 line_feed.draw()
 
             # 已开放温室再显示温室的生产情况
-            if cache.rhodes_island.facility_open[71]:
+            if facility.is_open(71):
                 for agriculture_line_id in cache.rhodes_island.green_house_line:
                     now_text = _("\n 温室：")
                     all_info_draw.text = now_text
@@ -536,7 +536,7 @@ class Agriculture_Production_Panel:
             line_feed.draw()
 
             # 温室（仅开放后显示）
-            if cache.rhodes_island.facility_open.get(71, False):
+            if facility.is_open(71, False):
                 for line_id in ri.green_house_line:
                     main_id = ri.green_house_line[line_id][1]
                     name = (
@@ -710,7 +710,6 @@ class Agriculture_Production_Panel:
             info_draw = draw.NormalDraw()
             return_list = []
 
-            # now_level = cache.rhodes_island.facility_level[16]
             resouce_id = cache.rhodes_island.herb_garden_line[
                 agriculture_line_id
             ][0]

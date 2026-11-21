@@ -23,6 +23,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -183,9 +184,7 @@ def get_education_zone_adjust() -> float:
     Return arguments:
     float -- 倍率，如 Lv5 时为 2.0
     """
-    now_level = cache.rhodes_island.facility_level.get(
-        education_constant.EDUCATION_ZONE_CID, 1
-    )
+    now_level = facility.level(education_constant.EDUCATION_ZONE_CID, 1)
     cid_list = game_config.config_facility_effect_data.get(
         education_constant.EDUCATION_ZONE_NAME, []
     )

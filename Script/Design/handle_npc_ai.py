@@ -20,7 +20,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import needs
+from Script.Modules.domains import facility, needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -1032,10 +1032,7 @@ def get_chara_entertainment(character_id: int) -> None:
                             ]
                         )
                         # 如果该娱乐活动的场所未开放，则去掉该id后重新随机
-                        if (
-                            cache.rhodes_island.facility_open[facility_open_cid]
-                            == 0
-                        ):
+                        if facility.is_open(facility_open_cid) == 0:
                             entertainment_list.remove(choice_entertainment_id)
                             continue
                     # 品酒只能在晚上进行

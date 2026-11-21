@@ -30,7 +30,7 @@ import sys
 import uuid
 from typing import TYPE_CHECKING
 
-from tests import outside_cache
+from tests import kernel_data, outside_cache
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -117,27 +117,6 @@ def set_clock(dt: datetime.datetime) -> None:
     core.reset_state(replace(core.state(), clock=game_time.minutes(dt)))
 
 
-def reset_clock(dt: datetime.datetime) -> None:
-    """
-    内核换成一个没有角色、时钟在 dt 的 GameState（ticked、settled_day 都是此刻）
-    Keyword arguments:
-    dt -- 游戏时间
-    """
-    from types import MappingProxyType
-
-    from Script.Design import game_time
-    from Script.Kernel import core
-
-    m = game_time.minutes(dt)
-    core.reset_state(
-        core.GameState(
-            m,
-            MappingProxyType({}),
-            MappingProxyType({"ticked": m, "settled_day": game_time.day(m)}),
-        )
-    )
-
-
 def start_time() -> datetime.datetime:
     """
     复原后的游戏时间：START_TIME 规整到游戏日历上
@@ -169,7 +148,6 @@ def act(fn: Callable[[], None]) -> None:
     from Script.Kernel import core
     from Script.Modules import load_order
     from Script.Modules.tk_ui import player_pick
-    from tests import kernel_data
 
     ran = False
 
@@ -345,7 +323,7 @@ class MinimalWorld:
         """ 游戏缓存（对象一直不变，复原时原地改写） """
         cache = self.cache
         cache.npc_tem_data = dict(character_config.character_tem_list)
-        reset_clock(start_time())
+        kernel_data.reset_clock(start_time(), {})
         cache.difficulty_setting = (
             attr_calculation.get_difficulty_setting_zero()
         )
@@ -353,7 +331,7 @@ class MinimalWorld:
             attr_calculation.get_birth_type_setting_zero()
         )
         cache.rhodes_island = basement.get_base_zero()
-        basement.get_base_updata()
+        kernel_data.written(basement.get_base_updata)
         for clothing_type, cloth_ids in STANDARD_OUTFIT.items():
             for cloth_id in cloth_ids:
                 if (
@@ -366,12 +344,15 @@ class MinimalWorld:
 
     def _snapshot(self) -> None:
         """
-        记下基线：SHALLOW_CACHE_FIELDS 中字段的浅拷贝，其余缓存字段（场景字典除外）的深拷贝，以及每个场景的属性
+        记下基线：SHALLOW_CACHE_FIELDS 中字段的浅拷贝，其余缓存字段（场景字典除外）的深拷贝，每个场景的属性，
+        以及 GameState 的全局数据（_boot 里 get_base_updata 开放的房间在其中）
         Keyword arguments:
         无
         Return arguments:
         无
         """
+        from Script.Kernel import core
+
         fields = {
             key: value
             for key, value in self.cache.__dict__.items()
@@ -381,6 +362,7 @@ class MinimalWorld:
             key: dict(fields.pop(key)) for key in SHALLOW_CACHE_FIELDS
         }
         self._baseline = copy.deepcopy(fields)
+        self._data = core.state().data
         self._scene_data = self.cache.scene_data
         self._scenes = dict(self._scene_data)
         self._scene_baseline = {
@@ -421,7 +403,7 @@ class MinimalWorld:
         from Script.Modules import load_order
 
         core.load(load_order.LOAD_ORDER)
-        reset_clock(start_time())
+        kernel_data.reset_clock(start_time(), self._data)
         seed_everything()
 
     def scene(self, path: list) -> game_type.Scene:
@@ -484,7 +466,6 @@ class MinimalWorld:
         """
         from Script.Core import game_type
         from Script.Design import attr_calculation, game_time, map_handle
-        from tests import kernel_data
 
         cache = self.cache
         if cid in cache.character_data:

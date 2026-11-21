@@ -12,7 +12,7 @@ from typing import TypedDict
 from Script.Config import game_config
 from Script.Core import cache_control, get_text
 from Script.Design import handle_ability
-from Script.Modules.domains import power
+from Script.Modules.domains import facility, power
 
 _: FunctionType = get_text._
 
@@ -216,28 +216,28 @@ def zone_consumption(zone_cid: int) -> float:
     Return arguments:
     float -- 保留 2 位小数
     """
-    levels = cache_control.cache.rhodes_island.facility_level
+    levels = facility.levels()
     adjust = zone_adjust(zone_cid)
     total = 0.0
     zone = game_config.config_facility.get(zone_cid)
     zone_name = getattr(zone, "name", "") if zone else ""
-    for facility_cid, facility in game_config.config_facility.items():
+    for facility_cid, facility_data in game_config.config_facility.items():
         try:
-            if facility.type == -1 and facility_cid != zone_cid:
+            if facility_data.type == -1 and facility_cid != zone_cid:
                 continue
         except Exception:
             continue
         if not (
             facility_cid == zone_cid
-            or (zone_name and zone_name in facility.name)
-            or facility.type == zone_cid
+            or (zone_name and zone_name in facility_data.name)
+            or facility_data.type == zone_cid
         ):
             continue
         level = levels.get(facility_cid, 1)
         try:
-            effect_cid = game_config.config_facility_effect_data[facility.name][
-                level
-            ]
+            effect_cid = game_config.config_facility_effect_data[
+                facility_data.name
+            ][level]
             use = game_config.config_facility_effect[effect_cid].power_use
         except Exception:
             continue
@@ -252,9 +252,9 @@ def power_consumption() -> float:
     float -- 保留 2 位小数
     """
     total = 0.0
-    for facility_cid, facility in game_config.config_facility.items():
+    for facility_cid, facility_data in game_config.config_facility.items():
         try:
-            if facility.type == -1:
+            if facility_data.type == -1:
                 total += zone_consumption(facility_cid)
         except Exception:
             continue

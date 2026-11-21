@@ -21,7 +21,7 @@ from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
 
 import copy
-from Script.Modules.domains import needs
+from Script.Modules.domains import facility, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1270,8 +1270,8 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
                 now_scene_data.scene_name
             ]
             # 如果未开放，则开放
-            if not cache.rhodes_island.facility_open[open_cid]:
-                cache.rhodes_island.facility_open[open_cid] = True
+            if not facility.is_open(open_cid):
+                facility.set_open(open_cid, True)
 
     info_draw_text += _("继承数据覆盖完毕\n")
     info_draw.text = info_draw_text

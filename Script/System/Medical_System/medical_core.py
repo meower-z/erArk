@@ -12,6 +12,7 @@ import math
 from Script.Config import config_def, game_config
 from Script.Core import cache_control, game_type
 from Script.System.Medical_System import medical_constant
+from Script.Modules.domains import facility
 
 
 def _bump_daily_counter(
@@ -148,12 +149,7 @@ def _get_medical_facility_level(rhodes_island: game_type.Rhodes_Island) -> int:
         int: 医疗部设施等级，缺省为 0。
     """
 
-    return int(
-        rhodes_island.facility_level.get(
-            medical_constant.MEDICAL_FACILITY_ID, 0
-        )
-        or 0
-    )
+    return int(facility.level(medical_constant.MEDICAL_FACILITY_ID, 0) or 0)
 
 
 def _pick_hospital_level_config(

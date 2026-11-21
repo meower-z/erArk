@@ -18,7 +18,7 @@ from Script.Design import (
     game_time,
 )
 from Script.Config import game_config, character_config, normal_config
-from Script.Modules.domains import needs
+from Script.Modules.domains import facility, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -258,7 +258,7 @@ def init_character_facility_open() -> None:
                 game_config.config_facility_open[open_cid].NPC_id
                 == cache.character_data[character_id].adv
             ):
-                cache.rhodes_island.facility_open[open_cid] = True
+                facility.set_open(open_cid, True)
                 break
 
 
@@ -286,7 +286,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
 
     if visitor_flag:
         # 根据访客区的等级，赋予对应的停留时间
-        now_level = cache.rhodes_island.facility_level[13]
+        now_level = facility.level(13)
         facility_cid = game_config.config_facility_effect_data[_("访客区")][
             int(now_level)
         ]
@@ -308,7 +308,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
                 and game_config.config_facility_open[open_cid].NPC_id
                 == character_data.adv
             ):
-                cache.rhodes_island.facility_open[open_cid] = True
+                facility.set_open(open_cid, True)
 
     # 分配角色宿舍
     dormitory_common.new_character_get_dormitory(character_id)

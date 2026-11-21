@@ -14,9 +14,9 @@ from Script.Design import attr_calculation, basement, handle_ability
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-
 from typing import TYPE_CHECKING
 from Script.Design import game_time
+from Script.Modules.domains import facility
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -310,7 +310,7 @@ class Manage_Assembly_Line_Panel:
             now_text = _(
                 " 当前仓库等级：{0}，容量（单资源存放上限）：{1}\n"
             ).format(
-                cache.rhodes_island.facility_level[3],
+                facility.level(3),
                 cache.rhodes_island.warehouse_capacity,
             )
 
@@ -580,7 +580,7 @@ class Manage_Assembly_Line_Panel:
             formula_now_data = game_config.config_productformula[formula_now_id]
             product_now_id = formula_now_data.product_id
             product_now_data = game_config.config_resouce[product_now_id]
-            now_level = cache.rhodes_island.facility_level[12]
+            now_level = facility.level(12)
 
             info_text = ""
             # info_text = f" ○需要先结算然后才可以变动生产的产品\n\n"

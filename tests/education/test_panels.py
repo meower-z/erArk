@@ -627,9 +627,9 @@ clear_schedules()
 section("Plan 26 §3.8：个人课表选目标时，未开放与条件不符的置灰")
 cs = course_select_panel.Course_Select_Panel(W)
 pool = _("游泳池")
-cache.rhodes_island.facility_open[
-    game_config.config_facility_open_name_to_cid[pool]
-] = False
+kernel_data.set_room_open(
+    game_config.config_facility_open_name_to_cid[pool], False
+)
 drawn_text.clear()
 cs._select_target(201, 0, 0, E.COURSE_TYPE_PE)
 check(
@@ -694,7 +694,7 @@ section(
 flow_handle.askfor_all = scripted_askfor
 answers[:] = []
 _game_room_cid = game_config.config_facility_open_name_to_cid[_("黄澄澄游戏室")]
-cache.rhodes_island.facility_open[_game_room_cid] = False
+kernel_data.set_room_open(_game_room_cid, False)
 drawn_text.clear()
 check(
     "选择活动：点[取消]返回 None",
@@ -706,7 +706,7 @@ check(
     _("[{0}]").format(_("下棋")) in drawn_text
     and not any("未开放" in t and _("下棋") in t for t in drawn_text),
 )
-cache.rhodes_island.facility_open[_game_room_cid] = True
+kernel_data.set_room_open(_game_room_cid, True)
 drawn_text.clear()
 schedule_template_panel.Schedule_Template_Panel(W)._select_activity()
 check("解锁之后不再标注", not any("未开放" in t for t in drawn_text))
@@ -730,7 +730,7 @@ clear_schedules()
 _pool_cid = game_config.config_facility_open_name_to_cid[pool]
 _cell_width = max(8, int((W - 14) / len(E.WEEK_NAME)))
 cs = course_select_panel.Course_Select_Panel(W)
-cache.rhodes_island.facility_open[_pool_cid] = False
+kernel_data.set_room_open(_pool_cid, False)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PE, pool)
 _text_open = cs._get_cell_text(201, 0, 0)
 check(
@@ -741,7 +741,7 @@ check(
     ),
     _text_open,
 )
-cache.rhodes_island.facility_open[_pool_cid] = True
+kernel_data.set_room_open(_pool_cid, True)
 check(
     "解锁后不再标注",
     cs._get_cell_text(201, 0, 0)
@@ -778,7 +778,7 @@ schedule_handle.set_selected_course(202, 2, 3, E.COURSE_TYPE_THEORY, ROOM1)
 schedule_handle.set_class_cell(ROOM2, 2, 3, 45, 101)
 schedule_handle.set_selected_course(203, 2, 3, E.COURSE_TYPE_THEORY, ROOM2)
 schedule_handle.set_selected_course(205, 2, 3, E.COURSE_TYPE_PE, pool)
-cache.rhodes_island.facility_open[_pool_cid] = False
+kernel_data.set_room_open(_pool_cid, False)
 flow_handle.askfor_all = scripted_askfor
 answers[:] = [lambda o: o == "DONE"]
 drawn_text.clear()
@@ -786,7 +786,7 @@ class_schedule_panel.Class_Schedule_Panel(W)._select_must_attend(
     [], ROOM_P, 2, 3
 )
 flow_handle.askfor_all = fake_askfor
-cache.rhodes_island.facility_open[_pool_cid] = True
+kernel_data.set_room_open(_pool_cid, True)
 _replace_line = next((t for t in drawn_text if "会顶替原本的课" in t), "")
 _pe_text = character_info_head.get_course_text(
     {"course_type": E.COURSE_TYPE_PE, "target": _("木桩房")}

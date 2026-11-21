@@ -13,6 +13,7 @@
 from Script.Config import game_config
 from Script.Design import map_handle
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 ROOM = ["中枢", "会议室"]
 OTHER_ROOM = ["中枢", "茶水间"]
@@ -36,9 +37,10 @@ class LockedRoomEntryTest(FastTestCase):
         for path in (ROOM, OTHER_ROOM, DR_ROOM, DR_OFFICE):
             scene_name = self.world.scene(path).scene_name
             if scene_name in game_config.config_facility_open_name_set:
-                self.cache.rhodes_island.facility_open[
-                    game_config.config_facility_open_name_to_cid[scene_name]
-                ] = True
+                kernel_data.set_room_open(
+                    game_config.config_facility_open_name_to_cid[scene_name],
+                    True,
+                )
         self.pl = self.world.chara(0, "博士", position=CORRIDOR)
         self.assistant = self.world.chara(1, "助理", position=CORRIDOR)
         self.other = self.world.chara(2, "干员", position=CORRIDOR)

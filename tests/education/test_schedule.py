@@ -30,10 +30,10 @@ from _bootstrap import (
     sex_class_handle,
 )
 import inspect
+from tests import kernel_data
 
 section("教室列表与开放判定")
 clear_schedules()
-cache.rhodes_island.facility_open = {}
 base_list = schedule_handle.get_classroom_list()
 check("只开三间基础教室", len(base_list) == 3, base_list)
 check(
@@ -396,7 +396,7 @@ section("Plan 26 §3.8：个人式课的场所开放与活动条件")
 pool = _("游泳池")
 pool_open_cid = game_config.config_facility_open_name_to_cid[pool]
 pe_pool = {"course_type": education_constant.COURSE_TYPE_PE, "target": pool}
-cache.rhodes_island.facility_open[pool_open_cid] = False
+kernel_data.set_room_open(pool_open_cid, False)
 check(
     "场景开放判定：未解锁的游泳池为否，不在 Facility_open 表里的基础教室恒为是",
     not schedule_handle.judge_scene_open(pool)
@@ -407,7 +407,7 @@ check(
     "体育课排在未解锁的游泳池：解析不出",
     schedule_handle.get_course_place(pe_pool) == [],
 )
-cache.rhodes_island.facility_open[pool_open_cid] = True
+kernel_data.set_room_open(pool_open_cid, True)
 check("解锁后恢复", bool(schedule_handle.get_course_place(pe_pool)))
 lockable = None
 for _cid in game_config.config_entertainment:
@@ -433,17 +433,17 @@ if lockable is not None:
         "target": _cid,
     }
     for _name in _names:
-        cache.rhodes_island.facility_open[
-            game_config.config_facility_open_name_to_cid[_name]
-        ] = False
+        kernel_data.set_room_open(
+            game_config.config_facility_open_name_to_cid[_name], False
+        )
     check(
         "兴趣课的场所全未开放：解析不出（此前取第一间，派人去门口空转）",
         schedule_handle.get_course_place(interest_course) == [],
         _names,
     )
-    cache.rhodes_island.facility_open[
-        game_config.config_facility_open_name_to_cid[_names[-1]]
-    ] = True
+    kernel_data.set_room_open(
+        game_config.config_facility_open_name_to_cid[_names[-1]], True
+    )
     _place = schedule_handle.get_course_place(interest_course)
     check(
         "开放其中一间：解析到已开放的那间",
@@ -521,7 +521,7 @@ check(
     schedule_handle.get_now_course(211) is None
     and schedule_handle.get_course_at(211, period_time(0), 0) is None,
 )
-cache.rhodes_island.facility_open[pool_open_cid] = False
+kernel_data.set_room_open(pool_open_cid, False)
 schedule_handle.set_selected_course(
     201, _wd, 0, education_constant.COURSE_TYPE_PE, pool
 )
@@ -530,7 +530,7 @@ check(
     not schedule_handle.judge_personal_course_valid(201, pe_pool)
     and schedule_handle.get_now_course(201) is None,
 )
-cache.rhodes_island.facility_open[pool_open_cid] = True
+kernel_data.set_room_open(pool_open_cid, True)
 check(
     "解锁后照常是一节课",
     (pool_course := schedule_handle.get_now_course(201)) is not None

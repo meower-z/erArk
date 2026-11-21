@@ -20,7 +20,7 @@ from typing import TypeGuard
 from Script.Core import cache_control, num
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import needs
+from Script.Modules.domains import facility, needs
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
@@ -1098,11 +1098,7 @@ def check_num_26_warehouse_capacity() -> list[CheckFailure]:
         return []
     materials = getattr(rhodes_island, "materials_resouce", None)
     materials = materials if isinstance(materials, dict) else {}
-    warehouse_level = (
-        getattr(rhodes_island, "facility_level", {}).get(3)
-        if isinstance(getattr(rhodes_island, "facility_level", None), dict)
-        else "?"
-    )
+    warehouse_level = facility.levels().get(3)
     return [
         make_failure(
             "NUM-26",

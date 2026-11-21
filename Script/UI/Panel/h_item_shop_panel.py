@@ -13,6 +13,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import see_item_info_panel
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -82,7 +83,7 @@ class HItemShopPanel:
     def draw(self) -> None:
         """绘制对象"""
         title_draw = draw.TitleLineDraw(_("成人用品商店"), self.width)
-        now_level = cache.rhodes_island.facility_level[11]  # 获取设施等级
+        now_level = facility.level(11)  # 获取设施等级
 
         # 按类别统计全部道具
         item_list_all = []

@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 import ast
 import inspect
 from Script.Design import game_time
+from tests import kernel_data
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -332,12 +333,11 @@ check(
 schedule_template_handle.apply_schedule_for_child(102)
 check("没有养成数据的干员不报错", True)
 
-
 section("Plan 27 §3.1：地点还没开放的活动退回自由选择，幼女的默认池滤掉")
 GAME_ROOM_OPEN_CID = game_config.config_facility_open_name_to_cid[
     _("黄澄澄游戏室")
 ]
-cache.rhodes_island.facility_open[GAME_ROOM_OPEN_CID] = False
+kernel_data.set_room_open(GAME_ROOM_OPEN_CID, False)
 check(
     "地点开放判定：恒开放的理论教室一（自习）为是；不存在的娱乐为否",
     schedule_template_handle.judge_activity_place_open(SELF_STUDY)
@@ -347,7 +347,7 @@ schedule_template_handle.apply_template(202, T.TEMPLATE_PLAYFUL)
 schedule_template_handle.apply_template(203, T.TEMPLATE_PLAYFUL)
 child.entertainment.entertainment_type = [11, 12, 13]
 schedule_template_handle.apply_schedule_for_child(202)
-cache.rhodes_island.facility_open[GAME_ROOM_OPEN_CID] = True
+kernel_data.set_room_open(GAME_ROOM_OPEN_CID, True)
 schedule_template_handle.apply_template(202, 0)
 schedule_template_handle.apply_template(203, 0)
 

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 from types import FunctionType
-
 from Script.Core import (
     cache_control,
     game_type,
@@ -20,6 +19,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 from Script.UI.Moudle import draw, view
 from Script.System.Medical_System import medical_constant, medical_service
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 全局缓存对象 """
@@ -338,7 +338,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         )
         line_feed.draw()
         # 仅在医疗区的等级大于等于3级时再显示住院医生分科
-        if ri.facility_level.get(medical_constant.MEDICAL_FACILITY_ID, 0) >= 3:
+        if facility.level(medical_constant.MEDICAL_FACILITY_ID, 0) >= 3:
             self._draw_specialization_section(
                 medical_constant.SPECIALIZATION_ROLE_HOSPITAL, return_list
             )
@@ -555,7 +555,7 @@ class PriceSettingSubPanel(_BaseSubPanel):
         return_list: list[str] = []
         current_ratio = medical_service.get_medical_price_ratio()
         new_ratio = medical_service.get_new_medical_price_ratio()
-        level = cache.rhodes_island.facility_level.get(6, 0)
+        level = facility.level(6, 0)
         # 使用当前生效的收费系数进行预测
         preview = medical_service.predict_medical_patient_refresh(
             price_ratio=current_ratio, level=level

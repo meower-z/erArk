@@ -1675,7 +1675,7 @@ pool_open_cid = game_config.config_facility_open_name_to_cid[pool]
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PE, pool)
 student.entertainment.entertainment_type = [TEND] * 3
 move_to(201, SCENE_DORM)
-cache.rhodes_island.facility_open[pool_open_cid] = False
+kernel_data.set_room_open(pool_open_cid, False)
 check(
     "体育课排在未解锁的游泳池：在 / 不在上课地点同为 0",
     handle_premise.handle_premise("self_in_course_place", 201) == 0
@@ -1685,7 +1685,7 @@ check(
     "整条链：没有上课行命中，交回娱乐链（去育儿室），不再走到门口空转",
     dispatch(201) == SM.MOVE_TO_NURSERY,
 )
-cache.rhodes_island.facility_open[pool_open_cid] = True
+kernel_data.set_room_open(pool_open_cid, True)
 move_to(201, SCENE_DORM)
 check(
     "解锁后恢复：715 去游泳池",
@@ -1883,9 +1883,9 @@ LOCKED_THEORY = [
     _("理论教室六"),
 ]
 for _room in LOCKED_THEORY:
-    cache.rhodes_island.facility_open[
-        game_config.config_facility_open_name_to_cid[_room]
-    ] = False
+    kernel_data.set_room_open(
+        game_config.config_facility_open_name_to_cid[_room], False
+    )
 set_time(period_time(1) + datetime.timedelta(minutes=15))
 move_to(201, SCENE_DORM)
 _moves = []

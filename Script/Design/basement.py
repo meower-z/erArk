@@ -12,7 +12,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Design import game_time
-from Script.Modules.domains import power
+from Script.Modules.domains import facility, power
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -31,16 +31,6 @@ def get_base_zero() -> game_type.Rhodes_Island:
     from Script.System.Medical_System import medical_service
 
     base_data = game_type.Rhodes_Island()
-
-    # 遍历全设施清单
-    for all_cid in game_config.config_facility:
-        # 全设施等级设为1
-        base_data.facility_level[all_cid] = 1
-
-    # 遍历全设施开放
-    for all_cid in game_config.config_facility_open:
-        # 全设施初始关闭
-        base_data.facility_open[all_cid] = False
 
     # 遍历全资源清单
     for all_cid in game_config.config_resouce:
@@ -95,7 +85,6 @@ def get_base_zero() -> game_type.Rhodes_Island:
 
     # 初始化公务工作
     base_data.office_work += 200
-    base_data.effectiveness = 100
 
     # 初始化医疗系统运行期缓存
     medical_service.init_medical_department_data(base_data, reset_runtime=True)
@@ -130,7 +119,7 @@ def get_base_updata() -> None:
     # 遍历全设施清单
     for all_cid in game_config.config_facility:
         # 全设施等级设为对应值
-        level = cache.rhodes_island.facility_level[all_cid]
+        level = facility.level(all_cid)
 
         # 累加全设施的用电量
         facility_name = game_config.config_facility[all_cid].name
@@ -149,7 +138,7 @@ def get_base_updata() -> None:
             ):
                 # print(f"debug zone_cid = {game_config.config_facility_open[open_cid].zone_cid}")
                 # print(f"debug facility_cid = {facility_cid}")
-                cache.rhodes_island.facility_open[open_cid] = True
+                facility.set_open(open_cid, True)
             # 如果zone_cid和facility_cid除以十的除数相等，且facility_cid的个位数大于等于zone_cid的个位数，则开放该设施
             elif (
                 game_config.config_facility_open[open_cid].zone_cid // 10
@@ -157,7 +146,7 @@ def get_base_updata() -> None:
                 and facility_cid % 10
                 >= game_config.config_facility_open[open_cid].zone_cid % 10
             ):
-                cache.rhodes_island.facility_open[open_cid] = True
+                facility.set_open(open_cid, True)
 
         # print(f"debug power_use = {base_data.power_use}")
 
@@ -249,22 +238,21 @@ def update_facility_limits(base_data: game_type.Rhodes_Island) -> None:
     Keyword arguments:
     base_data -- 要刷新的罗德岛数据
     """
-    for all_cid, facility in game_config.config_facility.items():
-        level = base_data.facility_level[all_cid]
-        effect_cid = game_config.config_facility_effect_data[facility.name][
-            level
-        ]
+    for all_cid, facility_data in game_config.config_facility.items():
+        level = facility.level(all_cid)
+        effect_cid = game_config.config_facility_effect_data[
+            facility_data.name
+        ][level]
         effect = game_config.config_facility_effect[effect_cid].effect
-        if facility.name == _("仓储区"):
+        if facility_data.name == _("仓储区"):
             extra = base_data.used_extra_warehouse_capacity_module * 200
             base_data.warehouse_capacity = effect + extra
-        elif facility.name == _("宿舍区"):
+        elif facility_data.name == _("宿舍区"):
             base_data.people_max = effect
     base_data.visitor_max = sum(
         1
         for room_id, room in game_config.config_facility_open.items()
-        if _("客房") in room.name
-        and base_data.facility_open.get(room_id, False)
+        if _("客房") in room.name and facility.is_open(room_id, False)
     )
 
 
@@ -279,14 +267,14 @@ def calc_facility_efficiency(facility_cid: int = -1) -> float:
         根据设施编号计算对应区块的工作效率，若设施编号为-1则计算全局效率
     """
     # 基地整体效率
-    adjust = cache.rhodes_island.effectiveness / 100
+    adjust = facility.effectiveness() / 100
     # 参数校验
     if facility_cid == -1 or facility_cid not in game_config.config_facility:
         return adjust
     # 获取设施数据
     facility_data = game_config.config_facility[facility_cid]
     facility_name = facility_data.name
-    now_level = cache.rhodes_island.facility_level[facility_cid]
+    now_level = facility.level(facility_cid)
     # 设施效果数据
     facility_effect_cid = game_config.config_facility_effect_data[
         facility_name
@@ -796,10 +784,8 @@ def settle_office_work() -> None:
     """
 
     now_work = cache.rhodes_island.office_work
-    all_facility_level = 0
-    # 遍历全设施，获取等级的和
-    for facility_cid in cache.rhodes_island.facility_level:
-        all_facility_level += cache.rhodes_island.facility_level[facility_cid]
+    # 全设施等级的和
+    all_facility_level = sum(facility.levels().values())
     # 总工作量为设施等级和*10+干员数量
     all_work = all_facility_level * 10 + len(cache.npc_id_got)
     # 根据当前剩余工作量和总工作量的比例，计算效率
@@ -828,18 +814,9 @@ def settle_office_work() -> None:
     shortage_ratio, __ = power_settle.settle_power_system(draw_flag=True)
     # # 如果能源系统出现供电不足，则降低效率
     effectiveness_change -= shortage_ratio / 2
-    cache.rhodes_island.effectiveness = 100 + int(effectiveness_change)
     # 效率不会小于50，也不会大于200
-    cache.rhodes_island.effectiveness = min(
-        cache.rhodes_island.effectiveness, 200
-    )
-    cache.rhodes_island.effectiveness = max(
-        cache.rhodes_island.effectiveness, 50
-    )
-    # 保留一位小数
-    cache.rhodes_island.effectiveness = round(
-        cache.rhodes_island.effectiveness, 1
-    )
+    effectiveness = min(100 + int(effectiveness_change), 200)
+    facility.set_effectiveness(round(max(effectiveness, 50), 1))
     # 取0.3~0.7的随机数，作为新增的工作量
     add_work = random.randint(30, 70) / 100 * all_work
     # 把新增的工作量加入当前剩余工作量
@@ -860,7 +837,7 @@ def settle_office_work() -> None:
     # else:
     #     now_draw_text += _("但能源系统出现供电不足，")
     now_draw_text += _("因此今日罗德岛的各设施的总效率为{0}%\n").format(
-        cache.rhodes_island.effectiveness
+        facility.effectiveness()
     )
     now_draw = draw.WaitDraw()
     now_draw.width = window_width

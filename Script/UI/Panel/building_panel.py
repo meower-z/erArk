@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.Design import basement
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import power_supply
+from Script.Modules.domains import facility, power_supply
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -113,7 +113,7 @@ class Building_Panel:
 
                     # 获取该区块的一系列信息
                     facility_name = facility_data.name
-                    now_level = str(cache.rhodes_island.facility_level[all_cid])
+                    now_level = str(facility.level(all_cid))
                     facility_cid = game_config.config_facility_effect_data[
                         facility_name
                     ][int(now_level)]
@@ -253,8 +253,7 @@ class Building_Panel:
                 # 控制中枢等级
                 if (
                     facility_cid <= 9
-                    or facility_data_next.level
-                    <= cache.rhodes_island.facility_level[0] + 1
+                    or facility_data_next.level <= facility.level(0) + 1
                 ):
                     pass
                 else:
@@ -358,7 +357,7 @@ class Building_Panel:
                 cache.rhodes_island.materials_resouce[
                     1
                 ] -= facility_data_next.money_use
-                cache.rhodes_island.facility_level[all_cid] += 1
+                facility.set_level(all_cid, facility.level(all_cid) + 1)
                 basement.get_base_updata()
 
                 # 输出提示信息
@@ -367,7 +366,7 @@ class Building_Panel:
                 info_draw = draw.WaitDraw()
                 info_draw.text = _("\n{0}提升到{1}级了！\n").format(
                     facility_data_now.name,
-                    str(cache.rhodes_island.facility_level[all_cid]),
+                    str(facility.level(all_cid)),
                 )
                 info_draw.width = self.width
                 info_draw.draw()
@@ -391,10 +390,7 @@ class Building_Panel:
                         facility_open_cid
                     ]
                     # 跳过已经开放的设施
-                    if (
-                        cache.rhodes_island.facility_open[facility_open_cid]
-                        == 1
-                    ):
+                    if facility.is_open(facility_open_cid) == 1:
                         continue
                     elif open_data.name in cache.rhodes_island.shop_open_list:
                         continue
@@ -471,7 +467,7 @@ class Building_Panel:
         facility_cid -- 建筑效果编号
         """
         open_data = game_config.config_facility_open[facility_open_cid]
-        cache.rhodes_island.facility_open[facility_open_cid] = True
+        facility.set_open(facility_open_cid, True)
         cache.rhodes_island.shop_open_list.append(open_data.name)
         basement.get_base_updata()
 

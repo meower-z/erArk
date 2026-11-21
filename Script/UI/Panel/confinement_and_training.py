@@ -23,7 +23,7 @@ import random
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import needs
+from Script.Modules.domains import facility, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -138,7 +138,7 @@ def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
             return True, 0, 0
         return False, 0, 0
     # 关押区的等级效果
-    now_level = cache.rhodes_island.facility_level[19]
+    now_level = facility.level(19)
     facility_cid = game_config.config_facility_effect_data[_("关押区")][
         int(now_level)
     ]

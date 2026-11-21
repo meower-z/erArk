@@ -4,7 +4,6 @@ import os
 import re
 from types import FunctionType
 from typing import Any
-
 from Script.Core import (
     cache_control,
     game_type,
@@ -17,6 +16,7 @@ from Script.Design import basement, handle_premise, map_handle
 from Script.System.Dormitory_System import common
 from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -140,7 +140,7 @@ class Manage_Dormitory_Panel:
         输出类型: 无
         功能: 显示宿舍等级、开放层数/房间数、管理员状态和基础恢复效率，并提供进入干员宿舍调整的入口
         """
-        dormitory_level = cache.rhodes_island.facility_level.get(4, 1)
+        dormitory_level = facility.level(4, 1)
         open_rooms_by_layer = self._get_open_rooms_by_layer()
         open_layers = sorted(open_rooms_by_layer.keys())
         efficiency = basement.calc_facility_efficiency(4)

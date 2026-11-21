@@ -20,7 +20,7 @@ from types import FunctionType
 from Script.Core import cache_control, get_text
 from Script.Config import game_config
 from Script.Design import map_handle
-from Script.Modules.domains import needs, power
+from Script.Modules.domains import facility, needs, power
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -45,7 +45,7 @@ def _all_current_effect_cids(ri: game_type.Rhodes_Island) -> list[int]:
         供SUPP-03的开放覆盖判定复用，一次性计算避免对每个待开放项重复全表扫描
     """
     result = []
-    facility_level = getattr(ri, "facility_level", {}) or {}
+    facility_level = facility.levels()
     for facility_cid, facility_data in game_config.config_facility.items():
         try:
             level = facility_level.get(facility_cid)
@@ -119,7 +119,7 @@ def check_facility_derived_max_consistency() -> list[CheckFailure]:
     ri = getattr(cache, "rhodes_island", None)
     if ri is None:
         return []
-    facility_open = getattr(ri, "facility_open", {}) or {}
+    facility_open = facility.opens()
     expected = sum(
         1
         for oid, room in game_config.config_facility_open.items()
@@ -159,7 +159,7 @@ def check_facility_open_monotonic_coverage() -> list[CheckFailure]:
     effect_cids = _all_current_effect_cids(ri)
     if not effect_cids:
         return []
-    facility_open = getattr(ri, "facility_open", {}) or {}
+    facility_open = facility.opens()
 
     def _covered(zone_cid: int) -> bool:
         """
@@ -349,7 +349,7 @@ def check_used_extra_warehouse_capacity_module_non_negative() -> (
                 (
                     f"cache.rhodes_island.used_extra_warehouse_capacity_module={used}，类型或值不满足type是int且>=0；"
                     f"warehouse_capacity={getattr(ri, 'warehouse_capacity', None)}，"
-                    f"facility_level[3]={getattr(ri, 'facility_level', {}).get(3)}"
+                    f"facility_level[3]={facility.levels().get(3)}"
                 ),
                 [],
             )

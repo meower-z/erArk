@@ -21,6 +21,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import manage_basement_panel, recruit_panel
 import random
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -40,13 +41,11 @@ def get_empty_guest_room_id() -> int | bool:
     """
     # 遍历全部客房
     guest_rooms = [
-        room_id
-        for room_id in cache.rhodes_island.facility_open
-        if 2000 < room_id < 2100
+        room_id for room_id in facility.opens() if 2000 < room_id < 2100
     ]
     for room_id in guest_rooms:
         # 跳过未开放的客房
-        if not cache.rhodes_island.facility_open[room_id]:
+        if not facility.is_open(room_id):
             continue
         room_name = game_config.config_facility_open[room_id].name
         # 遍历全部访客
@@ -124,7 +123,7 @@ def visitor_to_operator(character_id: int) -> None:
             and game_config.config_facility_open[open_cid].NPC_id
             == character_data.adv
         ):
-            cache.rhodes_island.facility_open[open_cid] = True
+            facility.set_open(open_cid, True)
 
     # 重新分配角色宿舍
     dormitory_common.new_character_get_dormitory(character_id)
@@ -372,7 +371,7 @@ class Invite_Visitor_Panel:
             all_info_draw.draw()
 
             # 邀请目标
-            now_level = cache.rhodes_island.facility_level[13]
+            now_level = facility.level(13)
             now_text = _("\n 当前邀请目标：")
             if now_level <= 1:
                 now_text += _(" 需要访客区至少为2级才可以邀请访客\n")
@@ -487,7 +486,7 @@ class Invite_Visitor_Panel:
                 now_text += f" [{str(character_data.adv).rjust(4,'0')}]{character_data.name}\n"
 
             # 访客区设施信息
-            now_level = cache.rhodes_island.facility_level[13]
+            now_level = facility.level(13)
             facility_cid = game_config.config_facility_effect_data[_("访客区")][
                 int(now_level)
             ]

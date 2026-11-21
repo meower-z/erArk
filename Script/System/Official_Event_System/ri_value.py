@@ -15,7 +15,7 @@
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text
-from Script.Modules.domains import power
+from Script.Modules.domains import facility, power
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -81,10 +81,7 @@ def get_all_office_work() -> float:
     Return arguments:
     float -- 总工作量，异常时为0
     """
-    all_facility_level = 0
-    for facility_cid in cache.rhodes_island.facility_level:
-        all_facility_level += cache.rhodes_island.facility_level[facility_cid]
-    return all_facility_level * 10 + len(cache.npc_id_got)
+    return sum(facility.levels().values()) * 10 + len(cache.npc_id_got)
 
 
 def get_ri_value(type_text: str) -> float:
@@ -101,11 +98,11 @@ def get_ri_value(type_text: str) -> float:
     if type_name == RI_TYPE_REPUTATION:
         return float(cache.country.nation_reputation.get(son_id, 0))
     if type_name == RI_TYPE_FACILITY:
-        return float(cache.rhodes_island.facility_level.get(son_id, 0))
+        return float(facility.level(son_id, 0))
     if type_name == RI_TYPE_OFFICE_WORK:
         return float(cache.rhodes_island.office_work)
     if type_name == RI_TYPE_EFFECTIVENESS:
-        return float(cache.rhodes_island.effectiveness)
+        return float(facility.effectiveness())
     if type_name == RI_TYPE_POWER:
         return float(power.storage())
     if type_name == RI_TYPE_PEOPLE:
@@ -142,9 +139,8 @@ def set_ri_value(type_text: str, new_value: float) -> None:
             max(0.0, min(float(new_value), get_all_office_work())), 1
         )
     elif type_name == RI_TYPE_EFFECTIVENESS:
-        cache.rhodes_island.effectiveness = round(
-            max(EFFECTIVENESS_MIN, min(float(new_value), EFFECTIVENESS_MAX)), 1
-        )
+        value = max(EFFECTIVENESS_MIN, min(float(new_value), EFFECTIVENESS_MAX))
+        facility.set_effectiveness(round(value, 1))
     elif type_name == RI_TYPE_POWER:
         power.set_storage(max(0, int(new_value)))
 

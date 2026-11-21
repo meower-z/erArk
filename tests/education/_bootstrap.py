@@ -138,9 +138,7 @@ cache: game_type.Cache = cache_control.cache
 normal_config.system_setting = attr_calculation.get_system_setting_zero()
 cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
 cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
-# 罗德岛设施：全部设施 Lv1，教育区另由测试按需调；facility_open 默认空（只开放三间基础教室）
-for _facility_cid in game_config.config_facility:
-    cache.rhodes_island.facility_level.setdefault(_facility_cid, 1)
+# 罗德岛设施：GameState 里没有设施数据，读到的是每个设施 1 级、每个待开放设施未开放。教育区的等级由测试按需改
 # 资源仓库：每种资源 0（与 basement 初始化一致）；内核推进时玩家行动收尾的成就结算要读它
 for _resouce_cid in game_config.config_resouce:
     cache.rhodes_island.materials_resouce.setdefault(_resouce_cid, 0)
@@ -192,6 +190,7 @@ from Script.System.Education_System import (  # noqa: E402
     semester_handle,
     sex_class_handle,
 )
+from Script.Modules.domains import facility
 
 # ==== 4. 环境工具 ====
 DEFAULT_TIME = datetime.datetime(2026, 9, 7, 9, 0)
@@ -373,7 +372,7 @@ def open_all_classroom() -> None:
     无
     """
     for open_cid in game_config.config_facility_open:
-        cache.rhodes_island.facility_open[open_cid] = True
+        kernel_data.set_room_open(open_cid, True)
 
 
 def clear_schedules() -> None:

@@ -18,7 +18,7 @@ from Script.Design import (
 from Script.Config import normal_config, game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.UI.Moudle import view
-from Script.Modules.domains import needs
+from Script.Modules.domains import facility, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -77,7 +77,7 @@ def handle_visitor_zone_ge_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_level = cache.rhodes_island.facility_level[13]
+    now_level = facility.level(13)
     if now_level >= 2:
         return 1
     return 0
@@ -142,7 +142,7 @@ def handle_blacksmith_shop_open(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.rhodes_island.facility_open[13]
+    return facility.is_open(13)
 
 
 @add_premise(constant_promise.Premise.DR_ROOM_LEVEL_GE_2)
@@ -154,7 +154,7 @@ def handle_dr_room_level_ge_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    dr_room_lv = cache.rhodes_island.facility_level[23]
+    dr_room_lv = facility.level(23)
     if dr_room_lv >= 2:
         return 1
     return 0

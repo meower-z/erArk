@@ -5,6 +5,7 @@ CURRENT 是本游戏写的文件 "2" 的版本。STEPS[n] 把版本 n 的 JSON �
 版本 0 的存档把生理需求与供电策略放在文件 "1" 的缓存对象上，所以 0 升 1 不是 JSON 步骤。
 这一升级在 install_save 里分三处。解开缓存后调 fill_v0_defaults，角色替换时调 copy_v0_needs，重建角色后调 adopt_v0。
 版本 0 与 1 的存档把动力数据放在罗德岛对象上。install_save 解开缓存后对每个版本调 adopt_power，把它搬进 GameState。
+版本 4 之前的存档把设施等级、开放情况与基地效率放在罗德岛对象上。install_save 对每个版本调 adopt_facility 搬走它们。
 界面的临时状态与玩家的面板选择不随存档：读任何版本的存档时，drop_ui_fields 去掉旧版本留在缓存与罗德岛对象上的它们，
 以及不再使用的字段。
 版本 3 之前的存档里，体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒在文件 "1" 的角色对象上。
@@ -18,11 +19,11 @@ from typing import Any, cast
 
 from Script.Core import game_type, num
 from Script.Core.num import Num
-from Script.Modules.domains import needs, power, pregnancy
+from Script.Modules.domains import facility, needs, power, pregnancy
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import settings
 
-CURRENT = 3
+CURRENT = 4
 """ 本游戏写的文件 "2" 的版本 """
 
 
@@ -147,9 +148,22 @@ def fill_v2_needs(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v3_to_v4(data: dict[str, Any]) -> dict[str, Any]:
+    """
+    版本 3 升 4，文件 "2" 原样交回。
+    版本 3 的文件 "2" 里没有设施数据。这一版存档的设施数据在文件 "1" 的罗德岛对象上，由 adopt_facility 搬进 GameState
+    Keyword arguments:
+    data -- 版本 3 的 JSON 对象
+    Return arguments:
+    dict -- 同一个对象
+    """
+    return data
+
+
 STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
     1: _v1_to_v2,
     2: fill_v2_needs,
+    3: _v3_to_v4,
 }
 """ 版本 n 到 n + 1 的升级步骤。版本 0 升 1 不是 JSON 步骤，见模块说明 """
 
@@ -253,6 +267,39 @@ def adopt_power(loaded_dict: dict[str, Any]) -> None:
         ),
     )
     power.set_storage(found.get("power_storage", 0.0))
+
+
+PICKLED_FACILITY = ("facility_level", "facility_open", "effectiveness")
+""" 版本 4 之前的存档里，罗德岛对象上存设施等级、开放情况与基地效率的属性名 """
+
+
+def adopt_facility(loaded_dict: dict[str, Any], version: int) -> int:
+    """
+    把罗德岛对象上 PICKLED_FACILITY 里的属性写进当前缓冲区，再从对象上删掉。对象上没有的属性不写。
+    等级表与开放情况表的设施id 换成字符串后，写进 base.facility_level 与 base.facility_open。
+    效率照原值写进 base.effectiveness
+    Keyword arguments:
+    loaded_dict -- 解开的存档缓存的属性表
+    version -- 存档的版本，旧存档为 0
+    Return arguments:
+    int -- 版本 4 之前的存档缺了的属性个数，版本 4 的存档为 0
+    """
+    island = loaded_dict.get("rhodes_island")
+    attrs = vars(island) if island is not None else {}
+    found = {
+        name: attrs.pop(name) for name in PICKLED_FACILITY if name in attrs
+    }
+    keys = {
+        "facility_level": facility.LEVEL,
+        "facility_open": facility.OPEN,
+    }
+    for name, key in keys.items():
+        if name in found:
+            table = {str(cid): value for cid, value in found[name].items()}
+            working.put(None, key, table)
+    if "effectiveness" in found:
+        working.put(None, facility.EFFECTIVENESS, found["effectiveness"])
+    return len(PICKLED_FACILITY) - len(found) if version < 4 else 0
 
 
 def drop_ui_fields(loaded_dict: dict[str, Any]) -> dict[str, Any]:

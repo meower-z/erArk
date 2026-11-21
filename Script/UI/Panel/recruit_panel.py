@@ -22,8 +22,8 @@ from Script.Config import game_config, normal_config
 from Script.Modules.save_load import reset
 
 import random
-
 from typing import TYPE_CHECKING
+from Script.Modules.domains import facility
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -440,7 +440,7 @@ class Recruit_Panel:
         title_text = _("招募")
         title_draw = draw.TitleLineDraw(title_text, self.width)
         # 当前设施数据
-        now_level = cache.rhodes_island.facility_level[7]
+        now_level = facility.level(7)
         line_count = len(cache.rhodes_island.recruit_line)
 
         # 开始获得招募npc的id
@@ -715,7 +715,7 @@ class Recruit_Panel:
             line_feed.draw()
 
             # 当前设施等级
-            now_level = cache.rhodes_island.facility_level[7]
+            now_level = facility.level(7)
 
             # 遍历策略列表，获取每个策略的信息
             for cid in game_config.config_recruitment_strategy.keys():

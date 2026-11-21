@@ -16,8 +16,8 @@ from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
-
 from typing import TYPE_CHECKING
+from Script.Modules.domains import facility
 
 if TYPE_CHECKING:
     import datetime
@@ -35,17 +35,15 @@ def judge_scene_open(scene_name: str) -> bool:
     scene_name -- 场景名
     Return arguments:
     bool -- 是否已开放
-    功能: constant.place_data 装的是**全部**场景——它在配置载入期由 data/map/ 的目录树
-             静态构建（map_config.load_dir_now），与存档、facility_level、facility_open 全都无关。
-             所以开放与否必须另查 Rhodes_Island.facility_open，与寻路的 wait_open
-             判定（map_handle.judge_scene_accessible）同口径。
-             理论教室一 / 实践教室一 / 大礼堂等 Lv1 基础设施压根不在 Facility_open.csv 里，
-             不给它们兜底会被误判成未开放，面板直接空掉（宿舍区同样处理，见 Dormitory_System/common.py）
+    功能: constant.place_data 装的是全部场景，它在配置载入期由 data/map/ 的目录树静态构建（map_config.load_dir_now）。
+             所以开放与否另用 facility.is_open 查，与寻路的 wait_open 判定（map_handle.judge_scene_accessible）同口径。
+             理论教室一、实践教室一、大礼堂等 1 级就有的设施不在 Facility_open.csv 里，这里把它们当作已开放。
+             不这样兜底的话，它们会被判成未开放，面板就空了（宿舍区同样处理，见 Dormitory_System/common.py）
     """
     if scene_name not in game_config.config_facility_open_name_set:
         return True
     open_cid = game_config.config_facility_open_name_to_cid[scene_name]
-    return bool(cache.rhodes_island.facility_open.get(open_cid, False))
+    return bool(facility.is_open(open_cid, False))
 
 
 def judge_classroom_open(classroom: str) -> bool:
