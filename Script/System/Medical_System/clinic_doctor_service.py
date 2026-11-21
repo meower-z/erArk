@@ -19,6 +19,7 @@ from Script.System.Medical_System import (
     medical_core,
 )
 from Script.System.Medical_System import clinic_patient_management
+from Script.Modules.domains import medical, medical_patient
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -78,13 +79,9 @@ def _get_role_doctor_ids(
         return []
     # 根据不同角色类型返回对应的医生编号集合。
     if role_key == medical_constant.SPECIALIZATION_ROLE_CLINIC:
-        return list(
-            getattr(rhodes_island, "medical_clinic_doctor_ids", []) or []
-        )
+        return list(medical.state().clinic_doctor_ids or [])
     if role_key == medical_constant.SPECIALIZATION_ROLE_HOSPITAL:
-        return list(
-            getattr(rhodes_island, "medical_hospital_doctor_ids", []) or []
-        )
+        return list(medical.state().hospital_doctor_ids or [])
     return []
 
 
@@ -105,9 +102,7 @@ def _ensure_specialization_structure(
     # 读取所有合法的分科分类键。
     categories = _get_specialization_categories()
     category_keys = [item["key"] for item in categories]
-    raw_spec = getattr(rhodes_island, "medical_doctor_specializations", {})
-    if not isinstance(raw_spec, dict):
-        raw_spec = {}
+    raw_spec = medical.state().doctor_specializations
 
     # 遍历门诊与住院两个角色，将当前医生列表映射到各分类。
     normalized: dict[str, dict[str, list[int]]] = {}
@@ -147,7 +142,7 @@ def _ensure_specialization_structure(
 
         normalized[role_key] = cleaned
 
-    rhodes_island.medical_doctor_specializations = normalized
+    medical.state().doctor_specializations = normalized
 
 
 def _resolve_doctor_specialization(
@@ -166,9 +161,7 @@ def _resolve_doctor_specialization(
     """
     # 确保分科结构初始化后再读取。
     _ensure_specialization_structure(rhodes_island)
-    role_bucket = getattr(
-        rhodes_island, "medical_doctor_specializations", {}
-    ).get(role_key, {})
+    role_bucket = medical.state().doctor_specializations.get(role_key, {})
     for category_key, doctor_list in role_bucket.items():
         if doctor_id in doctor_list:
             return category_key
@@ -176,13 +169,13 @@ def _resolve_doctor_specialization(
 
 
 def _bind_doctor_to_patient(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     doctor_character: game_type.Character | None,
 ) -> None:
     """记录医生与病人的绑定关系，避免存在未同步的引用。
 
     参数:
-        patient (Optional[medical_constant.MedicalPatient]): 需要绑定的病人对象。
+        patient (Optional[medical_patient.MedicalPatient]): 需要绑定的病人对象。
         doctor_character (Optional[game_type.Character]): 即将接诊的医生对象。
     返回:
         None
@@ -200,13 +193,13 @@ def _bind_doctor_to_patient(
 
 
 def _clear_doctor_patient_binding(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     doctor_character: game_type.Character | None,
 ) -> None:
     """解除医生与病人的绑定，防止残留的旧引用。
 
     参数:
-        patient (Optional[medical_constant.MedicalPatient]): 待解除绑定的病人。
+        patient (Optional[medical_patient.MedicalPatient]): 待解除绑定的病人。
         doctor_character (Optional[game_type.Character]): 目标医生对象。
     返回:
         None
@@ -228,13 +221,13 @@ def _clear_doctor_patient_binding(
 
 
 def _patient_matches_specialization(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     specialization_key: str,
 ) -> bool:
     """判断病人的生理系统是否满足医生分科要求。
 
     参数:
-        patient (Optional[medical_constant.MedicalPatient]): 需要匹配的病人对象。
+        patient (Optional[medical_patient.MedicalPatient]): 需要匹配的病人对象。
         specialization_key (str): 医生当前的分科键。
     返回:
         bool: True 表示病人满足分科要求。
@@ -258,14 +251,14 @@ def _patient_matches_specialization(
 
 
 def _is_patient_assignable(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     doctor_id: int,
     specialization_key: str,
 ) -> bool:
     """综合判断病人当前是否可以分配给指定医生。
 
     参数:
-        patient (Optional[medical_constant.MedicalPatient]): 候选病人对象。
+        patient (Optional[medical_patient.MedicalPatient]): 候选病人对象。
         doctor_id (int): 医生的角色 ID。
         specialization_key (str): 医生所属的分科键。
     返回:
@@ -329,7 +322,7 @@ def assign_doctor_specialization(
 
     # 重新构建分科结构并将目标医生移动到指定分类。
     _ensure_specialization_structure(rhodes_island)
-    role_bucket = rhodes_island.medical_doctor_specializations.setdefault(
+    role_bucket = medical.state().doctor_specializations.setdefault(
         role_key, {}
     )
     for key in category_keys:
@@ -405,7 +398,7 @@ def get_doctor_specialization_overview(
     # 准备好分科结构以便遍历。
     _ensure_specialization_structure(rhodes_island)
     categories = _get_specialization_categories()
-    role_bucket = rhodes_island.medical_doctor_specializations.get(role_key, {})
+    role_bucket = medical.state().doctor_specializations.get(role_key, {})
     character_table = getattr(cache_control.cache, "character_data", {})
 
     overview: list[dict[str, Any]] = []
@@ -470,7 +463,7 @@ def _resolve_specialization_bonus(
     rhodes_island: game_type.Rhodes_Island,
     role_key: str,
     doctor_character: game_type.Character | None,
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
 ) -> tuple[str, bool, float]:
     """根据医生与病人信息计算分科加成。
 
@@ -478,7 +471,7 @@ def _resolve_specialization_bonus(
         rhodes_island (game_type.Rhodes_Island): 目标基地对象。
         role_key (str): 医生角色键。
         doctor_character (Optional[game_type.Character]): 实际医生对象。
-        patient (Optional[medical_constant.MedicalPatient]): 当前诊治的病人。
+        patient (Optional[medical_patient.MedicalPatient]): 当前诊治的病人。
     返回:
         Tuple[str, bool, float]: 分别为分科键、是否匹配、加成倍数。
     """
@@ -517,14 +510,14 @@ def acquire_patient_for_doctor(
     doctor_character: game_type.Character | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
-) -> medical_constant.MedicalPatient | None:
+) -> medical_patient.MedicalPatient | None:
     """为门诊医生选取待诊病人。
 
     参数:
         doctor_character (Optional[game_type.Character]): 待分配的医生对象。
         target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
-        Optional[medical_constant.MedicalPatient]: 分配到的病人对象，若无则为 None。
+        Optional[medical_patient.MedicalPatient]: 分配到的病人对象，若无则为 None。
     """
     # --- 无医生对象时无法分配病人 ---
     if doctor_character is None:
@@ -534,7 +527,7 @@ def acquire_patient_for_doctor(
     rhodes_island = medical_core._get_rhodes_island(target_base)
     if rhodes_island is None:
         return None
-    patient_table = rhodes_island.medical_patients_today
+    patient_table = medical.state().today
     if not patient_table:
         return None
 
@@ -557,7 +550,7 @@ def acquire_patient_for_doctor(
         _clear_doctor_patient_binding(cached_patient, doctor_character)
 
     # --- 根据分科与状态过滤可分配的病人列表 ---
-    candidates: list[medical_constant.MedicalPatient] = [
+    candidates: list[medical_patient.MedicalPatient] = [
         patient
         for patient in patient_table.values()
         if _is_patient_assignable(patient, doctor_id, specialization_key)
@@ -580,7 +573,7 @@ def prepare_doctor_medical_behavior(
     behavior_id: str | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
-) -> medical_constant.MedicalPatient | None:
+) -> medical_patient.MedicalPatient | None:
     """为指定行为预先准备医生与病人的绑定关系。
 
     参数:
@@ -588,7 +581,7 @@ def prepare_doctor_medical_behavior(
         behavior_id (Optional[str]): 当前即将执行的行为 ID。
         target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
-        Optional[medical_constant.MedicalPatient]: 准备好的病人对象，若无则为 None。
+        Optional[medical_patient.MedicalPatient]: 准备好的病人对象，若无则为 None。
     """
     # 缺少医生或行为标识时无需准备。
     if doctor_character is None or not behavior_id:
@@ -643,36 +636,36 @@ def update_doctor_assignments(
 
     # 若传入新的门诊医生列表，则刷新缓存并计算能力值。
     if clinic_doctors is not None:
-        rhodes_island.medical_clinic_doctor_ids = list(clinic_doctors)
+        medical.state().clinic_doctor_ids = list(clinic_doctors)
         resolved_power = (
             clinic_power
             if clinic_power is not None
             else medical_core._calculate_doctor_power(clinic_doctors)
         )
-        rhodes_island.medical_clinic_doctor_power = float(resolved_power)
+        medical.state().clinic_doctor_power = float(resolved_power)
     else:
-        rhodes_island.medical_clinic_doctor_ids = list(
-            getattr(rhodes_island, "medical_clinic_doctor_ids", []) or []
+        medical.state().clinic_doctor_ids = list(
+            medical.state().clinic_doctor_ids or []
         )
-        rhodes_island.medical_clinic_doctor_power = float(
-            getattr(rhodes_island, "medical_clinic_doctor_power", 0.0) or 0.0
+        medical.state().clinic_doctor_power = float(
+            medical.state().clinic_doctor_power or 0.0
         )
 
     # 同理处理住院医生的名单与能力缓存。
     if hospital_doctors is not None:
-        rhodes_island.medical_hospital_doctor_ids = list(hospital_doctors)
+        medical.state().hospital_doctor_ids = list(hospital_doctors)
         resolved_power = (
             hospital_power
             if hospital_power is not None
             else medical_core._calculate_doctor_power(hospital_doctors)
         )
-        rhodes_island.medical_hospital_doctor_power = float(resolved_power)
+        medical.state().hospital_doctor_power = float(resolved_power)
     else:
-        rhodes_island.medical_hospital_doctor_ids = list(
-            getattr(rhodes_island, "medical_hospital_doctor_ids", []) or []
+        medical.state().hospital_doctor_ids = list(
+            medical.state().hospital_doctor_ids or []
         )
-        rhodes_island.medical_hospital_doctor_power = float(
-            getattr(rhodes_island, "medical_hospital_doctor_power", 0.0) or 0.0
+        medical.state().hospital_doctor_power = float(
+            medical.state().hospital_doctor_power or 0.0
         )
 
     # 仅保持分科结构有效性，床位上限在外部统一刷新。

@@ -1218,6 +1218,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     from Script.Design import attr_calculation, basement
     from Script.UI.Flow import creator_character_flow
     from Script.Config import map_config
+    from Script.System.Medical_System import medical_service
 
     info_draw = draw.NormalDraw()
     info_draw.width = width
@@ -1235,6 +1236,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     cache_control.cache = cache
     map_config.init_map_data()
     cache.rhodes_island = basement.get_base_zero()
+    medical_service.init_medical_department_data(cache.rhodes_island)
     cache.plan_queue = {}
     cache.player_route = None
     cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
@@ -1461,8 +1463,6 @@ class CharacterExperienceText:
 
     def draw(self) -> None:
         """绘制面板"""
-        # title_draw = draw.TitleLineDraw(_("人物状态"), self.width)
-        # title_draw.draw()
         line_feed_draw.draw()
         count = 0
         for label in self.draw_list:

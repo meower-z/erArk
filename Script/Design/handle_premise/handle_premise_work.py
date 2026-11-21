@@ -7,7 +7,7 @@ from Script.Core import (
     game_type,
 )
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import warehouse, work
+from Script.Modules.domains import medical, warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1197,7 +1197,7 @@ def handle_patient_wait(character_id: int) -> int:
     # 计算等待就诊的患者数量
     waiting_count = sum(
         1
-        for patient in cache.rhodes_island.medical_patients_today.values()
+        for patient in medical.state().today.values()
         if patient.state in waiting_states
     )
     if waiting_count > 0:
@@ -1214,7 +1214,7 @@ def handle_medical_ward_wait(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    hospitalized = getattr(cache.rhodes_island, "medical_hospitalized", {})
+    hospitalized = medical.state().hospitalized
     if hospitalized:
         return 1
     return 0
@@ -1231,10 +1231,7 @@ def handle_medical_surgery_wait(character_id: int) -> int:
     """
     from Script.System.Medical_System import medical_constant
 
-    hospitalized = getattr(cache.rhodes_island, "medical_hospitalized", {})
-    if not hospitalized:
-        return 0
-    for patient in hospitalized.values():
+    for patient in medical.state().hospitalized.values():
         if (
             getattr(patient, "state", None)
             != medical_constant.MedicalPatientState.HOSPITALIZED

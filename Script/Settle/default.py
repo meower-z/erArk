@@ -48,7 +48,7 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import facility, needs, warehouse
+from Script.Modules.domains import facility, medical, needs, warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -7201,6 +7201,7 @@ def handle_official_work_add_adjust(
 @settle_behavior.add_settle_behavior_effect(
     constant_effect.BehaviorEffect.CURE_PATIENT_ADD_ADJUST
 )
+@medical.editing()
 def handle_cure_patient_add_just(
     character_id: int,
     add_time: int,
@@ -7222,16 +7223,15 @@ def handle_cure_patient_add_just(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    rhodes_island = cache.rhodes_island
 
     # 玩家自己根据诊疗病人列表单独处理
     if character_id == 0:
         # 遍历所有本次被诊疗的病人
-        for patient_id in rhodes_island.player_examined_patient_ids:
+        for patient_id in medical.state().examined_patient_ids:
             # 获取该病人的数据
-            patient_obj = rhodes_island.medical_patients_today.get(patient_id)
+            patient_obj = medical.state().today.get(patient_id)
             if patient_obj is None:
-                patient_obj = rhodes_island.medical_hospitalized.get(patient_id)
+                patient_obj = medical.state().hospitalized.get(patient_id)
             if patient_obj is None:
                 continue
             # 病人的病情等级
@@ -7252,10 +7252,10 @@ def handle_cure_patient_add_just(
                 character_id, 88, base_value=exam_count, change_data=change_data
             )
         # 清空本次被诊疗的病人列表
-        rhodes_island.player_examined_patient_ids.clear()
+        medical.state().examined_patient_ids.clear()
         return
 
-    before_income = rhodes_island.medical_income_today
+    before_income = medical.state().income_today
 
     # 如果已有病人则选取该病人
     patient_id = getattr(
@@ -7264,10 +7264,10 @@ def handle_cure_patient_add_just(
     patient_obj = None
     # 先从今日病人中寻找
     if patient_id:
-        patient_obj = rhodes_island.medical_patients_today.get(patient_id)
+        patient_obj = medical.state().today.get(patient_id)
         # 再从住院病人中寻找
         if patient_obj is None:
-            patient_obj = rhodes_island.medical_hospitalized.get(patient_id)
+            patient_obj = medical.state().hospitalized.get(patient_id)
 
     # 否则获取一个新的病人
     if patient_obj is None:
@@ -7284,7 +7284,7 @@ def handle_cure_patient_add_just(
 
     # 进行诊断
     medical_service.advance_diagnose(patient_obj.patient_id, character_data)
-    income_delta = rhodes_island.medical_income_today - before_income
+    income_delta = medical.state().income_today - before_income
 
     # 根据病情等级获取额外习得和医疗经验
     base_chara_state_common_settle(

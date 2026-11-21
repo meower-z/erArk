@@ -16,18 +16,19 @@ from Script.System.Medical_System import (
     medical_core,
     medical_service,
 )
+from Script.Modules.domains import medical, medical_patient
 
 _: FunctionType = get_text._
 """ 翻译函数 """
 
 
 def _clear_player_session_state(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
 ) -> None:
     """清理玩家诊疗流程写入的临时状态字段。
 
     参数:
-        patient (medical_constant.MedicalPatient): 目标病人对象。
+        patient (medical_patient.MedicalPatient): 目标病人对象。
     返回:
         None: 重置患者对象上的玩家相关临时数据。
     """
@@ -48,14 +49,14 @@ def _clear_player_session_state(
 def _acquire_patient_for_player(
     doctor_character: game_type.Character | None,
     rhodes_island: game_type.Rhodes_Island | None,
-) -> medical_constant.MedicalPatient | None:
+) -> medical_patient.MedicalPatient | None:
     """根据当前优先策略为玩家诊疗会话选定病人。
 
     参数:
         doctor_character (Optional[game_type.Character]): 玩家当前操控的医生。
         rhodes_island (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
-        Optional[medical_constant.MedicalPatient]: 分配到的病人对象，若无则返回 None。
+        Optional[medical_patient.MedicalPatient]: 分配到的病人对象，若无则返回 None。
     """
 
     # 没有基地上下文时无法为玩家选择病人。
@@ -63,17 +64,15 @@ def _acquire_patient_for_player(
         return None
 
     # 若玩家已有锁定病人则优先返回该对象。
-    current_id = int(
-        getattr(rhodes_island, "medical_player_current_patient_id", 0) or 0
-    )
+    current_id = int(medical.state().player_patient_id or 0)
     if current_id:
-        patient = rhodes_island.medical_patients_today.get(current_id)
+        patient = medical.state().today.get(current_id)
         if patient is not None:
             return patient
 
     # 过滤出符合状态与医生绑定条件的候选病人。
-    candidates: list[medical_constant.MedicalPatient] = []
-    for patient in rhodes_island.medical_patients_today.values():
+    candidates: list[medical_patient.MedicalPatient] = []
+    for patient in medical.state().today.values():
         if patient.state not in medical_constant.WAITING_QUEUE_STATE_SET:
             continue
         assigned_doctor = int(getattr(patient, "assigned_doctor_id", 0) or 0)
@@ -95,7 +94,7 @@ def start_player_diagnose_session(
     doctor_character: game_type.Character | None = None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
-) -> medical_constant.MedicalPatient | None:
+) -> medical_patient.MedicalPatient | None:
     """
     初始化玩家诊疗会话。
 
@@ -103,7 +102,7 @@ def start_player_diagnose_session(
         doctor_character (Optional[game_type.Character]): 玩家当前操控的医生角色。
         target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
-        Optional[medical_constant.MedicalPatient]: 分配到的病人对象，若无则返回 None。
+        Optional[medical_patient.MedicalPatient]: 分配到的病人对象，若无则返回 None。
     """
 
     # 确定会话关联的基地对象。
@@ -141,7 +140,7 @@ def start_player_diagnose_session(
     medical_service.set_patient_state(
         patient, medical_constant.MedicalPatientState.IN_TREATMENT_PLAYER
     )
-    rhodes_island.medical_player_current_patient_id = patient.patient_id
+    medical.state().player_patient_id = patient.patient_id
 
     if doctor_character is not None and hasattr(doctor_character, "work"):
         doctor_character.work.medical_patient_id = patient.patient_id
@@ -152,7 +151,7 @@ def start_player_diagnose_session(
 def abort_player_diagnose_session(
     doctor_character: game_type.Character | None = None,
     *,
-    patient: medical_constant.MedicalPatient | None = None,
+    patient: medical_patient.MedicalPatient | None = None,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> None:
     """终止玩家诊疗会话并恢复病人原始状态。"""
@@ -164,11 +163,9 @@ def abort_player_diagnose_session(
 
     # 若未显式指定病人，则回退到当前锁定的对象。
     if patient is None:
-        current_id = int(
-            getattr(rhodes_island, "medical_player_current_patient_id", 0) or 0
-        )
+        current_id = int(medical.state().player_patient_id or 0)
         if current_id:
-            patient = rhodes_island.medical_patients_today.get(current_id)
+            patient = medical.state().today.get(current_id)
 
     if patient is None:
         return
@@ -188,7 +185,7 @@ def abort_player_diagnose_session(
 
     # 清理会话数据并重置当前病人 ID。
     _clear_player_session_state(patient)
-    rhodes_island.medical_player_current_patient_id = 0
+    medical.state().player_patient_id = 0
 
     # 若未提供医生对象则默认选取主角。
     if doctor_character is None:
@@ -202,7 +199,7 @@ def abort_player_diagnose_session(
 def commit_player_diagnose_session(
     doctor_character: game_type.Character | None = None,
     *,
-    patient: medical_constant.MedicalPatient | None = None,
+    patient: medical_patient.MedicalPatient | None = None,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
     """完成玩家诊疗流程并返回结算摘要"""
@@ -223,11 +220,9 @@ def commit_player_diagnose_session(
 
     # 若未指定病人则读取会话关联的当前病人
     if patient is None:
-        current_id = int(
-            getattr(rhodes_island, "medical_player_current_patient_id", 0) or 0
-        )
+        current_id = int(medical.state().player_patient_id or 0)
         if current_id:
-            patient = rhodes_island.medical_patients_today.get(current_id)
+            patient = medical.state().today.get(current_id)
 
     # 校验病人对象
     if patient is None:
@@ -250,14 +245,14 @@ def commit_player_diagnose_session(
     )
 
     # 调用常规诊疗推进，并记录诊疗收入变化。
-    income_before = float(rhodes_island.medical_income_today or 0.0)
+    income_before = float(medical.state().income_today or 0.0)
     medical_service.advance_diagnose(
         patient.patient_id, doctor_character, target_base=rhodes_island
     )
-    income_after = float(rhodes_island.medical_income_today or 0.0)
+    income_after = float(medical.state().income_today or 0.0)
 
     # 记录病人id
-    rhodes_island.player_examined_patient_ids.append(patient.patient_id)
+    medical.state().examined_patient_ids.append(patient.patient_id)
 
     # 根据最近一次用药记录还原药费收益，用于界面提示
     medicine_success = (
@@ -274,7 +269,7 @@ def commit_player_diagnose_session(
     medicine_income = max(0, income_delta - diagnose_income)
 
     # 解除医生绑定
-    rhodes_island.medical_player_current_patient_id = 0
+    medical.state().player_patient_id = 0
 
     return {
         "success": True,
@@ -289,7 +284,7 @@ def commit_player_diagnose_session(
 def execute_player_diagnose_checks(
     selections: list[dict[str, int]],
     *,
-    patient: medical_constant.MedicalPatient | None = None,
+    patient: medical_patient.MedicalPatient | None = None,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
     """执行玩家选择的检查条目并记录结果。"""
@@ -301,11 +296,9 @@ def execute_player_diagnose_checks(
 
     # 若未指定病人则沿用当前会话对象。
     if patient is None:
-        current_id = int(
-            getattr(rhodes_island, "medical_player_current_patient_id", 0) or 0
-        )
+        current_id = int(medical.state().player_patient_id or 0)
         if current_id:
-            patient = rhodes_island.medical_patients_today.get(current_id)
+            patient = medical.state().today.get(current_id)
 
     if patient is None:
         return {"success": False, "reason": "no_patient"}
@@ -424,7 +417,7 @@ def execute_player_diagnose_checks(
 
 
 def build_player_check_catalog(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
 ) -> dict[int, dict[str, object]]:
     """构建玩家诊疗用的系统/部位/并发症选择树。"""
 
@@ -488,14 +481,14 @@ def build_player_check_catalog(
 
 
 def estimate_patient_treatment_summary(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
     """估算诊疗收益与资源需求摘要。
 
     参数:
-        patient (Optional[medical_constant.MedicalPatient]): 待评估的病人对象。
+        patient (Optional[medical_patient.MedicalPatient]): 待评估的病人对象。
         target_base (Optional[game_type.Rhodes_Island]): 指定罗德岛基座，用于读取倍率与库存。
     返回:
         Dict[str, object]: 汇总后的收益、倍率与资源需求数据。

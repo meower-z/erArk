@@ -15,7 +15,14 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import economy, needs, power, production, work
+from Script.Modules.domains import (
+    economy,
+    medical,
+    needs,
+    power,
+    production,
+    work,
+)
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -460,19 +467,8 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 new_id = old_to_new_id.get(old_id, old_id)
                 ri.milk_in_fridge[new_id] = value
 
-        # medical_clinic_doctor_ids
-        if hasattr(ri, "medical_clinic_doctor_ids"):
-            ri.medical_clinic_doctor_ids = [
-                old_to_new_id.get(oid, oid)
-                for oid in ri.medical_clinic_doctor_ids
-            ]
-
-        # medical_hospital_doctor_ids
-        if hasattr(ri, "medical_hospital_doctor_ids"):
-            ri.medical_hospital_doctor_ids = [
-                old_to_new_id.get(oid, oid)
-                for oid in ri.medical_hospital_doctor_ids
-            ]
+        # 医疗部的门诊、住院医生名单与分科配置
+        medical.remap_doctors(old_to_new_id)
 
         # book_borrow_dict (Dict[int, int])
         if hasattr(ri, "book_borrow_dict"):
@@ -571,17 +567,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 old_to_new_id.get(oid, oid)
                 for oid in ri.manually_selected_exam_operator_ids
             }
-
-        # medical_doctor_specializations (Dict[str, Dict[str, List[int]]])
-        if hasattr(ri, "medical_doctor_specializations"):
-            for (
-                _pos_key,
-                system_dict,
-            ) in ri.medical_doctor_specializations.items():
-                for sys_key, id_list in system_dict.items():
-                    system_dict[sys_key] = [
-                        old_to_new_id.get(oid, oid) for oid in id_list
-                    ]
 
         # recruit_line (Dict[int, List]) - 招募线id:[0进度, 1策略id, 2主招聘专员id, 3效率]
         if hasattr(ri, "recruit_line"):
@@ -1380,19 +1365,8 @@ def migrate_character_replacement(
             for oid, value in old_milk.items():
                 ri.milk_in_fridge[old_to_new_id_map.get(oid, oid)] = value
 
-        # medical_clinic_doctor_ids
-        if hasattr(ri, "medical_clinic_doctor_ids"):
-            ri.medical_clinic_doctor_ids = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.medical_clinic_doctor_ids
-            ]
-
-        # medical_hospital_doctor_ids
-        if hasattr(ri, "medical_hospital_doctor_ids"):
-            ri.medical_hospital_doctor_ids = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.medical_hospital_doctor_ids
-            ]
+        # 医疗部的门诊、住院医生名单与分科配置
+        medical.remap_doctors(old_to_new_id_map)
 
         # book_borrow_dict
         if hasattr(ri, "book_borrow_dict") and ri.book_borrow_dict:
@@ -1511,20 +1485,6 @@ def migrate_character_replacement(
                 ri.manually_selected_exam_operator_ids.add(
                     old_to_new_id_map.get(oid, oid)
                 )
-
-        # medical_doctor_specializations
-        if (
-            hasattr(ri, "medical_doctor_specializations")
-            and ri.medical_doctor_specializations
-        ):
-            for (
-                _pos_key,
-                system_dict,
-            ) in ri.medical_doctor_specializations.items():
-                for sys_key, id_list in system_dict.items():
-                    system_dict[sys_key] = [
-                        old_to_new_id_map.get(oid, oid) for oid in id_list
-                    ]
 
         # recruit_line
         if hasattr(ri, "recruit_line") and ri.recruit_line:

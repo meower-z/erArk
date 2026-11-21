@@ -16,7 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import facility, production, warehouse
+from Script.Modules.domains import facility, medical, production, warehouse
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -151,7 +151,6 @@ def settle_assembly_line(
                 )
                 # 不超过总最大生产数
                 produce_num = min(produce_num, now_type_max_produce_num)
-            # print(f"debug 流水线{assembly_line_id}，实际生产数为{produce_num}")
 
             # 结算实际生产
             if produce_num > 0:
@@ -221,12 +220,12 @@ def settle_assembly_line(
     if hospital_bed_modules > 0:
         from Script.System.Medical_System import medical_core
 
-        # 结算模块数量
-        cache.rhodes_island.used_hospital_bed_modules += hospital_bed_modules
-        # 重新计算床位上限
-        cache.rhodes_island.medical_bed_limit = (
-            medical_core._calculate_medical_bed_limit(cache.rhodes_island)
-        )
+        # 结算模块数量，重新计算床位上限
+        with medical.editing() as m:
+            m.bed_modules += hospital_bed_modules
+            cache.rhodes_island.medical_bed_limit = (
+                medical_core._calculate_medical_bed_limit(cache.rhodes_island)
+            )
         # 绘制信息
         hospital_bed_modules_text = _(
             "○由于生产了{0}个住院病房扩展模块，罗德岛住院部床位数量提升了{1}个！\n"

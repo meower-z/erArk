@@ -25,7 +25,7 @@ from Script.Core import save_handle
 from Script.Design import attr_calculation
 from Script.Kernel import core
 from Script.Modules import load_order
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import medical, warehouse
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
 from tests.fast.base import FastTestCase
@@ -148,7 +148,7 @@ class KernelStateTest(FastTestCase):
         """
         存档时难度 1 为 3、系统设置 1 号为 0。之后把难度改成 1、系统设置改成 1，再读档。
         难度回到 3，系统设置还是 1、还是同一个对象。
-        内核的 GameState 除去全局键 roster.offstage 之外与存档时相同
+        内核的 GameState 除去全局键 roster.offstage 与读档修补补上的医疗部数据（存档里没有）之外与存档时相同
         """
         self.world.chara(0, "博士")
         cache = self.cache
@@ -170,6 +170,8 @@ class KernelStateTest(FastTestCase):
         loaded = core.state()
         data = dict(loaded.data)
         data.pop("roster.offstage")
+        for key in (medical.KEY, medical.CLINIC, medical.WARD):
+            data.pop(key, None)
         self.assertEqual(replace(loaded, data=MappingProxyType(data)), saved)
 
     def test_open_keys_load_and_no_end_runs_twice(self) -> None:

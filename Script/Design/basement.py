@@ -33,10 +33,8 @@ _: FunctionType = get_text._
 
 def get_base_zero() -> game_type.Rhodes_Island:
     """
-    基地情况结构体，设为空
+    基地情况结构体，设为空。医疗部数据不在罗德岛对象上，新游戏与新周目另调 medical_service.init_medical_department_data
     """
-    from Script.System.Medical_System import medical_service
-
     base_data = game_type.Rhodes_Island()
 
     # 遍历全部书籍
@@ -62,9 +60,6 @@ def get_base_zero() -> game_type.Rhodes_Island:
 
     # 初始化公务工作
     base_data.office_work += 200
-
-    # 初始化医疗系统运行期缓存
-    medical_service.init_medical_department_data(base_data, reset_runtime=True)
 
     # 初始化宿舍管理员（1~9层各对应一名，默认未任命）
     for layer_id in range(1, 10):

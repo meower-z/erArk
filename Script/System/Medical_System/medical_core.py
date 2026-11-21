@@ -7,13 +7,37 @@
 
 from __future__ import annotations
 
+import functools
 import math
+from collections.abc import Callable
 
 from Script.Config import config_def, game_config
 from Script.Core import cache_control, game_type
-from Script.Modules.domains import economy
+from Script.Modules.domains import (
+    economy,
+    facility,
+    medical,
+    medical_patient,
+    warehouse,
+)
 from Script.System.Medical_System import medical_constant
-from Script.Modules.domains import facility, warehouse
+
+
+def edits[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
+    """装饰器：函数在 domains.medical.editing() 块里运行，改医疗部数据的入口函数用它。
+
+    参数:
+        fn (Callable): 改医疗部数据的函数。
+    返回:
+        Callable: 包好的函数。
+    """
+
+    @functools.wraps(fn)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        with medical.editing():
+            return fn(*args, **kwargs)
+
+    return wrapper
 
 
 def _bump_daily_counter(
@@ -44,6 +68,7 @@ def _bump_daily_counter(
     counters.bump(key, value)
 
 
+@edits
 def _apply_income_to_rhodes(
     rhodes_island: game_type.Rhodes_Island | None,
     income_value: int,
@@ -54,15 +79,15 @@ def _apply_income_to_rhodes(
         rhodes_island (Optional[game_type.Rhodes_Island]): 目标基地缓存对象。
         income_value (int): 本次入账的龙门币数值，仅当大于 0 时生效。
     返回:
-        None: 无返回值。基地对象上的医疗收入与龙门币库存加上收入，今日总收入 base.income_today 也加上收入。
+        None: 无返回值。医疗部的今日与累计收入、龙门币库存加上收入，今日总收入 base.income_today 也加上收入。
     """
 
     # 收入不合法或没有目标基地时直接退出。
     if rhodes_island is None or income_value <= 0:
         return
     # 更新医疗收入字段并累计到全局收益。
-    rhodes_island.medical_income_today += income_value
-    rhodes_island.medical_income_total += income_value
+    medical.state().income_today += income_value
+    medical.state().income_total += income_value
     economy.add_income(income_value)
     # 同步物资仓库中的龙门币库存。
     warehouse.set(1, int(warehouse.stock().get(1, 0) or 0) + income_value)
@@ -104,35 +129,35 @@ def _obtain_daily_counters(
         return None
 
     # 读取现有统计字段并在必要时转化为结构体实例。
-    raw_value = getattr(rhodes_island, "medical_daily_counters", None)
+    raw_value = medical.state().daily_counters
     counters = medical_constant.MedicalDailyCounters.from_mapping(raw_value)
 
     # 将规范化结果回写至基地对象，确保后续访问保持一致。
-    rhodes_island.medical_daily_counters = counters
+    medical.state().daily_counters = counters
     return counters
 
 
 def _locate_patient(
     patient_id: int,
     rhodes_island: game_type.Rhodes_Island,
-) -> tuple[medical_constant.MedicalPatient | None, bool]:
+) -> tuple[medical_patient.MedicalPatient | None, bool]:
     """在门诊和住院列表中查找病人，返回病人对象与是否住院标记。
 
     参数:
         patient_id (int): 目标病人的唯一编号。
         rhodes_island (game_type.Rhodes_Island): 当前罗德岛缓存对象。
     返回:
-        Tuple[Optional[medical_constant.MedicalPatient], bool]:
+        Tuple[Optional[medical_patient.MedicalPatient], bool]:
             找到的病人对象以及是否处于住院列表的布尔标记。
     """
 
     # 先在门诊病人表中查找。
-    patient = rhodes_island.medical_patients_today.get(patient_id)
+    patient = medical.state().today.get(patient_id)
     if patient is not None:
         return patient, False
 
     # 再尝试在住院病人表中查找。
-    patient = rhodes_island.medical_hospitalized.get(patient_id)
+    patient = medical.state().hospitalized.get(patient_id)
     if patient is not None:
         return patient, True
 
@@ -200,7 +225,7 @@ def _calculate_patient_refresh_count(
         return 0
 
     # 计算收费系数对刷新数量的倍率，确保空值时回落到 1.0。
-    price_ratio = float(rhodes_island.medical_price_ratio or 1.0)
+    price_ratio = float(medical.state().price_ratio or 1.0)
     refresh_multiplier = resolve_price_refresh_multiplier(price_ratio)
 
     # 叠加国家感染率系数：从全局缓存安全读取，缺失或无效时使用 1.0 兜底。
@@ -243,15 +268,15 @@ def _calculate_medical_bed_limit(rhodes_island: game_type.Rhodes_Island) -> int:
     )
     base_limit = int(level_config.bed_limit) if level_config else 0
     # 每使用一个模块则提供2个额外床位。
-    module_count = int(rhodes_island.used_hospital_bed_modules or 0) * 3
+    module_count = int(medical.state().bed_modules or 0) * 3
     # 医生数量提供额外床位加成。
     hospital_bonus = (
-        len(getattr(rhodes_island, "medical_hospital_doctor_ids", []) or [])
+        len(medical.state().hospital_doctor_ids or [])
         * medical_constant.HOSPITAL_DOCTOR_BED_BONUS
     )
     total_limit = base_limit + module_count + hospital_bonus
     # 确保床位不低于现有住院人数。
-    current_occupancy = len(rhodes_island.medical_hospitalized)
+    current_occupancy = len(medical.state().hospitalized)
     return max(total_limit, current_occupancy)
 
 
@@ -293,64 +318,48 @@ def _ensure_runtime_dict(rhodes_island: game_type.Rhodes_Island) -> None:
     """
 
     # 保证病人、住院与手术记录容器存在且为正确类型。
-    rhodes_island.medical_patients_today = dict(
-        getattr(rhodes_island, "medical_patients_today", {}) or {}
-    )
-    rhodes_island.medical_hospitalized = dict(
-        getattr(rhodes_island, "medical_hospitalized", {}) or {}
-    )
-    rhodes_island.medical_surgery_records = list(
-        getattr(rhodes_island, "medical_surgery_records", []) or []
+    medical.state().today = dict(medical.state().today or {})
+    medical.state().hospitalized = dict(medical.state().hospitalized or {})
+    medical.state().surgery_records = list(
+        medical.state().surgery_records or []
     )
 
     # 校正药品累加器，确保所有资源键都已注册。
-    accumulator = dict(
-        getattr(rhodes_island, "medical_inventory_accumulator", {}) or {}
-    )
+    accumulator = dict(medical.state().accumulator or {})
     for resource_id in medical_constant.ALL_MEDICINE_RESOURCE_IDS:
         accumulator.setdefault(resource_id, 0.0)
-    rhodes_island.medical_inventory_accumulator = accumulator
+    medical.state().accumulator = accumulator
 
     # 转换收入、计数器与日志等字段的类型。
-    rhodes_island.medical_income_today = int(
-        getattr(rhodes_island, "medical_income_today", 0) or 0
-    )
-    rhodes_island.medical_income_total = int(
-        getattr(rhodes_island, "medical_income_total", 0) or 0
-    )
-    rhodes_island.medical_daily_counters = (
+    medical.state().income_today = int(medical.state().income_today or 0)
+    medical.state().income_total = int(medical.state().income_total or 0)
+    medical.state().daily_counters = (
         medical_constant.MedicalDailyCounters.from_mapping(
-            getattr(rhodes_island, "medical_daily_counters", None)
+            medical.state().daily_counters
         )
     )
-    rhodes_island.medical_recent_reports = list(
-        getattr(rhodes_island, "medical_recent_reports", []) or []
+    medical.state().recent_reports = list(medical.state().recent_reports or [])
+    medical.state().clinic_doctor_ids = list(
+        medical.state().clinic_doctor_ids or []
     )
-    rhodes_island.medical_clinic_doctor_ids = list(
-        getattr(rhodes_island, "medical_clinic_doctor_ids", []) or []
+    medical.state().hospital_doctor_ids = list(
+        medical.state().hospital_doctor_ids or []
     )
-    rhodes_island.medical_hospital_doctor_ids = list(
-        getattr(rhodes_island, "medical_hospital_doctor_ids", []) or []
+    medical.state().clinic_doctor_power = float(
+        medical.state().clinic_doctor_power or 0.0
     )
-    rhodes_island.medical_clinic_doctor_power = float(
-        getattr(rhodes_island, "medical_clinic_doctor_power", 0.0) or 0.0
-    )
-    rhodes_island.medical_hospital_doctor_power = float(
-        getattr(rhodes_island, "medical_hospital_doctor_power", 0.0) or 0.0
+    medical.state().hospital_doctor_power = float(
+        medical.state().hospital_doctor_power or 0.0
     )
     # 处理接诊优先策略，保证值转换为合法枚举。
-    priority_value = getattr(
-        rhodes_island,
-        "medical_patient_priority_mode",
-        medical_constant.MedicalPatientPriority.NORMAL.value,
-    )
+    priority_value = medical.state().priority_mode
     try:
         resolved_priority = medical_constant.MedicalPatientPriority(
             str(priority_value)
         )
     except ValueError:
         resolved_priority = medical_constant.MedicalPatientPriority.NORMAL
-    rhodes_island.medical_patient_priority_mode = resolved_priority.value
+    medical.state().priority_mode = resolved_priority.value
 
 
 def _resolve_default_price_ratio() -> float:
@@ -461,14 +470,14 @@ def _migrate_legacy_income(rhodes_island: game_type.Rhodes_Island) -> None:
     """
 
     # 读取旧字段数值并写入新字段。
-    legacy_total = getattr(rhodes_island, "medical_income_total", 0)
-    legacy_today = getattr(rhodes_island, "medical_income_today", 0)
-    rhodes_island.medical_income_total = int(legacy_total or 0)
-    rhodes_island.medical_income_today = int(legacy_today or 0)
+    legacy_total = medical.state().income_total
+    legacy_today = medical.state().income_today
+    medical.state().income_total = int(legacy_total or 0)
+    medical.state().income_today = int(legacy_today or 0)
 
     # 兼容更旧的 medical_income 字段。
     if hasattr(rhodes_island, "medical_income"):
         legacy_income = int(getattr(rhodes_island, "medical_income", 0) or 0)
-        rhodes_island.medical_income_total = max(
-            rhodes_island.medical_income_total, legacy_income
+        medical.state().income_total = max(
+            medical.state().income_total, legacy_income
         )

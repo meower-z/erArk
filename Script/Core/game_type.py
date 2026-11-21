@@ -1511,50 +1511,8 @@ class Rhodes_Island:
         """ 冰箱里每个干员的当日母乳存量，干员id:母乳ml存量 """
 
         # 医疗部
-        self.medical_patients_today: dict[int, Any] = {}
-        """ 当日待诊病人数据，patient_id:病人结构 """
-        self.medical_hospitalized: dict[int, Any] = {}
-        """ 住院病人数据，patient_id:病人结构 """
-        self.medical_price_ratio: float = 0.0
-        """ 当前收费系数，0 表示尚未初始化 """
-        self.new_medical_price_ratio: float = 0.0
-        """ 本次要调整的新收费系数，0表示未调整，非0的情况下第二天结算时会将当前收费系数调整为这个值 """
         self.medical_bed_limit: int = 0
         """ 医疗区床位上限（含加成） """
-        self.used_hospital_bed_modules: int = 0
-        """ 已使用的住院病房基建模块数量 """
-        self.medical_inventory_accumulator: dict[int, float] = {}
-        """ 药物扣除累计器，资源id:累计小数 """
-        self.medical_surgery_records: list[dict[str, Any]] = []
-        """ 今日手术记录列表 """
-        self.medical_income_today: int = 0
-        """ 今日医疗板块龙门币收入 """
-        self.medical_income_total: int = 0
-        """ 累计医疗板块龙门币收入 """
-        self.medical_weekly_weighted_treatment: int = 0
-        """ 本周医疗区治疗加权量 """
-        self.medical_daily_counters: Any = None
-        """ 医疗系统当日统计数据容器，由初始化流程写入 """
-        self.medical_recent_reports: list[dict[str, Any]] = []
-        """ 医疗系统近期经营日志 """
-        self.medical_clinic_doctor_ids: list[int] = []
-        """ 当前分配为门诊医生的干员id列表 """
-        self.medical_clinic_doctor_power: float = 0.0
-        """ 门诊医生医疗能力总和 """
-        self.medical_hospital_doctor_ids: list[int] = []
-        """ 当前分配为住院医生的干员id列表 """
-        self.medical_hospital_doctor_power: float = 0.0
-        """ 住院医生医疗能力总和 """
-        self.medical_patient_priority_mode: str = ""
-        """ 医疗部病人接诊优先策略标记，由初始化流程写入 """
-        self.medical_player_current_patient_id: int = 0
-        """ 玩家诊疗面板当前占用的病人ID，0 表示无会话 """
-        self.player_examined_patient_ids: list[int] = []
-        """ 玩家本次诊疗过的病人id列表 """
-        self.medical_doctor_specializations: dict[str, dict[str, list[int]]] = (
-            {}
-        )
-        """ 医生分科配置，按岗位分类记录各系统的医生id列表 """
 
         self.urine_in_fridge: dict[int, int] = {}
         """ 冷库里每个干员的当日圣水量，干员id:圣水ml存量 """
@@ -1573,15 +1531,6 @@ class Rhodes_Island:
         """ 手动选择的体检对象干员id集合 """
         self.manually_selected_exam_week_day_list: list[int] = []
         """ 手动选择的每周的体检日列表 """
-
-        self.patient_now: int = 0
-        """ 当前患者人数（旧系统字段，已废弃） """
-        self.patient_cured: int = 0
-        """ 当前已治疗患者人数（旧系统字段，已废弃） """
-        self.patient_max: int = 0
-        """ 患者人数上限（旧系统字段，已废弃） """
-        self.patient_cured_all: int = 0
-        """ 已治疗的患者总人数（旧系统字段，已废弃） """
 
         # 文职区
         self.recruit_line: dict[int, list] = {}

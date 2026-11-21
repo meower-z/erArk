@@ -46,6 +46,8 @@ line = draw.LineDraw("=", width)
 @handle_panel.add_panel(constant.Panel.CREATOR_CHARACTER)
 def creator_character_panel() -> None:
     """创建角色面板。建角色写的 GameState 数据记在以当前状态为底的缓冲区里，换成效果后交给 kernel_state.new_game"""
+    from Script.System.Medical_System import medical_service
+
     # 清掉同一进程里上一局残留的角色与已获得集合，并从干净的全局配置池重新拷贝一份角色模板：
     #    上一局生的女儿，其模板会随 born_new_character 留在运行时的 npc_tem_data 里、角色也留在
     #    character_data 里，而标题画面开新游戏并不重置这些运行时数据。不清的话 init_character_list
@@ -67,6 +69,8 @@ def creator_character_panel() -> None:
             if input_name_panel():
                 character.init_attr(0)
                 cache.rhodes_island = basement.get_base_zero()
+                # game_start 还会再重置医疗部；这一次让随机数与病人编号的消耗和 get_base_zero 自己重置时一样
+                medical_service.init_medical_department_data()
                 first_bonus_and_setting_updata()
                 character_handle.first_NPC_work()
                 io_init.init_style()  # 刷新NPC的文本字体颜色
@@ -270,7 +274,6 @@ class Character_JJ:
         now_draw_list: list[draw.Drawable] = []
 
         jj_draw = draw.LeftDraw()
-        # jj_draw.width = 1
         jj_draw.text = _("\n 阴茎大小：{0}      ").format(jj_text)
         now_draw_list.append(jj_draw)
 
@@ -424,7 +427,6 @@ class Character_FirstNPC:
         now_draw_list.append(line)
 
         info_draw = draw.LeftDraw()
-        # info_draw.width = 1
         info_draw.text = _(" 当前初始干员有：")
         info_draw.text += _("\n   基础:")
         npc_id_got_list = sorted(cache.npc_id_got)
@@ -465,7 +467,6 @@ class Character_FirstNPC:
         now_draw_list.append(line_feed_draw)
 
         info_last_draw = draw.LeftDraw()
-        # info_last_draw.width = 1
         if cache.debug_mode:
             self.npc_select_now = 999
         else:
@@ -1165,7 +1166,6 @@ class Character_Bonus:
         self.bonus_now = bonus_all
 
         info_talent_draw = draw.LeftDraw()
-        # info_talent_draw.width = 1
         info_talent_draw.text = _(" 可选奖励有：\n")
         info_talent_draw.text += _(
             "  （未选择的源石能力均可在游戏中满足特定条件解锁）\n"

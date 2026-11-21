@@ -352,7 +352,7 @@ config_official_event_by_sub_key: Dict[tuple, list] = {}
 | 部门 | 文件 | 决策点 | 落点字段 |
 | --- | --- | --- | --- |
 | 12 制造加工区 | `生产.csv` | 原料告罄，切配方还是停线 | `assembly_line[line][3]` |
-| 6 医疗部 | `医疗.csv` | 重症潮，涨价保药品 vs 保声望 | `new_medical_price_ratio` / 声望 |
+| 6 医疗部 | `医疗.csv` | 重症潮，涨价保药品 vs 保声望 | `medical.state().new_price_ratio` / 声望 |
 | 7 文职部 | `人事.csv` | 已招募干员的接收/婉拒 | `recruited_id` |
 | 3 仓储区 | `后勤.csv` | 仓储告急，抛售 vs 扩容 | `materials_resouce` |
 | 14 机库 | `外勤.csv` | 突发委托的接/拒 | `create_temp_commission` |

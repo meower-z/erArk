@@ -29,10 +29,6 @@ EXCLUDED_TOP_LEVEL_FIELDS = {
 # 字段名前缀黑名单：以这些前缀开头的字段均为渲染缓存中间数据，一并排除
 EXCLUDED_FIELD_PREFIXES = ("text_",)
 
-# rhodes_island内部排除的子字段：当日随机生成的内容数据（病人队列含大量生成文本，实测可达1MB），
-# 每日重新生成、无任何检查依赖、与状态自洽无关
-EXCLUDED_RHODES_ISLAND_FIELDS = {"medical_patients_today"}
-
 # 递归转换时的最大深度，超过后直接使用repr兜底，防止极端嵌套结构导致快照过大或递归过深
 MAX_DEPTH = 15
 
@@ -153,17 +149,6 @@ def build_snapshot(
                 if getattr(scene, "character_list", None)
             }
             snapshot[field_name] = _to_json_safe(filtered_scene_data, 0, set())
-            continue
-        if field_name == "rhodes_island":
-            # 整体转换后剔除当日生成的内容型子字段，以占位说明替代
-            ri_snapshot = _to_json_safe(field_value, 0, set())
-            if isinstance(ri_snapshot, dict):
-                for sub_field in EXCLUDED_RHODES_ISLAND_FIELDS:
-                    if sub_field in ri_snapshot:
-                        ri_snapshot[sub_field] = (
-                            "<当日生成的内容数据，已从快照排除>"
-                        )
-            snapshot[field_name] = ri_snapshot
             continue
         if (
             field_name == "character_data"

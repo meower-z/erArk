@@ -17,11 +17,12 @@ from Script.Core import (
 from Script.Design import attr_calculation, basement
 from Script.System.Medical_System import (
     medical_constant,
+    medical_core,
     medical_player_diagnose_function,
 )
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import medical_patient, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 全局缓存对象 """
@@ -53,6 +54,7 @@ def _ensure_float(value: object, default: float = 0.0) -> float:
     return default
 
 
+@medical_core.edits
 def start_player_diagnose_flow() -> bool:
     """启动玩家亲自诊疗流程。
 
@@ -100,7 +102,7 @@ class MedicalPlayerDiagnosePanel:
         self._refresh_check_limit()
 
         # 若玩家处于可控状态，则尝试开启医疗会话并缓存病患信息
-        initial_patient: medical_constant.MedicalPatient | None = None
+        initial_patient: medical_patient.MedicalPatient | None = None
         if self.player is not None:
             initial_patient = (
                 medical_player_diagnose_function.start_player_diagnose_session(
@@ -112,7 +114,7 @@ class MedicalPlayerDiagnosePanel:
             self._prepare_new_patient_session(initial_patient)
         else:
             # 未成功分配病人时保持面板闲置状态，便于界面直接提示
-            self.patient: medical_constant.MedicalPatient | None = None
+            self.patient: medical_patient.MedicalPatient | None = None
             self.session_active = False
 
     def _reset_runtime_flags(self) -> None:
@@ -244,7 +246,7 @@ class MedicalPlayerDiagnosePanel:
 
     def _prepare_new_patient_session(
         self,
-        patient: medical_constant.MedicalPatient,
+        patient: medical_patient.MedicalPatient,
         *,
         initial_feedback: str = "",
     ) -> None:
@@ -254,7 +256,7 @@ class MedicalPlayerDiagnosePanel:
             在完成一次诊疗结算后或面板首次打开时，清理旧状态并加载新病人的检查目录、提示限制等。
 
         参数:
-            patient (medical_constant.MedicalPatient): 即将进入玩家诊疗流程的病人对象。
+            patient (medical_patient.MedicalPatient): 即将进入玩家诊疗流程的病人对象。
             initial_feedback (str): 需要在面板底部展示的提示文本，默认为空串。
 
         返回:
@@ -1588,7 +1590,7 @@ class MedicalPlayerDiagnosePanel:
                 shortage_notice = "\n" + _("药品库存不足，请补充后再试。")
             base_message += shortage_notice
 
-        next_patient: medical_constant.MedicalPatient | None = None
+        next_patient: medical_patient.MedicalPatient | None = None
         if continue_after and self.player is not None:
             next_patient = (
                 medical_player_diagnose_function.start_player_diagnose_session(
@@ -1652,11 +1654,6 @@ class MedicalPlayerDiagnosePanel:
             base_setting = {}
             normal_config.system_setting.base_setting = base_setting
         base_setting[12] = next_value
-
-        # if 0 <= next_value < len(option_list):
-        #     self.feedback_text = _("治病提示已调整为：{0}").format(option_list[next_value])
-        # else:
-        #     self.feedback_text = _("治病提示设置已更新。")
 
     def _clear_pending(self) -> None:
         """清空所有待执行检查项。"""

@@ -3228,7 +3228,7 @@ def character_work_start_surgery(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    from Script.System.Medical_System import medical_service, medical_constant
+    from Script.System.Medical_System import medical_service
 
     character_data: game_type.Character = cache.character_data[character_id]
 
@@ -3249,9 +3249,7 @@ def character_work_start_surgery(character_id: int) -> choice.Plan:
         return plan
 
     # 随机选择一个患者
-    selected_patient: medical_constant.MedicalPatient = random.choice(
-        available_patients_list
-    )
+    selected_patient = random.choice(available_patients_list)
 
     # 开始时扣除手术资源并安排手术，资源不足时不安排
     plan.kind("schedule_surgery")

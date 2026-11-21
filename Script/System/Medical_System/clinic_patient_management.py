@@ -15,7 +15,7 @@ from types import FunctionType
 from Script.Config import config_def, game_config
 from Script.Core import cache_control, game_type, get_text, value_handle
 from Script.Design import handle_ability
-from Script.Modules.domains import economy
+from Script.Modules.domains import economy, medical, medical_patient
 from Script.System.Medical_System import medical_constant, medical_core
 from Script.Modules.domains import warehouse
 
@@ -25,18 +25,18 @@ _: FunctionType = get_text._
 
 def create_patient_stub(
     severity_level: int, **extra_fields: Any
-) -> medical_constant.MedicalPatient:
+) -> medical_patient.MedicalPatient:
     """创建尚未填充具体症状的病人结构。
 
     参数:
         severity_level (int): 生成病人的初始病情等级。
         **extra_fields (Any): 额外写入 `MedicalPatient` 构造器的字段。
     返回:
-        medical_constant.MedicalPatient: 结构完整且已初始化药品键的病人对象。
+        medical_patient.MedicalPatient: 结构完整且已初始化药品键的病人对象。
     """
 
     # 构造病人基础数据结构并分配唯一 ID。
-    patient = medical_constant.MedicalPatient(
+    patient = medical_patient.MedicalPatient(
         patient_id=next(medical_constant.PATIENT_ID_COUNTER),
         severity_level=severity_level,
         **extra_fields,
@@ -93,14 +93,14 @@ def pick_severity_level(facility_level: int | None = None) -> int | None:
 def generate_patient(
     severity_level: int,
     rhodes_island: game_type.Rhodes_Island | None,
-) -> medical_constant.MedicalPatient | None:
+) -> medical_patient.MedicalPatient | None:
     """生成单个门诊病人实体。
 
     参数:
         severity_level (int): 目标病情等级。
         rhodes_island: 当前基地对象，用于读取收费系数等字段。
     返回:
-        Optional[medical_constant.MedicalPatient]: 成功生成的病人对象，配置缺失时返回 None。
+        Optional[medical_patient.MedicalPatient]: 成功生成的病人对象，配置缺失时返回 None。
     """
 
     # 读取目标病情配置，缺失时返回 None。
@@ -163,9 +163,7 @@ def generate_patient(
     # 记录病情标签与当前收费系数，便于后续展示。
     if not patient.severity_name:
         patient.severity_name = severity_config.name
-    patient.price_ratio = float(
-        getattr(rhodes_island, "medical_price_ratio", 1.0) or 1.0
-    )
+    patient.price_ratio = float(medical.state().price_ratio or 1.0)
     return patient
 
 
@@ -375,12 +373,12 @@ def _pick_patient_race_id() -> int:
 
 
 def _resolve_patient_system_keys(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
 ) -> set[str]:
     """提取病人可能关联的系统键。
 
     参数:
-        patient (medical_constant.MedicalPatient): 目标病人对象。
+        patient (medical_patient.MedicalPatient): 目标病人对象。
     返回:
         Set[str]: 记录病人关联生理系统的字符串集合。
     """
@@ -419,36 +417,32 @@ def _resolve_triage_mode(
     # 缺少基地上下文时使用默认策略。
     if rhodes_island is None:
         return medical_constant.MedicalPatientPriority.NORMAL
-    raw_mode = getattr(
-        rhodes_island,
-        "medical_patient_priority_mode",
-        medical_constant.MedicalPatientPriority.NORMAL.value,
-    )
+    raw_mode = medical.state().priority_mode
     try:
         # 尝试将缓存值解析成合法枚举。
         mode = medical_constant.MedicalPatientPriority(str(raw_mode))
     except ValueError:
         # 解析失败时写入默认值并返回普通模式。
-        rhodes_island.medical_patient_priority_mode = (
+        medical.state().priority_mode = (
             medical_constant.MedicalPatientPriority.NORMAL.value
         )
         return medical_constant.MedicalPatientPriority.NORMAL
     # 将解析结果写回缓存以保持数据一致。
-    rhodes_island.medical_patient_priority_mode = mode.value
+    medical.state().priority_mode = mode.value
     return mode
 
 
 def select_triage_candidate(
-    candidates: list[medical_constant.MedicalPatient],
+    candidates: list[medical_patient.MedicalPatient],
     rhodes_island: game_type.Rhodes_Island | None,
-) -> medical_constant.MedicalPatient | None:
+) -> medical_patient.MedicalPatient | None:
     """在候选病人中挑选最优对象。
 
     参数:
-        candidates (List[medical_constant.MedicalPatient]): 病人候选列表。
+        candidates (List[medical_patient.MedicalPatient]): 病人候选列表。
         rhodes_island (Optional[game_type.Rhodes_Island]): 目标基地对象，用于读取优先策略。
     返回:
-        Optional[medical_constant.MedicalPatient]: 挑选出的病人，若无候选返回 None。
+        Optional[medical_patient.MedicalPatient]: 挑选出的病人，若无候选返回 None。
     """
 
     # 没有候选病人时直接返回。
@@ -485,7 +479,7 @@ def select_triage_candidate(
 
 
 def estimate_patient_diagnose_income(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> int:
@@ -493,7 +487,7 @@ def estimate_patient_diagnose_income(
     估算指定病人的诊疗阶段收益（不含药费）。
 
     参数:
-        patient (Optional[medical_constant.MedicalPatient]): 目标病人对象。
+        patient (Optional[medical_patient.MedicalPatient]): 目标病人对象。
         target_base (Optional[game_type.Rhodes_Island]): 指定罗德岛基座，用于倍率读取。
     返回:
         int: 诊疗阶段的预期收入，若缺失返回 0。
@@ -614,7 +608,7 @@ def advance_diagnose(
 
 
 def finalize_patient_after_diagnose(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
@@ -622,7 +616,7 @@ def finalize_patient_after_diagnose(
     病人诊疗完成后的结算处理，包括收入、状态、住院与药物结算。
 
     参数:
-        patient (medical_constant.MedicalPatient): 已完成诊疗的病人对象。
+        patient (medical_patient.MedicalPatient): 已完成诊疗的病人对象。
         target_base (Optional[game_type.Rhodes_Island]): 指定医疗部所属基地。
     返回:
         Dict[str, object]: 包含结算结果、收入、住院与药物处理信息。
@@ -663,8 +657,8 @@ def finalize_patient_after_diagnose(
         patient, target_base=rhodes_island
     )
     if diagnose_income > 0:
-        rhodes_island.medical_income_today += diagnose_income
-        rhodes_island.medical_income_total += diagnose_income
+        medical.state().income_today += diagnose_income
+        medical.state().income_total += diagnose_income
         economy.add_income(diagnose_income)
         warehouse.set(1, warehouse.stock().get(1, 0) + diagnose_income)
 
@@ -696,9 +690,7 @@ def finalize_patient_after_diagnose(
             rhodes_island, "medicine_completed_outpatient", 1
         )
         # 依据病情等级累加加权治疗量
-        rhodes_island.medical_weekly_weighted_treatment += (
-            patient.severity_level
-        )
+        medical.state().weekly_weighted_treatment += patient.severity_level
     else:
         set_patient_state(
             patient, medical_constant.MedicalPatientState.WAITING_MEDICATION
@@ -719,13 +711,13 @@ def finalize_patient_after_diagnose(
 
 
 def set_patient_state(
-    patient: medical_constant.MedicalPatient | None,
+    patient: medical_patient.MedicalPatient | None,
     state: medical_constant.MedicalPatientState,
 ) -> None:
     """更新病人的流程状态，并写入标签方便调试。
 
     参数:
-        patient (medical_constant.MedicalPatient): 需要更新状态的病人。
+        patient (medical_patient.MedicalPatient): 需要更新状态的病人。
         state (medical_constant.MedicalPatientState): 新的流程状态枚举值。
     返回:
         None
@@ -742,14 +734,14 @@ def get_patient_table(
     *,
     target_base: game_type.Rhodes_Island | None = None,
     hospitalized: bool,
-) -> dict[int, medical_constant.MedicalPatient]:
+) -> dict[int, medical_patient.MedicalPatient]:
     """获取指定状态下的病人表引用。
 
     参数:
         target_base (Optional[game_type.Rhodes_Island]): 指定基地实例。
         hospitalized (bool): 是否读取住院病人表，False 返回门诊病人表。
     返回:
-        Dict[int, medical_constant.MedicalPatient]: 病人 ID 到病人对象的映射。
+        Dict[int, medical_patient.MedicalPatient]: 病人 ID 到病人对象的映射。
     """
 
     # 根据 base 标记返回对应的病人表。
@@ -757,9 +749,7 @@ def get_patient_table(
     if rhodes_island is None:
         return {}
     return (
-        rhodes_island.medical_hospitalized
-        if hospitalized
-        else rhodes_island.medical_patients_today
+        medical.state().hospitalized if hospitalized else medical.state().today
     )
 
 
@@ -779,10 +769,10 @@ def get_medical_price_ratio(
     rhodes_island = medical_core._get_rhodes_island(target_base)
     if rhodes_island is None:
         return medical_core._resolve_default_price_ratio()
-    ratio = float(rhodes_island.medical_price_ratio or 0)
+    ratio = float(medical.state().price_ratio or 0)
     if ratio <= 0:
         ratio = medical_core._resolve_default_price_ratio()
-        rhodes_island.medical_price_ratio = ratio
+        medical.state().price_ratio = ratio
     return ratio
 
 
@@ -805,7 +795,7 @@ def set_medical_price_ratio(
         return
 
     # 设置待调整的收费系数，将在第二天结算时生效。
-    rhodes_island.new_medical_price_ratio = max(float(price_ratio), 0.1)
+    medical.state().new_price_ratio = max(float(price_ratio), 0.1)
 
 
 def get_new_medical_price_ratio(
@@ -823,7 +813,7 @@ def get_new_medical_price_ratio(
     rhodes_island = medical_core._get_rhodes_island(target_base)
     if rhodes_island is None:
         return 0.0
-    return float(rhodes_island.new_medical_price_ratio or 0.0)
+    return float(medical.state().new_price_ratio or 0.0)
 
 
 def apply_new_medical_price_ratio(
@@ -842,13 +832,13 @@ def apply_new_medical_price_ratio(
     if rhodes_island is None:
         return False
 
-    new_ratio = float(rhodes_island.new_medical_price_ratio or 0.0)
+    new_ratio = float(medical.state().new_price_ratio or 0.0)
     if new_ratio <= 0:
         return False
 
     # 将待调整的收费系数应用为当前收费系数。
-    rhodes_island.medical_price_ratio = new_ratio
-    rhodes_island.new_medical_price_ratio = 0.0
+    medical.state().price_ratio = new_ratio
+    medical.state().new_price_ratio = 0.0
     # 更新床位上限。
     rhodes_island.medical_bed_limit = medical_core._calculate_medical_bed_limit(
         rhodes_island
@@ -901,7 +891,7 @@ def set_patient_priority_mode(
         except ValueError:
             resolved = default_mode
 
-    rhodes_island.medical_patient_priority_mode = resolved.value
+    medical.state().priority_mode = resolved.value
     return resolved
 
 
@@ -981,14 +971,14 @@ def refresh_medical_patients(
     level: int | None = None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
-) -> list[medical_constant.MedicalPatient]:
+) -> list[medical_patient.MedicalPatient]:
     """根据医疗部等级刷新当日病人列表。
 
     参数:
         level (Optional[int]): 指定使用的医疗部等级，缺省时读取基地等级。
         target_base (Optional[game_type.Rhodes_Island]): 指定医疗部所属基地。
     返回:
-        List[medical_constant.MedicalPatient]: 新生成的病人列表。
+        List[medical_patient.MedicalPatient]: 新生成的病人列表。
     """
 
     # 若无法获取基地对象则直接返回空结果。
@@ -1014,7 +1004,7 @@ def refresh_medical_patients(
         return []
 
     # 循环生成病人并登记到门诊病人表。
-    new_patients: list[medical_constant.MedicalPatient] = []
+    new_patients: list[medical_patient.MedicalPatient] = []
     patient_table = get_patient_table(
         target_base=rhodes_island, hospitalized=False
     )

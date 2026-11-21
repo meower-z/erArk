@@ -14,7 +14,7 @@ from Script.Design import attr_calculation, handle_ability
 import random
 from Script.Design import game_time
 from Script.Modules.save_load import reset
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, medical
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -196,9 +196,7 @@ def settle_all_country_infection_rate() -> None:
     结算全国度的源石病感染率变化
     """
     # 每周治疗加权量
-    weekly_weighted_treatment = (
-        cache.rhodes_island.medical_weekly_weighted_treatment
-    )
+    weekly_weighted_treatment = medical.state().weekly_weighted_treatment
     # 本周所有国家感染率总和
     this_week_all_country_infection_rate = 0.0
     # 当前所在国家
@@ -246,7 +244,8 @@ def settle_all_country_infection_rate() -> None:
         )
 
     # 重置每周治疗加权量
-    cache.rhodes_island.medical_weekly_weighted_treatment = 0
+    with medical.editing() as m:
+        m.weekly_weighted_treatment = 0
     # 如果存在上周感染率总和，则进行对比输出变化
     if cache.country.last_week_all_country_infection_rate != -1.0:
         total_change = (
