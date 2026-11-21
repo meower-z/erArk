@@ -10,6 +10,7 @@
 - 再打开面板：已进行 1 次，只有检查头发是「已检查」；返回结束体检后，今日体检记录里只有检查头发。
 """
 
+import importlib
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
@@ -91,10 +92,7 @@ class PhysicalCheckRecordsPerformedTest(SlowTestCase):
             (True, False, True),
             "（检查头发已检查，测试头发已检查，已进行 1 次）",
         )
+        exam = importlib.import_module("Script.Modules.domains.physical_exam")
         self.assertEqual(
-            self.cache.rhodes_island.today_physical_examination_chara_id_dict.get(
-                self.npc_id
-            ),
-            {HAIR},
-            "今日体检记录",
+            exam.checks(exam.TODAY).get(self.npc_id), {HAIR}, "今日体检记录"
         )

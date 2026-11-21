@@ -7,6 +7,7 @@
 体检科要医疗部升到 2 级才开放，这里按已开放处理。
 """
 
+import importlib
 from unittest import mock
 
 from tests import kernel_data
@@ -61,17 +62,25 @@ class HealthCheckTestCase(SlowTestCase):
         self.instruct(constant.Instruct.PHYSICAL_CHECK_AND_MANAGE)
         self.show_panel()
         self.world.player.check_done()
-        setting = self.cache.rhodes_island.physical_examination_setting
+        exam = importlib.import_module("Script.Modules.domains.physical_exam")
+        setting = exam.settings()
         self.assertEqual(
             (setting[2], setting[3], setting[4]),
             (1, 3, 2),
             "定期体检、每天、手动名单",
         )
-        self.assertEqual(
-            self.cache.rhodes_island.manually_selected_exam_operator_ids, {cid}
-        )
+        self.assertEqual(exam.ids(exam.CHOSEN), {cid})
         self.walk(DR_OFFICE)
         return cid
+
+    def waiting(self) -> set[int]:
+        """
+        正在等待体检的干员
+        Return arguments:
+        set -- 角色id
+        """
+        exam = importlib.import_module("Script.Modules.domains.physical_exam")
+        return exam.ids(exam.WAITING)
 
     def sleep_through_midnight(self) -> None:
         """
