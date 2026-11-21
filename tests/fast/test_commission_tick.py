@@ -58,6 +58,7 @@ class CommissionTickTest(FastTestCase):
                 ),
                 MappingProxyType(
                     {
+                        **core.state().data,
                         time_hooks.TICKED: self.base,
                         time_hooks.SETTLED_DAY: game_time.day(self.base),
                     }

@@ -16,7 +16,7 @@
 
 from Script.Core import game_type
 from Script.Kernel import core
-from Script.Modules.domains import power, power_supply, work
+from Script.Modules.domains import power, power_supply, warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import upgrade
 from Script.System.Official_Event_System import ri_value
@@ -99,8 +99,7 @@ class PowerStateTest(FastTestCase):
 
     def test_surplus_day_fills_batteries(self) -> None:
         """发电有余的一天。满储能先自放电，再充回满，余下的溢出。燃料按计划扣除"""
-        island = self.cache.rhodes_island
-        island.materials_resouce[15] = 10**6
+        warehouse.set(15, 10**6)
         power.set_plant(aux_reactors=50, batteries=(1, 0, 0))
         power.set_storage(self.caps[0])
         rate = power.storage_levels("自放电率", float, 0.0)[0]
@@ -112,9 +111,7 @@ class PowerStateTest(FastTestCase):
         self.assertEqual(power.storage(), self.caps[0])
         self.assertEqual(day["overflow"], day["surplus"] - day["charged"])
         self.assertGreater(day["overflow"], 0)
-        self.assertEqual(
-            island.materials_resouce[15], 10**6 - int(day["fuel_plan"])
-        )
+        self.assertEqual(warehouse.amount(15), 10**6 - int(day["fuel_plan"]))
 
     def test_old_island_moves_into_state(self) -> None:
         """旧存档的罗德岛对象带着全部动力属性。动力值写进 GameState，这些属性从对象上删掉"""

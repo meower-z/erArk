@@ -7,6 +7,8 @@
 
 import unittest
 
+from Script.Modules.domains import warehouse
+from tests import kernel_data
 from tests.fast import WORLD
 
 
@@ -18,10 +20,12 @@ class FastTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         """
-        复原小世界并重设随机源；内核换成没有角色的开局时钟（同读档，各插件的 Reset 钩子清掉自己的状态）
+        复原小世界并重设随机源。内核换成没有角色的开局时钟，同读档一样由各插件的 Reset 钩子清掉自己的状态。
+        复原后的 GameState 里没有 base.stock，所以再用 warehouse.start 给每种配置资源记下库存 0
         Keyword arguments:
         无
         Return arguments:
         无
         """
         self.world.reset()
+        kernel_data.written(warehouse.start, {})

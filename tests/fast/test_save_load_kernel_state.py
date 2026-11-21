@@ -25,6 +25,7 @@ from Script.Core import save_handle
 from Script.Design import attr_calculation
 from Script.Kernel import core
 from Script.Modules import load_order
+from Script.Modules.domains import warehouse
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
 from tests.fast.base import FastTestCase
@@ -37,7 +38,8 @@ _serial = itertools.count()
 
 def game(clock: int, ends: dict[str, int]) -> core.GameState:
     """
-    一个 GameState：每个角色一个带行动数据的 Idle，在 ends 给出的分钟结束；角色与全局数据里有各种 JSON 值
+    一个 GameState：每个角色一个带行动数据的 Idle，在 ends 给出的分钟结束。角色与全局数据里有各种 JSON 值。
+    全局数据里的 base.stock 取自当前状态，换上这个 GameState 后库存不变
     Keyword arguments:
     clock -- 时钟
     ends -- 角色键到他的行动结束的分钟
@@ -61,6 +63,7 @@ def game(clock: int, ends: dict[str, int]) -> core.GameState:
         "ticked": clock,
         "settled_day": clock // 1440,
         "nested": ((1,), ()),
+        warehouse.KEY: core.value(core.state(), None, warehouse.KEY),
     }
     core.reset_state(core.GameState(clock, MappingProxyType(characters), data))
     return core.state()
