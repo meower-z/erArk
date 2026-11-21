@@ -19,6 +19,7 @@ import os
 
 from Script.Config import game_config
 from Script.Core import cache_control
+from Script.Modules.domains import work
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -632,21 +633,20 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 在编干员里最多只能有一名工作类型191的监狱长，current_warden_id非零时必须指向存在的角色，
+    功能: 在编干员里最多只能有一名工作类型191的监狱长，监狱长(work.warden)非零时必须指向存在的角色，
     不能与那名在编191冲突。"wid非零而没有任何在编191"是可达残留，已拆到ROSTER-12作warning，不进本条
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    wid = ri.current_warden_id
+    wid = work.warden()
     if type(wid) is not int:
         failures.append(
             make_failure(
                 "ROSTER-11",
                 "监狱长缓存唯一且指向真实岗位",
-                f"{warn}current_warden_id类型异常: {wid!r}",
+                f"{warn}监狱长(work.warden)类型异常: {wid!r}",
                 [],
             )
         )
@@ -664,7 +664,7 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
                 "监狱长缓存唯一且指向真实岗位",
                 (
                     f"{warn}存在{len(wardens)}名在编工作类型191(监狱长)的角色，超过唯一上限: {details}，"
-                    f"current_warden_id={wid}"
+                    f"work.warden()={wid}"
                 ),
                 list(wardens),
             )
@@ -675,7 +675,7 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-11",
                     "监狱长缓存唯一且指向真实岗位",
-                    f"{warn}current_warden_id={wid}指向的角色不存在于character_data中",
+                    f"{warn}work.warden()={wid}指向的角色不存在于character_data中",
                     [wid],
                 )
             )
@@ -686,7 +686,7 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
                     "ROSTER-11",
                     "监狱长缓存唯一且指向真实岗位",
                     (
-                        f"{warn}current_warden_id={wid}与另外在编191岗位角色冲突: "
+                        f"{warn}work.warden()={wid}与另外在编191岗位角色冲突: "
                         f"{[(cid, cd[cid].name) for cid in others]}"
                     ),
                     [wid] + others,
@@ -700,7 +700,7 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 期望状态：current_warden_id非零时该人在编、宿舍是关押区休息室、不是囚犯/访客、不在外勤。
+    功能: 期望状态：监狱长(work.warden)非零时该人在编、宿舍是关押区休息室、不是囚犯/访客、不在外勤。
     三项都可被合法操作打破(装袋前提未排除监狱长，玩家可把监狱长本人装袋后投入监牢)，故只作提示
     """
     cache = cache_control.cache
@@ -708,7 +708,7 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
     ri = cache.rhodes_island
     warn = _sev(cache, True)
     failures: list[CheckFailure] = []
-    wid = ri.current_warden_id
+    wid = work.warden()
     if not wid or wid not in cd:
         return failures
     w = cd[wid]
@@ -1279,7 +1279,7 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 每条线第3位是主招聘专员：0(空缺)或一名工作类型71且在hr_operator_ids_list招聘专员列表内的角色；
+    功能: 每条线第3位是主招聘专员：0(空缺)或一名工作类型71且在招聘专员名单work.roster(71)内的角色；
     同一人不能同时主理两条线。不含cid in npc_id_got —— 派遣外勤不改work_type，把主专员派出去是常规操作，
     加在线子句必然长期误报
     """
@@ -1315,8 +1315,8 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
         if c is None:
             problems.append("不存在于character_data")
         else:
-            if cid not in ri.hr_operator_ids_list:
-                problems.append("不在ri.hr_operator_ids_list招聘专员列表中")
+            if cid not in work.roster(work.HR_WORK):
+                problems.append("不在招聘专员名单work.roster(71)中")
             if c.work.work_type != 71:
                 problems.append(f"work.work_type={c.work.work_type}不是71")
         if problems:
@@ -1326,7 +1326,7 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
                     "招募线主专员真实可用且不重复",
                     f"{warn}主专员cid={cid} name={getattr(c, 'name', '?')!r} {'; '.join(problems)}；"
                     f"field_commission={getattr(getattr(c, 'sp_flag', None), 'field_commission', None)}，"
-                    f"cid in npc_id_got={cid in cache.npc_id_got}，hr_operator_ids_list={ri.hr_operator_ids_list}",
+                    f"cid in npc_id_got={cid in cache.npc_id_got}，work.roster(71)={work.roster(work.HR_WORK)}",
                     [cid],
                 )
             )
@@ -1338,23 +1338,22 @@ def check_hr_operator_list_integrity() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: hr_operator_ids_list是增量维护的效率计算表。可断言的是：无重复、成员都是存在的非玩家角色且
-    工作类型仍为71、所有在编的71号岗位都已收录。不做集合相等 —— 维护循环只遍历npc_id_got，结构上无法摘除
-    离线成员，每次派遣必现列表残留，只保留"在编71 ⊆ 列表"这一个方向
+    功能: 招聘专员名单work.roster(71)是招募效率计算用的名单。可断言的是：无重复、成员都是存在的非玩家角色且
+    工作类型仍为71、所有在编的71号岗位都已收录。不做集合相等 —— 名册只在刷新时按npc_id_got重建，下线（移出npc_id_got）的
+    成员留在名册里直到下一次刷新，只保留"在编71 ⊆ 列表"这一个方向
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    hr = ri.hr_operator_ids_list
+    hr = work.roster(work.HR_WORK)
     dup = {cid for cid in hr if hr.count(cid) > 1}
     if dup:
         failures.append(
             make_failure(
                 "ROSTER-24",
                 "招聘专员列表无重复、成员岗位正确、在编71全部在内",
-                f"{warn}hr_operator_ids_list中存在重复id: {sorted(dup)}，完整列表={hr}",
+                f"{warn}work.roster(71)中存在重复id: {sorted(dup)}，完整列表={hr}",
                 sorted(dup),
             )
         )
@@ -1370,7 +1369,7 @@ def check_hr_operator_list_integrity() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-24",
                     "招聘专员列表无重复、成员岗位正确、在编71全部在内",
-                    f"{warn}hr_operator_ids_list成员cid={cid} {'; '.join(problems)}；name={getattr(c, 'name', '?')!r}",
+                    f"{warn}work.roster(71)成员cid={cid} {'; '.join(problems)}；name={getattr(c, 'name', '?')!r}",
                     [cid],
                 )
             )
@@ -1385,7 +1384,7 @@ def check_hr_operator_list_integrity() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-24",
                 "招聘专员列表无重复、成员岗位正确、在编71全部在内",
-                f"{warn}在编71号岗位角色cid={cid} name={c.name!r} 未被收录进hr_operator_ids_list；"
+                f"{warn}在编71号岗位角色cid={cid} name={c.name!r} 未被收录进work.roster(71)；"
                 f"field_commission={c.sp_flag.field_commission}，in_diplomatic_visit={c.sp_flag.in_diplomatic_visit}",
                 [cid],
             )
@@ -1551,9 +1550,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
         "待确认招募(recruited_id)": set(ri.recruited_id),
         "囚犯(current_prisoners)": set(ri.current_prisoners),
         "邀请目标(invite_visitor)": {t} if t else set(),
-        "监狱长(current_warden_id)": (
-            {ri.current_warden_id} if ri.current_warden_id else set()
-        ),
+        "监狱长(work.warden)": {work.warden()} if work.warden() else set(),
         "逃跑者(escaping)": {
             cid for cid, c in cd.items() if cid != 0 and c.sp_flag.escaping
         },
@@ -1571,7 +1568,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
                         f"{warn}外勤中cid={cid} name={getattr(c, 'name', '?')!r}(委托mid={commission_of.get(cid)}) "
                         f"同时命中身份集合: {hit}；"
                         f"work.work_type={getattr(getattr(c, 'work', None), 'work_type', None)}，"
-                        f"current_warden_id={ri.current_warden_id}，"
+                        f"work.warden()={work.warden()}，"
                         f"assistant_character_id={assistant}，dormitory={getattr(c, 'dormitory', None)}"
                     ),
                     [cid],
@@ -1879,8 +1876,8 @@ def check_assistant_identity_exclusion() -> list[CheckFailure]:
         problems.append(
             f"当前是访客(a in visitor_info={a in ri.visitor_info}, vistor={ca.sp_flag.vistor})"
         )
-    if a == ri.current_warden_id:
-        problems.append("同时是current_warden_id监狱长")
+    if a == work.warden():
+        problems.append("同时是监狱长(work.warden)")
     if a in ri.current_prisoners or ca.sp_flag.imprisonment:
         problems.append("同时是囚犯(在current_prisoners中或imprisonment为True)")
     if ca.sp_flag.field_commission:

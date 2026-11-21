@@ -157,10 +157,8 @@ character.input_name_func = lambda ask_text: (asks.append(ask_text), next(names)
 # ④ 成就结算读 cache.rhodes_island.materials_resouce[1] 等 → KeyError，直接打桩（注意要打在**调用方模块**上）
 born_event_panel.achievement_panel.achievement_flow = lambda *a, **k: None
 
-# ⑤ 角色上线链 get_new_character 需要娱乐安排等完整 fixture → 只做登记的 stub；
-#    成长文案读教育区教师集合 → 预置空集合
+# ⑤ 角色上线链 get_new_character 需要娱乐安排等完整 fixture → 只做登记的 stub
 pregnancy_handle.character_handle.get_new_character = lambda cid, visitor_flag=False: cache.npc_id_got.add(cid)
-cache.rhodes_island.all_work_npc_set.setdefault(151, set())
 
 # ⑥ 事件里的"随机选一名医生/干员"用 random.choice(列表)，列表空会 IndexError：
 #    cache.npc_id_got 要非空，并给一个角色 profession = 3（医疗）
@@ -201,7 +199,6 @@ rm -f data/Character_Talk.json
 | `SyntaxError: invalid syntax`，报错行里有 `��` | heredoc/stdin 里的中文被 GBK 解码，改写成脚本文件，见铁律 7 |
 | `UnboundLocalError` 出现在 `chest_grow` / 乳汁上限 | fixture 没有罩杯素质，加 `talent[121] = 1` |
 | `KeyError: 1` 出现在 `achievement_panel.achievement_flow` | 成就结算读 `rhodes_island.materials_resouce`，打桩 `achievement_flow` |
-| `KeyError: 151` 出现在 `all_work_npc_set[151]` | 成长文案读教育区教师集合，`setdefault(151, set())` |
 | `IndexError` 出现在 `random.choice(doctor_id_list)` 之类 | 事件要随机选医生/干员，`npc_id_got` 为空或没有 profession=3 |
 | 面板测试永不返回（无报错） | `askfor_all` 桩返回了不在 `return_list` 里的值，按钮循环退不出 |
 | 调 `get_new_character` 后一连串 KeyError | 上线链要完整罗德岛 fixture，用只登记 `npc_id_got` 的 stub |

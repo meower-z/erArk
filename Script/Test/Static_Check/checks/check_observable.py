@@ -25,7 +25,7 @@ from collections.abc import Iterator
 
 from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, work
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
@@ -512,7 +512,7 @@ def check_observable_07() -> list[CheckFailure]:
     settings = getattr(island, "confinement_training_setting", None)
     if island is None or not isinstance(settings, dict):
         return []
-    warden = getattr(island, "current_warden_id", None)
+    warden = work.warden()
     bad_ids = []
     bad = []
     if (
@@ -521,7 +521,7 @@ def check_observable_07() -> list[CheckFailure]:
         and getattr(cache, "group_sex_mode", False)
     ):
         bad.append(
-            "群交现场已开启调教助手设置但current_warden_id=0，结算会把玩家当助手"
+            "群交现场已开启调教助手设置但没有监狱长(work.warden()=0)，结算会把玩家当助手"
         )
         bad_ids.append(0)
     data = _character_data(cache) or {}

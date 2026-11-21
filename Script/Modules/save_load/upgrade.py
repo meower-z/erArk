@@ -13,19 +13,29 @@ CURRENT 是本游戏写的文件 "2" 的版本。STEPS[n] 把版本 n 的 JSON �
 存档里的值由读档时角色替换的 copy_pickled 与重建角色后的 adopt_pickled 取来。
 版本 5 之前的存档把今日收入、已开放商店、货架、供需系数、今日买卖量、主交易员与自动交易设置放在罗德岛对象上。
 install_save 解开缓存后对每个版本调 adopt_economy，把它们搬进 GameState。4 升 5 的 STEPS[4] 原样交回文件 "2"。
+版本 6 之前的存档把岗位名册与监狱长放在罗德岛对象上。install_save 解开缓存后对每个版本调 adopt_work，
+把它们搬进 GameState。5 升 6 的 STEPS[5] 原样交回文件 "2"。
 读旧存档不改写存档的文件。读完再存，写的是当前版本。本模块不登记行动、事件或规则，也不在 LOAD_ORDER 里。
 """
 
 from collections.abc import Callable, Mapping
 from typing import Any, cast
 
+from Script.Config import game_config
 from Script.Core import game_type, num
 from Script.Core.num import Num
-from Script.Modules.domains import economy, facility, needs, power, pregnancy
+from Script.Modules.domains import (
+    economy,
+    facility,
+    needs,
+    power,
+    pregnancy,
+    work,
+)
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import settings
 
-CURRENT = 5
+CURRENT = 6
 """ 本游戏写的文件 "2" 的版本 """
 
 
@@ -173,11 +183,24 @@ def _v4_to_v5(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v5_to_v6(data: dict[str, Any]) -> dict[str, Any]:
+    """
+    版本 5 升 6。文件 "2" 不用改，原样交回。
+    旧存档的岗位名册与监狱长在文件 "1" 的罗德岛对象上，由 adopt_work 搬进 GameState
+    Keyword arguments:
+    data -- 版本 5 的 JSON 对象
+    Return arguments:
+    dict -- 同一个对象
+    """
+    return data
+
+
 STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
     1: _v1_to_v2,
     2: fill_v2_needs,
     3: _v3_to_v4,
     4: _v4_to_v5,
+    5: _v5_to_v6,
 }
 """ 版本 n 到 n + 1 的升级步骤。版本 0 升 1 不是 JSON 步骤，见模块说明 """
 
@@ -314,6 +337,39 @@ def adopt_facility(loaded_dict: dict[str, Any], version: int) -> int:
     if "effectiveness" in found:
         working.put(None, facility.EFFECTIVENESS, found["effectiveness"])
     return len(PICKLED_FACILITY) - len(found) if version < 4 else 0
+
+
+V5_WORK = (
+    "all_work_npc_set",
+    "work_people_now",
+    "hr_operator_ids_list",
+    "current_warden_id",
+)
+""" 版本 6 之前的存档里罗德岛对象上的岗位名册与监狱长属性名 """
+
+
+def adopt_work(loaded_dict: dict[str, Any]) -> None:
+    """
+    罗德岛对象带着 V5_WORK 里的属性（版本 6 之前的存档）时，把岗位名册与监狱长写进当前缓冲区，再从对象上删掉这些属性。
+    名册只写有人且岗位id在配置里的岗位，名单按刷新时的顺序：在编干员（npc_id_got）里的按它的遍历顺序在前，
+    不在编的按原集合的顺序在后。在岗人数与招聘专员名单由名册算出，不写。对象上没有这些属性时什么也不写
+    Keyword arguments:
+    loaded_dict -- 存档缓存的属性表
+    """
+    island = loaded_dict.get("rhodes_island")
+    attrs = vars(island) if island is not None else {}
+    found = {name: attrs.pop(name) for name in V5_WORK if name in attrs}
+    if not found:
+        return
+    rank = {cid: i for i, cid in enumerate(loaded_dict.get("npc_id_got", ()))}
+    work.set_rosters(
+        {
+            work_id: sorted(ids, key=lambda cid: rank.get(cid, len(rank)))
+            for work_id, ids in found.get("all_work_npc_set", {}).items()
+            if work_id in game_config.config_work_type
+        }
+    )
+    work.set_warden(found.get("current_warden_id", 0))
 
 
 def drop_ui_fields(loaded_dict: dict[str, Any]) -> dict[str, Any]:

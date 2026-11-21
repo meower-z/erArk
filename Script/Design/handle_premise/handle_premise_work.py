@@ -1,19 +1,16 @@
 """工作相关的前提处理函数"""
 
-from types import FunctionType
 from Script.Core import (
     cache_control,
     constant,
     constant_promise,
     game_type,
-    get_text,
 )
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
-_: FunctionType = get_text._
-""" 翻译api """
 
 
 @add_premise(constant_promise.Premise.HAVE_WORK)
@@ -1131,7 +1128,7 @@ def handle_have_warden(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.rhodes_island.current_warden_id
+    return work.warden()
 
 
 @add_premise(constant_promise.Premise.HAVE_NO_PATIENT_NEED_SURGERY)

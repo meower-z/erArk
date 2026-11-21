@@ -16,7 +16,7 @@ from Script.Config import game_config
 from Script.Core import cache_control
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, work
 
 KEY = "base.power_strategy"
 """ 供电策略在全局数据里的键 """
@@ -213,15 +213,11 @@ def main_reactor_level() -> int:
 
 def operator_ids() -> list[int]:
     """
-    供能调控员，即罗德岛职位名册 all_work_npc_set 里职位为 OPERATOR_WORK 的角色
+    供能调控员，即岗位名册（work.roster）里岗位为 OPERATOR_WORK 的角色
     Return arguments:
-    list -- 角色id
+    list -- 角色id，按名册的顺序
     """
-    return list(
-        cache_control.cache.rhodes_island.all_work_npc_set.get(
-            OPERATOR_WORK, ()
-        )
-    )
+    return list(work.roster(OPERATOR_WORK))
 
 
 def remap_operators(old_to_new: Mapping[int, int]) -> None:

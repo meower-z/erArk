@@ -18,7 +18,7 @@ from collections.abc import Callable
 from fractions import Fraction
 
 from Script.Config import game_config
-from Script.Modules.domains import needs, power
+from Script.Modules.domains import needs, power, work
 
 from . import check_log
 
@@ -320,21 +320,16 @@ def repair_work_npc_set(cache: game_type.Cache) -> list[dict]:
     返回值:
         List[dict]: 修复记录列表
     功能:
-        与ISLAND-09同语义：all_work_npc_set是可由角色work.work_type逐人重算的派生缓存，
-        调用游戏自身的维护函数basement.update_work_people()整体重算（源数据即真相），留痕各岗位集合的前后差异
+        与ISLAND-09同语义：岗位名册（work.rosters）可由角色work.work_type逐人重算，
+        调用游戏自身的维护函数basement.update_work_people()整体重算（源数据即真相），留痕各岗位名册的前后差异
     """
     from Script.Design import basement
 
-    ri = cache.rhodes_island
-    old_sets = {
-        wid: set(s)
-        for wid, s in getattr(ri, "all_work_npc_set", {}).items()
-        if isinstance(s, set)
-    }
-    # 唯一例外：游戏既有维护函数内部读取全局cache；此处只调用它重算派生岗位集合，不改造该函数本身
+    old_sets = {wid: set(ids) for wid, ids in work.rosters().items()}
+    # 唯一例外：游戏既有维护函数内部读取全局cache；此处只调用它重算岗位名册，不改造该函数本身
     basement.update_work_people()
     records = []
-    new_sets = getattr(ri, "all_work_npc_set", {})
+    new_sets = {wid: set(ids) for wid, ids in work.rosters().items()}
     for wid in set(old_sets) | set(new_sets):
         old_s = old_sets.get(wid, set())
         new_s = new_sets.get(wid, set())
@@ -342,8 +337,8 @@ def repair_work_npc_set(cache: game_type.Cache) -> list[dict]:
             records.append(
                 _record(
                     "ISLAND-09",
-                    "罗德岛岗位集合",
-                    f"all_work_npc_set[{wid}]",
+                    "罗德岛岗位名册",
+                    f"work.roster({wid})",
                     sorted(old_s),
                     sorted(new_s),
                 )
@@ -445,12 +440,11 @@ def repair_warden_reference(cache: game_type.Cache) -> list[dict]:
     返回值:
         List[dict]: 修复记录列表
     功能:
-        与ISLAND-29（引用子句，兼ROSTER-12）同语义：current_warden_id非0但指向的角色不存在或work_type!=191时，
+        与ISLAND-29（引用子句，兼ROSTER-12）同语义：监狱长（work.warden）非0但指向的角色不存在或work_type!=191时，
         若恰有一名角色work_type==191则改指该角色，否则置0（无监狱长）。囚犯表子句语义不在本修复范围
     """
-    ri = cache.rhodes_island
     cd = cache.character_data
-    warden_id = getattr(ri, "current_warden_id", 0)
+    warden_id = work.warden()
     if warden_id == 0 or (
         warden_id in cd
         and getattr(getattr(cd[warden_id], "work", None), "work_type", None)
@@ -463,11 +457,9 @@ def repair_warden_reference(cache: game_type.Cache) -> list[dict]:
         if getattr(getattr(ch, "work", None), "work_type", None) == 191
     ]
     new_id = actual_wardens[0] if len(actual_wardens) == 1 else 0
-    ri.current_warden_id = new_id
+    work.set_warden(new_id)
     return [
-        _record(
-            "ISLAND-29", "罗德岛监狱", "current_warden_id", warden_id, new_id
-        )
+        _record("ISLAND-29", "罗德岛监狱", "work.warden", warden_id, new_id)
     ]
 
 

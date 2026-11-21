@@ -15,7 +15,7 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import economy, needs, power
+from Script.Modules.domains import economy, needs, power, work
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -425,12 +425,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
     if "rhodes_island" in loaded_dict:
         ri = loaded_dict["rhodes_island"]
 
-        # hr_operator_ids_list
-        if hasattr(ri, "hr_operator_ids_list"):
-            ri.hr_operator_ids_list = [
-                old_to_new_id.get(oid, oid) for oid in ri.hr_operator_ids_list
-            ]
-
         # recruited_id (Set[int])
         if hasattr(ri, "recruited_id") and ri.recruited_id:
             # 如果ri.recruited_id是int类型的话，则先转为set
@@ -568,15 +562,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 for oid in ri.green_house_operator_ids
             ]
 
-        # current_warden_id
-        if hasattr(ri, "current_warden_id") and ri.current_warden_id != 0:
-            ri.current_warden_id = normalize_single_character_id(
-                ri.current_warden_id, 0
-            )
-            ri.current_warden_id = old_to_new_id.get(
-                ri.current_warden_id, ri.current_warden_id
-            )
-
         # current_prisoners (Dict[int, List])
         if hasattr(ri, "current_prisoners"):
             old_prisoners = ri.current_prisoners.copy()
@@ -649,13 +634,9 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 if line_data[2] != 0:
                     line_data[2] = old_to_new_id.get(line_data[2], line_data[2])
 
-        # all_work_npc_set (Dict[int, set]) - 工作id:干员id集合
-        if hasattr(ri, "all_work_npc_set"):
-            for work_id, npc_set in ri.all_work_npc_set.items():
-                if npc_set:
-                    ri.all_work_npc_set[work_id] = {
-                        old_to_new_id.get(oid, oid) for oid in npc_set
-                    }
+        # 岗位名册与监狱长
+        work.set_warden(normalize_single_character_id(work.warden(), 0))
+        work.remap(old_to_new_id)
 
     # 5.6 关系数据中的角色引用
     for _char_id, character in new_character_data.items():
@@ -1409,13 +1390,6 @@ def migrate_character_replacement(
     if "rhodes_island" in loaded_dict:
         ri = loaded_dict["rhodes_island"]
 
-        # hr_operator_ids_list
-        if hasattr(ri, "hr_operator_ids_list"):
-            ri.hr_operator_ids_list = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.hr_operator_ids_list
-            ]
-
         # recruited_id
         if hasattr(ri, "recruited_id") and ri.recruited_id:
             old_recruited = ri.recruited_id.copy()
@@ -1424,6 +1398,8 @@ def migrate_character_replacement(
                 ri.recruited_id.add(old_to_new_id_map.get(oid, oid))
 
         power.remap_operators(old_to_new_id_map)
+        work.set_warden(normalize_single_character_id(work.warden(), 0))
+        work.remap(old_to_new_id_map)
 
         # maintenance_place
         if hasattr(ri, "maintenance_place") and ri.maintenance_place:
@@ -1560,15 +1536,6 @@ def migrate_character_replacement(
                 for oid in ri.green_house_operator_ids
             ]
 
-        # current_warden_id
-        if hasattr(ri, "current_warden_id") and ri.current_warden_id != 0:
-            ri.current_warden_id = normalize_single_character_id(
-                ri.current_warden_id, 0
-            )
-            ri.current_warden_id = old_to_new_id_map.get(
-                ri.current_warden_id, ri.current_warden_id
-            )
-
         # current_prisoners
         if hasattr(ri, "current_prisoners") and ri.current_prisoners:
             old_prisoners = ri.current_prisoners.copy()
@@ -1661,15 +1628,6 @@ def migrate_character_replacement(
                     line_data[2] = old_to_new_id_map.get(
                         line_data[2], line_data[2]
                     )
-
-        # all_work_npc_set
-        if hasattr(ri, "all_work_npc_set") and ri.all_work_npc_set:
-            for work_id, npc_set in ri.all_work_npc_set.items():
-                if npc_set:
-                    new_set = set()
-                    for oid in npc_set:
-                        new_set.add(old_to_new_id_map.get(oid, oid))
-                    ri.all_work_npc_set[work_id] = new_set
 
     # ========== 9. 更新场景数据中的角色列表 ==========
     if "scene_data" in loaded_dict:
@@ -2674,10 +2632,7 @@ def _take_young_child_off_line(
     for character_id in young_child_id_set & set(loaded_dict["npc_id_got"]):
         loaded_dict["npc_id_got"].remove(character_id)
         count += 1
-    for work_npc_set in loaded_dict["rhodes_island"].all_work_npc_set.values():
-        for character_id in young_child_id_set & set(work_npc_set):
-            work_npc_set.remove(character_id)
-            count += 1
+    count += work.drop(young_child_id_set)
     for character_id in young_child_id_set:
         character = loaded_dict["character_data"][character_id]
         count += _replace_if_changed(character, "position", ["0", "0"])

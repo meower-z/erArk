@@ -23,7 +23,7 @@ import random
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import facility, needs
+from Script.Modules.domains import facility, needs, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -132,7 +132,7 @@ def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
     if character_id not in cache.rhodes_island.current_prisoners:
         return False, 0, 0
     # 如果没有监狱长，且概率大于30，则直接逃脱
-    warden_id = cache.rhodes_island.current_warden_id
+    warden_id = work.warden()
     if warden_id == 0:
         if cache.rhodes_island.current_prisoners[character_id][1] > 30:
             return True, 0, 0
@@ -346,7 +346,7 @@ def start_training_preparation(target_character_id: int) -> None:
 
     pl_character_data = cache.character_data[0]
     target_character_data = cache.character_data[target_character_id]
-    warden_id = cache.rhodes_island.current_warden_id
+    warden_id = work.warden()
     warden_character_data = cache.character_data[warden_id]
     # 移动到调教室
     humiliation_room_list = map_handle.get_map_system_path_for_str(
@@ -560,7 +560,7 @@ def get_behavior_id_of_sex_assistant() -> str:
     ] == 0 and handle_premise.handle_t_imprisonment_0(0):
         return "0"
     # 6异常或者绳子捆绑则返回0
-    warden_id = cache.rhodes_island.current_warden_id
+    warden_id = work.warden()
     if not handle_premise.handle_normal_6(
         warden_id
     ) or handle_premise.handle_self_now_bondage(warden_id):

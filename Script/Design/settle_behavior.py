@@ -29,7 +29,7 @@ from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, work
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -164,7 +164,7 @@ def handle_settle_behavior(
 
                     # 监狱长接着做助手行为：排进她的计划队列并打断她当前的行动
                     plan_queue.plan_next(
-                        cache.rhodes_island.current_warden_id,
+                        work.warden(),
                         state_id,
                         now_character_data.behavior.duration,
                         target=now_character_data.target_character_id,

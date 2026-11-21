@@ -1437,10 +1437,6 @@ class Rhodes_Island:
 
     def __init__(self) -> None:
         """初始化罗德岛相关属性对象"""
-        self.all_work_npc_set: dict[int, set] = {}
-        """ 所有工作的所属的干员id合集,工作id:干员id的集合 """
-        self.work_people_now: int = 0
-        """ 当前工作干员人数 """
         self.people_max: int = 0
         """ 干员人数上限 """
         self.party_day_of_week: dict[int, int] = {}
@@ -1599,8 +1595,6 @@ class Rhodes_Island:
         # 文职区
         self.recruit_line: dict[int, list] = {}
         """ 招募线数据: 招募线id:[0招募进度%, 1招募策略id, 2该线主招聘专员id(0为空缺), 3招募效率百分比(如20.5%)] """
-        self.hr_operator_ids_list: list[int] = []
-        """ 招募专员id列表 """
         self.recruited_id: set = set()
         """ 已招募待确认的干员id """
 
@@ -1668,8 +1662,6 @@ class Rhodes_Island:
         # 甲板
 
         # 关押区
-        self.current_warden_id: int = 0
-        """ 当前监狱长的干员id """
         self.current_prisoners: dict[int, list] = {}
         """ 当前囚犯干员的数据，干员id: [被关押的时间datetime, 逃脱的概率int] """
         self.confinement_training_setting: dict[int, int] = {}
