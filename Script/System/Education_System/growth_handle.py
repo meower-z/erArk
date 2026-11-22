@@ -23,26 +23,18 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
-from Script.Modules.domains import abilities, facility
+from Script.Modules.domains import (
+    abilities,
+    facility,
+    growth,
+    pregnancy,
+    roster,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
-
-
-def get_child_growth(character_id: int) -> game_type.CHILD_GROWTH:
-    """
-    取角色的养成数据结构体，没有则惰性创建（全项目唯一的创建入口）
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    game_type.CHILD_GROWTH -- 该角色的养成数据结构体
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.child_growth is None:
-        character_data.child_growth = game_type.CHILD_GROWTH()
-    return character_data.child_growth
 
 
 def get_character_stage(character_id: int) -> int:
@@ -80,7 +72,7 @@ def get_student_candidate_list() -> list[int]:
     from Script.Design import handle_premise
 
     result = []
-    for character_id in sorted(cache.npc_id_got):
+    for character_id in list(roster.active_sorted()):
         if character_id not in cache.character_data:
             continue
         if (
@@ -109,7 +101,7 @@ def get_course_candidate_list() -> list[int]:
           与 get_student_candidate_list 一样按 id 升序：「选择学生」面板与必修名单逐个列人，set 的迭代顺序会飘
     """
     result = []
-    for character_id in sorted(cache.npc_id_got):
+    for character_id in list(roster.active_sorted()):
         if character_id not in cache.character_data:
             continue
         character_data: game_type.Character = cache.character_data[character_id]
@@ -281,74 +273,76 @@ def settle_student_class_gain(
     from Script.Settle import common_default
     from Script.Design import game_time
 
-    growth_data = get_child_growth(student_id)
-    now_time = (
-        cache.character_data[student_id].behavior.start_time or game_time.now()
-    )
-    period = game_time.get_class_period(student_id)
-    now_mark = []
-    if period != -1:
-        now_mark = [now_time.toordinal(), period]
-        if growth_data.last_attend_period == now_mark:
-            return False
+    with growth.editing(student_id) as growth_data:
+        assert growth_data is not None
+        now_time = (
+            cache.character_data[student_id].behavior.start_time
+            or game_time.now()
+        )
+        period = game_time.get_class_period(student_id)
+        now_mark = []
+        if period != -1:
+            now_mark = [now_time.toordinal(), period]
+            if growth_data.last_attend_period == now_mark:
+                return False
 
-    no_teacher = teacher_id == -1 or teacher_id not in cache.character_data
-    # 表里没有的课型回落到理论课的基础值，按课型常量取，不写死编号（Plan 32 L28）
-    learn_base = education_constant.COURSE_LEARN_BASE.get(
-        course_type,
-        education_constant.COURSE_LEARN_BASE[
-            education_constant.COURSE_TYPE_THEORY
-        ],
-    )
-    exp_base = education_constant.COURSE_EXP_BASE.get(
-        course_type,
-        education_constant.COURSE_EXP_BASE[
-            education_constant.COURSE_TYPE_THEORY
-        ],
-    )
-    if no_teacher:
-        # 教室课没老师就是自习，有一套自己的低档基础值；
-        # 实习课没导师则是"见习"——照方案 §3.21 只把本岗位的基础值减半，而不是掉到自习档
-        if course_type in education_constant.CLASSROOM_COURSE_TYPE_SET:
-            learn_base = education_constant.SELF_STUDY_LEARN_BASE
-            exp_base = education_constant.SELF_STUDY_EXP_BASE
-        else:
-            learn_base = max(1, learn_base // 2)
-            exp_base = max(1, exp_base // 2)
-    adjust = get_class_adjust(ability_id, student_id, teacher_id)
+        no_teacher = teacher_id == -1 or teacher_id not in cache.character_data
+        # 表里没有的课型回落到理论课的基础值，按课型常量取，不写死编号（Plan 32 L28）
+        learn_base = education_constant.COURSE_LEARN_BASE.get(
+            course_type,
+            education_constant.COURSE_LEARN_BASE[
+                education_constant.COURSE_TYPE_THEORY
+            ],
+        )
+        exp_base = education_constant.COURSE_EXP_BASE.get(
+            course_type,
+            education_constant.COURSE_EXP_BASE[
+                education_constant.COURSE_TYPE_THEORY
+            ],
+        )
+        if no_teacher:
+            # 教室课没老师就是自习，有一套自己的低档基础值；
+            # 实习课没导师则是"见习"——照方案 §3.21 只把本岗位的基础值减半，而不是掉到自习档
+            if course_type in education_constant.CLASSROOM_COURSE_TYPE_SET:
+                learn_base = education_constant.SELF_STUDY_LEARN_BASE
+                exp_base = education_constant.SELF_STUDY_EXP_BASE
+            else:
+                learn_base = max(1, learn_base // 2)
+                exp_base = max(1, exp_base // 2)
+        adjust = get_class_adjust(ability_id, student_id, teacher_id)
 
-    # 习得状态：ability_level 传 -1 表示不吃"教师能力修正"，避免与速度系数双重加成；
-    # 倍率统一走 extra_adjust，这样 (上课分钟数 + 基础值) 整体被缩放
-    common_default.base_chara_state_common_settle(
-        student_id,
-        add_time,
-        education_constant.LEARN_STATE_ID,
-        base_value=learn_base,
-        ability_level=-1,
-        extra_adjust=adjust - 1.0,
-        change_data=change_data,
-        change_data_to_target_change=change_data_to_target_change,
-    )
-
-    # 科目经验：决定单科能升到多高；性技科目给的是理论经验、腰技只给习得（Plan 26 §3.1）
-    exp_id = get_class_exp_id(ability_id)
-    if exp_id:
-        final_exp = max(1, int(exp_base * adjust))
-        common_default.base_chara_experience_common_settle(
+        # 习得状态：ability_level 传 -1 表示不吃"教师能力修正"，避免与速度系数双重加成；
+        # 倍率统一走 extra_adjust，这样 (上课分钟数 + 基础值) 整体被缩放
+        common_default.base_chara_state_common_settle(
             student_id,
-            exp_id,
-            base_value=final_exp,
+            add_time,
+            education_constant.LEARN_STATE_ID,
+            base_value=learn_base,
+            ability_level=-1,
+            extra_adjust=adjust - 1.0,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
         )
 
-    # 记下这一节已结算过，并按需记一节出勤；这一节已记了缺课的不再记出勤（Plan 30）
-    if now_mark:
-        growth_data.last_attend_period = now_mark
-    if count_attend and not (
-        now_mark and judge_absent_this_period(student_id, now_time)
-    ):
-        growth_data.attend_class_count += 1
+        # 科目经验：决定单科能升到多高；性技科目给的是理论经验、腰技只给习得（Plan 26 §3.1）
+        exp_id = get_class_exp_id(ability_id)
+        if exp_id:
+            final_exp = max(1, int(exp_base * adjust))
+            common_default.base_chara_experience_common_settle(
+                student_id,
+                exp_id,
+                base_value=final_exp,
+                change_data=change_data,
+                change_data_to_target_change=change_data_to_target_change,
+            )
+
+        # 记下这一节已结算过，并按需记一节出勤；这一节已记了缺课的不再记出勤（Plan 30）
+        if now_mark:
+            growth_data.last_attend_period = now_mark
+        if count_attend and not (
+            now_mark and judge_absent_this_period(student_id, now_time)
+        ):
+            growth_data.attend_class_count += 1
     return True
 
 
@@ -371,7 +365,7 @@ def judge_absent_this_period(
 
     if character_id not in cache.character_data:
         return False
-    growth_data = cache.character_data[character_id].child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return False
     period = game_time.get_class_period_by_time(now_time)
@@ -431,7 +425,7 @@ def judge_have_course_type(character_id: int, course_type: int) -> bool:
     """
     if character_id not in cache.character_data:
         return False
-    growth_data = cache.character_data[character_id].child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None or not growth_data.selected_course:
         return False
     for week_day, day_data in growth_data.selected_course.items():
@@ -476,11 +470,12 @@ def settle_course_attend(character_id: int) -> bool:
     if judge_absent_this_period(character_id, now_time):
         return False
     now_mark = [now_time.toordinal(), period]
-    growth_data = get_child_growth(character_id)
-    if growth_data.last_attend_period == now_mark:
-        return False
-    growth_data.last_attend_period = now_mark
-    growth_data.attend_class_count += 1
+    with growth.editing(character_id) as growth_data:
+        assert growth_data is not None
+        if growth_data.last_attend_period == now_mark:
+            return False
+        growth_data.last_attend_period = now_mark
+        growth_data.attend_class_count += 1
     return True
 
 
@@ -534,8 +529,7 @@ def get_care_point_grow_bonus(character_id: int) -> int:
     Return arguments:
     int -- 0~CARE_POINT_CHEST_MAX_BONUS 的百分点偏移
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return 0
     return int(
@@ -566,8 +560,7 @@ def settle_personality_pair(character_id: int, pair_id: int) -> int:
         or pair_id not in education_constant.PERSONALITY_PAIR_TALENT
     ):
         return 0
-    character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return 0
     plus_talent, minus_talent = education_constant.PERSONALITY_PAIR_TALENT[
@@ -625,7 +618,7 @@ def settle_personality_talent(character_id: int) -> str:
     str -- 要输出给玩家的文本
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return _("\n{0}的性格尚未定型\n").format(character_data.name)
     got_name_list = []
@@ -725,11 +718,9 @@ def get_grow_day_time(character_id: int, grow_day: int) -> datetime.datetime:
              所以这里算出的就是有效成长天数走到该值的那一刻；用过加速药的，阶段的起点与终点整段往前挪。
           阶段转换（长大）本身仍按有效成长天数判，不走这里。只读
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    acceleration_day = int(
-        getattr(character_data.pregnancy, "growth_acceleration_days", 0)
-    )
-    return character_data.pregnancy.born_time + datetime.timedelta(
+    preg = pregnancy.of(character_id)
+    acceleration_day = int(preg.growth_acceleration_days)
+    return preg.born_time + datetime.timedelta(
         days=max(0, grow_day - acceleration_day)
     )
 
@@ -753,7 +744,7 @@ def get_stage_day(character_id: int) -> int:
         return 0
     # born_time 还是缺省值的角色不是在岛上出生的（世界设定「萝莉化」、自带年龄素质的干员），没有可认的阶段起点；
     #    也免得从公元 1 年起逐月累加两千多年
-    if cache.character_data[character_id].pregnancy.born_time.year <= 1:
+    if pregnancy.of(character_id).born_time.year <= 1:
         return 0
     stage_start_time = get_grow_day_time(
         character_id, get_stage_start_day(character_id)
@@ -781,7 +772,7 @@ def get_stage_progress(character_id: int) -> float:
     if not stage_end:
         # 已经不在成长阶段（已毕业或不是孩子），按走完算
         return 100.0
-    if cache.character_data[character_id].pregnancy.born_time.year <= 1:
+    if pregnancy.of(character_id).born_time.year <= 1:
         # 没有可认的出生日（不是在岛上出生的），按走完算
         return 100.0
     stage_start_time = get_grow_day_time(
@@ -817,7 +808,7 @@ def get_growth_value(character_id: int, value_id: int) -> float:
     # 学期进度同理，它是全岛共用的时间量，与这个角色有没有养成数据无关
     if value_id == education_constant.GROWTH_VALUE_SEMESTER_PROGRESS:
         return semester_handle.get_semester_progress()
-    growth_data = cache.character_data[character_id].child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         # 没有养成数据时，成绩单档位要回落到 -1（尚无成绩单）而不是 0——
         #    0 是「优秀」，回落成 0 会让全岛没上过学的人都通过优秀档的口上前提
@@ -911,20 +902,25 @@ def change_growth_value(
     Return arguments:
     无
     """
-    growth_data = get_child_growth(character_id)
-    if (
-        education_constant.GROWTH_VALUE_PERSONALITY_BASE
-        <= value_id
-        <= education_constant.GROWTH_VALUE_PERSONALITY_BASE + 3
-    ):
-        pair_id = value_id - education_constant.GROWTH_VALUE_PERSONALITY_BASE
-        growth_data.personality_point[pair_id] = (
-            growth_data.personality_point.get(pair_id, 0.0) + add_value
-        )
-        settle_adult_personality_pair(character_id, pair_id)
-    elif value_id == education_constant.GROWTH_VALUE_CARE:
-        # 照料值不设上限但不允许为负
-        growth_data.care_point = max(0.0, growth_data.care_point + add_value)
+    with growth.editing(character_id) as growth_data:
+        assert growth_data is not None
+        if (
+            education_constant.GROWTH_VALUE_PERSONALITY_BASE
+            <= value_id
+            <= education_constant.GROWTH_VALUE_PERSONALITY_BASE + 3
+        ):
+            pair_id = (
+                value_id - education_constant.GROWTH_VALUE_PERSONALITY_BASE
+            )
+            growth_data.personality_point[pair_id] = (
+                growth_data.personality_point.get(pair_id, 0.0) + add_value
+            )
+            settle_adult_personality_pair(character_id, pair_id)
+        elif value_id == education_constant.GROWTH_VALUE_CARE:
+            # 照料值不设上限但不允许为负
+            growth_data.care_point = max(
+                0.0, growth_data.care_point + add_value
+            )
 
 
 def set_growth_value(
@@ -940,14 +936,17 @@ def set_growth_value(
     Return arguments:
     无
     """
-    growth_data = get_child_growth(character_id)
-    if (
-        education_constant.GROWTH_VALUE_PERSONALITY_BASE
-        <= value_id
-        <= education_constant.GROWTH_VALUE_PERSONALITY_BASE + 3
-    ):
-        pair_id = value_id - education_constant.GROWTH_VALUE_PERSONALITY_BASE
-        growth_data.personality_point[pair_id] = new_value
-        settle_adult_personality_pair(character_id, pair_id)
-    elif value_id == education_constant.GROWTH_VALUE_CARE:
-        growth_data.care_point = max(0.0, new_value)
+    with growth.editing(character_id) as growth_data:
+        assert growth_data is not None
+        if (
+            education_constant.GROWTH_VALUE_PERSONALITY_BASE
+            <= value_id
+            <= education_constant.GROWTH_VALUE_PERSONALITY_BASE + 3
+        ):
+            pair_id = (
+                value_id - education_constant.GROWTH_VALUE_PERSONALITY_BASE
+            )
+            growth_data.personality_point[pair_id] = new_value
+            settle_adult_personality_pair(character_id, pair_id)
+        elif value_id == education_constant.GROWTH_VALUE_CARE:
+            growth_data.care_point = max(0.0, new_value)

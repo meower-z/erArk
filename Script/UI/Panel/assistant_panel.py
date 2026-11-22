@@ -6,7 +6,7 @@ from Script.Core import get_text, py_cmd
 from Script.Design import attr_calculation, handle_premise, map_handle
 from Script.Design import second_behavior
 from Script.UI.Moudle import draw, panel, view
-from Script.Modules.domains import action_info, flags, visitor, work
+from Script.Modules.domains import action_info, flags, roster, visitor, work
 from Script.Modules.save_load import reset
 from Script.Config import game_config, normal_config
 
@@ -29,7 +29,7 @@ def get_assistant_candidates() -> list[int]:
     获取助理候选角色id列表
     """
     candidates = []
-    npc_id_got_list = sorted(cache.npc_id_got)
+    npc_id_got_list = list(roster.active_sorted())
     for npc_id in npc_id_got_list:
         # 跳过玩家
         if npc_id == 0:

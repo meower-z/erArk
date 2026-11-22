@@ -8,6 +8,7 @@ from Script.Core import cache_control
 from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import player_collection, playthrough
+from Script.Modules.domains import pregnancy as pregnancy_domain
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -91,7 +92,7 @@ def check_birth_02() -> list[CheckFailure]:
         if type(birth_type) is not int or birth_type not in disabled:
             continue
         mothers.add(cid)
-        pregnancy = getattr(character, "pregnancy", None)
+        pregnancy = pregnancy_domain.of(cid)
         eggs = getattr(pregnancy, "eggs", None)
         if isinstance(eggs, dict):
             for key, value in eggs.items():

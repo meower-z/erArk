@@ -4,23 +4,19 @@ from __future__ import annotations
 
 import datetime
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    constant,
-    game_path_config,
-    game_type,
-    get_text,
-)
+from Script.Core import cache_control, constant, game_path_config, game_type
+from Script.Core import get_text
 from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, commission
 from Script.Modules.domains import diplomacy, economy, education, flags, fridge
-from Script.Modules.domains import library, maintenance, medical, modes, needs
-from Script.Modules.domains import physical_exam, player_ability
+from Script.Modules.domains import growth, library, maintenance, medical, modes
+from Script.Modules.domains import needs, physical_exam, player_ability
 from Script.Modules.domains import player_collection, playthrough, power
-from Script.Modules.domains import prison, production, recruit, visitor, work
+from Script.Modules.domains import pregnancy, prison, production, recruit
+from Script.Modules.domains import roster, visitor, work
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -727,11 +723,14 @@ def migrate_character_replacement(
             if hasattr(old_character, "entertainment")
             else game_type.CHARA_ENTERTAINMENT()
         )
-        new_character.pregnancy = (
-            old_character.pregnancy
-            if hasattr(old_character, "pregnancy")
-            else game_type.PREGNANCY()
-        )
+        if "pregnancy" in vars(old_character):
+            vars(new_character)["pregnancy"] = old_character.pregnancy
+        else:
+            pregnancy.copy_character(old_id, new_id)
+        if "child_growth" in vars(old_character):
+            vars(new_character)["child_growth"] = old_character.child_growth
+        else:
+            growth.copy_character(old_id, new_id)
         new_character.hypnosis = (
             old_character.hypnosis
             if hasattr(old_character, "hypnosis")
@@ -836,6 +835,7 @@ def migrate_character_replacement(
             if old_id in loaded_dict["npc_id_got"]:
                 loaded_dict["npc_id_got"].discard(old_id)
                 loaded_dict["npc_id_got"].add(new_id)
+        roster.remap({old_id: new_id}, characters=character_data)
 
         # ========== 5. 更新npc_tem_data ==========
         if old_id in npc_tem_data:
@@ -1158,7 +1158,7 @@ def fix_wrong_character(loaded_dict: dict[str, Any]) -> int:
                     if now_tem_chara is not None:
                         # 创建一个新的角色数据
                         new_character = character_handle.init_character(
-                            source_cid, now_tem_chara, collect_reset=False
+                            source_cid, now_tem_chara, False, False
                         )
                         # 重新赋值角色数据
                         loaded_dict["character_data"][key] = new_character
@@ -1437,7 +1437,7 @@ def update_new_character(loaded_dict: dict[str, Any]) -> int:
             continue
         new_character_cid = now_npc_data.AdvNpc  # 使用adv作为cid
         new_character = character_handle.init_character(
-            new_character_cid, now_npc_data, collect_reset=False
+            new_character_cid, now_npc_data, False, False
         )
         loaded_dict["character_data"][new_character_cid] = new_character
         update_count += 1
@@ -1621,35 +1621,35 @@ def _clear_child_activity(character: game_type.Character) -> int:
             for one in entertainment_list
         ]
         count += 1
-    growth_data = character.child_growth
-    if growth_data is None:
-        return count
-    if growth_data.follow_mother_flag:
-        growth_data.follow_mother_flag = False
-        count += 1
-    for slot in [
-        slot
-        for slot, value in growth_data.schedule_override.items()
-        if value not in game_config.config_entertainment
-    ]:
-        del growth_data.schedule_override[slot]
-        count += 1
-    count += _clear_missing_interest_course(growth_data.selected_course)
-    if not is_young_child:
-        return count
-    if growth_data.selected_course:
-        growth_data.selected_course = {}
-        count += 1
-    if growth_data.schedule_template_id:
-        growth_data.schedule_template_id = 0
-        count += 1
-    if growth_data.schedule_override:
-        growth_data.schedule_override = {}
-        count += 1
-    if growth_data.skip_class_flag or growth_data.skip_class_day:
-        growth_data.skip_class_flag = False
-        growth_data.skip_class_day = 0
-        count += 1
+    with growth.editing(character.cid, create=False) as growth_data:
+        if growth_data is None:
+            return count
+        if growth_data.follow_mother_flag:
+            growth_data.follow_mother_flag = False
+            count += 1
+        for slot in [
+            slot
+            for slot, value in growth_data.schedule_override.items()
+            if value not in game_config.config_entertainment
+        ]:
+            del growth_data.schedule_override[slot]
+            count += 1
+        count += _clear_missing_interest_course(growth_data.selected_course)
+        if not is_young_child:
+            return count
+        if growth_data.selected_course:
+            growth_data.selected_course = {}
+            count += 1
+        if growth_data.schedule_template_id:
+            growth_data.schedule_template_id = 0
+            count += 1
+        if growth_data.schedule_override:
+            growth_data.schedule_override = {}
+            count += 1
+        if growth_data.skip_class_flag or growth_data.skip_class_day:
+            growth_data.skip_class_flag = False
+            growth_data.skip_class_day = 0
+            count += 1
     return count
 
 
@@ -1714,12 +1714,7 @@ def _clear_young_child_h_state(character: game_type.Character) -> int:
         if talent.get(talent_id, 0):
             talent[talent_id] = 0
             count += 1
-    default_pregnancy = game_type.PREGNANCY()
-    for attr_name, default_value in vars(default_pregnancy).items():
-        if attr_name not in KEEP_PREGNANCY_ATTR_SET:
-            count += _replace_if_changed(
-                character.pregnancy, attr_name, default_value
-            )
+    count += pregnancy.reset_except(character.cid, KEEP_PREGNANCY_ATTR_SET)
     if needs.of(character.cid)["milk"] != 0:
         needs.set(character.cid, milk=0)
         count += 1
@@ -2005,9 +2000,11 @@ def _take_young_child_off_line(
         for character_id in young_child_id_set & set(scene.character_list):
             scene.character_list.remove(character_id)
             count += 1
-    for character_id in young_child_id_set & set(loaded_dict["npc_id_got"]):
-        loaded_dict["npc_id_got"].remove(character_id)
-        count += 1
+    if "npc_id_got" in loaded_dict:
+        for character_id in young_child_id_set & set(loaded_dict["npc_id_got"]):
+            loaded_dict["npc_id_got"].remove(character_id)
+            count += 1
+    count += roster.drop_active(young_child_id_set)
     count += work.drop(young_child_id_set)
     for character_id in young_child_id_set:
         character = loaded_dict["character_data"][character_id]

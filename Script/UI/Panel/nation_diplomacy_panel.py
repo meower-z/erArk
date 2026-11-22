@@ -1,13 +1,8 @@
 """势力外交界面面板，以及外交方针与各国感染率的结算"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
+from Script.Core import cache_control, game_type, get_text, flow_handle
+from Script.Core import constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
@@ -15,7 +10,7 @@ import random
 from Script.Design import game_time
 from Script.Modules.save_load import reset
 from Script.Modules.domains import abilities, country, diplomacy, facility
-from Script.Modules.domains import flags, location, medical
+from Script.Modules.domains import flags, location, medical, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -649,7 +644,7 @@ class Nation_Diplomacy_Panel:
             info_draw_2.width = self.width
             info_draw_2.draw()
             npc_draw_count = 0
-            chara_list = set(cache.npc_id_got)
+            chara_list = roster.active()
             # 将当前派遣的外交官加入到角色列表里（此处为副本，不能影响cache.npc_id_got）
             now_diplomat_chara_id = diplomacy.of(country_id)["diplomat"]
             if now_diplomat_chara_id != 0:

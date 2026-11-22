@@ -12,7 +12,7 @@ from Script.Core import (
 from Script.Design import map_handle, handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import flags, visitor
+from Script.Modules.domains import flags, roster, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -180,7 +180,7 @@ class All_Npc_Position_Panel:
             line_feed.draw()
 
             # 遍历角色id
-            npc_id_got_list = sorted(cache.npc_id_got)
+            npc_id_got_list = list(roster.active_sorted())
             final_list = []
             for npc_id in npc_id_got_list:
                 if npc_id != 0:
@@ -253,7 +253,7 @@ class All_Npc_Position_Panel:
 
     def call_all(self) -> None:
         """一键全跟随"""
-        for npc_id in cache.npc_id_got:
+        for npc_id in roster.active():
             if npc_id != 0:
                 character_data = cache.character_data[npc_id]
                 flags.set(character_data.cid, is_follow=1)

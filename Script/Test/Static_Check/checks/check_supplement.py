@@ -12,7 +12,7 @@ from __future__ import annotations
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import map_handle
-from Script.Modules.domains import facility, flags, modes, needs, power
+from Script.Modules.domains import facility, flags, modes, needs, power, roster
 from Script.Modules.domains import warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -172,7 +172,7 @@ def check_time_stop_unconscious_survives_off_list() -> list[CheckFailure]:
     if cache is None or modes.time_stop():
         return []
     character_data = getattr(cache, "character_data", {}) or {}
-    npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
+    npc_id_got: set[int] = roster.active()
     failures = []
     for cid, c in character_data.items():
         if flags.get(cid, "unconscious_h") != 3:

@@ -16,7 +16,7 @@ from Script.Design import game_time
 from Script.Design import handle_premise
 from Script.System.Pregnancy_System import egg_handle, family_tree_draw
 from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, pregnancy, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -81,11 +81,11 @@ def get_fetus_count_text(character_id: int) -> str:
     Return arguments:
     str -- 胎数说明文本
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    fetus_count = getattr(character_data.pregnancy, "fetus_count", 0)
+    preg = pregnancy.of(character_id)
+    fetus_count = preg.fetus_count
     if fetus_count < 2:
         return ""
-    if getattr(character_data.pregnancy, "identical_twins", False):
+    if preg.identical_twins:
         return _("（同卵双胞胎）")
     return _("（{0}胞胎）").format(fetus_count)
 
@@ -99,11 +99,11 @@ def get_stage_info_text(character_id: int, now_stage: int) -> str:
     Return arguments:
     str -- 关键时间说明
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    preg = pregnancy.of(character_id)
     if now_stage == pregnancy_constant.STAGE_FERTILIZATION:
-        start_time = character_data.pregnancy.fertilization_time
+        start_time = preg.fertilization_time
         # 预计日期扣除妊娠加速药的加速天数，已到期则显示为当天
-        acc_day = int(character_data.pregnancy.acceleration_days)
+        acc_day = int(preg.acceleration_days)
         predict_time = max(
             game_time.get_predict_date(
                 pregnancy_constant.PREGNANCY_DAY - acc_day, start_time
@@ -144,9 +144,9 @@ def get_stage_info_text(character_id: int, now_stage: int) -> str:
                 )
         return _("待受精卵块：{0}").format("、".join(egg_text_list))
     if now_stage == pregnancy_constant.STAGE_PREGNANCY:
-        start_time = character_data.pregnancy.fertilization_time
+        start_time = preg.fertilization_time
         # 预计日期扣除妊娠加速药的加速天数，已到期则显示为当天
-        acc_day = int(character_data.pregnancy.acceleration_days)
+        acc_day = int(preg.acceleration_days)
         predict_time = max(
             game_time.get_predict_date(
                 pregnancy_constant.PARTURIENT_DAY - acc_day, start_time
@@ -186,13 +186,12 @@ def get_stage_info_text(character_id: int, now_stage: int) -> str:
         baby_text_list = []
         for child_id in pregnancy_handle.get_baby_id_list(character_id):
             child_data = cache.character_data[child_id]
-            acc_day = int(
-                getattr(child_data.pregnancy, "growth_acceleration_days", 0)
-            )
+            child_preg = pregnancy.of(child_id)
+            acc_day = int(child_preg.growth_acceleration_days)
             grow_time = max(
                 game_time.get_predict_date(
                     pregnancy_constant.REARING_COMPLETE_DAY - acc_day,
-                    child_data.pregnancy.born_time,
+                    child_preg.born_time,
                 ),
                 game_time.now(),
             )
@@ -340,7 +339,7 @@ class Pregnancy_Overview_Panel:
 
         # 收集处于怀孕阶段的干员
         chara_stage_list = []
-        for character_id in sorted(cache.npc_id_got):
+        for character_id in list(roster.active_sorted()):
             if character_id == 0:
                 continue
             now_stage = get_chara_pregnancy_stage(character_id)

@@ -1,19 +1,14 @@
 """管理罗德岛的基建界面面板与干员工作岗位的调整"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-    num,
-)
+from Script.Core import cache_control, game_type, get_text, flow_handle
+from Script.Core import constant, num
 from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import (
+    abilities,
     commission,
     economy,
     facility,
@@ -21,11 +16,11 @@ from Script.Modules.domains import (
     needs,
     prison,
     recruit,
+    roster,
     visitor,
     warehouse,
     work,
 )
-from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -245,7 +240,7 @@ class Manage_Basement_Panel:
                 # 统计各部门岗位的工作干员数量
                 work_people_now, people_max = (
                     work.people_now(),
-                    len(cache.npc_id_got),
+                    roster.count(),
                 )
 
                 all_info_draw.text = _(
@@ -674,7 +669,7 @@ class Manage_Basement_Panel:
                     # ================= 3. 数据过滤与排序 =================
                     all_charas = []
 
-                    for npc_id in cache.npc_id_got:
+                    for npc_id in roster.active():
                         if npc_id == 0:
                             continue
 
@@ -1328,7 +1323,7 @@ class Manage_Basement_Panel:
                 now_text += _("\n  当前读者人数：{0} 人").format(reader_count)
 
             elif department == _("宿舍区"):
-                npc_count = str(len(cache.npc_id_got))
+                npc_count = str(roster.count())
                 now_text += _("\n  干员总数/宿舍容量：{0}/{1}").format(
                     npc_count, facility.people_max()
                 )
@@ -1405,7 +1400,7 @@ class Manage_Basement_Panel:
         character_id -- 要查看的角色id
         """
         # 获取所有npc的列表，用于上一页下一页功能
-        npc_list = list(cache.npc_id_got)
+        npc_list = list(roster.active())
         if 0 in npc_list:
             npc_list.remove(0)  # 移除玩家
         # 使用 SeeCharacterInfoHandleInScene 而不是 SeeCharacterInfoInScenePanel
@@ -1486,7 +1481,7 @@ class Change_Npc_Work_Panel:
                 self.work_type_npc_dict[work_type_id] = []
 
             # 遍历所有干员，将其加入对应的工作类型id列表中
-            for npc_id in cache.npc_id_got:
+            for npc_id in roster.active():
                 # 去掉玩家
                 if npc_id == 0:
                     continue

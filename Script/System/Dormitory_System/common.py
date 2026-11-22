@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
-from Script.Modules.domains import facility, visitor
+from Script.Modules.domains import facility, roster, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -158,11 +158,11 @@ def get_dormitory_resident_id_set() -> set[int]:
     获取需要纳入宿舍统计的角色id集合
     输入类型: 无
     输出类型: Set[int]
-    功能: 在当前拥有干员(cache.npc_id_got)基础上，追加所有异常状态为7(离岛)的角色id，作为宿舍居住统计的统一角色来源
+    功能: 在当前拥有干员(roster.active())基础上，追加所有异常状态为7(离岛)的角色id，作为宿舍居住统计的统一角色来源
     """
     from Script.Design.handle_premise import handle_normal_7
 
-    resident_id_set: set[int] = set(cache.npc_id_got)
+    resident_id_set: set[int] = roster.active()
     resident_id_set.discard(0)
     # 遍历所有角色，追加处于异常7(离岛)状态但不在拥有干员列表中的角色
     for character_id in cache.character_data:
@@ -288,7 +288,7 @@ def get_dormitory_occupants_text() -> str:
     resident_id_set = get_dormitory_resident_id_set()
     live_npc_id_set = resident_id_set.copy()
     # 处于异常7(离岛)状态的角色即为居住集合中不在拥有干员列表内的角色
-    unnormal_7_npc_id_set = resident_id_set - set(cache.npc_id_got)
+    unnormal_7_npc_id_set = resident_id_set - roster.active()
     Dormitory_all = (
         constant.place_data["Dormitory"]
         + constant.place_data["Special_Dormitory"]
@@ -403,8 +403,8 @@ def init_character_dormitory() -> None:
         for x in j
     }
     npc_count = 0
-    cache.npc_id_got.discard(0)
-    for character_id in cache.npc_id_got:
+    roster.discard(0)
+    for character_id in roster.active():
         character_data = cache.character_data[character_id]
         # print(f"{character_data.name}：{character_data.dormitory}")
         # 普通干员每两个人住一个房间
@@ -424,7 +424,7 @@ def init_character_dormitory() -> None:
                     # 如果要住宿舍的话，那先检测宿舍是否已经有人住了
                     if "宿舍" in character_data.dormitory:
                         already_live = False
-                        for now_character_id in cache.npc_id_got:
+                        for now_character_id in roster.active():
                             if now_character_id == character_id:
                                 continue
                             now_character_data = cache.character_data[

@@ -8,7 +8,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, pregnancy
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -335,24 +335,23 @@ def npc_b_talent_change_for_lactation_flag(character_id: int) -> None:
     """
     干员因涨奶而发生的罩杯变化\n
     """
-    character_data = cache.character_data[character_id]
     lactating = abilities.talent(character_id)[27]
 
     # 奶量超过上限的80%时，罩杯变大
     if (
         lactating
         and handle_premise.handle_milk_ge_80(character_id)
-        and not character_data.pregnancy.lactation_flag
+        and not pregnancy.of(character_id).lactation_flag
     ):
         if body_part_talent_update(
             character_id, [121, 122, 123, 124, 125], True, _("胸部")
         ):
-            character_data.pregnancy.lactation_flag = True
+            pregnancy.update(character_id, lactation_flag=True)
     # 奶量降到上限的79%及以下时，或失去泌乳素质（停乳药、育儿结束）后，罩杯变小
     elif (
         not lactating or handle_premise.handle_milk_le_79(character_id)
-    ) and character_data.pregnancy.lactation_flag == 1:
-        character_data.pregnancy.lactation_flag = False
+    ) and pregnancy.of(character_id).lactation_flag == 1:
+        pregnancy.update(character_id, lactation_flag=False)
         if body_part_talent_update(
             character_id, [121, 122, 123, 124, 125], False, _("胸部")
         ):

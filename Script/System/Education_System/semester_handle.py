@@ -21,6 +21,7 @@
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import game_time, attr_calculation
+from Script.Modules.domains import growth
 from Script.System.Education_System import education_constant, growth_handle
 from Script.Modules.domains import abilities
 
@@ -127,7 +128,7 @@ def get_semester_attend(character_id: int) -> tuple[int, int]:
     """
     if character_id not in cache.character_data:
         return 0, 0
-    growth_data = cache.character_data[character_id].child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return 0, 0
     # 夹到0：基线理论上不会超过累计，但存档迁移或调试改数时可能出现，负数出勤毫无意义
@@ -166,8 +167,7 @@ def get_semester_level_change(character_id: int) -> dict[int, list[int]]:
     result: dict[int, list[int]] = {}
     if character_id not in cache.character_data:
         return result
-    character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return result
     for ability_id in education_constant.SUBJECT_ABILITY_LIST:
@@ -249,7 +249,7 @@ def get_report_incomplete_reason(character_id: int) -> str:
         return ""
     character_data: game_type.Character = cache.character_data[character_id]
     work_type = character_data.work.work_type
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     base_work_type = (
         growth_data.semester_base_work_type if growth_data is not None else -1
     )
@@ -318,7 +318,7 @@ def judge_report_card_checkable(character_id: int) -> bool:
         return False
     if not judge_adult_out_of_school(character_id):
         return True
-    growth_data = cache.character_data[character_id].child_growth
+    growth_data = growth.of(character_id)
     return growth_data is not None and growth_data.report_card_flag
 
 
@@ -330,10 +330,10 @@ def build_report_card(character_id: int) -> dict:
     Return arguments:
     dict -- 成绩单快照，各字段见函数内注释
     """
-    growth_data = growth_handle.get_child_growth(character_id)
+    growth_data = growth.of(character_id)
     # 学期号取 semester_id 而不是当前学期：学期结算时时钟已经走进新学期了，
     #    这份成绩单属于**刚结束的那个**学期
-    if growth_data.semester_id:
+    if growth_data is not None and growth_data.semester_id:
         year, month = growth_data.semester_id[0], growth_data.semester_id[1]
     else:
         year, month = game_time.get_now_semester()
@@ -370,7 +370,7 @@ def get_report_card_history(character_id: int) -> list[dict]:
     """
     if character_id not in cache.character_data:
         return []
-    growth_data = cache.character_data[character_id].child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return []
     return growth_data.report_card_history
@@ -398,17 +398,16 @@ def push_report_card(character_id: int, report_data: dict) -> None:
     Return arguments:
     无
     """
-    growth_data = growth_handle.get_child_growth(character_id)
-    growth_data.report_card_history.append(report_data)
-    if (
-        len(growth_data.report_card_history)
-        > education_constant.REPORT_CARD_HISTORY_MAX
-    ):
-        # 只留最近的那几份。用切片重新赋值而不是 pop(0)：切片一次到位，
-        #    旧存档里若因上限调小而攒了超量的份数，一次就能收敛
-        growth_data.report_card_history = growth_data.report_card_history[
-            -education_constant.REPORT_CARD_HISTORY_MAX :
-        ]
+    with growth.editing(character_id) as growth_data:
+        assert growth_data is not None
+        growth_data.report_card_history.append(report_data)
+        if (
+            len(growth_data.report_card_history)
+            > education_constant.REPORT_CARD_HISTORY_MAX
+        ):
+            growth_data.report_card_history = growth_data.report_card_history[
+                -education_constant.REPORT_CARD_HISTORY_MAX :
+            ]
 
 
 def reset_semester_baseline(character_id: int, semester_id: list[int]) -> None:
@@ -422,17 +421,18 @@ def reset_semester_baseline(character_id: int, semester_id: list[int]) -> None:
     """
 
     character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = growth_handle.get_child_growth(character_id)
-    # 存的是 list 的**副本**：直接存传进来的那个对象，多个孩子会共享同一个 list
-    growth_data.semester_id = list(semester_id)
-    growth_data.semester_base_attend = growth_data.attend_class_count
-    growth_data.semester_base_absent = growth_data.absent_count
-    growth_data.semester_base_ability = {
-        ability_id: int(abilities.ability(character_id).get(ability_id, 0))
-        for ability_id in education_constant.SUBJECT_ABILITY_LIST
-    }
-    # 学期初的岗位（Plan 30）：成绩单按它与结算时的岗位写不全的理由，学期结算据它认出整学期都不在学生岗的成年女儿
-    growth_data.semester_base_work_type = character_data.work.work_type
+    with growth.editing(character_id) as growth_data:
+        assert growth_data is not None
+        # 存的是 list 的**副本**：直接存传进来的那个对象，多个孩子会共享同一个 list
+        growth_data.semester_id = list(semester_id)
+        growth_data.semester_base_attend = growth_data.attend_class_count
+        growth_data.semester_base_absent = growth_data.absent_count
+        growth_data.semester_base_ability = {
+            ability_id: int(abilities.ability(character_id).get(ability_id, 0))
+            for ability_id in education_constant.SUBJECT_ABILITY_LIST
+        }
+        # 学期初的岗位（Plan 30）：成绩单按它与结算时的岗位写不全的理由，学期结算据它认出整学期都不在学生岗的成年女儿
+        growth_data.semester_base_work_type = character_data.work.work_type
 
 
 def settle_semester_change() -> list[int]:
@@ -449,31 +449,26 @@ def settle_semester_change() -> list[int]:
     """
     now_semester = list(game_time.get_now_semester())
     report_list: list[int] = []
-    # 只遍历在学的女儿。普通干员也能选课攒听课数（口径24），但他们不出成绩单；
-    #    改成遍历全角色会给全岛每个人惰性创建 CHILD_GROWTH 并写进存档
     for character_id in growth_handle.get_student_candidate_list():
-        growth_data = growth_handle.get_child_growth(character_id)
-        # 第一次记账（刚长成学员 / 旧存档 / 新开局）：只立基线，不出成绩单
-        if not growth_data.semester_id:
+        with growth.editing(character_id) as growth_data:
+            assert growth_data is not None
+            if not growth_data.semester_id:
+                reset_semester_baseline(character_id, now_semester)
+                continue
+            if growth_data.semester_id == now_semester:
+                continue
+            if (
+                judge_adult_out_of_school(character_id)
+                and growth_data.semester_base_work_type
+                != education_constant.STUDENT_WORK_TYPE
+                and get_semester_attend(character_id) == (0, 0)
+            ):
+                reset_semester_baseline(character_id, now_semester)
+                continue
+            push_report_card(character_id, build_report_card(character_id))
+            growth_data.report_card_flag = True
             reset_semester_baseline(character_id, now_semester)
-            continue
-        if growth_data.semester_id == now_semester:
-            continue
-        # 毕业后整学期都不在学生岗（学期初也不是、本学期没有出勤与缺课记录）：只重置基线，不出空成绩单、不置待查看、
-        #    不进学期结束提示（Plan 30 §3.3 Q1，用户拍板）。学期初未知（-1）的旧档同样按「没有记录」认；
-        #    学期中途才离开学生岗的有记录，照出最后一份。这份名单养成总览也在用，所以收窄只能加在这里
-        if (
-            judge_adult_out_of_school(character_id)
-            and growth_data.semester_base_work_type
-            != education_constant.STUDENT_WORK_TYPE
-            and get_semester_attend(character_id) == (0, 0)
-        ):
-            reset_semester_baseline(character_id, now_semester)
-            continue
-        push_report_card(character_id, build_report_card(character_id))
-        growth_data.report_card_flag = True
-        reset_semester_baseline(character_id, now_semester)
-        report_list.append(character_id)
+            report_list.append(character_id)
     return report_list
 
 

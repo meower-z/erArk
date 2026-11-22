@@ -9,7 +9,7 @@
 1. `cache.debug_mode` 下debug面板可越过前提直接改素质、催眠深度/子项、角色扮演列表、熟睡值等，
    凡这些字段参与、且检查内容为"值来自合法结算路径"的不变式，都在检查体前加debug豁免；
    纯粹的存档结构/schema式检查（如MIND-22/28/29）不受debug模式影响，不加豁免。
-2. `cache.npc_id_got` 不保证是 `cache.character_data` 的子集，一律用 `_iter_npcs()` 做存在性保护。
+2. `roster.active()` 不保证是 `cache.character_data` 的子集，一律用 `_iter_npcs()` 做存在性保护。
 3. 场景key统一用 `map_handle.get_map_system_path_str_for_list`（`os.sep.join`），不是 "|".join。
 4. `game_config.config_roleplay` 在独立脚本环境下可能未加载，相关检查（MIND-16）遇缺表时降级为跳过。
 5. 全部字段访问一律使用 getattr/dict.get 加默认值防御，绝不能因为老存档缺字段或类型不符而让检查器自身抛异常。
@@ -23,7 +23,7 @@ from typing import TypeGuard
 from Script.Core import cache_control, num
 from Script.Design import map_handle
 from Script.Modules.domains import abilities, achievement, action_info, flags
-from Script.Modules.domains import modes, needs, player_ability
+from Script.Modules.domains import modes, needs, player_ability, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -68,7 +68,7 @@ def _iter_npcs() -> Iterator[tuple[int, game_type.Character]]:
         getattr(cache, "character_data", None), dict
     ):
         return
-    for cid in getattr(cache, "npc_id_got", None) or ():
+    for cid in roster.active():
         if cid and cid in cache.character_data:
             yield cid, cache.character_data[cid]
 

@@ -18,7 +18,7 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import abilities, achievement, action_info
-from Script.Modules.domains import player_collection
+from Script.Modules.domains import player_collection, pregnancy, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -44,7 +44,7 @@ def settle_health_check() -> None:
         if handle_premise.handle_today_is_healty_check_day(0):
             need_physical_examination_chara_id_list = []
             # 遍历所有干员
-            for chara_id in cache.npc_id_got:
+            for chara_id in roster.active():
                 if chara_id == 0:
                     continue
                 # 重置今日体检时间数据
@@ -929,7 +929,7 @@ class Physical_Check_And_Manage_Panel:
         while 1:
             final_list = []
             # 遍历角色id
-            for npc_id in cache.npc_id_got:
+            for npc_id in roster.active():
                 # 跳过玩家
                 if npc_id == 0:
                     continue
@@ -1202,7 +1202,7 @@ class Physical_Check_And_Manage_Panel:
         # 未怀孕情况下显示受精概率
         if not now_pregnancy_flag:
             report_text += _("当前受精概率{0}%").format(
-                target_character_data.pregnancy.fertilization_rate
+                pregnancy.of(target_character_data.cid).fertilization_rate
             )
         # 已生育
         child_id_list = target_character_data.relationship.child_id_list
@@ -1426,7 +1426,7 @@ class Physical_Check_And_Manage_Panel:
         )
         select_state: dict[str, int | str] = {}
         while 1:
-            npc_id_got_list = sorted(cache.npc_id_got)
+            npc_id_got_list = list(roster.active_sorted())
             # 已选择的角色id列表
             selected_id_list = list(physical_exam.ids(physical_exam.CHOSEN))
             final_list = []

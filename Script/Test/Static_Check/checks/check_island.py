@@ -7,7 +7,7 @@
 
 全域前提（详见需求文档"约定与全域前提"一节，各检查函数按需复用）：
 - 离线判定只能读 sp_flag.field_commission / escaping / be_bagged / in_diplomatic_visit 这几个来源标记，
-  绝不能用"是否在 cache.npc_id_got 里"或"position == ['0','0']"判断角色是否离线在场——外勤、越狱、被绑架、
+  绝不能用"是否在 roster.active() 里"或"position == ['0','0']"判断角色是否离线在场——外勤、越狱、被绑架、
   外派外交官都会把角色移出名单但保留其岗位/槽位数据。
 - 派生表（岗位集合/列表等）只由玩家打开对应面板时触发重算，没有任何每日/每回合结算刷新点，因此"派生表与
   实时名单逐人相等"类断言天然可能长期漂移，此类条目统一为 warning 级。
@@ -25,10 +25,10 @@ from Script.Config import game_config
 from Script.Modules.domains import commission, diplomacy, dormitory, economy
 from Script.Modules.domains import entertainment, facility, flags, library
 from Script.Modules.domains import location, maintenance, power, prison
-from Script.Modules.domains import production, recruit, visitor, warehouse, work
+from Script.Modules.domains import production, recruit, roster, visitor
+from Script.Modules.domains import warehouse, work
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
-
 from typing import TYPE_CHECKING
 from Script.Design import game_time
 
@@ -127,13 +127,13 @@ def check_island_01_npc_id_got_ref() -> list[CheckFailure]:
                 [],
             )
         )
-    ghost_ids = [cid for cid in cache.npc_id_got if cid not in cd]
+    ghost_ids = [cid for cid in roster.active() if cid not in cd]
     if ghost_ids:
         failures.append(
             make_failure(
                 "ISLAND-01",
                 "干员名单引用完整性",
-                f"npc_id_got中存在幽灵cid列表={ghost_ids}，len(npc_id_got)={len(cache.npc_id_got)}，"
+                f"npc_id_got中存在幽灵cid列表={ghost_ids}，len(npc_id_got)={roster.count()}，"
                 f"len(character_data)={len(cd)}，0 in character_data={0 in cd}",
                 ghost_ids,
             )
@@ -315,7 +315,7 @@ def check_island_07_work_type_valid() -> list[CheckFailure]:
     cd = cache.character_data
     valid_work_types = set(game_config.config_work_type)
     failures = []
-    for cid in cache.npc_id_got:
+    for cid in roster.active():
         if cid == 0 or cid not in cd:
             continue
         work_type = cd[cid].work.work_type
@@ -341,7 +341,7 @@ def check_island_08_work_rosters_self_consistent() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验岗位名册（work.rosters）的每个岗位id都在岗位配置里；名册里的每个id必须是存在的角色，且其work.work_type
-        必须等于所在岗位。绝不能加cid in cache.npc_id_got——外勤/关押/外派会把人移出名单而名册保留他，
+        必须等于所在岗位。绝不能加roster.has(cid)——外勤/关押/外派会把人移出名单而名册保留他，
         是主线玩法下的必现误报
     """
     cache = cache_control.cache
@@ -389,7 +389,7 @@ def check_island_09_work_set_recompute() -> list[CheckFailure]:
         cached_set = set(work.roster(wid))
         recompute_set = {
             cid
-            for cid in cache.npc_id_got
+            for cid in roster.active()
             if cid != 0 and cid in cd and cd[cid].work.work_type == wid
         }
         extra = cached_set - recompute_set
@@ -811,7 +811,7 @@ def check_island_19_dormitory_path_valid() -> list[CheckFailure]:
     cache = cache_control.cache
     cd = cache.character_data
     failures = []
-    for cid in cache.npc_id_got:
+    for cid in roster.active():
         if cid == 0 or cid not in cd:
             continue
         ch = cd[cid]
@@ -1243,8 +1243,8 @@ def check_island_26_field_commission_flag_consistency() -> list[CheckFailure]:
                         "ISLAND-26",
                         "外勤派遣名单与干员外勤标记一致",
                         f"委托com_id={com_id}({commission_name})名单含cid={cid}({ch.name})，但其"
-                        f"sp_flag.field_commission={flags.get(ch.cid, "field_commission")}，与委托id不符，"
-                        f"cid in cache.npc_id_got={cid in cache.npc_id_got}",
+                        f"sp_flag.field_commission={flags.get(ch.cid, 'field_commission')}，与委托id不符，"
+                        f"roster.has(cid)={roster.has(cid)}",
                         [cid],
                     )
                 )
@@ -1485,7 +1485,7 @@ def check_island_31_visitor_and_recruited_id() -> list[CheckFailure]:
             )
         )
     recruited_id = recruit.pending()
-    conflict = recruited_id & cache.npc_id_got
+    conflict = recruited_id & roster.active()
     ghost_recruited = [r for r in recruited_id if r not in cd]
     if 0 in recruited_id or ghost_recruited or conflict:
         conflict_detail = [(r, _chara_name(cd, r)) for r in conflict]

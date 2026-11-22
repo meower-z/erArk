@@ -20,7 +20,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import abilities, action_info, flags, needs, plan
-from Script.Modules.domains import player_ability
+from Script.Modules.domains import player_ability, roster
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -48,7 +48,7 @@ def update_sleep() -> None:
     now_draw.width = window_width
     now_draw.text = _("\n博士入睡，开始结算各种数据\n")
     now_draw.draw()
-    id_list = cache.npc_id_got.copy()
+    id_list = roster.active()
     id_list.add(0)
 
     # 角色刷新

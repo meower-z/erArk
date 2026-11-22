@@ -15,7 +15,7 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, pregnancy
+from Script.Modules.domains import abilities, pregnancy, roster
 
 panel_info_data: dict[str, object] = {}
 
@@ -93,7 +93,7 @@ class Born_Panel:
         """ 是否为卵生破壳模式 """
         self.egg_id_list: list = list(egg_id_list) if egg_id_list else []
         """ 卵生破壳模式下本次孵化的卵编号列表 """
-        mom_eggs = cache.character_data[mother_character_id].pregnancy.eggs
+        mom_eggs = pregnancy.of(mother_character_id).eggs
         self.soft_egg_mode: bool = egg_mode and any(
             mom_eggs.get(egg_id, {}).get("soft", False)
             for egg_id in self.egg_id_list
@@ -121,7 +121,7 @@ class Born_Panel:
         doctor_id_list = []
         dr_k_id = 0
         doctor_id = 0
-        for character_id in cache.npc_id_got:
+        for character_id in roster.active():
             character_data: game_type.Character = cache.character_data[
                 character_id
             ]
@@ -136,7 +136,7 @@ class Born_Panel:
             doctor_id = dr_k_id
         # 如果还是没有的话，则随机选取任何一位干员来接生
         if doctor_id == 0:
-            doctor_id = random.choice(list(cache.npc_id_got))
+            doctor_id = random.choice(list(roster.active()))
         doctor_character_data: game_type.Character = cache.character_data[
             doctor_id
         ]
@@ -201,18 +201,10 @@ class Born_Panel:
             if self.egg_mode:
                 born_count = max(1, len(self.egg_id_list))
             else:
-                born_count = max(
-                    1, getattr(mom_character_data.pregnancy, "fetus_count", 0)
-                )
+                mom_preg = pregnancy.of(self.mother_character_id)
+                born_count = max(1, mom_preg.fetus_count)
                 identical_twins_flag = (
-                    bool(
-                        getattr(
-                            mom_character_data.pregnancy,
-                            "identical_twins",
-                            False,
-                        )
-                    )
-                    and born_count == 2
+                    bool(mom_preg.identical_twins) and born_count == 2
                 )
             # 内循环2：起名字（按孩子数逐个取名）
             child_name_list = []
@@ -302,7 +294,7 @@ class Born_Panel:
                     child_character_data: game_type.Character = (
                         cache.character_data[new_child_id]
                     )
-                    child_character_data.pregnancy.born_time = game_time.now()
+                    pregnancy.update(new_child_id, born_time=game_time.now())
                     child_name_list.append(child_character_data.name)
 
                     info_draw.text = _(
@@ -371,9 +363,9 @@ class Born_Panel:
             if self.egg_mode:
                 # 卵生破壳结算：删除本次孵化的全部卵、直接进入育儿与泌乳，不进入产后
                 draw_text = "\n※※※※※※※※※\n"
-                for egg_id in self.egg_id_list:
-                    if egg_id in mom_character_data.pregnancy.eggs:
-                        del mom_character_data.pregnancy.eggs[egg_id]
+                with pregnancy.editing(self.mother_character_id) as mom_preg:
+                    for egg_id in self.egg_id_list:
+                        mom_preg.eggs.pop(egg_id, None)
                 talent[24] = 1
                 draw_text += _("\n{0}获得了[育儿]\n").format(
                     mom_character_data.name
@@ -421,9 +413,12 @@ class Born_Panel:
                     mom_character_data.name
                 )
                 # 生产完成，重置妊娠加速药的累计加速天数、本次胎数与同卵双胞胎标记
-                mom_character_data.pregnancy.acceleration_days = 0.0
-                mom_character_data.pregnancy.fetus_count = 0
-                mom_character_data.pregnancy.identical_twins = False
+                pregnancy.update(
+                    self.mother_character_id,
+                    acceleration_days=0.0,
+                    fetus_count=0,
+                    identical_twins=False,
+                )
                 experience[65] += 10
                 experience[68] += 10
                 experience[86] += 1

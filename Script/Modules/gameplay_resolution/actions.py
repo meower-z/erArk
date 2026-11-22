@@ -24,7 +24,7 @@ from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import time_hooks
 from Script.Modules.gameplay_resolution import intent
-from Script.Modules.domains import modes
+from Script.Modules.domains import modes, roster as roster_domain
 
 PLAYER = "0"
 """ 玩家在 GameState.characters 里的键 """
@@ -73,11 +73,15 @@ def time_stop(act: core.Action) -> tuple[core.Action]:
 
 def roster() -> tuple[str, ...]:
     """
-    在场的角色：玩家在前，干员按id
+    在场的角色：玩家在前，干员按id；101/102 阶段角色由 require_eligible 拦截
     Return arguments:
     tuple -- 角色键
     """
-    npcs = sorted(cid for cid in cache.npc_id_got if cid != 0)
+    npcs = [
+        int(roster_domain.require_eligible(cid))
+        for cid in roster_domain.active_sorted()
+        if cid != 0
+    ]
     return (PLAYER, *(str(cid) for cid in npcs))
 
 
@@ -154,7 +158,7 @@ def _intent_of(behavior: game_type.Behavior) -> intent.Intent:
 def state_from_cache(clock: int | None = None) -> core.GameState:
     """
     由缓存在 clock 这一分钟投影出新的 GameState（新游戏、新周目、没有文件 "2" 的旧存档）
-    名单上每个角色（玩家与 cache.npc_id_got 里的干员）的行动取缓存里行为的开始时间与分钟数，
+    名单上每个角色（玩家与 roster.active() 里的干员）的行动取缓存里行为的开始时间与分钟数，
     开始时间没设过时从 clock 开始。干员的行动是 Behavior，到时由 wrap_up 收尾；
     玩家的是同样起止的 kernel.Idle，到时不收尾，直接选下一个行动。
     全局数据的 ticked 是 clock，settled_day 是 clock 所在的游戏日
@@ -235,6 +239,9 @@ def project(new: core.GameState) -> core.GameState:
     GameState -- 带角色的 GameState
     """
     if new.characters:
+        for who in new.characters:
+            if who != PLAYER and who.isdigit():
+                roster_domain.require_eligible(int(who))
         if not any(OPEN in c.data for c in new.characters.values()):
             return new
         characters = {

@@ -29,10 +29,9 @@
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
-from Script.Modules.domains import education
+from Script.Modules.domains import education, growth
 from Script.System.Education_System import (
     education_constant,
-    growth_handle,
     schedule_handle,
 )
 
@@ -149,15 +148,15 @@ def delete_template(template_id: int) -> bool:
         return False
     if education.template(template_id) is None:
         return False
-    for character_data in cache.character_data.values():
-        growth_data = character_data.child_growth
-        if (
-            growth_data is None
-            or growth_data.schedule_template_id != template_id
-        ):
-            continue
-        growth_data.schedule_template_id = 0
-        growth_data.schedule_override = {}
+    for cid in cache.character_data:
+        with growth.editing(cid, create=False) as growth_data:
+            if (
+                growth_data is None
+                or growth_data.schedule_template_id != template_id
+            ):
+                continue
+            growth_data.schedule_template_id = 0
+            growth_data.schedule_override = {}
     return education.delete_template(template_id)
 
 
@@ -165,10 +164,11 @@ def apply_template(character_id: int, template_id: int) -> None:
     """给一个孩子套用模板（0 表示取消），换模板时清空该孩子的单项覆盖"""
     if template_id:
         init_default_template()
-    growth_data = growth_handle.get_child_growth(character_id)
-    if growth_data.schedule_template_id != template_id:
-        growth_data.schedule_override = {}
-    growth_data.schedule_template_id = template_id
+    with growth.editing(character_id) as growth_data:
+        assert growth_data is not None
+        if growth_data.schedule_template_id != template_id:
+            growth_data.schedule_override = {}
+        growth_data.schedule_template_id = template_id
 
 
 def batch_apply_template(character_id_list: list[int], template_id: int) -> int:
@@ -201,11 +201,12 @@ def set_child_override(
     Return arguments:
     无
     """
-    growth_data = growth_handle.get_child_growth(character_id)
-    if entertainment_id:
-        growth_data.schedule_override[slot] = entertainment_id
-    else:
-        growth_data.schedule_override.pop(slot, None)
+    with growth.editing(character_id) as growth_data:
+        assert growth_data is not None
+        if entertainment_id:
+            growth_data.schedule_override[slot] = entertainment_id
+        else:
+            growth_data.schedule_override.pop(slot, None)
 
 
 def get_child_slot_activity(character_id: int, slot: int) -> int:
@@ -217,8 +218,7 @@ def get_child_slot_activity(character_id: int, slot: int) -> int:
     Return arguments:
     int -- 娱乐cid，0表示该时段没有固定日程（保持每日随机）
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return 0
     # 单孩覆盖优先
@@ -320,7 +320,7 @@ def apply_schedule_for_child(character_id: int) -> None:
     无
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     # 没有养成数据、或没套用任何模板且没有任何覆盖的，不改写
     if growth_data is None:
         return
@@ -368,8 +368,7 @@ def get_child_schedule_text(character_id: int) -> str:
            时段值为 0 显示「自由选择娱乐活动」，这个孩子不满足条件的活动带「（条件不符→自由选择）」标注，
            地点还没开放的带「（未开放→自由选择）」（Plan 27）
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None or (
         not growth_data.schedule_template_id
         and not growth_data.schedule_override
@@ -399,10 +398,9 @@ def get_template_use_count(template_id: int) -> int:
           此前漏数；与 delete_template 解开引用的范围一致
     """
     count = 0
-    for character_data in cache.character_data.values():
-        if character_data.child_growth is None:
-            continue
-        if character_data.child_growth.schedule_template_id == template_id:
+    for cid in cache.character_data:
+        cg = growth.of(cid)
+        if cg is not None and cg.schedule_template_id == template_id:
             count += 1
     return count
 

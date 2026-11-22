@@ -18,7 +18,8 @@ from Script.Design import (
 from Script.Config import normal_config
 from Script.UI.Moudle import panel, draw
 from Script.Modules.domains import abilities, action_info, flags, needs
-from Script.Modules.domains import player_ability, player_collection
+from Script.Modules.domains import player_ability, player_collection, pregnancy
+from Script.Modules.domains import roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -76,7 +77,7 @@ def init_attr(character_id: int) -> None:
     character_data.event = attr_calculation.get_event_zero()
     character_data.work = attr_calculation.get_work_zero()
     character_data.entertainment = attr_calculation.get_entertainment_zero()
-    character_data.pregnancy = attr_calculation.get_pregnancy_zero()
+    pregnancy.put(character_id, attr_calculation.get_pregnancy_zero())
     flags.reset(character_id)
     character_data.chara_setting = attr_calculation.get_chara_setting_zero()
     character_data.assistant_services = (
@@ -158,7 +159,7 @@ def input_name_func(ask_text: str) -> str:
         if now_name in get_text.translation_values:
             not_system_error.draw()
             continue
-        if now_name in cache.npc_name_data:
+        if roster.has_name(now_name):
             not_name_error.draw()
             continue
         return_name = now_name

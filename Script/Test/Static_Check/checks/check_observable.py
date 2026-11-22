@@ -25,7 +25,7 @@ from collections.abc import Iterator
 from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
 from Script.Modules.domains import abilities, flags, history, modes, needs
-from Script.Modules.domains import player_ability, prison, work
+from Script.Modules.domains import player_ability, prison, roster, work
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
@@ -83,7 +83,7 @@ def _iter_npcs(cache: game_type.Cache) -> Iterator[tuple[int, object]]:
     功能: 以 npc_id_got 为域做单层遍历，并保护角色字典中的悬空 id。
     """
     data = _character_data(cache)
-    got = getattr(cache, "npc_id_got", None) if cache is not None else None
+    got = roster.active() if cache is not None else None
     if data is None or not got:
         return
     for cid in got:
@@ -627,10 +627,7 @@ def check_observable_12() -> list[CheckFailure]:
     ):
         return []
     assistant_id = getattr(pl, "assistant_character_id", None)
-    got_raw = getattr(cache, "npc_id_got", None)
-    if not isinstance(got_raw, (set, list, tuple)):
-        return []
-    got = set(got_raw)
+    got = roster.active()
     if (
         not isinstance(assistant_id, int)
         or isinstance(assistant_id, bool)

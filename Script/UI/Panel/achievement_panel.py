@@ -3,13 +3,8 @@
 from __future__ import annotations
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
+from Script.Core import cache_control, game_type, get_text, flow_handle
+from Script.Core import constant
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
@@ -17,7 +12,7 @@ from Script.Config import game_config, normal_config
 from typing import TYPE_CHECKING
 from Script.Modules.domains import abilities, achievement, commission, flags
 from Script.Modules.domains import needs, player_collection, playthrough
-from Script.Modules.domains import prison, warehouse
+from Script.Modules.domains import prison, roster, warehouse
 
 if TYPE_CHECKING:
     from typing import Any
@@ -249,7 +244,7 @@ def settle_chara_relationship() -> list[int]:
         if chara_id == 0:
             continue
         # 跳过不在当前角色列表也不在异常状态7中的
-        if chara_id not in cache.npc_id_got and handle_premise.handle_normal_7(
+        if not roster.has(chara_id) and handle_premise.handle_normal_7(
             chara_id
         ):
             continue
@@ -303,7 +298,7 @@ def settle_chara_recruit() -> list[int]:
         if chara_id == 0:
             continue
         # 跳过不在当前角色列表也不在异常状态7中的
-        if chara_id not in cache.npc_id_got and handle_premise.handle_normal_7(
+        if not roster.has(chara_id) and handle_premise.handle_normal_7(
             chara_id
         ):
             continue
@@ -461,7 +456,7 @@ def settle_chara_hypnosis() -> list[int]:
         if chara_id == 0:
             continue
         # 跳过不在当前角色列表也不在异常状态7中的
-        if chara_id not in cache.npc_id_got and handle_premise.handle_normal_7(
+        if not roster.has(chara_id) and handle_premise.handle_normal_7(
             chara_id
         ):
             continue

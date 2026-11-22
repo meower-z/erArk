@@ -1,7 +1,4 @@
-"""
-衣柜面板：列出当前场景衣柜里存有衣服的干员并查看其衣物，
-可偷取全部内裤或袜子，或选择射在衣物上
-"""
+"""衣柜面板：列出当前场景衣柜里存有衣服的干员并查看其衣物，可偷取全部内裤或袜子，或选择射在衣物上"""
 
 from collections.abc import Mapping
 from types import FunctionType
@@ -16,6 +13,7 @@ from Script.Modules.gameplay_resolution import edits
 from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import ejaculation_panel
+from Script.Modules.domains import roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -72,7 +70,7 @@ class Check_locker_Panel:
                 or "Dr_room" in map_data.scene_tag
             ):
                 # 读取当前宿舍的npc列表
-                for npc_id in cache.npc_id_got:
+                for npc_id in roster.active():
                     if npc_id:
                         character_data = cache.character_data[npc_id]
                         if map_path_str == character_data.dormitory:
@@ -90,7 +88,7 @@ class Check_locker_Panel:
             # 更衣室的情况
             elif "Locker_Room" in map_data.scene_tag:
                 # 读取所有人物是否有在衣柜里存放衣服
-                for npc_id in cache.npc_id_got:
+                for npc_id in roster.active():
                     if npc_id:
                         character_data = cache.character_data[npc_id]
                         for clothing_type in game_config.config_clothing_type:

@@ -11,13 +11,12 @@ from Script.Core import (
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
-
 from Script.System.Field_Commission_System.field_commission_function import (
     get_commission_demand_and_reward,
     process_commission_text,
 )
 from Script.Modules.domains import abilities, commission, facility, flags
-from Script.Modules.domains import location
+from Script.Modules.domains import location, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -196,7 +195,7 @@ class Field_Commission_Panel:
                         and commision_data.type == "角色"
                     ):
                         chara_adv = int(commision_data.demand.split("_")[1])
-                        for character_id in cache.npc_id_got:
+                        for character_id in roster.active():
                             if (
                                 cache.character_data[character_id].adv
                                 == chara_adv
@@ -620,7 +619,7 @@ class CommissionDraw:
             pass  # 容错处理
 
         # --- 自动勾选限定干员 ---
-        for npc_id in cache.npc_id_got:
+        for npc_id in roster.active():
             if npc_id == 0:
                 continue
             if cache.character_data[npc_id].adv in required_chars_adv:
@@ -917,7 +916,7 @@ class CommissionDraw:
 
             # --- 5. 获取并过滤人员列表 ---
             valid_npc_list = []
-            for npc_id in cache.npc_id_got:
+            for npc_id in roster.active():
                 if npc_id == 0:
                     continue
                 if handle_premise.handle_self_visitor_flag_1(npc_id):

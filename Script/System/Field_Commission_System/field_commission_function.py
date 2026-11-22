@@ -6,7 +6,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
 from Script.Modules.domains import abilities, achievement, commission, country
-from Script.Modules.domains import flags, location, recruit, warehouse
+from Script.Modules.domains import flags, location, recruit, roster, warehouse
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -336,9 +336,8 @@ def process_commission_text(
         item_name = item_name + cache.character_data[character_id].name
         now_have_item_num = 1
         # 如果不在当前干员中，且没有离线，则未招募
-        if (
-            character_id not in cache.npc_id_got
-            and handle_premise.handle_normal_7(character_id)
+        if not roster.has(character_id) and handle_premise.handle_normal_7(
+            character_id
         ):
             now_have_item_num = 0
     # 追捕
@@ -388,9 +387,8 @@ def process_commission_text(
             elif text_list[0] == "c":
                 chara_id = character.get_character_id_from_adv(item_id)
                 # 如果未获得该干员，则获得
-                if (
-                    chara_id not in cache.npc_id_got
-                    and handle_premise.handle_normal_7(chara_id)
+                if not roster.has(chara_id) and handle_premise.handle_normal_7(
+                    chara_id
                 ):
                     recruit.set_pending(recruit.pending() | {chara_id})
                 item_name = cache.character_data[chara_id].name

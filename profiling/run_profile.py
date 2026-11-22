@@ -236,7 +236,7 @@ def new_game_minimal_init() -> None:
     建角色写的 GameState 数据记进调用方用 working.based_on 开的缓冲区。
     """
     log("执行新建游戏最小初始化...")
-    from Script.Core import cache_control, game_type
+    from Script.Core import cache_control, game_type, io_init
     from Script.Design import (
         character_handle,
         character,
@@ -246,9 +246,9 @@ def new_game_minimal_init() -> None:
     from Script.System.Cooking_System import cooking
     from Script.System.Medical_System import medical_service
     from Script.Config import game_config, normal_config
-    from Script.Core import io_init
     from Script.System.Dormitory_System import common as dormitory_common
-    from Script.Modules.domains import physical_exam, playthrough, warehouse
+    from Script.Modules.domains import physical_exam, playthrough, roster
+    from Script.Modules.domains import warehouse
 
     cache = cache_control.cache
 
@@ -288,10 +288,10 @@ def new_game_minimal_init() -> None:
         except Exception:
             adv = None
         if adv in base_adv_set:
-            cache.npc_id_got.add(cid)
+            roster.add(cid)
 
     # 确保玩家自身加入集合
-    cache.npc_id_got.add(0)
+    roster.add(0)
 
     # 4. 初始化 NPC 工作 / 宿舍 / 位置 / 设施 / 娱乐 等
     # 在正式逻辑中 first_NPC_work 依赖已选择 NPC
@@ -322,7 +322,7 @@ def new_game_minimal_init() -> None:
     # 7. 初始行为（玩家与 NPC）：开始时间没设过，内核从开局时刻开始各角色的行动
     from Script.Core import constant as cst
 
-    for cid in cache.npc_id_got:
+    for cid in roster.active():
         ch = cache.character_data.get(cid)
         if not ch:
             continue

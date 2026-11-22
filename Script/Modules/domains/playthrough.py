@@ -169,6 +169,8 @@ CARRIED_KEYS = (
     "events.triggered_today",
     "log.instructions",
     "plan.sleep_save",
+    "roster.forbidden",
+    "roster.names",
 )
 """ 新周目沿用的全局键，由 carry_for_new_round 读出、restore_carried 写回 """
 

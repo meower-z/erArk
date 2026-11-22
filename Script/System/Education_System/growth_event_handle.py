@@ -17,7 +17,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
-from Script.Modules.domains import official
+from Script.Modules.domains import growth, official, roster
 from Script.System.Official_Event_System import official_event_handle
 
 cache: game_type.Cache = cache_control.cache
@@ -68,7 +68,7 @@ def get_growth_event_character_list() -> list[int]:
             continue
         if (
             stage not in education_constant.OFFLINE_STAGE_TALENT_SET
-            and character_id not in cache.npc_id_got
+            and not roster.has(character_id)
         ):
             continue
         if not handle_premise.handle_self_is_player_daughter(character_id):
@@ -94,7 +94,7 @@ def get_sibling_child_list(character_id: int) -> list[int]:
     # 双亲未登记时是 -1，两个都没登记的角色会互相认成兄弟姐妹（世界设定的萝莉化会给一大批
     #    干员挂上萝莉素质，正好撞进这个洞），所以只认有效的双亲id
     result = []
-    for other_id in cache.npc_id_got:
+    for other_id in roster.active():
         if other_id == character_id:
             continue
         # 只取幼女与学员（幼女离线、不在 npc_id_got 里，实际只有学员）：婴儿和已毕业的少女都不合适
@@ -127,7 +127,7 @@ def get_classmate_list(character_id: int) -> list[int]:
     """
     from Script.System.Education_System import growth_handle
 
-    growth_data = cache.character_data[character_id].child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None or not growth_data.selected_course:
         return []
     # 把自己确有的课压成 (星期, 节次, 课型, 目标) 的集合，再看别人有没有在同一个格子上确有这节课
@@ -141,7 +141,7 @@ def get_classmate_list(character_id: int) -> list[int]:
     if not self_slot:
         return []
     result = []
-    for other_id in cache.npc_id_got:
+    for other_id in roster.active():
         if other_id == character_id:
             continue
         if (
@@ -149,7 +149,7 @@ def get_classmate_list(character_id: int) -> list[int]:
             not in education_constant.SIBLING_PLAY_STAGE_SET
         ):
             continue
-        other_growth = cache.character_data[other_id].child_growth
+        other_growth = growth.of(other_id)
         if other_growth is None or not other_growth.selected_course:
             continue
         for week_day, day_data in other_growth.selected_course.items():

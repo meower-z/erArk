@@ -6,7 +6,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, growth
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -149,7 +149,7 @@ def gain_ability(character_id: int) -> None:
 
             # 孩子升级时记一笔待炫耀（Plan 22 §3.15 延迟炫耀）
             # 升级发生在玩家睡觉时的睡眠结算里，当场没有观众，所以攒着等下次见到玩家再说
-            if character_data.child_growth is not None:
+            if growth.has(character_id):
                 from Script.System.Education_System import (
                     education_constant,
                     growth_handle,
@@ -166,9 +166,11 @@ def gain_ability(character_id: int) -> None:
                     and growth_handle.get_character_stage(character_id)
                     in (102, 103)
                 ):
-                    character_data.child_growth.show_off_ability[
-                        ability_cid
-                    ] = ability[ability_cid]
+                    with growth.editing(character_id, create=False) as cg:
+                        if cg is not None:
+                            cg.show_off_ability[ability_cid] = ability[
+                                ability_cid
+                            ]
     # print(f"debug {character_data.name}的睡觉结算素质结束")
 
 

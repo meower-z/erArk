@@ -9,7 +9,7 @@
 1. `["0", "0"]` 不是哨兵值，是真实场景「罗德岛出口」，也是 `Character.position` 的默认值；
 离线角色被置为它是合法的稳定状态。
 2. 新生儿写入 `character_data` 但不进 `npc_id_got`、也不移动，所以"角色→场景名册"方向的检查必须以
-   `LIVE = set(cache.npc_id_got) | {0}` 为域，不能用全体 `character_data`。
+   `LIVE = roster.active() | {0}` 为域，不能用全体 `character_data`。
 3. 当前地图更新会把已删除场景内的角色迁到区域入口或["0", "0"]；位置检查仍检查迁移后的实际状态，不预设异常成因。
 4. 全部字段访问一律使用 getattr/dict.get 加默认值防御，绝不能因为老存档缺字段或类型不符而抛异常；
    若某个结构性假设本身就是不变量的一部分（例如字段类型、字段是否存在），则让比较结果记为"不变量失败"，而不是让检查器自己崩溃。
@@ -24,7 +24,8 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
-from Script.Modules.domains import action_info, education, flags, visitor, work
+from Script.Modules.domains import action_info, education, flags, growth
+from Script.Modules.domains import roster, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -84,11 +85,11 @@ def _live_ids(cache: game_type.Cache) -> set:
     参数:
         cache: 全局状态缓存对象
     返回值:
-        set: 在图角色id集合，等于 cache.npc_id_got 并入玩家id 0
+        set: 在图角色id集合，等于 roster.active() 并入玩家id 0
     功能:
         计算"在图角色"域，供多条以LIVE为迭代范围的检查复用；npc_id_got缺失时按空集处理
     """
-    return set(getattr(cache, "npc_id_got", set()) or set()) | {0}
+    return roster.active() | {0}
 
 
 def _permanent_dormitory(chara: object) -> str:
@@ -238,7 +239,7 @@ def check_character_position_is_existing_scene() -> list[CheckFailure]:
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     scene_data = getattr(cache, "scene_data", {}) or {}
-    npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
+    npc_id_got: set[int] = roster.active()
     for cid, c in character_data.items():
         position = getattr(c, "position", None)
         if _valid_scene_path(position, scene_data):
@@ -279,7 +280,7 @@ def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     scene_data = getattr(cache, "scene_data", {}) or {}
-    npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
+    npc_id_got: set[int] = roster.active()
     for cid in _live_ids(cache):
         c = character_data.get(cid)
         if c is None:
@@ -438,7 +439,7 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     scene_data = getattr(cache, "scene_data", {}) or {}
-    npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
+    npc_id_got: set[int] = roster.active()
 
     cid_to_scenes = collections.defaultdict(list)
     for path, sc in scene_data.items():
@@ -862,7 +863,7 @@ def check_current_assistant_valid_and_online() -> list[CheckFailure]:
     cache = cache_control.cache
     failures: list[CheckFailure] = []
     character_data = getattr(cache, "character_data", {}) or {}
-    npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
+    npc_id_got: set[int] = roster.active()
     pl = character_data.get(0)
     if pl is None:
         return failures
@@ -1121,7 +1122,7 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
     cache = cache_control.cache
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
-    npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
+    npc_id_got: set[int] = roster.active()
     for cid, c in character_data.items():
         is_follow = flags.get(cid, "is_follow")
         if is_follow == 0:
@@ -1172,7 +1173,7 @@ def check_bagging_consistency() -> list[CheckFailure]:
     failures: list[CheckFailure] = []
     character_data = getattr(cache, "character_data", {}) or {}
     scene_data = getattr(cache, "scene_data", {}) or {}
-    npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
+    npc_id_got: set[int] = roster.active()
     pl = character_data.get(0)
     if pl is None:
         return failures
@@ -1461,10 +1462,8 @@ def check_place_31() -> list[CheckFailure]:
     characters = getattr(cache, "character_data", None)
     if not isinstance(characters, dict):
         return failures
-    for cid, character in characters.items():
-        selected = getattr(
-            getattr(character, "child_growth", None), "selected_course", None
-        )
+    for cid in characters:
+        selected = getattr(growth.of(cid), "selected_course", None)
         if not isinstance(selected, dict):
             continue
         for day, periods in selected.items():

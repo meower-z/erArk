@@ -2,19 +2,14 @@
 
 import random
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    constant,
-)
+from Script.Core import cache_control, game_type, get_text, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Modules.domains import abilities, diplomacy, economy, facility
 from Script.Modules.domains import flags, fridge, maintenance, official
 from Script.Modules.domains import physical_exam, power, production, recruit
-from Script.Modules.domains import tallies, warehouse, work
+from Script.Modules.domains import roster, tallies, warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -317,8 +312,8 @@ def update_work_people() -> None:
         production.release_mains(kind)
 
     # 遍历在编干员，把每人加进所在岗位的名单（无岗位的进岗位 0）
-    cache.npc_id_got.discard(0)
-    for chara_id in cache.npc_id_got:
+    roster.discard(0)
+    for chara_id in roster.active():
         character_data = cache.character_data[chara_id]
         work_type = character_data.work.work_type
 
@@ -397,7 +392,7 @@ def library_reader_count() -> int:
     """
     return sum(
         1
-        for id in cache.npc_id_got - {0}
+        for id in roster.active() - {0}
         if handle_premise.handle_in_library(id)
     )
 
@@ -489,7 +484,7 @@ def settle_office_work() -> None:
     # 全设施等级的和
     all_facility_level = sum(facility.levels().values())
     # 总工作量为设施等级和*10+干员数量
-    all_work = all_facility_level * 10 + len(cache.npc_id_got)
+    all_work = all_facility_level * 10 + roster.count()
     # 根据当前剩余工作量和总工作量的比例，计算效率
     effectiveness_change = ((all_work / 2) - now_work) / all_work * 100
     if effectiveness_change > 0:

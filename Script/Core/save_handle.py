@@ -27,12 +27,12 @@ from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info
 from Script.Modules.domains import commission, country, diplomacy, dormitory
 from Script.Modules.domains import education, entertainment, facility, flags
-from Script.Modules.domains import fridge, history, kitchen, library, location
-from Script.Modules.domains import maintenance, medical, modes, needs, official
-from Script.Modules.domains import physical_exam, plan, player_ability
-from Script.Modules.domains import player_collection, playthrough, prison
-from Script.Modules.domains import production, recruit, tallies, visitor
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import fridge, growth, history, kitchen, library
+from Script.Modules.domains import location, maintenance, medical, modes, needs
+from Script.Modules.domains import official, physical_exam, plan
+from Script.Modules.domains import player_ability, player_collection
+from Script.Modules.domains import playthrough, pregnancy, prison, production
+from Script.Modules.domains import recruit, roster, tallies, visitor, warehouse
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -418,8 +418,7 @@ def _clear_soft_egg_race_pregnancy(
     if not soft_egg_enabled:
         return
     talent = getattr(character, "talent", abilities.talent(character.cid))
-    pregnancy_data = getattr(character, "pregnancy", None)
-    if not isinstance(talent, dict | abilities.Table) or pregnancy_data is None:
+    if not isinstance(talent, dict | abilities.Table):
         return
     race_config = game_config.config_race.get(getattr(character, "race", -1))
     if race_config is None or getattr(race_config, "birth_type", 1) != 12:
@@ -428,9 +427,18 @@ def _clear_soft_egg_race_pregnancy(
         return
     for talent_id in (20, 21, 22, 26, 35):
         talent[talent_id] = 0
-    pregnancy_data.fetus_count = 0
-    pregnancy_data.identical_twins = False
-    pregnancy_data.acceleration_days = 0.0
+    pregnancy_data = vars(character).get("pregnancy")
+    if pregnancy_data is not None:
+        pregnancy_data.fetus_count = 0
+        pregnancy_data.identical_twins = False
+        pregnancy_data.acceleration_days = 0.0
+    elif hasattr(character, "cid"):
+        pregnancy.update(
+            character.cid,
+            fetus_count=0,
+            identical_twins=False,
+            acceleration_days=0.0,
+        )
 
 
 def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
@@ -505,32 +513,19 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
                 dirty_data, "condom_decoration"
             ):
                 dirty_data.condom_decoration = {}
-            # 卵生系统旧存档兼容：补全妊娠结构体的卵字典与玩家收藏品的持有卵索引
-            pregnancy_data = getattr(character, "pregnancy", None)
-            if pregnancy_data is not None and not hasattr(
-                pregnancy_data, "eggs"
+            # 旧存档妊娠与养成结构体兼容：有属性时才回填与规范，读档后由领域 adopt 搬进内核状态
+            pregnancy_data = vars(character).get("pregnancy")
+            if pregnancy_data is not None and hasattr(
+                pregnancy_data, "__dict__"
             ):
-                pregnancy_data.eggs = {}
-            if pregnancy_data is not None and not hasattr(
-                pregnancy_data, "next_egg_id"
-            ):
-                pregnancy_data.next_egg_id = 0
-            if pregnancy_data is not None and not hasattr(
-                pregnancy_data, "ovulation_flag"
-            ):
-                pregnancy_data.ovulation_flag = False
-            # 怀孕药物旧存档兼容：补全妊娠加速药的累计加速天数
-            if pregnancy_data is not None and not hasattr(
-                pregnancy_data, "acceleration_days"
-            ):
-                pregnancy_data.acceleration_days = 0.0
-            # 养成药物旧存档兼容：补全成长加速药的累计成长天数
-            if pregnancy_data is not None and not hasattr(
-                pregnancy_data, "growth_acceleration_days"
-            ):
-                pregnancy_data.growth_acceleration_days = 0.0
-            # 孕程/成长天数缩短后的旧存档兼容：加速药累计天数截到新上限
-            if pregnancy_data is not None:
+                default_preg = game_type.PREGNANCY()
+                for attr_name in vars(default_preg):
+                    if not hasattr(pregnancy_data, attr_name):
+                        setattr(
+                            pregnancy_data,
+                            attr_name,
+                            getattr(default_preg, attr_name),
+                        )
                 pregnancy_data.acceleration_days = min(
                     pregnancy_data.acceleration_days,
                     pregnancy_constant.ACCELERATION_MAX_DAY,
@@ -545,66 +540,15 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
                             egg_data["acceleration_days"],
                             pregnancy_constant.ACCELERATION_MAX_DAY,
                         )
-            # 多胞胎旧存档兼容：补全本次胎数与同卵双胞胎标记
-            if pregnancy_data is not None and not hasattr(
-                pregnancy_data, "fetus_count"
-            ):
-                pregnancy_data.fetus_count = 0
-            if pregnancy_data is not None and not hasattr(
-                pregnancy_data, "identical_twins"
-            ):
-                pregnancy_data.identical_twins = False
-            # 无壳卵生旧存档兼容：补全体外排卵机会标记
-            if pregnancy_data is not None and not hasattr(
-                pregnancy_data, "external_ovulation_chance"
-            ):
-                pregnancy_data.external_ovulation_chance = False
-            # 胎教旧存档兼容：补全妊娠期胎教累积值（Plan 22 四期）
-            if pregnancy_data is not None and not hasattr(
-                pregnancy_data, "prenatal_point"
-            ):
-                pregnancy_data.prenatal_point = 0.0
-            # 生长养成系统旧存档兼容：补全养成数据结构体的挂载位（Plan 22）
-            # 默认None，由 growth_handle.get_child_growth() 惰性创建，此处只保证属性存在
-            if not hasattr(character, "child_growth"):
-                character.child_growth = None
-            # 生长养成系统旧存档兼容：补全养成数据结构体在后续各期新增的字段
-            # 用属性表整体回填而不是逐字段 hasattr：CHILD_GROWTH 在二期（日程模板）、
-            #    四期（胎教）、学期制各加过字段，逐个写漏一个就是一次读档崩溃
-            # 每个角色各 new 一个默认体：dict/list 这类可变默认值不能被多个角色共享
-            elif character.child_growth is not None:
-                default_growth_data = game_type.CHILD_GROWTH()
-                for growth_attr_name in vars(default_growth_data):
-                    if not hasattr(character.child_growth, growth_attr_name):
-                        setattr(
-                            character.child_growth,
-                            growth_attr_name,
-                            getattr(default_growth_data, growth_attr_name),
-                        )
-                # 成绩单由「只存最近一份」改为「存历年列表」：把早先那份并进列表头，别让它凭空消失
-                old_report_card = getattr(
-                    character.child_growth, "last_report_card", None
-                )
-                if (
-                    old_report_card
-                    and not character.child_growth.report_card_history
-                ):
-                    character.child_growth.report_card_history = [
-                        old_report_card
-                    ]
-                if hasattr(character.child_growth, "last_report_card"):
-                    del character.child_growth.last_report_card
-                # 教育区娱乐改编号（2026-09-09）：单孩日程覆盖里存的旧编号换成新编号
-                for slot in list(character.child_growth.schedule_override):
-                    character.child_growth.schedule_override[slot] = (
-                        _migrate_entertainment_cid(
-                            character.child_growth.schedule_override[slot]
-                        )
-                    )
-                # 挪了桶的养成事件（Plan 32 L22）：履历里的旧uid改成新uid，按uid去重与养成总览的履历才对得上
-                _migrate_official_event_history(
-                    character.child_growth.event_history
-                )
+            growth_data = vars(character).get("child_growth")
+            if growth_data is not None and hasattr(growth_data, "__dict__"):
+                growth.normalize_legacy(growth_data)
+            elif hasattr(character, "cid") and growth.has(character.cid):
+                with growth.editing(
+                    character.cid, create=False
+                ) as kernel_growth:
+                    if kernel_growth is not None:
+                        growth.normalize_legacy(kernel_growth)
             # 教育区娱乐改编号（2026-09-09）：当天三个娱乐槽位里的旧编号也换掉，
             # 免得读档当天照料卵 / 见学 / 自习的判定对不上号
             entertainment_data = getattr(character, "entertainment", None)
@@ -943,10 +887,13 @@ def install_save(save_id: str, version: int) -> None:
     if version == 0:
         upgrade.adopt_v0(loaded_dict)
     upgrade.adopt_pickled(loaded_dict)
+    pregnancy.adopt_old_save(loaded_dict, version)
+    growth.adopt_old_save(loaded_dict, version)
     young_child_session: old_chara_to_new.YoungChildSession = {}
     update_count += old_chara_to_new.migrate_age_and_body_type(
         loaded_dict, young_child_session
     )
+    update_count += roster.adopt_old_save(loaded_dict, version)
     # 挪了桶的养成事件：全局履历里的旧uid改成新uid
     event_history = official.history()
     update_count += _migrate_official_event_history(event_history)
@@ -965,7 +912,7 @@ def install_save(save_id: str, version: int) -> None:
         # 已关闭的查询是否可以被已有角色开启
         if not facility.is_open(all_cid):
             if game_config.config_facility_open[all_cid].NPC_id != 0:
-                for chara_cid in loaded_dict["npc_id_got"]:
+                for chara_cid in roster.active():
                     character_data = loaded_dict["character_data"][chara_cid]
                     if (
                         character_data.adv

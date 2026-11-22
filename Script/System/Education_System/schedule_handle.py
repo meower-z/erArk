@@ -17,7 +17,7 @@ from Script.Config import game_config
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
 from typing import TYPE_CHECKING
-from Script.Modules.domains import education, facility, flags
+from Script.Modules.domains import education, facility, flags, growth, roster
 
 if TYPE_CHECKING:
     import datetime
@@ -368,8 +368,7 @@ def get_selected_course(
     Return arguments:
     Optional[List] -- [课型int, 目标]，未选课则为None
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return None
     return growth_data.selected_course.get(week_day, {}).get(period, None)
@@ -397,13 +396,11 @@ def set_selected_course(
     Return arguments:
     无
     """
-    from Script.System.Education_System import growth_handle
-
-    growth_data = growth_handle.get_child_growth(character_id)
-    growth_data.selected_course.setdefault(week_day, {})[period] = [
-        course_type,
-        target,
-    ]
+    with growth.editing(character_id) as growth_data:
+        growth_data.selected_course.setdefault(week_day, {})[period] = [
+            course_type,
+            target,
+        ]
 
 
 def clear_selected_course(
@@ -418,12 +415,11 @@ def clear_selected_course(
     Return arguments:
     无
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
-    if growth_data is None:
+    if not growth.has(character_id):
         return
-    if week_day in growth_data.selected_course:
-        growth_data.selected_course[week_day].pop(period, None)
+    with growth.editing(character_id, create=False) as growth_data:
+        if growth_data is not None and week_day in growth_data.selected_course:
+            growth_data.selected_course[week_day].pop(period, None)
 
 
 def get_period_left_minute(
@@ -630,7 +626,7 @@ def get_teacher_candidate_list() -> list[int]:
              已经排着她的格子由面板标「（被监禁）」提醒换人（class_schedule_panel.get_teacher_absent_mark）
     """
     result = []
-    for character_id in cache.npc_id_got:
+    for character_id in roster.active():
         character_data: game_type.Character = cache.character_data[character_id]
         if (
             character_data.work.work_type

@@ -28,7 +28,7 @@ from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import game_time
 from Script.Modules.domains import achievement, action_info, flags, history
-from Script.Modules.domains import modes
+from Script.Modules.domains import modes, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -48,7 +48,7 @@ def _live_ids(cache: game_type.Cache) -> set:
         让整条检查降级成"检查器自身异常"；npc_id_got⊆character_data的存在性本身已由仓库现有的CORE-01覆盖，
         本域不重复报警
     """
-    npc_id_got = getattr(cache, "npc_id_got", None) or set()
+    npc_id_got = roster.active()
     character_data = getattr(cache, "character_data", None) or {}
     return ({0} | set(npc_id_got)) & set(character_data)
 
@@ -107,7 +107,7 @@ def check_character_dict_key_matches_cid() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     character_data = getattr(cache, "character_data", None) or {}
-    npc_id_got = getattr(cache, "npc_id_got", None) or set()
+    npc_id_got = roster.active()
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -927,7 +927,7 @@ def check_over_behavior_character_ids_exist() -> list[CheckFailure]:
     )
     if not bad:
         return []
-    npc_id_got = getattr(cache, "npc_id_got", None) or set()
+    npc_id_got = roster.active()
     involved = [x for x in bad if isinstance(x, int)]
     return [
         make_failure(

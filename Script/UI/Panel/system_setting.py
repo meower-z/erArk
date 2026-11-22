@@ -14,7 +14,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
 from Script.Modules.save_load import settings
-from Script.Modules.domains import playthrough
+from Script.Modules.domains import playthrough, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -607,7 +607,7 @@ class System_Setting_Panel:
     def change_ban_list(self) -> None:
         """修改已禁止干员列表"""
         while 1:
-            now_set = cache.forbidden_npc_id
+            now_set = roster.forbidden()
             return_list = []
             title_text = _("已禁止干员列表")
             title_draw = draw.TitleLineDraw(title_text, self.width)
@@ -656,12 +656,12 @@ class System_Setting_Panel:
         """修改已禁止干员列表"""
         from Script.Settle import default
 
-        if npc_id in cache.forbidden_npc_id:
-            cache.forbidden_npc_id.remove(npc_id)
+        if roster.is_forbidden(npc_id):
+            roster.unforbid(npc_id)
         else:
-            cache.forbidden_npc_id.add(npc_id)
+            roster.forbid(npc_id)
             # 如果该干员已被招募，则离岛
-            if npc_id in cache.npc_id_got:
+            if roster.has(npc_id):
                 default.handle_chara_off_line(
                     npc_id,
                     1,

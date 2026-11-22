@@ -17,7 +17,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, basement
 from Script.System.Education_System import education_constant, schedule_handle
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import abilities, flags
+from Script.Modules.domains import abilities, flags, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -69,7 +69,7 @@ def get_teacher_absent_mark(teacher_id: int, short: bool = False) -> str:
         return _("（离岗）") if short else _("（已离岗）")
     if flags.get(teacher_id, "imprisonment"):
         return _("（监禁）") if short else _("（被监禁）")
-    if teacher_id not in cache.npc_id_got:
+    if not roster.has(teacher_id):
         return _("（离岛）") if short else _("（不在岛上）")
     return ""
 

@@ -6,6 +6,7 @@ from Script.Core import cache_control, constant, flow_handle, game_type
 from Script.Core import get_text
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, handle_premise
+from Script.Modules.domains import pregnancy
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import abilities, action_info, flags
 
@@ -83,12 +84,14 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
             character_id
         )
         if add_day > 0:
-            character_data.pregnancy.acceleration_days += add_day
-            now_acc = int(character_data.pregnancy.acceleration_days)
+            with pregnancy.editing(character_id) as preg:
+                preg.acceleration_days += add_day
+                now_acc = int(preg.acceleration_days)
+                fert_time = preg.fertilization_time
             # 预计日期用游戏时间函数计算，自动归并到四季月
             predict_time = game_time.get_predict_date(
                 pregnancy_constant.PARTURIENT_DAY - now_acc,
-                character_data.pregnancy.fertilization_time,
+                fert_time,
             )
             now_draw.text += _(
                 "本次加速{0}，累计加速{1}，{2}的预计临盆日期提前到了{3}\n"
@@ -109,32 +112,35 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
         pl_character_data: game_type.Character = cache.character_data[0]
         egg_id = getattr(pl_character_data.behavior, "gift_egg_id", -1)
         pl_character_data.behavior.gift_egg_id = -1
-        egg_data = character_data.pregnancy.eggs.get(egg_id)
-        # 兜底：选中的卵已不存在或不在孵化中则不生效
-        if egg_data is None or not (
-            egg_data["identified"] and egg_data["fertilized"]
-        ):
-            now_draw.text += _("选中的卵已经不存在，药物没有产生效果\n")
-        else:
-            add_day = egg_handle.get_egg_acceleration_amount(egg_data)
-            if add_day > 0:
-                egg_data["acceleration_days"] = (
-                    egg_data.get("acceleration_days", 0) + add_day
-                )
-                now_acc = int(egg_data["acceleration_days"])
-                predict_time = game_time.get_predict_date(
-                    pregnancy_constant.HATCH_TOTAL_DAY - now_acc,
-                    egg_data["lay_time"],
-                )
-                now_draw.text += _(
-                    "本次加速{0}，累计加速{1}，这枚卵的预计破壳日期提前到了{2}\n"
-                ).format(
-                    game_time.get_duration_text(add_day),
-                    game_time.get_duration_text(now_acc),
-                    pregnancy_panel.get_date_text(predict_time),
-                )
+        with pregnancy.editing(character_id) as preg:
+            egg_data = preg.eggs.get(egg_id)
+            # 兜底：选中的卵已不存在或不在孵化中则不生效
+            if egg_data is None or not (
+                egg_data["identified"] and egg_data["fertilized"]
+            ):
+                now_draw.text += _("选中的卵已经不存在，药物没有产生效果\n")
             else:
-                now_draw.text += _("这枚卵已经加速到极限，药物没有产生效果\n")
+                add_day = egg_handle.get_egg_acceleration_amount(egg_data)
+                if add_day > 0:
+                    egg_data["acceleration_days"] = (
+                        egg_data.get("acceleration_days", 0) + add_day
+                    )
+                    now_acc = int(egg_data["acceleration_days"])
+                    predict_time = game_time.get_predict_date(
+                        pregnancy_constant.HATCH_TOTAL_DAY - now_acc,
+                        egg_data["lay_time"],
+                    )
+                    now_draw.text += _(
+                        "本次加速{0}，累计加速{1}，这枚卵的预计破壳日期提前到了{2}\n"
+                    ).format(
+                        game_time.get_duration_text(add_day),
+                        game_time.get_duration_text(now_acc),
+                        pregnancy_panel.get_date_text(predict_time),
+                    )
+                else:
+                    now_draw.text += _(
+                        "这枚卵已经加速到极限，药物没有产生效果\n"
+                    )
     elif drug_id == 37:  # 假孕药
         abilities.talent(character_id)[25] = 1
         now_draw.text += _(
@@ -176,23 +182,16 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
                 child_id
             )
             if add_day > 0:
-                child_character_data.pregnancy.growth_acceleration_days = (
-                    getattr(
-                        child_character_data.pregnancy,
-                        "growth_acceleration_days",
-                        0,
-                    )
-                    + add_day
-                )
-                now_acc = int(
-                    child_character_data.pregnancy.growth_acceleration_days
-                )
+                with pregnancy.editing(child_id) as child_preg:
+                    child_preg.growth_acceleration_days += add_day
+                    now_acc = int(child_preg.growth_acceleration_days)
+                    born_time = child_preg.born_time
                 total_day = pregnancy_handle.get_child_growth_stage_total_day(
                     child_id
                 )
                 predict_time = game_time.get_predict_date(
                     total_day - now_acc,
-                    child_character_data.pregnancy.born_time,
+                    born_time,
                 )
                 now_draw.text += _(
                     "本次加速{0}，累计加速{1}，{2}预计将在{3}成长为{4}\n"
@@ -471,16 +470,11 @@ class Gift_Panel:
                     cache.character_data[child_id]
                 )
                 grow_day = pregnancy_handle.get_child_grow_day(child_id)
-                acc_day = int(
-                    getattr(
-                        child_character_data.pregnancy,
-                        "growth_acceleration_days",
-                        0,
-                    )
-                )
+                child_preg = pregnancy.of(child_id)
+                acc_day = int(child_preg.growth_acceleration_days)
                 grow_time = game_time.get_predict_date(
                     pregnancy_constant.REARING_COMPLETE_DAY - acc_day,
-                    child_character_data.pregnancy.born_time,
+                    child_preg.born_time,
                 )
                 baby_text = _(
                     "[{0}] 出生第{1}天（已加速{2}，预计{3}成长为幼女）"

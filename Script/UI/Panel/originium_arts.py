@@ -14,7 +14,7 @@ from Script.Design import handle_talent, handle_premise
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, player_ability, player_collection
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import roster, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -380,7 +380,7 @@ class Originium_Arts_Panel:
                 if talent_id == 304:
                     # 好感度与信赖度
                     now_favorability_count, now_trust_count = 0, 0
-                    for chara_id in cache.npc_id_got:
+                    for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
                         if (
                             character_data.favorability[0]
@@ -412,7 +412,7 @@ class Originium_Arts_Panel:
                 elif talent_id == 305:
                     # 总好感度与总陷落角色
                     now_favorability_count, now_fall_count = 0, 0
-                    for chara_id in cache.npc_id_got:
+                    for chara_id in roster.active():
                         now_fall_count += handle_premise.handle_self_fall(
                             chara_id
                         )
@@ -441,7 +441,7 @@ class Originium_Arts_Panel:
                 elif talent_id == 306:
                     # 总好感度与总陷落角色
                     now_favorability_count, now_fall_count = 0, 0
-                    for chara_id in cache.npc_id_got:
+                    for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
                         now_favorability_count += int(
                             character_data.favorability[0]
@@ -487,7 +487,7 @@ class Originium_Arts_Panel:
                 elif talent_id == 308:
                     # 计算体内被射精总量和总绝顶经验
                     now_semen_count, now_exp_count = 0, 0
-                    for chara_id in cache.npc_id_got:
+                    for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
                         for part_id in [2, 6, 7, 8, 9, 15]:
                             now_semen_count += character_data.dirty.body_semen[
@@ -530,7 +530,7 @@ class Originium_Arts_Panel:
                 elif talent_id == 316:
                     # 计算全干员无意识经验
                     now_orgasm_exp_count, now_sex_exp_count = 0, 0
-                    for chara_id in cache.npc_id_got:
+                    for chara_id in roster.active():
                         npc_experience = abilities.experience(chara_id)
                         now_orgasm_exp_count += npc_experience[78]
                         now_sex_exp_count += npc_experience[79]
@@ -556,7 +556,7 @@ class Originium_Arts_Panel:
                     # 计算全干员无意识经验
                     now_time_stop_sex_exp_count, now_orgasm_exp_count = 0, 0
                     now_time_stop_sex_exp_count = experience[124]
-                    for chara_id in cache.npc_id_got:
+                    for chara_id in roster.active():
                         npc_experience = abilities.experience(chara_id)
                         now_orgasm_exp_count += npc_experience[78]
                     # 绘制
@@ -599,7 +599,7 @@ class Originium_Arts_Panel:
                     need_degree = up_data.npc_hypnosis_degree
                     now_degree: float = 0
                     # 计算全获得干员的催眠深度
-                    for chara_id in cache.npc_id_got:
+                    for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
                         now_degree += character_data.hypnosis.hypnosis_degree
                     now_degree = int(now_degree)
@@ -716,7 +716,7 @@ class Down_Negative_Talent_Panel:
             chara_exist_flag = False
 
             # 遍历备选人物名字并输出按钮
-            for chara_id in cache.npc_id_got:
+            for chara_id in roster.active():
                 character_data = cache.character_data[chara_id]
 
                 for ability_id in self.ability_id_list:

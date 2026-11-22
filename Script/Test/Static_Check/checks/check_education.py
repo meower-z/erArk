@@ -4,15 +4,13 @@
 from __future__ import annotations
 
 import math
-from typing import TypeGuard
+from typing import TYPE_CHECKING, TypeGuard
 
 from Script.Core import cache_control
 from Script.Config import game_config
-from Script.Modules.domains import education
+from Script.Modules.domains import education, growth as growth_domain, pregnancy
 from Script.System.Education_System import education_constant
 from ..check_registry import CheckFailure, register_check, make_failure
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Iterator, Any
@@ -45,8 +43,8 @@ def _growths(
     cache: game_type.Cache,
 ) -> Iterator[tuple[int, game_type.CHILD_GROWTH]]:
     """参数: cache(缓存对象)；返回值: 迭代器(cid,养成对象)；功能: 遍历已有养成数据，绝不惰性创建。"""
-    for cid, character in _characters(cache).items():
-        growth = getattr(character, "child_growth", None)
+    for cid in _characters(cache):
+        growth = growth_domain.of(cid)
         if growth is not None:
             yield cid, growth
 
@@ -172,9 +170,11 @@ def check_edu_03() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 检查全角色妊娠与已有养成记录的胎教值及常量上限。"""
     cache = cache_control.cache
     failures = []
-    for cid, character in _characters(cache).items():
-        for field in ("pregnancy", "child_growth"):
-            data = getattr(character, field, None)
+    for cid in _characters(cache):
+        for field, data in (
+            ("pregnancy", pregnancy.of(cid)),
+            ("child_growth", growth_domain.of(cid)),
+        ):
             if data is None:
                 continue
             value = getattr(data, "prenatal_point", None)

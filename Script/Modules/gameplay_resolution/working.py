@@ -146,15 +146,28 @@ class _Buffer:
         moved: set[str],
     ) -> core.Effect:
         game = self.game()
-        if isinstance(e, core.AddCharacter) and (
-            e.who in offstage or e.who in parked
-        ):
-            if e.data:
-                raise RuntimeError(f"{e.who} joins with data and parked data")
-            data = parked.pop(e.who, None) or dict(offstage[e.who])
-            offstage.pop(e.who, None)
-            moved.add(e.who)
-            return core.AddCharacter(e.who, data)
+        if isinstance(e, core.AddCharacter):
+            if e.who.isdigit() and int(e.who) != 0:
+                from Script.Modules.domains import roster
+
+                pushed = _reading() is not self
+                if pushed:
+                    _stack.append(self)
+                try:
+                    roster.require_eligible(int(e.who))
+                finally:
+                    if pushed:
+                        _stack.remove(self)
+            if e.who in offstage or e.who in parked:
+                if e.data:
+                    raise RuntimeError(
+                        f"{e.who} joins with data and parked data"
+                    )
+                data = parked.pop(e.who, None) or dict(offstage[e.who])
+                offstage.pop(e.who, None)
+                moved.add(e.who)
+                return core.AddCharacter(e.who, data)
+            return e
         if isinstance(e, core.RemoveCharacter) and e.who in game.characters:
             kept = dict(game.characters[e.who].data)
             for (who, key), hit in self.pending.items():

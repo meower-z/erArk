@@ -21,7 +21,7 @@ from Script.Config import game_config
 from Script.Core import cache_control
 from Script.Modules.domains import abilities, commission, diplomacy, facility
 from Script.Modules.domains import flags, location, modes, playthrough, prison
-from Script.Modules.domains import recruit, visitor, work
+from Script.Modules.domains import recruit, roster, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -129,13 +129,13 @@ def check_roster_id_self_consistency() -> list[CheckFailure]:
     cd = cache.character_data
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    for cid in cache.npc_id_got:
+    for cid in roster.active():
         if cid not in cd:
             failures.append(
                 make_failure(
                     "ROSTER-01",
                     "在编名册id自洽",
-                    f"{warn}npc_id_got中的角色id={cid}在character_data中不存在，len(npc_id_got)={len(cache.npc_id_got)}",
+                    f"{warn}npc_id_got中的角色id={cid}在character_data中不存在，len(npc_id_got)={roster.count()}",
                     [cid],
                 )
             )
@@ -166,7 +166,7 @@ def check_player_id_not_lingering_in_roster() -> list[CheckFailure]:
     cache = cache_control.cache
     warn = _sev(cache, True)
     failures: list[CheckFailure] = []
-    if 0 not in cache.npc_id_got:
+    if not roster.has(0):
         return failures
     if playthrough.game_round() <= 1:
         return failures
@@ -174,7 +174,7 @@ def check_player_id_not_lingering_in_roster() -> list[CheckFailure]:
         make_failure(
             "ROSTER-02",
             "玩家id不应长期留在NPC名册里",
-            f"{warn}玩家id=0仍留在npc_id_got中(len={len(cache.npc_id_got)})，game_time={game_time.now()}，game_round={playthrough.game_round()}；"
+            f"{warn}玩家id=0仍留在npc_id_got中(len={roster.count()})，game_time={game_time.now()}，game_round={playthrough.game_round()}；"
             f"若非开局首回合，说明discard(0)调用点(基建/宿舍面板)未生效或该id被重新add",
             [0],
         )
@@ -217,7 +217,7 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
             f"escaping={flags.get(cid, 'escaping')}, be_bagged={flags.get(cid, 'be_bagged')}, "
             f"in_diplomatic_visit={flags.get(cid, 'in_diplomatic_visit')}, vistor={flags.get(cid, 'vistor')}"
         )
-        if cid in cache.npc_id_got:
+        if roster.has(cid):
             pos = getattr(c, "position", None)
             # 形状断言放宽为"非空list且元素全为str"：47%场景(248/530)是三段路径，["0","0"]是真实场景非哨兵，
             # map_handle无任何长度约束，故不再断言len==2。畸形position会被下面的路径存在性分支抓住，
@@ -298,7 +298,7 @@ def check_offline_source_flag_matches_real_offline_state() -> (
         if cid == 0 or not any(flags.get(cid, k) for k in off):
             continue
         problems = []
-        if cid in cache.npc_id_got:
+        if roster.has(cid):
             problems.append("仍在npc_id_got在编名册中")
         hit = membership.get(cid, [])
         if hit:
@@ -408,7 +408,7 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
             continue
         c = cd[cid]
         problems = []
-        if cid not in cache.npc_id_got:
+        if not roster.has(cid):
             problems.append("不在npc_id_got在编名册中")
         if not (isinstance(rec, list) and len(rec) == 2):
             problems.append(f"record形状异常，期望长度2的list，实得{rec!r}")
@@ -560,7 +560,7 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
             problems.append("imprisonment应保留为True但为False")
         if prison.is_prisoner(cid):
             problems.append("仍残留在base.prisoners囚犯名册中")
-        if cid in cache.npc_id_got:
+        if roster.has(cid):
             problems.append("仍在npc_id_got在编名册中")
         hit = membership.get(cid, [])
         if hit:
@@ -648,7 +648,7 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
         return failures
     wardens = {
         cid
-        for cid in cache.npc_id_got
+        for cid in roster.active()
         if cid != 0 and cid in cd and cd[cid].work.work_type == 191
     }
     if len(wardens) > 1:
@@ -708,7 +708,7 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
     w = cd[wid]
     warden_dorm = _warden_dorm()
     problems = []
-    if wid not in cache.npc_id_got:
+    if not roster.has(wid):
         problems.append("不在npc_id_got在编名册中")
     if w.work.work_type != 191:
         problems.append(f"work.work_type={w.work.work_type}不是191")
@@ -798,7 +798,7 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: base.visitor的访客名册与sp_flag.vistor == 1的角色是同一批人，且当前访客都在在编名册(cache.npc_id_got)里。
+    功能: base.visitor的访客名册与sp_flag.vistor == 1的角色是同一批人，且当前访客都在在编名册(roster.active())里。
     不写成vistor != 0，因为前访客恒为2，是合法状态，不应被本条判为不一致
     """
     cache = cache_control.cache
@@ -831,7 +831,7 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
                 [cid],
             )
         )
-    for cid in vis_reg - cache.npc_id_got:
+    for cid in vis_reg - roster.active():
         c = cd.get(cid)
         failures.append(
             make_failure(
@@ -1027,7 +1027,7 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
         return failures
     c = cd[t]
     problems = []
-    if t in cache.npc_id_got:
+    if roster.has(t):
         problems.append("已在npc_id_got在编名册中")
     if visitor.is_visitor(t):
         problems.append("已在访客名册中")
@@ -1089,7 +1089,7 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
             continue
         c = cd[cid]
         problems = []
-        if cid in cache.npc_id_got:
+        if roster.has(cid):
             problems.append("已在npc_id_got在编名册中")
         if visitor.is_visitor(cid):
             problems.append("已在访客名册中")
@@ -1111,7 +1111,7 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
                     "ROSTER-20",
                     "待确认招募名单合法",
                     f"{warn}待确认招募cid={cid} name={c.name!r} adv={c.adv} {'; '.join(problems)}；"
-                    f"len(npc_id_got)={len(cache.npc_id_got)}，people_max={facility.people_max()}",
+                    f"len(npc_id_got)={roster.count()}，people_max={facility.people_max()}",
                     [cid],
                 )
             )
@@ -1156,7 +1156,7 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
                     "当前访客与其它名册身份互斥",
                     f"{warn}访客cid={cid} name={getattr(c, 'name', '?')!r} 同时命中身份集合: {hit_names}；"
                     f"vistor={flags.get(cid, 'vistor') if c is not None else None}，recruited_id={sorted(P)}，"
-                    f"邀请(目标, 进度)={visitor.invite()!r}，cid in npc_id_got={cid in cache.npc_id_got}",
+                    f"邀请(目标, 进度)={visitor.invite()!r}，cid in npc_id_got={roster.has(cid)}",
                     [cid],
                 )
             )
@@ -1260,7 +1260,7 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
                     "招募线主专员真实可用且不重复",
                     f"{warn}主专员cid={cid} name={getattr(c, 'name', '?')!r} {'; '.join(problems)}；"
                     f"field_commission={flags.get(cid, 'field_commission') if c is not None else None}，"
-                    f"cid in npc_id_got={cid in cache.npc_id_got}，work.roster(71)={work.roster(work.HR_WORK)}",
+                    f"cid in npc_id_got={roster.has(cid)}，work.roster(71)={work.roster(work.HR_WORK)}",
                     [cid],
                 )
             )
@@ -1309,7 +1309,7 @@ def check_hr_operator_list_integrity() -> list[CheckFailure]:
             )
     work71 = {
         cid
-        for cid in cache.npc_id_got
+        for cid in roster.active()
         if cid != 0 and cid in cd and cd[cid].work.work_type == 71
     }
     for cid in work71 - set(hr):
@@ -1401,8 +1401,8 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
                         "外勤名单与角色外勤flag双向一致",
                         (
                             f"{warn}委托mid={mid}人员cid={cid} name={c.name!r} "
-                            f"的sp_flag.field_commission={flags.get(c.cid, "field_commission")}"
-                            f"与所属委托不一致；cid in npc_id_got={cid in cache.npc_id_got}，position={c.position}，"
+                            f"的sp_flag.field_commission={flags.get(c.cid, 'field_commission')}"
+                            f"与所属委托不一致；cid in npc_id_got={roster.has(cid)}，position={c.position}，"
                             f"命中场景={membership_scene.get(cid, [])}"
                         ),
                         [cid],
@@ -1421,7 +1421,7 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
                 (
                     f"{warn}角色cid={cid} name={c.name!r} "
                     f"sp_flag.field_commission={flags.get(c.cid, 'field_commission')}非零，"
-                    f"但未出现在任何委托记录的人员列表中；cid in npc_id_got={cid in cache.npc_id_got}，"
+                    f"但未出现在任何委托记录的人员列表中；cid in npc_id_got={roster.has(cid)}，"
                     f"position={c.position}，"
                     f"命中场景={membership_scene.get(cid, [])}"
                 ),
@@ -1651,12 +1651,12 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
             )
         if current_country is not None:
             if country != current_country:
-                if did in cache.npc_id_got:
+                if roster.has(did):
                     problems.append(
                         f"外派到非当前所在国({country}!={current_country})但仍在npc_id_got在编名册中"
                     )
             else:
-                if did not in cache.npc_id_got:
+                if not roster.has(did):
                     problems.append(
                         f"外派国家与当前所在国一致({country})但不在npc_id_got在编名册中"
                     )
@@ -1728,7 +1728,7 @@ def check_assistant_identity_exclusion() -> list[CheckFailure]:
         return failures
     ca = cd[a]
     problems = []
-    if a not in cache.npc_id_got:
+    if not roster.has(a):
         problems.append("不在npc_id_got在编名册中")
     if visitor.is_visitor(a) or flags.get(ca.cid, "vistor") == 1:
         problems.append(
@@ -1813,7 +1813,7 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
         membership = _scene_membership(cache)
         c = cd[b]
         problems = []
-        if b in cache.npc_id_got:
+        if roster.has(b):
             problems.append("仍在npc_id_got在编名册中")
         hit = membership.get(b, [])
         if hit:

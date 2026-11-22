@@ -5,6 +5,7 @@
 """
 
 from Script.Core import cache_control
+from Script.Modules.domains import roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
@@ -21,7 +22,7 @@ def check_npc_id_got_consistency() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    for character_id in cache.npc_id_got:
+    for character_id in roster.active():
         if character_id not in cache.character_data:
             failures.append(
                 make_failure(

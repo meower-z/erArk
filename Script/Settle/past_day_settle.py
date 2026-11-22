@@ -17,7 +17,8 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
-from Script.Modules.domains import abilities, flags, history, needs, tallies
+from Script.Modules.domains import abilities, flags, growth, history, needs
+from Script.Modules.domains import pregnancy, roster, tallies
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -69,7 +70,7 @@ def update_new_day() -> None:
     sex_class_handle.clean_expired_temp_class()
 
     # 角色刷新
-    all_chara_id_set = cache.npc_id_got.copy()
+    all_chara_id_set = roster.active()
     all_chara_id_set.add(0)  # 包含玩家
     for character_id in all_chara_id_set:
         character_data: game_type.Character = cache.character_data[character_id]
@@ -83,16 +84,16 @@ def update_new_day() -> None:
                 now_draw.draw()
         # 清零香薰疗愈的flag
         flags.set(character_data.cid, aromatherapy=0)
-        if character_data.child_growth is not None:
-            growth_data = character_data.child_growth
+        with growth.editing(character_id, create=False) as growth_data:
             if (
-                growth_data.skip_class_flag
+                growth_data is not None
+                and growth_data.skip_class_flag
                 and growth_data.skip_class_day < game_time.now().toordinal()
             ):
                 growth_data.skip_class_flag = False
         if character_id:
             # 排卵日结束仍未结算（玩家当天未睡觉）时的兜底：受精判定与排卵结算
-            if character_data.pregnancy.ovulation_flag:
+            if pregnancy.of(character_id).ovulation_flag:
                 pregnancy_handle.get_fertilization_rate(character_id)
                 pregnancy_handle.check_fertilization(character_id)
                 egg_handle.check_ovulation(character_id)

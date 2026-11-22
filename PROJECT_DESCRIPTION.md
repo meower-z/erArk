@@ -403,23 +403,23 @@ Script/
 全局唯一 `cache_control.cache`，关键字段分组：
 
 - **渲染/输入**：`input_cache`
-- **角色世界**：`character_data`（角色ID -> Character）, `npc_tem_data`, `npc_id_got`, `forbidden_npc_id`, `npc_name_data`
+- **角色世界**：`character_data`（角色ID -> Character）, `npc_tem_data`
 - **时间**：`game_time`, `pre_game_time`
 - **地图**：`map_data`, `scene_data`, `collect_position_list`
 - **行为循环**：`over_behavior_character`
 - **基地/世界**：`rhodes_island`, `ai_setting`
-- **不在缓存里**：界面临时状态（`now_panel_id`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`；全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，存在 settings.json；本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件与指令记录（`events.triggered`、`events.triggered_today`、`log.instructions`）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写
+- **不在缓存里**：界面临时状态（`now_panel_id`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`；全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，存在 settings.json；在编/禁用/已用姓名名册（`roster.active`、`roster.forbidden`、`roster.names`，由 `Modules/domains/roster.py` 读写）、本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件与指令记录（`events.triggered`、`events.triggered_today`、`log.instructions`）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写
 
-### 9.2 Character（74 个字段）
+### 9.2 Character
 
 关键字段：
 
 - 基本：`cid`, `name`, `nick_name*`, `sex`, `adv`, `dead`
-- 数值：`eja_point*`, `semen_point*`（体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒，以及疲劳、饥饿、尿意、乳汁都不在 Character 上，在 GameState 的角色键 `body.needs` 里，用 `needs.of(cid)` 读。乳汁上限在角色键 `body.pregnancy` 里，用 `pregnancy.milk_max(cid)` 读）
+- 数值：`eja_point*`, `semen_point*`（体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒，以及疲劳、饥饿、尿意、乳汁都不在 Character 上，在 GameState 的角色键 `body.needs` 里，用 `needs.of(cid)` 读。妊娠状态与乳汁上限在角色键 `body.pregnancy` 里，用 `Modules/domains/pregnancy.py` 读写；养成状态在角色键 `growth.child` 里，用 `Modules/domains/growth.py` 读写）
 - 成长/社交：`favorability`, `trust`, `status_data`（能力、经验、宝珠与素质表都不在 Character 上，在 GameState 的角色键 `abilities.ability`、`abilities.experience`、`abilities.juel`、`abilities.talent` 里，用 `abilities.ability(cid)` 等读写）
 - 行为：`behavior`（Behavior 对象）, `second_behavior`, `must_settle/must_show_second_behavior_id_list`, `last_behavior_id_list`
 - 位置/住宿：`position`, `officeroom`, `dormitory`, `pre_dormitory`
-- 子对象：`event`, `cloth`, `item`, `food_bag`, `target_character_id`, `body_manage`, `first_record`, `dirty`, `h_state`, `work`, `entertainment`, `pregnancy`, `relationship`, `hypnosis`, `author_flag`（角色特殊状态标记与行动记录分别在 GameState 的角色键 `chara.flags` 与 `chara.action_info` 里，由 `Modules/domains/flags.py` 与 `Modules/domains/action_info.py` 读写）
+- 子对象：`event`, `cloth`, `item`, `food_bag`, `target_character_id`, `body_manage`, `first_record`, `dirty`, `h_state`, `work`, `entertainment`, `relationship`, `hypnosis`, `author_flag`（角色特殊状态标记、行动记录、妊娠与养成数据分别在 GameState 的角色键 `chara.flags`、`chara.action_info`、`body.pregnancy` 与 `growth.child` 里，由 `Modules/domains/flags.py`、`Modules/domains/action_info.py`、`Modules/domains/pregnancy.py` 与 `Modules/domains/growth.py` 读写）
 - 玩家特有：`collection_character`（玩家能力状态与玩家收藏品分别在 GameState 的角色键 `player.ability` 与 `player.collection` 里，由 `Modules/domains/player_ability.py` 与 `Modules/domains/player_collection.py` 读写）
 - 其他：`birthday`, `text_color`, `talk_size`, `token_text`, `assistant_character_id`, `assistant_services`, `chara_setting`
 
@@ -447,7 +447,7 @@ init_character_behavior()
 │       pl_start_time/pl_duration 记录 -> character_behavior(0, game_time, pl_start_time)
 ├── 时停模式：回退时间，直接结束
 ├── field_commission_function.update_field_commission()
-├── NPC 阶段：id_list = npc_id_got - {0}
+├── NPC 阶段：id_list = roster.active() - {0}
 │       while len(over_behavior_character) <= len(id_list)
 │           for 每个未完成 NPC: character_behavior(id, game_time, pl_start_time)
 ├── 跨天：game_time.day != pre_game_time.day -> past_day_settle.update_new_day()

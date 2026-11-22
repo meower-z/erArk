@@ -19,6 +19,7 @@ from Script.Config import game_config
 from Script.Core import cache_control, constant, game_type
 from Script.Design import child_stage_gate, handle_premise, virgin_break_gate
 from Script.Kernel import core
+from Script.Modules.domains import roster
 from Script.Modules.gameplay_resolution import intent
 from Script.Modules.domains import abilities
 
@@ -75,11 +76,7 @@ def target_gone(who: int, behavior_id: str, data: Data) -> bool:
     target_data = cache.character_data.get(target)
     if target_data is None or target_data.dead:
         return True
-    return (
-        bool(data.get("queued"))
-        and target != 0
-        and target not in cache.npc_id_got
-    )
+    return bool(data.get("queued")) and target != 0 and not roster.has(target)
 
 
 def premise_fails(who: int, behavior_id: str, data: Data) -> bool:

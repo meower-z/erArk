@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import time
 from typing import TYPE_CHECKING
+from Script.Modules.domains import roster
 
 if TYPE_CHECKING:
     from typing import TypedDict
@@ -80,12 +81,10 @@ def apply_loop_stats_patch() -> None:
         return
     _applied = True
 
-    from Script.Core import cache_control
     from Script.Config import game_config
     from Script.Design import character_behavior, handle_npc_ai
     from Script.Kernel import core
 
-    cache = cache_control.cache
     # 全量 target 列表长度，用于判定 search_target 是否落入全量兜底扫描
     full_target_count = len(game_config.config_target)
 
@@ -99,7 +98,7 @@ def apply_loop_stats_patch() -> None:
         loop_stats["step_times"].append(time.perf_counter() - t0)
         loop_stats["steps"] += 1
         loop_stats["game_minutes"] += core.state().clock - clock
-        loop_stats["npc_count"] = len(cache.npc_id_got)
+        loop_stats["npc_count"] = roster.count()
 
     core.step = _timed_step
 

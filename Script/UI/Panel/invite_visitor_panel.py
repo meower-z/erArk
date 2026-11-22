@@ -16,7 +16,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import manage_basement_panel, recruit_panel
 import random
-from Script.Modules.domains import abilities, facility, flags, location
+from Script.Modules.domains import abilities, facility, flags, location, roster
 from Script.Modules.domains import visitor
 
 cache: game_type.Cache = cache_control.cache
@@ -192,7 +192,7 @@ def visitor_leave(character_id: int) -> None:
     visitor.leave(character_id)
 
     # 从已有干员列表中移除
-    cache.npc_id_got.discard(character_id)
+    roster.discard(character_id)
 
     # 位置初始化
     scene_path_str = map_handle.get_map_system_path_str_for_list(
@@ -377,7 +377,7 @@ class Invite_Visitor_Panel:
                 # 去掉玩家与访客
                 id_list = [
                     i
-                    for i in cache.npc_id_got
+                    for i in roster.active()
                     if i != 0 and not visitor.is_visitor(i)
                 ]
                 for chara_id in id_list:

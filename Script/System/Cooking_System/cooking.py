@@ -8,7 +8,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
 from Script.Modules.domains import abilities, achievement, economy, flags
-from Script.Modules.domains import kitchen
+from Script.Modules.domains import kitchen, roster
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
 
@@ -20,7 +20,6 @@ _: FunctionType = get_text._
 
 def init_recipes() -> dict[int, game_type.Recipes]:
     """初始化菜谱数据"""
-    cache = cache_control.cache
     cache.recipe_data = {}
     for recipe_id in game_config.config_recipes:
         recipe_data = game_config.config_recipes[recipe_id]
@@ -225,7 +224,7 @@ def init_food_shop_data(
     # 如果是新的一天则清空食物数据
     if new_day_flag:
         kitchen.clear()
-    max_people = len(cache.npc_id_got)
+    max_people = roster.count()
     # 初始化食堂内的食物
     if update_restaurant_id in [-1, -2]:
         cook_index = 0
