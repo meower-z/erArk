@@ -149,7 +149,7 @@ class PickDraftHTest(SlowTestCase):
         """debug 模式下邀请隐奸（不隐藏）：选择期间缓存不变，开始的是邀请隐奸，之后双方在模式 1 里"""
         from Script.Core import constant
 
-        self.cache.debug_mode = True
+        kernel_data.put(kernel_data.domain("modes").set_debug, True)
         target = self.target_here()
         calls = self.watch_judge("隐奸")
         self.world.player.press("[1]不隐藏")
@@ -211,7 +211,7 @@ class PickDraftHTest(SlowTestCase):
         """debug 模式下邀请露出（模式 1）：选择期间缓存不变，开始的是邀请露出，之后双方在模式 1 里"""
         from Script.Core import constant
 
-        self.cache.debug_mode = True
+        kernel_data.put(kernel_data.domain("modes").set_debug, True)
         target = self.target_here()
         calls = self.watch_judge("露出")
         self.world.player.press("[1]无人室内露出")
@@ -235,7 +235,7 @@ class PickDraftHTest(SlowTestCase):
         from Script.Core import constant
         from Script.System.Instruct_System import handle_instruct
 
-        self.cache.debug_mode = True
+        kernel_data.put(kernel_data.domain("modes").set_debug, True)
         self.target_here()
         calls = self.watch_judge("群交")
         _, _, changed = self.run_pick(
@@ -261,7 +261,7 @@ class PickDraftHTest(SlowTestCase):
         from Script.Modules.tk_ui import player_pick
         from tests import world
 
-        self.cache.debug_mode = True
+        kernel_data.put(kernel_data.domain("modes").set_debug, True)
         here = kernel_data.domain("scene_state").occupants(
             self.world.scene(activity.position(0)).scene_path
         )

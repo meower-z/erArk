@@ -56,7 +56,6 @@ class EconomyStateTest(FastTestCase):
         super().setUp()
         self.world.chara(0, "博士")
         self.enterContext(working.based_on(core.state()))
-        self.island = self.cache.rhodes_island
 
     def flagged(self, check_id: str) -> bool:
         """
@@ -103,8 +102,8 @@ class EconomyStateTest(FastTestCase):
     def test_income_of_one_step_adds_up(self) -> None:
         """同一步里两笔医疗收入 30 与 12：今日收入为 42，龙门币库存也为 42。换成效果后今日收入只有一个 Change"""
         with working.based_on(core.state()) as step:
-            medical_core._apply_income_to_rhodes(self.island, 30)
-            medical_core._apply_income_to_rhodes(self.island, 12)
+            medical_core._apply_income_to_rhodes(30)
+            medical_core._apply_income_to_rhodes(12)
             effects = step.effects()
         changes = [
             e for e in effects if getattr(e, "key", None) == economy.INCOME

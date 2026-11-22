@@ -430,7 +430,7 @@ class Book43RemovedTest(SlowTestCase):
 
         if not os.path.isfile(os.path.join("save", USER_SAVE_ID, "1")):
             self.skipTest("save/99 fixture not installed")
-        old_island = save_handle.load_save(USER_SAVE_ID).rhodes_island
+        old_island = vars(save_handle.load_save(USER_SAVE_ID))["rhodes_island"]
         saved = dict(vars(old_island)["book_borrow_dict"])
         unknown = {
             book_id

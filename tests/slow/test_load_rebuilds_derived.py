@@ -118,14 +118,14 @@ class LoadRebuildsDerivedTest(SlowTestCase):
         save_handle = game("Script.Core.save_handle")
         index = game("Script.Modules.save_load.index")
         save_handle.establish_save(SLOT)
-        island = self.cache.rhodes_island
+        old = pickle.loads(pickle.dumps(self.cache))
+        old.rhodes_island = game("Script.Core.game_type").Rhodes_Island()
         for name in LIMITS:
-            setattr(island, name, 99)
-        vars(self.cache)["map_data"] = {}
+            setattr(old.rhodes_island, name, 99)
+        old.map_data = {}
         file_path = os.path.join(index.path(SLOT), index.CACHE_FILE)
         with open(file_path, "wb") as f:
-            pickle.dump(self.cache, f)
-        del vars(self.cache)["map_data"]
+            pickle.dump(old, f)
         self.load()
         values = self.values()
         self.assertEqual(

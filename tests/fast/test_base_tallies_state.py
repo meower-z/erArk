@@ -162,7 +162,7 @@ class BaseTalliesStateTest(FastTestCase):
 
     def test_bed_limit_waits_for_recompute(self) -> None:
         """医疗部初始化后加两名住院医生，再定下新收费系数，床位上限不变。新收费系数生效时重算，床位上限多两名医生的加成"""
-        medical_service.init_medical_department_data(self.cache.rhodes_island)
+        medical_service.init_medical_department_data()
         start = medical.state().bed_limit
         with medical.editing() as m:
             m.hospital_doctor_ids = [1, 2]
@@ -203,12 +203,13 @@ class BaseTalliesStateTest(FastTestCase):
     def test_old_save_moves_into_state(self) -> None:
         """
         版本 12 的罗德岛对象带着全部八个属性：派对排期周三为读书会，旅馆房间档次 2，四项计数 250、70、2、30，
-        冰箱两个表各一名干员。读档后 GameState 里是这些值，对象上没有这些属性
+        冰箱两个表各一名干员。读档后 GameState 里是这些值，缓存上没有罗德岛对象
         """
         saved = pickle.loads(pickle.dumps(self.cache))
         party = {d: 0 for d in range(7)} | {2: READING}
         counts = dict(zip(tallies.PICKLED, (250, 70, 2, 30), strict=True))
         tables = dict(zip(fridge.PICKLED, ({1: 40}, {2: 15}), strict=True))
+        saved.rhodes_island = game_type.Rhodes_Island()
         vars(saved.rhodes_island).update(
             {entertainment.PICKLED_PARTY: party, entertainment.PICKLED_HOTEL: 2}
             | counts
@@ -223,10 +224,7 @@ class BaseTalliesStateTest(FastTestCase):
         self.assertEqual(
             {old: fridge.table(k) for old, k in fridge.PICKLED.items()}, tables
         )
-        moved = {entertainment.PICKLED_PARTY, entertainment.PICKLED_HOTEL}
-        moved |= tallies.PICKLED.keys() | fridge.PICKLED.keys()
-        island = self.cache.rhodes_island
-        self.assertFalse(moved & vars(island).keys())
+        self.assertNotIn("rhodes_island", vars(self.cache))
 
     def test_old_save_counts_missing_and_wrong_types(self) -> None:
         """

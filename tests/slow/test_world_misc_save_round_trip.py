@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 """
-全局设定、周目、国家、模式、吵醒名单、成就、事件与指令记录、计划队列随存档存读往返并可继续推进
-==========================================================================================
-新游戏里等待三次后写下非默认设定、周目、声望、成就、事件与每日记录，经 save_handle 写盘存档。
-存档后改写周目、设定、声望、成就、今日事件与每日记录，再读档验证全部 14 个全局键回到存档值。
+全局设定、周目、国家、模式、吵醒名单、成就、事件与输入记录、计划队列随存档存读往返并可继续推进
+==============================================================================================
+新游戏里等待三次后写下非默认设定、周目、声望、成就、事件、每日记录与最近输入，经 save_handle 写盘存档。
+存档后改写周目、设定、声望、成就、今日事件、每日记录与最近输入，再读档验证全部 15 个全局键回到存档值。
 读档后继续等待 15 分钟，时钟随之推进。
 """
 
@@ -24,7 +24,7 @@ def game(name: str) -> ModuleType:
 
 
 class WorldMiscSaveRoundTripTest(SlowTestCase):
-    """14 个全局杂项键随新游戏存档存下、读档还原，并可继续推进"""
+    """15 个全局杂项键随新游戏存档存下、读档还原，并可继续推进"""
 
     def test_world_misc_keys_survive_save_load_and_continue(self) -> None:
         """存档后改写全局杂项键，读档还原为存档值，之后继续等待 15 分钟正常推进"""
@@ -53,6 +53,7 @@ class WorldMiscSaveRoundTripTest(SlowTestCase):
             history.trigger("ev_round_trip")
             history.trigger_today("ev_round_trip")
             history.add_daily("round_trip_note")
+            history.add_inputs(["round_trip_input"])
         keys = (
             playthrough.SETTINGS,
             playthrough.ROUND,
@@ -65,6 +66,7 @@ class WorldMiscSaveRoundTripTest(SlowTestCase):
             history.TRIGGERED,
             history.TODAY,
             history.LOG,
+            history.INPUTS,
             plan.QUEUE,
             plan.ROUTE,
             plan.SLEEP_SAVE,
@@ -80,6 +82,7 @@ class WorldMiscSaveRoundTripTest(SlowTestCase):
                 achievement.add("field_commission_count", 99)
                 history.clear_today()
                 history.clear_daily()
+                history.add_inputs(["after_save"])
             save_handle.input_load_save(SAVE_ID)
         finally:
             shutil.rmtree(

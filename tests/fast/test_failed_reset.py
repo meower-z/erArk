@@ -2,7 +2,7 @@
 """
 换入失败时一切如旧：Reset 的钩子出错，内核状态与游戏缓存都回到换入前
 ==================================================================
-新周目的步骤先改了缓存（old_character_id、玩家名），之后的一步或一个输出钩子出错：
+新周目的步骤先改了缓存（测试放在缓存上的 round_mark、玩家名），之后的一步或一个输出钩子出错：
 错误照常抛出，core.state() 还是换入前的那个，缓存里的值也都是换入前的。
 """
 
@@ -25,9 +25,11 @@ class FailedResetTest(FastTestCase):
         """玩家在场；新周目的面板换成只改缓存的替身，载入游戏的模块"""
         super().setUp()
         self.world.chara(0, "博士")
+        vars(self.cache)["round_mark"] = 0
+        self.addCleanup(vars(self.cache).pop, "round_mark", None)
 
         def setup(inherit: object) -> None:
-            self.cache.old_character_id += 1
+            vars(self.cache)["round_mark"] += 1
             identity.put(identity.Identity(0, name="新周目"))
 
         panel = SimpleNamespace(setup=setup)
@@ -39,11 +41,10 @@ class FailedResetTest(FastTestCase):
     def check_failed(self) -> None:
         """新周目出错抛出，内核状态与缓存都是换入前的"""
         before = core.state()
-        old_id = self.cache.old_character_id
         with self.assertRaises(RuntimeError):
             kernel_state.new_round({})
         self.assertIs(core.state(), before)
-        self.assertEqual(self.cache.old_character_id, old_id)
+        self.assertEqual(vars(self.cache)["round_mark"], 0)
         self.assertEqual(identity.of(0).name, "博士")
 
     def test_failed_step(self) -> None:

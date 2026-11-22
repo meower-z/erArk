@@ -23,6 +23,7 @@ from Script.System.Instruct_System import handle_instruct
 from Script.System.Pregnancy_System import egg_handle, pregnancy_handle
 from Script.UI.Panel import gift_panel, play_gomoku_panel, talent_up_panel
 from Script.Modules.domains import achievement, activity, inventory, pregnancy
+from Script.Modules.domains import modes
 from tests import chara_abilities as ca, kernel_data, pick_guard
 from tests import world as world_module
 from tests.chara_activity import aim
@@ -250,7 +251,7 @@ class PanelSubMenusReadOnly(FastTestCase):
             )
         with self.subTest("下完一局，开始时"):
             self.answers = ["中难度"]
-            with mock.patch.object(self.cache, "debug_mode", True):
+            with mock.patch.object(modes, "debug", return_value=True):
                 panel = gomoku(WIDTH)
             panel.DEPTH = 4
             behavior = self.assert_commits([], lambda: panel.end_settle(1))

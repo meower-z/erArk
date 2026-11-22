@@ -18,6 +18,7 @@ from unittest import mock
 from Script.Config import game_config
 from Script.Core import constant, flow_handle
 from Script.Kernel import core
+from Script.Modules.domains import modes
 from Script.Modules.gameplay_resolution import intent, start_gate
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
@@ -129,8 +130,8 @@ class InstructSubMenuTest(FastTestCase):
     def test_judge_question(self) -> None:
         """夺走初吻的询问：[返回]没有行动也没有发呆；[确定]定下亲吻，开始时不再问"""
         ca.talent(self.npc)[FIRST_KISS] = 1
+        kernel_data.put(modes.set_debug, True)
         world_module.act(player_pick.back)
-        self.cache.debug_mode = True
         kiss = self.instruct(constant.Instruct.KISS)
         self.assert_backs_out(kiss, NO)
         self.assert_commits(kiss, YES)
@@ -141,7 +142,7 @@ class InstructSubMenuTest(FastTestCase):
         from Script.Modules.domains import player_collection
         from tests import kernel_data
 
-        self.cache.debug_mode = True
+        kernel_data.put(modes.set_debug, True)
         kernel_data.put(player_collection.put, "used_condoms", [10, 20])
         world_module.act(player_pick.back)
         hang = self.instruct(constant.Instruct.HANG_CONDOM_DECORATION)
@@ -176,13 +177,13 @@ class InstructSubMenuTest(FastTestCase):
             constant.Behavior.HIGH_OBSCENITY_ANUS,
         )
         self.assertEqual(h_state.get(NPC, "bondage"), 0)
-        self.cache.debug_mode = True
+        kernel_data.put(modes.set_debug, True)
         self.assert_commits(lambda: panel.select_bondage(bondage_id))
         self.assertEqual(h_state.get(NPC, "bondage"), bondage_id)
 
     def test_sex_position(self) -> None:
         """换体位：处女的询问能取消；确定后换之前的体位在行动开始时才记下"""
-        self.cache.debug_mode = True
+        kernel_data.put(modes.set_debug, True)
         ca.talent(self.npc)[0] = 1
         kernel_data.put(
             h_state.set, 0, current_sex_position=3, pre_sex_position=-1

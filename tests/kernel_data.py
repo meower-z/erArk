@@ -68,19 +68,11 @@ def written[**P, T](fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
         return fn(*args, **kwargs)
 
 
-def new_island() -> game_type.Rhodes_Island:
-    """
-    测试世界启动时的罗德岛对象（basement.get_base_zero），随后像游戏的新开局一样重置医疗部数据，写进内核状态。
-    get_base_zero 自己不再重置医疗部；这里补上，测试世界的医疗部数据与随机数消耗才和游戏开局时相同
-    Return arguments:
-    game_type.Rhodes_Island -- 新的罗德岛对象
-    """
-    from Script.Design import basement
+def reset_medical() -> None:
+    """按新开局方式重置医疗部数据并写进内核状态。测试世界的医疗部数据与随机数消耗因此和游戏开局时相同"""
     from Script.System.Medical_System import medical_service
 
-    island = basement.get_base_zero()
-    written(medical_service.init_medical_department_data, island)
-    return island
+    written(medical_service.init_medical_department_data)
 
 
 def reset_clock(dt: datetime.datetime, data: Mapping[str, core.JSON]) -> None:

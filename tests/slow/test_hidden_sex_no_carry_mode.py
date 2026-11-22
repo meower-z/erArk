@@ -9,6 +9,7 @@
 from typing import TYPE_CHECKING
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -66,7 +67,7 @@ class HiddenSexNoCarryModeTest(SlowTestCase):
 
     def test_no_carry_mode(self) -> None:
         """两种打开方式下都只列出四个模式按钮，没有携带模式"""
-        self.cache.debug_mode = True
+        kernel_data.put(kernel_data.domain("modes").set_debug, True)
         for sex_be_discovered_flag in (False, True):
             label = (
                 "从被发现面板打开"
