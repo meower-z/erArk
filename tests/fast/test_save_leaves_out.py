@@ -4,8 +4,8 @@
 ================================
 save_handle.write_save_data 写出的缓存文件（文件 "1"）里没有地图和菜谱。
 文件里的罗德岛数据没有仓库容量、干员人数上限、访客上限和床位上限。
-文件里，与配置是同一个对象的角色模板存成 None，测试放进去的孩子模板照常存下。
-save_handle.load_save 读回的角色模板保持存档前的键序，配置里有的键换回配置的模板对象。
+旧格式缓存文件带着 npc_tem_data，其中配置键为 None，局内生成模板为原对象。
+save_handle.load_save 读回后保持原来的键序，把配置键的 None 换回配置的模板对象，并保留局内生成模板。
 直接 pickle 整个缓存的旧存档，读回后不带地图、菜谱和这四个上限。
 读档结束时报的更新条数，与读到的缓存带着全部字段时相同。
 """
@@ -40,14 +40,14 @@ class SaveLeavesOutTest(FastTestCase):
     """缓存文件不写读档时重新算出的字段"""
 
     def setUp(self) -> None:
-        """复原小世界，把存档目录换成临时目录，在角色模板里放一个孩子模板，把四个上限设成非 0 的值"""
+        """复原小世界，把存档目录换成临时目录，备好一个局内生成模板，把 REBUILT 中的三个上限设成非 0 的值"""
         super().setUp()
         folder = self.enterContext(tempfile.TemporaryDirectory())
         self.enterContext(mock.patch.object(index, "SAVE_DIR", folder))
         child = game_type.NpcTem()
         child.Name = "孩子"
         child.AdvNpc = CHILD
-        self.cache.npc_tem_data[CHILD] = child
+        self.child = child
         for value, name in enumerate(REBUILT, start=7):
             setattr(self.cache.rhodes_island, name, value)
 
@@ -93,29 +93,25 @@ class SaveLeavesOutTest(FastTestCase):
         return next(text for text in texts if "完成了更新" in text)
 
     def test_file_leaves_out_rebuilt_fields(self) -> None:
-        """文件里没有地图、菜谱和四个上限。配置里有的键存成 None，孩子模板照常存下，键序与存档前相同"""
+        """写出的缓存文件里没有 map_data、recipe_data 与 REBUILT 中的三个上限"""
         save_handle.write_save_data(SLOT, index.CACHE_FILE, self.cache)
         raw = self.raw()
         self.assertFalse({"map_data", "recipe_data"} & vars(raw).keys())
         self.assertFalse(set(REBUILT) & vars(raw.rhodes_island).keys())
-        self.assertEqual(list(raw.npc_tem_data), list(self.cache.npc_tem_data))
-        config = character_config.character_tem_list
-        saved = {k for k, v in raw.npc_tem_data.items() if v is not None}
-        self.assertEqual(saved, set(self.cache.npc_tem_data) - set(config))
-        self.assertEqual(raw.npc_tem_data[CHILD].Name, "孩子")
 
     def test_load_puts_config_templates_back(self) -> None:
-        """读回的角色模板与存档前键序相同。配置里有的键是配置的模板对象，孩子模板是存下的那份"""
-        save_handle.write_save_data(SLOT, index.CACHE_FILE, self.cache)
-        loaded = save_handle.load_save(SLOT)
-        self.assertEqual(
-            list(loaded.npc_tem_data), list(self.cache.npc_tem_data)
-        )
+        """旧格式缓存文件经 load_save 读回后，npc_tem_data 保持键序，配置键换回配置的模板对象，局内生成模板不变"""
         config = character_config.character_tem_list
-        for key, template in loaded.npc_tem_data.items():
+        templates = {**dict.fromkeys(config), CHILD: self.child}
+        legacy = game_type.Cache.__new__(game_type.Cache)
+        vars(legacy).update(vars(self.cache), npc_tem_data=templates)
+        save_handle.write_save_data(SLOT, index.CACHE_FILE, legacy)
+        loaded = vars(save_handle.load_save(SLOT))["npc_tem_data"]
+        self.assertEqual(list(loaded), list(templates))
+        for key, template in loaded.items():
             if key in config:
                 self.assertIs(template, config[key])
-        self.assertEqual(loaded.npc_tem_data[CHILD].Name, "孩子")
+        self.assertEqual(loaded[CHILD].Name, "孩子")
 
     def test_old_save_loads_without_rebuilt_fields(self) -> None:
         """直接 pickle 整个缓存的旧存档，读回后没有地图、菜谱和四个上限"""

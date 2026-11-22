@@ -110,7 +110,8 @@ class CharaKeysSaveRoundTripTest(SlowTestCase):
         relations = game("Script.Modules.domains.relations")
         new_round = game("Script.UI.Panel.new_round")
         cache = self.world.cache
-        cid = next(c for c in cache.character_data if c in cache.npc_tem_data)
+        npc_template = game("Script.Modules.domains.npc_template")
+        cid = next(c for c in cache.character_data if npc_template.get(c))
         with kernel_data.writing():
             relations.trust.set(cid, 80)
             relations.favorability.set_item(cid, 0, 70)
@@ -123,8 +124,8 @@ class CharaKeysSaveRoundTripTest(SlowTestCase):
             "fallen_social": {str(cid): (50, 30)},
             "abilities": {},
         }
-        template = {cid: cache.npc_tem_data[cid]}
-        with mock.patch.object(cache, "npc_tem_data", template):
+        template = {cid: npc_template.get(cid)}
+        with mock.patch.object(npc_template, "table", return_value=template):
             kernel_data.written(new_round._inherit_npc_data, inherit, {cid})
         self.assertEqual(relations.trust(cid), int(50 * rate / 100))
         self.assertEqual(relations.favorability(cid)[0], int(30 * rate / 100))

@@ -67,7 +67,7 @@ class OfflineTargetActionsTest(SlowTestCase):
         """
         return next(
             cid
-            for cid in sorted(self.cache.npc_tem_data)
+            for cid in sorted(kernel_data.domain("npc_template").ids())
             if cid
             and cid in self.cache.character_data
             and cid not in kernel_data.domain("roster").active()
