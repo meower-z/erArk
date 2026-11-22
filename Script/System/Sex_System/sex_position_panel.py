@@ -57,7 +57,7 @@ class Sex_Position_Panel:
         now_scene_str = map_handle.get_map_system_path_str_for_list(
             now_position
         )
-        now_scene_furniture = cache.scene_data[now_scene_str].have_furniture
+        now_scene_furniture = constant.scene_data[now_scene_str].have_furniture
 
         while 1:
             return_list = []

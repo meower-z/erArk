@@ -22,6 +22,7 @@ from Script.Modules.domains import (
 from Script.Modules.domains import h_meters, h_state, history, hypnosis, modes
 from Script.Modules.domains import needs, player_ability, player_collection
 from Script.Modules.domains import playthrough, status, relations, identity
+from Script.Modules.domains import scene_state
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -443,8 +444,7 @@ def chara_feel_state_adjust(
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(character_id)
         )
-        scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-        other_npc_num = len(scene_data.character_list) - 2
+        other_npc_num = len(scene_state.occupants(scene_path_str)) - 2
         # 最大只能吃十个人的加成
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.02
@@ -560,8 +560,7 @@ def chara_base_state_adjust(
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(character_id)
         )
-        scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-        other_npc_num = len(scene_data.character_list) - 2
+        other_npc_num = len(scene_state.occupants(scene_path_str)) - 2
         # 最大只能吃十个人的加成
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.05

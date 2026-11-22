@@ -197,7 +197,7 @@ class Navigation_Panel(Base_function_class):
             map_path_str = map_handle.get_map_system_path_str_for_list(
                 self.now_map
             )
-            map_data: game_type.Map = cache.map_data[map_path_str]
+            map_data: game_type.Map = constant.map_data[map_path_str]
             map_name = attr_text.get_map_path_text(self.now_map)
             title_draw = draw.TitleLineDraw(map_name, self.width)
             title_draw.draw()
@@ -296,7 +296,7 @@ class Navigation_Panel(Base_function_class):
                                         args=(target_scene,),
                                     )
                                     # TODO 如果是有特殊事件在那么显示为绿色
-                                    # if len(cache.scene_data[full_scene_str].character_list):
+                                    # if len(scene_state.occupants(full_scene_str)):
                                     #     now_draw.normal_style = "green"
                                 # 非临近地点则绘制灰色按钮
                                 else:
@@ -456,7 +456,7 @@ class MapSceneNameDraw(Base_function_class):
         self.return_list = []
 
         map_path_str = map_handle.get_map_system_path_str_for_list(self.now_map)
-        map_data: game_type.Map = cache.map_data[map_path_str]
+        map_data: game_type.Map = constant.map_data[map_path_str]
         map_name = attr_text.get_map_path_text(self.now_map)
         title_draw = draw.TitleLineDraw(map_name, self.width)
         title_draw.draw()

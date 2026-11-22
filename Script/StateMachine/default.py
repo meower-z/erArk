@@ -20,7 +20,7 @@ from Script.Core import get_text, cache_control, game_type, constant
 from Script.Modules.domains import abilities, action_info, activity, economy
 from Script.Modules.domains import h_state, kitchen, maintenance, modes
 from Script.Modules.domains import production, body_manage, inventory
-from Script.Modules.domains import chara_life, relations, identity
+from Script.Modules.domains import chara_life, relations, identity, scene_state
 from Script.UI.Moudle import draw
 
 if TYPE_CHECKING:
@@ -113,7 +113,7 @@ def _draw_move_intent(character_id: int, target_scene_str: str) -> None:
         activity.position(character_id) == activity.position(0)
         and normal_config.system_setting.draw_setting[8] == 1
     ):
-        now_scene_data = cache.scene_data[target_scene_str]
+        now_scene_data = constant.scene_data[target_scene_str]
         now_draw = draw.NormalDraw()
         now_draw.text = _("{0}打算前往{1}\n").format(
             character_data.name, now_scene_data.scene_name
@@ -298,7 +298,7 @@ def character_move_to_rand_scene(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    scene_list = list(cache.scene_data.keys())
+    scene_list = list(constant.scene_data.keys())
     now_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
@@ -483,7 +483,7 @@ def character_move_to_clinic(character_id: int) -> choice.Plan:
     # 判断是否存在没有人的门诊室，存在的话优先去没有人的
     plan = handle_state_machine.new_plan(character_id)
     for Clinic_place in constant.place_data["Clinic"]:
-        if list(cache.scene_data[Clinic_place].character_list) == []:
+        if not scene_state.occupants(Clinic_place):
             to_clinic = map_handle.get_map_system_path_for_str(Clinic_place)
             break
     else:
@@ -1424,7 +1424,7 @@ def character_move_to_production_workshop(character_id: int) -> choice.Plan:
                 target_scene_str, character_id
             )
             if (
-                list(cache.scene_data[target_scene_str].character_list) == []
+                not scene_state.occupants(target_scene_str)
                 and close_type == "open"
             ):
                 empty_flag = True
@@ -2216,10 +2216,8 @@ def character_work_nursery_care(character_id: int) -> choice.Plan:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data = cache.scene_data[scene_path_str]
-    baby_id_list = [
-        i for i in scene_data.character_list if i and abilities.talent(i)[101]
-    ]
+    occupants = scene_state.occupants(scene_path_str)
+    baby_id_list = [i for i in occupants if i and abilities.talent(i)[101]]
     if len(baby_id_list):
         action_list.append("baby")
     if len(action_list):
@@ -3022,7 +3020,7 @@ def character_buy_rand_food_at_foodshop(character_id: int) -> choice.Plan:
             if not len(foods):
                 continue
             # 获取食谱
-            food_recipe = cache.recipe_data[int(recipes_id)]
+            food_recipe = game_config.config_recipes[int(recipes_id)]
             all_food_list.append(recipes_id)
             # 菜谱类型不是预制食物（5）的算自制食物
             if food_recipe.type != 5:
@@ -3310,8 +3308,8 @@ def pull_students(character_id: int) -> None:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    scene_data: game_type.Scene = constant.scene_data[scene_path_str]
+    for chara_id in scene_state.occupants(scene_path_str):
         # 跳过自己
         if chara_id == character_id:
             continue
@@ -3398,8 +3396,8 @@ def character_education_skip_class(character_id: int) -> choice.Plan:
         activity.position(character_id)
     )
     now_scene_tag: str | list[str] = ""
-    if now_scene_str in cache.scene_data:
-        now_scene_tag = cache.scene_data[now_scene_str].scene_tag
+    if now_scene_str in constant.scene_data:
+        now_scene_tag = constant.scene_data[now_scene_str].scene_tag
     # 还在教室（含实践教室与大礼堂）里，先离开
     if any(
         tag in now_scene_tag
@@ -4105,11 +4103,10 @@ def character_work_massage(character_id: int) -> choice.Plan:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 场景角色数大于等于2时进行检测
-    if len(scene_data.character_list) >= 2:
+    if len(scene_state.occupants(scene_path_str)) >= 2:
         # 遍历当前角色列表
-        for chara_id in scene_data.character_list:
+        for chara_id in scene_state.occupants(scene_path_str):
             # 跳过自己
             if chara_id == character_id:
                 continue

@@ -176,7 +176,7 @@ class Sleep_Panel:
             now_scene_str = map_handle.get_map_system_path_str_for_list(
                 now_position
             )
-            now_scene_data = cache.scene_data[now_scene_str]
+            now_scene_data = constant.scene_data[now_scene_str]
 
             # 地点关门判定的三个分支
             if now_scene_data.close_type == 0:

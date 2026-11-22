@@ -12,7 +12,7 @@
 
 import random
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import cache_control, game_type, get_text, constant
 from Script.Config import normal_config
 from Script.Design import (
     attr_calculation,
@@ -284,8 +284,8 @@ def get_soft_egg_scene_name(egg_data: dict) -> str:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         egg_data["position"]
     )
-    if scene_path_str in cache.scene_data:
-        return cache.scene_data[scene_path_str].scene_name
+    if scene_path_str in constant.scene_data:
+        return constant.scene_data[scene_path_str].scene_name
     return scene_path_str
 
 

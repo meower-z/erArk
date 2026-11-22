@@ -18,13 +18,14 @@
 import datetime
 import random
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import cache_control, game_type, get_text, constant
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
 from Script.Modules.domains import abilities, activity, chara_life, education
 from Script.Modules.domains import flags, growth, modes, needs, relations
-from Script.Modules.domains import roster, identity
+from Script.Modules.domains import roster, identity, scene_state
 from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
+from Script.Config import game_config
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -184,9 +185,9 @@ def get_scene_name(scene_path: list) -> str:
     str -- 场景名，路径不是真实场景时为空串
     """
     scene_path_str = map_handle.get_map_system_path_str_for_list(scene_path)
-    if scene_path_str not in cache.scene_data:
+    if scene_path_str not in constant.scene_data:
         return ""
-    return cache.scene_data[scene_path_str].scene_name
+    return constant.scene_data[scene_path_str].scene_name
 
 
 def find_reserved_class(
@@ -457,15 +458,15 @@ def get_scene_student_list(scene_path: list | None = None) -> list[int]:
     if scene_path is None:
         scene_path = activity.position(0)
     scene_path_str = map_handle.get_map_system_path_str_for_list(scene_path)
-    if scene_path_str not in cache.scene_data:
+    if scene_path_str not in constant.scene_data:
         return []
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+    scene_data: game_type.Scene = constant.scene_data[scene_path_str]
     # 必修名单上的人豁免前置修习：玩家点名要她来，她就算没排过性技理论课也照样上。
     #    传这间教室的名字：开课前取的是这间教室等着开讲的那节预约（Plan 26 §3.5）
     must_attend_set = get_must_attend_set(scene_data.scene_name)
     return [
         cid
-        for cid in scene_data.character_list
+        for cid in scene_state.occupants(scene_path_str)
         if cid
         and judge_can_join_sex_class(
             cid, check_course=cid not in must_attend_set
@@ -492,10 +493,10 @@ def get_class_member_list() -> list[int]:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(0)
     )
-    if scene_path_str not in cache.scene_data:
+    if scene_path_str not in constant.scene_data:
         return []
     result = []
-    for character_id in cache.scene_data[scene_path_str].character_list:
+    for character_id in scene_state.occupants(scene_path_str):
         if not character_id or not identity.exists(character_id):
             continue
         character_data: identity.Identity = identity.of(character_id)
@@ -837,8 +838,6 @@ def get_ability_name(ability_id: int) -> str:
     Return arguments:
     str -- 能力名，查不到则为空串
     """
-    from Script.Config import game_config
-
     if ability_id in game_config.config_ability:
         return game_config.config_ability[ability_id].name
     return ""

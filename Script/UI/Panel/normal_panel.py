@@ -63,7 +63,7 @@ class Close_Door_Panel:
             now_scene_str = map_handle.get_map_system_path_str_for_list(
                 activity.position(0)
             )
-            now_scene_data = cache.scene_data[now_scene_str]
+            now_scene_data = constant.scene_data[now_scene_str]
             now_draw_list: list[draw.Drawable] = []
 
             # 地点关门判定的三个分支

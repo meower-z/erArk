@@ -91,8 +91,8 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
                 activity.position(character_id)
             )
             classroom = (
-                cache.scene_data[scene_path_str].scene_name
-                if scene_path_str in cache.scene_data
+                constant.scene_data[scene_path_str].scene_name
+                if scene_path_str in constant.scene_data
                 else ""
             )
             listen_text = get_course_text(

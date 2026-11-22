@@ -42,7 +42,7 @@ from Script.Modules.domains import inventory, maintenance, medical, modes, needs
 from Script.Modules.domains import official, physical_exam, player_ability
 from Script.Modules.domains import player_collection, pregnancy, prison, recruit
 from Script.Modules.domains import roster, status, visitor, wardrobe, warehouse
-from Script.Modules.domains import chara_life, relations
+from Script.Modules.domains import chara_life, relations, scene_state
 from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
@@ -818,8 +818,7 @@ def handle_scene_all_characters_desire_point_zero(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         if chara_id == 0:
             continue
         needs.set(character_id, desire=0)
@@ -1588,8 +1587,7 @@ def handle_hypnosis_all(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_data.cid)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    scene_character_list = scene_data.character_list.copy()
+    scene_character_list = scene_state.occupants(scene_path_str)
     # 催眠角色列表
     hypnosis_character_list = []
     # 去掉里的自己
@@ -2408,8 +2406,7 @@ def handle_scene_all_characters_condom_info_show_flag_on(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         # 遍历非玩家的角色
         if chara_id:
             handle_target_condom_info_show_flag_on(
@@ -3451,10 +3448,9 @@ def handle_target_to_masturebate(
         return
     now_position = activity.position(character_id)
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
-    now_scene_data = cache.scene_data[now_scene_str]
-    if len(now_scene_data.character_list) >= 2:
+    if len(scene_state.occupants(now_scene_str)) >= 2:
         # 遍历当前角色列表
-        for chara_id in now_scene_data.character_list:
+        for chara_id in scene_state.occupants(now_scene_str):
             # 遍历非自己且非玩家的角色
             if chara_id != character_id and chara_id != 0:
                 # 检测是否在自慰
@@ -3487,12 +3483,11 @@ def handle_target_to_most_desire(
         return
     now_position = activity.position(character_id)
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
-    now_scene_data = cache.scene_data[now_scene_str]
     target_chara_id = 0
     max_desire_value = -1
-    if len(now_scene_data.character_list) >= 2:
+    if len(scene_state.occupants(now_scene_str)) >= 2:
         # 遍历当前角色列表
-        for chara_id in now_scene_data.character_list:
+        for chara_id in scene_state.occupants(now_scene_str):
             # 跳过玩家
             if chara_id == 0:
                 continue
@@ -4609,8 +4604,8 @@ def handle_door_close(
         return
     now_position = activity.position(character_id)
     now_position_str = map_handle.get_map_system_path_str_for_list(now_position)
-    now_scene_data = cache.scene_data[now_position_str]
-    now_scene_data.close_flag = now_scene_data.close_type
+    now_scene_data = constant.scene_data[now_position_str]
+    scene_state.set_close_flag(now_position_str, now_scene_data.close_type)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -4634,8 +4629,7 @@ def handle_door_close_reset(
         return
     now_position = activity.position(character_id)
     now_position_str = map_handle.get_map_system_path_str_for_list(now_position)
-    now_scene_data = cache.scene_data[now_position_str]
-    now_scene_data.close_flag = 0
+    scene_state.set_close_flag(now_position_str, 0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -4723,9 +4717,8 @@ def handle_scene_others_move_to_pre_scene(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
-    for chara_id in scene_data.character_list.copy():
+    for chara_id in scene_state.occupants(scene_path_str):
         # 跳过自己和交互对象
         if chara_id == character_id or chara_id == activity.target(
             character_id
@@ -4756,9 +4749,8 @@ def handle_scene_all_chara_move_to_pre_scene(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
-    for chara_id in scene_data.character_list.copy():
+    for chara_id in scene_state.occupants(scene_path_str):
         # 跳过自己
         if chara_id == character_id:
             continue
@@ -4787,9 +4779,8 @@ def handle_scene_all_chara_except_masturebate_to_pl_move_to_pre_scene(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
-    for chara_id in scene_data.character_list.copy():
+    for chara_id in scene_state.occupants(scene_path_str):
         # 跳过玩家
         if chara_id == 0:
             continue
@@ -4948,8 +4939,7 @@ def handle_scene_all_characters_update_orgasm_level(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         with h_state.editing(chara_id) as hs:
             for state_id in game_config.config_character_state:
                 if game_config.config_character_state[state_id].type == 0:
@@ -4982,8 +4972,7 @@ def handle_scene_all_characters_h_state_reset(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list.copy():
+    for chara_id in scene_state.occupants(scene_path_str):
         handle_self_h_state_reset(chara_id, add_time, change_data, now_time)
 
 
@@ -5050,11 +5039,6 @@ def handle_chara_off_line(
     if roster.has(character_id):
         roster.remove(character_id)
     # 离开地图
-    old_scene_path_str = map_handle.get_map_system_path_str_for_list(
-        activity.position(character_id)
-    )
-    if character_id in cache.scene_data[old_scene_path_str].character_list:
-        cache.scene_data[old_scene_path_str].character_list.remove(character_id)
     activity.set_position(character_id, ["0", "0"])
 
 
@@ -5104,12 +5088,6 @@ def handle_chara_on_line(
     # 加入当前干员列表
     if not roster.has(character_id):
         roster.add(character_id)
-    # 进入地图
-    now_scene_path_str = map_handle.get_map_system_path_str_for_list(
-        activity.position(character_id)
-    )
-    if character_id not in cache.scene_data[now_scene_path_str].character_list:
-        cache.scene_data[now_scene_path_str].character_list.add(character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5205,8 +5183,7 @@ def handle_place_all_chara_add_1_been_hypnosis_experience(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    scene_character_list = scene_data.character_list.copy()
+    scene_character_list = scene_state.occupants(scene_path_str)
     # 去掉里的自己
     if character_id in scene_character_list:
         scene_character_list.remove(character_id)
@@ -5919,8 +5896,7 @@ def handle_scene_all_characters_h_flag_to_1(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         if chara_id == 0:
             continue
         handle_h_flag_to_1(chara_id, add_time, change_data, now_time)
@@ -7860,8 +7836,7 @@ def handle_group_sex_end_h_add_hpmp_max(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         now_character_data: identity.Identity = identity.of(chara_id)
         # 统计绝顶奖励前，先为该在场参与者解放并结算其累计的寸止绝顶，使其计入退出奖励；无累计者不建立空TargetChange条目
         if h_state.get(chara_id, "orgasm_edge") != 0:
@@ -7942,9 +7917,8 @@ def handle_group_sex_fail_add_just(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         handle_sub_self_small_mana_point(
             chara_id, add_time, change_data, now_time
         )
@@ -8811,7 +8785,7 @@ def _settle_pulled_by_player_teach(student_id: int, add_time: int) -> bool:
     ):
         return False
     ability_id, course_type = _teach_subject(0)
-    scene_name = cache.scene_data[
+    scene_name = constant.scene_data[
         map_handle.get_map_system_path_str_for_list(
             activity.position(student_id)
         )
@@ -8867,11 +8841,11 @@ def handle_teach_add_just(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+    scene_data: game_type.Scene = constant.scene_data[scene_path_str]
     # 场景角色数大于等于2时进行检测
-    if len(scene_data.character_list) >= 2:
+    if len(scene_state.occupants(scene_path_str)) >= 2:
         # 遍历当前角色列表
-        for chara_id in scene_data.character_list:
+        for chara_id in scene_state.occupants(scene_path_str):
             # 跳过自己
             if chara_id == character_id:
                 continue
@@ -9639,11 +9613,11 @@ def handle_sing_add_adjust(
         adjust = handle_ability.get_ability_adjust(ability[44])
 
         # 对在场的全部角色起效
-        for chara_id in cache.scene_data[
+        for chara_id in scene_state.occupants(
             map_handle.get_map_system_path_str_for_list(
                 activity.position(character_id)
             )
-        ].character_list:
+        ):
             # 跳过玩家自己
             if chara_id == character_id:
                 continue
@@ -9783,11 +9757,11 @@ def handle_play_instrument_add_adjust(
         adjust = handle_ability.get_ability_adjust(ability[44])
 
         # 对在场的全部角色起效
-        for chara_id in cache.scene_data[
+        for chara_id in scene_state.occupants(
             map_handle.get_map_system_path_str_for_list(
                 activity.position(character_id)
             )
-        ].character_list:
+        ):
             # 跳过玩家自己
             if chara_id == character_id:
                 continue
@@ -12013,8 +11987,7 @@ def handle_scene_all_characters_penis_in_reset(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         h_state.set(chara_id, insert_position=-1)
 
 

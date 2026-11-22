@@ -14,7 +14,7 @@
 | NUM 数值范围 | `check_numeric.py` | 30 |
 | OBS 可观察矛盾 | `check_observable.py` | 17 |
 | OFFICIAL 公务事件 | `check_official.py` | 2 |
-| PLACE 位置与场景 | `check_place.py` | 31 |
+| PLACE 位置与场景 | `check_place.py` | 26 |
 | ROSTER 名册 | `check_roster.py` | 33 |
 | BIRTH / COOK 设置记忆 | `check_setting.py` | 4 |
 | SUPP 补充盲点 | `check_supplement.py` | 6 |
@@ -175,7 +175,7 @@ H 状态、群交模式、逆推、隐奸。
 | ISLAND-16 | 宿舍管理员表结构与引用合法 | dormitory.managers()的键只能是1..9层；值是0(未任命)或一名存在的角色；同一人不得同时管理两层 |
 | ISLAND-17 | 宿舍管理员岗位联动与层键覆盖 | 每个被任命的管理员的work.work_type应为31，且1..9层键应齐全 |
 | ISLAND-18 | 已关闭楼层不得保留管理员 | 层号高于当前宿舍区等级理论开放上限的层，其管理员必须为0 |
-| ISLAND-19 | 已招募干员的宿舍路径必须是合法场景 | 每个在编非玩家干员的dormitory必须非空且是cache.scene_data的合法键，不得残留""或模板值"无" |
+| ISLAND-19 | 已招募干员的宿舍路径必须是合法场景 | 每个在编非玩家干员的 dormitory 必须非空且是 constant.scene_data 的合法键，不得残留 "" 或模板值 "无" |
 | ISLAND-20 | 普通宿舍房间不超过2人 | 普通宿舍房设计容量2人；超员说明分配逻辑或特殊搬迁把人塞进了满房 |
 | ISLAND-21 | 借书记录双向一致且不超借阅上限 | library.holders()[book]=借阅者id(-1未借出，0为玩家)与角色的entertainment.borrow_book_id_set必须 互为反向索引；书籍id必须合法；单人持书不超过3本 |
 | ISLAND-22 | 一周派对排期键值合法且同一娱乐不占两天 | 一周派对排期（entertainment.party_days()）的键恰为0..6，值为合法娱乐id(0表示无活动)，且同一非零娱乐id不得同时 占据两天 |
@@ -299,21 +299,17 @@ H 状态、群交模式、逆推、隐奸。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| PLACE-01 | 角色字典键与cid一致 | 角色身份表（identity.table()）的每个键都等于对应Identity自身的cid字段，防止场景名册、交互目标、助理引用等按id索引却指向身份不一致的记录 |
-| PLACE-02 | 场景/地图自描述键一致 | cache.scene_data[k].scene_path == k 且 cache.map_data[k].map_path == k |
-| PLACE-03 | 场景名册id必须存在 | 任一Scene.character_list中的id都必须存在于角色身份表（identity.characters），名册写入点只写已存在角色id，无合法悬空来源 |
+| PLACE-01 | 角色字典键与cid一致 | 角色身份表（identity.table()）的每个键都等于对应Identity自身的cid字段，防止场景内角色、交互目标、助理引用等按id索引却指向身份不一致的记录 |
+| PLACE-02 | 场景/地图自描述键一致 | constant.scene_data[k].scene_path == k 且 constant.map_data[k].map_path == k |
 | PLACE-04 | 角色位置必须是现有场景 | 角色身份表（identity.characters）中每个角色（全域，不限LIVE）的position拼成的路径必须是scene_data的键 |
-| PLACE-05 | 角色→场景方向一致 | 每个在图角色（LIVE域）必须出现在自己position所指场景的character_list里 |
-| PLACE-06 | 场景→角色方向一致 | 场景名册里的每个角色，其position必须正好指回该场景，抓"旧场景没删干净"的残影，与PLACE-05互补 |
-| PLACE-07 | 角色不得同时出现在多个场景 | 同一角色id在所有Scene.character_list中最多出现一次 |
-| PLACE-08 | 场景名册只容纳在册角色/离线角色必须退出名册 | 两个方向合成一条：(a) 任何场景名册成员必须是玩家或在npc_id_got中；(b) 带明确离线标记 （被装袋/外勤中/逃跑中）的角色必须已退出npc_id_got |
-| PLACE-09 | 空房间不该锁着门 | close_flag != 0的场景其character_list不应为空 |
+| PLACE-08 | 离线角色必须退出在编名册 | 带有明确离线标记（be_bagged、field_commission、escaping）的角色均不在在编名册（roster.active()）中 |
+| PLACE-09 | 空房间不该锁着门 | scene_state.closed() 中每个已关门场景的在场角色（scene_state.occupants(path)）均不为空 |
 | PLACE-10 | 门类型与门状态枚举合法 | close_type ∈ {0,1,2}（无门/普通门/隔间门），且close_flag只能是0或本场景的close_type |
 | PLACE-11 | 房间容量档位枚举合法 | room_area只能是0/1/2/3（对应满员判定的10/50/100/9999四档） |
-| PLACE-12 | 移动路径字段必须是现有场景 | behavior.move_src/move_target/move_final_target只要非空，就必须拼成cache.scene_data的合法键 |
+| PLACE-12 | 移动路径字段必须是现有场景 | behavior.move_src/move_target/move_final_target 只要非空，就必须拼成 constant.scene_data 的合法键 |
 | PLACE-13 | 移动历史长度与内容合法 | action_info.past_move_position_list最多10条，每条都必须是合法场景路径 |
-| PLACE-14 | 收藏地点必须是合法场景 | cache.collect_position_list每一项都是场景路径列表，必须存在于cache.scene_data； 否则地图收藏面板点一下就会跳进不存在的场景 |
-| PLACE-15 | 宿舍字段必须是合法场景或哨兵值 | LIVE域内角色的dormitory（场景路径字符串）只允许是cache.scene_data的键，或未分配哨兵""/"无" |
+| PLACE-14 | 收藏地点必须是合法场景 | cache.collect_position_list 的每一项都是场景路径列表且存在于 constant.scene_data，否则地图收藏面板点一下就会跳进不存在的场景 |
+| PLACE-15 | 宿舍字段必须是合法场景或哨兵值 | LIVE 域内角色的 dormitory（场景路径字符串）只允许是 constant.scene_data 的键，或未分配哨兵 ""/"无" |
 | PLACE-16 | 交互对象id必须存在 | 每个角色的交互对象id（activity.target）必须存在于角色身份表（identity.characters） |
 | PLACE-17 | H状态角色的交互对象必须同场 | LIVE域内处于sp_flag.is_h的角色，其交互对象必须存在且与自己position相同 |
 | PLACE-18 | 助理字段只属于玩家 | 只有id 0可以有非零assistant_character_id；NPC上非零都是脏数据（面板与前提只读玩家那一份， NPC上的值永远失效却会随存档迁移传播） |
@@ -391,4 +387,4 @@ H 状态、群交模式、逆推、隐奸。
 | SUPP-04 | 时停无意识值跨名单残留 | 非时停时，角色身份表（identity.characters）中任何角色都不应残留专属时停无意识值unconscious_h==3 |
 | SUPP-05 | 愤怒值下界 | 每个角色的body.needs的angry类型为int且不小于0 |
 | SUPP-07 | 仓储扩展模块使用数非负 | （只取独立于NUM-26的后半式） |
-| SUPP-08 | 办公室场景引用合法 | 角色身份表（identity.characters）中每个角色的officeroom（列表字段）只允许是空列表或cache.scene_data的合法键 |
+| SUPP-08 | 办公室场景引用合法 | 角色身份表（identity.characters）中每个角色的officeroom（列表字段）只允许是空列表或constant.scene_data的合法键 |

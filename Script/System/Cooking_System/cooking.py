@@ -3,7 +3,7 @@
 import random
 import uuid
 from types import FunctionType
-from Script.Core.game_type import Recipes, Food
+from Script.Core.game_type import Food
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
@@ -17,45 +17,6 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
-
-
-def init_recipes() -> dict[int, game_type.Recipes]:
-    """初始化菜谱数据"""
-    cache.recipe_data = {}
-    for recipe_id in game_config.config_recipes:
-        recipe_data = game_config.config_recipes[recipe_id]
-        recipe = create_recipe(
-            recipe_data.name,
-            recipe_data.time,
-            recipe_data.difficulty,
-            recipe_data.money,
-            recipe_data.introduce,
-            recipe_data.type,
-        )
-        cache.recipe_data[recipe_id] = recipe
-    return cache.recipe_data
-
-
-def create_recipe(
-    name: str, time: int, difficulty: int, money: int, introduce: str, type: int
-) -> Recipes:
-    """
-    创建菜谱对象
-    Keyword arguments:
-    name -- 菜谱名字
-    time -- 烹饪用时
-    difficulty -- 烹饪难度
-    Return arguments:
-    Recipes -- 菜谱对象
-    """
-    recipe = Recipes()
-    recipe.name = name
-    recipe.time = time
-    recipe.difficulty = difficulty
-    recipe.money = money
-    recipe.introduce = introduce
-    recipe.type = type
-    return recipe
 
 
 @reset.repair
@@ -88,7 +49,7 @@ def create_food(
     Return arguments:
     Food -- 食物对象
     """
-    recipe_data: game_type.Recipes = cache.recipe_data[food_recipe]
+    recipe_data = game_config.config_recipes[food_recipe]
     food = Food()
     food.id = food_id
     food.uid = uuid.uuid4()
@@ -222,7 +183,6 @@ def init_food_shop_data(
     update_restaurant_id -- 餐馆id，默认为-2，如果不是-2则仅刷新对应id的餐馆的食物\n
     new_day_flag -- 是否为新的一天，默认为False\n
     """
-    cache = cache_control.cache
     # 如果是新的一天则清空食物数据
     if new_day_flag:
         kitchen.clear()
@@ -231,10 +191,10 @@ def init_food_shop_data(
     if update_restaurant_id in [-1, -2]:
         cook_index = 0
         while 1:
-            recipes_id_list = list(cache.recipe_data.keys())
+            recipes_id_list = list(game_config.config_recipes.keys())
             recipes_id = random.choice(recipes_id_list)
             food_list: dict[str, Food] = {}
-            now_recipe_data = cache.recipe_data[recipes_id]
+            now_recipe_data = game_config.config_recipes[recipes_id]
             # 只能制作预制菜
             if now_recipe_data.type != 5:
                 continue
@@ -262,7 +222,7 @@ def init_food_shop_data(
                 if game_config.config_recipes[x].restaurant == restaurant_id
             ]
             recipes_id = random.choice(recipes_id_list)
-            now_recipe_data = cache.recipe_data[recipes_id]
+            now_recipe_data = game_config.config_recipes[recipes_id]
             # 难度上无法制作的菜谱直接跳过
             if now_recipe_data.difficulty == 999:
                 continue
@@ -291,7 +251,7 @@ def init_food_shop_data(
                 if game_config.config_recipes[x].type in [1, 2]
             ]
             recipes_id = random.choice(recipes_id_list)
-            now_recipe_data = cache.recipe_data[recipes_id]
+            now_recipe_data = game_config.config_recipes[recipes_id]
             cook_level = random.randint(1, 8)
             new_food = cook(food_list, recipes_id, cook_level, "")
             shelf.setdefault(str(recipes_id), {})[
@@ -316,7 +276,7 @@ def get_character_cookable_recipes(
     list -- 食谱id列表
     """
     cookable_recipes_list = []
-    for recipe_id, recipe in cache.recipe_data.items():
+    for recipe_id, recipe in game_config.config_recipes.items():
         # 难度上无法制作的菜谱直接跳过
         if recipe.difficulty >= 100:
             continue
@@ -427,7 +387,7 @@ def get_character_food_bag_type_list_buy_food_type(
     for food_uid in inventory.foods(character_id):
         food_data: Food = inventory.foods(character_id)[food_uid]
         if food_data.recipe != -1:
-            food_name = cache.recipe_data[food_data.recipe].name
+            food_name = game_config.config_recipes[food_data.recipe].name
             food_list.setdefault(food_name, set())
             food_list[food_name].add(food_uid)
     return food_list
@@ -452,12 +412,16 @@ def get_food_list_from_food_shop(
                 continue
             now_food: game_type.Food = next(iter(shelf.values()))
             if now_food.recipe != -1:
-                food_list[food_id] = cache.recipe_data[int(food_id)].name
+                food_list[food_id] = game_config.config_recipes[
+                    int(food_id)
+                ].name
     # 餐馆与地摊小贩的食物
     elif economy.has_shelf(restaurant_id):
         for food_id, foods in economy.shelf(restaurant_id).items():
             if len(foods):
-                food_list[food_id] = cache.recipe_data[int(food_id)].name
+                food_list[food_id] = game_config.config_recipes[
+                    int(food_id)
+                ].name
     return food_list
 
 
@@ -474,34 +438,42 @@ def get_cook_from_makefood_data_by_food_type(
     food_list = {}
     for food_id in view.makefood_data:
         # 选择对应食物种类
-        if food_type == _("主食") and cache.recipe_data[int(food_id)].type != 0:
-            continue
-        elif (
-            food_type == _("零食") and cache.recipe_data[int(food_id)].type != 1
+        if (
+            food_type == _("主食")
+            and game_config.config_recipes[int(food_id)].type != 0
         ):
             continue
         elif (
-            food_type == _("饮品") and cache.recipe_data[int(food_id)].type != 2
+            food_type == _("零食")
+            and game_config.config_recipes[int(food_id)].type != 1
         ):
             continue
         elif (
-            food_type == _("酒类") and cache.recipe_data[int(food_id)].type != 3
+            food_type == _("饮品")
+            and game_config.config_recipes[int(food_id)].type != 2
         ):
             continue
         elif (
-            food_type == _("咖啡") and cache.recipe_data[int(food_id)].type != 8
+            food_type == _("酒类")
+            and game_config.config_recipes[int(food_id)].type != 3
         ):
             continue
         elif (
-            food_type == _("其他") and cache.recipe_data[int(food_id)].type != 9
+            food_type == _("咖啡")
+            and game_config.config_recipes[int(food_id)].type != 8
+        ):
+            continue
+        elif (
+            food_type == _("其他")
+            and game_config.config_recipes[int(food_id)].type != 9
         ):
             continue
 
         # 跳过时间为999的食谱
-        if cache.recipe_data[int(food_id)].time >= 999:
+        if game_config.config_recipes[int(food_id)].time >= 999:
             continue
 
-        food_list[food_id] = cache.recipe_data[int(food_id)].name
+        food_list[food_id] = game_config.config_recipes[int(food_id)].name
     return food_list
 
 
@@ -528,7 +500,7 @@ def get_filtered_sorted_cook_data(food_type: str) -> list:
     if filter_type or filter_difficulty != -1 or filter_time != -1:
         filtered_list = []
         for food_id, food_name in food_list:
-            recipe = cache.recipe_data[int(food_id)]
+            recipe = game_config.config_recipes[int(food_id)]
 
             # 类型筛选
             if filter_type and recipe.type not in filter_type:
@@ -564,16 +536,18 @@ def get_filtered_sorted_cook_data(food_type: str) -> list:
         reverse = sort_order == 1
         if sort_type == 1:  # 按难度排序
             food_list.sort(
-                key=lambda x: cache.recipe_data[int(x[0])].difficulty,
+                key=lambda x: game_config.config_recipes[int(x[0])].difficulty,
                 reverse=reverse,
             )
         elif sort_type == 2:  # 按时间排序
             food_list.sort(
-                key=lambda x: cache.recipe_data[int(x[0])].time, reverse=reverse
+                key=lambda x: game_config.config_recipes[int(x[0])].time,
+                reverse=reverse,
             )
         elif sort_type == 3:  # 按类型排序
             food_list.sort(
-                key=lambda x: cache.recipe_data[int(x[0])].type, reverse=reverse
+                key=lambda x: game_config.config_recipes[int(x[0])].type,
+                reverse=reverse,
             )
 
     return food_list
@@ -593,7 +567,7 @@ def judge_accept_special_seasoning_food(
     talent = abilities.talent(character_id)
     return_d100 = random.randint(1, 100)
     # 食物的菜谱难度
-    food_recipe_data: game_type.Recipes = cache.recipe_data[food.recipe]
+    food_recipe_data = game_config.config_recipes[food.recipe]
     food_difficulty = food_recipe_data.difficulty
     # 食物的品质
     food_quality = food.quality

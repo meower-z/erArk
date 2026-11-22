@@ -15,7 +15,7 @@ from Script.Modules.domains import (
     hypnosis,
     player_ability,
 )
-from Script.Modules.domains import identity
+from Script.Modules.domains import identity, scene_state
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -154,16 +154,16 @@ def evaluate_hypnosis_completion(character_id: int) -> int:
             now_scene_str = map_handle.get_map_system_path_str_for_list(
                 now_position
             )
-            now_scene_data = cache.scene_data[now_scene_str]
+            now_scene_data = constant.scene_data[now_scene_str]
             if now_scene_data.close_type != 1:
                 now_draw: draw.NormalDraw = draw.WaitDraw()
                 draw_text = _("\n当前地点不能锁门，无法进行空气催眠\n")
                 now_draw.text = draw_text
                 now_draw.draw()
                 return 0
-            elif cache.scene_data[now_scene_str].close_flag == 0:
-                cache.scene_data[now_scene_str].close_flag = (
-                    now_scene_data.close_type
+            elif scene_state.close_flag(now_scene_str) == 0:
+                scene_state.set_close_flag(
+                    now_scene_str, now_scene_data.close_type
                 )
                 now_draw = draw.WaitDraw()
                 draw_text = _("\n为了防止有人打扰，将门锁上了\n")
@@ -174,7 +174,6 @@ def evaluate_hypnosis_completion(character_id: int) -> int:
         if now_hypnosis_type == 1 or now_hypnosis_type == 2:
             hypnosis_state.clear_hypnosis_behavior_mode(character_id)
             flags.set(character_id, unconscious_h=now_hypnosis_type + 3)
-        # print(f"debug {character_data.name} unconscious_h = {character_data.sp_flag.unconscious_h}")
         return 1
     # 未完成催眠
     else:

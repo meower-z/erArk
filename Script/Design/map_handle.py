@@ -7,7 +7,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from types import FunctionType
 from Script.Modules.domains import activity, chara_life, facility, flags
-from Script.Modules.domains import relations, identity
+from Script.Modules.domains import relations, identity, scene_state
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -53,7 +53,7 @@ def get_map_for_path(scene_path: list) -> list:
     """
     map_path = scene_path[:-1]
     map_path_str = get_map_system_path_str_for_list(map_path)
-    if map_path_str in cache.map_data:
+    if map_path_str in constant.map_data:
         return map_path
     return get_map_for_path(map_path)
 
@@ -66,7 +66,7 @@ def get_map_data_for_map_path(map_path_str: str) -> game_type.Map:
     Return arguments:
     game_type.Map -- 地图数据
     """
-    return cache.map_data[map_path_str]
+    return constant.map_data[map_path_str]
 
 
 def get_scene_list_for_map(map_path_str: str) -> list:
@@ -106,22 +106,12 @@ def character_move_scene(
     character_id -- 角色id
     """
     old_scene_path_str = get_map_system_path_str_for_list(old_scene_path)
-    new_scene_path_str = get_map_system_path_str_for_list(new_scene_path)
-    # 从旧场景移除角色
-    if character_id in cache.scene_data[old_scene_path_str].character_list:
-        cache.scene_data[old_scene_path_str].character_list.remove(character_id)
     # 如果旧场景上锁了，且玩家不在其中，则将其解锁（玩家在屋内时，其他角色离开不解锁）
-    if (
-        cache.scene_data[old_scene_path_str].close_flag >= 1
-        and 0 not in cache.scene_data[old_scene_path_str].character_list
+    if scene_state.close_flag(old_scene_path_str) >= 1 and (
+        character_id == 0 or 0 not in scene_state.occupants(old_scene_path_str)
     ):
-        cache.scene_data[old_scene_path_str].close_flag = 0
-    # 在新场景添加角色
-    if character_id not in cache.scene_data[new_scene_path_str].character_list:
-        activity.set_position(character_id, new_scene_path)
-        cache.scene_data[new_scene_path_str].character_list.add(character_id)
-    # 如果角色已经在新场景角色列表中，但位置还没有移动到新场景，则移动位置
-    elif activity.position(character_id) != new_scene_path:
+        scene_state.set_close_flag(old_scene_path_str, 0)
+    if activity.position(character_id) != new_scene_path:
         activity.set_position(character_id, new_scene_path)
     # 刷新移动起止位置
     activity.update_behavior(
@@ -164,7 +154,7 @@ def get_path_finding(
     else:
         return (
             "",
-            cache.map_data[map_path_str].sorted_path[now_node][target_node],
+            constant.map_data[map_path_str].sorted_path[now_node][target_node],
         )
 
 
@@ -223,7 +213,7 @@ def get_map_path_for_true(map_path: list) -> list:
     map_path -- 当前地图路径
     """
     map_path_str = get_map_system_path_str_for_list(map_path)
-    if map_path_str in cache.map_data:
+    if map_path_str in constant.map_data:
         return map_path
     else:
         new_map_path = map_path[:-1]
@@ -328,7 +318,7 @@ def get_scene_data_for_map(
     scene_path = get_map_system_path_for_str(scene_path_str)
     scene_path = get_scene_path_for_true(scene_path)
     scene_path_str = get_map_system_path_str_for_list(scene_path)
-    return cache.scene_data[scene_path_str]
+    return constant.scene_data[scene_path_str]
 
 
 def get_scene_path_for_map_scene_id(map_path: list, map_scene_id: str) -> list:
@@ -369,8 +359,7 @@ def get_scene_path_for_true(scene_path: list) -> list:
     """
     scene_path_str = get_map_system_path_str_for_list(scene_path)
     # print(f"debug scene_path_str = {scene_path_str} ")
-    # print(f"debug cache.scene_data = {cache.scene_data} ")
-    if scene_path_str in cache.scene_data:
+    if scene_path_str in constant.scene_data:
         return scene_path
     else:
         scene_path.append("0")
@@ -389,8 +378,7 @@ def get_chara_now_scene_all_chara_id_list(
     scene_path_str = get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_character_data = cache.scene_data[scene_path_str].character_list
-    now_scene_character_list = list(scene_character_data)
+    now_scene_character_list = scene_state.occupants(scene_path_str)
     if remove_own_character:
         now_scene_character_list.remove(character_id)
     return now_scene_character_list
@@ -405,8 +393,7 @@ def get_scene_character_name_list(
     scene_path -- 场景路径
     remove_own_character -- 从姓名列表中移除主角 (default False)
     """
-    scene_character_data = cache.scene_data[scene_path_str].character_list
-    now_scene_character_list = list(scene_character_data)
+    now_scene_character_list = scene_state.occupants(scene_path_str)
     name_list = []
     if remove_own_character:
         now_scene_character_list.remove(0)
@@ -437,7 +424,7 @@ def get_scene_character_id_list(scene_path_str: str) -> list:
     Keyword arguments:
     scene_path -- 场景路径
     """
-    return list(cache.scene_data[scene_path_str].character_list)
+    return scene_state.occupants(scene_path_str)
 
 
 def judge_scene_is_full(scene_path_str: str) -> bool:
@@ -446,7 +433,7 @@ def judge_scene_is_full(scene_path_str: str) -> bool:
     Keyword arguments:
     scene_path -- 场景路径
     """
-    scene_data = cache.scene_data[scene_path_str]
+    scene_data = constant.scene_data[scene_path_str]
     if not hasattr(scene_data, "room_area"):
         return False
     if scene_data.room_area == 0:
@@ -457,7 +444,7 @@ def judge_scene_is_full(scene_path_str: str) -> bool:
         max_character = 100
     else:
         max_character = 9999
-    if len(scene_data.character_list) >= max_character:
+    if len(scene_state.occupants(scene_path_str)) >= max_character:
         return True
     return False
 
@@ -496,12 +483,12 @@ def init_scene_edge_path_data() -> None:
     """初始化全部地图寻路数据"""
     global scene_path_edge
     scene_path_edge = {}
-    for now_position_str in cache.scene_data:
+    for now_position_str in constant.scene_data:
         scene_path_edge[now_position_str] = {}
         # 忽略大地图
         if "泰拉" in now_position_str or _("泰拉") in now_position_str:
             continue
-        for target_scene_str in cache.scene_data:
+        for target_scene_str in constant.scene_data:
             if target_scene_str == now_position_str:
                 continue
             # 忽略大地图
@@ -655,7 +642,7 @@ def judge_scene_accessible(
     """
 
     # print(f"debug target_scene_str = {target_scene_str}")
-    now_scene_data = cache.scene_data[target_scene_str]
+    now_scene_data = constant.scene_data[target_scene_str]
     character_data = identity.of(character_id)
     # print(f"debug now_scene_data.name = {now_scene_data.scene_name}")
 
@@ -718,7 +705,7 @@ def judge_scene_accessible(
             return "wait_open"
 
     # 锁门判断
-    if now_scene_data.close_flag == 1:
+    if scene_state.close_flag(target_scene_str) == 1:
         # 即使关门，也可以进去自己的宿舍
         if chara_life.dormitory(character_data.cid) == target_scene_str:
             pass

@@ -227,9 +227,9 @@ def judge_in_scene(character_id: int, scene_name: str) -> bool:
     now_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    if now_scene_str not in cache.scene_data:
+    if now_scene_str not in constant.scene_data:
         return False
-    return cache.scene_data[now_scene_str].scene_name == scene_name
+    return constant.scene_data[now_scene_str].scene_name == scene_name
 
 
 def settle_absent(character_id: int, by_skip: bool = False) -> bool:
@@ -894,6 +894,6 @@ def judge_mother_available(character_id: int) -> int:
     mother_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(mother_id)
     )
-    if mother_scene_str not in cache.scene_data:
+    if mother_scene_str not in constant.scene_data:
         return -1
     return mother_id

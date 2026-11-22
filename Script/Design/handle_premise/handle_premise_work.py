@@ -11,6 +11,7 @@ from Script.Modules.domains import (
     warehouse,
 )
 from Script.Modules.domains import abilities, work, chara_life, identity
+from Script.Modules.domains import scene_state
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -784,8 +785,7 @@ def handle_nursery_have_work_to_do(character_id: int) -> int:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         if chara_id and abilities.talent(chara_id)[101]:
             return 1
     return 0
@@ -1343,9 +1343,9 @@ def handle_have_intern_student(character_id: int) -> int:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    if scene_path_str not in cache.scene_data:
+    if scene_path_str not in constant.scene_data:
         return 0
-    for other_id in cache.scene_data[scene_path_str].character_list:
+    for other_id in scene_state.occupants(scene_path_str):
         if other_id == character_id:
             continue
         if (

@@ -21,7 +21,7 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import first_record, flags, h_meters, h_state
 from Script.Modules.domains import modes, pregnancy, tallies, wardrobe
-from Script.Modules.domains import identity
+from Script.Modules.domains import identity, scene_state
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -704,10 +704,9 @@ class Ejaculation_Panel:
             scene_path_str = map_handle.get_map_system_path_str_for_list(
                 activity.position(0)
             )
-            scene_data: game_type.Scene = cache.scene_data[scene_path_str]
 
             # 当前场景的角色列表
-            for chara_id in scene_data.character_list:
+            for chara_id in scene_state.occupants(scene_path_str):
                 # 不显示自己
                 if chara_id == 0:
                     continue

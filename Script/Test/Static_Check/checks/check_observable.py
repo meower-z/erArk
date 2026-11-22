@@ -36,7 +36,7 @@ from Script.Modules.domains import needs, player_ability, prison, roster, work
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import relations
+from Script.Modules.domains import relations, scene_state
 from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
@@ -147,9 +147,7 @@ def _scene(cache: game_type.Cache, position: object) -> game_type.Scene | None:
     返回值: 对应场景对象；路径或场景结构异常时返回 None
     功能: 使用游戏路径助手防御式解析角色当前位置。
     """
-    scene_data = (
-        getattr(cache, "scene_data", None) if cache is not None else None
-    )
+    scene_data = constant.scene_data if cache is not None else None
     if (
         not isinstance(scene_data, dict)
         or not isinstance(position, list)
@@ -412,7 +410,7 @@ def check_observable_05() -> list[CheckFailure]:
         return []
     scene = _scene(cache, activity.position(pl.cid))
     roster = (
-        getattr(scene, "character_list", None) if scene is not None else None
+        scene_state.occupants(scene.scene_path) if scene is not None else None
     )
     if not isinstance(roster, (list, set, tuple)) or target_id in roster:
         return []

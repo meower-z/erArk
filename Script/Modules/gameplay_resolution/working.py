@@ -121,6 +121,7 @@ class _Buffer:
         default_factory=dict
     )
     forgotten: list[str] = field(default_factory=list)
+    revisions: dict[str, int] = field(default_factory=dict)
 
     def game(self) -> core.GameState:
         return core.state() if self.base is None else self.base
@@ -142,6 +143,7 @@ class _Buffer:
         if _keys[key].fold is not None:
             raise RuntimeError(f"{key} changes only by its rule")
         self.entry(who, key).value = new
+        self.revisions[key] = self.revisions.get(key, 0) + 1
 
     def change(
         self, who: str | None, key: str, op: str, operand: core.JSON
@@ -149,6 +151,7 @@ class _Buffer:
         hit = self.entry(who, key)
         hit.value = fold_all(key, hit.value, ((op, operand),))
         hit.ops.append((op, operand))
+        self.revisions[key] = self.revisions.get(key, 0) + 1
 
     def carried(self) -> tuple[core.JSON, ...]:
         out: list[core.JSON] = []
@@ -266,6 +269,22 @@ def _reading() -> _Buffer:
     if _stack:
         return _stack[-1]
     return _step
+
+
+def revision(*keys: str) -> tuple[object, core.GameState, tuple[int, ...]]:
+    """
+    返回当前读取缓冲区的版本标识，供派生缓存判断指定键是否发生变化
+    Keyword arguments:
+    keys -- 要跟踪写入次数的键名
+    Return arguments:
+    tuple[object, core.GameState, tuple[int, ...]] -- (当前读取缓冲区, 基准 GameState, 各键累计写入次数)
+    """
+    buffer = _reading()
+    return (
+        buffer,
+        buffer.game(),
+        tuple(buffer.revisions.get(k, 0) for k in keys),
+    )
 
 
 def get(

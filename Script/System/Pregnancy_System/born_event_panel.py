@@ -52,7 +52,7 @@ def move_to_inpatient_department_for_born(mother_character_id: int) -> list:
     mom_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(mother_character_id)
     )
-    if "Inpatient_Department" in cache.scene_data[mom_scene_str].scene_tag:
+    if "Inpatient_Department" in constant.scene_data[mom_scene_str].scene_tag:
         target_scene_path = list(activity.position(mother_character_id))
     else:
         target_scene_path = map_handle.get_map_system_path_for_str(

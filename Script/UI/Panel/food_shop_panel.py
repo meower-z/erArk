@@ -95,8 +95,8 @@ class FoodShopPanel:
         scene_position_str = map_handle.get_map_system_path_str_for_list(
             scene_position
         )
-        scene_name = cache.scene_data[scene_position_str].scene_name
-        scene_tag = cache.scene_data[scene_position_str].scene_tag
+        scene_name = constant.scene_data[scene_position_str].scene_name
+        scene_tag = constant.scene_data[scene_position_str].scene_tag
         title_draw = draw.TitleLineDraw(scene_name, self.width)
         food_type_list = [_("当前提供的食物")]
         # food_type_list = [_("主食"), _("零食"), _("饮品"), _("水果"), _("食材"), _("调料")]
@@ -248,7 +248,7 @@ class SeeFoodListByFoodNameDraw:
         scene_position_str = map_handle.get_map_system_path_str_for_list(
             scene_position
         )
-        scene_tag = cache.scene_data[scene_position_str].scene_tag
+        scene_tag = constant.scene_data[scene_position_str].scene_tag
 
         # 找到当前场景对应的食物商店
         self.now_restaurant_id: int | Literal["Stall_Vendor"] | None = None
@@ -300,9 +300,7 @@ class SeeFoodListByFoodNameDraw:
                 max_quality = food_data.quality
             # 获取食谱数据
             if isinstance(now_cid, str):
-                self.food_recipe: game_type.Recipes = cache.recipe_data[
-                    int(now_cid)
-                ]
+                self.food_recipe = game_config.config_recipes[int(now_cid)]
         # 加上制作者标记
         if maker_flag:
             make_text = _("(手制)")

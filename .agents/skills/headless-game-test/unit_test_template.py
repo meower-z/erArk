@@ -100,10 +100,10 @@ cache = cache_control.cache
 # ==== 2. 全局前置（不做这两件事会在结算里 KeyError） ====
 # 数值结算会读全局设置 normal_config.system_setting 的各项，System_Setting() 默认是空壳
 normal_config.system_setting = attr_calculation.get_system_setting_zero()
-# 场景路径必须是 cache.scene_data 里真实存在的键；["0"] 之类的占位值会让关门/移动类结算 KeyError
+# 场景路径必须是 constant.scene_data 里真实存在的键，["0"] 之类的占位值会让关门或移动类结算触发 KeyError
 SCENE = ["宿舍", "1区", "101"]
 PREV_SCENE = ["宿舍", "1区", "0"]
-assert map_handle.get_map_system_path_str_for_list(SCENE) in cache.scene_data
+assert map_handle.get_map_system_path_str_for_list(SCENE) in constant.scene_data
 
 # ==== 3. 屏蔽 UI ====
 for _n in dir(draw):

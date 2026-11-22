@@ -21,7 +21,7 @@ from collections import Counter
 from collections.abc import Mapping
 from typing import Any
 
-from Script.Core import cache_control
+from Script.Core import cache_control, constant
 from Script.Config import game_config
 from Script.Modules.domains import commission, diplomacy, dormitory, economy
 from Script.Modules.domains import entertainment, facility, flags, library
@@ -802,10 +802,9 @@ def check_island_19_dormitory_path_valid() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验每个在编非玩家干员的dormitory必须非空且是cache.scene_data的合法键，不得残留""或模板值"无"。
+        校验每个在编非玩家干员的 dormitory 必须非空且是 constant.scene_data 的合法键，不得残留 "" 或模板值 "无"。
         面板是模态阻塞的，回合快照看不到面板中途状态，不因"可能在编辑面板内"而抑制本条
     """
-    cache = cache_control.cache
     cd = identity.table()
     failures = []
     for cid in roster.active():
@@ -813,7 +812,7 @@ def check_island_19_dormitory_path_valid() -> list[CheckFailure]:
             continue
         ch = cd[cid]
         dormitory = chara_life.dormitory(cid)
-        if dormitory and dormitory in cache.scene_data:
+        if dormitory and dormitory in constant.scene_data:
             continue
         failures.append(
             make_failure(
@@ -838,7 +837,6 @@ def check_island_20_dormitory_room_capacity() -> list[CheckFailure]:
         [warning] 校验普通宿舍房设计容量2人；超员说明分配逻辑或特殊搬迁把人塞进了满房。永不判失败——代码自身
         容忍超员（max(2,实际人数)撑容量），超员可以合法持续到玩家升级宿舍；本函数仅在确有超员时给出经营告警
     """
-    cache = cache_control.cache
     cd = identity.table()
     try:
         resident_ids = dorm_common.get_dormitory_resident_id_set()
@@ -862,8 +860,8 @@ def check_island_20_dormitory_room_capacity() -> list[CheckFailure]:
             (cid, cd[cid].name, chara_life.work_type(cid)) for cid in cids
         ]
         scene_name = (
-            getattr(cache.scene_data.get(path), "name", path)
-            if path in getattr(cache, "scene_data", {})
+            getattr(constant.scene_data.get(path), "name", path)
+            if path in constant.scene_data
             else path
         )
         failures.append(
@@ -1403,13 +1401,12 @@ def check_island_30_facility_damage_and_maintenance() -> list[CheckFailure]:
         角色、值是合法场景路径。两张表由 maintenance.damage 与 maintenance.places 读出。不要求检修工程师在npc_id_got
         （外勤中的工程师留着检修地点）。不要求检修目标当前仍有损坏记录（无损坏时会随机选目标）
     """
-    cache = cache_control.cache
     cd = identity.table()
     failures = []
     illegal_damage = [
         (p, v)
         for p, v in maintenance.damage().items()
-        if not (p in cache.scene_data and type(v) is int and v >= 1)
+        if not (p in constant.scene_data and type(v) is int and v >= 1)
     ]
     if illegal_damage:
         failures.append(
@@ -1426,13 +1423,13 @@ def check_island_30_facility_damage_and_maintenance() -> list[CheckFailure]:
         if not (
             cid in cd
             and chara_life.work_type(cid) == 21
-            and place in cache.scene_data
+            and place in constant.scene_data
         )
     ]
     if illegal_maintenance:
         detail = [
             f"cid={cid},{_chara_name(cd, cid)},work_type={chara_life.work_type(cid) if cid in cd else None},"
-            f"{_sp_flag_brief(cd.get(cid))},place_in_scene_data={place in cache.scene_data}"
+            f"{_sp_flag_brief(cd.get(cid))},place_in_scene_data={place in constant.scene_data}"
             for cid, place in illegal_maintenance
         ]
         failures.append(

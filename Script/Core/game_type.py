@@ -1420,14 +1420,10 @@ class Scene:
         """ 有家具(1基础家具,2办公级家具,3卧室级家具) """
         self.close_type: int = 0
         """ 关门类型(0无法关门,1正常关门,2小隔间关门) """
-        self.close_flag: int = 0
-        """ 关门状态，同关门类型close_type(0未关门,1正常关门,2小隔间关门) """
         self.room_area: int = 0
         """ 房间面积(0基础10人,1标准50人,2较大100人,3无限制人数) """
         self.scene_tag: list = []
         """ 场景标签 """
-        self.character_list: set = set()
-        """ 场景内角色列表 """
         self.scene_img: str = ""
         """ 场景图片 """
 
@@ -1560,16 +1556,10 @@ class Cache:
         # """ 存储服装类型数据 """
         self.old_character_id: int = 0
         """ 离开场景面板前在场景中查看的角色id """
-        self.map_data: dict[str, Map] = {}
-        """ 游戏地图数据 地图路径:地图数据 """
-        self.scene_data: dict[str, Scene] = {}
-        """ 游戏场景数据 场景路径:场景数据 """
         # self.wear_item_type_data: dict = {}
         # """ 可穿戴道具类型数据 """
         self.over_behavior_character: set = set()
         """ 本次update中已结束结算的npc """
-        self.recipe_data: dict[int, Recipes] = {}
-        """ 菜谱数据 """
         self.debug_mode: bool = False
         """ debug模式 """
         self.rhodes_island: Rhodes_Island = Rhodes_Island()

@@ -6,7 +6,7 @@ from Script.Design import attr_calculation, clothing, handle_premise
 from Script.Design import map_handle, settle_behavior
 from Script.Core import cache_control, constant_effect, game_type, get_text
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import activity, dirty, identity
+from Script.Modules.domains import activity, dirty, identity, scene_state
 from Script.UI.Moudle import draw
 from Script.Modules.domains import flags, wardrobe
 
@@ -203,8 +203,7 @@ def handle_scene_all_characters_bra_pan_see(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         if chara_id == 0:
             continue
         handle_bra_see(chara_id, add_time, change_data, now_time)
@@ -287,9 +286,8 @@ def handle_get_scene_t_pan(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历当前角色列表
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         # 遍历非玩家的角色
         if chara_id > 0:
             clothing.pl_get_chara_pan(chara_id)
@@ -322,9 +320,8 @@ def handle_get_scene_t_socks(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历当前角色列表
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         # 遍历非玩家的角色
         if chara_id > 0:
             clothing.pl_get_chara_socks(chara_id)
@@ -424,9 +421,8 @@ def handle_scene_all_characters_cloth_back(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历当前角色列表
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         if chara_id == 0:
             continue
         handle_self_cloth_back(chara_id, add_time, change_data, now_time)

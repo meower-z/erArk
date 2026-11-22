@@ -15,7 +15,7 @@ from Script.Core import (
 from Script.Design import map_handle, attr_text, character_move, handle_premise
 from Script.Config import game_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import activity, identity
+from Script.Modules.domains import activity, identity, scene_state
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -68,7 +68,7 @@ class SeeMapPanel:
             map_path_str = map_handle.get_map_system_path_str_for_list(
                 self.now_map
             )
-            map_data: game_type.Map = cache.map_data[map_path_str]
+            map_data: game_type.Map = constant.map_data[map_path_str]
             map_name = attr_text.get_map_path_text(self.now_map)
             # 绘制标题
             title_draw = draw.TitleLineDraw(
@@ -158,11 +158,7 @@ class SeeMapPanel:
                                     args=(scene_path,),
                                 )
                                 # 如果是有NPC在那么显示为绿色
-                                if len(
-                                    cache.scene_data[
-                                        full_scene_str
-                                    ].character_list
-                                ):
+                                if len(scene_state.occupants(full_scene_str)):
                                     now_draw.normal_style = "green"
                             # 如果当前地点不可进入则绘制灰色按钮
                             else:
@@ -439,7 +435,7 @@ class MapSceneNameDraw:
         """绘制面板"""
         self.return_list = []
         map_path_str = map_handle.get_map_system_path_str_for_list(self.now_map)
-        map_data: game_type.Map = cache.map_data[map_path_str]
+        map_data: game_type.Map = constant.map_data[map_path_str]
         path_edge = map_data.path_edge
         scene_id_list = list(path_edge.keys())
         if len(scene_id_list):

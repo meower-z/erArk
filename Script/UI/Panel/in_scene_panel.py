@@ -86,7 +86,7 @@ class InScenePanel:
             scene_path_str = map_handle.get_map_system_path_str_for_list(
                 activity.position(0)
             )
-            scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+            scene_data: game_type.Scene = constant.scene_data[scene_path_str]
             character_handle_panel.null_button_text = activity.target(0)
             character_list = character_behavior.scene_characters(scene_data)
             character_handle_panel.text_list = character_list

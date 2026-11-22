@@ -1126,21 +1126,11 @@ def remove_abnormal_daughter(character_id: int) -> bool:
     Return arguments:
     bool -- 移除了时为真
     """
-    from Script.Design import map_handle
     from Script.System.Official_Event_System import official_event_handle
 
     # 安全护栏：只移除疑似误入的女儿，绝不动在册的亲生女儿
     if not judge_suspected_abnormal_daughter(character_id):
         return False
-    # 从所在场景的角色列表里移除
-    scene_path_str = map_handle.get_map_system_path_str_for_list(
-        activity.position(character_id)
-    )
-    if (
-        scene_path_str in cache.scene_data
-        and character_id in cache.scene_data[scene_path_str].character_list
-    ):
-        cache.scene_data[scene_path_str].character_list.remove(character_id)
     # 删掉角色数据与已获得集合，用 working.forget 丢掉停放的数据，再删掉角色模板，免得再被实例化
     roster.discard(character_id)
     identity.discard(character_id)

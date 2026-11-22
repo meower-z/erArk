@@ -28,7 +28,7 @@ from Script.Modules.domains import (
     economy,
     flags,
 )
-from Script.Modules.domains import player_ability, tallies
+from Script.Modules.domains import player_ability, tallies, scene_state
 from Script.Modules.gameplay_resolution import intent, plan_queue, starts
 from Script.System.Cooking_System import cooking
 from Script.System.Sex_System import drunk_sex_common
@@ -257,8 +257,8 @@ def start_sleep(who: int, chosen: intent.Intent) -> None:
         scene_path = map_handle.get_map_system_path_str_for_list(
             activity.position(who)
         )
-        scene_data = cache.scene_data[scene_path]
-        scene_data.close_flag = scene_data.close_type
+        scene_data = constant.scene_data[scene_path]
+        scene_state.set_close_flag(scene_path, scene_data.close_type)
     now = game_time.now()
     action_info.set(who, "sleep_time", now)
     action_info.set(

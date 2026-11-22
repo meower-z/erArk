@@ -16,6 +16,7 @@ from Script.Modules.domains import hypnosis, needs, npc_template
 from Script.Modules.domains import player_collection
 from Script.Modules.domains import playthrough, roster, chara_life, relations
 from Script.Modules.domains import identity
+from Script.Core import constant
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1198,7 +1199,6 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     """
     from Script.Design import basement
     from Script.UI.Flow import creator_character_flow
-    from Script.Config import map_config
     from Script.System.Medical_System import medical_service
 
     info_draw = draw.NormalDraw()
@@ -1216,7 +1216,6 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
 
     # 开始重置
     cache_control.cache = cache
-    map_config.init_map_data()
     cache.rhodes_island = basement.get_base_zero()
     medical_service.init_medical_department_data(cache.rhodes_island)
     playthrough.reset_difficulty_and_birth()
@@ -1235,7 +1234,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     for now_id in new_npc_id_got:
         # 获取地点数据
         now_dormitory = chara_life.dormitory(now_id)
-        now_scene_data = cache.scene_data[now_dormitory]
+        now_scene_data = constant.scene_data[now_dormitory]
         # 如果该地点在设施开放列表中
         if (
             now_scene_data.scene_name

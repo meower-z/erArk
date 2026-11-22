@@ -20,12 +20,12 @@ from __future__ import annotations
 from fractions import Fraction
 from typing import TypeGuard
 
-from Script.Core import cache_control, num
+from Script.Core import cache_control, constant, num
 from Script.Design import map_handle
 from Script.Modules.domains import abilities, achievement, action_info, activity
 from Script.Modules.domains import flags, h_state as h_state_domain
 from Script.Modules.domains import hypnosis as hypnosis_domain, modes, needs
-from Script.Modules.domains import player_ability, roster
+from Script.Modules.domains import player_ability, roster, scene_state
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -126,7 +126,7 @@ def _scene_key(position: object) -> str | None:
     参数: position 角色/玩家的position字段
     返回值: Optional[str] 场景key字符串；position不是"全字符串的list"形状时返回None
     功能: 用map_handle.get_map_system_path_str_for_list(os.sep.join)统一生成场景key，
-        供MIND-19/MIND-20按场景查cache.scene_data；坏形状交由调用方判失败而不是让本函数抛异常
+        供 MIND-19/MIND-20 按场景查 constant.scene_data，坏形状交由调用方判失败而不是让本函数抛异常
     """
     if (
         not isinstance(position, list)
@@ -882,10 +882,7 @@ def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
         可锁门地点并在施放时强制锁门，仍有人处于5而门已开说明锁被别的结算解掉了。已知会命中的真实缺口：
         H结束效果会开门却不解除空气催眠，命中时应向游戏侧提缺口，故为warning而非直接放宽
     """
-    cache = cache_control.cache
-    scene_data = getattr(cache, "scene_data", None)
-    if not isinstance(scene_data, dict):
-        return []
+    scene_data = constant.scene_data
     pl = _pl()
     failures = []
     for cid, chara in _iter_all():
@@ -896,7 +893,7 @@ def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
         if (
             scene is not None
             and getattr(scene, "close_type", 0) == 1
-            and getattr(scene, "close_flag", 0) != 0
+            and scene_state.close_flag(scene.scene_path) != 0
         ):
             continue
         air_position = (
@@ -910,7 +907,7 @@ def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
                 "空气催眠地点必须处于锁门状态",
                 f"[warning] 角色id={cid}({_name(chara)})unconscious_h=5但所在场景{key!r}未处于锁门状态: "
                 f"close_type={getattr(scene, 'close_type', '?') if scene is not None else '场景不存在'} "
-                f"close_flag={getattr(scene, 'close_flag', '?') if scene is not None else '?'}，"
+                f"close_flag={scene_state.close_flag(scene.scene_path) if scene is not None else '?'}，"
                 f"玩家position={activity.position(pl.cid) if pl is not None else '?'}，"
                 f"air_hypnosis_position={air_position}",
                 [cid],
@@ -929,20 +926,18 @@ def check_air_hypnosis_anchor_shape() -> list[CheckFailure]:
         str=""，但当前成功路径赋的是position(List[str])，混入任意字符串会让位置比较永远失真，无法解析
         的路径还会让MIND-19取场景时KeyError。有意不写len(air)==2——场景路径不是固定两段
     """
-    cache = cache_control.cache
     pl = _pl()
     if pl is None:
         return []
     air = player_ability.get(pl.cid, "air_hypnosis_position")
     if air == "":
         return []
-    scene_data = getattr(cache, "scene_data", None)
+    scene_data = constant.scene_data
     key = _scene_key(air) if isinstance(air, list) else None
     ok = (
         isinstance(air, list)
         and bool(air)
         and all(isinstance(x, str) for x in air)
-        and isinstance(scene_data, dict)
         and key in scene_data
     )
     if ok:

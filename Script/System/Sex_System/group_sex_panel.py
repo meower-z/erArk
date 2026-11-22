@@ -13,7 +13,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle, virgin_break_gate
 from Script.Modules.domains import abilities, activity, flags, h_state, modes
-from Script.Modules.domains import roster
+from Script.Modules.domains import roster, scene_state
 from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
@@ -670,8 +670,9 @@ class Edit_Group_Sex_Temple_Panel:
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(self.pl_character_data.cid)
         )
-        scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-        all_character_list: Collection[int] = scene_data.character_list
+        all_character_list: Collection[int] = scene_state.occupants(
+            scene_path_str
+        )
         # 全模板中的角色id列表
         group_sex_chara_id_list = count_group_sex_character_list()
         # 获取已选的角色id
@@ -851,8 +852,7 @@ class Edit_Group_Sex_Temple_Panel:
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(self.pl_character_data.cid)
         )
-        scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-        now_scene_character_list = scene_data.character_list
+        now_scene_character_list = scene_state.occupants(scene_path_str)
         select_state: dict[str, int | str] = {}
 
         while 1:

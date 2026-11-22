@@ -14,6 +14,7 @@ from Script.Modules.domains import abilities, achievement, activity, chara_life
 from Script.Modules.domains import commission, dirty, flags, h_state, inventory
 from Script.Modules.domains import needs, player_collection, playthrough, prison
 from Script.Modules.domains import relations, roster, warehouse, identity
+from Script.Modules.domains import scene_state
 
 if TYPE_CHECKING:
     from typing import Any
@@ -491,7 +492,6 @@ def settle_chara_group_sex() -> list[int]:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(0)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 统计群交人数，有意识人数，无意识人数
     group_sex_character_count = 0
     conscious_count = 0
@@ -499,7 +499,7 @@ def settle_chara_group_sex() -> list[int]:
     # 母女丼成就特殊标志
     daughter_and_mother_flag = 0
     # 遍历当前角色列表
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         # 跳过非角色
         if chara_id == 0:
             continue
@@ -518,10 +518,9 @@ def settle_chara_group_sex() -> list[int]:
             # 获取该角色的母亲ID
             mother_id = relations.mother_id(chara_id)
             # 如果母亲也在场且也在H中
-            if (
-                mother_id in scene_data.character_list
-                and handle_premise.handle_self_is_h(mother_id)
-            ):
+            if mother_id in scene_state.occupants(
+                scene_path_str
+            ) and handle_premise.handle_self_is_h(mother_id):
                 daughter_and_mother_flag = 1
     # 904号成就
     if (

@@ -18,7 +18,7 @@ from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
 from typing import TYPE_CHECKING
 from Script.Modules.domains import activity, chara_life, education, facility
-from Script.Modules.domains import flags, growth, roster, identity
+from Script.Modules.domains import flags, growth, roster, identity, scene_state
 
 if TYPE_CHECKING:
     import datetime
@@ -96,7 +96,7 @@ def get_classroom_list(course_type: int = -1) -> list[str]:
         for scene_path_str in constant.place_data.get(
             education_constant.CLASSROOM_TAG_BY_COURSE_TYPE[now_type], []
         ):
-            scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+            scene_data: game_type.Scene = constant.scene_data[scene_path_str]
             if not judge_classroom_open(scene_data.scene_name):
                 continue
             now_group.append(scene_data.scene_name)
@@ -117,7 +117,7 @@ def get_course_type_by_classroom(classroom: str) -> int:
         tag,
     ) in education_constant.CLASSROOM_TAG_BY_COURSE_TYPE.items():
         for scene_path_str in constant.place_data.get(tag, []):
-            if cache.scene_data[scene_path_str].scene_name == classroom:
+            if constant.scene_data[scene_path_str].scene_name == classroom:
                 return course_type
     return -1
 
@@ -134,9 +134,9 @@ def get_course_type_by_position(position: list[str]) -> int:
           两处共用一个定义，口上读到的课型与实际结算不会分叉。只读
     """
     scene_path_str = map_handle.get_map_system_path_str_for_list(position)
-    if scene_path_str in cache.scene_data:
+    if scene_path_str in constant.scene_data:
         course_type = get_course_type_by_classroom(
-            cache.scene_data[scene_path_str].scene_name
+            constant.scene_data[scene_path_str].scene_name
         )
         if course_type != -1:
             return course_type
@@ -153,7 +153,7 @@ def get_classroom_position(classroom: str) -> list[str]:
     """
     for tag in education_constant.CLASSROOM_TAG_BY_COURSE_TYPE.values():
         for scene_path_str in constant.place_data.get(tag, []):
-            if cache.scene_data[scene_path_str].scene_name == classroom:
+            if constant.scene_data[scene_path_str].scene_name == classroom:
                 return map_handle.get_map_system_path_for_str(scene_path_str)
     return []
 
@@ -600,8 +600,8 @@ def get_now_teaching(character_id: int) -> dict | None:
             activity.position(character_id)
         )
         if (
-            now_scene_str not in cache.scene_data
-            or cache.scene_data[now_scene_str].scene_name != classroom
+            now_scene_str not in constant.scene_data
+            or constant.scene_data[now_scene_str].scene_name != classroom
         ):
             return None
     return {
@@ -672,10 +672,9 @@ def get_intern_mentor(character_id: int, work_type_id: int) -> int:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    if scene_path_str not in cache.scene_data:
+    if scene_path_str not in constant.scene_data:
         return -1
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for other_id in scene_data.character_list:
+    for other_id in scene_state.occupants(scene_path_str):
         if other_id == character_id:
             continue
         if chara_life.work_type(other_id) == work_type_id:
@@ -721,7 +720,7 @@ def get_course_place(now_course: dict) -> list[str]:
     # 体育课要精确到具体那间房（木桩房与射击房同属 Training_Room）；那间房还没开放就解析不出（Plan 26 §3.8）
     if course_type == education_constant.COURSE_TYPE_PE:
         for scene_path_str in scene_list:
-            scene_name = cache.scene_data[scene_path_str].scene_name
+            scene_name = constant.scene_data[scene_path_str].scene_name
             if scene_name == now_course["target"]:
                 if not judge_scene_open(scene_name):
                     return []
@@ -735,21 +734,21 @@ def get_course_place(now_course: dict) -> list[str]:
     if course_type == education_constant.COURSE_TYPE_INTERN:
         work_type_id = now_course["target"]
         for scene_path_str in scene_list:
-            for other_id in cache.scene_data[scene_path_str].character_list:
+            for other_id in scene_state.occupants(scene_path_str):
                 if chara_life.work_type(other_id) == work_type_id:
                     return map_handle.get_map_system_path_for_str(
                         scene_path_str
                     )
         work_place = game_config.config_work_type[work_type_id].place
         for scene_path_str in scene_list:
-            if cache.scene_data[
+            if constant.scene_data[
                 scene_path_str
             ].scene_name == work_place and judge_scene_open(work_place):
                 return map_handle.get_map_system_path_for_str(scene_path_str)
     # 兴趣课与实习课的回落：取第一间已开放的。整组都没开放（咖啡馆、温室之类还没建）就解析不出，
     #    交回既有 AI（Plan 24 §3.7），不再派人走到门口、因寻路 wait_open 一分钟一分钟地空转（Plan 26 §3.8）
     for scene_path_str in scene_list:
-        if judge_scene_open(cache.scene_data[scene_path_str].scene_name):
+        if judge_scene_open(constant.scene_data[scene_path_str].scene_name):
             return map_handle.get_map_system_path_for_str(scene_path_str)
     return []
 

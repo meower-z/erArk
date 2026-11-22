@@ -17,7 +17,7 @@ from Script.Modules.save_load import reset
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import abilities, activity, chara_life, h_state
 from Script.Modules.domains import player_collection, relations, roster, status
-from Script.Modules.domains import visitor
+from Script.Modules.domains import visitor, scene_state
 from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
@@ -1842,8 +1842,7 @@ class SeeCharacterInfoInScenePanel:
         """ 绘制宽度 """
         position = activity.position(0)
         position_str = map_handle.get_map_system_path_str_for_list(position)
-        scene_data: game_type.Scene = cache.scene_data[position_str]
-        now_list = list(scene_data.character_list)
+        now_list = list(scene_state.occupants(position_str))
         now_list.remove(0)
         self.handle_panel = SeeCharacterInfoHandleInScene(
             target_id, width, now_list

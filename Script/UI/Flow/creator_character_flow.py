@@ -96,7 +96,6 @@ def game_start() -> None:
     character_handle.init_character_position()
     character_handle.init_character_facility_open()
     character_handle.handle_character_setting()
-    cooking.init_recipes()
     cooking.init_food_shop_data(new_day_flag=True)
     playthrough.reset_difficulty_and_birth()
     country.fill()

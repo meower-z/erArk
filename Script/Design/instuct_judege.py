@@ -11,6 +11,7 @@ from Script.Design import handle_talent, map_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.Modules.domains import abilities, action_info, activity, identity
+from Script.Modules.domains import scene_state
 from Script.Modules.domains import entertainment, flags, h_state, needs
 from Script.Modules.domains import player_ability, relations, status
 
@@ -306,11 +307,10 @@ def calculation_instuct_judege(
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(character_id)
         )
-        scene_data = cache.scene_data[scene_path_str]
         if len(
-            scene_data.character_list
+            scene_state.occupants(scene_path_str)
         ) > 2 and handle_premise.handle_t_normal_5_6(character_id):
-            other_chara_count = len(scene_data.character_list) - 2
+            other_chara_count = len(scene_state.occupants(scene_path_str)) - 2
             if instruct_name in {_("群交"), _("隐奸")}:
                 judge_other_people = 60 + 60 * other_chara_count
             elif judge_data_type == "S":
@@ -331,7 +331,7 @@ def calculation_instuct_judege(
         assistant_id = relations.assistant_character_id(character_id)
         if (
             assistant_id != target_character_id
-            and assistant_id in scene_data.character_list
+            and assistant_id in scene_state.occupants(scene_path_str)
         ):
             if relations.assistant_services(assistant_id)[8]:
                 judge += 50
