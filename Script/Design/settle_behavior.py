@@ -16,7 +16,7 @@ from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
 from Script.Modules.domains import abilities, action_info, flags, modes, needs
-from Script.Modules.domains import roster, work
+from Script.Modules.domains import roster, status, work
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -319,7 +319,7 @@ def handle_settle_behavior(
             # 获取排序后的状态列表，按 type 排序（快感 type==0 在前）
             seen_status = {
                 status_id: shown_change(
-                    now_character_data.status_data[status_id],
+                    status.of(now_character_data.cid)[status_id],
                     change_data.status_data[status_id],
                 )
                 for status_id in change_data.status_data
@@ -349,11 +349,11 @@ def handle_settle_behavior(
                 )
                 # 获取新旧状态等级
                 new_state_level = attr_calculation.get_status_level(
-                    num.whole(now_character_data.status_data[status_id])
+                    num.whole(status.of(now_character_data.cid)[status_id])
                 )
                 old_state_level = attr_calculation.get_status_level(
                     num.whole(
-                        now_character_data.status_data[status_id]
+                        status.of(now_character_data.cid)[status_id]
                         - change_data.status_data[status_id]
                     )
                 )
@@ -509,7 +509,7 @@ def handle_settle_behavior(
                     # 获取排序后的状态列表，按 type 排序（快感 type==0 在前）
                     seen_status = {
                         status_id: shown_change(
-                            target_data.status_data[status_id],
+                            status.of(target_data.cid)[status_id],
                             target_change.status_data[status_id],
                         )
                         for status_id in target_change.status_data
@@ -551,11 +551,11 @@ def handle_settle_behavior(
                         )
                         # 获取新旧状态等级
                         new_state_level = attr_calculation.get_status_level(
-                            num.whole(target_data.status_data[status_id])
+                            num.whole(status.of(target_data.cid)[status_id])
                         )
                         old_state_level = attr_calculation.get_status_level(
                             num.whole(
-                                target_data.status_data[status_id]
+                                status.of(target_data.cid)[status_id]
                                 - target_change.status_data[status_id]
                             )
                         )
@@ -1262,22 +1262,21 @@ def handle_comprehensive_value_effect(
                 return 1
             return 0
         else:
-            # 对属性进行操作
+            # 对属性值进行操作（G 加、L 减、E 设为），状态值与能力等四张表在内核状态里，其余属性在角色对象上
             operation_func = operation_mapping[operation]
-
-            # 能力、素质、宝珠与经验表不在角色对象上，经 abilities.Table 读写
-            if attribute_name in abilities.PICKLED:
+            by = int(effect_all_value_list[3])
+            if attribute_name == "status_data":
+                old = status.of(final_character_id)[type_son_id]
+                new = {"G": old + by, "L": old - by, "E": by}[operation]
+                status.set(final_character_id, type_son_id, new)
+            elif attribute_name in abilities.PICKLED:
                 key = abilities.PICKLED[attribute_name]
-                attribute_value = abilities.Table(final_character_id, key)
+                table = abilities.Table(final_character_id, key)
+                table[type_son_id] = operation_func(table[type_son_id], by)
             else:
                 attribute_value = getattr(final_character_data, attribute_name)
-            # 对属性值进行操作
-            attribute_value[type_son_id] = operation_func(
-                attribute_value[type_son_id], int(effect_all_value_list[3])
-            )
-            # 将操作后的属性值重新设置到对象上
-            if attribute_name not in abilities.PICKLED:
-                setattr(final_character_data, attribute_name, attribute_value)
+                old = attribute_value[type_son_id]
+                attribute_value[type_son_id] = operation_func(old, by)
 
             # 记录结算数据，结算记录里没有素质与宝珠的栏
             if attribute_name not in ["flag", "talent", "juel"]:

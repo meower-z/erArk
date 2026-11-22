@@ -34,6 +34,7 @@ from Script.UI.Panel import (
     confinement_and_training,
 )
 from Script.Modules.domains import kitchen, needs, warehouse
+from Script.Modules.domains import inventory, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -113,7 +114,7 @@ def start_buy_food(who: int, chosen: intent.Intent) -> None:
         assert taken is not None
         food = taken
     character_data = cache.character_data[who]
-    character_data.food_bag[UUID(uid)] = food
+    inventory.put_food(who, food)
     character_data.behavior.target_food = food
 
 
@@ -126,7 +127,7 @@ def check_eat_food(who: int, chosen: intent.Intent) -> core.Action | None:
     """
     args = _args(chosen)
     character_data = cache.character_data[who]
-    food = character_data.food_bag.get(UUID(str(args["food_uid"])))
+    food = inventory.foods(who).get(UUID(str(args["food_uid"])))
     if food is None:
         return _wait_one_minute(who)
     target_id = character_data.target_character_id
@@ -166,7 +167,7 @@ def start_eat_food(who: int, chosen: intent.Intent) -> None:
     """
     args = _args(chosen)
     character_data = cache.character_data[who]
-    food = character_data.food_bag[UUID(str(args["food_uid"]))]
+    food = inventory.foods(who)[UUID(str(args["food_uid"]))]
     character_data.behavior.target_food = food
     if args.get("angry"):
         needs.add(who, "angry", 40)
@@ -196,7 +197,7 @@ def start_make_food(who: int, chosen: intent.Intent) -> None:
     character_data = cache.character_data[who]
     character_data.behavior.make_food_count = len(made)
     if made:
-        character_data.behavior.target_food = character_data.food_bag[made[-1]]
+        character_data.behavior.target_food = inventory.foods(who)[made[-1]]
     if len(made) < count:
         now_draw = draw.NormalDraw()
         now_draw.text = _(
@@ -309,20 +310,22 @@ def start_undress(who: int, chosen: intent.Intent) -> None:
     给对方脱衣：0 脱到只穿内衣，1 脱到只剩袜子手套，2 脱光，3 收走内裤；之后的结算同脱衣
     """
     target_id = cache.character_data[who].target_character_id
-    target_data = cache.character_data[target_id]
     choice = int(cast(int, _args(chosen)["choice"]))
-    cloth = target_data.cloth
+    cloth = wardrobe.of(target_id)
     if choice == 0:
         for i in (5, 8):
             cloth.cloth_off[i].extend(cloth.cloth_wear[i])
+        wardrobe.put(target_id, cloth)
         clothing.undress_out_cloth(target_id)
     elif choice == 1:
         for i in (5, 6, 8, 9):
             cloth.cloth_off[i].extend(cloth.cloth_wear[i])
+        wardrobe.put(target_id, cloth)
         clothing.strip_down_till_socks_and_gloves_left(target_id)
     elif choice == 2:
         for i in game_config.config_clothing_type:
             cloth.cloth_off[i].extend(cloth.cloth_wear[i])
+        wardrobe.put(target_id, cloth)
         clothing.get_all_cloth_off(target_id)
     elif choice == 3:
         clothing.pl_get_chara_pan(target_id)

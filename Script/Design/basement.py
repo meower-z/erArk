@@ -7,9 +7,9 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Modules.domains import abilities, diplomacy, economy, facility
-from Script.Modules.domains import flags, fridge, maintenance, official
-from Script.Modules.domains import physical_exam, power, production, recruit
-from Script.Modules.domains import roster, tallies, warehouse, work
+from Script.Modules.domains import flags, fridge, inventory, maintenance
+from Script.Modules.domains import official, physical_exam, power, production
+from Script.Modules.domains import recruit, roster, tallies, warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -414,17 +414,16 @@ def settle_milk() -> None:
     chara_id_list = list(cache.character_data.keys())
     chara_id_list.append(0)
     for character_id in chara_id_list:
-        character_data: game_type.Character = cache.character_data[character_id]
 
         # 遍历角色背包
-        for food_id in character_data.food_bag.copy():
-            food: game_type.Food = character_data.food_bag[food_id]
+        for food_id in inventory.foods(character_id).copy():
+            food: game_type.Food = inventory.foods(character_id)[food_id]
             # 如果是母乳，则转化，并删掉原物品
             if food.milk_ml > 0:
                 warehouse.add(31, food.milk_ml)
                 all_milk += food.milk_ml
                 # print(f"debug {character_data.name}携带的母乳（{food.ml}ml）已转化为罗德岛的母乳")
-                del character_data.food_bag[food.uid]
+                inventory.drop_food(character_id, food.uid)
 
     # 输出提示信息
     if all_milk > 0:

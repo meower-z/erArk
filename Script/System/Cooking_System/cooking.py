@@ -8,7 +8,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
 from Script.Modules.domains import abilities, achievement, economy, flags
-from Script.Modules.domains import kitchen, roster
+from Script.Modules.domains import inventory, kitchen, roster
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
 
@@ -60,14 +60,15 @@ def create_recipe(
 @reset.repair
 def _drop_old_format_food() -> None:
     """读档时删掉各角色背包里旧版本的食物：没有母乳量，或精液调味却没有调味量"""
-    for character in cache.character_data.values():
-        food_bag = character.food_bag
+    for character_id in cache.character_data:
+        food_bag = inventory.foods(character_id)
         for uid, food in list(food_bag.items()):
             if not hasattr(food, "milk_ml") or (
                 food.special_seasoning in [11, 12]
                 and not hasattr(food, "special_seasoning_amount")
             ):
                 del food_bag[uid]
+        inventory.replace_foods(character_id, food_bag)
 
 
 def create_food(
@@ -368,7 +369,7 @@ def player_can_season(seasoning: int) -> bool:
     bool -- 够做一份
     """
     if seasoning > 100:
-        return cache.character_data[0].item[seasoning] > 0
+        return inventory.items(0)[seasoning] > 0
     if seasoning in {11, 12}:
         return not handle_premise.handle_pl_semen_le_2(0)
     return True
@@ -395,7 +396,7 @@ def player_make_dishes(
         if not player_can_season(seasoning):
             break
         if seasoning > 100:
-            character_data.item[seasoning] -= 1
+            inventory.add_item(0, seasoning, -1)
         semen_count = 0
         if seasoning in {11, 12}:
             __, semen_count = ejaculation_panel.common_ejaculation()
@@ -404,7 +405,7 @@ def player_make_dishes(
         food = create_food("", recipe_id, quality, character_data.name)
         food.special_seasoning = seasoning
         food.special_seasoning_amount = semen_count
-        character_data.food_bag[food.uid] = food
+        inventory.put_food(0, food)
         made.append(food.uid)
         achievement.add("make_food_count", 1)
     return made
@@ -422,9 +423,8 @@ def get_character_food_bag_type_list_buy_food_type(
     Dict -- 食物名字数据 食物名字:uid集合
     """
     food_list: dict[str, set[uuid.UUID]] = {}
-    character_data = cache.character_data[character_id]
-    for food_uid in character_data.food_bag:
-        food_data: Food = character_data.food_bag[food_uid]
+    for food_uid in inventory.foods(character_id):
+        food_data: Food = inventory.foods(character_id)[food_uid]
         if food_data.recipe != -1:
             food_name = cache.recipe_data[food_data.recipe].name
             food_list.setdefault(food_name, set())
@@ -602,9 +602,6 @@ def judge_accept_special_seasoning_food(
     )
     accept_rate = max(accept_rate, 5)  # 保底5%几率
 
-    # debug模式直接过
-    # if cache.debug_mode:
-    # return 1
     # 567异常则直接通过
     if handle_premise.handle_unnormal_567(character_id):
         return 1
@@ -711,18 +708,19 @@ def handle_food_deterioration(character_id: int) -> int:
     Return arguments:
     int -- 过期食物数量
     """
-    character_data = cache.character_data[character_id]
+    food_bag = inventory.foods(character_id)
     remove_food_uid_list = []
     # NPC只有在持有食物大于1个时才进行变质与过期结算
-    if character_id != 0 and len(character_data.food_bag) <= 1:
+    if character_id != 0 and len(food_bag) <= 1:
         return 0
-    for food_uid in character_data.food_bag:
-        food_data: Food = character_data.food_bag[food_uid]
+    for food_uid in food_bag:
+        food_data: Food = food_bag[food_uid]
         # 食物变质
         food_data.quality = min(food_data.quality - 1, food_data.quality // 2)
         # 食物过期
         if food_data.quality <= 0:
             remove_food_uid_list.append(food_uid)
     for food_uid in remove_food_uid_list:
-        character_data.food_bag.pop(food_uid)
+        food_bag.pop(food_uid)
+    inventory.replace_foods(character_id, food_bag)
     return len(remove_food_uid_list)

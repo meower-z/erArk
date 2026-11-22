@@ -10,13 +10,14 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import abilities, action_info, commission
-from Script.Modules.domains import diplomacy, economy, education, flags, fridge
-from Script.Modules.domains import growth, library, maintenance, medical, modes
-from Script.Modules.domains import needs, physical_exam, player_ability
+from Script.Modules.domains import abilities, action_info, body_manage
+from Script.Modules.domains import commission, diplomacy, economy, education
+from Script.Modules.domains import flags, fridge, growth, inventory, library
+from Script.Modules.domains import maintenance, medical, modes, needs
+from Script.Modules.domains import physical_exam, player_ability
 from Script.Modules.domains import player_collection, playthrough, power
 from Script.Modules.domains import pregnancy, prison, production, recruit
-from Script.Modules.domains import roster, visitor, work
+from Script.Modules.domains import roster, status, visitor, wardrobe, work
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -557,15 +558,16 @@ def migrate_character_replacement(
         new_character.talk_size = new_tem.Talk_Size
 
         # 从新模板生成衣服
-        new_character.cloth = attr_calculation.get_cloth_zero()
-        new_character.cloth.cloth_wear = attr_calculation.get_cloth_wear_zero()
+        cloth = attr_calculation.get_cloth_zero()
+        cloth.cloth_wear = attr_calculation.get_cloth_wear_zero()
         for cloth_id in new_tem.Cloth:
             if cloth_id in game_config.config_clothing_tem:
                 cloth_type = game_config.config_clothing_tem[
                     cloth_id
                 ].clothing_type
-                new_character.cloth.clothing_tem.append(cloth_id)
-                new_character.cloth.cloth_wear[cloth_type].append(cloth_id)
+                cloth.clothing_tem.append(cloth_id)
+                cloth.cloth_wear[cloth_type].append(cloth_id)
+        wardrobe.put(new_id, cloth)
 
         # ========== 2. 复制旧角色的动态数据 ==========
         # 数值属性
@@ -594,15 +596,9 @@ def migrate_character_replacement(
             new_character.last_behavior_id_list = [0]
 
         # 字典/集合属性
-        new_character.status_data = (
-            old_character.status_data.copy()
-            if old_character.status_data
-            else {}
-        )
+        status.replace(new_id, status.of(old_id))
         abilities.copy_tables(old_id, new_id)
-        new_character.item = (
-            old_character.item.copy() if old_character.item else {}
-        )
+        inventory.replace_items(new_id, inventory.items(old_id))
         new_character.chara_setting = (
             old_character.chara_setting.copy()
             if hasattr(old_character, "chara_setting")
@@ -615,12 +611,7 @@ def migrate_character_replacement(
             and old_character.assistant_services
             else {}
         )
-        new_character.body_manage = (
-            old_character.body_manage.copy()
-            if hasattr(old_character, "body_manage")
-            and old_character.body_manage
-            else {}
-        )
+        body_manage.replace(new_id, body_manage.of(old_id))
 
         # 好感度数据（需要转换内部ID引用）
         new_character.favorability = {}
@@ -708,11 +699,7 @@ def migrate_character_replacement(
             else []
         )
         new_character.event = old_character.event
-        new_character.food_bag = (
-            old_character.food_bag.copy()
-            if hasattr(old_character, "food_bag") and old_character.food_bag
-            else {}
-        )
+        inventory.replace_foods(new_id, inventory.foods(old_id))
         new_character.dirty = old_character.dirty
         new_character.h_state = old_character.h_state
         for domain in (flags, action_info, player_ability, player_collection):
@@ -1226,8 +1213,8 @@ def update_character_config_data(value: game_type.Character) -> int:
             update_count += 1
     # 状态
     for key in game_config.config_character_state:
-        if key not in value.status_data:
-            value.status_data[key] = 0
+        if key not in status.of(value.cid):
+            status.set(value.cid, key, 0)
             update_count += 1
         # 该状态的性高潮记录
         if game_config.config_character_state[key].type == 0:
@@ -1247,21 +1234,21 @@ def update_character_config_data(value: game_type.Character) -> int:
                 value.chara_setting[key] = 0
                 update_count += 1
     # 道具
-    if len(value.item) != len(game_config.config_item):
+    if len(inventory.items(value.cid)) != len(game_config.config_item):
         for key in game_config.config_item:
-            if key not in value.item:
-                value.item[key] = 0
+            if key not in inventory.items(value.cid):
+                inventory.set_item(value.cid, key, 0)
                 update_count += 1
     # 身体管理
-    if len(value.body_manage) == 0:
-        value.body_manage = attr_calculation.get_body_manage_zero()
+    if len(body_manage.of(value.cid)) == 0:
+        body_manage.replace(value.cid, attr_calculation.get_body_manage_zero())
         update_count += 1
-    if len(value.body_manage) != len(
+    if len(body_manage.of(value.cid)) != len(
         game_config.config_body_manage_requirement
     ):
         for key in game_config.config_body_manage_requirement:
-            if key not in value.body_manage:
-                value.body_manage[key] = 0
+            if key not in body_manage.of(value.cid):
+                body_manage.set(value.cid, key, 0)
                 update_count += 1
     # 助理服务
     if len(value.assistant_services) != len(
@@ -1347,19 +1334,20 @@ def update_chara_cloth(
     """
     from Script.Design import clothing
 
+    cloth = wardrobe.of(value.cid)
     # 数据长度不一致时，重置服装数据
-    if len(value.cloth.cloth_wear) != len(game_config.config_clothing_type):
-        value.cloth.cloth_wear = attr_calculation.get_cloth_wear_zero()
-    if len(value.cloth.cloth_locker_in_shower) != len(
+    if len(cloth.cloth_wear) != len(game_config.config_clothing_type):
+        cloth.cloth_wear = attr_calculation.get_cloth_wear_zero()
+    if len(cloth.cloth_locker_in_shower) != len(
         game_config.config_clothing_type
     ):
-        value.cloth.cloth_locker_in_shower = (
+        cloth.cloth_locker_in_shower = (
             attr_calculation.get_shower_cloth_locker_zero()
         )
-    if len(value.cloth.cloth_locker_in_dormitory) != len(
+    if len(cloth.cloth_locker_in_dormitory) != len(
         game_config.config_clothing_type
     ):
-        value.cloth.cloth_locker_in_dormitory = (
+        cloth.cloth_locker_in_dormitory = (
             attr_calculation.get_cloth_locker_in_dormitory_zero()
         )
     empty_dirty_data = attr_calculation.get_zero_dirty()
@@ -1376,15 +1364,16 @@ def update_chara_cloth(
         for clothing_type, semen_list in value.dirty.cloth_locker_semen.items()
     }
 
+    wardrobe.put(value.cid, cloth)
     # 跳过玩家
     if value.cid == 0:
         return 0
 
     # 判断是否需要重置服装数据
     reset_cloth_flag = False
-    if len(value.cloth.cloth_wear):
-        for now_type in value.cloth.cloth_wear:
-            now_type_cloth_data = value.cloth.cloth_wear[now_type]
+    if len(cloth.cloth_wear):
+        for now_type in cloth.cloth_wear:
+            now_type_cloth_data = cloth.cloth_wear[now_type]
             for now_cloth_id in now_type_cloth_data:
                 # 查找该编号的服装数据是否存在，如果不存在，则重置该角色的服装数据
                 if (
@@ -1398,17 +1387,18 @@ def update_chara_cloth(
                 break
     # 进行服装数据的重置
     if reset_cloth_flag:
-        value.cloth = attr_calculation.get_cloth_zero()
+        cloth = attr_calculation.get_cloth_zero()
         for cloth_id in tem_character.Cloth:
             if cloth_id not in game_config.config_clothing_tem:
                 continue
             type = game_config.config_clothing_tem[cloth_id].clothing_type
-            value.cloth.cloth_wear[type].append(cloth_id)
+            cloth.cloth_wear[type].append(cloth_id)
         bra_id, pan_id = clothing.get_random_underwear()
-        if not len(value.cloth.cloth_wear[6]):
-            value.cloth.cloth_wear[6].append(bra_id)
-        if not len(value.cloth.cloth_wear[9]):
-            value.cloth.cloth_wear[9].append(pan_id)
+        if not len(cloth.cloth_wear[6]):
+            cloth.cloth_wear[6].append(bra_id)
+        if not len(cloth.cloth_wear[9]):
+            cloth.cloth_wear[9].append(pan_id)
+        wardrobe.put(value.cid, cloth)
         return 1
     return 0
 
@@ -2050,8 +2040,8 @@ def _take_young_child_off_line(
             for state_id, state in game_config.config_character_state.items()
             if state.type == 0
         ]:
-            if character.status_data.get(state_id, 0):
-                character.status_data[state_id] = 0
+            if status.of(character.cid).get(state_id, 0):
+                status.set(character.cid, state_id, 0)
                 count += 1
     for character in loaded_dict["character_data"].values():
         if (
@@ -2093,8 +2083,8 @@ def _clear_age_drug_item(character: game_type.Character) -> int:
     """
     count = 0
     for item_id in AGE_DRUG_ITEM_TUPLE:
-        if item_id in character.item:
-            del character.item[item_id]
+        if item_id in inventory.items(character.cid):
+            inventory.drop_item(character.cid, item_id)
             count += 1
     return count
 

@@ -4,8 +4,8 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import action_info, entertainment, flags, modes
-from Script.Modules.domains import prison
+from Script.Modules.domains import action_info, entertainment, flags, inventory
+from Script.Modules.domains import modes, prison
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -2592,10 +2592,9 @@ def handle_have_food(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     food_index = 0
-    for food_id in character_data.food_bag:
-        if character_data.food_bag[food_id]:
+    for food_id in inventory.foods(character_id):
+        if inventory.foods(character_id)[food_id]:
             food_index += 1
     return food_index
 
@@ -2609,10 +2608,9 @@ def handle_not_have_food(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     food_index = 1
-    for food_id in character_data.food_bag:
-        if character_data.food_bag[food_id]:
+    for food_id in inventory.foods(character_id):
+        if inventory.foods(character_id)[food_id]:
             return 0
     return food_index
 
@@ -2626,8 +2624,7 @@ def handle_have_camera(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[50] > 0:
+    if inventory.items(character_id)[50] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -2646,8 +2643,7 @@ def handle_have_video_recorder(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[51] > 0:
+    if inventory.items(character_id)[51] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -2666,8 +2662,7 @@ def handle_have_instrument(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[52] > 0:
+    if inventory.items(character_id)[52] > 0:
         return 1
     return 0
 
@@ -2681,8 +2676,7 @@ def handle_have_nipple_clamp(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[122] > 0:
+    if inventory.items(character_id)[122] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -2742,8 +2736,7 @@ def handle_have_love_egg(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[121] > 0:
+    if inventory.items(character_id)[121] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -2762,8 +2755,7 @@ def handle_have_clit_clamp(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[123] > 0:
+    if inventory.items(character_id)[123] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -2821,8 +2813,7 @@ def handle_have_electric_message_stick(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[124] > 0:
+    if inventory.items(character_id)[124] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -2841,8 +2832,7 @@ def handle_have_vibrator(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[125] > 0:
+    if inventory.items(character_id)[125] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -3910,8 +3900,7 @@ def handle_have_milking_machine(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[133] > 0:
+    if inventory.items(character_id)[133] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -3930,8 +3919,7 @@ def handle_have_urine_collector(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[134] > 0:
+    if inventory.items(character_id)[134] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -3950,8 +3938,7 @@ def handle_have_bondage(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[131] > 0:
+    if inventory.items(character_id)[131] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -3970,8 +3957,7 @@ def handle_have_patch(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[132] > 0:
+    if inventory.items(character_id)[132] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -3990,8 +3976,7 @@ def handle_have_gag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[140] > 0:
+    if inventory.items(character_id)[140] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4010,8 +3995,7 @@ def handle_have_big_vibrator(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[126] > 0:
+    if inventory.items(character_id)[126] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4030,8 +4014,7 @@ def handle_have_huge_vibrator(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[127] > 0:
+    if inventory.items(character_id)[127] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4050,8 +4033,7 @@ def handle_have_clyster_tools(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[128] > 0:
+    if inventory.items(character_id)[128] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4070,8 +4052,7 @@ def handle_have_anal_beads(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[129] > 0:
+    if inventory.items(character_id)[129] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4152,8 +4133,7 @@ def handle_have_whip(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[135] > 0:
+    if inventory.items(character_id)[135] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4172,8 +4152,7 @@ def handle_have_needle(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[137] > 0:
+    if inventory.items(character_id)[137] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4192,8 +4171,7 @@ def handle_have_condom(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[120] > 0:
+    if inventory.items(character_id)[120] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4212,8 +4190,7 @@ def handle_have_safe_candles(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[136] > 0:
+    if inventory.items(character_id)[136] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4232,8 +4209,7 @@ def handle_have_cotton_stick(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[139] > 0:
+    if inventory.items(character_id)[139] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4252,8 +4228,7 @@ def handle_have_birth_control_pills_before(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[101] > 0:
+    if inventory.items(character_id)[101] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4272,8 +4247,7 @@ def handle_have_birth_control_pills_after(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[102] > 0:
+    if inventory.items(character_id)[102] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4292,8 +4266,7 @@ def handle_have_body_lubricant(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[100] > 0:
+    if inventory.items(character_id)[100] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4312,8 +4285,7 @@ def handle_have_philter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[103] > 0:
+    if inventory.items(character_id)[103] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4332,8 +4304,7 @@ def handle_have_enemas(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[104] > 0:
+    if inventory.items(character_id)[104] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4352,8 +4323,7 @@ def handle_have_diuretics_once(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[105] > 0:
+    if inventory.items(character_id)[105] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4372,8 +4342,7 @@ def handle_have_diuretics_persistent(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[106] > 0:
+    if inventory.items(character_id)[106] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4392,8 +4361,7 @@ def handle_have_sleeping_pills(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[107] > 0:
+    if inventory.items(character_id)[107] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4412,8 +4380,7 @@ def handle_have_clomid(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[108] > 0:
+    if inventory.items(character_id)[108] > 0:
         return 1
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(
@@ -4432,8 +4399,7 @@ def handle_have_ring(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[201] > 0:
+    if inventory.items(character_id)[201] > 0:
         return 1
     return 0
 
@@ -4447,8 +4413,7 @@ def handle_have_collar(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[202] > 0:
+    if inventory.items(character_id)[202] > 0:
         return 1
     return 0
 
@@ -4462,8 +4427,7 @@ def handle_have_bag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[151] > 0:
+    if inventory.items(character_id)[151] > 0:
         return 1
     return 0
 
@@ -4477,8 +4441,7 @@ def handle_have_penis_mold(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.item[175] > 0:
+    if inventory.items(character_id)[175] > 0:
         return 1
     return 0
 
@@ -4520,7 +4483,7 @@ def handle_not_have_target_manage_dormitory_key(character_id: int) -> int:
         return 1
     # 获取对应的钥匙道具编号
     key_item_id = 300 + target_manager_layer
-    if character_data.item[key_item_id] > 0:
+    if inventory.items(character_id)[key_item_id] > 0:
         return 0
     return 1
 
@@ -4549,6 +4512,6 @@ def handle_have_target_dormitory_layer_key(character_id: int) -> int:
         return 0
     # 获取对应的钥匙道具编号
     key_item_id = 300 + target_manager_layer
-    if character_data.item[key_item_id] > 0:
+    if inventory.items(character_id)[key_item_id] > 0:
         return 1
     return 0

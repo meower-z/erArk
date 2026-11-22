@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from Script.Core import cache_control, game_type, get_text, constant
 from Script.Design import handle_state_machine, map_handle, handle_premise
-from Script.Modules.domains import abilities, dormitory
+from Script.Modules.domains import abilities, dormitory, inventory
 from Script.System.Dormitory_System import common
 
 if TYPE_CHECKING:
@@ -262,6 +262,6 @@ def ask_copy_key(character_id: int) -> int:
         return 0
     # 给予玩家对应层号的钥匙
     key_item_id = 300 + layer
-    character_data.item[key_item_id] = 1
+    inventory.set_item(character_id, key_item_id, 1)
     # 返回钥匙id
     return key_item_id

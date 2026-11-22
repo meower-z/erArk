@@ -11,8 +11,8 @@ from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
 from Script.Modules.domains import abilities, achievement, commission, flags
-from Script.Modules.domains import needs, player_collection, playthrough
-from Script.Modules.domains import prison, roster, warehouse
+from Script.Modules.domains import inventory, needs, player_collection
+from Script.Modules.domains import playthrough, prison, roster, warehouse
 
 if TYPE_CHECKING:
     from typing import Any
@@ -835,9 +835,8 @@ class Achievement_Panel:
         更新成就列表
         功能：重新加载成就数据并刷新面板
         """
-        pl_character_data: game_type.Character = cache.character_data[0]
         # 如果某道具已拥有，则添加到购买过的道具列表中
-        for item_id in pl_character_data.item:
+        for item_id in inventory.items(0):
             if item_id not in achievement.get("buy_item_count_list"):
                 achievement.append("buy_item_count_list", item_id)
         # 如果外勤数小于已完成的外勤统计数，则等于外勤统计数量

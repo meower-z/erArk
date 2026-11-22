@@ -20,7 +20,7 @@ import random
 from Script.Design import game_time
 from Script.Modules.domains import abilities, flags, history, modes, needs
 from Script.Modules.domains import player_ability, player_collection
-from Script.Modules.domains import playthrough
+from Script.Modules.domains import playthrough, status
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -303,7 +303,7 @@ def base_chara_state_common_settle(
     if tenths_add:
         # 现有状态值（整数部分）的十分之一，最大不超过3倍最终值
         tenths_value = Fraction(
-            num.whole(character_data.status_data[state_id]), 10
+            num.whole(status.of(character_id)[state_id]), 10
         )
         final_value += min(3 * final_value, tenths_value)
     if not exact:
@@ -329,13 +329,7 @@ def base_chara_state_common_settle(
         return
 
     # 结算最终值
-    character_data.status_data[state_id] += final_value
-    character_data.status_data[state_id] = min(
-        99999, character_data.status_data[state_id]
-    )
-    character_data.status_data[state_id] = max(
-        0, character_data.status_data[state_id]
-    )
+    status.add(character_id, state_id, final_value, max=99999, min=0)
 
     # 顺从对恭顺、露出对羞耻、施虐对先导、受虐对苦痛而产生的额外快感
     if state_id in [10, 14, 16, 17]:
@@ -919,26 +913,25 @@ def calculation_favorability(
     """
     target_character_id_talent = abilities.talent(target_character_id)
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[target_character_id]
     fix = 1.0
     # 状态相关计算#
 
     # 恭顺、好意、欲情、快乐每级+0.1倍#
     for i in {10, 11, 12, 13}:
         status_level = attr_calculation.get_status_level(
-            target_data.status_data[i]
+            status.of(target_character_id)[i]
         )
         fix += status_level * 0.1
     # 羞耻、苦痛每级-0.1倍#
     for i in {16, 17}:
         status_level = attr_calculation.get_status_level(
-            target_data.status_data[i]
+            status.of(target_character_id)[i]
         )
         fix -= status_level * 0.1
     # 恐怖、抑郁、反感每级-0.3倍#
     for i in {18, 19, 20}:
         status_level = attr_calculation.get_status_level(
-            target_data.status_data[i]
+            status.of(target_character_id)[i]
         )
         fix -= status_level * 0.3
 

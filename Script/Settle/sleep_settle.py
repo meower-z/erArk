@@ -20,7 +20,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import abilities, action_info, flags, needs, plan
-from Script.Modules.domains import player_ability, roster
+from Script.Modules.domains import player_ability, roster, status
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -139,9 +139,9 @@ def settle_character_juel(character_id: int) -> int:
                 continue
         status_value: num.Num = 0
         # 获得状态值并清零
-        if status_id in character_data.status_data:
-            status_value = character_data.status_data[status_id]
-            cache.character_data[character_id].status_data[status_id] = 0
+        if status_id in status.of(character_id):
+            status_value = status.of(character_id)[status_id]
+            status.set(character_id, status_id, 0)
             # print("status_value :",status_value)
         # 只要状态值不为0就结算为对应珠
         if status_value != 0:

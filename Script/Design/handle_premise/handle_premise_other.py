@@ -12,6 +12,7 @@ from Script.UI.Moudle import view
 from Script.Modules.domains import abilities, action_info, facility, flags
 from Script.Modules.domains import growth, history, modes, needs, physical_exam
 from Script.Modules.domains import player_ability, player_collection, pregnancy
+from Script.Modules.domains import status
 from Script.Modules.domains import visitor
 
 cache: game_type.Cache = cache_control.cache
@@ -890,8 +891,7 @@ def handle_self_shy_ge_100000(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.status_data[16] <= 100000:
+    if status.of(character_id)[16] <= 100000:
         return 1
     return 0
 
@@ -2672,7 +2672,7 @@ def handle_t_lubrication_l_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.status_data[8] < 1:
+    if status.of(target_data.cid)[8] < 1:
         return 1
     return 0
 
@@ -2688,7 +2688,7 @@ def handle_t_lubrication_ge_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.status_data[8] >= 3:
+    if status.of(target_data.cid)[8] >= 3:
         return 1
     return 0
 
@@ -2704,7 +2704,7 @@ def handle_t_lubrication_ge_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.status_data[8] >= 1:
+    if status.of(target_data.cid)[8] >= 1:
         return 1
     return 0
 
@@ -2720,7 +2720,7 @@ def handle_t_lubrication_ge_5(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.status_data[8] >= 5:
+    if status.of(target_data.cid)[8] >= 5:
         return 1
     return 0
 
@@ -2736,7 +2736,7 @@ def handle_t_lubrication_ge_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.status_data[8] >= 7:
+    if status.of(target_data.cid)[8] >= 7:
         return 1
     return 0
 
@@ -2752,7 +2752,7 @@ def handle_t_lubrication_l_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.status_data[8] < 3:
+    if status.of(target_data.cid)[8] < 3:
         return 1
     return 0
 
@@ -2768,7 +2768,7 @@ def handle_t_lubrication_l_7(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.status_data[8] < 7:
+    if status.of(target_data.cid)[8] < 7:
         return 1
     return 0
 

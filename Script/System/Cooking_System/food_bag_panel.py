@@ -16,6 +16,7 @@ from Script.UI.Moudle import panel, draw, view
 from Script.Design import attr_calculation, handle_premise
 from Script.Modules.tk_ui import player_pick
 from Script.Config import normal_config, game_config
+from Script.Modules.domains import inventory
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -282,12 +283,11 @@ class FoodBagPanel:
         group_normal -- 正常调味食物分组
         group_special -- 特殊调味食物分组
         """
-        character_data: game_type.Character = cache.character_data[0]
         # 读取背包食物，按(recipe, special_seasoning)分组
         group_normal: dict = {}
         group_special: dict = {}
-        for i in character_data.food_bag:
-            food_data: game_type.Food = character_data.food_bag[i]
+        for i in inventory.foods(0):
+            food_data: game_type.Food = inventory.foods(0)[i]
             recipe_data = game_config.config_recipes.get(food_data.recipe)
             # 如果是食用类型的食物，则跳过饮用类型的食物
             if (
@@ -394,10 +394,8 @@ class FoodGroupDraw:
         # 遍历计算最高品质
         max_quality = 0
         for uid in uid_list:
-            if uid in cache.character_data[0].food_bag:
-                food_data: game_type.Food = cache.character_data[0].food_bag[
-                    uid
-                ]
+            if uid in inventory.foods(0):
+                food_data: game_type.Food = inventory.foods(0)[uid]
                 if food_data.quality > max_quality:
                     max_quality = food_data.quality
 
@@ -507,13 +505,12 @@ class FoodGroupDraw:
                 intro_draw.draw()
 
             return_list = []
-            character_data: game_type.Character = cache.character_data[0]
             valid_uids = [
-                uid for uid in self.uid_list if uid in character_data.food_bag
+                uid for uid in self.uid_list if uid in inventory.foods(0)
             ]
 
             for uid in valid_uids:
-                food_data: game_type.Food = character_data.food_bag[uid]
+                food_data: game_type.Food = inventory.foods(0)[uid]
                 _quality_level, food_quality_str = (
                     attr_calculation.get_food_quality(food_data.quality)
                 )

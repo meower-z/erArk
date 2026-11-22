@@ -13,7 +13,7 @@ from Script.Design import map_handle, handle_premise, talk_image
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
 from Script.Design import game_time
-from Script.Modules.domains import action_info, flags
+from Script.Modules.domains import action_info, flags, inventory, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -39,7 +39,6 @@ def handle_talk(character_id: int) -> None:
         character_id != 0
         and character_data.position != cache.character_data[0].position
     ):
-        # print(f"debug {character_data.name}和玩家不在同一位置，不显示文本")
         return
     # 智能跟随模式下，博士离开时，跟随的角色不显示送别文本
     if (
@@ -50,7 +49,6 @@ def handle_talk(character_id: int) -> None:
             character_data.target_character_id
         )
     ):
-        # print(f"debug 智能跟随模式下，博士离开时，跟随的角色{target_data.name}不显示送别文本")
         return
     # 第一段行为结算的口上
     now_talk_data, calculated_premise_dict = handle_talk_sub(
@@ -1173,8 +1171,7 @@ def code_text_to_draw_text(
     # 包中食物
     all_food_name = ""
     all_food_count = 0
-    for food_id in character_data.food_bag:
-        food_data = character_data.food_bag[food_id]
+    for food_data in inventory.foods(character_data.cid).values():
         all_food_name += food_data.name + "、"
         all_food_count += 1
     if all_food_count > 1:
@@ -1232,9 +1229,11 @@ def code_text_to_draw_text(
             break
 
     # 服装，来自于NPC当前穿的衣服，或行动传入的变量
+    self_worn = wardrobe.of(character_data.cid).cloth_wear
+    target_worn = wardrobe.of(target_data.cid).cloth_wear
     self_up_cloth_name = ""
-    if character_id != 0 and len(character_data.cloth.cloth_wear[5]):
-        for Up_cloth_Id in character_data.cloth.cloth_wear[5]:
+    if character_id != 0 and len(self_worn[5]):
+        for Up_cloth_Id in self_worn[5]:
             self_up_cloth_name += game_config.config_clothing_tem[
                 Up_cloth_Id
             ].name
@@ -1243,8 +1242,8 @@ def code_text_to_draw_text(
         if character_id == 0:
             self_up_cloth_name = _("兜帽")
     self_down_cloth_name = ""
-    if character_id != 0 and len(character_data.cloth.cloth_wear[8]):
-        for Down_cloth_Id in character_data.cloth.cloth_wear[8]:
+    if character_id != 0 and len(self_worn[8]):
+        for Down_cloth_Id in self_worn[8]:
             self_down_cloth_name += game_config.config_clothing_tem[
                 Down_cloth_Id
             ].name
@@ -1253,74 +1252,74 @@ def code_text_to_draw_text(
         if character_id == 0:
             self_down_cloth_name = _("长裤")
     target_up_cloth_name = ""
-    if character_id == 0 and len(target_data.cloth.cloth_wear[5]):
-        for Up_cloth_Id in target_data.cloth.cloth_wear[5]:
+    if character_id == 0 and len(target_worn[5]):
+        for Up_cloth_Id in target_worn[5]:
             target_up_cloth_name += game_config.config_clothing_tem[
                 Up_cloth_Id
             ].name
     if target_up_cloth_name == "":
         target_up_cloth_name = _("没有穿上衣的裸露身体")
     target_down_cloth_name = ""
-    if character_id == 0 and len(target_data.cloth.cloth_wear[8]):
-        for Down_cloth_Id in target_data.cloth.cloth_wear[8]:
+    if character_id == 0 and len(target_worn[8]):
+        for Down_cloth_Id in target_worn[8]:
             target_down_cloth_name += game_config.config_clothing_tem[
                 Down_cloth_Id
             ].name
     if target_down_cloth_name == "":
         target_down_cloth_name = _("没有穿下衣的裸露身体")
     target_bra_name = ""
-    if character_id == 0 and len(target_data.cloth.cloth_wear[6]):
-        for BraId in target_data.cloth.cloth_wear[6]:
+    if character_id == 0 and len(target_worn[6]):
+        for BraId in target_worn[6]:
             target_bra_name += game_config.config_clothing_tem[BraId].name
     if target_bra_name == "":
         target_bra_name = _("没有穿胸罩的乳房")
     target_ski_name = ""
-    if character_id == 0 and len(target_data.cloth.cloth_wear[8]):
-        for SkiId in target_data.cloth.cloth_wear[8]:
+    if character_id == 0 and len(target_worn[8]):
+        for SkiId in target_worn[8]:
             target_ski_name += game_config.config_clothing_tem[SkiId].name
     if target_ski_name == "":
         target_ski_name = _("没有穿裙子的胯部")
     target_pan_name = ""
-    if character_id == 0 and len(target_data.cloth.cloth_wear[9]):
-        for PanId in target_data.cloth.cloth_wear[9]:
+    if character_id == 0 and len(target_worn[9]):
+        for PanId in target_worn[9]:
             target_pan_name += game_config.config_clothing_tem[PanId].name
     elif player_data.behavior.pan_name != "":
         target_pan_name = player_data.behavior.pan_name
     if target_pan_name == "":
         target_pan_name = _("没有穿内裤的阴部")
     target_soc_name = ""
-    if character_id == 0 and len(target_data.cloth.cloth_wear[10]):
-        for SocId in target_data.cloth.cloth_wear[10]:
+    if character_id == 0 and len(target_worn[10]):
+        for SocId in target_worn[10]:
             target_soc_name += game_config.config_clothing_tem[SocId].name
     elif player_data.behavior.socks_name != "":
         target_soc_name = player_data.behavior.socks_name
     if target_soc_name == "":
         target_soc_name = _("没有穿袜子的双腿")
     pan_name = ""
-    if character_id != 0 and len(character_data.cloth.cloth_wear[9]):
-        for PanId in character_data.cloth.cloth_wear[9]:
+    if character_id != 0 and len(self_worn[9]):
+        for PanId in self_worn[9]:
             pan_name += game_config.config_clothing_tem[PanId].name
     elif player_data.behavior.pan_name != "":
         pan_name = player_data.behavior.pan_name
     if pan_name == "":
         pan_name = _("没有穿内裤的阴部")
     socks_name = ""
-    if character_id != 0 and len(character_data.cloth.cloth_wear[10]):
-        for SocId in character_data.cloth.cloth_wear[10]:
+    if character_id != 0 and len(self_worn[10]):
+        for SocId in self_worn[10]:
             socks_name += game_config.config_clothing_tem[SocId].name
     elif player_data.behavior.socks_name != "":
         socks_name = player_data.behavior.socks_name
     if socks_name == "":
         socks_name = _("没有穿袜子的双腿")
     up_cloth_name = ""
-    if character_id != 0 and len(character_data.cloth.cloth_wear[5]):
-        for Up_cloth_Id in character_data.cloth.cloth_wear[5]:
+    if character_id != 0 and len(self_worn[5]):
+        for Up_cloth_Id in self_worn[5]:
             up_cloth_name += game_config.config_clothing_tem[Up_cloth_Id].name
     if up_cloth_name == "":
         up_cloth_name = _("没有穿上衣的裸露身体")
     down_cloth_name = ""
-    if character_id != 0 and len(character_data.cloth.cloth_wear[8]):
-        for Down_cloth_Id in character_data.cloth.cloth_wear[8]:
+    if character_id != 0 and len(self_worn[8]):
+        for Down_cloth_Id in self_worn[8]:
             down_cloth_name += game_config.config_clothing_tem[
                 Down_cloth_Id
             ].name

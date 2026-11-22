@@ -51,7 +51,7 @@ from Script.System.Education_System import (
 )
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import flags, growth, modes, needs, roster
+from Script.Modules.domains import flags, growth, modes, needs, roster, status
 
 if TYPE_CHECKING:
     import datetime
@@ -68,11 +68,10 @@ def get_negative_status_level_sum(character_id: int) -> int:
     Return arguments:
     int -- 苦痛/恐怖/抑郁/反感四项的等级之和，0~32
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     level_sum = 0
     for state_id in education_constant.NEGATIVE_STATE_ID_LIST:
         level_sum += attr_calculation.get_status_level(
-            character_data.status_data.get(state_id, 0)
+            status.of(character_id).get(state_id, 0)
         )
     return level_sum
 

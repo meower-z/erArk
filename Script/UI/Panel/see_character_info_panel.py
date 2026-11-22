@@ -15,7 +15,8 @@ from Script.UI.Panel import body_info_panel, character_info_head
 from Script.System.First_Record_System import first_record_panel
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, player_collection, roster, visitor
+from Script.Modules.domains import abilities, player_collection, roster, status
+from Script.Modules.domains import visitor
 
 panel_info_data: dict[str, object] = {}
 
@@ -25,7 +26,6 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
 window_width = normal_config.config_normal.text_width
@@ -423,8 +423,8 @@ class SeeCharacterStatusPanel:
         # 计算状态数值和等级
         status_text = game_config.config_character_state[status_id].name
         status_value = 0
-        if status_id in character_data.status_data:
-            status_value = num.shown(character_data.status_data[status_id])
+        if status_id in status.of(character_data.cid):
+            status_value = num.shown(status.of(character_data.cid)[status_id])
         status_level = attr_calculation.get_status_level(status_value)
 
         # 计算当前等级的最大值

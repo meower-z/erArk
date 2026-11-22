@@ -7,7 +7,7 @@ from Script.Design import map_handle, settle_behavior
 from Script.Core import cache_control, constant_effect, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import flags
+from Script.Modules.domains import flags, wardrobe
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -36,9 +36,8 @@ def handle_change_underware(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.cloth.cloth_wear[6] = []
-    character_data.cloth.cloth_wear[9] = []
+    wardrobe.set_part(character_id, "cloth_wear", 6, [])
+    wardrobe.set_part(character_id, "cloth_wear", 9, [])
     if character_id:
         clothing.get_underwear(character_id)
 
@@ -62,8 +61,7 @@ def handle_bra_see(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.cloth.cloth_see[6] = True
+    wardrobe.set_part(character_id, "cloth_see", 6, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -110,8 +108,7 @@ def handle_pan_see(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.cloth.cloth_see[9] = True
+    wardrobe.set_part(character_id, "cloth_see", 9, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -158,8 +155,7 @@ def handle_cloth_see_zero(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.cloth.cloth_see = {6: False, 9: False}
+    wardrobe.set(character_id, "cloth_see", {6: False, 9: False})
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -365,19 +361,15 @@ def handle_self_cloth_back(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
+    cloth = wardrobe.of(character_id)
 
     # 穿回脱下的衣服
     wear_flag = False
     for i in game_config.config_clothing_type:
-        if len(character_data.cloth.cloth_off[i]):
-            (
-                character_data.cloth.cloth_wear[i],
-                character_data.cloth.cloth_off[i],
-            ) = (
-                character_data.cloth.cloth_off[i],
-                [],
-            )
+        if len(cloth.cloth_off[i]):
+            cloth.cloth_wear[i], cloth.cloth_off[i] = cloth.cloth_off[i], []
             wear_flag = True
+    wardrobe.put(character_id, cloth)
     if wear_flag:
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
@@ -606,11 +598,11 @@ def handle_locker_cloth_in_shower_reset(
     """
     if not add_time:
         return
-    character_data = cache.character_data[character_id]
-    character_data.cloth.cloth_locker_in_shower = (
-        attr_calculation.get_shower_cloth_locker_zero()
+    wardrobe.set(
+        character_id,
+        "cloth_locker_in_shower",
+        attr_calculation.get_shower_cloth_locker_zero(),
     )
-    # print(f"debug {character_data.name} cloth_locker = {character_data.cloth.cloth_locker}")
     clothing.clean_locker_semen(character_id)
 
 
@@ -636,23 +628,26 @@ def handle_wear_to_shower_locker(
     character_data = cache.character_data[character_id]
 
     for clothing_type in game_config.config_clothing_type:
-        if len(character_data.cloth.cloth_wear[clothing_type]):
-            tem_list = character_data.cloth.cloth_wear[clothing_type].copy()
+        if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
+            tem_list = (
+                wardrobe.of(character_id).cloth_wear[clothing_type].copy()
+            )
             for cloth_id in tem_list:
-                # print(f"debug cloth_id = {cloth_id}")
                 # 不转移首饰和必须穿着的衣服
                 if game_config.config_clothing_tem[
                     cloth_id
                 ].tag != 6 and cloth_id not in clothing.chara_special_wear_cloth(
                     character_id
                 ):
-                    # print(f"debug move_cloth_id = {cloth_id}")
-                    character_data.cloth.cloth_wear[clothing_type].remove(
-                        cloth_id
+                    wardrobe.remove(
+                        character_id, "cloth_wear", clothing_type, cloth_id
                     )
-                    character_data.cloth.cloth_locker_in_shower[
-                        clothing_type
-                    ].append(cloth_id)
+                    wardrobe.append(
+                        character_id,
+                        "cloth_locker_in_shower",
+                        clothing_type,
+                        cloth_id,
+                    )
         # 避免对应type没有数据，所以先补充一个空列表再交换
         cloth_text = game_config.config_clothing_type[clothing_type].name
         empty_list = [cloth_text, 0, 0, 0]
@@ -693,24 +688,30 @@ def handle_shower_locker_to_wear(
     if not add_time:
         return
     # 从缓存中获取角色数据
-    character_data = cache.character_data[character_id]
 
     # 遍历游戏配置中的所有服装类型
     for clothing_type in game_config.config_clothing_type:
         # 如果某个服装类型的衣柜不为空
-        if len(character_data.cloth.cloth_locker_in_shower[clothing_type]):
+        if len(wardrobe.of(character_id).cloth_locker_in_shower[clothing_type]):
             # 复制该服装类型的衣柜列表
-            tem_list = character_data.cloth.cloth_locker_in_shower[
-                clothing_type
-            ].copy()
+            tem_list = (
+                wardrobe.of(character_id)
+                .cloth_locker_in_shower[clothing_type]
+                .copy()
+            )
             # 遍历该服装类型的衣柜列表
             for cloth_id in tem_list:
                 # 将服装添加到穿着列表中
-                character_data.cloth.cloth_wear[clothing_type].append(cloth_id)
+                wardrobe.append(
+                    character_id, "cloth_wear", clothing_type, cloth_id
+                )
                 # 将服装从衣柜列表中移除
-                character_data.cloth.cloth_locker_in_shower[
-                    clothing_type
-                ].remove(cloth_id)
+                wardrobe.remove(
+                    character_id,
+                    "cloth_locker_in_shower",
+                    clothing_type,
+                    cloth_id,
+                )
 
     # 将衣柜里的衣服精液转移到穿着的衣服上
     clothing.locker_cloth_semen_to_wear_cloth_semen(character_id)
@@ -751,23 +752,26 @@ def handle_foot_cloth_to_shower_locker(
             ]
 
     for clothing_type in {10, 11}:
-        if len(character_data.cloth.cloth_wear[clothing_type]):
-            tem_list = character_data.cloth.cloth_wear[clothing_type].copy()
+        if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
+            tem_list = (
+                wardrobe.of(character_id).cloth_wear[clothing_type].copy()
+            )
             for cloth_id in tem_list:
-                # print(f"debug cloth_id = {cloth_id}")
                 # 不转移首饰和必须穿着的衣服
                 if game_config.config_clothing_tem[
                     cloth_id
                 ].tag != 6 and cloth_id not in clothing.chara_special_wear_cloth(
                     character_id
                 ):
-                    # print(f"debug move_cloth_id = {cloth_id}")
-                    character_data.cloth.cloth_wear[clothing_type].remove(
-                        cloth_id
+                    wardrobe.remove(
+                        character_id, "cloth_wear", clothing_type, cloth_id
                     )
-                    character_data.cloth.cloth_locker_in_shower[
-                        clothing_type
-                    ].append(cloth_id)
+                    wardrobe.append(
+                        character_id,
+                        "cloth_locker_in_shower",
+                        clothing_type,
+                        cloth_id,
+                    )
         # 避免对应type没有数据，所以先补充一个空列表再交换
         cloth_text = game_config.config_clothing_type[clothing_type].name
         empty_list = [cloth_text, 0, 0, 0]
@@ -806,15 +810,18 @@ def handle_shower_locker_to_dormitory_locker(
     if not add_time:
         return
     # 从缓存中获取角色数据
-    character_data = cache.character_data[character_id]
 
     # 同居助理的宿舍地址即博士房间，所以她在博士房间洗澡后，衣服同样转进这份宿舍衣柜，
     # 次日在博士房间起床时再由效果649穿回，与普通角色完全一致
-    character_data.cloth.cloth_locker_in_dormitory = (
-        character_data.cloth.cloth_locker_in_shower.copy()
+    wardrobe.set(
+        character_id,
+        "cloth_locker_in_dormitory",
+        wardrobe.of(character_id).cloth_locker_in_shower.copy(),
     )
-    character_data.cloth.cloth_locker_in_shower = (
-        attr_calculation.get_shower_cloth_locker_zero()
+    wardrobe.set(
+        character_id,
+        "cloth_locker_in_shower",
+        attr_calculation.get_shower_cloth_locker_zero(),
     )
 
 
@@ -849,7 +856,9 @@ def handle_wear_to_dormitory_locker(
 
     # 宿舍衣柜里已经有衣服时跳过，避免洗完澡（效果647）存进来的白天衣服被浴帽浴巾污染
     for clothing_type in game_config.config_clothing_type:
-        if len(character_data.cloth.cloth_locker_in_dormitory[clothing_type]):
+        if len(
+            wardrobe.of(character_id).cloth_locker_in_dormitory[clothing_type]
+        ):
             return
 
     # 提前取得必穿项列表（该函数会把缺失的必穿项补回身上，只需调用一次）
@@ -857,8 +866,10 @@ def handle_wear_to_dormitory_locker(
 
     # 遍历所有服装部位，把身上的衣服转移到宿舍衣柜里
     for clothing_type in game_config.config_clothing_type:
-        if len(character_data.cloth.cloth_wear[clothing_type]):
-            tem_list = character_data.cloth.cloth_wear[clothing_type].copy()
+        if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
+            tem_list = (
+                wardrobe.of(character_id).cloth_wear[clothing_type].copy()
+            )
             for cloth_id in tem_list:
                 # 必穿项（抑制戒指、监测环、镣铐、戒指、项圈）留在身上，全局只保持一份
                 if cloth_id in special_cloth_list:
@@ -867,10 +878,15 @@ def handle_wear_to_dormitory_locker(
                 # 若把首饰转进宿舍衣柜，起床时会被get_cloth_from_dormitory_locker()的角色模板过滤永久删除
                 if game_config.config_clothing_tem[cloth_id].tag == 6:
                     continue
-                character_data.cloth.cloth_wear[clothing_type].remove(cloth_id)
-                character_data.cloth.cloth_locker_in_dormitory[
-                    clothing_type
-                ].append(cloth_id)
+                wardrobe.remove(
+                    character_id, "cloth_wear", clothing_type, cloth_id
+                )
+                wardrobe.append(
+                    character_id,
+                    "cloth_locker_in_dormitory",
+                    clothing_type,
+                    cloth_id,
+                )
         # 避免对应type没有数据，所以先补充一个空列表再交换
         cloth_text = game_config.config_clothing_type[clothing_type].name
         empty_list = [cloth_text, 0, 0, 0]
@@ -952,17 +968,12 @@ def handle_up_and_bra_to_tem(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    cloth = wardrobe.of(character_id)
 
     for i in [5, 6]:
-        if len(character_data.cloth.cloth_wear[i]):
-            (
-                character_data.cloth.cloth_off[i],
-                character_data.cloth.cloth_wear[i],
-            ) = (
-                character_data.cloth.cloth_wear[i],
-                [],
-            )
+        if len(cloth.cloth_wear[i]):
+            cloth.cloth_off[i], cloth.cloth_wear[i] = cloth.cloth_wear[i], []
+    wardrobe.put(character_id, cloth)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -984,17 +995,12 @@ def handle_down_and_pan_to_tem(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    cloth = wardrobe.of(character_id)
 
     for i in [8, 9]:
-        if len(character_data.cloth.cloth_wear[i]):
-            (
-                character_data.cloth.cloth_off[i],
-                character_data.cloth.cloth_wear[i],
-            ) = (
-                character_data.cloth.cloth_wear[i],
-                [],
-            )
+        if len(cloth.cloth_wear[i]):
+            cloth.cloth_off[i], cloth.cloth_wear[i] = cloth.cloth_wear[i], []
+    wardrobe.put(character_id, cloth)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1017,16 +1023,12 @@ def handle_target_up_and_bra_to_tem(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
+    cloth = wardrobe.of(character_data.target_character_id)
 
     for i in [5, 6]:
-        if len(target_data.cloth.cloth_wear[i]):
-            target_data.cloth.cloth_off[i], target_data.cloth.cloth_wear[i] = (
-                target_data.cloth.cloth_wear[i],
-                [],
-            )
+        if len(cloth.cloth_wear[i]):
+            cloth.cloth_off[i], cloth.cloth_wear[i] = cloth.cloth_wear[i], []
+    wardrobe.put(character_data.target_character_id, cloth)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1049,13 +1051,9 @@ def handle_target_down_and_pan_to_tem(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
+    cloth = wardrobe.of(character_data.target_character_id)
 
     for i in [8, 9]:
-        if len(target_data.cloth.cloth_wear[i]):
-            target_data.cloth.cloth_off[i], target_data.cloth.cloth_wear[i] = (
-                target_data.cloth.cloth_wear[i],
-                [],
-            )
+        if len(cloth.cloth_wear[i]):
+            cloth.cloth_off[i], cloth.cloth_wear[i] = cloth.cloth_wear[i], []
+    wardrobe.put(character_data.target_character_id, cloth)

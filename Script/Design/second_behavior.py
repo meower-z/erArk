@@ -9,7 +9,7 @@ from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities, flags, growth
+from Script.Modules.domains import abilities, flags, growth, status
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -568,8 +568,7 @@ def get_now_state_all_value_and_text_from_mark_up_data(
     tuple -- 总值,提示文本
     """
     # 本地化常用对象，减少每次循环访问全局模块属性的成本
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_status_data = character_data.status_data
+    character_status_data = status.of(character_id)
     mark_up_data_need_state_list = (
         game_config.config_mark_up_data_need_state_list[mark_up_id]
     )

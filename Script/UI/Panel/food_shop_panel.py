@@ -14,6 +14,7 @@ from Script.Core import (
 )
 from Script.Design import map_handle, attr_calculation
 from Script.Modules.domains import economy, kitchen
+from Script.Modules.domains import inventory
 from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw, panel, view
@@ -39,8 +40,8 @@ def put_selfmade_food_in() -> None:
 
     # 读取背包食物，并只提取uid列表
     id_list_normal = []
-    for i in character_data.food_bag.copy():
-        food_data: game_type.Food = character_data.food_bag[i]
+    for i in inventory.foods(0).copy():
+        food_data: game_type.Food = inventory.foods(0)[i]
         if food_data.special_seasoning == 0:
             id_list_normal.append(i)
 
@@ -60,10 +61,10 @@ def put_selfmade_food_in() -> None:
 
     # 遍历食物列表，将食物放入食堂
     for uid in id_list_normal:
-        food_data = character_data.food_bag[uid]
+        food_data = inventory.foods(0)[uid]
         recipes_id = str(food_data.recipe)
         food_name = food_data.name
-        kitchen.stock(recipes_id, cache.character_data[0].food_bag.pop(uid))
+        kitchen.stock(recipes_id, inventory.take_food(0, uid))
         # 绘制提示信息
         info_draw = draw.NormalDraw()
         info_draw.text = _("{0}已放入食堂\n").format(food_name)

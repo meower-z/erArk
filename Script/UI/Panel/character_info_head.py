@@ -8,7 +8,8 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Panel import hypnosis_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, action_info, flags, needs
+from Script.Modules.domains import abilities, action_info, flags, inventory
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -16,7 +17,6 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
 window_width = normal_config.config_normal.text_width
@@ -805,7 +805,7 @@ class CharacterInfoHead:
             )
             # 如果有理智恢复剂的话，显示快捷键
             for item_id in [0, 1, 2, 3]:
-                if character_data.item[item_id] > 0:
+                if inventory.items(character_id)[item_id] > 0:
                     self.draw_list[0] = self.draw_list[0] + (sanity_item_draw,)
                     self.return_list.append(sanity_item_draw.return_text)
                     break
@@ -815,7 +815,7 @@ class CharacterInfoHead:
                 semen_point_draw,
             )
             # 如果有精力恢复剂的话，显示快捷键
-            if character_data.item[11] > 0:
+            if inventory.items(character_id)[11] > 0:
                 self.draw_list[0] = self.draw_list[0] + (semen_item_draw,)
                 self.return_list.append(semen_item_draw.return_text)
         """ 要绘制的面板列表 """

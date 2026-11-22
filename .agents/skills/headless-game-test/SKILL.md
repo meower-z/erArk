@@ -55,18 +55,14 @@ assert map_handle.get_map_system_path_str_for_list(SCENE) in cache.scene_data
 
 | 字段 | 置零函数 | 坑 |
 | --- | --- | --- |
-| `cloth` | `get_cloth_zero()` | 无参 |
-| `cloth.cloth_locker_in_dormitory` | `get_cloth_locker_in_dormitory_zero()` | `get_cloth_zero()` 不含两个衣柜，要单独置零 |
-| `cloth.cloth_locker_in_shower` | `get_shower_cloth_locker_zero()` | 命名顺序与上一行相反（shower_cloth_locker） |
+| 服装、状态值、身体管理 | `tests.chara_data.seed(cid, {})` | 这三项存在内核状态里，不在角色对象上。读写用 `wardrobe`、`status`、`body_manage` 模块。第二个参数是要穿的衣服（服装类型到衣服id），`{}` 时不穿 |
 | `dirty` | **`get_zero_dirty()`** | 不是 `get_dirty_zero`；另有 `get_dirty_reset()` 是别的语义 |
 | `talent` | `get_talent_zero({})`，交回的表在 `kernel_data.writing()` 里经 `abilities.talent(cid).replace(...)` 写进 GameState（`Character` 上没有这个字段） | **要传一个 dict 进去** |
 | `ability` | `get_ability_zero({})`，经 `abilities.ability(cid).replace(...)` 写入，写法同 `talent` | 同上 |
-| `status_data` | **`get_status_zero({})`** | 字段叫 `status_data`，函数却叫 `get_status_zero` |
 | `juel` | `get_juel_zero({})`，经 `abilities.juel(cid).replace(...)` 写入，写法同 `talent` | 同上 |
 | `experience` | `get_experience_zero({})`，经 `abilities.experience(cid).replace(...)` 写入，写法同 `talent` | 同上 |
 | `second_behavior` | `get_second_behavior_zero({})` | 同上 |
 | `h_state` | `get_h_state_reset(cd.h_state)` | **只有 reset 版**，要把旧对象传进去 |
-| `body_manage` | `get_body_manage_zero()` | 无参；管理类前提（如睡前锁门）会直接取 `[24]` |
 | `favorability` | 手写 `{0: 0}` | 好感/信赖类前提直接取 `[0]`；口上里的 `favorability_ge_3` 会走到 |
 | `talent[121]` | 在 `kernel_data.writing()` 里手写 `abilities.talent(cid)[121] = 1` | 罩杯素质 121~125 至少要有一个为 1：胸部成长/乳汁上限之类的代码用 `for tid in [121..125]: if talent[tid]: ...; break` 找罩杯，一个都没有时循环变量不赋值 → `UnboundLocalError`（报错在 `chest_grow`/`milk_max` 处） |
 | `race` | 手写 `cd.race = <种族id>` | 默认 0=博士；生育方式、种族限定判定都查 `game_config.config_race[cd.race]`，测卵生/多胎要显式给对应种族 |
@@ -191,7 +187,7 @@ rm -f data/Character_Talk.json
 | `TypeError: get_xxx_zero() missing 1 required positional argument` | 该置零函数要传 dict，查上表 |
 | `KeyError` 出现在 `common_default.chara_base_state_adjust` | 漏了 `normal_config.system_setting` |
 | `KeyError: '0'` 出现在 `cache.scene_data[...]` | 场景路径不是真实场景 |
-| `KeyError: 24` 出现在 `handle_premise_body_manage` | 漏了 `body_manage` |
+| `KeyError: 24` 出现在 `handle_premise_body_manage` | 漏了 `chara_data.seed` |
 | `KeyError: 0` 出现在 `handle_favorability_*` | 漏了 `favorability`（口上前提会走到） |
 | 断言全过但数值没变 | `add_time` 传了 0 |
 | 新前提/新口上"没注册" | 漏跑 `buildconfig.py`，或新口上没删 `Character_Talk.json` |

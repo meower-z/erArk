@@ -3,7 +3,7 @@
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import map_handle, update
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import action_info, flags, plan
+from Script.Modules.domains import action_info, flags, inventory, plan
 from types import FunctionType
 
 cache: game_type.Cache = cache_control.cache
@@ -224,13 +224,13 @@ def character_move(
             elif (
                 "Dormitory" in now_scene_data.scene_tag
                 or "Guest_Room" in now_scene_data.scene_tag
-            ) and character_data.item[152] >= 1:
+            ) and inventory.items(character_id)[152] >= 1:
                 info_draw = draw.WaitDraw()
                 info_draw.text = _(
                     "\n  ●你拿出了一次性万能钥匙，悄悄打开了门\n\n"
                 )
                 info_draw.draw()
-                character_data.item[152] -= 1
+                inventory.add_item(character_id, 152, -1)
                 now_scene_data.close_flag = 0
                 access_type = "open"
         # 其他不可进入情况

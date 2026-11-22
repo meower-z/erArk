@@ -8,6 +8,7 @@ from types import FunctionType
 from Script.Config import game_config, normal_config
 from Script.Core import cache_control, get_text
 from Script.Modules.domains import achievement, power, power_supply
+from Script.Modules.domains import status
 from Script.UI.Moudle import draw
 
 _: FunctionType = get_text._
@@ -97,7 +98,7 @@ def store_power_by_human_power(
     if per_degree is None:
         return 0.0
     character = cache_control.cache.character_data[character_id]
-    character.status_data[12] = int(character.status_data[12] / 2)
+    status.set(character_id, 12, int(status.of(character_id)[12] / 2))
     power.store(per_degree)
     if draw_flag:
         draw_text = draw.WaitDraw()

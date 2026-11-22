@@ -7,6 +7,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
 from Script.UI.Moudle import draw
 from Script.System.Item_System import condom_handle
+from Script.Modules.domains import wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -210,9 +211,6 @@ class Condom_Select_Panel:
         Return arguments:\n
         (部位类型, 部位cid) -- 选中的部位，取消时返回-1
         """
-        target_data: game_type.Character = cache.character_data[
-            target_character_id
-        ]
         title_draw = draw.TitleLineDraw(_("选择部位"), self.width)
         while 1:
             return_list = []
@@ -250,7 +248,9 @@ class Condom_Select_Panel:
                     part_list.append((0, part_cid))
             # 已穿着的服装部位
             for clothing_type in game_config.config_clothing_type:
-                if len(target_data.cloth.cloth_wear[clothing_type]):
+                if len(
+                    wardrobe.of(target_character_id).cloth_wear[clothing_type]
+                ):
                     part_list.append((1, clothing_type))
 
             # 每行绘制5个居中按钮，每个按钮宽度为行宽的五分之一

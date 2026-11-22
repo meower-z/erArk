@@ -9,6 +9,7 @@ from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import (
     abilities,
+    body_manage,
     commission,
     economy,
     facility,
@@ -1766,9 +1767,7 @@ class Change_Npc_Work_Panel:
         target_data: game_type.Character = cache.character_data[character_id]
         # 如果原工作是性爱练习生的话，则重置性爱练习
         if target_data.work.work_type == 193:
-            for i in target_data.body_manage:
-                if i in range(30, 40) and target_data.body_manage[i]:
-                    target_data.body_manage[i] = 0
+            body_manage.clear(character_id, range(30, 40))
         from Script.System.Dormitory_System import common
 
         # 如果旧的工作是监狱长，则解除监狱长身份，并重置宿舍

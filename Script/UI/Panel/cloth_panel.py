@@ -6,8 +6,8 @@ from Script.Core import get_text, py_cmd, rich_text, text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_premise
 from Script.UI.Moudle import draw, panel, view
-from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, player_ability
+from Script.Modules.tk_ui import drawn_see, player_pick
+from Script.Modules.domains import abilities, player_ability, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -28,16 +28,15 @@ def cloth_off_after_settle(character_id: int) -> None:
     Keyword arguments:
     character_id -- 角色id
     """
-    character_data = cache.character_data[character_id]
+    cloth = wardrobe.of(character_id)
     for i in game_config.config_clothing_type:
         # 去重
-        character_data.cloth.cloth_off[i] = list(
-            set(character_data.cloth.cloth_off[i])
-        )
+        cloth.cloth_off[i] = list(set(cloth.cloth_off[i]))
         # 如果某个脱掉的衣服还在穿着，则从脱掉的衣服列表中移除
-        for j in character_data.cloth.cloth_off[i]:
-            if j in character_data.cloth.cloth_wear[i]:
-                character_data.cloth.cloth_off[i].remove(j)
+        for j in cloth.cloth_off[i]:
+            if j in cloth.cloth_wear[i]:
+                cloth.cloth_off[i].remove(j)
+    wardrobe.put(character_id, cloth)
 
 
 class SeeCharacterClothPanel:
@@ -77,27 +76,23 @@ class SeeCharacterClothPanel:
         target_character_data = cache.character_data[
             character_data.target_character_id
         ]
+        cloth = wardrobe.of(target_character_data.cid)
 
         type_line = draw.LittleTitleLineDraw(_("服装"), width, ":")
         self.draw_list.append(type_line)
 
         now_text = ""
         # 遍历全部衣服类型
-        # print(f"debug target_character_data.cloth.cloth_wear = {target_character_data.cloth.cloth_wear}")
         for clothing_type in game_config.config_clothing_type:
             type_name = game_config.config_clothing_type[clothing_type].name
             # 当该类型里有衣服存在的时候才显示
-            if len(target_character_data.cloth.cloth_wear[clothing_type]):
+            if len(cloth.cloth_wear[clothing_type]):
                 # 正常情况下不显示胸部和内裤的服装,debug或该部位可以显示则显示
                 if clothing_type in {6, 9} and not cache.debug_mode:
                     if not (
                         player_ability.get(0, "visual")
                         and abilities.talent(0)[307]
-                    ) and len(
-                        target_character_data.cloth.cloth_wear[
-                            clothing_type - 1
-                        ]
-                    ):
+                    ) and len(cloth.cloth_wear[clothing_type - 1]):
                         continue
                 # 当显示到下衣8的时候，换行
                 if (
@@ -108,9 +103,7 @@ class SeeCharacterClothPanel:
                     now_text += "\n"
                 now_text += f"  [{type_name}]:"
                 # 如果有多个衣服，则依次显示
-                for cloth_id in target_character_data.cloth.cloth_wear[
-                    clothing_type
-                ]:
+                for cloth_id in cloth.cloth_wear[clothing_type]:
                     cloth_name = game_config.config_clothing_tem[cloth_id].name
                     now_text += f" {cloth_name}"
                     # 如果该部位有精液，则显示精液信息（旧存档的衣服污浊数据可能是空的）
@@ -128,20 +121,14 @@ class SeeCharacterClothPanel:
                         # 是否显示完整污浊文本，仅在最后一件衣服上显示
                         if (
                             normal_config.system_setting.draw_setting[10]
-                            and cloth_id
-                            == target_character_data.cloth.cloth_wear[
-                                clothing_type
-                            ][-1]
+                            and cloth_id == cloth.cloth_wear[clothing_type][-1]
                         ):
                             dirty_text_context = game_config.ui_text_data[
                                 "dirty_full"
                             ][dirty_text_cid]
                         elif (
                             normal_config.system_setting.draw_setting[10]
-                            and cloth_id
-                            != target_character_data.cloth.cloth_wear[
-                                clothing_type
-                            ][-1]
+                            and cloth_id != cloth.cloth_wear[clothing_type][-1]
                         ):
                             continue
                         else:
@@ -185,10 +172,7 @@ class SeeCharacterClothPanel:
                     now_text += f"<semen>({decoration_text_context})</semen>"
 
             # 当显示到下衣8，且此时没有衣服的时候，换行
-            if (
-                clothing_type == 8
-                and len(target_character_data.cloth.cloth_wear[8]) == 0
-            ):
+            if clothing_type == 8 and len(cloth.cloth_wear[8]) == 0:
                 now_text += "\n"
             # 或者在完整污浊显示时换行
             elif (
@@ -203,31 +187,29 @@ class SeeCharacterClothPanel:
                     now_text += "\n"
             # 真空的胸衣和内裤单独显示
             if clothing_type in {6, 9} and not len(
-                target_character_data.cloth.cloth_wear[clothing_type]
+                cloth.cloth_wear[clothing_type]
             ):
                 if not cache.debug_mode:
-                    if not target_character_data.cloth.cloth_see[clothing_type]:
+                    if not cloth.cloth_see[clothing_type]:
                         continue
                 now_text += _("  [{0}]: 真空").format(type_name)
         # 穿着服装的显示最后，如果不是换行符，则补个换行符
         if now_text != "" and now_text[-1] != "\n":
             now_text += "\n"
-        # cloth_text_list.append(now_text)
 
         no_cloth_flag = True
         for clothing_type in game_config.config_clothing_type:
-            if len(target_character_data.cloth.cloth_wear[clothing_type]):
+            if len(cloth.cloth_wear[clothing_type]):
                 no_cloth_flag = False
                 break
         if no_cloth_flag:
             now_text = _("  全裸\n")
-            # cloth_text_list.append(now_text)
 
         # 计算脱下的衣服
         off_text = _("  [已脱下]:")
         count = 0
-        for cloth_type in target_character_data.cloth.cloth_off:
-            for cloth_id in target_character_data.cloth.cloth_off[cloth_type]:
+        for cloth_type in cloth.cloth_off:
+            for cloth_id in cloth.cloth_off[cloth_type]:
                 cloth_name = game_config.config_clothing_tem[cloth_id].name
                 off_text += f" {cloth_name}"
                 # 每8个衣服换行
@@ -340,9 +322,7 @@ class SeeUndressButtonList:
         """ 按钮返回值 """
 
         character_data: game_type.Character = cache.character_data[0]
-        target_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
-        ]
+        cloth = wardrobe.of(character_data.target_character_id)
 
         # 按钮绘制
         name_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
@@ -350,18 +330,14 @@ class SeeUndressButtonList:
 
         index_text = text_handle.id_index(button_id)
         button_text = f"{index_text}{self.button_name_text}"
-        # print(f"debug button_id = {button_id}")
-        # print(f"debug target_data.cloth = {target_data.cloth}")
 
         # 0号指令,脱到只穿内衣
         if self.button_id == 0:
-            cloth_count = len(target_data.cloth.cloth_wear[5]) + len(
-                target_data.cloth.cloth_wear[8]
-            )
+            cloth_count = len(cloth.cloth_wear[5]) + len(cloth.cloth_wear[8])
             if cloth_count:
                 button_text += _(" ：会脱掉")
                 for i in {5, 8}:
-                    for j in target_data.cloth.cloth_wear[i]:
+                    for j in cloth.cloth_wear[i]:
                         cloth_name = game_config.config_clothing_tem[j].name
                         button_text += f" {cloth_name}"
             else:
@@ -371,15 +347,15 @@ class SeeUndressButtonList:
         # 1号指令,脱到只穿袜子手套等
         elif self.button_id == 1:
             cloth_count = (
-                len(target_data.cloth.cloth_wear[5])
-                + len(target_data.cloth.cloth_wear[6])
-                + len(target_data.cloth.cloth_wear[8])
-                + len(target_data.cloth.cloth_wear[9])
+                len(cloth.cloth_wear[5])
+                + len(cloth.cloth_wear[6])
+                + len(cloth.cloth_wear[8])
+                + len(cloth.cloth_wear[9])
             )
             if cloth_count:
                 button_text += _(" ：会脱掉")
                 for i in {5, 6, 8, 9}:
-                    for j in target_data.cloth.cloth_wear[i]:
+                    for j in cloth.cloth_wear[i]:
                         cloth_name = game_config.config_clothing_tem[j].name
                         button_text += f" {cloth_name}"
             else:
@@ -390,11 +366,11 @@ class SeeUndressButtonList:
         elif self.button_id == 2:
             cloth_count = 0
             for i in game_config.config_clothing_type:
-                cloth_count += len(target_data.cloth.cloth_wear[i])
+                cloth_count += len(cloth.cloth_wear[i])
             if cloth_count:
                 button_text += _(" ：会脱掉")
                 for i in game_config.config_clothing_type:
-                    for j in target_data.cloth.cloth_wear[i]:
+                    for j in cloth.cloth_wear[i]:
                         cloth_name = game_config.config_clothing_tem[j].name
                         button_text += f" {cloth_name}"
             else:
@@ -403,11 +379,11 @@ class SeeUndressButtonList:
 
         # 3号指令,把内裤收走
         if self.button_id == 3:
-            cloth_count = len(target_data.cloth.cloth_wear[9])
+            cloth_count = len(cloth.cloth_wear[9])
             if cloth_count:
                 button_text += _(" ：会收走")
                 for i in {9}:
-                    for j in target_data.cloth.cloth_wear[i]:
+                    for j in cloth.cloth_wear[i]:
                         cloth_name = game_config.config_clothing_tem[j].name
                         button_text += f" {cloth_name}"
             else:
@@ -497,10 +473,12 @@ class SwitchCharacterClothPanel:
         """
         self.draw_list.clear()
         self.button_list.clear()
+        seen: dict[int, bool] = {}
         character_data = cache.character_data[0]
         target_character_data = cache.character_data[
             character_data.target_character_id
         ]
+        cloth = wardrobe.of(target_character_data.cid)
         # 添加标题
         type_line = draw.LittleTitleLineDraw(_("服装"), self.width, ":")
         self.draw_list.append(type_line)
@@ -509,25 +487,17 @@ class SwitchCharacterClothPanel:
         for clothing_type in game_config.config_clothing_type:
             type_name = game_config.config_clothing_type[clothing_type].name
             # 只在有衣服时显示
-            if len(target_character_data.cloth.cloth_wear[clothing_type]):
+            if len(cloth.cloth_wear[clothing_type]):
                 # 处理胸部和内裤的特殊显示逻辑
                 if clothing_type in {6, 9} and not cache.debug_mode:
-                    if (
-                        player_ability.get(0, "visual")
-                        and abilities.talent(0)[307]
-                    ) or len(
-                        target_character_data.cloth.cloth_wear[
-                            clothing_type - 1
-                        ]
-                    ) == 0:
-                        target_character_data.cloth.cloth_see[clothing_type] = (
-                            True
+                    seen[clothing_type] = (
+                        bool(
+                            player_ability.get(0, "visual")
+                            and abilities.talent(0)[307]
                         )
-                    else:
-                        target_character_data.cloth.cloth_see[clothing_type] = (
-                            False
-                        )
-                    if not target_character_data.cloth.cloth_see[clothing_type]:
+                        or not cloth.cloth_wear[clothing_type - 1]
+                    )
+                    if not seen[clothing_type]:
                         continue
                 # 下衣8时换行
                 if clothing_type == 8 and now_row:
@@ -540,9 +510,7 @@ class SwitchCharacterClothPanel:
                 type_title.width = self.width
                 now_row.append(type_title)
                 # 依次显示每件衣服为按钮
-                for cloth_id in target_character_data.cloth.cloth_wear[
-                    clothing_type
-                ]:
+                for cloth_id in cloth.cloth_wear[clothing_type]:
                     btn = SwitchClothButton(cloth_id, clothing_type, True, self)
                     self.button_list.append(btn)
                     now_row.append(btn)
@@ -569,20 +537,14 @@ class SwitchCharacterClothPanel:
                         # 只在最后一件衣服上显示完整污浊文本
                         if (
                             normal_config.system_setting.draw_setting[10]
-                            and cloth_id
-                            == target_character_data.cloth.cloth_wear[
-                                clothing_type
-                            ][-1]
+                            and cloth_id == cloth.cloth_wear[clothing_type][-1]
                         ):
                             dirty_text_context = game_config.ui_text_data[
                                 "dirty_full"
                             ][dirty_text_cid]
                         elif (
                             normal_config.system_setting.draw_setting[10]
-                            and cloth_id
-                            != target_character_data.cloth.cloth_wear[
-                                clothing_type
-                            ][-1]
+                            and cloth_id != cloth.cloth_wear[clothing_type][-1]
                         ):
                             continue
                         else:
@@ -597,10 +559,7 @@ class SwitchCharacterClothPanel:
                         )
                         now_row.extend(get_rich_text_draw_list)
             # 下衣8无衣服时换行
-            if (
-                clothing_type == 8
-                and len(target_character_data.cloth.cloth_wear[8]) == 0
-            ):
+            if clothing_type == 8 and len(cloth.cloth_wear[8]) == 0:
                 if now_row:
                     self.draw_list.extend(now_row)
                     self.draw_list.append(line_feed)
@@ -616,15 +575,16 @@ class SwitchCharacterClothPanel:
                     now_row = []
             # 真空显示
             if clothing_type in {6, 9} and not len(
-                target_character_data.cloth.cloth_wear[clothing_type]
+                cloth.cloth_wear[clothing_type]
             ):
                 if not cache.debug_mode:
-                    if not target_character_data.cloth.cloth_see[clothing_type]:
+                    if not cloth.cloth_see[clothing_type]:
                         continue
                 vac_draw = draw.NormalDraw()
                 vac_draw.text = _("  [{0}]: 真空").format(type_name)
                 vac_draw.width = self.width
                 now_row.append(vac_draw)
+        drawn_see.remember(target_character_data.cid, seen)
         # 最后一行补换行
         if now_row:
             self.draw_list.extend(now_row)
@@ -632,7 +592,7 @@ class SwitchCharacterClothPanel:
         # 全裸显示
         no_cloth_flag = True
         for clothing_type in game_config.config_clothing_type:
-            if len(target_character_data.cloth.cloth_wear[clothing_type]):
+            if len(cloth.cloth_wear[clothing_type]):
                 no_cloth_flag = False
                 break
         if no_cloth_flag:
@@ -647,8 +607,8 @@ class SwitchCharacterClothPanel:
         off_cloth_count = 0
         off_draw_count = 0
         off_row: list[draw.Drawable] = []
-        for cloth_type in target_character_data.cloth.cloth_off:
-            for cloth_id in target_character_data.cloth.cloth_off[cloth_type]:
+        for cloth_type in cloth.cloth_off:
+            for cloth_id in cloth.cloth_off[cloth_type]:
                 btn = SwitchClothButton(cloth_id, cloth_type, False, self)
                 self.button_list.append(btn)
                 off_row.append(btn)
@@ -719,11 +679,6 @@ class SwitchClothButton(draw.LeftButton):
         self.panel = panel
         cloth_name = game_config.config_clothing_tem[cloth_id].name
         btn_text = f" {cloth_name}"
-        # 按钮文本，穿着为[脱下]，脱下为[穿上]
-        # if is_wear:
-        #     btn_text = f"[脱下]{cloth_name}"
-        # else:
-        #     btn_text = f"[穿上]{cloth_name}"
         # 计算按钮宽度为文字本身宽度
         btn_width = len(btn_text) * 2
         # 初始化父类按钮，按钮宽度为文字宽度
@@ -744,27 +699,42 @@ class SwitchClothButton(draw.LeftButton):
             if self.is_wear:
                 if (
                     self.cloth_id
-                    in target_character_data.cloth.cloth_wear[
+                    in wardrobe.of(target_character_data.cid).cloth_wear[
                         self.clothing_type
                     ]
                 ):
-                    target_character_data.cloth.cloth_wear[
-                        self.clothing_type
-                    ].remove(self.cloth_id)
-                    target_character_data.cloth.cloth_off[
-                        self.clothing_type
-                    ].append(self.cloth_id)
+                    wardrobe.remove(
+                        target_character_data.cid,
+                        "cloth_wear",
+                        self.clothing_type,
+                        self.cloth_id,
+                    )
+                    wardrobe.append(
+                        target_character_data.cid,
+                        "cloth_off",
+                        self.clothing_type,
+                        self.cloth_id,
+                    )
             # 如果当前脱下，则穿上
             else:
                 if (
                     self.cloth_id
-                    in target_character_data.cloth.cloth_off[self.clothing_type]
+                    in wardrobe.of(target_character_data.cid).cloth_off[
+                        self.clothing_type
+                    ]
                 ):
-                    target_character_data.cloth.cloth_off[
-                        self.clothing_type
-                    ].remove(self.cloth_id)
-                    target_character_data.cloth.cloth_wear[
-                        self.clothing_type
-                    ].append(self.cloth_id)
+                    wardrobe.remove(
+                        target_character_data.cid,
+                        "cloth_off",
+                        self.clothing_type,
+                        self.cloth_id,
+                    )
+                    wardrobe.append(
+                        target_character_data.cid,
+                        "cloth_wear",
+                        self.clothing_type,
+                        self.cloth_id,
+                    )
             # 刷新面板
             self.panel._refresh_panel()
+            drawn_see.keep()

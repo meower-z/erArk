@@ -11,7 +11,7 @@ from Script.Design import handle_talent, map_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.Modules.domains import abilities, action_info, entertainment, flags
-from Script.Modules.domains import needs, player_ability
+from Script.Modules.domains import needs, player_ability, status
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -111,29 +111,29 @@ def calculation_instuct_judege(
     # 状态修正
     # 欲情和快乐为低正修正，恭顺和屈服为高正修正，羞耻和抑郁低小负修正，苦痛和恐怖和反感为高负修正
     add_status_level_sum_s = attr_calculation.get_status_level(
-        num.whole(target_data.status_data[12])
+        num.whole(status.of(target_character_id)[12])
     ) + attr_calculation.get_status_level(
-        num.whole(target_data.status_data[13])
+        num.whole(status.of(target_character_id)[13])
     )
     add_status_level_sum_l = attr_calculation.get_status_level(
-        num.whole(target_data.status_data[10])
+        num.whole(status.of(target_character_id)[10])
     ) + attr_calculation.get_status_level(
-        num.whole(target_data.status_data[15])
+        num.whole(status.of(target_character_id)[15])
     )
     down_status_level_sum_s = attr_calculation.get_status_level(
-        num.whole(target_data.status_data[16])
+        num.whole(status.of(target_character_id)[16])
     ) + attr_calculation.get_status_level(
-        num.whole(target_data.status_data[19])
+        num.whole(status.of(target_character_id)[19])
     )
     down_status_level_sum_l = (
         attr_calculation.get_status_level(
-            num.whole(target_data.status_data[17])
+            num.whole(status.of(target_character_id)[17])
         )
         + attr_calculation.get_status_level(
-            num.whole(target_data.status_data[18])
+            num.whole(status.of(target_character_id)[18])
         )
         + attr_calculation.get_status_level(
-            num.whole(target_data.status_data[20])
+            num.whole(status.of(target_character_id)[20])
         )
     )
     judge_status = (

@@ -31,7 +31,7 @@ from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.domains import abilities, action_info, entertainment
 from Script.Modules.domains import facility, flags, needs, physical_exam
-from Script.Modules.domains import pregnancy, recruit, roster, warehouse
+from Script.Modules.domains import pregnancy, recruit, roster, status, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1398,15 +1398,12 @@ class Debug_Panel:
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
                     target_id = cache.character_data[0].target_character_id
-                    target_character_data = cache.character_data[target_id]
                     for state_id in game_config.config_character_state:
                         if (
                             game_config.config_character_state[state_id].type
                             == 0
                         ):
-                            target_character_data.status_data[
-                                state_id
-                            ] += new_value
+                            status.add(target_id, state_id, new_value)
                 # 招募指定adv_id的干员
                 elif key_index == 16:
                     from Script.Design import character
@@ -1650,7 +1647,7 @@ class Debug_Panel:
                 info_text = "\n"
                 for cid in game_config.config_character_state:
                     name = game_config.config_character_state[cid].name
-                    info_text += f"{cid}:{name}={num.shown(target_data.status_data[cid])} "
+                    info_text += f"{cid}:{name}={num.shown(status.of(target_data.cid)[cid])} "
                 draw_text_list.append(f"[000]:状态列表：\n{info_text}")
 
                 # 进行显示
@@ -1678,7 +1675,7 @@ class Debug_Panel:
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
 
-                    target_data.status_data[value_index] = new_value
+                    status.set(target_data.cid, value_index, new_value)
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False

@@ -18,7 +18,8 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import abilities, achievement, action_info
-from Script.Modules.domains import player_collection, pregnancy, roster
+from Script.Modules.domains import body_manage, player_collection, pregnancy
+from Script.Modules.domains import roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -453,16 +454,16 @@ class Physical_Check_And_Manage_Panel:
         target_character_data = cache.character_data[target_character_id]
 
         # 判断是否要重置身体管理数据
-        if not len(target_character_data.body_manage):
-            target_character_data.body_manage = (
-                attr_calculation.get_body_manage_zero()
+        if not len(body_manage.of(target_character_id)):
+            body_manage.replace(
+                target_character_id, attr_calculation.get_body_manage_zero()
             )
-        elif len(target_character_data.body_manage) != len(
+        elif len(body_manage.of(target_character_id)) != len(
             game_config.config_body_manage_requirement
         ):
             for cid in game_config.config_body_manage_requirement:
-                if cid not in target_character_data.body_manage:
-                    target_character_data.body_manage[cid] = 0
+                if cid not in body_manage.of(target_character_id):
+                    body_manage.set(target_character_id, cid, 0)
 
         while 1:
             return_list = []
@@ -506,7 +507,7 @@ class Physical_Check_And_Manage_Panel:
                     require_text = require_text[3:]
 
                 # 已经在进行中的不需要判定
-                if target_character_data.body_manage[manage_cid]:
+                if body_manage.of(target_character_id)[manage_cid]:
                     judge_result = True
                 else:
                     # 跳过没有进行前置检查的
@@ -527,7 +528,7 @@ class Physical_Check_And_Manage_Panel:
                         f"[{str(count).rjust(2,'0')}]：{behavior_name}"
                     )
                     # 如果已进行该身体管理，则显示进行中
-                    if target_character_data.body_manage[manage_cid]:
+                    if body_manage.of(target_character_id)[manage_cid]:
                         manage_text += _("(进行中)")
                     manage_draw: draw.LeftButton | draw.NormalDraw
                     manage_draw = draw.LeftButton(
@@ -842,13 +843,13 @@ class Physical_Check_And_Manage_Panel:
         info_text = "\n"
 
         # 如果没有进行该身体管理，则进行
-        if target_character_data.body_manage[manage_cid] == 0:
+        if body_manage.of(target_character_id)[manage_cid] == 0:
             # 结算二段行为
             second_behavior.character_get_second_behavior(
                 target_character_id, body_manage_second_behavior_id
             )
             # 结算身体管理
-            target_character_data.body_manage[manage_cid] = 1
+            body_manage.set(target_character_id, manage_cid, 1)
             info_text += _(
                 "对{0}进行了{1}的身体管理，将在明天睡醒后生效。\n"
             ).format(
@@ -875,7 +876,7 @@ class Physical_Check_And_Manage_Panel:
         # 如果已经进行该身体管理，则取消
         else:
             # 结算身体管理
-            target_character_data.body_manage[manage_cid] = 0
+            body_manage.set(target_character_id, manage_cid, 0)
             info_text += _(
                 "取消了对{0}的{1}的身体管理，将在明天睡醒后生效。\n"
             ).format(
@@ -933,12 +934,11 @@ class Physical_Check_And_Manage_Panel:
                 # 跳过玩家
                 if npc_id == 0:
                     continue
-                now_character_data = cache.character_data[npc_id]
                 for (
                     body_manage_cid
                 ) in game_config.config_body_manage_requirement:
                     # 如果当前干员的身体管理数据不为0，则加入列表
-                    if now_character_data.body_manage[body_manage_cid] > 0:
+                    if body_manage.of(npc_id)[body_manage_cid] > 0:
                         now_list = [npc_id, self.cancle_physical_manage, []]
                         final_list.append(now_list)
                         break
@@ -957,8 +957,8 @@ class Physical_Check_And_Manage_Panel:
         """取消目标角色的身体管理"""
         target_character_data = cache.character_data[target_character_id]
         # 取消所有的身体管理
-        target_character_data.body_manage = (
-            attr_calculation.get_body_manage_zero()
+        body_manage.replace(
+            target_character_id, attr_calculation.get_body_manage_zero()
         )
         info_text = _(
             "\n取消了对{0}的全部身体管理，将在明天睡醒后生效。\n"

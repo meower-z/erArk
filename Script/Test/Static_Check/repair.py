@@ -18,7 +18,7 @@ from collections.abc import Callable
 from fractions import Fraction
 
 from Script.Config import game_config
-from Script.Modules.domains import flags, modes, needs, power, work
+from Script.Modules.domains import flags, modes, needs, power, wardrobe, work
 
 from . import check_log
 
@@ -164,19 +164,18 @@ def repair_angry_point_lower_bound(cache: game_type.Cache) -> list[dict]:
 
 
 def _iter_cloth_containers(
-    chara: object,
+    cid: int,
 ) -> Iterator[tuple[str, dict[int, list[int]]]]:
     """
     参数:
-        chara: 角色对象
+        cid: 角色id
     返回值:
-        Iterator[Tuple[str, dict]]: (容器名, 槽位字典)序列；cloth结构缺失时为空
+        Iterator[Tuple[str, dict]]: 角色服装（wardrobe.of）里四个服装容器的 (容器名, 槽位字典) 序列
     功能:
-        遍历四个服装容器，结构非法的容器跳过（形状问题属BODY-01，不在修复范围）
+        逐个交出四个服装容器，结构非法的容器跳过（形状问题属BODY-01，不在修复范围）。
+        遍历到底后把服装写回 body.cloth，调用方对槽位字典的修改因此生效
     """
-    cloth = getattr(chara, "cloth", None)
-    if cloth is None:
-        return
+    cloth = wardrobe.of(cid)
     for attr_name in (
         "cloth_wear",
         "cloth_off",
@@ -186,6 +185,7 @@ def _iter_cloth_containers(
         d = getattr(cloth, attr_name, None)
         if isinstance(d, dict):
             yield attr_name, d
+    wardrobe.put(cid, cloth)
 
 
 @register_repair("BODY-02", "非法服装id清除与错位归正")
@@ -205,7 +205,7 @@ def repair_cloth_id_validity(cache: game_type.Cache) -> list[dict]:
         return []
     records = []
     for cid, chara in cache.character_data.items():
-        for attr_name, d in _iter_cloth_containers(chara):
+        for attr_name, d in _iter_cloth_containers(cid):
             for t, lst in list(d.items()):
                 if not isinstance(lst, list):
                     continue
@@ -259,7 +259,7 @@ def repair_cloth_slot_duplicates(cache: game_type.Cache) -> list[dict]:
     """
     records = []
     for cid, chara in cache.character_data.items():
-        for attr_name, d in _iter_cloth_containers(chara):
+        for attr_name, d in _iter_cloth_containers(cid):
             for t, lst in d.items():
                 if not isinstance(lst, list) or len(lst) == len(set(lst)):
                     continue
@@ -292,14 +292,14 @@ def repair_clothing_tem_list(cache: game_type.Cache) -> list[dict]:
         return []
     records = []
     for cid, chara in cache.character_data.items():
-        lst = getattr(getattr(chara, "cloth", None), "clothing_tem", None)
-        if not isinstance(lst, list):
-            continue
+        cloth = wardrobe.of(cid)
+        lst = cloth.clothing_tem
         bad = [x for x in lst if type(x) is not int or x not in tem]
         if not bad:
             continue
         old_list = list(lst)
         lst[:] = [x for x in lst if x not in bad]
+        wardrobe.put(cid, cloth)
         records.append(
             _record(
                 "BODY-35",

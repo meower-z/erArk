@@ -22,6 +22,7 @@ from Script.Modules.domains import modes
 from Script.Modules.domains import production
 from Script.UI.Moudle import draw
 from Script.Modules.domains import economy
+from Script.Modules.domains import body_manage, inventory
 
 if TYPE_CHECKING:
     from Script.Modules.npc_action_choice import choice
@@ -3110,11 +3111,10 @@ def character_eat_rand_food(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     plan.set("target_character_id", character_id)
     plan.set("behavior.behavior_id", constant.Behavior.EAT)
     now_food_list = []
-    for food_id in character_data.food_bag:
+    for food_id in inventory.foods(character_id):
         now_food_list.append(food_id)
     # 如果没有食物则直接清空饥饿值和进食状态，然后切换至无行动状态并返回，以防止进食失败的死循环
     if not len(now_food_list):
@@ -4207,12 +4207,11 @@ def character_work_sex_exercises(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     plan.set("target_character_id", character_id)
     # 从目前的性爱练习列表中随机选一个
     exercises_list = []
-    for i in character_data.body_manage:
-        if character_data.body_manage[i]:
+    for i in body_manage.of(character_id):
+        if body_manage.of(character_id)[i]:
             body_manage_data = game_config.config_body_manage_requirement[i]
             if body_manage_data.behavior_id == "0":
                 continue

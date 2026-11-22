@@ -29,7 +29,7 @@ from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import abilities, action_info, flags, growth
-from Script.Modules.domains import history, needs, physical_exam, roster
+from Script.Modules.domains import history, needs, physical_exam, roster, status
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -520,8 +520,7 @@ def handle_comprehensive_value_premise(
                 ):
                     return 1
             return 0
-        else:
-            final_value = final_character_data.status_data.get(type_son_id, 0)
+        final_value = status.of(final_character_id).get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "F":
         if "Flag" in premise_all_value_list[1]:
             final_value = (

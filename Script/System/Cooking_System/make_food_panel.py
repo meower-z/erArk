@@ -18,6 +18,7 @@ from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking, cook_question_panel
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import inventory
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -93,7 +94,6 @@ class Make_food_Panel:
 
     def draw(self) -> None:
         """绘制对象"""
-        character_data: game_type.Character = cache.character_data[0]
         title_draw = draw.TitleLineDraw(_("制作食物"), self.width)
         food_type_list = [_("主食"), _("零食"), _("饮品"), _("酒类")]
         if self.make_food_type == 1:
@@ -240,7 +240,7 @@ class Make_food_Panel:
                 # 如果是加药物需要已拥有药物
                 if seasoning_cid > 100:
                     if (
-                        not character_data.item[seasoning_cid]
+                        not inventory.items(0)[seasoning_cid]
                         and not cache.debug_mode
                     ):
                         continue
@@ -906,7 +906,6 @@ class SeeFoodListByFoodNameDraw:
         from Script.Design import basement
         from Script.Design import handle_premise
 
-        character_data: game_type.Character = cache.character_data[0]
         food_recipe = game_config.config_recipes[int(self.food_cid)]
         food_name = self.food_name
         food_diffucty = food_recipe.difficulty
@@ -930,7 +929,7 @@ class SeeFoodListByFoodNameDraw:
         max_count = 10
         if self.special_seasoning > 100:
             max_count = min(
-                max_count, character_data.item[self.special_seasoning]
+                max_count, inventory.items(0)[self.special_seasoning]
             )
         max_count = max(1, max_count)
         # 沿用上次在同类型做饭面板中选择的制作数量，并按本次可制作上限钳制
