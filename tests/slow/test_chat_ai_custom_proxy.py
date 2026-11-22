@@ -112,6 +112,9 @@ class ChatAiCustomProxyTest(SlowTestCase):
         """
         super().setUp()
         self.constant = importlib.import_module("Script.Core.constant")
+        self.normal_config = importlib.import_module(
+            "Script.Config.normal_config"
+        )
         FakeProxy.request_lines = []
         server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), FakeProxy)
         threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -133,7 +136,8 @@ class ChatAiCustomProxyTest(SlowTestCase):
     def enter_settings(self, local_ip: str) -> None:
         """
         经「文本生成AI设置」面板开启文本生成AI，设为对所有地文生成，并填模型名、自定义代理、本地绑定 IP、
-        自定义接口地址与 API 密钥
+        自定义接口地址与 API 密钥。退出面板后，验证内存中的 normal_config.ai_setting 与磁盘上的 settings.json
+        都保存了自定义代理地址。
         Keyword arguments:
         local_ip -- 面板询问本地绑定 IP 时输入的文字
         Return arguments:
@@ -162,8 +166,15 @@ class ChatAiCustomProxyTest(SlowTestCase):
         snapshot_states.instruct(
             self.world, self.constant.Instruct.SYSTEM_SETTING
         )
+        settings = importlib.import_module("Script.Modules.save_load.settings")
+        with open(settings.path, encoding="utf-8") as setting_file:
+            on_disk = json.load(setting_file)["ai_setting"]
         self.assertEqual(
-            self.cache.ai_setting.now_ai_chat_proxy[0], self.proxy_url
+            (
+                self.normal_config.ai_setting.now_ai_chat_proxy[0],
+                on_disk["now_ai_chat_proxy"][0],
+            ),
+            (self.proxy_url, self.proxy_url),
         )
 
     def check_chat_and_test_button(self) -> None:
@@ -203,13 +214,13 @@ class ChatAiCustomProxyTest(SlowTestCase):
     def test_proxy(self) -> None:
         """本地 IP 一栏输入数字 1，面板把本地 IP 存为空"""
         self.enter_settings("1")
-        self.assertEqual(self.cache.ai_setting.now_ai_chat_proxy[1], "")
+        self.assertEqual(self.normal_config.ai_setting.now_ai_chat_proxy[1], "")
         self.check_chat_and_test_button()
 
     def test_proxy_with_local_ip(self) -> None:
         """本地 IP 一栏输入 127.0.0.2，面板存下这个本地 IP"""
         self.enter_settings("127.0.0.2")
         self.assertEqual(
-            self.cache.ai_setting.now_ai_chat_proxy[1], "127.0.0.2"
+            self.normal_config.ai_setting.now_ai_chat_proxy[1], "127.0.0.2"
         )
         self.check_chat_and_test_button()
