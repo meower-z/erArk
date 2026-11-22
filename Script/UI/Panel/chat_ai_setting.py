@@ -8,16 +8,13 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
+from Script.Modules.save_load import settings
 import openai
 from google import genai
 import concurrent.futures
 import os
 import csv
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing import Any
+from typing import Any
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -43,13 +40,17 @@ def setting_of(cid: int) -> Any:
     Return arguments:
     Any -- 设置的值
     """
-    return cache.ai_setting.ai_chat_setting.get(cid, int(cid in DEFAULT_ON))
+    return normal_config.ai_setting.ai_chat_setting.get(
+        cid, int(cid in DEFAULT_ON)
+    )
 
 
 def fill_defaults() -> None:
     """把没有登记的设置都写成默认值（改设置时调用，之后其他地方可以直接按id读）"""
     for cid in game_config.config_ai_chat_setting:
-        cache.ai_setting.ai_chat_setting.setdefault(cid, int(cid in DEFAULT_ON))
+        normal_config.ai_setting.ai_chat_setting.setdefault(
+            cid, int(cid in DEFAULT_ON)
+        )
 
 
 class Chat_Ai_Setting_Panel:
@@ -63,8 +64,6 @@ class Chat_Ai_Setting_Panel:
         """初始化绘制对象"""
         self.width: int = width
         """ 绘制的最大宽度 """
-        # self.now_panel = _("文本生成AI设置")
-        # """ 当前绘制的页面 """
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的文本列表 """
         self.test_flag = 0
@@ -77,7 +76,7 @@ class Chat_Ai_Setting_Panel:
 
         title_text = _("文本生成AI设置")
         title_draw = draw.TitleLineDraw(title_text, self.width)
-        if 1 not in cache.ai_setting.ai_chat_setting or setting_of(1) == 0:
+        if setting_of(1) == 0:
             while 1:
                 return_list = []
                 title_draw.draw()
@@ -156,10 +155,7 @@ class Chat_Ai_Setting_Panel:
             # 遍历全部设置
             for cid in game_config.config_ai_chat_setting:
                 # 如果当前不是第1个设置，且第1个设置没有开启，则不显示后面的设置
-                if cid != 1 and (
-                    1 not in cache.ai_setting.ai_chat_setting
-                    or setting_of(1) == 0
-                ):
+                if cid != 1 and setting_of(1) == 0:
                     break
                 line_feed.draw()
                 ai_chat_setting_data = game_config.config_ai_chat_setting[cid]
@@ -192,18 +188,19 @@ class Chat_Ai_Setting_Panel:
                 elif cid == 10 and setting_of(cid) == 1:
                     button_text = (
                         f" [{game_config.config_ai_chat_setting_option[cid][now_setting_flag]}] "
-                        + cache.ai_setting.now_ai_chat_base_url
+                        + normal_config.ai_setting.now_ai_chat_base_url
                     )
                 # 自定义代理
                 elif cid == 11 and setting_of(cid) == 1:
                     button_text = (
                         f" [{game_config.config_ai_chat_setting_option[cid][now_setting_flag]}] "
                         + "ip："
-                        + cache.ai_setting.now_ai_chat_proxy[0]
+                        + normal_config.ai_setting.now_ai_chat_proxy[0]
                     )
-                    if len(cache.ai_setting.now_ai_chat_proxy[1]) > 0:
+                    if len(normal_config.ai_setting.now_ai_chat_proxy[1]) > 0:
                         button_text += (
-                            " port：" + cache.ai_setting.now_ai_chat_proxy[1]
+                            " port："
+                            + normal_config.ai_setting.now_ai_chat_proxy[1]
                         )
                 else:
                     button_text = f" [{game_config.config_ai_chat_setting_option[cid][now_setting_flag]}] "
@@ -236,11 +233,11 @@ class Chat_Ai_Setting_Panel:
                 button_draw.draw()
                 return_list.append(button_draw.return_text)
                 # 绘制选项
-                if cache.ai_setting.ai_chat_translator_setting == 0:
+                if normal_config.ai_setting.ai_chat_translator_setting == 0:
                     button_text = _(" [未开启] ")
-                elif cache.ai_setting.ai_chat_translator_setting == 1:
+                elif normal_config.ai_setting.ai_chat_translator_setting == 1:
                     button_text = _(" [仅翻译地文] ")
-                elif cache.ai_setting.ai_chat_translator_setting == 2:
+                elif normal_config.ai_setting.ai_chat_translator_setting == 2:
                     button_text = _(" [翻译地文和口上] ")
                 button_draw = draw.LeftButton(
                     button_text,
@@ -263,23 +260,23 @@ class Chat_Ai_Setting_Panel:
                         for row in reader:
                             if row[0] == "OPENAI_API_KEY":
                                 api_key = row[1]
-                                cache.ai_setting.ai_chat_api_key[
+                                normal_config.ai_setting.ai_chat_api_key[
                                     "OPENAI_API_KEY"
                                 ] = api_key
                             elif row[0] == "GEMINI_API_KEY":
                                 api_key = row[1]
-                                cache.ai_setting.ai_chat_api_key[
+                                normal_config.ai_setting.ai_chat_api_key[
                                     "GEMINI_API_KEY"
                                 ] = api_key
                             elif row[0] == "DEEPSEEK_API_KEY":
                                 api_key = row[1]
-                                cache.ai_setting.ai_chat_api_key[
+                                normal_config.ai_setting.ai_chat_api_key[
                                     "DEEPSEEK_API_KEY"
                                 ] = api_key
                 except FileNotFoundError:
                     pass
                 # 显示当前api的密钥
-                OPENAI_API_KEY = cache.ai_setting.ai_chat_api_key.get(
+                OPENAI_API_KEY = normal_config.ai_setting.ai_chat_api_key.get(
                     "OPENAI_API_KEY", ""
                 )
                 if OPENAI_API_KEY == "":
@@ -289,7 +286,7 @@ class Chat_Ai_Setting_Panel:
                 key_info_text = _("  OpenAI API密钥： {0}\n").format(
                     OPENAI_API_KEY
                 )
-                GEMINI_API_KEY = cache.ai_setting.ai_chat_api_key.get(
+                GEMINI_API_KEY = normal_config.ai_setting.ai_chat_api_key.get(
                     "GEMINI_API_KEY", ""
                 )
                 if GEMINI_API_KEY == "":
@@ -299,7 +296,7 @@ class Chat_Ai_Setting_Panel:
                 key_info_text += _("  Gemini API密钥： {0}\n").format(
                     GEMINI_API_KEY
                 )
-                DEEPSEEK_API_KEY = cache.ai_setting.ai_chat_api_key.get(
+                DEEPSEEK_API_KEY = normal_config.ai_setting.ai_chat_api_key.get(
                     "DEEPSEEK_API_KEY", ""
                 )
                 if DEEPSEEK_API_KEY == "":
@@ -391,6 +388,7 @@ class Chat_Ai_Setting_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
+                settings.save()
                 break
 
     def draw_info(self, cid: int) -> None:
@@ -441,7 +439,7 @@ class Chat_Ai_Setting_Panel:
             ask_panel = panel.AskForOneMessage()
             ask_panel.set(ask_text, 99)
             new_model = ask_panel.draw()
-            cache.ai_setting.ai_chat_setting[cid] = new_model
+            normal_config.ai_setting.ai_chat_setting[cid] = new_model
             self.test_flag = 0  # 重置测试标志
         # 自定义发送的数据
         elif cid == 6:
@@ -460,10 +458,10 @@ class Chat_Ai_Setting_Panel:
                 new_num = 0
             elif new_num > 9:
                 new_num = 9
-            cache.ai_setting.ai_chat_setting[cid] = new_num
+            normal_config.ai_setting.ai_chat_setting[cid] = new_num
         # 调整api的base_url的选项单独处理
         elif cid == 10:
-            if cache.ai_setting.ai_chat_setting[cid] == 0:
+            if normal_config.ai_setting.ai_chat_setting[cid] == 0:
                 line_feed.draw()
                 line_draw = draw.LineDraw("-", self.width)
                 line_draw.draw()
@@ -484,13 +482,13 @@ class Chat_Ai_Setting_Panel:
                 # 如果最后的字符是换行符，则删去
                 if new_base_url[-1] == "\n":
                     new_base_url = new_base_url[:-1]
-                cache.ai_setting.now_ai_chat_base_url = new_base_url
-                cache.ai_setting.ai_chat_setting[cid] = 1
+                normal_config.ai_setting.now_ai_chat_base_url = new_base_url
+                normal_config.ai_setting.ai_chat_setting[cid] = 1
             else:
-                cache.ai_setting.ai_chat_setting[cid] = 0
+                normal_config.ai_setting.ai_chat_setting[cid] = 0
         # 调整api的代理的选项单独处理
         elif cid == 11:
-            if cache.ai_setting.ai_chat_setting[cid] == 0:
+            if normal_config.ai_setting.ai_chat_setting[cid] == 0:
                 line_feed.draw()
                 line_draw = draw.LineDraw("-", self.width)
                 line_draw.draw()
@@ -507,7 +505,7 @@ class Chat_Ai_Setting_Panel:
                 # 如果最后的字符是换行符，则删去
                 if new_ip[-1] == "\n":
                     new_ip = new_ip[:-1]
-                cache.ai_setting.now_ai_chat_proxy[0] = new_ip
+                normal_config.ai_setting.now_ai_chat_proxy[0] = new_ip
                 line_feed.draw()
                 ask_text = _(
                     "请输入您要使用的本地绑定的 IP 地址，不使用本地ip则随便输入数字后回车即可：\n"
@@ -521,22 +519,22 @@ class Chat_Ai_Setting_Panel:
                     new_port = new_port[:-1]
                 # 检测输入的端口是否符合规范，需要有三个点
                 if new_port.count(".") == 3:
-                    cache.ai_setting.now_ai_chat_proxy[1] = new_port
+                    normal_config.ai_setting.now_ai_chat_proxy[1] = new_port
                 else:
-                    cache.ai_setting.now_ai_chat_proxy[1] = ""
-                cache.ai_setting.ai_chat_setting[cid] = 1
+                    normal_config.ai_setting.now_ai_chat_proxy[1] = ""
+                normal_config.ai_setting.ai_chat_setting[cid] = 1
             else:
-                cache.ai_setting.ai_chat_setting[cid] = 0
+                normal_config.ai_setting.ai_chat_setting[cid] = 0
         else:
-            if cache.ai_setting.ai_chat_setting[cid] < option_len - 1:
-                cache.ai_setting.ai_chat_setting[cid] += 1
+            if normal_config.ai_setting.ai_chat_setting[cid] < option_len - 1:
+                normal_config.ai_setting.ai_chat_setting[cid] += 1
             else:
-                cache.ai_setting.ai_chat_setting[cid] = 0
+                normal_config.ai_setting.ai_chat_setting[cid] = 0
 
     def select_send_data(self) -> None:
         """选择发送的数据"""
         while True:
-            send_data_all_flags = cache.ai_setting.send_data_flags
+            send_data_all_flags = normal_config.ai_setting.send_data_flags
             return_list = []
             title_draw = draw.TitleLineDraw(_("选择发送给AI的数据"), self.width)
             title_draw.draw()
@@ -664,15 +662,15 @@ class Chat_Ai_Setting_Panel:
 
     def toggle_send_data(self, send_data_cid: int) -> None:
         """切换数据是否被选择"""
-        cache.ai_setting.send_data_flags[send_data_cid] = (
-            not cache.ai_setting.send_data_flags[send_data_cid]
+        normal_config.ai_setting.send_data_flags[send_data_cid] = (
+            not normal_config.ai_setting.send_data_flags[send_data_cid]
         )
 
     def change_translator(self) -> None:
         """修改翻译设置"""
-        cache.ai_setting.ai_chat_translator_setting += 1
-        if cache.ai_setting.ai_chat_translator_setting > 2:
-            cache.ai_setting.ai_chat_translator_setting = 0
+        normal_config.ai_setting.ai_chat_translator_setting += 1
+        if normal_config.ai_setting.ai_chat_translator_setting > 2:
+            normal_config.ai_setting.ai_chat_translator_setting = 0
 
     def change_api_key(self, key_type: str) -> None:
         """修改api密钥"""
@@ -738,7 +736,7 @@ class Chat_Ai_Setting_Panel:
 
             yrn = flow_handle.askfor_all(return_list)
             if yrn == yes_draw.return_text:
-                cache.ai_setting.ai_chat_api_key[key_type] = ask_text
+                normal_config.ai_setting.ai_chat_api_key[key_type] = ask_text
                 self.test_flag = 0  # 重置测试标志
                 # 调用保存函数
                 self.update_or_add_key("ai_chat_api_key.csv", key_type, API_KEY)
@@ -780,7 +778,7 @@ class Chat_Ai_Setting_Panel:
         """测试AI"""
 
         # 判断在调用哪个api
-        model = cache.ai_setting.ai_chat_setting[5]
+        model = normal_config.ai_setting.ai_chat_setting[5]
         if model == 0 or model == "0":
             info_draw: draw.NormalDraw = draw.WaitDraw()
             info_draw.style = "warning"
@@ -804,15 +802,14 @@ class Chat_Ai_Setting_Panel:
             info_draw.draw()
 
         # 判断是否设置了api密钥
-        if now_key_type not in cache.ai_setting.ai_chat_api_key:
+        if now_key_type not in normal_config.ai_setting.ai_chat_api_key:
             info_draw = draw.NormalDraw()
             info_draw.text = _(" \n  请先设置该模型的API密钥\n")
             info_draw.width = self.width
             info_draw.draw()
             return
 
-        API_KEY = cache.ai_setting.ai_chat_api_key[now_key_type]
-        # CUSTOM_ENDPOINT = cache.ai_setting.now_ai_chat_api_endpoint[now_key_type]
+        API_KEY = normal_config.ai_setting.ai_chat_api_key[now_key_type]
 
         client: openai.OpenAI | genai.Client
         if (
@@ -826,25 +823,27 @@ class Chat_Ai_Setting_Panel:
                     base_url="https://api.deepseek.com"
                 )
             # 自定义base_url
-            if cache.ai_setting.ai_chat_setting[10] == 1:
+            if normal_config.ai_setting.ai_chat_setting[10] == 1:
                 client = client.with_options(
-                    base_url=cache.ai_setting.now_ai_chat_base_url
+                    base_url=normal_config.ai_setting.now_ai_chat_base_url
                 )
             # 自定义代理
-            if cache.ai_setting.ai_chat_setting[11] == 1:
+            if normal_config.ai_setting.ai_chat_setting[11] == 1:
                 client = client.with_options(
                     http_client=openai.DefaultHttpxClient(
-                        proxy=cache.ai_setting.now_ai_chat_proxy[0]
+                        proxy=normal_config.ai_setting.now_ai_chat_proxy[0]
                     )
                 )
         else:
             # 构建http_options参数
             api_version_val = (
-                "v1alpha" if cache.ai_setting.ai_chat_setting[12] == 1 else None
+                "v1alpha"
+                if normal_config.ai_setting.ai_chat_setting[12] == 1
+                else None
             )
             base_url_val = (
-                cache.ai_setting.now_ai_chat_base_url
-                if cache.ai_setting.ai_chat_setting[10] == 1
+                normal_config.ai_setting.now_ai_chat_base_url
+                if normal_config.ai_setting.ai_chat_setting[10] == 1
                 else None
             )
             # 创建client
@@ -890,7 +889,7 @@ class Chat_Ai_Setting_Panel:
         """获取AI的返回结果"""
         if key_type == "OPENAI_API_KEY" or key_type == "DEEPSEEK_API_KEY":
             return client.chat.completions.create(
-                model=cache.ai_setting.ai_chat_setting[5],
+                model=normal_config.ai_setting.ai_chat_setting[5],
                 messages=[
                     {
                         "role": "user",
@@ -905,7 +904,7 @@ class Chat_Ai_Setting_Panel:
             )
         elif key_type == "GEMINI_API_KEY":
             return client.models.generate_content(
-                model=cache.ai_setting.ai_chat_setting[5],
+                model=normal_config.ai_setting.ai_chat_setting[5],
                 contents="这是一条测试消息，如果收到请指直接回复1即可，不需要思考，不需要回复其他内容",
             )
         else:

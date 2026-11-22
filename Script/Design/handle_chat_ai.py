@@ -69,10 +69,7 @@ def judge_use_text_ai(
         fanal_text: str 最终文本
     """
     # 如果AI设置未开启，则直接返回原文本
-    if (
-        1 not in cache.ai_setting.ai_chat_setting
-        or cache.ai_setting.ai_chat_setting[1] == 0
-    ):
+    if normal_config.ai_setting.ai_chat_setting.get(1, 0) == 0:
         return original_text
 
     # 判断在调用哪个api
@@ -81,13 +78,13 @@ def judge_use_text_ai(
     if now_key_type == "":
         return original_text
     # 如果没有设置api密钥，则直接返回原文本
-    if now_key_type not in cache.ai_setting.ai_chat_api_key:
+    if now_key_type not in normal_config.ai_setting.ai_chat_api_key:
         return original_text
 
     # 直接对话模式跳过安全检查
     if not direct_mode:
         # 判断是否设置了指令类型
-        if cache.ai_setting.ai_chat_setting[2] == 0:
+        if normal_config.ai_setting.ai_chat_setting[2] == 0:
             safe_flag = False
             behavior_data = game_config.config_behavior[behavior_id]
             # 判断是否是安全标签
@@ -99,7 +96,7 @@ def judge_use_text_ai(
                 return original_text
 
         # 判断是什么类型的地文
-        if cache.ai_setting.ai_chat_setting[3] == 0 and not translator:
+        if normal_config.ai_setting.ai_chat_setting[3] == 0 and not translator:
             if "地文" not in original_text:
                 return original_text
 
@@ -113,8 +110,8 @@ def judge_use_text_ai(
         return original_text
 
     # 输出文本生成提示
-    if cache.ai_setting.ai_chat_setting[8] == 0:
-        model = cache.ai_setting.ai_chat_setting[5]
+    if normal_config.ai_setting.ai_chat_setting[8] == 0:
+        model = normal_config.ai_setting.ai_chat_setting[5]
         info_draw = draw.NormalDraw()
         info_text = _("\n（正在调用{0}）\n").format(model)
         info_draw.text = info_text
@@ -138,13 +135,13 @@ def judge_use_text_ai(
         ai_gererate_text = ai_result
 
     # 检测是否显示原文本
-    if cache.ai_setting.ai_chat_setting[4] == 1:
+    if normal_config.ai_setting.ai_chat_setting[4] == 1:
         fanal_text = ai_gererate_text
     else:
         fanal_text = "(原文本)" + original_text + "\n" + ai_gererate_text
 
     # 是否保存
-    if cache.ai_setting.ai_chat_setting[7] == 1 and not translator:
+    if normal_config.ai_setting.ai_chat_setting[7] == 1 and not translator:
         save_ai_talk_record(character_id, behavior_id, ai_gererate_text)
 
     return fanal_text
@@ -156,7 +153,7 @@ def get_key_type() -> str:
     Return arguments:
     key_type -- 当前使用的api密钥类型
     """
-    model = cache.ai_setting.ai_chat_setting[5]
+    model = normal_config.ai_setting.ai_chat_setting[5]
     # 如果没有输入模型名，则返回空字符串
     if not model:
         return ""
@@ -255,7 +252,8 @@ def build_user_prompt(
         user_prompt: str 构造好的用户提示词
     功能描述:
         根据角色数据、行为数据及外部CSV（game_config.config_ai_chat_send_data）中预置的提示词模板生成用户提示词。
-        只有当 cache.ai_setting.send_data_flags 中对应的 cid 为 True 时才会将该提示词加入到输出中。
+        各项提示词是否加入输出，由 create_tem_sned_data_flags 结合 normal_config.ai_setting.send_data_flags、
+        配置默认值与角色当前状态决定。
         模板中的花括号{}内为变量，需要替换为对应的实际值。
     """
 
@@ -532,7 +530,7 @@ def create_tem_sned_data_flags(npc_character_id: int) -> dict[int, bool]:
         根据角色ID和游戏配置中的预设数据，创建一个包含各个数据项是否需要处理的布尔值的列表。
         该列表用于在生成用户提示词时判断哪些数据需要被包含在内。
     """
-    tem_send_data_flags = cache.ai_setting.send_data_flags.copy()
+    tem_send_data_flags = normal_config.ai_setting.send_data_flags.copy()
     for cid in game_config.config_ai_chat_send_data:
         ai_chat_send_data = game_config.config_ai_chat_send_data[cid]
         # 初始化不存在的数据选择状态
@@ -623,12 +621,12 @@ def text_ai(
     """
 
     # 基础数据
-    talk_num = cache.ai_setting.ai_chat_setting[9] + 1
+    talk_num = normal_config.ai_setting.ai_chat_setting[9] + 1
 
     # 模型与密钥
-    model = cache.ai_setting.ai_chat_setting[5]
+    model = normal_config.ai_setting.ai_chat_setting[5]
     now_key_type = get_key_type()
-    API_KEY = cache.ai_setting.ai_chat_api_key[now_key_type]
+    API_KEY = normal_config.ai_setting.ai_chat_api_key[now_key_type]
 
     # 系统提示词
     system_promote = ""
@@ -725,23 +723,23 @@ def text_ai(
         if now_key_type == "DEEPSEEK_API_KEY":
             client = client.with_options(base_url="https://api.deepseek.com")
         # 自定义base_url
-        if cache.ai_setting.ai_chat_setting[10] == 1:
+        if normal_config.ai_setting.ai_chat_setting[10] == 1:
             client = client.with_options(
-                base_url=cache.ai_setting.now_ai_chat_base_url
+                base_url=normal_config.ai_setting.now_ai_chat_base_url
             )
         # 自定义代理
-        if cache.ai_setting.ai_chat_setting[11] == 1:
+        if normal_config.ai_setting.ai_chat_setting[11] == 1:
             client = client.with_options(
                 http_client=openai.DefaultHttpxClient(
-                    proxy=cache.ai_setting.now_ai_chat_proxy[0]
+                    proxy=normal_config.ai_setting.now_ai_chat_proxy[0]
                 )
             )
         try:
             # 发送请求
             # 流式输出
-            if cache.ai_setting.ai_chat_setting[14] == 1:
+            if normal_config.ai_setting.ai_chat_setting[14] == 1:
                 completion = client.chat.completions.create(
-                    model=cache.ai_setting.ai_chat_setting[5],
+                    model=normal_config.ai_setting.ai_chat_setting[5],
                     messages=[
                         {"role": "system", "content": system_promote},
                         {"role": "user", "content": user_prompt},
@@ -759,7 +757,7 @@ def text_ai(
             # 非流式输出
             else:
                 openai_response = client.chat.completions.create(
-                    model=cache.ai_setting.ai_chat_setting[5],
+                    model=normal_config.ai_setting.ai_chat_setting[5],
                     messages=[
                         {"role": "system", "content": system_promote},
                         {"role": "user", "content": user_prompt},
@@ -774,11 +772,13 @@ def text_ai(
     else:
         # 构建http_options参数
         api_version_val = (
-            "v1alpha" if cache.ai_setting.ai_chat_setting[12] == 1 else None
+            "v1alpha"
+            if normal_config.ai_setting.ai_chat_setting[12] == 1
+            else None
         )
         base_url_val = (
-            cache.ai_setting.now_ai_chat_base_url
-            if cache.ai_setting.ai_chat_setting[10] == 1
+            normal_config.ai_setting.now_ai_chat_base_url
+            if normal_config.ai_setting.ai_chat_setting[10] == 1
             else None
         )
         # 创建client
@@ -794,7 +794,7 @@ def text_ai(
         try:
             # 发送请求
             # 流式输出
-            if cache.ai_setting.ai_chat_setting[14] == 1:
+            if normal_config.ai_setting.ai_chat_setting[14] == 1:
                 gemini_stream = gemini_client.models.generate_content_stream(
                     model=model,
                     contents=user_prompt,
@@ -904,7 +904,7 @@ def text_ai(
         # 在不影响\\n的情况下，将\n删去
         result["text"] = result["text"].replace("\n", "")
         # 删除思考过程
-        if cache.ai_setting.ai_chat_setting[13] == 1:
+        if normal_config.ai_setting.ai_chat_setting[13] == 1:
             # 使用正则删除<think>到</think>之间的内容
             result["text"] = re.sub(r"<think>.*?</think>", "", result["text"])
 
@@ -916,7 +916,7 @@ def text_ai(
         if not translator:
             ai_gererate_text = ai_gererate_text.replace(" ", "")
         # 删除思考过程
-        if cache.ai_setting.ai_chat_setting[13] == 1:
+        if normal_config.ai_setting.ai_chat_setting[13] == 1:
             # 使用正则删除<think>到</think>之间的内容
             ai_gererate_text = re.sub(
                 r"<think>.*?</think>", "", ai_gererate_text
@@ -1079,7 +1079,7 @@ def direct_chat_with_ai() -> str:
             )
 
             # 非流式传输下再绘制回复
-            if cache.ai_setting.ai_chat_setting[14] != 1:
+            if normal_config.ai_setting.ai_chat_setting[14] != 1:
                 # 处理换行符
                 reply_text = reply_text.replace("\\n", "\n")
                 # 替换掉text:

@@ -2288,7 +2288,7 @@ def handle_ai_chat_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.ai_setting.ai_chat_setting.get(1, 0)
+    return normal_config.ai_setting.ai_chat_setting.get(1, 0)
 
 
 @add_premise(constant_promise.Premise.SELF_WAITING_FOR_HEALTH_CHECK)

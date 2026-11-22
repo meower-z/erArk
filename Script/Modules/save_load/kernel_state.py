@@ -254,12 +254,14 @@ def _empty(clock: int) -> core.GameState:
 
 def _reset_keeping_cache(game: core.GameState, why: core.Data) -> None:
     """
-    以 why 换入 game；Reset 的钩子出错时，内核恢复原来的状态，缓存也换回换入前的副本，再抛出
+    以 why 换入 game。Reset 抛出异常且内核状态未切换时，缓存换回换入前的副本，随后重新抛出异常。
+    无论是否抛出异常，finally 都在内核状态未切换时丢弃读档暂存的 AI 设置，在状态已切换时提交并保存它。
     Keyword arguments:
     game -- 换入的状态
     why -- 换入的原因
     """
     from Script.Modules.gameplay_resolution import draft
+    from Script.Modules.save_load import settings
 
     # 选择的草稿里换入时先换回原物，草稿之后关闭时什么也不做
     draft.abandon()
@@ -275,6 +277,12 @@ def _reset_keeping_cache(game: core.GameState, why: core.Data) -> None:
             cache.__dict__.clear()
             cache.__dict__.update(pickle.loads(data))
         raise
+    finally:
+        # 内核状态已切换才提交暂存 AI 设置（含换态后中止选择），未切换则丢弃
+        if core.state() is before:
+            settings.drop_pending_ai()
+        else:
+            settings.commit_pending_ai()
 
 
 def load(save_id: str) -> None:

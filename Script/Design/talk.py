@@ -507,7 +507,7 @@ def handle_talk_draw(
             # 翻译口上
             if (
                 normal_config.config_normal.language != "zh_CN"
-                and cache.ai_setting.ai_chat_translator_setting == 2
+                and normal_config.ai_setting.ai_chat_translator_setting == 2
             ):
                 now_talk_text = handle_chat_ai.judge_use_text_ai(
                     character_id,
@@ -518,11 +518,11 @@ def handle_talk_draw(
                 now_draw.text = now_talk_text
         # 地文
         else:
-            cache.ai_setting.ai_chat_setting.setdefault(1, 0)
+            normal_config.ai_setting.ai_chat_setting.setdefault(1, 0)
             # 地文翻译
             if (
                 normal_config.config_normal.language != "zh_CN"
-                and cache.ai_setting.ai_chat_translator_setting >= 1
+                and normal_config.ai_setting.ai_chat_translator_setting >= 1
             ):
                 now_talk_text = handle_chat_ai.judge_use_text_ai(
                     character_id,
@@ -532,7 +532,7 @@ def handle_talk_draw(
                 )
                 now_draw.text = now_talk_text
             # 如果启用了文本生成ai
-            elif cache.ai_setting.ai_chat_setting[1]:
+            elif normal_config.ai_setting.ai_chat_setting[1]:
                 now_draw = draw.LineFeedWaitDraw()
                 now_talk_text = handle_chat_ai.judge_use_text_ai(
                     character_id, now_behavior_id, now_talk_text
