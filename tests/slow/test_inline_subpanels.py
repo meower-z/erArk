@@ -14,6 +14,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -43,7 +44,7 @@ class InlineSubpanelTest(SlowTestCase):
             self.core._bodies.__setitem__, "kernel.StartAction", saved
         )
         player = self.cache.character_data[0]
-        self.npcs = sorted(self.cache.npc_id_got)[:2]
+        self.npcs = sorted(kernel_data.domain("roster").active())[:2]
         for cid in self.npcs:
             self.world.move(cid, player.position)
         player.target_character_id = self.npcs[0]

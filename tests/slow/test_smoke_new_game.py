@@ -18,6 +18,7 @@ import os
 
 from tests.slow.base import SlowTestCase
 from tests.world import ROOT
+from tests import kernel_data
 
 HOURS = 6
 """ 推进的游戏小时数：10:00 到 16:00 """
@@ -86,7 +87,7 @@ class SmokeNewGameTest(SlowTestCase):
             recorder.record(f"{index:04d}", capture(self.cache, log, memo))
             npc_behaviors.update(
                 self.cache.character_data[cid].behavior.behavior_id
-                for cid in self.cache.npc_id_got
+                for cid in kernel_data.domain("roster").active()
             )
             if now.minute == 0:
                 run_checks()

@@ -22,7 +22,7 @@ class NamedCharacterValueEffectTest(SlowTestCase):
         cache = self.cache
         npc_id = min(
             cid
-            for cid in cache.npc_id_got
+            for cid in kernel_data.domain("roster").active()
             if cache.character_data[cid].adv == cid
         )
         npc = cache.character_data[npc_id]

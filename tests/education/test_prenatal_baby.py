@@ -4,6 +4,7 @@
 from _bootstrap import (
     baby_growth_handle,
     check,
+    child_growth,
     class_ai,
     clear_schedules,
     constant,
@@ -13,10 +14,12 @@ from _bootstrap import (
     finish,
     game_config,
     game_type,
+    growth,
     growth_handle,
     make_character,
     open_all_classroom,
     pl,
+    pregnancy,
     section,
     set_time,
     settle_behavior,
@@ -67,19 +70,19 @@ J = E.LEARN_STATE_ID
 subject_exp_set = {
     growth_handle.get_subject_exp_id(a) for a in E.SUBJECT_ABILITY_LIST
 } - {0}
-mother.pregnancy.prenatal_point = 40.0
+pregnancy.update(102, prenatal_point=40.0)
 exp_before_a = dict(ca.experience(baby_a))
 text_a = baby_growth_handle.settle_prenatal_to_child(102, 203)
 text_b = baby_growth_handle.settle_prenatal_to_child(102, 204)
-growth_a = baby_a.child_growth
-assert growth_a is not None
-growth_b = baby_b.child_growth
-assert growth_b is not None
+assert growth.of(203) is not None
+assert growth.of(204) is not None
+growth_a = child_growth(203)
+growth_b = child_growth(204)
 check(
     "双胎各自全额 40 点",
     growth_a.prenatal_point == 40.0 and growth_b.prenatal_point == 40.0,
 )
-check("转写不清零母亲侧", mother.pregnancy.prenatal_point == 40.0)
+check("转写不清零母亲侧", pregnancy.of(102).prenatal_point == 40.0)
 check(
     "双胎各得 400 个习得珠",
     ca.juel(baby_a).get(J, 0) == 400 and ca.juel(baby_b).get(J, 0) == 400,
@@ -111,11 +114,12 @@ check("清零", baby_growth_handle.get_prenatal_point(102) == 0.0)
 check(
     "无胎教不出文本、不建养成数据",
     baby_growth_handle.settle_prenatal_to_child(102, 105) == ""
-    and nurse.child_growth is None,
+    and growth.of(105) is None,
 )
-mother.pregnancy.prenatal_point = 1.0
+pregnancy.update(102, prenatal_point=1.0)
 juel_before = ca.juel(baby_b).get(J, 0)
 text = baby_growth_handle.settle_prenatal_to_child(102, 204)
+assert growth.of(204) is not None
 check(
     "1 点：折 10 个珠，也有一句文本",
     growth_b.prenatal_point == 1.0
@@ -133,7 +137,7 @@ check(
     ca.juel(baby_b).get(J, 0) == juel_before and "还不足以留下什么" in text,
     text,
 )
-mother.pregnancy.prenatal_point = 0.0
+pregnancy.update(102, prenatal_point=0.0)
 
 section("胎教结算 555")
 change = game_type.CharacterStatusChange()
@@ -141,16 +145,16 @@ pl.target_character_id = 102
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.PRENATAL_ADD_ADJUST
 ](0, 30, change, game_time.now())
-check("对孕肚说话一次 +0.5", mother.pregnancy.prenatal_point == 0.5)
+check("对孕肚说话一次 +0.5", pregnancy.of(102).prenatal_point == 0.5)
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.PRENATAL_ADD_ADJUST
 ](0, 0, change, game_time.now())
-check("add_time=0 不累积", mother.pregnancy.prenatal_point == 0.5)
+check("add_time=0 不累积", pregnancy.of(102).prenatal_point == 0.5)
 pl.target_character_id = 0
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.PRENATAL_ADD_ADJUST
 ](0, 30, change, game_time.now())
-check("没有交互对象不累积", mother.pregnancy.prenatal_point == 0.5)
+check("没有交互对象不累积", pregnancy.of(102).prenatal_point == 0.5)
 check(
     "三条胎教指令的效果串都挂了 555",
     all(
@@ -306,15 +310,16 @@ skip_old = make_character(
 birthday_girl = make_character(
     208, "今天过生日的萝莉", 152, daughter=True, stage=103, mother_id=102
 )
-skip_new.pregnancy.born_time = datetime.datetime(2025, 9, 20, 9, 0)
-skip_old.pregnancy.born_time = datetime.datetime(2025, 9, 20, 9, 0)
-birthday_girl.pregnancy.born_time = datetime.datetime(2025, 9, 8, 6, 0)
-_g_new = growth_handle.get_child_growth(206)
-_g_old = growth_handle.get_child_growth(207)
-# 玩家一步跨过午夜：NPC 阶段先跑完新一天的早上，549 挂上新一天的 flag（flag 与日期一起写，README 夹具陷阱）；
-# 另一个是前一天的残留
-_g_new.skip_class_flag, _g_new.skip_class_day = True, _new_day.toordinal()
-_g_old.skip_class_flag, _g_old.skip_class_day = True, _new_day.toordinal() - 1
+pregnancy.update(206, born_time=datetime.datetime(2025, 9, 20, 9, 0))
+pregnancy.update(207, born_time=datetime.datetime(2025, 9, 20, 9, 0))
+pregnancy.update(208, born_time=datetime.datetime(2025, 9, 8, 6, 0))
+with growth.editing(206) as _g_new:
+    _g_new.skip_class_flag, _g_new.skip_class_day = True, _new_day.toordinal()
+with growth.editing(207) as _g_old:
+    _g_old.skip_class_flag, _g_old.skip_class_day = (
+        True,
+        _new_day.toordinal() - 1,
+    )
 clear_schedules()
 _orig_base_newday = basement.update_base_resouce_newday
 # 基建日结在夹具里读不到 2 号体检设置，会报 KeyError（README 夹具陷阱）。它排在角色刷新段之后，这里换成空函数
@@ -330,13 +335,18 @@ except Exception as now_error:
 finally:
     basement.update_base_resouce_newday = _orig_base_newday
 check("跨天结算在夹具里跑通", not _new_day_error, _new_day_error)
+_g_new_after = growth.of(206)
+_g_old_after = growth.of(207)
 check(
     "L5 新一天挂上的翘课 flag 跨天后仍在，今天仍算已翘课（此前被无条件清掉，当天余下节次重新掷翘课）",
-    _g_new.skip_class_flag and class_ai.judge_skip_class_today(206, _new_day),
+    _g_new_after is not None
+    and _g_new_after.skip_class_flag
+    and class_ai.judge_skip_class_today(206, _new_day),
 )
 check(
     "L5 对照：前一天的残留照清",
-    not _g_old.skip_class_flag
+    _g_old_after is not None
+    and not _g_old_after.skip_class_flag
     and not class_ai.judge_skip_class_today(207, _new_day),
 )
 _queue = official.queue()

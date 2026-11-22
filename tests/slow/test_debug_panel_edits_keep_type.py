@@ -65,7 +65,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
         Return arguments:
         int -- 角色id
         """
-        return min(cid for cid in self.cache.npc_id_got if cid)
+        return min(cid for cid in kernel_data.domain("roster").active() if cid)
 
     def test_party_day(self) -> None:
         """[007] 改一天的派对娱乐，当天刷新娱乐时干员的娱乐都是它"""
@@ -127,7 +127,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
         chara_id = min(
             cid
             for cid in self.cache.character_data
-            if cid and cid not in self.cache.npc_id_got
+            if cid and cid not in kernel_data.domain("roster").active()
         )
         self.use_panel(
             ("press", "[全局变量]"),
@@ -138,7 +138,11 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
         with kernel_data.writing():
             recruited = recruit_panel.recruit_new_chara()
         self.assertTrue(recruited, "确认招募成功")
-        self.assertIn(chara_id, self.cache.npc_id_got, "确认后这名干员入职")
+        self.assertIn(
+            chara_id,
+            kernel_data.domain("roster").active(),
+            "确认后这名干员入职",
+        )
         self.assertEqual(recruit.pending(), set(), "确认后没有待确认的干员")
 
     def test_orgasm_count(self) -> None:

@@ -24,7 +24,7 @@ from Script.Config import game_config
 from Script.Core import game_type
 from Script.Design import basement
 from Script.Kernel import core
-from Script.Modules.domains import economy, warehouse, work
+from Script.Modules.domains import economy, roster, warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state, upgrade
 from Script.System.Cooking_System import cooking
@@ -116,7 +116,7 @@ class EconomyStateTest(FastTestCase):
     def restock(self) -> None:
         """载入菜谱，按 3 名已招募干员给新的一天进货"""
         cooking.init_recipes()
-        self.cache.npc_id_got = {1, 2, 3}
+        roster.set_active({1, 2, 3})
         cooking.init_food_shop_data(new_day_flag=True)
 
     def test_new_day_restock(self) -> None:
@@ -173,7 +173,7 @@ class EconomyStateTest(FastTestCase):
         """干员甲是交易员，干员乙不是。刷新岗位后交易员名单是 [甲]，乙与不存在的角色 9999 的主交易员位置改为空缺"""
         self.world.chara(1, "干员甲").work.work_type = economy.TRADER_WORK
         self.world.chara(2, "干员乙")
-        self.cache.npc_id_got = {1, 2}
+        roster.set_active({1, 2})
         economy.set_main_trader("甲类", 1)
         economy.set_main_trader("乙类", 2)
         economy.set_main_trader("丙类", 9999)
@@ -185,9 +185,9 @@ class EconomyStateTest(FastTestCase):
 
     def test_trader_order_follows_recruits(self) -> None:
         """已招募干员是 1 到 39 与 1050，其中 3 与 1050 是交易员：交易员名单按已招募干员集合的遍历顺序排列"""
-        self.cache.npc_id_got = {*range(1, 40), 1050}
+        roster.set_active({*range(1, 40), 1050})
         work.set_rosters({economy.TRADER_WORK: [1050, 3]})
-        expected = [cid for cid in self.cache.npc_id_got if cid in (3, 1050)]
+        expected = [cid for cid in roster.active() if cid in (3, 1050)]
         self.assertEqual(economy.trade_operator_ids(), expected)
 
     def old_island(self) -> game_type.Rhodes_Island:

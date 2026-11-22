@@ -18,7 +18,7 @@ from types import SimpleNamespace
 from Script.Config import game_config
 from Script.Design import basement, game_time
 from Script.Kernel import core
-from Script.Modules.domains import production, warehouse
+from Script.Modules.domains import production, roster, warehouse
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import upgrade
 from Script.Test.Static_Check.check_registry import get_all_checks
@@ -110,7 +110,7 @@ class ProductionStateTest(FastTestCase):
         production.appoint("assembly", 0, 3)
         production.appoint("green_house", 0, 2)
         self.cache.character_data[3].work.work_type = 0
-        self.cache.npc_id_got.update({1, 2, 3})
+        roster.set_active({1, 2, 3})
         basement.update_work_people()
         self.assertEqual(production.workers("assembly"), [1])
         self.assertEqual(production.workers("green_house"), [2])

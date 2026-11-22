@@ -1,25 +1,11 @@
 # -*- coding: UTF-8 -*-
 """semester_handle：学期时间、本学期出勤、成绩档位、学期切换、成绩单历史"""
 
-from _bootstrap import (
-    DEFAULT_TIME,
-    _,
-    check,
-    class_ai,
-    clear_schedules,
-    datetime,
-    education_constant,
-    finish,
-    game_config,
-    game_time,
-    growth_handle,
-    make_character,
-    period_time,
-    remove_character,
-    section,
-    semester_handle,
-    set_time,
-)
+from _bootstrap import child_growth, growth, DEFAULT_TIME, _, check, class_ai
+from _bootstrap import clear_schedules, datetime, education_constant, finish
+from _bootstrap import game_config, game_time, growth_handle, make_character
+from _bootstrap import period_time, remove_character, section, semester_handle
+from _bootstrap import set_time
 from tests import chara_abilities as ca
 
 clear_schedules()
@@ -68,7 +54,7 @@ check(
     semester_handle.get_semester_attend(301) == (0, 0)
     and semester_handle.get_semester_attend(999) == (0, 0),
 )
-g = growth_handle.get_child_growth(201)
+g = child_growth(201)
 g.attend_class_count = 10
 g.absent_count = 3
 g.semester_base_attend = 4
@@ -178,7 +164,7 @@ check(
     semester_handle.settle_semester_change() == []
     and len(g.report_card_history) == 1,
 )
-check("成年学生没被凭空建出养成数据", adult.child_growth is None)
+check("成年学生没被凭空建出养成数据", growth.of(adult.cid) is None)
 check("终身累计不被污染", g.attend_class_count == 9)
 g.attend_class_count = 12
 check("新学期听课 3 节", semester_handle.get_semester_attend(201) == (3, 0))
@@ -235,7 +221,8 @@ check("节次外不记", not growth_handle.settle_course_attend(201))
 set_time(datetime.datetime(2026, 12, 7, 9, 0))
 check(
     "不是女儿也不是学生岗的不记",
-    not growth_handle.settle_course_attend(102) and mother.child_growth is None,
+    not growth_handle.settle_course_attend(102)
+    and growth.of(mother.cid) is None,
 )
 card = semester_handle.build_report_card(201)
 check(
@@ -419,8 +406,8 @@ g.report_card_flag = False
 check(
     "第一次记账：成年女儿照立基线、记下学期初岗位",
     semester_handle.settle_semester_change() == []
-    and growth_handle.get_child_growth(207).semester_id == [2027, 6]
-    and growth_handle.get_child_growth(207).semester_base_work_type == 21,
+    and child_growth(207).semester_id == [2027, 6]
+    and child_growth(207).semester_base_work_type == 21,
 )
 check(
     "judge_adult_out_of_school：成年且不在学生岗才成立（萝莉改岗不算）",
@@ -431,7 +418,7 @@ check(
 )
 set_time(datetime.datetime(2027, 9, 1, 9, 0))
 report_list = semester_handle.settle_semester_change()
-_g207 = growth_handle.get_child_growth(207)
+_g207 = child_growth(207)
 check(
     (
         "成年且整学期不在学生岗：不出成绩单、不置待查看、不进学期结束名单，只把基线挪到新学期（此前每学期一份 "
@@ -445,8 +432,7 @@ check(
 )
 check(
     "成年仍在学生岗的女儿：照出",
-    208 in report_list
-    and len(growth_handle.get_child_growth(208).report_card_history) == 1,
+    208 in report_list and len(child_growth(208).report_card_history) == 1,
 )
 check(
     "萝莉整学期不在学生岗：照出（Plan 29 口径），理由「本学期担任…，没有上课」",
@@ -455,8 +441,8 @@ check(
     == _("{0}本学期担任{1}，没有上课").format(student.name, _w21),
     semester_handle.get_last_report_card(201).get("reason"),
 )
-growth_handle.get_child_growth(208).report_card_flag = False
-growth_handle.get_child_growth(208).attend_class_count += 2
+child_growth(208).report_card_flag = False
+child_growth(208).attend_class_count += 2
 grown_student.work.work_type = 21
 set_time(datetime.datetime(2027, 12, 1, 9, 0))
 report_list = semester_handle.settle_semester_change()
@@ -466,7 +452,7 @@ check(
     208 in report_list
     and _last_208.get("attend") == 2
     and "本学期改任了" in _last_208.get("reason", "")
-    and growth_handle.get_child_growth(208).report_card_flag,
+    and child_growth(208).report_card_flag,
     _last_208,
 )
 check(
@@ -476,7 +462,7 @@ check(
     and semester_handle.judge_report_card_checkable(201)
     and not semester_handle.judge_report_card_checkable(999),
 )
-growth_handle.get_child_growth(208).report_card_flag = False
+child_growth(208).report_card_flag = False
 check(
     "看完之后（flag 清掉）：不可用",
     not semester_handle.judge_report_card_checkable(208),
@@ -489,7 +475,7 @@ check(
     207 not in report_list
     and _g207.report_card_history == []
     and 208 not in report_list
-    and len(growth_handle.get_child_growth(208).report_card_history) == 2,
+    and len(child_growth(208).report_card_history) == 2,
     report_list,
 )
 student.work.work_type = 152

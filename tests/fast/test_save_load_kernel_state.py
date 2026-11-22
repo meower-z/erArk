@@ -14,26 +14,29 @@
 """
 
 import itertools
+import os
+import pickle
 import sys
 import tempfile
 from collections.abc import Callable
 from dataclasses import replace
-from types import MappingProxyType, ModuleType
+from types import MappingProxyType, ModuleType, SimpleNamespace
 from typing import Any
 from unittest import mock
 
-from Script.Config import game_config
-from Script.Core import save_handle
+from Script.Config import character_config, game_config, normal_config
+from Script.Core import game_type, save_handle
+from Script.Design import character_handle
 from Script.Kernel import core
 from Script.Modules import load_order
 from Script.Modules.domains import abilities, country, facility, medical
-from Script.Modules.domains import physical_exam
-from Script.Modules.domains import player_collection, playthrough, warehouse
+from Script.Modules.domains import physical_exam, player_collection
+from Script.Modules.domains import playthrough, pregnancy, roster, warehouse
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
+from Script.System.Pregnancy_System import pregnancy_constant
 from tests import kernel_data
 from tests.fast.base import FastTestCase
-from Script.Config import normal_config
 
 SAVE_ID = "kernel_state_test"
 """ 测试用的存档id """
@@ -71,7 +74,12 @@ def game(clock: int, ends: dict[str, int]) -> core.GameState:
         "nested": ((1,), ()),
         **{
             key: core.value(core.state(), None, key)
-            for key in (warehouse.KEY, playthrough.SETTINGS, country.KEY)
+            for key in (
+                warehouse.KEY,
+                playthrough.SETTINGS,
+                country.KEY,
+                roster.ACTIVE,
+            )
         },
     }
     core.reset_state(core.GameState(clock, MappingProxyType(characters), data))
@@ -162,8 +170,7 @@ class KernelStateTest(FastTestCase):
         与存档时相同。这几项存档里没有，是读档修补补上的
         """
         self.world.chara(0, "博士")
-        cache = self.cache
-        cache.npc_id_got = {0}
+        kernel_data.put(roster.set_active, {0})
         kernel_data.written(country.fill)
         kernel_data.written(playthrough.reset_difficulty_and_birth)
         kernel_data.set_world(
@@ -219,7 +226,6 @@ class KernelStateTest(FastTestCase):
         self.assertIn(actions.behave.name, core._actions, load_order.__name__)
         for cid in range(3):
             self.world.chara(cid, f"角色{cid}")
-        self.cache.npc_id_got = {0, 1, 2}
         kernel_data.written(country.fill)
         clock = core.state().clock + 800
         data: core.JSON = {"behavior_id": "share_blankly", "minutes": 10}
@@ -238,7 +244,11 @@ class KernelStateTest(FastTestCase):
             core.GameState(
                 clock,
                 MappingProxyType(characters),
-                {"ticked": clock, "settled_day": clock // 1440},
+                {
+                    "ticked": clock,
+                    "settled_day": clock // 1440,
+                    roster.ACTIVE: (0, 1, 2),
+                },
             )
         )
         save_handle.establish_save(SAVE_ID)
@@ -293,7 +303,7 @@ class KernelStateTest(FastTestCase):
         3 级待开放设施仍未开放
         """
         self.world.chara(0, "博士")
-        self.cache.npc_id_got = {0}
+        kernel_data.put(roster.set_active, {0})
         kernel_data.written(country.fill)
         name = game_config.config_facility[DORMITORY].name
         effects = game_config.config_facility_effect_data[name]
@@ -312,3 +322,62 @@ class KernelStateTest(FastTestCase):
         save_handle.input_load_save(SAVE_ID)
         self.assertTrue(all(facility.is_open(cid) for cid in rooms[2]))
         self.assertFalse(any(facility.is_open(cid) for cid in rooms[3]))
+
+    def test_v0_all_system_setting_soft_egg_off_preserves_pregnancy(
+        self,
+    ) -> None:
+        """极旧存档的无壳卵生开关仅在 all_system_setting 且关闭时，完整读档不清空正常孕程"""
+        soft_cid, soft_tem = next(
+            (cid, tem)
+            for cid, tem in character_config.character_tem_list.items()
+            if getattr(game_config.config_race.get(tem.Race), "birth_type", 1)
+            == 12
+        )
+        self.world.chara(0, "博士")
+        self.cache.npc_tem_data[soft_cid] = soft_tem
+        kernel_data.put(
+            character_handle.init_character,
+            soft_cid,
+            soft_tem,
+            collect_reset=False,
+        )
+        kernel_data.put(roster.set_active, {0, soft_cid})
+        kernel_data.written(country.fill)
+        kernel_data.written(playthrough.reset_difficulty_and_birth)
+        save_handle.establish_save(SAVE_ID)
+        save_dir = save_handle.get_save_dir_path(SAVE_ID)
+        file_1 = os.path.join(save_dir, "1")
+        file_2 = os.path.join(save_dir, "2")
+        if os.path.exists(file_2):
+            os.remove(file_2)
+        head = dict(index.head(SAVE_ID))
+        head.pop(kernel_state.TOKEN, None)
+        index.write_head(SAVE_ID, head)
+
+        for soft_egg_flag, expect_pregnant in ((0, 1), (1, 0)):
+            with open(file_1, "rb") as f:
+                legacy = pickle.load(f)
+            legacy.__dict__.pop("birth_type_setting", None)
+            vars(legacy)["all_system_setting"] = SimpleNamespace(
+                birth_type_setting={
+                    pregnancy_constant.BIRTH_TYPE_EGG_SOFT: soft_egg_flag
+                }
+            )
+            legacy.npc_id_got = {0, soft_cid}
+            legacy.forbidden_npc_id = set()
+            legacy.npc_name_data = {"博士", soft_tem.Name}
+            saved_npc = legacy.character_data[soft_cid]
+            vars(saved_npc)["talent"] = {21: 1, 26: 1}
+            preg = game_type.PREGNANCY()
+            preg.fetus_count = 1
+            preg.acceleration_days = 5.0
+            vars(saved_npc)["pregnancy"] = preg
+            with open(file_1, "wb") as f:
+                pickle.dump(legacy, f)
+            save_handle.input_load_save(SAVE_ID)
+            self.assertEqual(
+                abilities.talent(soft_cid).get(21, 0), expect_pregnant
+            )
+            self.assertEqual(
+                pregnancy.of(soft_cid).fetus_count, expect_pregnant
+            )

@@ -92,9 +92,11 @@ class SlowTestCase(unittest.TestCase):
         Return arguments:
         int -- 角色id
         """
+        from Script.Modules.domains import roster
+
         found = [
             cid
-            for cid in self.cache.npc_id_got
+            for cid in roster.active()
             if self.cache.character_data[cid].name == name
         ]
         self.assertEqual(len(found), 1, f"本局应有一名「{name}」")

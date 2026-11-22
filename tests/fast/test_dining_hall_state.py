@@ -14,7 +14,7 @@ from types import SimpleNamespace
 
 from Script.Core import game_type
 from Script.Kernel import core
-from Script.Modules.domains import kitchen
+from Script.Modules.domains import kitchen, roster
 from Script.Modules.gameplay_resolution import intent, npc_starters, working
 from Script.System.Cooking_System import cooking
 from tests.fast.base import FastTestCase
@@ -49,7 +49,7 @@ class DiningHallStateTest(FastTestCase):
         """有两名干员时，新的一天食堂有六份食物，都是预制食物，前一天的食物不留"""
         self.world.chara(1, "干员1")
         self.world.chara(2, "干员2")
-        self.cache.npc_id_got.update({1, 2})
+        roster.set_active({1, 2})
         cooking.init_recipes()
         kitchen.stock("1", _food("昨天的", 1))
         cooking.init_food_shop_data(new_day_flag=True)

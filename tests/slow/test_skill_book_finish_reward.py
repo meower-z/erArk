@@ -57,7 +57,9 @@ class SkillBookFinishRewardTest(SlowTestCase):
         """每本技能书读完时加的对应经验，等于它的难度在 FINISH_REWARD 里的值"""
         from Script.Config import game_config
 
-        character_id = min(cid for cid in self.cache.npc_id_got if cid != 0)
+        character_id = min(
+            cid for cid in kernel_data.domain("roster").active() if cid != 0
+        )
         character_data = self.cache.character_data[character_id]
         character_data.target_character_id = character_id
         progress_dict = character_data.entertainment.read_book_progress

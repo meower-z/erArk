@@ -14,6 +14,7 @@ import importlib
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 HAIR = "examine_hair"
 """ 检查头发 """
@@ -27,7 +28,9 @@ class PhysicalCheckRecordsPerformedTest(SlowTestCase):
     def setUp(self) -> None:
         """开新游戏，玩家以同一场景里的一名干员为交互对象"""
         super().setUp()
-        self.npc_id: int = sorted(i for i in self.cache.npc_id_got if i)[0]
+        self.npc_id: int = sorted(
+            i for i in kernel_data.domain("roster").active() if i
+        )[0]
         player = self.cache.character_data[0]
         self.world.move(self.npc_id, player.position)
         player.target_character_id = self.npc_id

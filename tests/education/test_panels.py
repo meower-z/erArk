@@ -1,43 +1,17 @@
 # -*- coding: UTF-8 -*-
 """面板：页签容器、全局课表、个人课表、日程模板、养成总览、选人按钮（通用 NPC 选择面板）、临时课编辑"""
 
-from _bootstrap import (
-    DEFAULT_TIME,
-    SCENE_DORM,
-    _,
-    auto_schedule,
-    cache,
-    check,
-    classroom_path,
-    clear_schedules,
-    constant,
-    datetime,
-    draw,
-    drawn_text,
-    education,
-    education_constant,
-    finish,
-    flow_handle,
-    game_config,
-    growth_handle,
-    make_character,
-    move_to,
-    open_all_classroom,
-    period_time,
-    pl,
-    schedule_handle,
-    section,
-    semester_handle,
-    set_time,
-    sex_class_handle,
-)
-from Script.System.Education_System import (
-    class_schedule_panel,
-    course_select_panel,
-    growth_panel,
-    schedule_template_panel,
-    student_select,
-)
+from _bootstrap import child_growth, growth, roster, DEFAULT_TIME, SCENE_DORM
+from _bootstrap import _, auto_schedule, cache, check, classroom_path
+from _bootstrap import clear_schedules, constant, datetime, draw, drawn_text
+from _bootstrap import education, education_constant, finish, flow_handle
+from _bootstrap import game_config, make_character, move_to
+from _bootstrap import open_all_classroom, period_time, pl, schedule_handle
+from _bootstrap import section, semester_handle, set_time, sex_class_handle
+from Script.System.Education_System import class_schedule_panel
+from Script.System.Education_System import course_select_panel, growth_panel
+from Script.System.Education_System import schedule_template_panel
+from Script.System.Education_System import student_select
 from typing import TYPE_CHECKING
 from Script.Design import game_time, instuct_judege
 from Script.Core import text_handle
@@ -327,7 +301,7 @@ auto_schedule.auto_fill_class_schedule()
 cs.handle_yrn(_("一键选课"))
 check(
     "成年学生也能一键选课",
-    cache.character_data[301].child_growth is not None
+    growth.of(301) is not None
     and any(
         schedule_handle.get_selected_course(301, d, p)
         for d in range(5)
@@ -456,7 +430,7 @@ check(
     any(_("未知") in t and "母亲" in t for t in drawn_text),
 )
 cache.character_data[201].relationship.mother_id = 102
-g = growth_handle.get_child_growth(201)
+g = child_growth(201)
 for index in range(3):
     semester_handle.push_report_card(
         201,
@@ -820,7 +794,7 @@ clear_schedules()
 for _cid in (201, 202, 203, 205):
     schedule_handle.clear_selected_course(_cid, 2, 3)
 
-_g201 = growth_handle.get_child_growth(201)
+_g201 = child_growth(201)
 _g201.report_card_flag = True
 drawn_text.clear()
 growth_panel.Growth_Panel(W)._draw_flag(201)
@@ -835,7 +809,7 @@ check(
     [t for t in drawn_text if "成绩单" in t],
 )
 _g201.report_card_flag = False
-_g210 = growth_handle.get_child_growth(210)
+_g210 = child_growth(210)
 _g210.report_card_flag = True
 drawn_text.clear()
 growth_panel.Growth_Panel(W)._draw_flag(210)
@@ -893,7 +867,7 @@ check(
 schedule_handle.clear_selected_course(204, 2, 3)
 
 section("Plan 31 §3.6：养成总览的翘课标记只认挂上 flag 的那一天")
-_g201 = growth_handle.get_child_growth(201)
+_g201 = child_growth(201)
 _g201.skip_class_flag = True
 _g201.skip_class_day = game_time.now().toordinal()
 drawn_text.clear()
@@ -1016,7 +990,7 @@ schedule_handle.set_class_cell(ROOM1, _l6_day, 0, 45, 103)
 schedule_handle.set_class_cell(ROOM1, _l6_day, 1, 45, 104)
 schedule_handle.set_class_cell(ROOM1, _l6_day, 2, 45, 105)
 teacher_b.work.work_type = 21  # 教师乙改了岗
-cache.npc_id_got.discard(104)  # 教师丙不在岛上（外勤等离线时移出 npc_id_got）
+roster.discard(104)  # 教师丙不在岛上（外勤等离线时移出 npc_id_got）
 _button_log: list[tuple[str, str, str]] = []
 _orig_center_draw = draw.CenterButton.draw
 _orig_left_draw = draw.LeftButton.draw
@@ -1146,7 +1120,7 @@ teacher_b.name = _l6_saved_name
 setattr(draw.CenterButton, "draw", _orig_center_draw)
 setattr(draw.LeftButton, "draw", _orig_left_draw)
 teacher_b.work.work_type = 151
-cache.npc_id_got.add(104)
+roster.add(104)
 clear_schedules()
 
 section(
@@ -1211,12 +1185,12 @@ check(
     class_schedule_panel.get_teacher_absent_mark(103) == _("（已离岗）"),
 )
 teacher_b.work.work_type = 151
-cache.npc_id_got.discard(103)
+roster.discard(103)
 check(
     "L21 被监禁、又不在 npc_id_got：标「被监禁」（排在「不在岛上」之前）",
     class_schedule_panel.get_teacher_absent_mark(103) == _("（被监禁）"),
 )
-cache.npc_id_got.add(103)
+roster.add(103)
 flow_handle.askfor_all = scripted_askfor
 answers[:] = [lambda o: o == _("取消")]
 _l21_panel._select_teacher(ROOM1, _l21_day, 1, 45)
@@ -1320,7 +1294,7 @@ clear_schedules()
 set_time(period_time(0))
 _st_day = game_time.now().weekday()
 _st = cache.character_data[201]
-_st_growth = growth_handle.get_child_growth(201)
+_st_growth = child_growth(201)
 _st_growth.selected_course = {}
 _st_growth.skip_class_flag = False
 _st_growth.skip_class_day = 0

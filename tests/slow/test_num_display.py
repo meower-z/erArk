@@ -49,7 +49,9 @@ class NumDisplayTest(SlowTestCase):
         """
         super().setUp()
         self.player = self.cache.character_data[0]
-        self.operator_id = min(cid for cid in self.cache.npc_id_got if cid != 0)
+        self.operator_id = min(
+            cid for cid in kernel_data.domain("roster").active() if cid != 0
+        )
         self.operator = self.cache.character_data[self.operator_id]
         self.operator.position = list(self.player.position)
         self.player.target_character_id = self.operator_id

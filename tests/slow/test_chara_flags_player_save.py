@@ -85,12 +85,15 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
         save_handle = game("Script.Core.save_handle")
         kernel = game("Script.Kernel.core")
         kernel_state = game("Script.Modules.save_load.kernel_state")
+        upgrade = game("Script.Modules.save_load.upgrade")
         flags = kd.domain("flags")
         action_info = kd.domain("action_info")
         player_ability = kd.domain("player_ability")
         player_collection = kd.domain("player_collection")
 
-        npc_id = min(cid for cid in self.cache.npc_id_got if cid != 0)
+        npc_id = min(
+            cid for cid in kd.domain("roster").active_sorted() if cid != 0
+        )
         kd.put(flags.set, npc_id, is_follow=1, morning_salutation=2)
         kd.put(action_info.set, npc_id, "talk_count", 4)
         kd.put(action_info.record_move, 0, ["中枢", "博士房间"])
@@ -111,7 +114,7 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
         path = os.path.join(self.folder, SLOT, kernel_state.SAVE_FILE)
         with open(path, encoding="utf-8") as f:
             first_file = json.load(f)
-        self.assertEqual(first_file["version"], 17)
+        self.assertEqual(first_file["version"], upgrade.CURRENT)
         self.assertIn('"$frac"', json.dumps(first_file))
         pl_data = first_file["characters"]["0"]["data"]
         self.assertIn(player_ability.KEY, pl_data)
@@ -172,7 +175,9 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
         player_ability = kd.domain("player_ability")
         player_collection = kd.domain("player_collection")
 
-        npc_id = min(cid for cid in self.cache.npc_id_got if cid != 0)
+        npc_id = min(
+            cid for cid in kd.domain("roster").active_sorted() if cid != 0
+        )
         save_handle.establish_save("v16_old")
 
         # 改写文件 "2" 为 v16 且去掉四个新键

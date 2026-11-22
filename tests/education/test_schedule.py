@@ -1,35 +1,13 @@
 # -*- coding: UTF-8 -*-
 """schedule_handle：教室、全局课表、个人课表、当前课程、上课地点、实习导师"""
 
-from _bootstrap import (
-    DEFAULT_TIME,
-    SCENE_DORM,
-    _,
-    auto_schedule,
-    cache,
-    check,
-    clear_schedules,
-    constant,
-    datetime,
-    education,
-    education_constant,
-    finish,
-    game_config,
-    game_time,
-    growth_handle,
-    make_character,
-    move_to,
-    open_all_classroom,
-    period_time,
-    pl,
-    remove_character,
-    scene_str,
-    schedule_handle,
-    schedule_template_handle,
-    section,
-    set_time,
-    sex_class_handle,
-)
+from _bootstrap import child_growth, growth, DEFAULT_TIME, SCENE_DORM, _
+from _bootstrap import auto_schedule, cache, check, clear_schedules, constant
+from _bootstrap import datetime, education, education_constant, finish
+from _bootstrap import game_config, game_time, make_character, move_to
+from _bootstrap import open_all_classroom, period_time, pl, remove_character
+from _bootstrap import scene_str, schedule_handle, schedule_template_handle
+from _bootstrap import section, set_time, sex_class_handle
 import inspect
 from tests import chara_abilities as ca, kernel_data
 from Script.Modules.domains import flags, library
@@ -176,7 +154,7 @@ check(
 )
 check(
     "没有养成数据也不会被凭空创建",
-    cache.character_data[201].child_growth is None,
+    growth.of(201) is None,
 )
 schedule_handle.set_selected_course(
     201, 0, 0, education_constant.COURSE_TYPE_THEORY, ROOM1
@@ -676,7 +654,7 @@ clear_schedules()
 set_time(period_time(0))
 _wd = game_time.now().weekday()
 _today = game_time.now().date().toordinal()
-growth_handle.get_child_growth(201).selected_course = {}
+child_growth(201).selected_course = {}
 schedule_handle.set_class_cell(ROOM1, _wd, 0, 45, 101)
 schedule_handle.set_class_cell(ROOM1, _wd, 1, 43, 101)
 schedule_handle.set_selected_course(
@@ -779,7 +757,7 @@ check(
         for k in ("学生岗", "借不到书")
     ),
 )
-growth_handle.get_child_growth(201).selected_course = {}
+child_growth(201).selected_course = {}
 clear_schedules()
 
 section(

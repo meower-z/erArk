@@ -48,7 +48,9 @@ class MoveOptionEventListsChildTest(SlowTestCase):
 
         from Script.Core import constant
 
-        npc_id = min(cid for cid in self.cache.npc_id_got if cid)
+        npc_id = min(
+            cid for cid in kernel_data.domain("roster").active() if cid
+        )
         npc = self.cache.character_data[npc_id]
         self.world.move(npc_id, LADIES_ONLY)
         ca.talent(npc_id)[FALL_2_TALENT] = 1

@@ -12,6 +12,7 @@ from collections.abc import Mapping
 from typing import cast
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 
@@ -78,17 +79,17 @@ class RecruitAtStartTest(SlowTestCase):
             for a in self.started
         ]
         self.assertEqual(started, [(constant.Behavior.WAIT, 5)])
-        self.assertIn(self.new_id, self.cache.npc_id_got)
+        self.assertIn(self.new_id, kernel_data.domain("roster").active())
         self.assertEqual(recruit.pending(), set())
 
     def test_full_dormitory_commits_nothing(self) -> None:
         """宿舍已满：没有行动，缓存不变，新干员没有加入"""
         facility = importlib.import_module("Script.Modules.domains.facility")
-        full = len(self.cache.npc_id_got)
+        full = len(kernel_data.domain("roster").active())
         self.enterContext(
             mock.patch.object(facility, "people_max", lambda: full)
         )
         changed = self.confirm()
         self.assertFalse(changed)
         self.assertEqual(self.started, [])
-        self.assertNotIn(self.new_id, self.cache.npc_id_got)
+        self.assertNotIn(self.new_id, kernel_data.domain("roster").active())

@@ -43,7 +43,11 @@ class EventsTiredChainTest(SlowTestCase):
         self.amiya = self.cache.character_data[AMIYA_ID]
         self.kaltsit = self.cache.character_data[KALTSIT_ID]
         for cid in (AMIYA_ID, KALTSIT_ID):
-            self.assertIn(cid, self.cache.npc_id_got, f"本局应有干员 {cid}")
+            self.assertIn(
+                cid,
+                kernel_data.domain("roster").active(),
+                f"本局应有干员 {cid}",
+            )
             self.world.move(cid, list(self.pl.position))
         self.pl.target_character_id = AMIYA_ID
         kernel_data.put(kernel_data.domain("flags").set, self.pl.cid, is_h=True)

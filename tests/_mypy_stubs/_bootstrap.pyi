@@ -5,6 +5,7 @@ from tests.education._bootstrap import baby_growth_handle as baby_growth_handle
 from tests.education._bootstrap import cache as cache
 from tests.education._bootstrap import character_handle as character_handle
 from tests.education._bootstrap import check as check
+from tests.education._bootstrap import child_growth as child_growth
 from tests.education._bootstrap import class_ai as class_ai
 from tests.education._bootstrap import classroom_path as classroom_path
 from tests.education._bootstrap import clear_schedules as clear_schedules
@@ -22,6 +23,7 @@ from tests.education._bootstrap import flow_handle as flow_handle
 from tests.education._bootstrap import game_config as game_config
 from tests.education._bootstrap import game_time as game_time
 from tests.education._bootstrap import game_type as game_type
+from tests.education._bootstrap import growth as growth
 from tests.education._bootstrap import (
     growth_event_handle as growth_event_handle,
 )
@@ -36,9 +38,11 @@ from tests.education._bootstrap import os as os
 from tests.education._bootstrap import period_time as period_time
 from tests.education._bootstrap import pl as pl
 from tests.education._bootstrap import play as play
+from tests.education._bootstrap import pregnancy as pregnancy
 from tests.education._bootstrap import random as random
 from tests.education._bootstrap import remove_character as remove_character
 from tests.education._bootstrap import ROOT as ROOT
+from tests.education._bootstrap import roster as roster
 from tests.education._bootstrap import save_handle as save_handle
 from tests.education._bootstrap import SCENE_DORM as SCENE_DORM
 from tests.education._bootstrap import SCENE_EDU_ENTRY as SCENE_EDU_ENTRY

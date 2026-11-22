@@ -45,7 +45,9 @@ class VisitorSettleTest(SlowTestCase):
         self.assertGreater(visitor.capacity(), 0, "前提：开新游戏后有客房")
         target = min(recruit_panel.find_recruitable_npc())
         player = self.cache.character_data[0]
-        player.target_character_id = min(self.cache.npc_id_got - {0})
+        player.target_character_id = min(
+            kernel_data.domain("roster").active() - {0}
+        )
         change = game_type.CharacterStatusChange()
         with kernel_data.writing():
             visitor.set_invite(target)
@@ -71,7 +73,7 @@ class VisitorSettleTest(SlowTestCase):
         game_type = game("Script.Core.game_type")
         game_time = game("Script.Design.game_time")
         settle = game("Script.Settle.default").handle_invite_visitor_add_adjust
-        joined = min(self.cache.npc_id_got - {0})
+        joined = min(kernel_data.domain("roster").active() - {0})
         self.cache.character_data[0].target_character_id = joined
         with kernel_data.writing():
             visitor.set_invite(joined, 30)

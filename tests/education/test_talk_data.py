@@ -3,32 +3,13 @@
 
 import subprocess
 
-from _bootstrap import (
-    ROOT,
-    _,
-    check,
-    classroom_path,
-    clear_schedules,
-    constant,
-    constant_promise,
-    education_constant,
-    finish,
-    game_config,
-    game_type,
-    growth_event_handle,
-    growth_handle,
-    handle_premise,
-    make_character,
-    open_all_classroom,
-    os,
-    period_time,
-    pl,
-    remove_character,
-    schedule_handle,
-    section,
-    set_time,
-    sys,
-)
+from _bootstrap import child_growth, ROOT, _, check, classroom_path
+from _bootstrap import clear_schedules, constant, constant_promise
+from _bootstrap import education_constant, finish, game_config, game_type
+from _bootstrap import growth_event_handle, growth_handle, handle_premise
+from _bootstrap import make_character, open_all_classroom, os, period_time, pl
+from _bootstrap import remove_character, schedule_handle, section, set_time
+from _bootstrap import sys
 import csv
 from Script.System.Pregnancy_System import pregnancy_constant
 import ast
@@ -552,7 +533,7 @@ check(
     "CVP_A1_Growth|24_LE_1" in talk_premise("work_skip_class1004"),
     talk_premise("work_skip_class1004"),
 )
-growth_data = growth_handle.get_child_growth(201)
+growth_data = child_growth(201)
 growth_data.attend_class_count = 20
 growth_data.sex_class_count = 0
 check(
@@ -1057,10 +1038,13 @@ set_time(period_time(0))
 make_character(
     202, "女儿B", 152, daughter=True, stage=102, mother_id=102, born_days=150
 )
+make_character(
+    203, "女儿C", 152, daughter=True, stage=103, mother_id=102, born_days=280
+)
 schedule_handle.set_class_cell(_("理论教室一"), 0, 0, 45, -1)
 _growth_by_cid = {
-    201: growth_handle.get_child_growth(201),
-    202: growth_handle.get_child_growth(202),
+    201: child_growth(201),
+    202: child_growth(202),
 }
 """ 夹具孩子的养成数据：角色id -> CHILD_GROWTH """
 for _growth_cid, _growth in _growth_by_cid.items():
@@ -1199,7 +1183,7 @@ ADULT_NO_CLASS_TALK = (
 make_character(
     203, "成年女儿", 152, daughter=True, stage=104, mother_id=102, born_days=500
 )
-_growth_203 = growth_handle.get_child_growth(203)
+_growth_203 = child_growth(203)
 _growth_203.report_card_history = [{"grade": E.REPORT_GRADE_NO_CLASS}]
 _growth_203.report_card_flag = True
 pl.target_character_id = 203
@@ -1300,6 +1284,7 @@ for _growth in _growth_by_cid.values():
     _growth.report_card_flag = False
     _growth.selected_course = {}
 remove_character(202)
+remove_character(203)
 clear_schedules()
 
 section(

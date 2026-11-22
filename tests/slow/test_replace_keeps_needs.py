@@ -16,6 +16,7 @@ from fractions import Fraction
 from types import ModuleType
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 NEEDS = {
     "tired": Fraction(7, 3),
@@ -51,11 +52,13 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
     def setUp(self) -> None:
         """取旧角色与新id。存档属性表用缓存属性的浅拷贝，角色表另拷一份并删掉新id"""
         super().setUp()
-        self.old = min(cid for cid in self.cache.npc_id_got if cid != 0)
+        self.old = min(
+            cid for cid in kernel_data.domain("roster").active() if cid != 0
+        )
         self.new = max(
             cid
             for cid in self.cache.character_data
-            if cid not in self.cache.npc_id_got
+            if cid not in kernel_data.domain("roster").active()
             and cid in self.cache.npc_tem_data
         )
         self.loaded = dict(vars(self.cache))
@@ -90,10 +93,12 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
     def test_pickled_stats_copy_attributes(self) -> None:
         """版本 1 与 2 的存档：新角色对象抄过属性、再经 adopt_pickled 写进 body.needs 之后，与当前存档得到的相同"""
         core = game("Script.Kernel.core")
+        game_type = game("Script.Core.game_type")
         needs = game("Script.Modules.domains.needs")
         upgrade = game("Script.Modules.save_load.upgrade")
         working = game("Script.Modules.gameplay_resolution.working")
         old = self.loaded["character_data"][self.old]
+        vars(old)["pregnancy"] = game_type.PREGNANCY()
         for name, stat in upgrade.PICKLED_NEEDS.items():
             setattr(old, name, NEEDS[stat])
         with working.based_on(core.state()):

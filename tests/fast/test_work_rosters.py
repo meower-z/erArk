@@ -16,7 +16,7 @@ from typing import Any, cast
 
 from Script.Core import game_type
 from Script.Design import basement
-from Script.Modules.domains import work
+from Script.Modules.domains import roster, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import upgrade
 from Script.Test.Static_Check import repair
@@ -48,7 +48,7 @@ class WorkRostersTest(FastTestCase):
         """
         return tuple(
             cid
-            for cid in self.cache.npc_id_got
+            for cid in roster.active()
             if cid and self.cache.character_data[cid].work.work_type == job
         )
 
@@ -105,7 +105,7 @@ class WorkRostersTest(FastTestCase):
             hr_operator_ids_list=[3, 1, 6],
             current_warden_id=4,
         )
-        npc = self.cache.npc_id_got
+        npc = roster.active()
         with kernel_data.writing():
             upgrade.adopt_work({"rhodes_island": island, "npc_id_got": npc})
         self.assertEqual(

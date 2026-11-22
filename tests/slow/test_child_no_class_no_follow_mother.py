@@ -44,8 +44,10 @@ class ChildStagesOfflineTest(SlowTestCase):
         无
         """
         super().setUp()
+        from Script.Modules.domains import roster
+
         self.mother_id, self.other_id = sorted(
-            cid for cid in self.cache.npc_id_got if cid
+            cid for cid in roster.active() if cid
         )[:2]
         self.mother = self.cache.character_data[self.mother_id]
 
@@ -65,9 +67,8 @@ class ChildStagesOfflineTest(SlowTestCase):
 
     def test_child_offline_until_trainee(self) -> None:
         """出生后与长成幼女后不在任何场景、不在 npc_id_got、不上学；长成学员后上线、成年、上学"""
-        from Script.Design import game_time
-
-        from Script.Design import talk
+        from Script.Design import game_time, talk
+        from Script.Modules.domains import pregnancy, roster
         from Script.System.Education_System import (
             education_constant,
             growth_handle,
@@ -84,14 +85,12 @@ class ChildStagesOfflineTest(SlowTestCase):
         talk.must_show_talk_check = lambda character_id: None
         child_id = kernel_data.born(self.mother_id, "测试女儿")
         child = self.cache.character_data[child_id]
-        child.pregnancy.born_time = game_time.now()
+        kernel_data.put(pregnancy.update, child_id, born_time=game_time.now())
         self.assertEqual(ca.talent(child_id)[BABY], 1, "出生时是婴儿")
         self.assertEqual(
             self.scene_list_with(child_id), [], "出生后不在任何场景"
         )
-        self.assertNotIn(
-            child_id, self.cache.npc_id_got, "出生后不在 npc_id_got"
-        )
+        self.assertFalse(roster.has(child_id), "出生后不在在编名册")
 
         ca.talent(self.mother)[REARING_TALENT] = 1
         with mock.patch.object(
@@ -104,22 +103,20 @@ class ChildStagesOfflineTest(SlowTestCase):
         self.assertEqual(
             self.scene_list_with(child_id), [], "长成幼女后不在任何场景"
         )
-        self.assertNotIn(
-            child_id, self.cache.npc_id_got, "长成幼女后不在 npc_id_got"
-        )
+        self.assertFalse(roster.has(child_id), "长成幼女后不在在编名册")
         self.assertNotEqual(
             child.work.work_type,
             education_constant.STUDENT_WORK_TYPE,
             "长成幼女时不置学生岗",
         )
         child.work.work_type = education_constant.STUDENT_WORK_TYPE
-        self.cache.npc_id_got.add(child_id)
+        with self.assertRaises(ValueError):
+            kernel_data.put(roster.add, child_id)
         self.assertNotIn(
             child_id,
             growth_handle.get_student_candidate_list(),
-            "即便是学生岗、在 npc_id_got 里，幼女也不在养成名单里",
+            "幼女既无法进入名册，也不在养成名单里",
         )
-        self.cache.npc_id_got.discard(child_id)
         child.work.work_type = 0
 
         # 胸部成长按母亲的胸部素质算，与上线、上学无关；本局取来当母亲的干员未必有胸部素质，这里不结算它
@@ -132,9 +129,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         ), kernel_data.writing():
             pregnancy_handle.check_all_child_grow_to_loli()
         self.assertEqual(ca.talent(child_id)[TRAINEE], 1, "幼女长成了学员")
-        self.assertIn(
-            child_id, self.cache.npc_id_got, "长成学员后进了 npc_id_got"
-        )
+        self.assertTrue(roster.has(child_id), "长成学员后进了在编名册")
         self.assertEqual(
             len(self.scene_list_with(child_id)), 1, "长成学员后在一个场景里"
         )
@@ -154,16 +149,11 @@ class ChildStagesOfflineTest(SlowTestCase):
         离线的幼女照样派得到养成事件：每日派发会挑她当主体，挑一条选项会改她养成数值的事件入队，
         经 settle_official_event_option 结算那个选项后，她的照料值或性格倾向变了
         """
-        from Script.Design import game_time
-
         import random
 
-        from Script.Design import talk
-        from Script.System.Education_System import (
-            growth_event_handle,
-            growth_handle,
-        )
-        from Script.Modules.domains import official
+        from Script.Design import game_time, talk
+        from Script.System.Education_System import growth_event_handle
+        from Script.Modules.domains import growth, official, pregnancy, roster
         from Script.System.Official_Event_System import official_event_handle
         from Script.System.Pregnancy_System import (
             pregnancy_constant,
@@ -175,8 +165,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         )
         talk.must_show_talk_check = lambda character_id: None
         child_id = kernel_data.born(self.mother_id, "测试女儿")
-        child = self.cache.character_data[child_id]
-        child.pregnancy.born_time = game_time.now()
+        kernel_data.put(pregnancy.update, child_id, born_time=game_time.now())
         ca.talent(self.mother)[REARING_TALENT] = 1
         with mock.patch.object(
             pregnancy_handle,
@@ -185,7 +174,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         ), kernel_data.writing():
             pregnancy_handle.check_rearing_complete(self.mother_id)
         self.assertEqual(ca.talent(child_id)[CHILD], 1, "婴儿长成了幼女")
-        self.assertNotIn(child_id, self.cache.npc_id_got, "幼女不在 npc_id_got")
+        self.assertFalse(roster.has(child_id), "幼女不在在编名册")
 
         # 每日派发每个女儿只按一定概率派，这里让概率判定必过
         with mock.patch.object(random, "randint", return_value=1):
@@ -228,13 +217,23 @@ class ChildStagesOfflineTest(SlowTestCase):
             [(one["uid"], one["chara_id"]) for one in official.queue()],
             "队列里有以她为主体的这条事件",
         )
-        growth_data = growth_handle.get_child_growth(child_id)
-        before = (growth_data.care_point, dict(growth_data.personality_point))
-        official_event_handle.settle_official_event_option(
-            uid, child_id, partner_id, option_index
+        before_data = growth.of(child_id)
+        before = (
+            (before_data.care_point, dict(before_data.personality_point))
+            if before_data is not None
+            else (0, {})
         )
+        kernel_data.written(
+            official_event_handle.settle_official_event_option,
+            uid,
+            child_id,
+            partner_id,
+            option_index,
+        )
+        after_data = growth.of(child_id)
+        assert after_data is not None
         self.assertNotEqual(
-            (growth_data.care_point, dict(growth_data.personality_point)),
+            (after_data.care_point, dict(after_data.personality_point)),
             before,
             f"结算 {uid} 的选项 {option_index} 后照料值或性格倾向变了",
         )

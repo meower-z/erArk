@@ -33,7 +33,7 @@ from __future__ import annotations
 import contextlib
 from typing import TYPE_CHECKING
 from unittest import mock
-from tests.kernel_data import writing, written
+from tests.kernel_data import writing
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -152,9 +152,11 @@ def npc_id(world: FullWorld, name: str) -> int:
     Return arguments:
     int -- 角色id
     """
+    from Script.Modules.domains import roster
+
     found = [
         cid
-        for cid in world.cache.npc_id_got
+        for cid in roster.active()
         if world.cache.character_data[cid].name == name
     ]
     if len(found) != 1:
@@ -244,41 +246,30 @@ def days_passed(day: int) -> Iterator[None]:
 
 
 def fertilize(world: FullWorld, mother_id: int) -> None:
-    """
-    让母亲受精：射精到子宫，生理周期推进到排卵日，走受精结算
-    Keyword arguments:
-    world -- FullWorld
-    mother_id -- 母亲角色id
-    Return arguments:
-    无
-    """
+    """让母亲受精：射精到子宫，生理周期推进到排卵日，走受精结算"""
     from Script.Design import handle_premise
+    from Script.Modules.domains import pregnancy
     from Script.System.Pregnancy_System import pregnancy_handle
     from Script.UI.Panel import ejaculation_panel
+    from tests.kernel_data import writing
 
     mother = world.cache.character_data[mother_id]
     # 部位 7 为子宫，类型 0 为身体
     ejaculation_panel.update_semen_dirty(mother_id, 7, 0, 1000)
-    for _ in range(7):
-        if mother.pregnancy.ovulation_flag:
-            break
-        pregnancy_handle.update_reproduction_period(mother_id)
-    pregnancy_handle.get_fertilization_rate(mother_id)
-    written(pregnancy_handle.check_fertilization, mother_id)
+    with writing():
+        for _ in range(7):
+            if pregnancy.of(mother_id).ovulation_flag:
+                break
+            pregnancy_handle.update_reproduction_period(mother_id)
+        pregnancy_handle.get_fertilization_rate(mother_id)
+        pregnancy_handle.check_fertilization(mother_id)
     if not handle_premise.handle_fertilization_1(mother_id):
         raise PlanError(f"{mother.name} 没有受精")
 
 
 def give_birth(world: FullWorld, mother_id: int, name: str) -> list:
-    """
-    受精的母亲转妊娠、临盆、生产，给每个孩子取名，产后转育儿
-    Keyword arguments:
-    world -- FullWorld
-    mother_id -- 母亲角色id
-    name -- 孩子名字的前缀，第 n 个孩子叫 name + n
-    Return arguments:
-    list[int] -- 这一胎的孩子id
-    """
+    """受精的母亲转妊娠、临盆、生产，给每个孩子取名，产后转育儿；返回新出生孩子id列表"""
+    from Script.Modules.domains import pregnancy
     from Script.System.Pregnancy_System import (
         pregnancy_constant,
         pregnancy_handle,
@@ -291,7 +282,7 @@ def give_birth(world: FullWorld, mother_id: int, name: str) -> list:
         pregnancy_handle.check_near_born(mother_id)
     before = list(mother.relationship.child_id_list)
     world.player.press("焦急等待")
-    for index in range(max(1, mother.pregnancy.fetus_count)):
+    for index in range(max(1, pregnancy.of(mother_id).fetus_count)):
         world.player.type(f"{name}{index + 1}")
     # 临盆后第 5 天的生产概率为 100%
     with days_passed(pregnancy_constant.PARTURIENT_DAY + 5):

@@ -103,7 +103,10 @@ class OldSaveIntsTest(FastTestCase):
         """体力与气力上限是 float：换成相等的 Fraction，之后的时间结算不出错"""
         npc = self.world.chara(0, "博士")
         vars(npc).update(
-            hit_point=500, hit_point_max=1000.5, mana_point_max=800.25
+            hit_point=500,
+            hit_point_max=1000.5,
+            mana_point_max=800.25,
+            pregnancy=game_type.PREGNANCY(),
         )
         now = game_time.now()
         npc.behavior.start_time = now - datetime.timedelta(minutes=10)
@@ -140,7 +143,9 @@ class OldSaveIntsTest(FastTestCase):
             drunk_point=Fraction(5, 2),
             last_hunger_time=datetime.datetime(1, 1, 1),
         )
-        vars(npc.pregnancy)["milk_max"] = 230
+        old_preg = game_type.PREGNANCY()
+        vars(old_preg)["milk_max"] = 230
+        vars(npc)["pregnancy"] = old_preg
         with working.based_on(core.state()):
             upgrade.adopt_pickled({"character_data": {1: npc}})
             got = needs.of(1)
@@ -164,7 +169,7 @@ class OldSaveIntsTest(FastTestCase):
         self.assertEqual(milk_max, 230)
         left = {"hit_point", "sleep_point", "last_hunger_time"} & set(vars(npc))
         self.assertEqual(left, set())
-        self.assertFalse(hasattr(npc.pregnancy, "milk_max"))
+        self.assertFalse(hasattr(old_preg, "milk_max"))
 
     def test_v0_needs_become_exact(self) -> None:
         """
@@ -174,7 +179,9 @@ class OldSaveIntsTest(FastTestCase):
         self.world.chara(0, "博士")
         npc = self.world.chara(1, "干员")
         vars(npc).update(tired_point=12.5, hunger_point=240, urinate_point=0.25)
-        vars(npc.pregnancy)["milk"] = 4.75
+        old_preg = game_type.PREGNANCY()
+        vars(old_preg)["milk"] = 4.75
+        vars(npc)["pregnancy"] = old_preg
         island = game_type.Rhodes_Island()
         vars(island)["power_supply_strategy"] = {4: 1}
         loaded = {"character_data": {1: npc}, "rhodes_island": island}
@@ -196,17 +203,17 @@ class OldSaveIntsTest(FastTestCase):
             ],
         )
         self.assertFalse(hasattr(npc, "tired_point"))
-        self.assertFalse(hasattr(npc.pregnancy, "milk"))
+        self.assertFalse(hasattr(old_preg, "milk"))
 
     def test_v0_defaults_and_missing_pregnancy(self) -> None:
         """缺需求属性的旧角色补上 0，重建后没有乳汁的妊娠数据读成乳汁 0，缺策略表的罗德岛补空表"""
         self.world.chara(0, "博士")
         npc = self.world.chara(1, "干员")
-        rebuilt = vars(npc).pop("pregnancy")
+        rebuilt = game_type.PREGNANCY()
         island = game_type.Rhodes_Island()
         loaded = {"character_data": {1: npc}, "rhodes_island": island}
         upgrade.fill_v0_defaults(loaded)
-        npc.pregnancy = rebuilt
+        vars(npc)["pregnancy"] = rebuilt
         with working.based_on(core.state()):
             upgrade.adopt_v0(loaded)
             got = needs.of(1)

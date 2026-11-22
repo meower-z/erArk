@@ -17,6 +17,7 @@ import signal
 import traceback
 from collections.abc import Callable
 
+from tests import kernel_data
 from tests.slow import remove_parent_guard
 from tests.slow.base import SlowTestCase
 from tests.slow.test_tag_logic_same_in_english import (
@@ -68,7 +69,7 @@ def collect_new_game(language: str) -> dict[str, list[int]]:
     cache = run.cache
     assistant_panel = game("Script.UI.Panel.assistant_panel")
     return {
-        "npc_id_got": sorted(cache.npc_id_got),
+        "npc_id_got": sorted(kernel_data.domain("roster").active()),
         "assistant": [cache.character_data[0].assistant_character_id],
         "candidates": assistant_panel.get_assistant_candidates(),
     }

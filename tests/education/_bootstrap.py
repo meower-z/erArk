@@ -128,8 +128,18 @@ _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
 
 from Script.Modules.save_load import kernel_state
-from Script.Modules.domains import education, modes, official, plan
-from Script.Modules.domains import playthrough, warehouse
+from Script.Modules.domains import (
+    education,
+    growth as growth,
+    modes,
+    official,
+    plan,
+    playthrough,
+    pregnancy as pregnancy,
+    roster as roster,
+    warehouse,
+)
+from tests.education._growth_ref import child_growth as child_growth
 
 character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
@@ -139,10 +149,10 @@ cache: game_type.Cache = cache_control.cache
 # ==== 2. 全局前置 ====
 normal_config.system_setting = attr_calculation.get_system_setting_zero()
 kernel_data.written(playthrough.reset_difficulty_and_birth)
-# 罗德岛设施：GameState 里没有设施数据，读到的是每个设施 1 级、每个待开放设施未开放。教育区的等级由测试按需改
-# 资源仓库：每种资源 0（与 basement 初始化一致）；内核推进时玩家行动收尾的成就结算要读它
 kernel_data.written(warehouse.start, {})
-kernel_project.auto_commit_outside_step(education.KEYS)
+kernel_project.auto_commit_outside_step(
+    (*education.KEYS, *roster.KEYS, pregnancy.KEY, growth.KEY)
+)
 ca.auto_commit_outside_step()
 # 书库：library.holders() 把配置里的每本书读作在架、没被借走；兴趣课读书要先借书（Plan 29）
 
@@ -211,32 +221,20 @@ assert (
 
 
 def scene_str(path: list) -> str:
-    """
-    场景路径列表 → 场景路径字符串
-    Keyword arguments:
-    path -- 场景路径列表
-    Return arguments:
-    str -- 场景路径字符串
-    """
+    """场景路径列表 → 场景路径字符串"""
     return map_handle.get_map_system_path_str_for_list(path)
 
 
 def _scene_list_add(scene_path_str: str, character_id: int) -> None:
-    """
-    把角色登记进场景的角色名单
-    """
-    if scene_path_str not in cache.scene_data:
-        return
-    cache.scene_data[scene_path_str].character_list.add(character_id)
+    """把角色登记进场景的角色名单"""
+    if scene_path_str in cache.scene_data:
+        cache.scene_data[scene_path_str].character_list.add(character_id)
 
 
 def _scene_list_remove(scene_path_str: str, character_id: int) -> None:
-    """
-    把角色从场景的角色名单里移除
-    """
-    if scene_path_str not in cache.scene_data:
-        return
-    cache.scene_data[scene_path_str].character_list.discard(character_id)
+    """把角色从场景的角色名单里移除"""
+    if scene_path_str in cache.scene_data:
+        cache.scene_data[scene_path_str].character_list.discard(character_id)
 
 
 def move_to(character_id: int, path: list) -> None:
@@ -327,21 +325,22 @@ def make_character(
     if daughter:
         cd.relationship.father_id = 0
         cd.relationship.mother_id = mother_id
-        cd.pregnancy.born_time = game_time.now() - datetime.timedelta(
-            days=born_days
-        )
         if mother_id in cache.character_data:
             mother_data = cache.character_data[mother_id]
             if cid not in mother_data.relationship.child_id_list:
                 mother_data.relationship.child_id_list.append(cid)
     cd.position = list(position if position is not None else SCENE_DORM)
     cache.character_data[cid] = cd
+    if daughter:
+        pregnancy.update(
+            cid,
+            born_time=game_time.now() - datetime.timedelta(days=born_days),
+        )
     kernel_data.set_needs(cid, tired=0, hunger=0, urine=0, milk=0)
     kernel_data.set_needs(cid, hit=100, hit_max=100, mana=100, mana_max=100)
-    # 婴儿不进 npc_id_got，与真实婴儿一致（Plan 28 §3.9）：character_handle.born_new_character 不加，
-    #    要到长成幼女、get_new_character 上线时才加。此前夹具把婴儿也放进去，婴儿期事件派不出来的 BUG 一直测不出
-    if cid and stage != 101:
-        cache.npc_id_got.add(cid)
+    # 婴儿/幼女不进在编名册，与真实成长阶段边界一致
+    if cid and stage not in (101, 102):
+        roster.add(cid)
     _scene_list_add(scene_str(cd.position), cid)
     return cd
 
@@ -357,7 +356,7 @@ def remove_character(cid: int) -> None:
     if cid in cache.character_data:
         _scene_list_remove(scene_str(cache.character_data[cid].position), cid)
         del cache.character_data[cid]
-    cache.npc_id_got.discard(cid)
+    roster.discard(cid)
 
 
 def open_all_classroom() -> None:

@@ -224,7 +224,9 @@ class NumNoFloatTest(SlowTestCase):
         )
 
         player = self.cache.character_data[0]
-        operator_id = min(cid for cid in self.cache.npc_id_got if cid != 0)
+        operator_id = min(
+            cid for cid in kernel_data.domain("roster").active() if cid != 0
+        )
         operator = self.cache.character_data[operator_id]
         operator.position = list(player.position)
         player.target_character_id = operator_id

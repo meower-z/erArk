@@ -45,7 +45,9 @@ class PickDraftWorldTest(SlowTestCase):
 
         core._bodies["kernel.StartAction"] = spy
         self.addCleanup(core._bodies.__setitem__, "kernel.StartAction", saved)
-        self.chara_id: int = sorted(i for i in self.cache.npc_id_got if i)[0]
+        self.chara_id: int = sorted(
+            i for i in kernel_data.domain("roster").active() if i
+        )[0]
 
     def run_pick(self, fn: "Callable[[], None]") -> tuple[int, int, bool]:
         """
@@ -350,7 +352,7 @@ class PickDraftWorldTest(SlowTestCase):
         self.assert_one_edit(start, end, changed)
         follow = {
             kernel_data.domain("flags").get(i, "is_follow")
-            for i in self.cache.npc_id_got
+            for i in kernel_data.domain("roster").active()
             if i
         }
         self.assertEqual(follow, {1})

@@ -36,11 +36,12 @@ class AbilitiesSaveRoundTripTest(SlowTestCase):
         core = game("Script.Kernel.core")
         save_handle = game("Script.Core.save_handle")
         abilities = game("Script.Modules.domains.abilities")
+        roster = game("Script.Modules.domains.roster")
 
         for _ in range(3):
             instruct(self.world, constant.Instruct.WAIT)
         cache = self.world.cache
-        npc = next(cid for cid in sorted(cache.npc_id_got) if cid)
+        npc = next(cid for cid in roster.active_sorted() if cid)
         first = {
             key: next(iter(abilities.Table(npc, key)))
             for key in abilities.PICKLED.values()
