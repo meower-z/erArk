@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
 """
-看一眼就走的面板什么也不留下；改了设置才是一个 0 分钟的 Edit
-==============================================================
+看一眼就走的面板什么也不留下，改游戏状态里的设置才是 0 分钟的 Edit
+==================================================================
 - add_panel 登记的每个面板（player_pick.UNDRAFTED、标题与建角色面板、OPENED_BY_SETTLEMENT 之外）各打开一次，
   每次等输入时按屏幕上的「返回」（没有时按「退出」「离开」「取消」「关闭」），直到面板退出：
   内核没有开始玩家的行动，缓存的指纹（tests.pick_guard.fingerprint）不变。新游戏与用户存档 99 各走一遍
   （存档 99 不入库，装在 save/99 时才跑，没装时报跳过）。打开时写缓存的面板（旧存档的修补、显示前的重算）
   会让看一眼也定下一个 0 分钟的 Edit，这里把它们都找出来。
-- 新游戏里文本生成AI的设置还是空的：在设置面板里改一项是一个 0 分钟的 Edit，之后每项设置都有值（没改的是默认值）；
-  干员个人设置改一项同样是一个 0 分钟的 Edit。
+- 新游戏里文本生成AI的设置还是空的，且属于全局设置（不是游戏状态）。在设置面板里改一项不触发内核行动。改完后每项 AI
+  设置都有值（没改的是默认值）。干员个人设置改一项则是一个 0 分钟的 Edit。
 """
 
 import importlib
@@ -205,8 +205,17 @@ class ZeroMinutePanelsTest(SlowTestCase):
         count, problems = self.sweep()
         self.assertEqual(problems, {}, f"打开了 {count} 个面板")
 
-    def run_edit(self, origin: str, fn: Callable[[], None]) -> None:
-        """玩家这一次选择在 origin 的草稿里跑 fn；断言定下的是一个 0 分钟 Edit，时钟不动"""
+    def run_edit(
+        self, origin: str, fn: Callable[[], None], edit: bool = True
+    ) -> None:
+        """
+        在 origin 对应的玩家选择草稿里执行 fn，并断言内核时钟不变。edit 为 True 时断言定下一个 0 分钟 Edit，为
+        False 时断言没有开始任何玩家行动。
+        Keyword arguments:
+        origin -- 草稿来源标识
+        fn -- 在草稿上下文中执行的函数
+        edit -- 是否预期定下一个 0 分钟 Edit（默认为 True）
+        """
         clock = self.core.state().clock
 
         def pick() -> None:
@@ -215,26 +224,32 @@ class ZeroMinutePanelsTest(SlowTestCase):
 
         self.started.clear()
         self.tests_world.act(pick)
-        self.assertEqual(self.player_starts(), [(self.edits.EDIT, 0)])
+        expected = [(self.edits.EDIT, 0)] if edit else []
+        self.assertEqual(self.player_starts(), expected)
         self.assertEqual(self.core.state().clock, clock)
 
     def test_setting_edits_commit_one_edit(self) -> None:
-        """新游戏里改一项AI设置与一项干员设置：各是一个 0 分钟 Edit，AI设置之后每项都有值"""
+        """
+        新游戏里改一项文本生成 AI 设置不触发内核行动。改完后每项 AI 设置都有值（2 号与 7 号均为 1）。
+        改一项干员个人设置会定下一个 0 分钟 Edit 并更新该设置。
+        """
         from Script.Modules.domains import chara_profile
 
         game_config = importlib.import_module("Script.Config.game_config")
+        normal_config = importlib.import_module("Script.Config.normal_config")
         chat_ai = importlib.import_module("Script.UI.Panel.chat_ai_setting")
         chara = importlib.import_module("Script.UI.Panel.character_setting")
         self.tests_world.act(lambda: None)
-        self.assertEqual(self.cache.ai_setting.ai_chat_setting, {})
+        self.assertEqual(normal_config.ai_setting.ai_chat_setting, {})
         options = game_config.config_ai_chat_setting_option[2]
         self.run_edit(
             "chat ai",
             lambda: chat_ai.Chat_Ai_Setting_Panel(120).change_setting(
                 2, len(options)
             ),
+            edit=False,
         )
-        settings = self.cache.ai_setting.ai_chat_setting
+        settings = normal_config.ai_setting.ai_chat_setting
         self.assertEqual(set(settings), set(game_config.config_ai_chat_setting))
         self.assertEqual(settings[2], 1)
         self.assertEqual(settings[7], 1)

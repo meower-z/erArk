@@ -2,7 +2,8 @@
 """
 测试复原游戏缓存之外的进程状态
 ==============================
-全局设置（save_load.settings 与 normal_config.system_setting）与界面临时状态（Script.UI.Moudle.view）不在游戏缓存里，
+全局设置（save_load.settings、normal_config.system_setting 与 normal_config.ai_setting）
+与界面临时状态（Script.UI.Moudle.view）不在游戏缓存里，
 MinimalWorld 复原缓存时由 fresh 把它们也复原。本模块顶部不导入游戏模块（慢速层收集测试时不能载入游戏）。
 """
 
@@ -17,9 +18,10 @@ SETTINGS_DIR = tempfile.mkdtemp(prefix="erark-settings-")
 
 def fresh() -> None:
     """
-    全局设置回到还没装过的样子：settings.json 换到 SETTINGS_DIR 下并删掉，settings 模块记下的设置清空，
-    normal_config 上换成空的设置对象；界面临时状态回到模块载入时的初值。
-    下一次 core.reset_state 时，settings 的输出钩子以默认值为底重新装好全局设置
+    把全局设置（系统设置与文本生成 AI 设置）与界面临时状态复原到初始状态。
+    函数把 settings.json 路径换到 SETTINGS_DIR 下并删除该文件，清空 settings 模块的装入与收下状态，再把
+    normal_config.system_setting 与 normal_config.ai_setting 换成空对象，并重新载入 view。
+    下一次 core.reset_state 时，settings 的输出钩子以默认值为底重新装好全局设置。
     Keyword arguments:
     无
     Return arguments:
@@ -36,5 +38,8 @@ def fresh() -> None:
     settings._live = None
     settings._saved = None
     settings._has_preferences = False
+    settings._has_ai = False
+    settings._pending_ai = None
     normal_config.system_setting = game_type.System_Setting()
+    normal_config.ai_setting = game_type.Ai_Setting()
     importlib.reload(view)
