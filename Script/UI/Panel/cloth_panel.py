@@ -4,10 +4,10 @@ from types import FunctionType
 from Script.Core import cache_control, constant, flow_handle, game_type
 from Script.Core import get_text, py_cmd, rich_text, text_handle
 from Script.Config import game_config, normal_config
-from Script.Design import attr_calculation, handle_premise
+from Script.Design import handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.tk_ui import drawn_see, player_pick
-from Script.Modules.domains import abilities, player_ability, wardrobe
+from Script.Modules.domains import abilities, dirty, player_ability, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -106,17 +106,13 @@ class SeeCharacterClothPanel:
                 for cloth_id in cloth.cloth_wear[clothing_type]:
                     cloth_name = game_config.config_clothing_tem[cloth_id].name
                     now_text += f" {cloth_name}"
-                    # 如果该部位有精液，则显示精液信息（旧存档的衣服污浊数据可能是空的）
-                    if (
-                        target_character_data.dirty.cloth_semen.get(
-                            clothing_type, (None, 0)
-                        )[1]
-                        != 0
-                    ):
+                    # 如果该部位有精液，则显示精液信息
+                    cloth_semen = dirty.view(
+                        target_character_data.cid
+                    ).cloth_semen
+                    if cloth_semen.get(clothing_type, (None, 0))[1] != 0:
                         dirty_text_context = ""
-                        semen_level = target_character_data.dirty.cloth_semen[
-                            clothing_type
-                        ][2]
+                        semen_level = cloth_semen[clothing_type][2]
                         dirty_text_cid = f"{_(type_name, revert_translation=True)}精液污浊{str(semen_level)}"
                         # 是否显示完整污浊文本，仅在最后一件衣服上显示
                         if (
@@ -161,9 +157,9 @@ class SeeCharacterClothPanel:
                         ).format(str(decoration_count))
                     # 如果该部位已有污浊信息，则先换行再显示，否则直接显示
                     if (
-                        target_character_data.dirty.cloth_semen[clothing_type][
-                            1
-                        ]
+                        dirty.view(target_character_data.cid).cloth_semen[
+                            clothing_type
+                        ][1]
                         != 0
                         and now_text != ""
                         and now_text[-1] != "\n"
@@ -181,7 +177,9 @@ class SeeCharacterClothPanel:
                 and normal_config.system_setting.draw_setting[10]
             ):
                 if (
-                    target_character_data.dirty.cloth_semen[clothing_type][2]
+                    dirty.view(target_character_data.cid).cloth_semen[
+                        clothing_type
+                    ][2]
                     != 0
                 ):
                     now_text += "\n"
@@ -516,23 +514,12 @@ class SwitchCharacterClothPanel:
                     now_row.append(btn)
                     self.return_list.append(btn.return_text)  # 加入按钮返回值
                     # 精液污渍显示
-                    if len(target_character_data.dirty.cloth_semen) == 0:
-                        empty_dirty_data = attr_calculation.get_dirty_reset(
-                            target_character_data.dirty
-                        )
-                        target_character_data.dirty.cloth_semen = (
-                            empty_dirty_data.cloth_semen
-                        )
-                    if (
-                        target_character_data.dirty.cloth_semen[clothing_type][
-                            1
-                        ]
-                        != 0
-                    ):
+                    cloth_semen = dirty.view(
+                        target_character_data.cid
+                    ).cloth_semen
+                    if cloth_semen[clothing_type][1] != 0:
                         dirty_text_context = ""
-                        semen_level = target_character_data.dirty.cloth_semen[
-                            clothing_type
-                        ][2]
+                        semen_level = cloth_semen[clothing_type][2]
                         dirty_text_cid = f"{_(type_name, revert_translation=True)}精液污浊{str(semen_level)}"
                         # 只在最后一件衣服上显示完整污浊文本
                         if (
@@ -567,7 +554,9 @@ class SwitchCharacterClothPanel:
             # 完整污浊显示时换行
             elif now_row and normal_config.system_setting.draw_setting[10]:
                 if (
-                    target_character_data.dirty.cloth_semen[clothing_type][2]
+                    dirty.view(target_character_data.cid).cloth_semen[
+                        clothing_type
+                    ][2]
                     != 0
                 ):
                     self.draw_list.extend(now_row)

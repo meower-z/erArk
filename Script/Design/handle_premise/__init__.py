@@ -28,8 +28,9 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities, action_info, flags, growth
-from Script.Modules.domains import history, needs, physical_exam, roster, status
+from Script.Modules.domains import abilities, action_info, dirty, flags, growth
+from Script.Modules.domains import h_state, history, hypnosis, needs
+from Script.Modules.domains import physical_exam, roster, status
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -507,19 +508,13 @@ def handle_comprehensive_value_premise(
             part_type = b2_value[0]
             part_cid = int(b2_value[1:])
             # 区分是身体还是服装
-            if part_type == "B":
-                if (
-                    pl_target_character_data.h_state.shoot_position_body
-                    == part_cid
-                ):
-                    return 1
-            else:
-                if (
-                    pl_target_character_data.h_state.shoot_position_cloth
-                    == part_cid
-                ):
-                    return 1
-            return 0
+            tid = pl_target_character_data.cid
+            key = (
+                "shoot_position_body"
+                if part_type == "B"
+                else "shoot_position_cloth"
+            )
+            return 1 if h_state.get(tid, key) == part_cid else 0
         final_value = status.of(final_character_id).get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "F":
         if "Flag" in premise_all_value_list[1]:
@@ -538,12 +533,12 @@ def handle_comprehensive_value_premise(
             part_type = b2_value[0]
             part_cid = int(b2_value[1:])
             # 区分是身体还是服装
-            if part_type == "B":
-                final_value = final_character_data.dirty.body_semen[part_cid][1]
-            else:
-                final_value = final_character_data.dirty.cloth_semen[part_cid][
-                    1
-                ]
+            fn = (
+                dirty.body_semen_amount
+                if part_type == "B"
+                else dirty.cloth_semen_amount
+            )
+            final_value = fn(final_character_data.cid, part_cid)
     elif premise_all_value_list[1][0] == "G":
         # 养成数值前提（Plan 22 三期）：出勤、性格倾向、照料值等，编号见 education_constant.GROWTH_VALUE_*
         # 必须排在攻略程度之前——"Growth" 与 "Gift" 的首字母都是 G，落到默认分支会被当成攻略程度
@@ -566,7 +561,7 @@ def handle_comprehensive_value_premise(
             )
     elif premise_all_value_list[1][0] == "B":
         if "Bondage" in premise_all_value_list[1]:
-            if final_character_data.h_state.bondage == type_son_id:
+            if h_state.get(final_character_data.cid, "bondage") == type_son_id:
                 final_value = 1
             else:
                 final_value = 0
@@ -589,7 +584,7 @@ def handle_comprehensive_value_premise(
         return 0
     elif premise_all_value_list[1][0] == "R":
         if "Roleplay" in premise_all_value_list[1]:
-            if type_son_id in final_character_data.hypnosis.roleplay:
+            if type_son_id in hypnosis.of(final_character_data.cid)["roleplay"]:
                 final_value = 1
             else:
                 final_value = 0
@@ -635,16 +630,10 @@ def handle_comprehensive_value_premise(
             part_type = b2_value[0]
             part_cid = int(b2_value[1:])
             # 区分是身体还是服装
-            if part_type == "B":
-                if pl_target_character_data.h_state.insert_position == part_cid:
-                    return 1
-            else:
-                if (
-                    pl_target_character_data.h_state.insert_position - 20
-                    == part_cid
-                ):
-                    return 1
-            return 0
+            pos = h_state.get(pl_target_character_data.cid, "insert_position")
+            return (
+                1 if (pos if part_type == "B" else pos - 20) == part_cid else 0
+            )
 
     # 前指令的单独计算
     elif premise_all_value_list[1][0] == "I":

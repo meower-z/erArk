@@ -12,7 +12,8 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement, action_info, flags
+from Script.Modules.domains import abilities, achievement, action_info, dirty
+from Script.Modules.domains import first_record, flags, h_meters, h_state
 from Script.Modules.domains import modes, pregnancy, tallies, wardrobe
 
 cache: game_type.Cache = cache_control.cache
@@ -34,7 +35,7 @@ def show_endure_ejaculation_panel() -> bool:
     """
     character_data: game_type.Character = cache.character_data[0]
     now_lv = abilities.ability(0)[30]
-    now_count = character_data.h_state.endure_not_shot_count
+    now_count = h_state.get(0, "endure_not_shot_count")
     line = draw.LineDraw("-", window_width)
 
     # 判断忍耐几率
@@ -106,8 +107,8 @@ def show_endure_ejaculation_panel() -> bool:
 
     # 忍住的结算
     if return_flag:
-        character_data.h_state.endure_not_shot_count += 1
-        character_data.eja_point = 0
+        h_state.set(0, endure_not_shot_count=now_count + 1)
+        h_meters.set(0, eja=0)
         endure_text = _("\n{0}忍住了射精\n").format(character_data.name)
         now_draw = draw.NormalDraw()
         now_draw.text = endure_text
@@ -150,17 +151,18 @@ def common_ejaculation() -> tuple[str, int]:
         return _("只流出了些许前列腺液，已经射不出精液了"), 0
     else:
         # 基础射精值，小中多射精区分
+        endure_cnt = h_state.get(0, "endure_not_shot_count")
         if character_data.second_behavior["p_orgasm_strong"] == 1:
             semen_count: float = int(
                 game_config.config_semen_shoot_amount[2].base_semen_amount
                 * random_weight
-            ) * (character_data.h_state.endure_not_shot_count + 1)
+            ) * (endure_cnt + 1)
             semen_text = _("超大量射精，射出了")
         elif character_data.second_behavior["p_orgasm_normal"] == 1:
             semen_count = int(
                 game_config.config_semen_shoot_amount[1].base_semen_amount
                 * random_weight
-            ) * (character_data.h_state.endure_not_shot_count + 1)
+            ) * (endure_cnt + 1)
             semen_text = _("大量射精，射出了")
         else:
             semen_count = int(
@@ -191,7 +193,7 @@ def common_ejaculation() -> tuple[str, int]:
         # 如果使用了精液精力剂，则本次射精量翻倍
         if handle_premise.handle_self_semen_energy_agent(0):
             semen_count *= 2
-            character_data.h_state.used_semen_energy_agent = False
+            h_state.set(0, used_semen_energy_agent=False)
             extra_text += _("（精力剂+）")
 
         # 如果施加了香薰疗愈-射精状态，则射精量翻倍
@@ -212,33 +214,36 @@ def common_ejaculation() -> tuple[str, int]:
             extra_text += _("（浓厚精液+）")
 
         # 射精量不高于剩余精液值
+        meters = h_meters.of(0)
         semen_ml = min(
             int(semen_count),
-            num.whole(
-                character_data.semen_point
-                + character_data.tem_extra_semen_point
-            ),
+            num.whole(meters["semen"] + meters["extra_semen"]),
         )
         # 组合射精文本
         semen_text += str(semen_ml) + _("ml精液") + extra_text
 
-        character_data.h_state.orgasm_level[3] += 1  # 更新射精次数
-        character_data.h_state.just_shoot = 1  # 更新刚射精状态
-        character_data.dirty.penis_dirty_dict["semen"] = (
-            True  # 更新阴茎精液污浊状态
-        )
+        with h_state.editing(0) as hs:
+            hs.orgasm_level[3] += 1  # 更新射精次数
+            hs.just_shoot = 1  # 更新刚射精状态
+            hs.endure_not_shot_count = 0  # 清零忍住不射次数
+        with dirty.editing(0) as d:
+            d.penis_dirty_dict["semen"] = True  # 更新阴茎精液污浊状态
         tallies.add(tallies.SEMEN, semen_ml)  # 更新总精液量
-        character_data.h_state.endure_not_shot_count = 0  # 清零忍住不射次数
 
         # 优先扣除临时额外精液值，不够的再扣除基础精液值
-        if character_data.tem_extra_semen_point > semen_ml:
-            character_data.tem_extra_semen_point -= semen_ml
-        else:
-            character_data.semen_point -= (
-                semen_ml - character_data.tem_extra_semen_point
+        extra = meters["extra_semen"]
+        if extra > semen_ml:
+            h_meters.set(
+                0,
+                extra_semen=extra - semen_ml,
+                semen=max(0, meters["semen"]),
             )
-            character_data.tem_extra_semen_point = 0
-        character_data.semen_point = max(0, character_data.semen_point)
+        else:
+            h_meters.set(
+                0,
+                semen=max(0, meters["semen"] - (semen_ml - extra)),
+                extra_semen=0,
+            )
 
         return semen_text, semen_ml
 
@@ -261,7 +266,6 @@ def update_semen_dirty(
     """
     talent = abilities.talent(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
 
     # 判断部位类型
     if part_type == 0:
@@ -272,109 +276,108 @@ def update_semen_dirty(
             return
         elif part_cid == 14 and not talent[111]:
             return
-        # 更新身体部位被射精污浊数据
-        now_semen_data = character_data.dirty.body_semen[part_cid]
     elif part_type == 1:
         # 检查该部位是否有服装
         if not len(wardrobe.of(character_id).cloth_wear[part_cid]):
             return
-        # 更新服装部位被射精污浊数据
-        now_semen_data = character_data.dirty.cloth_semen[part_cid]
     elif part_type == 2:
         # 检查该部位是否有服装
         if not len(wardrobe.of(character_id).cloth_locker_in_shower[part_cid]):
             return
-        now_semen_data = character_data.dirty.cloth_locker_semen[part_cid]
     else:
         # 宿舍衣柜（部位类型3）：检查该部位是否有服装
         if not wardrobe.of(character_id).cloth_locker_in_dormitory[part_cid]:
             return
-        now_semen_data = character_data.dirty.cloth_locker_semen[part_cid]
 
-    if (
-        part_type == 0
-        and semen_count > 0
-        and now_semen_data[3] == 0
-        and part_cid not in character_data.first_record.first_shoot_body_dict
-    ):
-        character_data.first_record.first_shoot_body_dict[part_cid] = [
-            game_time.now(),
-            list(character_data.position),
-        ]
-    # 该部位增加当前精液量
-    now_semen_data[1] += semen_count
-    now_semen_data[1] = max(now_semen_data[1], 0)
-    # 在精液量为正的情况下
-    if semen_count > 0:
-        # 该部位增加总精液量
-        now_semen_data[3] += semen_count
-    # 该部位更新精液等级
-    now_semen_data[2] = attr_calculation.get_semen_now_level(
-        now_semen_data[1], part_cid, part_type
-    )
-    # 记录射精部位
-    if update_shoot_position_flag:
+    with dirty.editing(character_id) as d:
         if part_type == 0:
-            character_data.h_state.shoot_position_body = part_cid
-            # 无意识中则记录部位精液
-            if (
-                handle_premise.handle_unconscious_flag_ge_1(character_id)
-                and part_cid
-                not in character_data.dirty.body_semen_in_unconscious
-            ):
-                character_data.dirty.body_semen_in_unconscious.append(part_cid)
+            now_semen_data = d.body_semen[part_cid]
+        elif part_type == 1:
+            now_semen_data = d.cloth_semen[part_cid]
         else:
-            character_data.h_state.shoot_position_cloth = part_cid
-            if (
-                handle_premise.handle_unconscious_flag_ge_1(character_id)
-                and part_cid
-                not in character_data.dirty.cloth_semen_in_unconscious
-            ):
-                character_data.dirty.cloth_semen_in_unconscious.append(part_cid)
-        # 重置部位插入
+            now_semen_data = d.cloth_locker_semen[part_cid]
+
+        if (
+            part_type == 0
+            and semen_count > 0
+            and now_semen_data[3] == 0
+            and not first_record.has_shoot_body(character_id, part_cid)
+        ):
+            with first_record.editing(character_id) as fr:
+                fr.first_shoot_body_dict[part_cid] = [
+                    game_time.now(),
+                    list(character_data.position),
+                ]
+        # 该部位增加当前精液量
+        now_semen_data[1] += semen_count
+        now_semen_data[1] = max(now_semen_data[1], 0)
+        # 在精液量为正的情况下
         if semen_count > 0:
-            pl_character_data.h_state.insert_position = -1
-            pl_character_data.h_state.pre_sex_position = (
-                pl_character_data.h_state.current_sex_position
-            )
-            pl_character_data.h_state.current_sex_position = -1
-            character_data.h_state.insert_position = -1
-    # A部位射精时，精液量大于1级，已经持有灌肠肛塞道具，且设置已开启，且A没有道具，则结算精液灌肠
-    if (
-        part_type == 0
-        and part_cid == 8
-        and now_semen_data[2] > 1
-        and normal_config.system_setting.base_setting[8]
-        and handle_premise.handle_have_clyster_tools(0)
-        and handle_premise.handle_target_a_empty(0)
-    ):
-        character_data.dirty.a_clean = 3
-        if now_semen_data[2] <= 3:
-            character_data.dirty.enema_capacity = 1
-        elif now_semen_data[2] <= 5:
-            character_data.dirty.enema_capacity = 2
-        elif now_semen_data[2] == 6:
-            character_data.dirty.enema_capacity = 3
-        elif now_semen_data[2] == 7:
-            character_data.dirty.enema_capacity = 4
-        else:
-            character_data.dirty.enema_capacity = 5
-        # 如果自己的身体插入部位是A，则清零
-        if character_data.h_state.insert_position == 8:
-            character_data.h_state.insert_position = -1
-        # 如果此时在群交中，且阴茎状态为肛交，则清零阴茎状态
-        if handle_premise.handle_group_sex_mode_on(0):
-            now_template_data = (
-                pl_character_data.h_state.group_sex_body_template_dict["A"]
-            )
-            behavior_id = now_template_data[0]["penis"][1]
-            # 如果没有阴茎状态，则不处理
-            if behavior_id == -1:
-                return
-            behavior_data = game_config.config_behavior[behavior_id]
-            # 如果为肛交，则清零阴茎状态
-            if "A" in behavior_data.tag:
-                now_template_data[0]["penis"] = [-1, -1]
+            # 该部位增加总精液量
+            now_semen_data[3] += semen_count
+        # 该部位更新精液等级
+        now_semen_data[2] = attr_calculation.get_semen_now_level(
+            now_semen_data[1], part_cid, part_type
+        )
+        # 记录射精部位
+        if update_shoot_position_flag:
+            if part_type == 0:
+                h_state.set(character_id, shoot_position_body=part_cid)
+                # 无意识中则记录部位精液
+                if (
+                    handle_premise.handle_unconscious_flag_ge_1(character_id)
+                    and part_cid not in d.body_semen_in_unconscious
+                ):
+                    d.body_semen_in_unconscious.append(part_cid)
+            else:
+                h_state.set(character_id, shoot_position_cloth=part_cid)
+                if (
+                    handle_premise.handle_unconscious_flag_ge_1(character_id)
+                    and part_cid not in d.cloth_semen_in_unconscious
+                ):
+                    d.cloth_semen_in_unconscious.append(part_cid)
+            # 重置部位插入
+            if semen_count > 0:
+                h_state.set(
+                    0,
+                    insert_position=-1,
+                    pre_sex_position=h_state.get(0, "current_sex_position"),
+                    current_sex_position=-1,
+                )
+                h_state.set(character_id, insert_position=-1)
+        # A部位射精时，精液量大于1级，已经持有灌肠肛塞道具，且设置已开启，且A没有道具，则结算精液灌肠
+        if (
+            part_type == 0
+            and part_cid == 8
+            and now_semen_data[2] > 1
+            and normal_config.system_setting.base_setting[8]
+            and handle_premise.handle_have_clyster_tools(0)
+            and handle_premise.handle_target_a_empty(0)
+        ):
+            d.a_clean = 3
+            if now_semen_data[2] <= 3:
+                d.enema_capacity = 1
+            elif now_semen_data[2] <= 5:
+                d.enema_capacity = 2
+            elif now_semen_data[2] == 6:
+                d.enema_capacity = 3
+            elif now_semen_data[2] == 7:
+                d.enema_capacity = 4
+            else:
+                d.enema_capacity = 5
+            # 如果自己的身体插入部位是A，则清零
+            if h_state.get(character_id, "insert_position") == 8:
+                h_state.set(character_id, insert_position=-1)
+            # 如果此时在群交中，且阴茎状态为肛交，则清零阴茎状态
+            if handle_premise.handle_group_sex_mode_on(0):
+                with h_state.editing(0) as pl_hs:
+                    now_template_data = pl_hs.group_sex_body_template_dict["A"]
+                    behavior_id = now_template_data[0]["penis"][1]
+                    if behavior_id == -1:
+                        return
+                    behavior_data = game_config.config_behavior[behavior_id]
+                    if "A" in behavior_data.tag:
+                        now_template_data[0]["penis"] = [-1, -1]
 
 
 def calculate_semen_flow(
@@ -389,7 +392,6 @@ def calculate_semen_flow(
     semen_count -- 精液量
     """
     if character_id != 0:
-        character_data: game_type.Character = cache.character_data[character_id]
         # 创建精液流通情况字典
         flow_targets: list[dict[str, int]] = []
         all_flow_dict = {
@@ -397,57 +399,51 @@ def calculate_semen_flow(
             "targets": flow_targets,
         }
 
-        # 判断部位类型，0为身体部位，1为服装部位
-        if part_type == 0:
-            # 判断是否满溢
-            max_volume = game_config.config_body_part[part_cid].max_volume
-            # 满溢时使用满溢流动表，且仅计算额外溢出来的部分
-            if character_data.dirty.body_semen[part_cid][1] > max_volume:
-                flow_list = game_config.config_body_part_full_flow[part_cid]
-                semen_count = (
-                    character_data.dirty.body_semen[part_cid][1] - max_volume
-                )
-            # 未满溢时使用正常流动表
+        with dirty.editing(character_id) as d:
+            # 判断部位类型，0为身体部位，1为服装部位
+            if part_type == 0:
+                max_volume = game_config.config_body_part[part_cid].max_volume
+                if d.body_semen[part_cid][1] > max_volume:
+                    flow_list = game_config.config_body_part_full_flow[part_cid]
+                    semen_count = d.body_semen[part_cid][1] - max_volume
+                else:
+                    flow_list = game_config.config_body_part_normal_flow[
+                        part_cid
+                    ]
             else:
-                flow_list = game_config.config_body_part_normal_flow[part_cid]
-        else:
-            # 判断是否满溢
-            max_volume = game_config.config_clothing_type[part_cid].max_volume
-            # 满溢时使用满溢流动表，且仅计算额外溢出来的部分
-            if character_data.dirty.cloth_semen[part_cid][1] > max_volume:
-                flow_list = game_config.config_cloth_part_full_flow[part_cid]
-                semen_count = (
-                    character_data.dirty.cloth_semen[part_cid][1] - max_volume
+                max_volume = game_config.config_clothing_type[
+                    part_cid
+                ].max_volume
+                if d.cloth_semen[part_cid][1] > max_volume:
+                    flow_list = game_config.config_cloth_part_full_flow[
+                        part_cid
+                    ]
+                    semen_count = d.cloth_semen[part_cid][1] - max_volume
+                else:
+                    flow_list = game_config.config_cloth_part_normal_flow[
+                        part_cid
+                    ]
+
+            # 遍历流动表，计算应该向各部位流动多少，添加到精液流通情况字典中
+            for flow_str in flow_list:
+                flow_type = flow_str[0]
+                flow_cid = int(flow_str[1:].split("-")[0])
+                flow_rate = int(flow_str[1:].split("-")[1])
+                now_flow_dict: dict[str, int] = {}
+                if flow_type == "B":
+                    now_flow_dict["type"] = 0
+                elif flow_type == "C":
+                    now_flow_dict["type"] = 1
+                elif flow_type == "E":
+                    now_flow_dict["type"] = 2
+                now_flow_dict["id"] = flow_cid
+                now_flow_dict["remaining_volume"] = max(
+                    1, int(semen_count * flow_rate / 100)
                 )
-            # 未满溢时使用正常流动表
-            else:
-                flow_list = game_config.config_cloth_part_normal_flow[part_cid]
+                flow_targets.append(now_flow_dict)
 
-        # 遍历流动表，计算应该向各部位流动多少，添加到精液流通情况字典中
-        for flow_str in flow_list:
-            # 获取流动类型，部位cid，流动比例
-            flow_type = flow_str[0]
-            flow_cid = int(flow_str[1:].split("-")[0])
-            flow_rate = int(flow_str[1:].split("-")[1])
-            # 创建流动情况字典
-            now_flow_dict: dict[str, int] = {}
-            # 判断流动类型，0为身体部位，1为服装部位，2为环境滴落
-            if flow_type == "B":
-                now_flow_dict["type"] = 0
-            elif flow_type == "C":
-                now_flow_dict["type"] = 1
-            elif flow_type == "E":
-                now_flow_dict["type"] = 2
-            # 添加流动目标部位cid和流动量
-            now_flow_dict["id"] = flow_cid
-            now_flow_dict["remaining_volume"] = max(
-                1, int(semen_count * flow_rate / 100)
-            )
-            # 添加到精液流通情况字典中
-            flow_targets.append(now_flow_dict)
-
-        # 添加到目标角色的精液流通情况列表中
-        character_data.dirty.semen_flow.append(all_flow_dict)
+            # 添加到目标角色的精液流通情况列表中
+            d.semen_flow.append(all_flow_dict)
 
 
 def ejaculation_flow(
@@ -477,7 +473,11 @@ def ejaculation_flow(
 
     if semen_count > 0:
         # 记录射精量
-        character_data.h_state.shoot_semen_amount += semen_count
+        h_state.set(
+            0,
+            shoot_semen_amount=h_state.get(0, "shoot_semen_amount")
+            + semen_count,
+        )
         # 群交中
         if handle_premise.handle_group_sex_mode_on(0):
             # 成就记录
@@ -495,7 +495,7 @@ def ejaculation_flow(
             # 成就统计
             achievement.add_entry("sleep_sex_record", 2)
         # 正常射精时
-        if not character_data.h_state.body_item[13][1]:
+        if not h_state.body_item_on(0, 13):
             # 射在体外无壳卵上
             if soft_egg_id >= 0:
                 from Script.System.Pregnancy_System import soft_egg_handle
@@ -506,7 +506,7 @@ def ejaculation_flow(
                 )
             # 在有目标对象时
             elif target_character_id > 0:
-                cache.shoot_position = part_cid
+                h_meters.set_shoot_position(part_cid)
                 # 更新被射精污浊数据
                 update_semen_dirty(
                     target_character_id, part_cid, part_type, semen_count
@@ -544,16 +544,18 @@ def ejaculation_flow(
                 now_text = character_data.name + semen_text
         # 戴着避孕套射精时
         else:
-            cache.shoot_position = 0
+            h_meters.set_shoot_position(0)
             # 将射精量转化为避孕套中的精液量
-            character_data.h_state.condom_count[0] += 1
-            character_data.h_state.condom_count[1] += semen_count
+            condom_cnt = h_state.get(0, "condom_count")
+            h_state.set(
+                0, condom_count=[condom_cnt[0] + 1, condom_cnt[1] + semen_count]
+            )
             # 存入用过的避孕套存量池
             from Script.System.Item_System import condom_handle
 
             condom_handle.add_used_condom(semen_count)
             # 去掉避孕套状态
-            character_data.h_state.body_item[13][1] = False
+            h_state.set_body_item(0, 13, False)
             # 获取射精文本
             now_text = _("在避孕套里") + semen_text
 
@@ -623,7 +625,7 @@ class Ejaculation_Panel:
             self.draw_choose_part()
         # 如果没有选择射精部位，则直接在当前阴茎位置射精
         elif not normal_config.system_setting.base_setting[3]:
-            now_position = target_data.h_state.insert_position
+            now_position = h_state.get(target_data.cid, "insert_position")
             if now_position != -1:
                 # 身体
                 if now_position < 20:
@@ -866,16 +868,14 @@ class Ejaculation_Panel:
         py_cmd.clr_cmd()
         # 更新阴茎插入部位
         character_data: game_type.Character = cache.character_data[0]
-        target_character_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
-        ]
+        target_id = character_data.target_character_id
         if part_type == 0:
-            character_data.h_state.insert_position = part_cid
-            target_character_data.h_state.insert_position = part_cid
+            h_state.set(0, insert_position=part_cid)
+            h_state.set(target_id, insert_position=part_cid)
             # 如果是深喉插入状态，则将部位改为食道射精
             if handle_premise.handle_last_cmd_deep_throat(0):
                 part_cid = 15
         else:
-            character_data.h_state.insert_position = part_cid + 20
-            target_character_data.h_state.insert_position = part_cid + 20
+            h_state.set(0, insert_position=part_cid + 20)
+            h_state.set(target_id, insert_position=part_cid + 20)
         ejaculation_flow(part_cid, part_type)

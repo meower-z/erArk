@@ -16,7 +16,7 @@ from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, action_info, entertainment
-from Script.Modules.domains import facility, flags, needs, roster
+from Script.Modules.domains import facility, flags, hypnosis, needs, roster
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -287,9 +287,9 @@ def choose_state_machine(character_id: int) -> int | None:
     null_target_set: set[str] = set()
 
     # 体控催眠的木头人不赋予新活动，原地等着（睡眠、时停等6异常时例外）
-    if character_data.hypnosis.blockhead and handle_premise.handle_normal_6(
-        character_id
-    ):
+    if hypnosis.of(character_id)[
+        "blockhead"
+    ] and handle_premise.handle_normal_6(character_id):
         return None
     # 如果该NPC在H模式
     if flags.get(character_id, "is_h"):

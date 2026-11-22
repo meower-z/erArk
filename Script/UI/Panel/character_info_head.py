@@ -8,8 +8,8 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Panel import hypnosis_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, action_info, flags, inventory
-from Script.Modules.domains import needs
+from Script.Modules.domains import abilities, action_info, flags, h_meters
+from Script.Modules.domains import h_state, hypnosis, inventory, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -422,24 +422,18 @@ def get_character_status_list(
     # 催眠状态时进行显示
     hypnosis_draw = draw.LeftDraw()
     hypnosis_text = ""
+    hyp_deg = hypnosis.degree(character_id)
     if normal_config.system_setting.draw_setting[4] and (
         handle_premise.handle_unconscious_hypnosis_flag(character_id)
-        or (
-            character_data.hypnosis.hypnosis_degree > 0
-            and normal_config.system_setting.draw_setting[4] == 2
-        )
+        or (hyp_deg > 0 and normal_config.system_setting.draw_setting[4] == 2)
     ):
         hypnosis_text = _(" <催眠")
         # 根据催眠程度来区分颜色
-        hypnosis_draw.style = hypnosis_panel.get_hypnosis_degree_color(
-            character_data.hypnosis.hypnosis_degree
-        )
+        hypnosis_draw.style = hypnosis_panel.get_hypnosis_degree_color(hyp_deg)
         # 是否显示具体数值
         if normal_config.system_setting.draw_setting[4] == 2:
             # 显示到小数点后一位
-            hypnosis_text += (
-                f"({round(character_data.hypnosis.hypnosis_degree, 1)}%)"
-            )
+            hypnosis_text += f"({round(hyp_deg, 1)}%)"
         # 是否显示催眠类型
         if handle_premise.handle_unconscious_hypnosis_flag(character_id):
             hypnosis_cid = flags.get(character_id, "unconscious_h") - 3
@@ -472,7 +466,7 @@ def get_character_status_list(
             ].introduce
         if handle_premise.handle_hypnosis_roleplay(character_id):
             hypnosis_text += _("(扮演")
-            for role_play_cid in character_data.hypnosis.roleplay:
+            for role_play_cid in hypnosis.roleplay(character_id):
                 role_play_name = game_config.config_roleplay[role_play_cid].name
                 hypnosis_text += f"-{role_play_name}"
             hypnosis_text += ")"
@@ -535,7 +529,7 @@ def get_character_status_list(
         skill_ability_lv = abilities.ability(0)[30]
         orgasm_edge_margin = skill_ability_lv * 3 - sum(
             value * value
-            for value in character_data.h_state.orgasm_edge_count.values()
+            for value in h_state.view(character_id).orgasm_edge_count.values()
         )
         if orgasm_edge_margin >= 3:
             orgasm_edge_text = _(" <寸止>")
@@ -704,15 +698,17 @@ class CharacterInfoHead:
 
         # 射精欲不为零时进行提示
         eja_text = ""
-        if character_id == 0 and character_data.eja_point > 0:
-            if character_data.eja_point <= 300:
-                eja_text = _(" <射精欲:低>")
-            elif character_data.eja_point <= 600:
-                eja_text = _(" <射精欲:中>")
-            elif character_data.eja_point <= 900:
-                eja_text = _(" <射精欲:高>")
-            else:
-                eja_text = _(" <射精欲:极>")
+        if character_id == 0:
+            eja_val = h_meters.of(0)["eja"]
+            if eja_val > 0:
+                if eja_val <= 300:
+                    eja_text = _(" <射精欲:低>")
+                elif eja_val <= 600:
+                    eja_text = _(" <射精欲:中>")
+                elif eja_val <= 900:
+                    eja_text = _(" <射精欲:高>")
+                else:
+                    eja_text = _(" <射精欲:极>")
 
         # 获取所有角色状态
         status_list, status_text_list = get_character_status_list(character_id)
@@ -779,13 +775,11 @@ class CharacterInfoHead:
             semen_point_draw = draw.InfoBarDraw()
             semen_point_draw.width = int(width / 7.5)
             semen_point_draw.scale = 1
+            meters = h_meters.of(character_id)
             semen_point_draw.set(
                 "SemenPointBar",
-                int(character_data.semen_point_max),
-                num.shown(
-                    character_data.semen_point
-                    + character_data.tem_extra_semen_point
-                ),
+                int(meters["semen_max"]),
+                num.shown(meters["semen"] + meters["extra_semen"]),
                 _("精液"),
                 tooltip=_("精液，进行射精时消耗"),
             )

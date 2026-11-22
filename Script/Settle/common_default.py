@@ -2,13 +2,8 @@
 
 from fractions import Fraction
 from types import FunctionType
-from Script.Design import (
-    character_handle,
-    map_handle,
-    attr_calculation,
-    handle_premise,
-    handle_ability,
-)
+from Script.Design import attr_calculation, character_handle, game_time
+from Script.Design import handle_ability, handle_premise, map_handle
 from Script.System.First_Record_System import first_record_handle
 from Script.Core import cache_control, constant, game_type, get_text, num
 from Script.Config import game_config, normal_config
@@ -17,9 +12,9 @@ from Script.UI.Panel import ejaculation_panel, system_setting
 
 import math
 import random
-from Script.Design import game_time
-from Script.Modules.domains import abilities, flags, history, modes, needs
-from Script.Modules.domains import player_ability, player_collection
+from Script.Modules.domains import abilities, dirty, first_record, flags
+from Script.Modules.domains import h_meters, h_state, history, hypnosis, modes
+from Script.Modules.domains import needs, player_ability, player_collection
 from Script.Modules.domains import playthrough, status
 
 _: FunctionType = get_text._
@@ -370,7 +365,6 @@ def chara_feel_state_adjust(
 
     ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
 
     from Script.Design import handle_talent
     from Script.System.Sex_System import drunk_sex_common
@@ -398,7 +392,7 @@ def chara_feel_state_adjust(
     if flags.get(character_id, "aromatherapy") == 4:
         final_adjust += 1
     # 催眠-敏感
-    if character_data.hypnosis.increase_body_sensitivity:
+    if hypnosis.get(character_id, "increase_body_sensitivity"):
         final_adjust += 2
     # V和W快感加成
     if state_id in [4, 7]:
@@ -407,12 +401,12 @@ def chara_feel_state_adjust(
             final_adjust += 1
         # 灌肠下会增加V和W快感
         if handle_premise.handle_enema(character_id):
-            final_adjust += character_data.dirty.enema_capacity * 0.2
+            final_adjust += dirty.enema_capacity(character_id) * 0.2
     # VAUW的姿势快感加成
     if state_id in [4, 5, 6, 7] and handle_premise.handle_dr_have_sex_position(
         character_id
     ):
-        now_position = character_data.h_state.current_sex_position
+        now_position = h_state.get(character_id, "current_sex_position")
         position_feel_adjust = game_config.config_sex_position_data[
             now_position
         ].pleasure_coefficient
@@ -424,10 +418,7 @@ def chara_feel_state_adjust(
             position_feel_adjust += 0.5
         final_adjust += position_feel_adjust
     # 子宫奸会大幅增加W快感
-    if (
-        state_id == 7
-        and pl_character_data.h_state.current_womb_sex_position == 2
-    ):
+    if state_id == 7 and h_state.get(0, "current_womb_sex_position") == 2:
         final_adjust += 2
     # 眼罩增加全部快感
     if handle_premise.handle_self_now_patch(character_id):
@@ -559,7 +550,10 @@ def chara_base_state_adjust(
         elif flags.get(character_id, "aromatherapy") == 4 and state_id == 12:
             final_adjust += 1
     # 催眠-敏感
-    if character_data.hypnosis.increase_body_sensitivity and state_id == 12:
+    if (
+        hypnosis.get(character_id, "increase_body_sensitivity")
+        and state_id == 12
+    ):
         final_adjust += 2
     # 群交中会因在场的其他干员人数进行调整
     if flags.get(
@@ -1140,9 +1134,9 @@ def base_chara_climix_common_settle(
             )
         # 否则根据之前的高潮程度来判断
         else:
-            pre_data = character_data.h_state.orgasm_level[
-                part_id
-            ]  # 记录里的前高潮程度
+            pre_data = h_state.orgasm_level(
+                character_id, part_id
+            )  # 记录里的前高潮程度
             if pre_data % 3 == 0:
                 degree = 0
             elif pre_data % 3 == 1:
@@ -1155,11 +1149,12 @@ def base_chara_climix_common_settle(
         second_behavior.character_get_second_behavior(
             character_id, second_behavior_id
         )
-        character_data.h_state.orgasm_level[part_id] += 1
+        with h_state.editing(character_id) as hs:
+            hs.orgasm_level[part_id] += 1
 
     # 触发射精面板
     if part_id == 3:
-        character_data.eja_point = 0
+        h_meters.set(character_id, eja=0)
         now_draw = ejaculation_panel.Ejaculation_Panel(width)
         now_draw.draw()
         line = draw.LineDraw("-", width)
@@ -1287,21 +1282,22 @@ def base_chara_experience_common_settle(
     if (
         experience_id == 42
         and final_character_id != 0
-        and 2 not in character_data.first_record.first_part_sex_dict
+        and not first_record.has_part_sex(final_character_id, 2)
     ):
-        character_data.first_record.first_part_sex_dict[2] = {
-            "id": 0,
-            "time": game_time.now(),
-            "place": list(character_data.position),
-            "posture": "",
-            "item": -1,
-        }
+        with first_record.editing(final_character_id) as fr:
+            fr.first_part_sex_dict[2] = {
+                "id": 0,
+                "time": game_time.now(),
+                "place": list(character_data.position),
+                "posture": "",
+                "item": -1,
+            }
     # 饮精绝顶经验结算时记录特殊履历：第一次饮精绝顶（附记精液来源：H中记当时的H模式，精液食物记食物名称）
-    elif (
-        experience_id == 111
-        and 7 not in character_data.first_record.first_special_record_dict
+    elif experience_id == 111 and not first_record.has_special(
+        final_character_id, 7
     ):
-        first_record_handle.record_first_special_record(
+        rec = first_record_handle.record_first_special_record
+        rec(
             final_character_id,
             7,
             first_record_handle.get_semen_source_text(final_character_id),

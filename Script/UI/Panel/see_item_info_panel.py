@@ -15,7 +15,8 @@ from Script.Core import (
 )
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import inventory, needs, player_ability, warehouse
+from Script.Modules.domains import h_meters, inventory, needs, player_ability
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -73,19 +74,17 @@ def use_drug(item_id: int) -> None:
         )
     # 精力恢复剂
     elif item_id == 11:
-        semen_add = int(pl_character_data.semen_point_max * (effect_add / 100))
-        pl_character_data.semen_point = min(
-            pl_character_data.semen_point + semen_add,
-            pl_character_data.semen_point_max,
-        )
+        semen_max = h_meters.of(0)["semen_max"]
+        semen_add = int(semen_max * (effect_add / 100))
+        h_meters.add(0, "semen", semen_add, max=semen_max)
         now_draw_text = _(
             "\n{0}使用了{1}，精液量增加了{2}，现在为{3}/{4}\n\n"
         ).format(
             pl_character_data.name,
             item_data.name,
             effect_add,
-            num.shown(pl_character_data.semen_point),
-            pl_character_data.semen_point_max,
+            num.shown(h_meters.of(0)["semen"]),
+            semen_max,
         )
     # 解酒药
     elif item_id == 12:

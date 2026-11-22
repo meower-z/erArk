@@ -12,8 +12,9 @@ from Script.Design import child_stage_gate, handle_talent, character_handle
 from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
 import copy
-from Script.Modules.domains import abilities, facility, needs
-from Script.Modules.domains import player_collection, playthrough, roster
+from Script.Modules.domains import abilities, facility, first_record, h_meters
+from Script.Modules.domains import hypnosis, needs, player_collection
+from Script.Modules.domains import playthrough, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -79,7 +80,6 @@ class New_Round_Handle:
             title_text = _("周目点数结算")
             title_draw = draw.TitleLineDraw(title_text, self.width)
             title_draw.draw()
-            pl_character_data = cache.character_data[0]
             self.round_point_all = 0
             self.round_point_cost = 0
             self.return_list = []
@@ -351,9 +351,8 @@ class New_Round_Handle:
             santy_extra_grouth = 100 + int(
                 (pl_needs["sanity_max"] - 100) * now_rate / 100
             )
-            semen_extra_grouth = 100 + int(
-                (pl_character_data.semen_point_max - 100) * now_rate / 100
-            )
+            semen_max = h_meters.of(0)["semen_max"]
+            semen_extra_grouth = 100 + int((semen_max - 100) * now_rate / 100)
             info_text = _(
                 "  属性上限成长：当前体力上限{0}(→{1})，气力上限{2}(→{3})，理智上限{4}(→{5})，精液上限{6}(→{7})\n\n"
             ).format(
@@ -363,7 +362,7 @@ class New_Round_Handle:
                 mp_extra_grouth,
                 pl_needs["sanity_max"],
                 santy_extra_grouth,
-                pl_character_data.semen_point_max,
+                semen_max,
                 semen_extra_grouth,
             )
             info_draw.text = info_text
@@ -690,7 +689,6 @@ class New_Round_Handle:
             return 0
         else:
             all_cost = 0
-            pl_character_data = cache.character_data[0]
             now_inherit_data_cid = (
                 game_config.config_new_round_inherit_type_data[2][
                     self.pl_extra_growth_count
@@ -712,7 +710,7 @@ class New_Round_Handle:
             all_cost += int(san_extra_grouth)
             # 精液上限成长
             semen_extra_grouth = (
-                (pl_character_data.semen_point_max - 100) * now_rate / 100
+                (h_meters.of(0)["semen_max"] - 100) * now_rate / 100
             )
             all_cost += int(semen_extra_grouth)
             return all_cost
@@ -874,6 +872,8 @@ class New_Round_Handle:
         dict -- 各项继承的档位、陷落干员id列表、新周目的世界设定，
         与博士此刻的体力、气力、理智上限（player_maxima），见 setup
         """
+        st, n0 = core.state(), needs.of(0)
+        chars = cache.character_data
         return {
             "pl_abi_and_exp_count": self.pl_abi_and_exp_count,
             "pl_originium_arts_count": self.pl_originium_arts_count,
@@ -887,16 +887,18 @@ class New_Round_Handle:
                 str(cid): value for cid, value in self.world_setting.items()
             },
             "player_maxima": {
-                stat: needs.of(0)[stat]
-                for stat in ("hit_max", "mana_max", "sanity_max")
+                **{k: n0[k] for k in ("hit_max", "mana_max", "sanity_max")},
+                "semen_max": h_meters.of(0)["semen_max"],
             },
-            "carried": playthrough.carry_for_new_round(core.state()),
-            "abilities": abilities.carry(
-                [0, *self.all_fall_chara_list], core.state()
-            ),
-            "carried_collection": player_collection.carry_for_new_round(
-                core.state()
-            ),
+            "npc_hypnosis": {
+                str(c): d
+                for c in self.all_fall_chara_list
+                if (d := hypnosis.degree(c))
+            },
+            "first_records": first_record.carry_for_new_round(chars, st),
+            "carried": playthrough.carry_for_new_round(st),
+            "abilities": abilities.carry([0, *self.all_fall_chara_list], st),
+            "carried_collection": player_collection.carry_for_new_round(st),
         }
 
     def start_new_round(self) -> None:
@@ -1021,14 +1023,9 @@ def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
     new_pl_character_data = cache.character_data[0]
     new_pl_character_data.name = old_pl_character_data.name
 
-    # 归档旧周目的性行为履历（old_pl_character_data已deepcopy，快照直接引用即可；此时周目数仍是旧周目数）
-    new_pl_character_data.first_record_history = getattr(
-        old_pl_character_data, "first_record_history", {}
-    )
-    if old_pl_character_data.first_record.has_any_record():
-        new_pl_character_data.first_record_history[playthrough.game_round()] = (
-            old_pl_character_data.first_record
-        )
+    # 归档旧周目的性行为履历（此时周目数仍是旧周目数）
+    carried_fr = cast(Mapping[str, object], inherit.get("first_records", {}))
+    first_record.restore_for_new_round(0, playthrough.game_round(), carried_fr)
 
     # 玩家能力与经验
     now_rate = _inherit_rate(1, _count(inherit, "pl_abi_and_exp_count"))
@@ -1060,10 +1057,8 @@ def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
     san_extra_grouth = (maxima["sanity_max"] - 100) * now_rate / 100
     needs.set(0, sanity_max=int(100 + san_extra_grouth))
     # 精液上限成长
-    semen_extra_grouth = (
-        (old_pl_character_data.semen_point_max - 100) * now_rate / 100
-    )
-    new_pl_character_data.semen_point_max = int(100 + semen_extra_grouth)
+    semen_extra_grouth = (maxima["semen_max"] - 100) * now_rate / 100
+    h_meters.set(0, semen_max=int(100 + semen_extra_grouth))
     info_draw_text += _("玩家属性上限成长继承完毕\n")
 
     # 玩家收藏品
@@ -1170,8 +1165,12 @@ def _inherit_npc_data(
 
             # 干员催眠进度
             now_rate = _inherit_rate(6, _count(inherit, "chara_hypnosis_count"))
-            new_npc_data.hypnosis.hypnosis_degree = int(
-                old_npc_data[now_id].hypnosis.hypnosis_degree * now_rate / 100
+            npc_hyp = cast(Mapping[str, float], inherit.get("npc_hypnosis", {}))
+            hypnosis.set(
+                now_id,
+                hypnosis_degree=int(
+                    npc_hyp.get(str(now_id), 0) * now_rate / 100
+                ),
             )
             if now_rate > 0:
                 info_draw_text += _(
@@ -1180,17 +1179,13 @@ def _inherit_npc_data(
             else:
                 info_draw_text += _("干员催眠进度未继承\n")
 
-        # 归档旧周目的性行为履历（陷落与未陷落分支都归档；old_npc_data已整体deepcopy，快照直接引用即可）
-        old_data = old_npc_data.get(now_id)
-        if old_data is not None:
-            new_data = cache.character_data[now_id]
-            new_data.first_record_history = getattr(
-                old_data, "first_record_history", {}
-            )
-            if old_data.first_record.has_any_record():
-                new_data.first_record_history[playthrough.game_round()] = (
-                    old_data.first_record
-                )
+        # 归档旧周目的性行为履历（陷落与未陷落分支都归档）
+        carried_fr = cast(
+            Mapping[str, object], inherit.get("first_records", {})
+        )
+        first_record.restore_for_new_round(
+            now_id, playthrough.game_round(), carried_fr
+        )
 
     info_draw.text = info_draw_text
     info_draw.draw()

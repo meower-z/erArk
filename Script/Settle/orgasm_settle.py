@@ -8,7 +8,8 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel, ejaculation_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement, status
+from Script.Modules.domains import abilities, achievement, first_record
+from Script.Modules.domains import h_meters, h_state, status
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -65,15 +66,12 @@ def orgasm_judge(
     skip_undure -- 是否跳过忍耐高潮的结算
     """
     # print()
-    character_data: game_type.Character = cache.character_data[character_id]
     # print(f"进入{character_data.name}的高潮结算")
 
     # 检测射精
     if character_id == 0:
-        if (
-            character_data.eja_point >= character_data.eja_point_max
-            or skip_undure
-        ):
+        meters = h_meters.of(0)
+        if meters["eja"] >= meters["eja_max"] or skip_undure:
             # 无精液高潮：基础精液与临时精液合计不超过2ml时，作为高潮而非射精结算
             if handle_premise.handle_pl_semen_le_2(0):
                 # 登记专用二段行为，不打开射精对象/部位选择面板，也不进行射精统计与目标效果
@@ -81,8 +79,8 @@ def orgasm_judge(
                     0, "p_no_semen_climax"
                 )
                 # 清空射精槽与忍住不射次数，避免同一次高潮被“停止忍耐”或普通H结束释放重复触发
-                character_data.eja_point = 0
-                character_data.h_state.endure_not_shot_count = 0
+                h_meters.set(0, eja=0)
+                h_state.set(0, endure_not_shot_count=0)
                 return
             else:
                 # 忍住射精
@@ -92,13 +90,14 @@ def orgasm_judge(
                     )
                     if endure_flag:
                         return
+                endure_cnt = h_state.get(0, "endure_not_shot_count")
                 # 普
-                if character_data.h_state.endure_not_shot_count == 0:
+                if endure_cnt == 0:
                     second_behavior.character_get_second_behavior(
                         0, "p_orgasm_small"
                     )
                 # 超强
-                elif character_data.h_state.endure_not_shot_count >= 4:
+                elif endure_cnt >= 4:
                     second_behavior.character_get_second_behavior(
                         0, "p_orgasm_strong"
                     )
@@ -107,7 +106,7 @@ def orgasm_judge(
                     second_behavior.character_get_second_behavior(
                         0, "p_orgasm_normal"
                     )
-            character_data.eja_point = 0
+            h_meters.set(0, eja=0)
             now_draw = ejaculation_panel.Ejaculation_Panel(width)
             now_draw.draw()
             line = draw.LineDraw("-", width)
@@ -117,62 +116,62 @@ def orgasm_judge(
         extra_orgasm_dict = {}  # 额外高潮结算字典
         un_count_orgasm_dict = {}  # 不计数高潮结算字典
         drink_semen_orgasm_flag = False  # 本次是否触发了饮精绝顶（素质31）
-        for state_id in game_config.config_character_state:
-            # 跳过非快感属性
-            if game_config.config_character_state[state_id].type != 0:
-                continue
-            orgasm = state_id
-            # 跳过射精槽
-            if orgasm == 3:
-                continue
-            # 10级前检测人物的各感度数据是否等于该人物的高潮记录程度数据
-            # now_data -- 当前高潮程度
-            # pre_data -- 记录里的前高潮程度
-            # un_count_data -- 不计数的本次临时高潮数
-            # extra_add -- 额外高潮次数
-            now_data = attr_calculation.get_status_level(
-                status.of(character_id)[orgasm]
-            )
-            pre_data = character_data.h_state.orgasm_level[orgasm]
-            un_count_data = 0
-            extra_add = 0
-            # 字典初始化
-            normal_orgasm_dict[orgasm] = 0
-            extra_orgasm_dict[orgasm] = 0
-            un_count_orgasm_dict[orgasm] = 0
-            # 饮精绝顶
-            if orgasm == 21 and abilities.talent(character_id)[31]:
-                if character_data.h_state.shoot_position_body in [2, 15]:
-                    un_count_data += 1
-                    # 仅登记标记，射精位置的重置延后到高潮结算之后，
-                    # 以免 orgasm_settle_in_second_behavior 内的饮精绝顶经验(111)判定读不到射精位置
-                    drink_semen_orgasm_flag = True
-            un_count_orgasm_dict[orgasm] = un_count_data
-            # 如果已经到了10级，则进行额外高潮结算
-            if pre_data >= 10:
-                character_data.h_state.extra_orgasm_feel.setdefault(orgasm, 0)
-                change_data.status_data.setdefault(orgasm, 0)
-                character_data.h_state.extra_orgasm_feel[orgasm] += int(
-                    change_data.status_data[orgasm]
+        with h_state.editing(character_id) as hs:
+            for state_id in game_config.config_character_state:
+                # 跳过非快感属性
+                if game_config.config_character_state[state_id].type != 0:
+                    continue
+                orgasm = state_id
+                # 跳过射精槽
+                if orgasm == 3:
+                    continue
+                # 10级前检测人物的各感度数据是否等于该人物的高潮记录程度数据
+                # now_data -- 当前高潮程度
+                # pre_data -- 记录里的前高潮程度
+                # un_count_data -- 不计数的本次临时高潮数
+                # extra_add -- 额外高潮次数
+                now_data = attr_calculation.get_status_level(
+                    status.of(character_id)[orgasm]
                 )
-                # 额外高潮次数
-                extra_count = pre_data - 10
-                # 基础阈值为2w，每次高潮则乘以0.9的若干次方
-                now_threshold = 20000 * (0.9**extra_count)
-                now_threshold = max(1000, now_threshold)
-                # 如果超过阈值，则进行额外高潮结算
-                extra_add = int(
-                    character_data.h_state.extra_orgasm_feel[orgasm]
-                    // now_threshold
-                )
-                now_data = pre_data + extra_add
-                character_data.h_state.extra_orgasm_feel[orgasm] -= int(
-                    extra_add * now_threshold
-                )
-                character_data.h_state.extra_orgasm_count += extra_add
-                extra_orgasm_dict[orgasm] = extra_add
-            # 计算普通高潮次数
-            normal_orgasm_dict[orgasm] = now_data - pre_data
+                pre_data = hs.orgasm_level[orgasm]
+                un_count_data = 0
+                extra_add = 0
+                # 字典初始化
+                normal_orgasm_dict[orgasm] = 0
+                extra_orgasm_dict[orgasm] = 0
+                un_count_orgasm_dict[orgasm] = 0
+                # 饮精绝顶
+                if orgasm == 21 and abilities.talent(character_id)[31]:
+                    if hs.shoot_position_body in [2, 15]:
+                        un_count_data += 1
+                        # 仅登记标记，射精位置的重置延后到高潮结算之后，
+                        # 以免 orgasm_settle_in_second_behavior 内的饮精绝顶经验(111)判定读不到射精位置
+                        drink_semen_orgasm_flag = True
+                un_count_orgasm_dict[orgasm] = un_count_data
+                # 如果已经到了10级，则进行额外高潮结算
+                if pre_data >= 10:
+                    hs.extra_orgasm_feel.setdefault(orgasm, 0)
+                    change_data.status_data.setdefault(orgasm, 0)
+                    hs.extra_orgasm_feel[orgasm] += int(
+                        change_data.status_data[orgasm]
+                    )
+                    # 额外高潮次数
+                    extra_count = pre_data - 10
+                    # 基础阈值为2w，每次高潮则乘以0.9的若干次方
+                    now_threshold = 20000 * (0.9**extra_count)
+                    now_threshold = max(1000, now_threshold)
+                    # 如果超过阈值，则进行额外高潮结算
+                    extra_add = int(
+                        hs.extra_orgasm_feel[orgasm] // now_threshold
+                    )
+                    now_data = pre_data + extra_add
+                    hs.extra_orgasm_feel[orgasm] -= int(
+                        extra_add * now_threshold
+                    )
+                    hs.extra_orgasm_count += extra_add
+                    extra_orgasm_dict[orgasm] = extra_add
+                # 计算普通高潮次数
+                normal_orgasm_dict[orgasm] = now_data - pre_data
         # 高潮结算函数
         orgasm_settle_in_second_behavior(
             character_id,
@@ -183,7 +182,7 @@ def orgasm_judge(
         )
         # 触发了饮精绝顶后重置射精位置，以免重复触发
         if drink_semen_orgasm_flag:
-            character_data.h_state.shoot_position_body = -1
+            h_state.set(character_id, shoot_position_body=-1)
 
 
 def orgasm_settle_in_second_behavior(
@@ -246,9 +245,9 @@ def orgasm_settle_in_second_behavior(
     )
     orgasm_edge_success_flag = False
     if orgasm_edge_flag:
-        candidate_orgasm_edge_count = (
-            character_data.h_state.orgasm_edge_count.copy()
-        )
+        candidate_orgasm_edge_count = h_state.view(
+            character_id
+        ).orgasm_edge_count.copy()
         crossed_part_count = 0
         for orgasm in supported_orgasm_list:
             normal_orgasm_data = normal_orgasm_dict.get(orgasm, 0)
@@ -271,16 +270,15 @@ def orgasm_settle_in_second_behavior(
         # 共同寸止失败时，将已累积的寸止计数并入本次不计数高潮一起解放，清空寸止计数并进入解放状态
         if not orgasm_edge_success_flag:
             release_orgasm_dict = un_count_orgasm_dict.copy()
-            for orgasm in supported_orgasm_list:
-                held_count = character_data.h_state.orgasm_edge_count.get(
-                    orgasm, 0
-                )
-                if held_count > 0:
-                    release_orgasm_dict[orgasm] = (
-                        release_orgasm_dict.get(orgasm, 0) + held_count
-                    )
-            character_data.h_state.orgasm_edge_count.clear()
-            character_data.h_state.orgasm_edge = 2
+            with h_state.editing(character_id) as hs:
+                for orgasm in supported_orgasm_list:
+                    held_count = hs.orgasm_edge_count.get(orgasm, 0)
+                    if held_count > 0:
+                        release_orgasm_dict[orgasm] = (
+                            release_orgasm_dict.get(orgasm, 0) + held_count
+                        )
+                hs.orgasm_edge_count.clear()
+                hs.orgasm_edge = 2
             un_count_orgasm_dict = release_orgasm_dict
 
     part_count = 0  # 部位高潮计数
@@ -290,9 +288,9 @@ def orgasm_settle_in_second_behavior(
         if orgasm == 3:
             continue
 
-        pre_data = character_data.h_state.orgasm_level[
-            orgasm
-        ]  # 记录里的前高潮程度
+        pre_data = h_state.orgasm_level(
+            character_id, orgasm
+        )  # 记录里的前高潮程度
 
         normal_orgasm_data = normal_orgasm_dict.get(orgasm, 0)
         extra_orgasm_data = extra_orgasm_dict.get(orgasm, 0)
@@ -314,22 +312,20 @@ def orgasm_settle_in_second_behavior(
             # 高潮次数统计
             climax_count = normal_orgasm_data + un_count_orgasm_data
             # 刷新记录
-            character_data.h_state.orgasm_level[orgasm] = now_data
-            # 时停状态下
-            if time_stop_flag:
-                # 绝顶计入时停计数
-                character_data.h_state.time_stop_orgasm_count.setdefault(
-                    orgasm, 0
-                )
-                character_data.h_state.time_stop_orgasm_count[
-                    orgasm
-                ] += climax_count
-                continue
-            # 如果本次共同寸止成功，则记录该部位并跳过普通结算
+            with h_state.editing(character_id) as hs:
+                hs.orgasm_level[orgasm] = now_data
+                # 时停状态下
+                if time_stop_flag:
+                    # 绝顶计入时停计数
+                    hs.time_stop_orgasm_count.setdefault(orgasm, 0)
+                    hs.time_stop_orgasm_count[orgasm] += climax_count
+                    continue
+                # 如果本次共同寸止成功，则记录该部位并跳过普通结算
+                if orgasm_edge_success_flag:
+                    # 绝顶计入寸止计数
+                    hs.orgasm_edge_count.setdefault(orgasm, 0)
+                    hs.orgasm_edge_count[orgasm] += climax_count
             if orgasm_edge_success_flag:
-                # 绝顶计入寸止计数
-                character_data.h_state.orgasm_edge_count.setdefault(orgasm, 0)
-                character_data.h_state.orgasm_edge_count[orgasm] += climax_count
                 # 赋予寸止行为
                 second_behavior_id = f"{part_dict[orgasm]}_orgasm_edge"
                 second_behavior.character_get_second_behavior(
@@ -439,7 +435,7 @@ def orgasm_settle_in_second_behavior(
 
     if part_count >= 1:
         # 饮精绝顶经验
-        if character_data.h_state.shoot_position_body in [2, 15]:
+        if h_state.get(character_id, "shoot_position_body") in [2, 15]:
             base_chara_experience_common_settle(
                 character_id, 111, change_data=change_data
             )
@@ -449,17 +445,16 @@ def orgasm_settle_in_second_behavior(
         second_behavior.character_get_second_behavior(
             character_id, second_behavior_id
         )
-        character_data.h_state.plural_orgasm_set = tem_orgasm_set.copy()
+        with h_state.editing(character_id) as hs:
+            hs.plural_orgasm_set = tem_orgasm_set.copy()
         # 记录该等级多重绝顶的初次达成（时间/地点/参与部位，各等级独立达成、不做高等级回填）
-        if (
-            part_count
-            not in character_data.first_record.first_plural_orgasm_dict
-        ):
-            character_data.first_record.first_plural_orgasm_dict[part_count] = [
-                game_time.now(),
-                list(character_data.position),
-                sorted(tem_orgasm_set),
-            ]
+        with first_record.editing(character_id) as fr:
+            if part_count not in fr.first_plural_orgasm_dict:
+                fr.first_plural_orgasm_dict[part_count] = [
+                    game_time.now(),
+                    list(character_data.position),
+                    sorted(tem_orgasm_set),
+                ]
         # 结算成就
         if part_count >= 2:
             achievement_panel.achievement_flow(_("绝顶"), 1221)
@@ -486,22 +481,22 @@ def release_orgasm_edge_now(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象（自身结算传根对象，交互对象或群交成员传其TargetChange）
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     # 未处于寸止累计时无需解放
-    if character_data.h_state.orgasm_edge == 0:
+    if h_state.get(character_id, "orgasm_edge") == 0:
         return
     # 变为寸止解放状态
-    character_data.h_state.orgasm_edge = 2
+    h_state.set(character_id, orgasm_edge=2)
     # 将寸止计数转化为绝顶
     orgasm_settle_in_second_behavior(
         character_id,
         change_data,
-        un_count_orgasm_dict=character_data.h_state.orgasm_edge_count,
+        un_count_orgasm_dict=h_state.view(character_id).orgasm_edge_count,
     )
     # 清零寸止计数
-    for state_id in game_config.config_character_state:
-        if game_config.config_character_state[state_id].type == 0:
-            character_data.h_state.orgasm_edge_count[state_id] = 0
+    with h_state.editing(character_id) as hs:
+        for state_id in game_config.config_character_state:
+            if game_config.config_character_state[state_id].type == 0:
+                hs.orgasm_edge_count[state_id] = 0
     # 立即结算刚解放绝顶的口上与数值，使其落在退出重置与退出奖励之前，同样按部位仅取最高绝顶程度触发口上
     second_behavior.second_behavior_effect(
         character_id, change_data, orgasm_settle_flag=True
@@ -561,7 +556,7 @@ def judge_orgasm_edge_success(
     # 目前的高潮寸止数量，同一部位寸止次数越多，成功率越低
     all_orgasm_edge_count = 0
     if not orgasm_edge_count:
-        orgasm_edge_count = character_data.h_state.orgasm_edge_count
+        orgasm_edge_count = h_state.view(character_id).orgasm_edge_count
     for __, value in orgasm_edge_count.items():
         all_orgasm_edge_count += value * value
     # 玩家的高潮寸止技巧

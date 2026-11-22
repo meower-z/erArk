@@ -11,7 +11,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, map_handle
-from Script.Modules.domains import abilities, flags
+from Script.Modules.domains import abilities, flags, h_state
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -52,7 +52,7 @@ class Sex_Position_Panel:
         character_data: game_type.Character = cache.character_data[0]
         pl_tec_lv = abilities.ability(0)[76]
         # 当前性交体位
-        now_sex_position_id = character_data.h_state.current_sex_position
+        now_sex_position_id = h_state.get(0, "current_sex_position")
         # 当前房间的家具等级
         now_position = character_data.position
         now_scene_str = map_handle.get_map_system_path_str_for_list(

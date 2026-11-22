@@ -17,11 +17,9 @@ from Script.Design import (
     basement,
 )
 from Script.Core import get_text, cache_control, game_type, constant
-from Script.Modules.domains import abilities, action_info, kitchen, maintenance
-from Script.Modules.domains import modes
-from Script.Modules.domains import production
+from Script.Modules.domains import abilities, action_info, economy, h_state
+from Script.Modules.domains import kitchen, maintenance, modes, production
 from Script.UI.Moudle import draw
-from Script.Modules.domains import economy
 from Script.Modules.domains import body_manage, inventory
 
 if TYPE_CHECKING:
@@ -3988,8 +3986,7 @@ def character_self_nipple_clamp_switch_chaneg(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.h_state.body_item[0][1]:
+    if h_state.body_item_on(character_id, 0):
         plan.set("behavior.behavior_id", constant.Behavior.NIPPLE_CLAMP_OFF)
         plan.set("state", constant.CharacterStatus.STATUS_NIPPLE_CLAMP_OFF)
     else:
@@ -4010,8 +4007,7 @@ def character_self_clit_clamp_switch_chaneg(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.h_state.body_item[1][1]:
+    if h_state.body_item_on(character_id, 1):
         plan.set("behavior.behavior_id", constant.Behavior.CLIT_CLAMP_OFF)
         plan.set("state", constant.CharacterStatus.STATUS_CLIT_CLAMP_OFF)
     else:
@@ -4032,8 +4028,7 @@ def character_self_v_vibrator_switch_chaneg(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.h_state.body_item[2][1]:
+    if h_state.body_item_on(character_id, 2):
         plan.set(
             "behavior.behavior_id", constant.Behavior.VIBRATOR_INSERTION_OFF
         )
@@ -4058,8 +4053,7 @@ def character_self_a_vibrator_switch_chaneg(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.h_state.body_item[3][1]:
+    if h_state.body_item_on(character_id, 3):
         plan.set(
             "behavior.behavior_id",
             constant.Behavior.VIBRATOR_INSERTION_ANAL_OFF,

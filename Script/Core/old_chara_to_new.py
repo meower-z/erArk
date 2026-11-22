@@ -11,8 +11,10 @@ from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, body_manage
-from Script.Modules.domains import commission, diplomacy, economy, education
-from Script.Modules.domains import flags, fridge, growth, inventory, library
+from Script.Modules.domains import commission, diplomacy, dirty, economy
+from Script.Modules.domains import education, first_record, flags, fridge
+from Script.Modules.domains import growth, h_meters, h_state, hypnosis
+from Script.Modules.domains import inventory, library
 from Script.Modules.domains import maintenance, medical, modes, needs
 from Script.Modules.domains import physical_exam, player_ability
 from Script.Modules.domains import player_collection, playthrough, power
@@ -571,13 +573,7 @@ def migrate_character_replacement(
 
         # ========== 2. 复制旧角色的动态数据 ==========
         # 数值属性
-        new_character.eja_point = old_character.eja_point
-        new_character.eja_point_max = old_character.eja_point_max
-        new_character.semen_point = old_character.semen_point
-        new_character.semen_point_max = old_character.semen_point_max
-        new_character.tem_extra_semen_point = (
-            old_character.tem_extra_semen_point
-        )
+        h_meters.copy_replaced(old_character, new_character, old_id, new_id)
         if not upgrade.copy_v0_needs(old_character, new_character):
             needs.set(new_id, **needs.of(old_id))
         if not upgrade.copy_pickled(
@@ -700,8 +696,8 @@ def migrate_character_replacement(
         )
         new_character.event = old_character.event
         inventory.replace_foods(new_id, inventory.foods(old_id))
-        new_character.dirty = old_character.dirty
-        new_character.h_state = old_character.h_state
+        dirty.copy_replaced(old_character, new_character, old_id, new_id)
+        h_state.copy_replaced(old_character, new_character, old_id, new_id)
         for domain in (flags, action_info, player_ability, player_collection):
             domain.copy_to(old_id, new_id)
         new_character.work = old_character.work
@@ -718,11 +714,7 @@ def migrate_character_replacement(
             vars(new_character)["child_growth"] = old_character.child_growth
         else:
             growth.copy_character(old_id, new_id)
-        new_character.hypnosis = (
-            old_character.hypnosis
-            if hasattr(old_character, "hypnosis")
-            else game_type.HYPNOSIS()
-        )
+        hypnosis.copy_replaced(old_character, new_character, old_id, new_id)
         new_character.author_flag = (
             old_character.author_flag
             if hasattr(old_character, "author_flag")
@@ -781,6 +773,7 @@ def migrate_character_replacement(
             new_character, "first_record_history", {}
         ).values():
             _remap_first_record_ids(history_record, old_to_new_id_map)
+        first_record.remap_ids(new_id, old_to_new_id_map)
 
         # h_state中的角色ID转换
         if hasattr(new_character, "h_state") and hasattr(
@@ -795,7 +788,6 @@ def migrate_character_replacement(
                     new_character.h_state.group_sex_body_template_dict[
                         old_to_new_id_map.get(oid, oid)
                     ] = value
-                # 转换group_sex_body_template_dict中serve_data的角色ID
                 for (
                     _char_id,
                     serve_data,
@@ -813,6 +805,7 @@ def migrate_character_replacement(
                             )
                             for oid in serve_data[0]
                         ]
+        h_state.remap_group_sex_ids(new_id, old_to_new_id_map)
 
         # ========== 3. 将新角色添加到character_data ==========
         character_data[new_id] = new_character
@@ -880,6 +873,7 @@ def migrate_character_replacement(
             character, "first_record_history", {}
         ).values():
             _remap_first_record_ids(history_record, old_to_new_id_map)
+        first_record.remap_ids(_char_id, old_to_new_id_map)
 
         # relationship中的角色ID
         if hasattr(character, "relationship"):
@@ -932,6 +926,7 @@ def migrate_character_replacement(
                             )
                             for oid in serve_data[0]
                         ]
+        h_state.remap_group_sex_ids(_char_id, old_to_new_id_map)
 
     # ========== 7. 更新内核角色域与玩家收藏品中的角色ID引用 ==========
     all_cids = tuple(character_data)
@@ -1216,17 +1211,6 @@ def update_character_config_data(value: game_type.Character) -> int:
         if key not in status.of(value.cid):
             status.set(value.cid, key, 0)
             update_count += 1
-        # 该状态的性高潮记录
-        if game_config.config_character_state[key].type == 0:
-            value.h_state.orgasm_level.setdefault(key, 0)
-            value.h_state.orgasm_count.setdefault(key, [0, 0])
-            value.h_state.orgasm_edge_count.setdefault(key, 0)
-            value.h_state.extra_orgasm_feel.setdefault(key, 0)
-            value.h_state.time_stop_orgasm_count.setdefault(key, 0)
-            # 对错误数据的修复
-            if value.h_state.orgasm_count[key] == 0:
-                value.h_state.orgasm_count[key] = [0, 0]
-                update_count += 1
     # 设置
     if len(value.chara_setting) != len(game_config.config_chara_setting):
         for key in game_config.config_chara_setting:
@@ -1257,17 +1241,6 @@ def update_character_config_data(value: game_type.Character) -> int:
         for key in game_config.config_assistant_services:
             if key not in value.assistant_services:
                 value.assistant_services[key] = 0
-                update_count += 1
-    # 身体道具
-    if len(value.h_state.body_item) != len(game_config.config_body_item):
-        # 如果body_item是列表而不是字典，则初始化为空字典
-        if isinstance(value.h_state.body_item, list):
-            value.h_state.body_item = {}
-        for key in game_config.config_body_item:
-            if key not in value.h_state.body_item:
-                item_id = game_config.config_body_item[key].item_id
-                item_name = game_config.config_item[item_id].name
-                value.h_state.body_item[key] = [item_name, False, None]
                 update_count += 1
     # 行为
     # 如果行为id是int的话
@@ -1314,13 +1287,6 @@ def update_character_config_data(value: game_type.Character) -> int:
         if behavior_id not in value.second_behavior:
             value.second_behavior[behavior_id] = 0
             update_count += 1
-            # print(f"debug 添加了二段行为: {behavior_id}")
-    # 角色扮演的跨版本数据结构处理，如果是int类型，则将其转化为列表
-    if isinstance(value.hypnosis.roleplay, int):
-        value.hypnosis.roleplay = []
-        update_count += 1
-        # print(f"debug 更新了角色扮演数据: {value.roleplay}")
-
     return update_count
 
 
@@ -1350,19 +1316,6 @@ def update_chara_cloth(
         cloth.cloth_locker_in_dormitory = (
             attr_calculation.get_cloth_locker_in_dormitory_zero()
         )
-    empty_dirty_data = attr_calculation.get_zero_dirty()
-    if len(value.dirty.cloth_semen) != len(game_config.config_clothing_type):
-        value.dirty.cloth_semen = empty_dirty_data.cloth_semen
-    if len(value.dirty.cloth_locker_semen) != len(
-        game_config.config_clothing_type
-    ):
-        value.dirty.cloth_locker_semen = empty_dirty_data.cloth_locker_semen
-    # 衣柜精液表换成自己的 dict 与列表：存档里它可能与穿着的表是同一个 dict 或共用列表，
-    # 上面两表都重置时也取自同一个 get_zero_dirty() 的结果，各部位共用同一个列表
-    value.dirty.cloth_locker_semen = {
-        clothing_type: list(semen_list)
-        for clothing_type, semen_list in value.dirty.cloth_locker_semen.items()
-    }
 
     wardrobe.put(value.cid, cloth)
     # 跳过玩家
@@ -1665,20 +1618,6 @@ def _replace_if_changed(
     return 1
 
 
-def _get_new_dirty() -> game_type.DIRTY:
-    """
-    新角色的污浊数据：身上、穿着与衣柜里的服装精液各用各的列表
-    Return arguments:
-    game_type.DIRTY -- 污浊数据
-    """
-    dirty_data = attr_calculation.get_dirty_reset(game_type.DIRTY())
-    dirty_data.cloth_locker_semen = {
-        clothing_type: list(semen_list)
-        for clothing_type, semen_list in dirty_data.cloth_semen.items()
-    }
-    return dirty_data
-
-
 def _clear_young_child_h_state(character: game_type.Character) -> int:
     """
     101/102阶段的孩子：污浊、H状态与身体道具、H相关标记与后续链、泌乳、妊娠与卵，换成新角色的默认值
@@ -1689,12 +1628,8 @@ def _clear_young_child_h_state(character: game_type.Character) -> int:
     功能: 妊娠数据里的生殖周期、出生时间、成长加速天数与奶量上限保留，其余换成默认值；只改孩子本人，不动母亲
     """
     talent = abilities.talent(character.cid)
-    count = _replace_if_changed(character, "dirty", _get_new_dirty())
-    count += _replace_if_changed(
-        character,
-        "h_state",
-        attr_calculation.get_h_state_reset(game_type.BODY_H_STATE()),
-    )
+    count = int(dirty.clear(character.cid))
+    count += int(h_state.clear(character.cid))
     for flag_name in YOUNG_CHILD_H_FLAG_TUPLE:
         default_val = flags.DEFAULTS[flag_name]
         if flags.get(character.cid, flag_name) != default_val:
@@ -1750,55 +1685,10 @@ def _clear_young_child_egg_index(
 def _remove_from_group_sex_template(
     character: game_type.Character, young_child_id_set: set
 ) -> int:
-    """
-    从角色的群交部位模板（A、B）里去掉101/102阶段的孩子：单部位的交互对象换回 [-1, -1]，阴茎侍奉的对象列表里删掉她们
-    Keyword arguments:
-    character -- 角色数据
-    young_child_id_set -- 101/102阶段孩子的角色id集合
-    Return arguments:
-    int -- 改动的项数
-    功能: 阴茎侍奉的对象删空时换回默认的 [[-1], -1]。
-    两部分分别检查结构：模板不是长度至少为2、第一项为字典的列表时整份跳过；
-          阴茎侍奉部分不是 [对象列表, 指令状态] 时只跳过这一部分，单部位已做的改动保留。
-          group_sex_panel.clear_character_data_in_group_sex_template 只改游戏缓存里玩家的模板、不检查结构，
-          而这里改的是还没载入缓存的存档里每个角色的模板，所以不用它
-    """
-    count = 0
-    for (
-        template_data
-    ) in character.h_state.group_sex_body_template_dict.values():
-        if (
-            not isinstance(template_data, list)
-            or len(template_data) < 2
-            or not isinstance(template_data[0], dict)
-        ):
-            continue
-        for part_key, part_value in template_data[0].items():
-            if (
-                isinstance(part_value, list)
-                and part_value
-                and part_value[0] in young_child_id_set
-            ):
-                template_data[0][part_key] = [-1, -1]
-                count += 1
-        serve_data = template_data[1]
-        if (
-            not isinstance(serve_data, list)
-            or len(serve_data) < 2
-            or not isinstance(serve_data[0], list)
-        ):
-            continue
-        serve_id_list = [
-            chara_id
-            for chara_id in serve_data[0]
-            if chara_id not in young_child_id_set
-        ]
-        if len(serve_id_list) != len(serve_data[0]):
-            template_data[1] = (
-                [serve_id_list, serve_data[1]] if serve_id_list else [[-1], -1]
-            )
-            count += 1
-    return count
+    """从角色的群交部位模板（A、B）里去掉101/102阶段的孩子"""
+    return h_state.remove_from_group_sex_template(
+        character.cid, young_child_id_set
+    )
 
 
 def _discard_id(container: object, young_child_id_set: set) -> int:
@@ -2023,9 +1913,7 @@ def _take_young_child_off_line(
         )
         count += _replace_if_changed(character, "dormitory", "")
         count += _replace_if_changed(character, "permanent_dormitory", "")
-        count += _replace_if_changed(
-            character, "hypnosis", game_type.HYPNOSIS()
-        )
+        count += int(hypnosis.reset(character_id))
         count += _replace_if_changed(
             character, "event", game_type.Chara_Event()
         )
@@ -2128,30 +2016,10 @@ def _find_young_child_session(
     if player is None or not young_child_id_set:
         return session
     if loaded_dict.get("group_sex_mode", modes.group_sex()):
-        in_template = False
-        for character in character_data.values():
-            for (
-                template_data
-            ) in character.h_state.group_sex_body_template_dict.values():
-                if (
-                    isinstance(template_data, list)
-                    and len(template_data) >= 2
-                    and isinstance(template_data[0], dict)
-                    and isinstance(template_data[1], list)
-                ):
-                    part_id_list = [
-                        part_value[0]
-                        for part_value in template_data[0].values()
-                        if isinstance(part_value, list) and part_value
-                    ]
-                    serve_id_list = (
-                        template_data[1][0]
-                        if template_data[1]
-                        and isinstance(template_data[1][0], list)
-                        else []
-                    )
-                    if young_child_id_set & set(part_id_list + serve_id_list):
-                        in_template = True
+        in_template = any(
+            h_state.group_sex_template_has(character.cid, young_child_id_set)
+            for character in character_data.values()
+        )
         child_in_scene_h = any(
             flags.get(chara_id, "is_h")
             and character_data[chara_id].position == player.position

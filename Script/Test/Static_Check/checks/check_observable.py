@@ -24,8 +24,8 @@ from collections.abc import Iterator
 
 from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
-from Script.Modules.domains import abilities, flags, history, modes, needs
-from Script.Modules.domains import player_ability, prison, roster, work
+from Script.Modules.domains import abilities, flags, h_state, history, modes
+from Script.Modules.domains import needs, player_ability, prison, roster, work
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
@@ -113,12 +113,9 @@ def _name(chara: object) -> str:
 
 
 def _hs(chara: object) -> game_type.BODY_H_STATE | None:
-    """
-    参数: chara 角色对象
-    返回值: 角色 h_state 对象，缺失时返回 None
-    功能: 缩短防御式 H 状态读取链。
-    """
-    return getattr(chara, "h_state", None)
+    """角色 h_state 视图，缺少有效 cid 时返回 None"""
+    cid = getattr(chara, "cid", None)
+    return h_state.view(cid) if isinstance(cid, int) else None
 
 
 def _behavior(chara: object) -> game_type.Behavior | None:

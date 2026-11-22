@@ -11,7 +11,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, h_state
 
 panel_info_data: dict[str, object] = {}
 
@@ -56,10 +56,7 @@ class Bondage_Panel:
 
             # 交互对象的捆绑状态
             target_character_id = character_data.target_character_id
-            target_character_data: game_type.Character = cache.character_data[
-                target_character_id
-            ]
-            now_bondage_id = target_character_data.h_state.bondage
+            now_bondage_id = h_state.get(target_character_id, "bondage")
             now_bondage_data = game_config.config_bondage[now_bondage_id]
 
             # 输出提示信息

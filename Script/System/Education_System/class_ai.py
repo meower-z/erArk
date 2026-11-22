@@ -45,13 +45,10 @@ import random
 from Script.Config import game_config
 from Script.Core import cache_control, game_type, constant
 from Script.Design import attr_calculation, game_time, map_handle
-from Script.System.Education_System import (
-    education_constant,
-    schedule_handle,
-)
-
+from Script.System.Education_System import education_constant, schedule_handle
 from typing import TYPE_CHECKING
-from Script.Modules.domains import flags, growth, modes, needs, roster, status
+from Script.Modules.domains import flags, growth, hypnosis, modes, needs
+from Script.Modules.domains import roster, status
 
 if TYPE_CHECKING:
     import datetime
@@ -136,7 +133,7 @@ def judge_teacher_available(teacher_id: int, classroom: str = "") -> bool:
             return False
     # 体控-木头人每轮被锁成原地等待（handle_npc_ai_in_h），玩家离开也不解除，这一节来不了。
     #    无意识 6 本不在 normal_5 / 6 里，得显式判（Plan 31 §3.4）；体控-逆推一开就进 H，已被上面的 is_h 挡掉
-    if teacher_data.hypnosis.blockhead:
+    if hypnosis.get(teacher_id, "blockhead"):
         return False
     if flags.get(teacher_id, "field_commission") or flags.get(
         teacher_id, "in_diplomatic_visit"

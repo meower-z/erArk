@@ -14,7 +14,7 @@ from Script.Core import (
 from Script.Core.num import Num
 from Script.Design import game_time
 from Script.Config import game_config
-from Script.Modules.domains import abilities, facility
+from Script.Modules.domains import abilities, facility, hypnosis
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -227,151 +227,6 @@ def get_time_zero() -> datetime.datetime:
     时间归为游戏初始时间
     """
     return game_time.now()
-
-
-def get_dirty_reset(old_dirty_data: game_type.DIRTY) -> game_type.DIRTY:
-    """
-    重置污浊情况
-    """
-    dirty_data = old_dirty_data
-
-    for body_part in game_config.config_body_part:
-        body_text = game_config.config_body_part[body_part].name
-        # 如果已经有数据，则将当前数据归0
-        if body_part in dirty_data.body_semen:
-            dirty_data.body_semen[body_part][1] = 0
-            dirty_data.body_semen[body_part][2] = 0
-        else:
-            now_list = [body_text, 0, 0, 0]
-            dirty_data.body_semen[body_part] = now_list
-
-    for clothing_type in game_config.config_clothing_type:
-        cloth_text = game_config.config_clothing_type[clothing_type].name
-        # 如果已经有数据，则将当前数据归0
-        if clothing_type in dirty_data.cloth_semen:
-            dirty_data.cloth_semen[clothing_type][1] = 0
-            dirty_data.cloth_semen[clothing_type][2] = 0
-        else:
-            now_list = [cloth_text, 0, 0, 0]
-            dirty_data.cloth_semen[clothing_type] = now_list
-
-    dirty_data.a_clean = 0
-    dirty_data.enema_capacity = 0
-    dirty_data.condom_decoration = {}
-
-    # 清零阴茎污浊
-    for dirty_key in dirty_data.penis_dirty_dict:
-        dirty_data.penis_dirty_dict[dirty_key] = False
-
-    return dirty_data
-
-
-def get_zero_dirty() -> game_type.DIRTY:
-    """
-    创建一个空污浊数据
-    """
-    dirty_data = game_type.DIRTY()
-
-    for body_part in game_config.config_body_part:
-        body_text = game_config.config_body_part[body_part].name
-        now_list = [body_text, 0, 0, 0]
-        dirty_data.body_semen[body_part] = now_list
-
-    for clothing_type in game_config.config_clothing_type:
-        cloth_text = game_config.config_clothing_type[clothing_type].name
-        now_list = [cloth_text, 0, 0, 0]
-        dirty_data.cloth_semen[clothing_type] = now_list
-        dirty_data.cloth_locker_semen[clothing_type] = now_list
-
-    dirty_data.a_clean = 0
-    dirty_data.enema_capacity = 0
-
-    # 清零阴茎污浊
-    for dirty_key in dirty_data.penis_dirty_dict:
-        dirty_data.penis_dirty_dict[dirty_key] = False
-
-    return dirty_data
-
-
-def get_h_state_reset(
-    old_h_state_data: game_type.BODY_H_STATE,
-) -> game_type.BODY_H_STATE:
-    """
-    重置H状态结构体
-    """
-    h_state_data = game_type.BODY_H_STATE()
-
-    # 身体道具
-    for i in game_config.config_body_item:
-        item_data = game_config.config_body_item[i]
-        item_id = item_data.item_id
-        item_name = game_config.config_item[item_id].name
-        h_state_data.body_item[i] = [item_name, False, None]
-        # 保留药物数据和非H下依然可用的装备数据
-        if item_data.type in {0, 2} and i in old_h_state_data.body_item:
-            h_state_data.body_item[i] = old_h_state_data.body_item[i]
-
-    # 部位绝顶
-    for state_id in game_config.config_character_state:
-        if game_config.config_character_state[state_id].type == 0:
-            body_part = state_id
-            h_state_data.orgasm_level[body_part] = 0
-            h_state_data.orgasm_count[body_part] = [0, 0]
-            h_state_data.orgasm_edge_count[body_part] = 0
-            h_state_data.extra_orgasm_feel[body_part] = 0
-            # 时停绝顶保留
-            if body_part in old_h_state_data.time_stop_orgasm_count:
-                h_state_data.time_stop_orgasm_count[body_part] = (
-                    old_h_state_data.time_stop_orgasm_count[body_part]
-                )
-            else:
-                h_state_data.time_stop_orgasm_count[body_part] = 0
-
-    # 群交字典
-    h_state_data.group_sex_body_template_dict = {
-        "A": [
-            {
-                "mouth": [-1, -1],
-                "L_hand": [-1, -1],
-                "R_hand": [-1, -1],
-                "penis": [-1, -1],
-                "anal": [-1, -1],
-            },
-            [[-1], -1],
-        ],
-        "B": [
-            {
-                "mouth": [-1, -1],
-                "L_hand": [-1, -1],
-                "R_hand": [-1, -1],
-                "penis": [-1, -1],
-                "anal": [-1, -1],
-            },
-            [[-1], -1],
-        ],
-    }
-
-    # 相关flag和计数
-    h_state_data.endure_not_shot_count = old_h_state_data.endure_not_shot_count
-    # 保留群交设置
-    h_state_data.group_sex_lock_flag = old_h_state_data.group_sex_lock_flag
-    h_state_data.all_group_sex_temple_run = (
-        old_h_state_data.all_group_sex_temple_run
-    )
-    h_state_data.npc_ai_type_in_group_sex = (
-        old_h_state_data.npc_ai_type_in_group_sex
-    )
-
-    return h_state_data
-
-
-def get_first_record_zero() -> game_type.FIRST_RECORD:
-    """
-    直接将初次状态记录结构体归0
-    """
-    first_record_data = game_type.FIRST_RECORD()
-
-    return first_record_data
 
 
 def get_cloth_zero() -> game_type.CLOTH:
@@ -955,7 +810,7 @@ def judge_require(
                 # 催眠进度代替信赖度
                 if hypnosis_replace_trust_flag:
                     if (
-                        character_data.hypnosis.hypnosis_degree
+                        hypnosis.of(character_id)["hypnosis_degree"]
                         >= judge_value / 2
                     ):
                         continue

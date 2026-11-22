@@ -9,7 +9,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_premise, map_handle
-from Script.Modules.domains import abilities, prison, wardrobe
+from Script.Modules.domains import abilities, dirty, prison, wardrobe
 from Script.UI.Moudle import draw
 
 cache: game_type.Cache = cache_control.cache
@@ -713,11 +713,11 @@ def clean_locker_semen(character_id: int) -> None:
     Return arguments:
     无
     """
-    character_data = cache.character_data[character_id]
-    empty_dirty_data = attr_calculation.get_zero_dirty()
-    character_data.dirty.cloth_locker_semen = (
-        empty_dirty_data.cloth_locker_semen
-    )
+    with dirty.editing(character_id) as d:
+        d.cloth_locker_semen = {
+            ct: [game_config.config_clothing_type[ct].name, 0, 0, 0]
+            for ct in game_config.config_clothing_type
+        }
 
 
 def locker_cloth_semen_to_wear_cloth_semen(character_id: int) -> None:
@@ -728,21 +728,21 @@ def locker_cloth_semen_to_wear_cloth_semen(character_id: int) -> None:
     Return arguments:
     无
     """
-    character_data = cache.character_data[character_id]
     semen_flag = False
-    for clothing_type in game_config.config_clothing_type:
-        now_add = character_data.dirty.cloth_locker_semen[clothing_type][1]
-        if now_add > 0:
-            character_data.dirty.cloth_semen[clothing_type][1] += now_add
-            # 更新当前精液等级
-            character_data.dirty.cloth_semen[clothing_type][2] = (
-                attr_calculation.get_semen_now_level(
-                    character_data.dirty.cloth_semen[clothing_type][1],
-                    clothing_type,
-                    1,
+    with dirty.editing(character_id) as d:
+        for clothing_type in game_config.config_clothing_type:
+            now_add = d.cloth_locker_semen.get(clothing_type, [0, 0])[1]
+            if now_add > 0:
+                d.cloth_semen[clothing_type][1] += now_add
+                # 更新当前精液等级
+                d.cloth_semen[clothing_type][2] = (
+                    attr_calculation.get_semen_now_level(
+                        d.cloth_semen[clothing_type][1],
+                        clothing_type,
+                        1,
+                    )
                 )
-            )
-            semen_flag = True
+                semen_flag = True
     if semen_flag:
         clean_locker_semen(character_id)
 

@@ -22,6 +22,7 @@ from Script.Design import (
     second_behavior,
     talk,
 )
+from Script.Modules.domains import dirty, h_state, hypnosis
 from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant, egg_handle
 from Script.Design import game_time
@@ -67,7 +68,6 @@ def get_external_ovulation_rate(
     """
     if orgasm_degree < 1:
         return 0.0
-    character_data: game_type.Character = cache.character_data[character_id]
     # 子宫超强绝顶必定排卵
     if orgasm_part == 7 and orgasm_degree >= 3:
         return 100.0
@@ -79,9 +79,9 @@ def get_external_ovulation_rate(
     elif orgasm_part == 7:
         now_rate *= pregnancy_constant.EXTERNAL_OVULATION_W_MULT
     # 排卵促进药与催眠强制排卵改为提升排卵概率
-    if character_data.h_state.body_item[10][1]:
+    if h_state.body_item_on(character_id, 10):
         now_rate *= pregnancy_constant.EXTERNAL_OVULATION_DRUG_MULT
-    if character_data.hypnosis.force_ovulation:
+    if hypnosis.get(character_id, "force_ovulation"):
         now_rate *= pregnancy_constant.EXTERNAL_OVULATION_DRUG_MULT
     return min(100.0, now_rate)
 
@@ -119,8 +119,8 @@ def judge_external_ovulation(
         return False
     # 命中：消耗本日机会，排卵促进药与催眠强制排卵效果随之结束
     pregnancy.update(character_id, external_ovulation_chance=False)
-    character_data.h_state.body_item[10][1] = False
-    character_data.hypnosis.force_ovulation = False
+    h_state.set_body_item(character_id, 10, False)
+    hypnosis.set(character_id, force_ovulation=False)
     second_behavior.character_get_second_behavior(
         character_id, pregnancy_constant.LAY_SOFT_EGG_SECOND_BEHAVIOR
     )
@@ -138,18 +138,20 @@ def lay_soft_egg(character_id: int) -> int:
     character_data: game_type.Character = cache.character_data[character_id]
     # 精液转移：子宫(7)与小穴(6)各转移八成，部位剩余量与等级同步刷新（累计量不动）
     transfer_count = 0
-    for part_cid in (6, 7):
-        now_semen_data = character_data.dirty.body_semen[part_cid]
-        move_count = int(
-            now_semen_data[1] * pregnancy_constant.SOFT_EGG_SEMEN_TRANSFER_RATE
-        )
-        if move_count <= 0:
-            continue
-        now_semen_data[1] = max(now_semen_data[1] - move_count, 0)
-        now_semen_data[2] = attr_calculation.get_semen_now_level(
-            now_semen_data[1], part_cid, 0
-        )
-        transfer_count += move_count
+    with dirty.editing(character_id) as d:
+        for part_cid in (6, 7):
+            now_semen_data = d.body_semen[part_cid]
+            move_count = int(
+                now_semen_data[1]
+                * pregnancy_constant.SOFT_EGG_SEMEN_TRANSFER_RATE
+            )
+            if move_count <= 0:
+                continue
+            now_semen_data[1] = max(now_semen_data[1] - move_count, 0)
+            now_semen_data[2] = attr_calculation.get_semen_now_level(
+                now_semen_data[1], part_cid, 0
+            )
+            transfer_count += move_count
     # 登记体外卵
     egg_id = player_collection.add_soft_egg(
         character_id,

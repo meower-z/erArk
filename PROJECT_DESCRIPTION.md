@@ -415,11 +415,11 @@ Script/
 关键字段：
 
 - 基本：`cid`, `name`, `nick_name*`, `sex`, `adv`, `dead`
-- 数值：`eja_point*`, `semen_point*`（体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒，以及疲劳、饥饿、尿意、乳汁都不在 Character 上，在 GameState 的角色键 `body.needs` 里，用 `needs.of(cid)` 读。妊娠状态与乳汁上限在角色键 `body.pregnancy` 里，用 `Modules/domains/pregnancy.py` 读写；养成状态在角色键 `growth.child` 里，用 `Modules/domains/growth.py` 读写）
+- 数值：体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒，以及疲劳、饥饿、尿意、乳汁不在 Character 上，在 GameState 的角色键 `body.needs` 里，用 `needs.of(cid)` 读；妊娠状态与乳汁上限在角色键 `body.pregnancy` 里，用 `Modules/domains/pregnancy.py` 读写；养成状态在角色键 `growth.child` 里，用 `Modules/domains/growth.py` 读写；射精槽、精液槽与它们的上限、临时额外精液量在角色键 `h.meters` 里，用 `h_meters.of(cid)` 读（全局射精位置在 `h.shoot_position`，用 `h_meters.shoot_position()` 读）
 - 成长/社交：`favorability`, `trust`（能力、经验、宝珠与素质表都不在 Character 上，在 GameState 的角色键 `abilities.ability`、`abilities.experience`、`abilities.juel`、`abilities.talent` 里，用 `abilities.ability(cid)` 等读写；状态值也不在 Character 上，在 GameState 的角色键 `body.status` 里，用 `status.of(cid)` 读）
 - 行为：`behavior`（Behavior 对象）, `second_behavior`, `must_settle/must_show_second_behavior_id_list`, `last_behavior_id_list`
 - 位置/住宿：`position`, `officeroom`, `dormitory`, `pre_dormitory`
-- 子对象：`event`, `target_character_id`, `first_record`, `dirty`, `h_state`, `work`, `entertainment`, `relationship`, `hypnosis`, `author_flag`（角色特殊状态标记、行动记录、妊娠与养成数据分别在 GameState 的角色键 `chara.flags`、`chara.action_info`、`body.pregnancy` 与 `growth.child` 里，由 `Modules/domains/flags.py`、`Modules/domains/action_info.py`、`Modules/domains/pregnancy.py` 与 `Modules/domains/growth.py` 读写；服装、道具、食物背包与身体管理不在 Character 上，在 GameState 的角色键 `body.cloth`、`inventory.items`、`inventory.food_bag`、`body.manage` 里，用 `wardrobe`、`inventory`、`body_manage` 模块读写）
+- 子对象：`event`, `target_character_id`, `work`, `entertainment`, `relationship`, `author_flag`（角色特殊状态标记、行动记录、妊娠与养成数据分别在 GameState 的角色键 `chara.flags`、`chara.action_info`、`body.pregnancy` 与 `growth.child` 里；服装、道具、食物背包与身体管理在 `body.cloth`、`inventory.items`、`inventory.food_bag`、`body.manage` 里，用 `wardrobe`、`inventory`、`body_manage` 模块读写；H 状态、污浊、催眠、初次记录与历史初次记录在 `h.state`、`body.dirty`、`mind.hypnosis`、`history.first_record`、`history.first_record_history`）
 - 玩家特有：`collection_character`（玩家能力状态与玩家收藏品分别在 GameState 的角色键 `player.ability` 与 `player.collection` 里，由 `Modules/domains/player_ability.py` 与 `Modules/domains/player_collection.py` 读写）
 - 其他：`birthday`, `text_color`, `talk_size`, `token_text`, `assistant_character_id`, `assistant_services`, `chara_setting`
 

@@ -16,7 +16,13 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import game_time
-from Script.Modules.domains import abilities, needs, pregnancy, wardrobe
+from Script.Modules.domains import (
+    abilities,
+    dirty as dirty_domain,
+    needs,
+    pregnancy,
+    wardrobe,
+)
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -144,7 +150,8 @@ def _dirty_tables(chara: object) -> list[tuple[str, dict]] | None:
     功能:
         统一取出身体/在穿服装/衣柜服装三张精液记录表
     """
-    dirty = getattr(chara, "dirty", None)
+    cid = getattr(chara, "cid", None)
+    dirty = dirty_domain.view(cid) if isinstance(cid, int) else None
     if dirty is None:
         return None
     tables = []
@@ -492,10 +499,8 @@ def check_condom_decoration() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_charas():
-        dirty = getattr(chara, "dirty", None)
+        dirty = dirty_domain.view(cid)
         cloth = wardrobe.of(cid)
-        if dirty is None:
-            continue
         deco = getattr(dirty, "condom_decoration", None)
         if deco is None:
             continue
@@ -554,7 +559,7 @@ def check_semen_table_shape() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验body_semen覆盖全部身体部位、cloth_semen覆盖全部服装部位（均被裸下标访问）；
-        cloth_locker_semen允许为空dict（新建角色经get_dirty_reset的合法基线，该函数不初始化此表），
+        cloth_locker_semen允许为空dict（新建角色在body.dirty中的合法基线，默认不初始化此表），
         但非空时必须覆盖全部服装部位——半初始化才是危险状态。每个条目是[名字,当前量,等级,总量]四元list。
         用>=而非==，容忍存档里的旧多余键
     """
@@ -653,9 +658,7 @@ def check_semen_non_negative() -> list[CheckFailure]:
                             [cid],
                         )
                     )
-        absorbed = getattr(
-            getattr(chara, "dirty", None), "absorbed_total_semen", 0
-        )
+        absorbed = dirty_domain.get(cid, "absorbed_total_semen")
         if not (_num(absorbed) and absorbed >= 0):
             failures.append(
                 make_failure(
@@ -760,59 +763,6 @@ def check_semen_level_sync() -> list[CheckFailure]:
     return failures
 
 
-@register_check("BODY-14", "衣柜精液与在穿精液不得共享list对象")
-def check_semen_list_aliasing() -> list[CheckFailure]:
-    """
-    参数:
-        无
-    返回值:
-        List[CheckFailure]: 失败记录列表（聚合为至多一条）
-    功能:
-        校验cloth_semen与cloth_locker_semen不是同一个dict，
-        且cloth_semen[t]与cloth_locker_semen[t]不是同一个list对象；
-        共享时改一处会静默连带改另一处。聚合上报避免刷屏
-    """
-    ct, _, _ = _get_config_sets()
-    if ct is None:
-        return []
-    hits = []
-    for cid, chara in _iter_charas():
-        dirty = getattr(chara, "dirty", None)
-        if dirty is None:
-            continue
-        cloth_semen = getattr(dirty, "cloth_semen", None)
-        locker_semen = getattr(dirty, "cloth_locker_semen", None)
-        if not isinstance(cloth_semen, dict) or not isinstance(
-            locker_semen, dict
-        ):
-            continue
-        if cloth_semen is locker_semen:
-            hits.append((cid, "整表同一对象"))
-            continue
-        for t in ct:
-            if (
-                t in cloth_semen
-                and t in locker_semen
-                and cloth_semen[t] is locker_semen[t]
-                and isinstance(cloth_semen[t], list)
-            ):
-                hits.append(
-                    (cid, f"槽位{t}共享同一list(id={id(cloth_semen[t])})")
-                )
-    if not hits:
-        return []
-    sample = "; ".join(f"cid={h[0]} {h[1]}" for h in hits[:5])
-    more = " ..." if len(hits) > 5 else ""
-    return [
-        make_failure(
-            "BODY-14",
-            "衣柜精液与在穿精液不得共享list对象",
-            f"[warning] 共{len(hits)}处发现别名共享: {sample}{more}",
-            sorted({h[0] for h in hits}),
-        )
-    ]
-
-
 @register_check("BODY-15", "兽部有精液则须有对应兽部素质")
 def check_beast_part_semen_talent() -> list[CheckFailure]:
     """
@@ -861,9 +811,7 @@ def check_enema_state() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        dirty = getattr(chara, "dirty", None)
-        if dirty is None:
-            continue
+        dirty = dirty_domain.view(cid)
         a_clean = getattr(dirty, "a_clean", 0)
         capacity = getattr(dirty, "enema_capacity", 0)
         ok = (
@@ -902,9 +850,7 @@ def check_semen_flow_shape() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_charas():
-        flow = getattr(getattr(chara, "dirty", None), "semen_flow", None)
-        if flow is None:
-            continue
+        flow: object = dirty_domain.view(cid).semen_flow
         if not isinstance(flow, list):
             failures.append(
                 make_failure(
@@ -969,12 +915,8 @@ def check_player_no_semen_flow() -> list[CheckFailure]:
         or 0 not in cache.character_data
     ):
         return []
-    flow = getattr(
-        getattr(cache.character_data[0], "dirty", None), "semen_flow", None
-    )
+    flow: object = dirty_domain.view(0).semen_flow
     if isinstance(flow, list) and flow == []:
-        return []
-    if flow is None:
         return []
     return [
         make_failure(
@@ -1002,16 +944,12 @@ def check_unconscious_semen_lists() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_charas():
-        dirty = getattr(chara, "dirty", None)
-        if dirty is None:
-            continue
+        dirty = dirty_domain.view(cid)
         for attr_name, key_set in (
             ("body_semen_in_unconscious", bp),
             ("cloth_semen_in_unconscious", ct),
         ):
-            lst = getattr(dirty, attr_name, None)
-            if lst is None:
-                continue
+            lst = getattr(dirty, attr_name)
             if not isinstance(lst, list) or any(
                 type(x) is not int for x in lst
             ):
@@ -1048,9 +986,7 @@ def check_penis_dirty_dict() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        d = getattr(getattr(chara, "dirty", None), "penis_dirty_dict", None)
-        if d is None:
-            continue
+        d: object = dirty_domain.view(cid).penis_dirty_dict
         ok = (
             isinstance(d, dict)
             and set(d) <= {"semen", "blood"}
@@ -1435,11 +1371,9 @@ def check_semen_flow_source_container() -> list[CheckFailure]:
         聚合统计上报，每次命中都对应一次真实的量凭空增加
     """
     hits = []
-    for cid, chara in _iter_charas():
-        dirty = getattr(chara, "dirty", None)
+    for cid, _chara in _iter_charas():
+        dirty = dirty_domain.view(cid)
         cloth = wardrobe.of(cid)
-        if dirty is None:
-            continue
         flow = getattr(dirty, "semen_flow", None)
         wear = getattr(cloth, "cloth_wear", None)
         if not isinstance(flow, list) or not isinstance(wear, dict):

@@ -20,7 +20,7 @@ from Script.Design import (
 )
 from Script.Modules.tk_ui import player_pick
 import math
-from Script.Modules.domains import action_info, needs
+from Script.Modules.domains import action_info, h_meters, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -128,11 +128,9 @@ class Sleep_Panel:
             / needs.of(self.pl_character_data.cid)["sanity_max"]
             / 0.15
         )  # 理智
+        pl_meters = h_meters.of(self.pl_character_data.cid)
         semen_recover_time = math.ceil(
-            (
-                self.pl_character_data.semen_point_max
-                - self.pl_character_data.semen_point
-            )
+            (pl_meters["semen_max"] - pl_meters["semen"])
             / needs.of(self.pl_character_data.cid)["sanity_max"]
             / 0.15
         )  # 精液

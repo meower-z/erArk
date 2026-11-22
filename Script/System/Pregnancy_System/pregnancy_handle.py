@@ -19,7 +19,6 @@ from Script.Design import (
     handle_premise,
     handle_talent,
     talk,
-    attr_calculation,
     second_behavior,
 )
 from Script.UI.Moudle import draw
@@ -27,6 +26,7 @@ from Script.UI.Panel import achievement_panel
 from Script.System.Pregnancy_System import born_event_panel
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import dirty, h_state, hypnosis
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.domains import abilities, growth, pregnancy, roster, work
 
@@ -294,8 +294,9 @@ def get_fertilization_rate(character_id: int) -> tuple[float, str]:
     pl_character_data: game_type.Character = cache.character_data[0]
     draw_text = ""
 
-    semen_count = character_data.dirty.body_semen[7][1]
-    semen_level = character_data.dirty.body_semen[7][2]
+    womb_semen = dirty.view(character_id).body_semen[7]
+    semen_count = womb_semen[1]
+    semen_level = womb_semen[2]
     now_reproduction = pregnancy.of(character_id).reproduction_period
     # 基础概率
     now_rate = get_base_fertilization_rate(semen_count, semen_level)
@@ -307,16 +308,17 @@ def get_fertilization_rate(character_id: int) -> tuple[float, str]:
     if fake_pregnancy_flag:
         now_rate = 0
     # 事前避孕药修正
-    if character_data.h_state.body_item[11][1]:
+    if h_state.body_item_on(character_id, 11):
         now_rate = 0
-        if game_time.judge_date_big_or_small(
-            game_time.now(), character_data.h_state.body_item[11][2]
+        pill_end = h_state.body_item_end(character_id, 11)
+        if pill_end is not None and game_time.judge_date_big_or_small(
+            game_time.now(), pill_end
         ):
-            character_data.h_state.body_item[11][1] = False
+            h_state.set_body_item(character_id, 11, False, pill_end)
     # 事后避孕药修正
-    if character_data.h_state.body_item[12][1]:
+    if h_state.body_item_on(character_id, 12):
         now_rate = 0
-        character_data.h_state.body_item[12][1] = False
+        h_state.set_body_item(character_id, 12, False)
     if semen_count > 0:
         # 如果假孕的话绘制信息
         if fake_pregnancy_flag:
@@ -335,21 +337,21 @@ def get_fertilization_rate(character_id: int) -> tuple[float, str]:
                 now_reproduction
             ].type
             # 排卵促进药（加成结果须写回now_rate，否则会被函数末尾的赋值覆盖）
-            if character_data.h_state.body_item[10][1]:
+            if h_state.body_item_on(character_id, 10):
                 new_rate = min(100, now_rate * 5)
                 draw_text += _(
                     "\n在排卵促进药的影响下，怀孕概率由{0}上升到了{1}%\n"
                 ).format(round(now_rate, 2), round(new_rate, 2))
                 now_rate = new_rate
-                character_data.h_state.body_item[10][1] = False
+                h_state.set_body_item(character_id, 10, False)
             # 排卵催眠
-            if character_data.hypnosis.force_ovulation:
+            if hypnosis.get(character_id, "force_ovulation"):
                 new_rate = min(100, now_rate * 5)
                 draw_text += _(
                     "\n在催眠-强制排卵的影响下，怀孕概率由{0}上升到了{1}%\n"
                 ).format(round(now_rate, 2), round(new_rate, 2))
                 now_rate = new_rate
-                character_data.hypnosis.force_ovulation = False
+                hypnosis.set(character_id, force_ovulation=False)
             # 浓厚精液
             if abilities.talent(0)[33] == 1:
                 new_rate = min(100, now_rate * 2)
@@ -389,18 +391,18 @@ def check_fertilization(character_id: int) -> int | None:
             preg.ovulation_flag = False
 
         # 多胎判定用的临时精液量：须在清空精液之前读取子宫精液量与等级
-        semen_total = character_data.dirty.body_semen[7][1]
-        semen_level = character_data.dirty.body_semen[7][2]
+        with dirty.editing(character_id) as d:
+            semen_total = d.body_semen[7][1]
+            semen_level = d.body_semen[7][2]
+            # 清空小穴和子宫的当前精液量
+            for body_cid in [6, 7]:
+                d.body_semen[body_cid][1] = 0
+                d.body_semen[body_cid][2] = 0
         multiple_birth_flag = egg_handle.is_multiple_birth(character_id)
 
-        # 清空小穴和子宫的当前精液量
-        for body_cid in [6, 7]:
-            character_data.dirty.body_semen[body_cid][1] = 0
-            character_data.dirty.body_semen[body_cid][2] = 0
-
         # 消除强制排卵状态
-        if character_data.hypnosis.force_ovulation:
-            character_data.hypnosis.force_ovulation = False
+        if hypnosis.get(character_id, "force_ovulation"):
+            hypnosis.set(character_id, force_ovulation=False)
         # 如果当前已受精，则跳过判断
         for i in {20, 21, 22}:
             if talent[i] == 1:
@@ -500,10 +502,9 @@ def check_fertilization(character_id: int) -> int | None:
                         character_id, "fertilization"
                     )
                 else:
-                    if (
-                        character_data.h_state.body_item[11][1]
-                        or character_data.h_state.body_item[12][1]
-                    ):
+                    if h_state.body_item_on(
+                        character_id, 11
+                    ) or h_state.body_item_on(character_id, 12):
                         draw_text += _("\n在避孕药的影响下——")
                     if multiple_birth_flag:
                         draw_text += _(
@@ -518,9 +519,8 @@ def check_fertilization(character_id: int) -> int | None:
                     )
 
             preg.fertilization_rate = 0
-        elif (
-            character_data.h_state.body_item[11][1]
-            or character_data.h_state.body_item[12][1]
+        elif h_state.body_item_on(character_id, 11) or h_state.body_item_on(
+            character_id, 12
         ):
             draw_text += _(
                 "\n在避孕药的影响下——\n精子在{0}的阴道中游荡，但未能成功受精\n"
@@ -598,9 +598,7 @@ def check_near_born(character_id: int) -> None:
         # 从受精开始算，满 PARTURIENT_DAY 天进入临盆，之后每天按概率生产
         if past_day >= pregnancy_constant.PARTURIENT_DAY:
             # 清零污浊结构体
-            character_data.dirty = attr_calculation.get_dirty_reset(
-                character_data.dirty
-            )
+            dirty.reset(character_id)
             # 赋予对应素质和二段行动
             abilities.talent(character_id).merge({21: 0, 22: 1})
             second_behavior.character_get_second_behavior(
@@ -929,7 +927,6 @@ def update_reproduction_period(character_id: int) -> None:
     刷新生理周期（每日0点逐角色调用），推进到排卵日时挂起本周期的排卵日事件待办标记
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     with pregnancy.editing(character_id) as preg:
         if preg.reproduction_period == 6:
             preg.reproduction_period = 0
@@ -943,8 +940,8 @@ def update_reproduction_period(character_id: int) -> None:
         elif preg.external_ovulation_chance:
             # 离开排卵日：体外排卵机会过期；无壳卵生的排卵促进药/催眠强制排卵效果只保留到当日机会结束
             preg.external_ovulation_chance = False
-            character_data.h_state.body_item[10][1] = False
-            character_data.hypnosis.force_ovulation = False
+            h_state.set_body_item(character_id, 10, False)
+            hypnosis.set(character_id, force_ovulation=False)
 
 
 def chest_grow(character_id: int, print_flag: bool = False) -> str:

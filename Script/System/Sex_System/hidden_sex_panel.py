@@ -15,7 +15,7 @@ from Script.Design import handle_premise, handle_ability, map_handle
 from Script.UI.Panel import dirty_panel
 
 import random
-from Script.Modules.domains import abilities, achievement, flags
+from Script.Modules.domains import abilities, achievement, flags, h_state
 
 panel_info_data: dict[str, object] = {}
 
@@ -57,11 +57,9 @@ def handle_hidden_sex_flow(
     settle_hidden_value_by_action(
         character_id, add_flag, now_duration, now_intensity
     )
-    # 获取角色数据
-    character_data = cache.character_data[character_id]
     # 判断是否被发现
     discovered = check_hidden_sex_discovery(
-        character_data.h_state.hidden_sex_discovery_dregree
+        h_state.get(character_id, "hidden_sex_discovery_dregree")
     )
     # 被发现时
     if discovered:
@@ -221,14 +219,13 @@ def settle_hidden_value_by_action(
         adjust = -2 / mode_adjust * abi_adjust
     # 最终值
     delta = int(now_duration * adjust)
-    # 将计算出的增益累加到角色隐蔽发现度上
-    character_data.h_state.hidden_sex_discovery_dregree += delta
-    # 最大为100，最小为0
-    character_data.h_state.hidden_sex_discovery_dregree = min(
-        character_data.h_state.hidden_sex_discovery_dregree, 100
+    # 将计算出的增益累加到角色隐蔽发现度上，最大为100，最小为0
+    new_degree = (
+        h_state.get(character_id, "hidden_sex_discovery_dregree") + delta
     )
-    character_data.h_state.hidden_sex_discovery_dregree = max(
-        character_data.h_state.hidden_sex_discovery_dregree, 0
+    h_state.set(
+        character_id,
+        hidden_sex_discovery_dregree=max(min(new_degree, 100), 0),
     )
 
 
@@ -372,7 +369,7 @@ class See_Hidden_Sex_InfoPanel:
         all_text = ""
 
         # 被发现文本
-        now_dregree = pl_character_data.h_state.hidden_sex_discovery_dregree
+        now_dregree = h_state.get(0, "hidden_sex_discovery_dregree")
         # 根据隐蔽程度数值判断状态文本
         __, hidden_text = get_hidden_level(now_dregree)
         all_text += _(" 隐蔽程度：{0}").format(hidden_text)
@@ -393,12 +390,12 @@ class See_Hidden_Sex_InfoPanel:
             chara_name = insert_character_data.name
             insert_text = " "
             # 显示阴茎位置的文本
-            now_position_index = insert_character_data.h_state.insert_position
+            now_position_index = h_state.get(insert_chara_id, "insert_position")
             position_text_cid = f"阴茎位置{str(now_position_index)}"
             insert_position_text = game_config.ui_text_data["h_state"][
                 position_text_cid
             ]
-            sex_position_index = pl_character_data.h_state.current_sex_position
+            sex_position_index = h_state.get(0, "current_sex_position")
             # 如果是阴茎位置为阴道、子宫、后穴、尿道，且博士有体位数据，则显示性交姿势
             if now_position_index in {6, 7, 8, 9} and sex_position_index != -1:
                 sex_position_text_cid = f"体位{str(sex_position_index)}"
@@ -586,7 +583,7 @@ class Select_Hidden_Sex_Mode_Panel:
             flags.set(0, is_h=False)
         if mode_id == 5:
             flags.set(0, is_h=True)
-            character_data.h_state.current_sex_position = -1
+            h_state.set(character_data.cid, current_sex_position=-1)
         # 携带模式下邀请之后以对面抱位直接插入所选部位；插入本身不判定实行值，邀请隐奸的判定没过时不会插入
         carry_behavior_id = ""
         if mode_id == 5:

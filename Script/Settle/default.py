@@ -1,6 +1,7 @@
 """行为结算效果函数（各自用 add_settle_behavior_effect 按 id 注册），以及部位交初体验的记录函数 record_first_part_sex"""
 
 import datetime
+from fractions import Fraction
 import random, math
 from types import FunctionType
 
@@ -28,8 +29,10 @@ from Script.Settle.common_default import base_chara_climix_common_settle
 from Script.Settle.common_default import base_chara_experience_common_settle
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import abilities, achievement, action_info, facility
-from Script.Modules.domains import flags, fridge, growth, history, inventory
+from Script.Modules.domains import abilities, achievement, action_info, dirty
+from Script.Modules.domains import facility, first_record, flags, fridge
+from Script.Modules.domains import growth, h_meters, h_state, history, hypnosis
+from Script.Modules.domains import inventory
 from Script.Modules.domains import maintenance, medical, modes, needs, official
 from Script.Modules.domains import physical_exam, player_ability
 from Script.Modules.domains import player_collection, pregnancy, prison, recruit
@@ -1016,18 +1019,24 @@ def handle_first_kiss(
 
     if abilities.talent(character_id)[4] == 1:
         abilities.talent(character_id)[4] = 0
-        character_data.first_record.first_kiss_id = target_data.cid
-        character_data.first_record.first_kiss_time = game_time.now()
-        character_data.first_record.first_kiss_place = character_data.position
+        first_record.set(
+            character_id,
+            first_kiss_id=target_data.cid,
+            first_kiss_time=game_time.now(),
+            first_kiss_place=character_data.position,
+        )
         # 初吻的二段结算
         second_behavior.character_get_second_behavior(
             character_id, "first_kiss"
         )
     if abilities.talent(target_data.cid)[4] == 1:
         abilities.talent(target_data.cid)[4] = 0
-        target_data.first_record.first_kiss_id = character_id
-        target_data.first_record.first_kiss_time = game_time.now()
-        target_data.first_record.first_kiss_place = target_data.position
+        first_record.set(
+            target_data.cid,
+            first_kiss_id=character_id,
+            first_kiss_time=game_time.now(),
+            first_kiss_place=target_data.position,
+        )
         # 初吻的二段结算
         second_behavior.character_get_second_behavior(
             target_data.cid, "first_kiss"
@@ -1067,20 +1076,24 @@ def handle_first_sex(
 
     if abilities.talent(character_id)[5] == 1 and (not item_flag):
         abilities.talent(character_id)[5] = 0
-        character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = game_time.now()
-        character_data.first_record.first_sex_place = character_data.position
-        character_data.first_record.first_sex_posture = instruct_name
+        first_record.set(
+            character_id,
+            first_sex_id=target_data.cid,
+            first_sex_time=game_time.now(),
+            first_sex_place=character_data.position,
+            first_sex_posture=instruct_name,
+        )
     if abilities.talent(target_data.cid)[0] == 1:
         abilities.talent(target_data.cid)[0] = 0
         # NPC的V破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
-        target_data.first_record.first_part_sex_dict[6] = {
-            "id": character_id,
-            "time": game_time.now(),
-            "place": list(target_data.position),
-            "posture": instruct_name,
-            "item": 1 if item_flag else -1,
-        }
+        with first_record.editing(target_data.cid) as fr:
+            fr.first_part_sex_dict[6] = {
+                "id": character_id,
+                "time": game_time.now(),
+                "place": list(target_data.position),
+                "posture": instruct_name,
+                "item": 1 if item_flag else -1,
+            }
         second_behavior.character_get_second_behavior(
             target_data.cid, "first_sex"
         )
@@ -1165,20 +1178,24 @@ def handle_first_a_sex(
 
     if abilities.talent(character_id)[5] == 1 and (not item_flag):
         abilities.talent(character_id)[5] = 0
-        character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = game_time.now()
-        character_data.first_record.first_sex_place = character_data.position
-        character_data.first_record.first_sex_posture = instruct_name
+        first_record.set(
+            character_id,
+            first_sex_id=target_data.cid,
+            first_sex_time=game_time.now(),
+            first_sex_place=character_data.position,
+            first_sex_posture=instruct_name,
+        )
     if abilities.talent(target_data.cid)[1] == 1:
         abilities.talent(target_data.cid)[1] = 0
         # NPC的A破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
-        target_data.first_record.first_part_sex_dict[8] = {
-            "id": character_id,
-            "time": game_time.now(),
-            "place": list(target_data.position),
-            "posture": instruct_name,
-            "item": 1 if item_flag else -1,
-        }
+        with first_record.editing(target_data.cid) as fr:
+            fr.first_part_sex_dict[8] = {
+                "id": character_id,
+                "time": game_time.now(),
+                "place": list(target_data.position),
+                "posture": instruct_name,
+                "item": 1 if item_flag else -1,
+            }
         if (not character_id) or (not target_data.cid):
             # a处女的二段结算
             second_behavior.character_get_second_behavior(
@@ -1222,20 +1239,24 @@ def handle_first_u_sex(
 
     if abilities.talent(character_id)[5] == 1:
         abilities.talent(character_id)[5] = 0
-        character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = game_time.now()
-        character_data.first_record.first_sex_place = character_data.position
-        character_data.first_record.first_sex_posture = instruct_name
+        first_record.set(
+            character_id,
+            first_sex_id=target_data.cid,
+            first_sex_time=game_time.now(),
+            first_sex_place=character_data.position,
+            first_sex_posture=instruct_name,
+        )
     if abilities.talent(target_data.cid)[2] == 1:
         abilities.talent(target_data.cid)[2] = 0
         # NPC的U破处记录进部位交初体验dict（若未来接入采尿器道具破处，item记2）
-        target_data.first_record.first_part_sex_dict[9] = {
-            "id": character_id,
-            "time": game_time.now(),
-            "place": list(target_data.position),
-            "posture": instruct_name,
-            "item": -1,
-        }
+        with first_record.editing(target_data.cid) as fr:
+            fr.first_part_sex_dict[9] = {
+                "id": character_id,
+                "time": game_time.now(),
+                "place": list(target_data.position),
+                "posture": instruct_name,
+                "item": -1,
+            }
         if (not character_id) or (not target_data.cid):
             # 处女的二段结算
             second_behavior.character_get_second_behavior(
@@ -1274,20 +1295,24 @@ def handle_first_w_sex(
 
     if abilities.talent(character_id)[5] == 1:
         abilities.talent(character_id)[5] = 0
-        character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = game_time.now()
-        character_data.first_record.first_sex_place = character_data.position
-        character_data.first_record.first_sex_posture = instruct_name
+        first_record.set(
+            character_id,
+            first_sex_id=target_data.cid,
+            first_sex_time=game_time.now(),
+            first_sex_place=character_data.position,
+            first_sex_posture=instruct_name,
+        )
     if abilities.talent(target_data.cid)[3] == 1:
         abilities.talent(target_data.cid)[3] = 0
         # NPC的W破处记录进部位交初体验dict（W破处无道具）
-        target_data.first_record.first_part_sex_dict[7] = {
-            "id": character_id,
-            "time": game_time.now(),
-            "place": list(target_data.position),
-            "posture": instruct_name,
-            "item": -1,
-        }
+        with first_record.editing(target_data.cid) as fr:
+            fr.first_part_sex_dict[7] = {
+                "id": character_id,
+                "time": game_time.now(),
+                "place": list(target_data.position),
+                "posture": instruct_name,
+                "item": -1,
+            }
         if (not character_id) or (not target_data.cid):
             # 处女的二段结算
             second_behavior.character_get_second_behavior(
@@ -1317,7 +1342,7 @@ def handle_day_first_meet_0(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.first_record.day_first_meet = 0
+    first_record.set(character_id, day_first_meet=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1342,7 +1367,7 @@ def handle_day_first_meet_1(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.first_record.day_first_meet = 1
+    first_record.set(character_id, day_first_meet=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1375,10 +1400,13 @@ def handle_first_kiss_to_penis(
 
     if talent[4] == 1:
         talent[4] = 0
-        target_data.first_record.first_kiss_id = character_id
-        target_data.first_record.first_kiss_time = game_time.now()
-        target_data.first_record.first_kiss_place = target_data.position
-        target_data.first_record.first_kiss_body_part = 1
+        first_record.set(
+            target_data.cid,
+            first_kiss_id=character_id,
+            first_kiss_time=game_time.now(),
+            first_kiss_place=target_data.position,
+            first_kiss_body_part=1,
+        )
         # 阴茎初吻的二段结算
         second_behavior.character_get_second_behavior(
             target_data.cid, "first_kiss_but_penis"
@@ -1534,11 +1562,16 @@ def handle_hypnosis_one(
     if cache.debug_mode:
         hypnosis_degree_grow = 999
     new_hypnosis_degree = (
-        target_character_data.hypnosis.hypnosis_degree + hypnosis_degree_grow
+        hypnosis.degree(character_data.target_character_id)
+        + hypnosis_degree_grow
     )
     # 赋予到角色数据
-    target_character_data.hypnosis.hypnosis_degree = min(
-        new_hypnosis_degree, hypnosis_panel.hypnosis_degree_limit_calculation()
+    hypnosis.set(
+        character_data.target_character_id,
+        hypnosis_degree=min(
+            new_hypnosis_degree,
+            hypnosis_panel.hypnosis_degree_limit_calculation(),
+        ),
     )
     target_change.hypnosis_degree += hypnosis_degree_grow
     # 判断催眠完成
@@ -1633,14 +1666,14 @@ def handle_hypnosis_all(
         # debug下催眠增加到999
         if cache.debug_mode:
             hypnosis_degree_grow = 999
-        new_hypnosis_degree = (
-            target_character_data.hypnosis.hypnosis_degree
-            + hypnosis_degree_grow
-        )
+        new_hypnosis_degree = hypnosis.degree(target_id) + hypnosis_degree_grow
         # 赋予到角色数据
-        target_character_data.hypnosis.hypnosis_degree = min(
-            new_hypnosis_degree,
-            hypnosis_panel.hypnosis_degree_limit_calculation(),
+        hypnosis.set(
+            target_id,
+            hypnosis_degree=min(
+                new_hypnosis_degree,
+                hypnosis_panel.hypnosis_degree_limit_calculation(),
+            ),
         )
         target_change.hypnosis_degree += hypnosis_degree_grow
         # 判断催眠完成
@@ -1724,7 +1757,7 @@ def handle_target_hypnosis_increase_body_sensitivity_on(
     if character_data.dead:
         return
     santi_down = 10
-    target_character_data.hypnosis.increase_body_sensitivity = True
+    hypnosis.set(target_character_data.cid, increase_body_sensitivity=True)
     needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
     player_ability.add_sanity_cost(character_id, santi_down)
@@ -1755,7 +1788,7 @@ def handle_target_hypnosis_increase_body_sensitivity_off(
     ]
     if character_data.dead:
         return
-    target_character_data.hypnosis.increase_body_sensitivity = False
+    hypnosis.set(target_character_data.cid, increase_body_sensitivity=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1817,7 +1850,7 @@ def handle_target_hypnosis_force_ovulation_on(
     if character_data.dead:
         return
     santi_down = 10
-    target_character_data.hypnosis.force_ovulation = True
+    hypnosis.set(target_character_data.cid, force_ovulation=True)
     from Script.System.Pregnancy_System import egg_handle
 
     with pregnancy.editing(character_data.target_character_id) as target_preg:
@@ -1855,7 +1888,7 @@ def handle_target_hypnosis_force_ovulation_off(
     ]
     if character_data.dead:
         return
-    target_character_data.hypnosis.force_ovulation = False
+    hypnosis.set(target_character_data.cid, force_ovulation=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1884,12 +1917,12 @@ def handle_target_hypnosis_blockhead_switch_change(
     if character_data.dead:
         return
     # 清理会复位全部行为模式标志，本次操作是开启还是关闭须以清理前的开关状态判断
-    target_in_blockhead = target_character_data.hypnosis.blockhead
+    target_in_blockhead = hypnosis.get(target_character_data.cid, "blockhead")
     hypnosis_state.clear_hypnosis_behavior_mode(
         character_data.target_character_id
     )
     if not target_in_blockhead:
-        target_character_data.hypnosis.blockhead = True
+        hypnosis.set(target_character_data.cid, blockhead=True)
         flags.set(target_character_data.cid, unconscious_h=6)
         santi_down = 10
         needs.add(character_id, "sanity", -santi_down, min=0)
@@ -1922,8 +1955,8 @@ def handle_target_hypnosis_blockhead_off(
     ]
     if character_data.dead:
         return
-    if target_character_data.hypnosis.blockhead:
-        target_character_data.hypnosis.blockhead = False
+    if hypnosis.get(target_character_data.cid, "blockhead"):
+        hypnosis.set(target_character_data.cid, blockhead=False)
         flags.set(target_character_data.cid, unconscious_h=0)
 
 
@@ -1953,13 +1986,13 @@ def handle_target_hypnosis_active_h_switch_change(
     if character_data.dead:
         return
     # 清理会复位全部行为模式标志，本次操作是开启还是关闭须以清理前的开关状态判断
-    target_in_active_h = target_character_data.hypnosis.active_h
+    target_in_active_h = hypnosis.get(target_character_data.cid, "active_h")
     hypnosis_state.clear_hypnosis_behavior_mode(
         character_data.target_character_id
     )
     if not target_in_active_h:
-        target_character_data.hypnosis.active_h = True
-        target_character_data.h_state.npc_active_h = True
+        hypnosis.set(target_character_data.cid, active_h=True)
+        h_state.set(target_character_data.cid, npc_active_h=True)
         flags.set(target_character_data.cid, unconscious_h=6)
         santi_down = 10
         needs.add(character_id, "sanity", -santi_down, min=0)
@@ -1993,9 +2026,9 @@ def handle_target_hypnosis_active_h_off(
     ]
     if character_data.dead:
         return
-    if target_character_data.hypnosis.active_h:
-        target_character_data.hypnosis.active_h = False
-        target_character_data.h_state.npc_active_h = False
+    if hypnosis.get(target_character_data.cid, "active_h"):
+        hypnosis.set(target_character_data.cid, active_h=False)
+        h_state.set(target_character_data.cid, npc_active_h=False)
         flags.set(target_character_data.cid, unconscious_h=0)
 
 
@@ -2024,10 +2057,10 @@ def handle_target_hypnosis_pain_as_pleasure_switch_change(
     ]
     if character_data.dead:
         return
-    if target_character_data.hypnosis.pain_as_pleasure:
-        target_character_data.hypnosis.pain_as_pleasure = False
+    if hypnosis.get(target_character_data.cid, "pain_as_pleasure"):
+        hypnosis.set(target_character_data.cid, pain_as_pleasure=False)
     else:
-        target_character_data.hypnosis.pain_as_pleasure = True
+        hypnosis.set(target_character_data.cid, pain_as_pleasure=True)
         santi_down = 10
         needs.add(character_id, "sanity", -santi_down, min=0)
         change_data.sanity_point -= santi_down
@@ -2059,7 +2092,7 @@ def handle_target_hypnosis_pain_as_pleasure_off(
     ]
     if character_data.dead:
         return
-    target_character_data.hypnosis.pain_as_pleasure = False
+    hypnosis.set(target_character_data.cid, pain_as_pleasure=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2086,9 +2119,10 @@ def handle_time_stop_on(
         chara_data = cache.character_data[chara_id]
         flags.set(chara_data.cid, unconscious_h=3)
         # 重置时停中的角色的时停高潮计数
-        for state_id in game_config.config_character_state:
-            if game_config.config_character_state[state_id].type == 0:
-                chara_data.h_state.time_stop_orgasm_count[state_id] = 0
+        with h_state.editing(chara_id) as hs:
+            for state_id in game_config.config_character_state:
+                if game_config.config_character_state[state_id].type == 0:
+                    hs.time_stop_orgasm_count[state_id] = 0
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2239,7 +2273,7 @@ def handle_npc_active_h_on(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.h_state.npc_active_h = True
+    h_state.set(character_id, npc_active_h=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2264,7 +2298,7 @@ def handle_npc_active_h_off(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.h_state.npc_active_h = False
+    h_state.set(character_id, npc_active_h=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2292,7 +2326,7 @@ def handle_target_npc_active_h_on(
     ]
     if character_data.dead:
         return
-    target_character_data.h_state.npc_active_h = True
+    h_state.set(target_character_data.cid, npc_active_h=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2320,7 +2354,7 @@ def handle_target_npc_active_h_off(
     ]
     if character_data.dead:
         return
-    target_character_data.h_state.npc_active_h = False
+    h_state.set(target_character_data.cid, npc_active_h=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2342,8 +2376,7 @@ def handle_pl_just_shoot_on(
     """
     if not add_time:
         return
-    pl_character_data: game_type.Character = cache.character_data[0]
-    pl_character_data.h_state.just_shoot = 1
+    h_state.set(0, just_shoot=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2365,8 +2398,7 @@ def handle_pl_just_shoot_off(
     """
     if not add_time:
         return
-    pl_character_data: game_type.Character = cache.character_data[0]
-    pl_character_data.h_state.just_shoot = 0
+    h_state.set(0, just_shoot=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2388,8 +2420,7 @@ def handle_pl_condom_use_reset(
     """
     if not add_time:
         return
-    pl_character_data: game_type.Character = cache.character_data[0]
-    pl_character_data.h_state.condom_count = [0, 0]
+    h_state.set(0, condom_count=[0, 0])
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2411,8 +2442,7 @@ def handle_self_condom_info_show_flag_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.h_state.condom_info_show_flag = True
+    h_state.set(character_id, condom_info_show_flag=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2491,11 +2521,11 @@ def handle_self_orgasm_edge_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.h_state.orgasm_edge = 1
-    for state_id in game_config.config_character_state:
-        if game_config.config_character_state[state_id].type == 0:
-            character_data.h_state.orgasm_edge_count[state_id] = 0
+    with h_state.editing(character_id) as hs:
+        hs.orgasm_edge = 1
+        for state_id in game_config.config_character_state:
+            if game_config.config_character_state[state_id].type == 0:
+                hs.orgasm_edge_count[state_id] = 0
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2517,8 +2547,7 @@ def handle_self_orgasm_edge_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.h_state.orgasm_edge = 0
+    h_state.set(character_id, orgasm_edge=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2590,8 +2619,7 @@ def handle_all_group_sex_temple_run_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.all_group_sex_temple_run = True
+    h_state.set(0, all_group_sex_temple_run=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2613,8 +2641,7 @@ def handle_all_group_sex_temple_run_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.all_group_sex_temple_run = False
+    h_state.set(0, all_group_sex_temple_run=False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2680,12 +2707,10 @@ def handle_clear_group_sex_template(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.h_state.group_sex_body_template_dict = (
-        attr_calculation.get_h_state_reset(
-            character_data.h_state
-        ).group_sex_body_template_dict
-    )
+    with h_state.editing(character_id) as hs:
+        hs.group_sex_body_template_dict = (
+            game_type.BODY_H_STATE().group_sex_body_template_dict
+        )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3734,7 +3759,7 @@ def handle_target_add_small_p_feel(
         abilities.ability(target_data.cid)[3]
     )
     now_add_lust *= adjust
-    target_data.eja_point += num.exact(now_add_lust)
+    h_meters.add(target_data.cid, "eja", num.exact(now_add_lust))
     action_info.set(target_data.cid, "last_eaj_add_time", now_time)
 
 
@@ -4313,9 +4338,11 @@ def handle_add_small_p_feel(
     if character_data.dead:
         return
     now_lust_multiple = 10
-    now_add_lust = add_time + now_lust_multiple + character_data.eja_point * 0.4
+    now_add_lust = (
+        add_time + now_lust_multiple + h_meters.of(character_id)["eja"] * 0.4
+    )
     now_add_lust = int(now_add_lust)
-    character_data.eja_point += now_add_lust
+    h_meters.add(character_id, "eja", now_add_lust)
     change_data.eja_point += now_add_lust
     action_info.set(character_id, "last_eaj_add_time", now_time)
 
@@ -4703,10 +4730,7 @@ def handle_dirty_reset(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.dirty = attr_calculation.get_dirty_reset(
-        character_data.dirty
-    )
+    dirty.reset(character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -4979,13 +5003,12 @@ def handle_self_h_state_reset(
 
     character_data: game_type.Character = cache.character_data[character_id]
     # H状态数据归零
-    character_data.h_state = attr_calculation.get_h_state_reset(
-        character_data.h_state
-    )
+    h_state.reset(character_id)
     # 清零阴茎污浊
-    character_data.dirty.penis_dirty_dict["semen"] = False
+    with dirty.editing(character_id) as d:
+        d.penis_dirty_dict["semen"] = False
     # 清零阴茎位置
-    character_data.h_state.insert_position = -1
+    h_state.set(character_id, insert_position=-1)
     # 清零自慰状态
     flags.set(character_id, masturebate=0)
     flags.set(character_id, npc_masturebate_for_player=False)
@@ -5000,12 +5023,12 @@ def handle_self_h_state_reset(
     # 清零玩具档位
     flags.set(character_id, sex_toy_level=0)
     # 记录高潮进度
-    for state_id in game_config.config_character_state:
-        if game_config.config_character_state[state_id].type == 0:
-            now_data = attr_calculation.get_status_level(
-                num.whole(status.of(character_id)[state_id])
-            )
-            character_data.h_state.orgasm_level[state_id] = now_data
+    with h_state.editing(character_id) as hs:
+        for state_id in game_config.config_character_state:
+            if game_config.config_character_state[state_id].type == 0:
+                hs.orgasm_level[state_id] = attr_calculation.get_status_level(
+                    num.whole(status.of(character_id)[state_id])
+                )
     # 清零H相关二段状态
     for (
         second_behavior_id,
@@ -5080,16 +5103,17 @@ def handle_update_orgasm_level(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    for state_id in game_config.config_character_state:
-        if game_config.config_character_state[state_id].type == 0:
-            now_data = attr_calculation.get_status_level(
-                num.whole(status.of(character_id)[state_id])
-            )
-            character_data.h_state.orgasm_level[state_id] = now_data
-            now_data = attr_calculation.get_status_level(
-                num.whole(status.of(target_data.cid)[state_id])
-            )
-            target_data.h_state.orgasm_level[state_id] = now_data
+    with h_state.editing(character_id) as hs, h_state.editing(
+        target_data.cid
+    ) as ths:
+        for state_id in game_config.config_character_state:
+            if game_config.config_character_state[state_id].type == 0:
+                hs.orgasm_level[state_id] = attr_calculation.get_status_level(
+                    num.whole(status.of(character_id)[state_id])
+                )
+                ths.orgasm_level[state_id] = attr_calculation.get_status_level(
+                    num.whole(status.of(target_data.cid)[state_id])
+                )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5117,13 +5141,14 @@ def handle_scene_all_characters_update_orgasm_level(
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
-        now_character_data = cache.character_data[chara_id]
-        for state_id in game_config.config_character_state:
-            if game_config.config_character_state[state_id].type == 0:
-                now_data = attr_calculation.get_status_level(
-                    num.whole(status.of(chara_id)[state_id])
-                )
-                now_character_data.h_state.orgasm_level[state_id] = now_data
+        with h_state.editing(chara_id) as hs:
+            for state_id in game_config.config_character_state:
+                if game_config.config_character_state[state_id].type == 0:
+                    hs.orgasm_level[state_id] = (
+                        attr_calculation.get_status_level(
+                            num.whole(status.of(chara_id)[state_id])
+                        )
+                    )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5173,9 +5198,10 @@ def handle_all_character_unconscious_semen_reset(
     """
     if not add_time:
         return
-    for __, character_data in cache.character_data.items():
-        character_data.dirty.body_semen_in_unconscious = []
-        character_data.dirty.cloth_semen_in_unconscious = []
+    for chara_id in cache.character_data:
+        with dirty.editing(chara_id) as d:
+            d.body_semen_in_unconscious = []
+            d.cloth_semen_in_unconscious = []
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5206,9 +5232,7 @@ def handle_chara_off_line(
     handle_dirty_reset(
         character_id, add_time, change_data, now_time
     )  # 污浊情况归零
-    character_data.h_state = attr_calculation.get_h_state_reset(
-        character_data.h_state
-    )  # H状态数据归零
+    h_state.reset(character_id)  # H状态数据归零
     # 归零快感状态
     for state_id in game_config.config_character_state:
         if game_config.config_character_state[state_id].type == 0:
@@ -7837,52 +7861,42 @@ def handle_dirty_reset_in_shower(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 保留比例
-    keep_rate_dict = {6: 0.2, 7: 0.7, 8: 0.3, 15: 1}
+    keep_rate_dict: dict[int, num.Num] = {
+        6: Fraction(1, 5),
+        7: Fraction(7, 10),
+        8: Fraction(3, 10),
+        15: 1,
+    }
     # 身体管理被要求不洗精液时则上调比例
     if handle_premise.handle_ask_not_wash_semen(character_id):
-        keep_rate_dict[6] = 0.8
-        keep_rate_dict[7] = 0.9
+        keep_rate_dict[6] = Fraction(4, 5)
+        keep_rate_dict[7] = Fraction(9, 10)
     # 保留数据
-    keep_data = {}
-    for body_cid in keep_rate_dict:
-        # 先清零
-        keep_data[body_cid] = 0
-        # 计算保留数据，使用原数据以继承0号和3号元素
-        body_dirty = character_data.dirty.body_semen[body_cid].copy()
-        keep_rate = keep_rate_dict[body_cid]
-        new_dirty = body_dirty[1] * num.exact(keep_rate)
-        # 如果保留后小于5，则归零
-        if new_dirty < 5:
-            new_dirty = 0
-        # 获取新的等级
-        new_lv = attr_calculation.get_semen_now_level(new_dirty, body_cid, 0)
-        body_dirty[1] = new_dirty
-        body_dirty[2] = new_lv
-        keep_data[body_cid] = body_dirty
-
-    # 被要求禁止洗衣服时，先保存衣物污浊，待身体清洗结算后恢复
-    keep_cloth_semen = {}
-    if handle_premise.handle_ask_not_wash_cloth(character_id):
-        keep_cloth_semen = {
-            clothing_type: semen_data.copy()
-            for clothing_type, semen_data in character_data.dirty.cloth_semen.items()
-        }
-
-    # 数据归零后再赋值
-    # 暂时注释仅身体污浊的清零，使服装污浊也一起清零
-    # new_dirty = attr_calculation.get_dirty_reset(character_data.dirty)
-    # character_data.dirty.body_semen = new_dirty.body_semen
-    character_data.dirty = attr_calculation.get_dirty_reset(
-        character_data.dirty
-    )
-    for body_cid in keep_rate_dict:
-        character_data.dirty.body_semen[body_cid] = keep_data[body_cid]
-
-    # 恢复被禁止清洗的衣物污浊
-    for clothing_type, semen_data in keep_cloth_semen.items():
-        character_data.dirty.cloth_semen[clothing_type] = semen_data
+    with dirty.editing(character_id) as d:
+        keep_data = {}
+        for body_cid in keep_rate_dict:
+            # 计算保留数据，使用原数据以继承0号和3号元素
+            body_dirty = d.body_semen[body_cid].copy()
+            new_dirty: num.Num = body_dirty[1] * keep_rate_dict[body_cid]
+            if new_dirty < 5:
+                new_dirty = 0
+            body_dirty[1] = new_dirty
+            body_dirty[2] = attr_calculation.get_semen_now_level(
+                new_dirty, body_cid, 0
+            )
+            keep_data[body_cid] = body_dirty
+        # 被要求禁止洗衣服时，先保存衣物污浊，待身体清洗结算后恢复
+        keep_cloth_semen = (
+            {ct: sd.copy() for ct, sd in d.cloth_semen.items()}
+            if handle_premise.handle_ask_not_wash_cloth(character_id)
+            else {}
+        )
+        dirty.reset(character_id)
+        for body_cid in keep_rate_dict:
+            d.body_semen[body_cid] = keep_data[body_cid]
+        for clothing_type, semen_data in keep_cloth_semen.items():
+            d.cloth_semen[clothing_type] = semen_data
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -7912,7 +7926,7 @@ def handle_orgasm_edge_release(
     if target_id == character_id:
         return
     # 仅在交互对象确有寸止累计时才建立其TargetChange并解放，避免空条目影响显示判定
-    if cache.character_data[target_id].h_state.orgasm_edge != 0:
+    if h_state.get(target_id, "orgasm_edge") != 0:
         orgasm_settle.release_orgasm_edge_now(
             target_id,
             change_data.target_change.setdefault(
@@ -7945,26 +7959,27 @@ def handle_time_stop_orgasm_release(
     for chara_id in roster.active():
         if chara_id == 0:
             continue
-        character_data = cache.character_data[chara_id]
         # 变为时停解放状态
-        character_data.h_state.time_stop_release = True
+        h_state.set(chara_id, time_stop_release=True)
+        ts_counts = h_state.view(chara_id).time_stop_orgasm_count
         # 将时停绝顶计数转化为绝顶
         settlement_change = (
             change_data.target_change.setdefault(
                 chara_id, game_type.TargetChange()
             )
-            if any(character_data.h_state.time_stop_orgasm_count.values())
+            if any(ts_counts.values())
             else change_data
         )
         orgasm_settle.orgasm_settle_in_second_behavior(
             chara_id,
             settlement_change,
-            un_count_orgasm_dict=character_data.h_state.time_stop_orgasm_count,
+            un_count_orgasm_dict=ts_counts,
         )
         # 清零时停绝顶计数
-        for state_id in game_config.config_character_state:
-            if game_config.config_character_state[state_id].type == 0:
-                character_data.h_state.time_stop_orgasm_count[state_id] = 0
+        with h_state.editing(chara_id) as hs:
+            for state_id in game_config.config_character_state:
+                if game_config.config_character_state[state_id].type == 0:
+                    hs.time_stop_orgasm_count[state_id] = 0
         # 触发角色的二段行为
         handle_npc_ai_in_h.settle_unconscious_semen_and_cloth(chara_id)
 
@@ -8013,17 +8028,15 @@ def handle_end_h_add_hpmp_max(
             # 跳过非快感
             if game_config.config_character_state[state_id].type != 0:
                 continue
-            now_part_count = now_character_data.h_state.orgasm_count[state_id][
-                0
-            ]
+            now_part_count = h_state.view(chara_id).orgasm_count[state_id][0]
             orgasm_count += now_part_count
             if now_part_count > 0:
                 if chara_id == 0 and state_id == 3:
                     info_text += _("射精{0}次，总射精{1}ml，").format(
                         now_part_count,
-                        now_character_data.h_state.shoot_semen_amount,
+                        h_state.get(chara_id, "shoot_semen_amount"),
                     )
-                    now_character_data.h_state.shoot_semen_amount = 0
+                    h_state.set(chara_id, shoot_semen_amount=0)
                 else:
                     info_text += _("{0}绝顶{1}次，").format(
                         game_config.config_character_state[state_id].name,
@@ -8048,11 +8061,8 @@ def handle_end_h_add_hpmp_max(
                 ),
             )
             # 玩家则额外增加精液量上限
-            if chara_id == 0 and now_character_data.semen_point_max < 999:
-                now_character_data.semen_point_max += orgasm_count
-                now_character_data.semen_point_max = min(
-                    now_character_data.semen_point_max, 999
-                )
+            if chara_id == 0 and h_meters.of(0)["semen_max"] < 999:
+                h_meters.add(0, "semen_max", orgasm_count, max=999)
                 info_text += _("，精液量上限增加了{0}").format(orgasm_count)
             info_text += "\n"
             # 输出提示信息
@@ -8095,7 +8105,7 @@ def handle_group_sex_end_h_add_hpmp_max(
     for chara_id in scene_data.character_list:
         now_character_data: game_type.Character = cache.character_data[chara_id]
         # 统计绝顶奖励前，先为该在场参与者解放并结算其累计的寸止绝顶，使其计入退出奖励；无累计者不建立空TargetChange条目
-        if now_character_data.h_state.orgasm_edge != 0:
+        if h_state.get(chara_id, "orgasm_edge") != 0:
             orgasm_settle.release_orgasm_edge_now(
                 chara_id,
                 change_data.target_change.setdefault(
@@ -8108,17 +8118,15 @@ def handle_group_sex_end_h_add_hpmp_max(
             # 跳过非快感
             if game_config.config_character_state[state_id].type != 0:
                 continue
-            now_part_count = now_character_data.h_state.orgasm_count[state_id][
-                0
-            ]
+            now_part_count = h_state.view(chara_id).orgasm_count[state_id][0]
             orgasm_count += now_part_count
             if now_part_count > 0:
                 if chara_id == 0 and state_id == 3:
                     info_text += _("射精{0}次，总射精{1}ml，").format(
                         now_part_count,
-                        now_character_data.h_state.shoot_semen_amount,
+                        h_state.get(chara_id, "shoot_semen_amount"),
                     )
-                    now_character_data.h_state.shoot_semen_amount = 0
+                    h_state.set(chara_id, shoot_semen_amount=0)
                 else:
                     info_text += _("{0}绝顶{1}次，").format(
                         game_config.config_character_state[state_id].name,
@@ -8138,11 +8146,8 @@ def handle_group_sex_end_h_add_hpmp_max(
             # 减少欲望值
             needs.add(chara_id, "desire", -(orgasm_count * 20), min=0)
             # 玩家则额外增加精液量上限
-            if chara_id == 0 and now_character_data.semen_point_max < 999:
-                now_character_data.semen_point_max += orgasm_count
-                now_character_data.semen_point_max = min(
-                    now_character_data.semen_point_max, 999
-                )
+            if chara_id == 0 and h_meters.of(0)["semen_max"] < 999:
+                h_meters.add(0, "semen_max", orgasm_count, max=999)
                 info_text += _("，精液量上限增加了{0}").format(orgasm_count)
             info_text += "\n"
             # 输出提示信息
@@ -9741,16 +9746,16 @@ def handle_eat_add_just(
                 now_food.special_seasoning_amount if now_food is not None else 0
             )
             # 加精液到口腔
-            temp_position = cache.shoot_position
-            cache.shoot_position = 2  # 口腔
+            temp_position = h_meters.shoot_position()
+            h_meters.set_shoot_position(2)  # 口腔
             ejaculation_panel.update_semen_dirty(
                 chara_id, 2, 0, semen_ml, update_shoot_position_flag=False
             )
-            cache.shoot_position = temp_position
+            h_meters.set_shoot_position(temp_position)
             # 登记精液进入口腔，使本次进食若因高品质快感而绝顶时，
             # 由二段绝顶结算联动饮精绝顶（素质31）与饮精绝顶经验（111）
             if semen_ml > 0:
-                target_data.h_state.shoot_position_body = 2
+                h_state.set(target_data.cid, shoot_position_body=2)
         # 药物食物则获得对应药物效果
         elif food_seasoning == 102:  # 事后避孕药
             handle_target_no_pregnancy_from_last_h(
@@ -10351,7 +10356,7 @@ def handle_tech_add_p_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 8
         now_add_lust = int(now_add_lust)
-        target_data.eja_point += now_add_lust
+        h_meters.add(target_data.cid, "eja", now_add_lust)
         # change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
         # target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
         # target_change.status_data.setdefault(3, 0)
@@ -10725,7 +10730,7 @@ def handle_tech_add_pl_p_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 8
         now_add_lust = int(now_add_lust)
-        character_data.eja_point += now_add_lust
+        h_meters.add(character_id, "eja", now_add_lust)
         change_data.eja_point += now_add_lust
         action_info.set(character_id, "last_eaj_add_time", now_time)
 
@@ -11009,7 +11014,7 @@ def handle_target_w_adjust_add_pain(
         )
 
         # 如果是子宫奸，则进一步调整
-        if character_data.h_state.current_womb_sex_position == 2:
+        if h_state.get(character_id, "current_womb_sex_position") == 2:
             size_adjust *= 3
 
         # 最终调整值
@@ -11396,7 +11401,7 @@ def handle_finger_tech_add_pl_p_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 8
         now_add_lust = int(now_add_lust)
-        character_data.eja_point += now_add_lust
+        h_meters.add(character_id, "eja", now_add_lust)
         change_data.eja_point += now_add_lust
         action_info.set(character_id, "last_eaj_add_time", now_time)
 
@@ -11446,7 +11451,7 @@ def handle_tongue_tech_add_pl_p_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 8
         now_add_lust = int(now_add_lust)
-        character_data.eja_point += now_add_lust
+        h_meters.add(character_id, "eja", now_add_lust)
         change_data.eja_point += now_add_lust
         action_info.set(character_id, "last_eaj_add_time", now_time)
 
@@ -11496,7 +11501,7 @@ def handle_feet_tech_add_pl_p_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 8
         now_add_lust = int(now_add_lust)
-        character_data.eja_point += now_add_lust
+        h_meters.add(character_id, "eja", now_add_lust)
         change_data.eja_point += now_add_lust
         action_info.set(character_id, "last_eaj_add_time", now_time)
 
@@ -11546,7 +11551,7 @@ def handle_breast_tech_add_pl_p_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 8
         now_add_lust = int(now_add_lust)
-        character_data.eja_point += now_add_lust
+        h_meters.add(character_id, "eja", now_add_lust)
         change_data.eja_point += now_add_lust
         action_info.set(character_id, "last_eaj_add_time", now_time)
 
@@ -11596,7 +11601,7 @@ def handle_vagina_tech_add_pl_p_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 8
         now_add_lust = int(now_add_lust)
-        character_data.eja_point += now_add_lust
+        h_meters.add(character_id, "eja", now_add_lust)
         change_data.eja_point += now_add_lust
         action_info.set(character_id, "last_eaj_add_time", now_time)
 
@@ -11646,7 +11651,7 @@ def handle_anus_tech_add_pl_p_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 8
         now_add_lust = int(now_add_lust)
-        character_data.eja_point += now_add_lust
+        h_meters.add(character_id, "eja", now_add_lust)
         change_data.eja_point += now_add_lust
         action_info.set(character_id, "last_eaj_add_time", now_time)
 
@@ -11891,11 +11896,11 @@ def handle_urinate_point_zero(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     needs.set(character_id, urine=0)
     # 尿道的精液一起归零
-    character_data.dirty.body_semen[9][1] = 0
-    character_data.dirty.body_semen[9][2] = 0
+    with dirty.editing(character_id) as d:
+        d.body_semen[9][1] = 0
+        d.body_semen[9][2] = 0
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12209,12 +12214,9 @@ def handle_add_small_semen_point(
         return
     if character_id > 0:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    add_semen_point = int(add_time / 60 * 0.15 * character_data.semen_point_max)
-    character_data.semen_point += add_semen_point
-    # 如果超过最大值则=最大值
-    if character_data.semen_point >= character_data.semen_point_max:
-        character_data.semen_point = character_data.semen_point_max
+    semen_max = h_meters.of(character_id)["semen_max"]
+    add_semen_point = int(add_time / 60 * 0.15 * semen_max)
+    h_meters.add(character_id, "semen", add_semen_point, max=semen_max)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12350,8 +12352,8 @@ def handle_penis_in_t_reset(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = -1
-    character_data.h_state.insert_position = -1
+    h_state.set(target_data.cid, insert_position=-1)
+    h_state.set(character_id, insert_position=-1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12379,8 +12381,7 @@ def handle_scene_all_characters_penis_in_reset(
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
-        now_character_data: game_type.Character = cache.character_data[chara_id]
-        now_character_data.h_state.insert_position = -1
+        h_state.set(chara_id, insert_position=-1)
 
 
 def record_first_part_sex(
@@ -12396,24 +12397,25 @@ def record_first_part_sex(
     # 玩家不做部位交记录（部位交的身体部位恒属于NPC）
     if not target_data.cid:
         return
-    part_id = target_data.h_state.insert_position
+    part_id = h_state.get(target_data.cid, "insert_position")
     # 身体部位以外（未插入或服装部位）不记录
     if part_id == -1 or part_id >= 20:
         return
-    if part_id in target_data.first_record.first_part_sex_dict:
+    if first_record.has_part_sex(target_data.cid, part_id):
         return
     # 姿势取行为发起者当前行为的中文名
     behavior_name = ""
     behavior_id = cache.character_data[character_id].behavior.behavior_id
     if behavior_id in game_config.config_behavior:
         behavior_name = game_config.config_behavior[behavior_id].name
-    target_data.first_record.first_part_sex_dict[part_id] = {
-        "id": character_id,
-        "time": game_time.now(),
-        "place": list(target_data.position),
-        "posture": behavior_name,
-        "item": item,
-    }
+    with first_record.editing(target_data.cid) as fr:
+        fr.first_part_sex_dict[part_id] = {
+            "id": character_id,
+            "time": game_time.now(),
+            "place": list(target_data.position),
+            "posture": behavior_name,
+            "item": item,
+        }
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12439,7 +12441,7 @@ def handle_penis_in_t_hair(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 0
+    h_state.set(target_data.cid, insert_position=0)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12466,7 +12468,7 @@ def handle_penis_in_t_face(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 1
+    h_state.set(target_data.cid, insert_position=1)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12493,7 +12495,7 @@ def handle_penis_in_t_mouse(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 2
+    h_state.set(target_data.cid, insert_position=2)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12520,7 +12522,7 @@ def handle_penis_in_t_breast(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 3
+    h_state.set(target_data.cid, insert_position=3)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12547,7 +12549,7 @@ def handle_penis_in_t_axilla(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 4
+    h_state.set(target_data.cid, insert_position=4)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12574,7 +12576,7 @@ def handle_penis_in_t_hand(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 5
+    h_state.set(target_data.cid, insert_position=5)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12601,7 +12603,7 @@ def handle_penis_in_t_vagina(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 6
+    h_state.set(target_data.cid, insert_position=6)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12628,7 +12630,7 @@ def handle_penis_in_t_womb(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 7
+    h_state.set(target_data.cid, insert_position=7)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12655,7 +12657,7 @@ def handle_penis_in_t_anal(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 8
+    h_state.set(target_data.cid, insert_position=8)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12682,7 +12684,7 @@ def handle_penis_in_t_urethral(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 9
+    h_state.set(target_data.cid, insert_position=9)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12709,7 +12711,7 @@ def handle_penis_in_t_leg(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 10
+    h_state.set(target_data.cid, insert_position=10)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12736,7 +12738,7 @@ def handle_penis_in_t_foot(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 11
+    h_state.set(target_data.cid, insert_position=11)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12763,7 +12765,7 @@ def handle_penis_in_t_tail(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 12
+    h_state.set(target_data.cid, insert_position=12)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12790,7 +12792,7 @@ def handle_penis_in_t_horn(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 13
+    h_state.set(target_data.cid, insert_position=13)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12817,7 +12819,7 @@ def handle_penis_in_t_ears(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 14
+    h_state.set(target_data.cid, insert_position=14)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12844,7 +12846,7 @@ def handle_penis_in_t_deep_throat(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 15
+    h_state.set(target_data.cid, insert_position=15)
     record_first_part_sex(character_id, target_data)
 
 
@@ -12871,7 +12873,7 @@ def handle_penis_in_t_hat(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 20
+    h_state.set(target_data.cid, insert_position=20)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12897,7 +12899,7 @@ def handle_penis_in_t_classes(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 21
+    h_state.set(target_data.cid, insert_position=21)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12923,7 +12925,7 @@ def handle_penis_in_t_ear_ornament(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 22
+    h_state.set(target_data.cid, insert_position=22)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12949,7 +12951,7 @@ def handle_penis_in_t_neck_ornament(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 23
+    h_state.set(target_data.cid, insert_position=23)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12975,7 +12977,7 @@ def handle_penis_in_t_mouth_ornament(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 24
+    h_state.set(target_data.cid, insert_position=24)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13001,7 +13003,7 @@ def handle_penis_in_t_top(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 25
+    h_state.set(target_data.cid, insert_position=25)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13027,7 +13029,7 @@ def handle_penis_in_t_corset(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 26
+    h_state.set(target_data.cid, insert_position=26)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13053,7 +13055,7 @@ def handle_penis_in_t_gloves(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 27
+    h_state.set(target_data.cid, insert_position=27)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13079,7 +13081,7 @@ def handle_penis_in_t_skirt(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 28
+    h_state.set(target_data.cid, insert_position=28)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13105,7 +13107,7 @@ def handle_penis_in_t_underwear(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 29
+    h_state.set(target_data.cid, insert_position=29)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13131,7 +13133,7 @@ def handle_penis_in_t_socks(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 30
+    h_state.set(target_data.cid, insert_position=30)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13157,7 +13159,7 @@ def handle_penis_in_t_shoes(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 31
+    h_state.set(target_data.cid, insert_position=31)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13183,7 +13185,7 @@ def handle_penis_in_t_weapoms(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 32
+    h_state.set(target_data.cid, insert_position=32)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13209,7 +13211,7 @@ def handle_penis_in_t_trousers(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.h_state.insert_position = 28
+    h_state.set(target_data.cid, insert_position=28)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13235,8 +13237,8 @@ def handle_cancel_penis_in_face_or_mouse(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.h_state.insert_position in {1, 2}:
-        target_data.h_state.insert_position = -1
+    if h_state.get(target_data.cid, "insert_position") in {1, 2}:
+        h_state.set(target_data.cid, insert_position=-1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13258,8 +13260,7 @@ def handle_dr_position_null(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = -1
+    h_state.set(0, current_sex_position=-1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13281,8 +13282,7 @@ def handle_dr_position_normal(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 1
+    h_state.set(0, current_sex_position=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13304,8 +13304,7 @@ def handle_dr_position_back(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 2
+    h_state.set(0, current_sex_position=2)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13327,8 +13326,7 @@ def handle_dr_position_face_ride(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 3
+    h_state.set(0, current_sex_position=3)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13350,8 +13348,7 @@ def handle_dr_position_back_ride(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 4
+    h_state.set(0, current_sex_position=4)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13373,8 +13370,7 @@ def handle_dr_position_face_seat(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 5
+    h_state.set(0, current_sex_position=5)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13396,8 +13392,7 @@ def handle_dr_position_back_seat(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 6
+    h_state.set(0, current_sex_position=6)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13419,8 +13414,7 @@ def handle_dr_position_face_stand(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 7
+    h_state.set(0, current_sex_position=7)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13442,8 +13436,7 @@ def handle_dr_position_back_stand(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 8
+    h_state.set(0, current_sex_position=8)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13465,8 +13458,7 @@ def handle_dr_position_face_hug(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 9
+    h_state.set(0, current_sex_position=9)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13488,8 +13480,7 @@ def handle_dr_position_back_hug(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 10
+    h_state.set(0, current_sex_position=10)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13511,8 +13502,7 @@ def handle_dr_position_face_lie(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 11
+    h_state.set(0, current_sex_position=11)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13534,8 +13524,7 @@ def handle_dr_position_back_lie(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_sex_position = 12
+    h_state.set(0, current_sex_position=12)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13557,8 +13546,7 @@ def handle_dr_position_womb_null(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_womb_sex_position = 0
+    h_state.set(0, current_womb_sex_position=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13580,8 +13568,7 @@ def handle_dr_position_womb_insert(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_womb_sex_position = 1
+    h_state.set(0, current_womb_sex_position=1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13603,8 +13590,7 @@ def handle_dr_position_womb_sex(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.current_womb_sex_position = 2
+    h_state.set(0, current_womb_sex_position=2)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13630,8 +13616,8 @@ def handle_h_in_love_hotel_to_false(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    character_data.h_state.h_in_love_hotel = False
-    target_data.h_state.h_in_love_hotel = False
+    h_state.set(character_id, h_in_love_hotel=False)
+    h_state.set(target_data.cid, h_in_love_hotel=False)
 
 
 @settle_behavior.add_settle_behavior_effect(

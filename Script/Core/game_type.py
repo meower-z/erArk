@@ -1545,16 +1545,6 @@ class Character:
         """ 角色性别 """
         # self.age: int = 18
         # """ 角色年龄 """
-        self.eja_point_max: int = 0
-        """ 角色最大射精槽 """
-        self.eja_point: Num = 0
-        """ 角色当前射精槽 """
-        self.semen_point_max: int = 0
-        """ 角色最大精液槽 """
-        self.semen_point: Num = 0
-        """ 角色当前精液槽 """
-        self.tem_extra_semen_point: int = 0
-        """ 角色临时最大精液槽 """
         self.state: int | str = 0
         """ 角色当前状态 """
         self.last_behavior_id_list: list = [0]
@@ -1621,22 +1611,12 @@ class Character:
         """ 角色的个人设置 """
         self.assistant_services: dict[int, int] = {}
         """ 角色作为助理的情况 """
-        self.first_record: FIRST_RECORD = FIRST_RECORD()
-        """ 角色初次状态记录 """
-        self.first_record_history: dict = {}
-        """ 之前各周目性行为履历的单独存储 周目数int:该周目结束时的FIRST_RECORD快照 """
-        self.dirty: DIRTY = DIRTY()
-        """ 角色身上污浊的情况 """
-        self.h_state: BODY_H_STATE = BODY_H_STATE()
-        """ 角色本次H的情况 """
         self.work: CHARA_WORK = CHARA_WORK()
         """ 角色的工作情况 """
         self.entertainment: CHARA_ENTERTAINMENT = CHARA_ENTERTAINMENT()
         """ 角色的娱乐与兴趣情况 """
         self.relationship: RELATIONSHIP = RELATIONSHIP()
         """ 角色的社会关系 """
-        self.hypnosis: HYPNOSIS = HYPNOSIS()
-        """ 角色的催眠情况 """
         self.author_flag: AUTHOR_FLAG = AUTHOR_FLAG()
         """ 角色口上作者变量 """
 
@@ -1683,8 +1663,6 @@ class Cache:
         """ 本次update中已结束结算的npc """
         self.recipe_data: dict[int, Recipes] = {}
         """ 菜谱数据 """
-        self.shoot_position: int = 0
-        """ 记录射精位置 """
         self.debug_mode: bool = False
         """ debug模式 """
         self.rhodes_island: Rhodes_Island = Rhodes_Island()

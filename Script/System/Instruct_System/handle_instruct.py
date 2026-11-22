@@ -29,7 +29,7 @@ from Script.Design import game_time
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import abilities, achievement, action_info, flags
-from Script.Modules.domains import needs, player_collection, roster
+from Script.Modules.domains import h_state, needs, player_collection, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1408,7 +1408,7 @@ def _start_bondage(who: int, chosen: intent.Intent) -> None:
     """
     bondage_id = chosen["args"]["bondage_id"]
     assert isinstance(bondage_id, int)
-    cache.character_data[chosen["target"]].h_state.bondage = bondage_id
+    h_state.set(chosen["target"], bondage=bondage_id)
 
 
 @start_part("sex_position")
@@ -1419,11 +1419,12 @@ def _start_sex_position(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    h_state = cache.character_data[who].h_state
-    if chosen["args"]["change_position"]:
-        h_state.pre_sex_position = h_state.current_sex_position
-    else:
-        h_state.pre_sex_position = -1
+    pre = (
+        h_state.get(who, "current_sex_position")
+        if chosen["args"]["change_position"]
+        else -1
+    )
+    h_state.set(who, pre_sex_position=pre)
 
 
 @add_instruct(constant.Instruct.TEST_INSTRUCT)
@@ -1701,8 +1702,8 @@ def _start_do_h(who: int, chosen: intent.Intent) -> None:
     target_data = cache.character_data[chosen["target"]]
     place = str(chosen["args"]["place"])
     if place:
-        setattr(character_data.h_state, place, True)
-        setattr(target_data.h_state, place, True)
+        h_state.set(who, **{place: True})
+        h_state.set(chosen["target"], **{place: True})
     now_draw = draw.WaitDraw()
     now_draw.width = width
     now_draw_text = "\n"
@@ -4685,10 +4686,7 @@ def handle_give_blowjob() -> None:
 def handle_change_top_and_bottom() -> None:
     """处理交给对方指令"""
     character_data: game_type.Character = cache.character_data[0]
-    target_character_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_character_data.h_state.npc_active_h = True
+    h_state.set(character_data.target_character_id, npc_active_h=True)
     handle_npc_ai_in_h.npc_active_h()
 
 
@@ -4702,10 +4700,7 @@ def handle_keep_enjoy() -> None:
 def handle_try_pl_active_h() -> None:
     """处理尝试掌握主动权指令"""
     character_data: game_type.Character = cache.character_data[0]
-    target_character_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_character_data.h_state.npc_active_h = False
+    h_state.set(character_data.target_character_id, npc_active_h=False)
 
 
 @add_instruct(constant.Instruct.UNDRESS)

@@ -17,7 +17,7 @@ from google.genai import types as genai_types
 import os
 import re
 from typing import Any, Callable, Iterable, TypedDict
-from Script.Modules.domains import abilities, flags, needs, wardrobe
+from Script.Modules.domains import abilities, flags, hypnosis, needs, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -417,11 +417,10 @@ def build_user_prompt(
                 sub_info = game_config.config_hypnosis_sub_type[12].introduce
                 hypnosis_name += " " + sub_name
                 new_info += sub_info
-                if len(npc_character_data.hypnosis.roleplay):
-                    for roleplay_id in npc_character_data.hypnosis.roleplay:
-                        roleplay_data = game_config.config_roleplay[roleplay_id]
-                        roleplay_info = roleplay_data.info
-                        new_info += " " + roleplay_info
+                for roleplay_id in hypnosis.roleplay(npc_character_data.cid):
+                    roleplay_data = game_config.config_roleplay[roleplay_id]
+                    roleplay_info = roleplay_data.info
+                    new_info += " " + roleplay_info
             # 如果有新的信息，则更新催眠效果
             if len(new_info) > 0:
                 hypnosis_effect = new_info

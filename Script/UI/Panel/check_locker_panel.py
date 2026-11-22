@@ -7,6 +7,7 @@ from typing import cast
 from Script.Core import cache_control, constant, flow_handle, game_type
 from Script.Core import get_text, py_cmd, text_handle
 from Script.Design import attr_text, clothing, handle_premise, map_handle
+from Script.Modules.domains import dirty
 from Script.UI.Moudle import draw, panel, view
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import edits
@@ -332,11 +333,9 @@ class FindDraw:
                             cloth_id
                         ].name
                         cloth_show_text += f" {cloth_name}"
-                    semen_now_count = (
-                        self.character_data.dirty.cloth_locker_semen[
-                            clothing_type
-                        ][1]
-                    )
+                    semen_now_count = dirty.view(
+                        self.character_data.cid
+                    ).cloth_locker_semen[clothing_type][1]
                     if semen_now_count:
                         cloth_show_text += _("({0}ml精液)").format(
                             semen_now_count
@@ -578,10 +577,11 @@ class Ejaculation_NameDraw:
             if num_button:
                 index_text = text_handle.id_index(button_id)
                 button_text = f"{index_text} {now_text}"
-                if target_data.dirty.cloth_locker_semen[self.index][1] != 0:
-                    button_text += _(" ({0}ml精液)").format(
-                        str(target_data.dirty.cloth_locker_semen[self.index][1])
-                    )
+                val = dirty.view(target_data.cid).cloth_locker_semen[
+                    self.index
+                ][1]
+                if val != 0:
+                    button_text += _(" ({0}ml精液)").format(str(val))
                 name_draw: draw.CenterButton = draw.LeftButton(
                     button_text,
                     self.button_return,

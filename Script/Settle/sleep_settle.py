@@ -19,7 +19,8 @@ from Script.System.Pregnancy_System import pregnancy_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import abilities, action_info, flags, needs, plan
+from Script.Modules.domains import abilities, action_info, first_record, flags
+from Script.Modules.domains import h_meters, h_state, needs, plan
 from Script.Modules.domains import player_ability, roster, status
 
 game_path = game_path_config.game_path
@@ -59,7 +60,7 @@ def update_sleep() -> None:
         # 玩家结算
         if character_id == 0:
             sanity_point_grow()  # 玩家理智成长
-            character_data.eja_point = 0  # 清零射精槽
+            h_meters.set(0, eja=0)  # 清零射精槽
             action_info.set(character_data.cid, "day_first_shoot_semen", True)
             assistant_id = character_data.assistant_character_id
             # 对玩家助理结算
@@ -99,9 +100,7 @@ def update_sleep() -> None:
             # 清零H被撞破的flag
             action_info.set(character_data.cid, "h_interrupt", 0)
             # 重置每天第一次见面
-            character_data.first_record.day_first_meet = 1
-            # 新：改为洗澡时清零（清零污浊状态）
-            # character_data.dirty = attr_calculation.get_dirty_zero()
+            first_record.set(character_id, day_first_meet=1)
             # 检查并处理受精怀孕部分
             pregnancy_handle.check_all_pregnancy(character_id)
             # 检查是否有可以获得的素质
@@ -110,9 +109,7 @@ def update_sleep() -> None:
             if normal_config.system_setting.base_setting[2]:
                 handle_ability.gain_ability(character_id)
             # 清零H状态
-            character_data.h_state = attr_calculation.get_h_state_reset(
-                character_data.h_state
-            )
+            h_state.reset(character_id)
             # 清零睡奸中醒来状态
             flags.set(character_data.cid, sleep_h_awake=False)
 
@@ -232,33 +229,23 @@ def refresh_temp_semen_max() -> None:
     """
     talent = abilities.talent(0)
     character_data: game_type.Character = cache.character_data[0]
-    now_semen = num.whole(character_data.semen_point)
+    meters = h_meters.of(0)
+    now_semen = num.whole(meters["semen"])
     # 需要睡眠时长至少大于等于6h
     if now_semen and character_data.behavior.duration >= 360:
         # 最大额外精液量为正常上限的4倍
-        character_data.tem_extra_semen_point += now_semen // 2
-        character_data.tem_extra_semen_point = min(
-            character_data.tem_extra_semen_point,
-            character_data.semen_point_max * 4,
-        )
+        limit = meters["semen_max"] * 4
+        new_extra = min(meters["extra_semen"] + now_semen // 2, limit)
+        h_meters.set(0, extra_semen=new_extra)
         # 获得浓厚精液
-        if (
-            character_data.tem_extra_semen_point
-            >= character_data.semen_point_max * 4
-        ):
-            talent[33] = 1
-        else:
-            talent[33] = 0
+        talent[33] = 1 if new_extra >= limit else 0
         # 绘制说明信息
         now_draw = draw.NormalDraw()
         now_draw.width = window_width
         draw_text = _(
             "\n在充足的睡眠下，今日未消耗的 {0}ml 精液转化为了 {1}ml 次日额外精液"
         ).format(now_semen, now_semen // 2)
-        if (
-            character_data.tem_extra_semen_point
-            >= character_data.semen_point_max * 4
-        ):
+        if new_extra >= limit:
             draw_text += _("，额外精液量已达上限，并获得了为期一天的[浓厚精液]")
         draw_text += "\n"
         now_draw.text = draw_text

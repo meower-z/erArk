@@ -1,7 +1,8 @@
 """避孕套的存量池与装饰：存量池的增减与清空、装饰的挂上与取回，以及饮用与挤出的结算"""
 
 from Script.Core import cache_control, game_type
-from Script.Modules.domains import flags, player_collection
+from Script.Modules.domains import dirty, flags, h_meters, h_state
+from Script.Modules.domains import player_collection
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -44,7 +45,7 @@ def get_decoration_dict(character_id: int) -> dict[tuple, list[int]]:
     Return arguments:\n
     Dict[tuple, List[int]] -- 键为(部位类型, 部位cid)，值为各套精液量列表
     """
-    return cache.character_data[character_id].dirty.condom_decoration
+    return dirty.view(character_id).condom_decoration
 
 
 def get_decoration_count(
@@ -114,15 +115,17 @@ def move_to_decoration(
     int -- 实际转移的个数
     """
     used_condoms = get_used_condoms()
-    decoration_dict = get_decoration_dict(character_id)
     location_key = (part_type, part_cid)
-    decoration_dict.setdefault(location_key, [])
     # 下标从大到小移除，避免移除时下标错位
     move_count = 0
-    for index in sorted(set(condom_index_list), reverse=True):
-        if 0 <= index < len(used_condoms):
-            decoration_dict[location_key].append(used_condoms.pop(index))
-            move_count += 1
+    with dirty.editing(character_id) as d:
+        d.condom_decoration.setdefault(location_key, [])
+        for index in sorted(set(condom_index_list), reverse=True):
+            if 0 <= index < len(used_condoms):
+                d.condom_decoration[location_key].append(
+                    used_condoms.pop(index)
+                )
+                move_count += 1
     if move_count:
         player_collection.put("used_condoms", used_condoms)
     return move_count
@@ -140,22 +143,23 @@ def take_back_decoration(
     int -- 实际取回的个数
     """
     used_condoms = get_used_condoms()
-    decoration_dict = get_decoration_dict(character_id)
     # 按部位分组后下标从大到小移除，避免移除时下标错位
     take_count = 0
-    for location_key, index in sorted(
-        set(location_index_list), key=lambda x: (x[0], -x[1])
-    ):
-        now_list = decoration_dict.get(location_key, [])
-        if 0 <= index < len(now_list):
-            used_condoms.append(now_list.pop(index))
-            take_count += 1
+    with dirty.editing(character_id) as d:
+        decoration_dict = d.condom_decoration
+        for location_key, index in sorted(
+            set(location_index_list), key=lambda x: (x[0], -x[1])
+        ):
+            now_list = decoration_dict.get(location_key, [])
+            if 0 <= index < len(now_list):
+                used_condoms.append(now_list.pop(index))
+                take_count += 1
+        # 清理空部位
+        for location_key in list(decoration_dict.keys()):
+            if not decoration_dict[location_key]:
+                del decoration_dict[location_key]
     if take_count:
         player_collection.put("used_condoms", used_condoms)
-    # 清理空部位
-    for location_key in list(decoration_dict.keys()):
-        if not decoration_dict[location_key]:
-            del decoration_dict[location_key]
     return take_count
 
 
@@ -238,7 +242,6 @@ def settle_drink(
         base_chara_state_common_settle,
     )
 
-    target_data: game_type.Character = cache.character_data[target_character_id]
     # 消耗选中的避孕套
     consumed_list = consume_condoms(condom_index_list)
     if not consumed_list:
@@ -248,8 +251,8 @@ def settle_drink(
         target_character_id, sum(consumed_list), 21, 0, tenths_add=False
     )
     # 每个避孕套里的精液按10%残留口腔、90%进入胃部结算
-    temp_position = cache.shoot_position
-    cache.shoot_position = 2
+    temp_position = h_meters.shoot_position()
+    h_meters.set_shoot_position(2)
     for semen_count in consumed_list:
         mouth_count = max(int(semen_count * 0.1), 1) if semen_count > 0 else 0
         mouth_count = min(mouth_count, semen_count)
@@ -273,9 +276,9 @@ def settle_drink(
         # 每喝一个加一次精液经验和饮精经验
         base_chara_experience_common_settle(target_character_id, 24)
         base_chara_experience_common_settle(target_character_id, 25)
-    cache.shoot_position = temp_position
+    h_meters.set_shoot_position(temp_position)
     # 记录精液射入位置为胃部，以联动饮精绝顶二段行为
-    target_data.h_state.shoot_position_body = 15
+    h_state.set(target_character_id, shoot_position_body=15)
 
 
 def settle_squeeze(
@@ -330,10 +333,11 @@ def remove_cloth_decoration(
     Return arguments:\n
     无
     """
-    decoration_dict = get_decoration_dict(character_id)
-    for location_key in list(decoration_dict.keys()):
-        part_type, part_cid = location_key
-        if part_type != 1:
-            continue
-        if part_cid_list is None or part_cid in part_cid_list:
-            del decoration_dict[location_key]
+    with dirty.editing(character_id) as d:
+        decoration_dict = d.condom_decoration
+        for location_key in list(decoration_dict.keys()):
+            part_type, part_cid = location_key
+            if part_type != 1:
+                continue
+            if part_cid_list is None or part_cid in part_cid_list:
+                del decoration_dict[location_key]

@@ -8,7 +8,7 @@ from Script.Design import handle_ability, handle_premise, handle_talent
 from Script.Design import hypnosis_state, map_handle
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, flags, player_ability
+from Script.Modules.domains import abilities, flags, hypnosis, player_ability
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -63,16 +63,13 @@ def hypnosis_degree_calculation(target_character_id: int) -> float:
     float -- 催眠增长值
     """
     talent = abilities.talent(0)
-    target_character_data: game_type.Character = cache.character_data[
-        target_character_id
-    ]
 
     if target_character_id == 0:
         return 0
 
     # 如果已经达到当前玩家的能力上限，则不再增加
     hypnosis_degree_limit = hypnosis_degree_limit_calculation()
-    if target_character_data.hypnosis.hypnosis_degree >= hypnosis_degree_limit:
+    if hypnosis.degree(target_character_id) >= hypnosis_degree_limit:
         return 0
 
     base_addition = 1
@@ -143,7 +140,7 @@ def evaluate_hypnosis_completion(character_id: int) -> int:
         now_hypnosis_type
     ].hypnosis_degree
     # 催眠完成，开始结算
-    if character_data.hypnosis.hypnosis_degree >= hypnosis_degree_need:
+    if hypnosis.degree(character_id) >= hypnosis_degree_need:
         # 空气催眠
         if now_hypnosis_type == 2:
             # 限制为需要锁门的地点，并强制锁门
@@ -252,7 +249,7 @@ class Chose_Hypnosis_Type_Panel:
             if pl_character_data.target_character_id > 0:
                 info_text += _("○当前催眠对象：{0}，催眠深度：{1}%\n").format(
                     target_character_data.name,
-                    target_character_data.hypnosis.hypnosis_degree,
+                    hypnosis.degree(pl_character_data.target_character_id),
                 )
             info_text += _("\n催眠系能力：\n")
             # 催眠能力
@@ -293,7 +290,9 @@ class Chose_Hypnosis_Type_Panel:
                     pl_character_data.target_character_id == 0
                     or (
                         pl_character_data.target_character_id > 0
-                        and target_character_data.hypnosis.hypnosis_degree
+                        and hypnosis.degree(
+                            pl_character_data.target_character_id
+                        )
                         >= hypnosis_type_data.hypnosis_degree
                         and not handle_premise.handle_self_parturient_or_postpartum(
                             pl_character_data.target_character_id
@@ -466,10 +465,7 @@ class Chose_Hypnosis_Type_Panel:
             )
             now_draw.draw()
             character_data: game_type.Character = cache.character_data[0]
-            target_data: game_type.Character = cache.character_data[
-                character_data.target_character_id
-            ]
-            if len(target_data.hypnosis.roleplay) != 0:
+            if len(hypnosis.roleplay(character_data.target_character_id)) != 0:
                 handle_instruct.chara_handle_instruct_common_settle(
                     behavbior_cid
                 )
@@ -540,12 +536,10 @@ class Chose_Roleplay_Type_Panel:
         # 初始化角色扮演选择缓存
         self.selected_roleplay_cache = []
         pl_character_data: game_type.Character = cache.character_data[0]
-        target_data: game_type.Character = cache.character_data[
-            pl_character_data.target_character_id
-        ]
         # 如果对方有角色扮演数据，则将其缓存到selected_roleplay_cache中
-        if len(target_data.hypnosis.roleplay):
-            self.selected_roleplay_cache = target_data.hypnosis.roleplay[:]
+        cur_rp = hypnosis.roleplay(pl_character_data.target_character_id)
+        if len(cur_rp):
+            self.selected_roleplay_cache = list(cur_rp)
 
     def draw(self) -> None:
         """
@@ -969,26 +963,26 @@ class Chose_Roleplay_Type_Panel:
         target_data: game_type.Character = cache.character_data[
             pl_character_data.target_character_id
         ]
+        tid = pl_character_data.target_character_id
         # 提交非空的角色扮演选择时先退出目标当前的催眠行为模式，保证模式互斥
         if self.selected_roleplay_cache:
-            hypnosis_state.clear_hypnosis_behavior_mode(
-                pl_character_data.target_character_id
-            )
+            hypnosis_state.clear_hypnosis_behavior_mode(tid)
         # 赋值缓存到数据
-        target_data.hypnosis.roleplay = self.selected_roleplay_cache[:]
+        hypnosis.set_roleplay(tid, self.selected_roleplay_cache)
         # 输出提示信息
         info_draw = draw.WaitDraw()
         info_draw.style = "purple"
         info_text = _("\n已为{0}开始进行以下的角色扮演了：").format(
             target_data.name
         )
-        if not target_data.hypnosis.roleplay:
+        new_rp = hypnosis.roleplay(pl_character_data.target_character_id)
+        if not new_rp:
             info_text += _("无\n")
             # 如果原本是心控催眠，则取消心控催眠状态
             if flags.get(target_data.cid, "unconscious_h") == 7:
                 flags.set(target_data.cid, unconscious_h=0)
         else:
-            for cid in target_data.hypnosis.roleplay:
+            for cid in new_rp:
                 if cid in game_config.config_roleplay:
                     info_text += _("{0} ").format(
                         game_config.config_roleplay[cid].name

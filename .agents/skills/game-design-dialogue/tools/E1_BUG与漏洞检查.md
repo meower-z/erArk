@@ -31,7 +31,7 @@
 | 10 | 边界值 | 空集合 / 0 / 负数 / 上限；罩杯素质 121~125 一个都没有时 `UnboundLocalError`（`headless-game-test` fixture 表） | 好感字典没有 `[0]`、`favorability[0]` 直接下标 |
 | 11 | 重复触发与幂等 | 同一行为在 `character_behavior.character_behavior` 的玩家分支与 NPC 分支两处都会走实时结算（`realtime_settle.character_aotu_change_value`）；二段行为在 `second_behavior.py:81 check_second_effect` 末尾归零 | 每次结算都累加的"一次性"奖励；清除函数第二次调用再报一次（plan_21 §6.1 有"清除幂等"专项） |
 | 12 | 跨天与多周目 | `Script/Settle/past_day_settle.py:31 update_new_day`（:49 遍历 `cache.npc_id_got`）；多周目 `Script/UI/Panel/new_round.py`（继承项 :37~49），`game_type.py:1698 first_record_history` / `:1902 game_round` | 跨天字段没清 → 第二天仍算"今天已做"；新周目 `Cache()` 重建后新字段丢失但继承逻辑没带上 |
-| 13 | `BODY_H_STATE` 重建 | `Script/Settle/default.py:4260 handle_self_h_state_reset`（效果 403）在 :4279 调 `attr_calculation.py:273 get_h_state_reset` **整个换新对象**；`default.py:4441 handle_chara_off_line` :4462、`sleep_settle.py:98` 同样 | 挂在 `h_state` 上的新字段 H 一结束就被重建丢掉；要持久的数据不能放这里 |
+| 13 | `BODY_H_STATE` 重建 | `Script/Settle/default.py` 的 `handle_self_h_state_reset`（效果 403）、`handle_chara_off_line` 与 `sleep_settle.py` 均调 `h_state.reset` 清空非持久字段 | 挂在 `h.state` 上的新字段 H 一结束就被清掉；要持久的数据不能放这里，新增字段还须同步加入 `h_state._encode`/`_decode` |
 | 14 | 二段行为跨场景 | `second_behavior.py:180`：NPC 与玩家不同场景时只处理 must_show / must_settle，其余**直接丢弃**；`constant_effect.py:1011 Nothing=999` / `:1013 Must_Show=998` / `:1015 Must_Settle=997` | 远程触发的二段行为（如受精）挂了 999 → 不结算不显示 |
 | 15 | 循环导入 | Core → System 方向最危险（plan_21 §7 `save_handle` 导入 `pregnancy_constant`）；惯例是函数内延迟 import（`docs/数据处理工作流/主场景互动界面.md:115`） | 顶部 import 子系统模块导致游戏启动即报错 |
 

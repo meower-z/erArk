@@ -13,8 +13,8 @@ from Script.Core import (
 from Script.Design import handle_talent, handle_premise
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, player_ability, player_collection
-from Script.Modules.domains import roster, status, warehouse
+from Script.Modules.domains import abilities, dirty, hypnosis, player_ability
+from Script.Modules.domains import player_collection, roster, status, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -489,10 +489,9 @@ class Originium_Arts_Panel:
                     now_semen_count, now_exp_count = 0, 0
                     for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
+                        body_semen = dirty.view(chara_id).body_semen
                         for part_id in [2, 6, 7, 8, 9, 15]:
-                            now_semen_count += character_data.dirty.body_semen[
-                                part_id
-                            ][3]
+                            now_semen_count += body_semen[part_id][3]
                         now_exp_count += abilities.experience(chara_id)[20]
                     # 绘制
                     draw_text += _(
@@ -600,8 +599,7 @@ class Originium_Arts_Panel:
                     now_degree: float = 0
                     # 计算全获得干员的催眠深度
                     for chara_id in roster.active():
-                        character_data = cache.character_data[chara_id]
-                        now_degree += character_data.hypnosis.hypnosis_degree
+                        now_degree += hypnosis.degree(chara_id)
                     now_degree = int(now_degree)
                     # 绘制
                     draw_text += _(

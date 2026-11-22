@@ -22,8 +22,9 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement, action_info, flags
-from Script.Modules.domains import history, needs, player_ability, wardrobe
+from Script.Modules.domains import abilities, achievement, action_info, dirty
+from Script.Modules.domains import flags, h_state, history, hypnosis, needs
+from Script.Modules.domains import player_ability, wardrobe
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -70,8 +71,9 @@ def judge_character_h_obscenity_unconscious(
             player_ability.set(character_id, air_hypnosis_position="")
         # 如果前指令是口交类型则重置所有阴茎污浊状态
         if handle_premise.handle_last_cmd_blowjob_type(0):
-            for dirty_key in character_data.dirty.penis_dirty_dict:
-                character_data.dirty.penis_dirty_dict[dirty_key] = False
+            with dirty.editing(0) as d:
+                for dirty_key in d.penis_dirty_dict:
+                    d.penis_dirty_dict[dirty_key] = False
         # 当前有H体位下，如果进行手、口、胸类则清零H体位数据
         if handle_premise.handle_dr_have_sex_position(0):
             if (
@@ -79,16 +81,13 @@ def judge_character_h_obscenity_unconscious(
                 or handle_premise.handle_last_cmd_blowjob_type(0)
                 or handle_premise.handle_last_cmd_paizuri_type(0)
             ):
-                character_data.h_state.current_sex_position = -1
+                h_state.set(0, current_sex_position=-1)
         # 当前有子宫性交位置下，如果阴茎位置不是阴道或子宫，则清零子宫性交位置数据
         if handle_premise.handle_dr_have_sex_position(0):
-            if character_data.h_state.insert_position not in [6, 7]:
-                character_data.h_state.current_womb_sex_position = 0
+            if h_state.get(0, "insert_position") not in [6, 7]:
+                h_state.set(0, current_womb_sex_position=0)
         # 刚刚射精状态下，用计数的方式来判断是否重置
-        if character_data.h_state.just_shoot == 1:
-            character_data.h_state.just_shoot = 2
-        else:
-            character_data.h_state.just_shoot = 0
+        h_state.set(0, just_shoot=2 if h_state.get(0, "just_shoot") == 1 else 0)
         # 二次确认H意外结束的归零结算
         special_end_list = constant.special_end_H_list
         if (
@@ -126,12 +125,15 @@ def judge_character_h_obscenity_unconscious(
         )
     # 将时停解放状态改为False
     if handle_premise.handle_self_time_stop_orgasm_relase(character_id):
-        character_data.h_state.time_stop_release = False
+        h_state.set(character_id, time_stop_release=False)
 
     # 群交中，仅自慰类型和补位类型的干员由群交AI判断处理（睡奸与6异常时例外）；
     # H中或木头人时做什么由她选行动时决定（handle_npc_ai.choose_state_machine）
     if (
-        (flags.get(character_id, "is_h") or character_data.hypnosis.blockhead)
+        (
+            flags.get(character_id, "is_h")
+            or hypnosis.of(character_id)["blockhead"]
+        )
         and character_data.behavior.behavior_id != constant.Behavior.SLEEP
         and handle_premise.handle_normal_6(character_id)
         and handle_premise.handle_group_sex_mode_on(character_id)
@@ -282,7 +284,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
         if handle_premise.handle_action_sleep(
             character_data.target_character_id
         ):
-            target_data.h_state.pretend_sleep = True
+            h_state.set(target_data.cid, pretend_sleep=True)
             flags.set(target_data.cid, unconscious_h=1)
             # 成就刷新
             achievement.set_entry("sleep_sex_record", 1, 1)
@@ -531,21 +533,17 @@ def settle_unconscious_semen_and_cloth(character_id: int) -> None:
     from Script.Design import second_behavior
 
     # 从缓存中获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
+    d_view = dirty.view(character_id)
     # 对数据进行去重
-    character_data.dirty.body_semen_in_unconscious = list(
-        set(character_data.dirty.body_semen_in_unconscious)
-    )
-    character_data.dirty.cloth_semen_in_unconscious = list(
-        set(character_data.dirty.cloth_semen_in_unconscious)
-    )
+    body_unconscious = list(set(d_view.body_semen_in_unconscious))
+    cloth_unconscious = list(set(d_view.cloth_semen_in_unconscious))
     # 触发角色的部位精液二段行为
-    for body_part in character_data.dirty.body_semen_in_unconscious:
+    for body_part in body_unconscious:
         second_behavior_id = "in_unconscious_cum_on_body_" + str(body_part)
         second_behavior.character_get_second_behavior(
             character_id, second_behavior_id
         )
-    for cloth_part in character_data.dirty.cloth_semen_in_unconscious:
+    for cloth_part in cloth_unconscious:
         # 如果自己身上没穿着该部位的衣服，则跳过
         if len(wardrobe.of(character_id).cloth_wear[cloth_part]) == 0:
             continue
@@ -563,8 +561,9 @@ def settle_unconscious_semen_and_cloth(character_id: int) -> None:
             character_id, "in_unconscious_stolen_socks"
         )
     # 数据清零
-    character_data.dirty.body_semen_in_unconscious = []
-    character_data.dirty.cloth_semen_in_unconscious = []
+    with dirty.editing(character_id) as d:
+        d.body_semen_in_unconscious = []
+        d.cloth_semen_in_unconscious = []
     wardrobe.set(character_id, "stolen_panties_in_unconscious", False)
     wardrobe.set(character_id, "stolen_socks_in_unconscious", False)
 
@@ -650,10 +649,9 @@ def npc_active_h() -> int:
     target_character_data = cache.character_data[target_character_id]
 
     # 如果对方不是主动H状态，则返回
-    if (
-        not target_character_data.hypnosis.active_h
-        and not target_character_data.h_state.npc_active_h
-    ):
+    if not hypnosis.of(target_character_data.cid)[
+        "active_h"
+    ] and not h_state.get(target_character_data.cid, "npc_active_h"):
         return 0
     # 对方处于幼年阶段时不逆推
     if child_stage_gate.is_child_stage(target_character_id):
@@ -746,14 +744,10 @@ def npc_ai_in_group_sex(character_id: int) -> None:
     if character_id == 0 or child_stage_gate.is_child_stage(character_id):
         return
     # 如果自己已在群交模板中，则返回
-    group_sex_chara_id_list = group_sex_panel.count_group_sex_character_list()
-    if character_id in group_sex_chara_id_list:
+    if character_id in group_sex_panel.count_group_sex_character_list():
         return
 
     pl_character_data: game_type.Character = cache.character_data[0]
-    A_template_data = pl_character_data.h_state.group_sex_body_template_dict[
-        "A"
-    ]
 
     # 如果不是H状态+群交，则返回
     if not flags.get(
@@ -770,19 +764,16 @@ def npc_ai_in_group_sex(character_id: int) -> None:
         flags.set(character_id, masturebate=3)
         return
 
-    # 获取当前模板的空缺部位和非空缺部位
-    now_template_empty_part_list, __ = (
-        group_sex_panel.get_now_template_part_list()
-    )
-
-    # 没有空缺时，自己进入要自慰状态
-    if not now_template_empty_part_list:
+    # 获取当前模板的空缺部位；没有空缺时自己进入要自慰状态
+    empty_parts, __ = group_sex_panel.get_now_template_part_list()
+    if not empty_parts:
         flags.set(character_id, masturebate=3)
         return
     # 随机选择一个部位；如果是加入侍奉，则直接加入
-    body_part = random.choice(now_template_empty_part_list)
+    body_part = random.choice(empty_parts)
     if body_part == _("加入侍奉"):
-        A_template_data[1][0].append(character_id)
+        with h_state.editing(0) as pl_hs:
+            pl_hs.group_sex_body_template_dict["A"][1][0].append(character_id)
         return
     # 获取该部位的状态id列表：查询按玩家的交互对象判断前提，查完复原
     old_target_character_id = pl_character_data.target_character_id
@@ -795,12 +786,13 @@ def npc_ai_in_group_sex(character_id: int) -> None:
         )
     finally:
         pl_character_data.target_character_id = old_target_character_id
-    # 如果没有可用的状态，则返回
-    if len(new_status_id_list) == 0:
+    if not new_status_id_list:
         return
     # 随机选择一个状态；侍奉时替换侍奉位，对单时占这个部位
     status_id = random.choice(new_status_id_list)
-    if body_part == "侍奉":
-        A_template_data[1] = [[character_id], status_id]
-    else:
-        A_template_data[0][body_part] = [character_id, status_id]
+    with h_state.editing(0) as pl_hs:
+        A_template_data = pl_hs.group_sex_body_template_dict["A"]
+        if body_part == "侍奉":
+            A_template_data[1] = [[character_id], status_id]
+        else:
+            A_template_data[0][body_part] = [character_id, status_id]

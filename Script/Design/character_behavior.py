@@ -25,6 +25,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Kernel import core
+from Script.Modules.domains import h_state
 from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, realtime_settle
@@ -315,10 +316,11 @@ def judge_before_pl_behavior() -> None:
             pl_character_data.target_character_id
         ]
         # 重置交互对象的射精部位
-        if target_character_data.h_state.shoot_position_body != -1:
-            target_character_data.h_state.shoot_position_body = -1
-        if target_character_data.h_state.shoot_position_cloth != -1:
-            target_character_data.h_state.shoot_position_cloth = -1
+        h_state.set(
+            target_character_data.cid,
+            shoot_position_body=-1,
+            shoot_position_cloth=-1,
+        )
 
     # 睡眠时间在6h及以上的额外恢复
     if (

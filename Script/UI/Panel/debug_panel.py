@@ -29,9 +29,10 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import abilities, action_info, entertainment
-from Script.Modules.domains import facility, flags, needs, physical_exam
-from Script.Modules.domains import pregnancy, recruit, roster, status, warehouse
+from Script.Modules.domains import abilities, action_info, dirty, entertainment
+from Script.Modules.domains import facility, flags, h_meters, h_state, hypnosis
+from Script.Modules.domains import needs, physical_exam, pregnancy, recruit
+from Script.Modules.domains import roster, status, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -885,7 +886,7 @@ class Debug_Panel:
                     f"[003]:最大MP：{needs.of(0)['mana_max']}"
                 )
                 draw_text_list.append(
-                    f"[004]:当前射精槽：{num.shown(cache.character_data[0].eja_point)}"
+                    f"[004]:当前射精槽：{num.shown(h_meters.of(0)['eja'])}"
                 )
                 draw_text_list.append(
                     f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(needs.of(0)['tired'])}"
@@ -1287,14 +1288,16 @@ class Debug_Panel:
                     needs.set(0, mana_max=new_value)
                 # 当前射精槽
                 elif key_index == 4:
-                    info_text = f"[004]:当前射精槽：{num.shown(cache.character_data[0].eja_point)}"
+                    info_text = (
+                        f"[004]:当前射精槽：{num.shown(h_meters.of(0)['eja'])}"
+                    )
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    cache.character_data[0].eja_point = new_value
+                    h_meters.set(0, eja=new_value)
                 # 疲劳值
                 elif key_index == 5:
                     info_text = f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(needs.of(0)['tired'])}"
@@ -1503,7 +1506,7 @@ class Debug_Panel:
                     f"[015]:愤怒槽：{needs.of(target_data.cid)['angry']}"
                 )
                 draw_text_list.append(
-                    f"[016]:射精槽：{num.shown(target_data.eja_point)}"
+                    f"[016]:射精槽：{num.shown(h_meters.of(target_data.cid)['eja'])}"
                 )
                 draw_text_list.append(
                     f"[017]:对玩家的好感度：{target_data.favorability[0]}"
@@ -1519,10 +1522,10 @@ class Debug_Panel:
                     f"[021]:欲望值：{needs.of(target_data.cid)['desire']}"
                 )
                 draw_text_list.append(
-                    f"[022]:精液值：{num.shown(target_data.semen_point)}"
+                    f"[022]:精液值：{num.shown(h_meters.of(target_data.cid)['semen'])}"
                 )
                 draw_text_list.append(
-                    f"[023]:精液值上限：{target_data.semen_point_max}"
+                    f"[023]:精液值上限：{h_meters.of(target_data.cid)['semen_max']}"
                 )
                 draw_text_list.append(
                     f"[024]:醉酒值 0~100点(max)：{num.shown(needs.of(target_data.cid)['drunk'])}"
@@ -1578,7 +1581,7 @@ class Debug_Panel:
                     elif value_index == 15:
                         needs.set(target_data.cid, angry=new_value)
                     elif value_index == 16:
-                        target_data.eja_point = new_value
+                        h_meters.set(target_data.cid, eja=new_value)
                     elif value_index == 17:
                         target_data.favorability[0] = new_value
                     elif value_index == 18:
@@ -1590,9 +1593,9 @@ class Debug_Panel:
                     elif value_index == 21:
                         needs.set(target_data.cid, desire=new_value)
                     elif value_index == 22:
-                        target_data.semen_point = new_value
+                        h_meters.set(target_data.cid, semen=new_value)
                     elif value_index == 23:
-                        target_data.semen_point_max = new_value
+                        h_meters.set(target_data.cid, semen_max=new_value)
                     elif value_index == 24:
                         needs.set(target_data.cid, drunk=new_value)
 
@@ -1846,21 +1849,22 @@ class Debug_Panel:
             # 污浊数据
             elif key_index == 12:
                 draw_text_list = []
+                d_view = dirty.view(target_data.cid)
                 shown_body_semen = {
                     part: [slot[0], num.shown(slot[1]), *slot[2:]]
-                    for part, slot in target_data.dirty.body_semen.items()
+                    for part, slot in d_view.body_semen.items()
                 }
                 draw_text_list.append(
                     f"[000]:身体精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{shown_body_semen}"
                 )
                 draw_text_list.append(
-                    f"\n[001]:服装精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{target_data.dirty.cloth_semen}"
+                    f"\n[001]:服装精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{d_view.cloth_semen}"
                 )
                 draw_text_list.append(
-                    f"\n[002]:衣柜里的服装精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{target_data.dirty.cloth_locker_semen}"
+                    f"\n[002]:衣柜里的服装精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{d_view.cloth_locker_semen}"
                 )
                 draw_text_list.append(
-                    f"\n[003]:A是否干净 [0脏污,1灌肠中,2已灌肠,3精液灌肠中,4已精液灌肠]：{target_data.dirty.a_clean}"
+                    f"\n[003]:A是否干净 [0脏污,1灌肠中,2已灌肠,3精液灌肠中,4已精液灌肠]：{d_view.a_clean}"
                 )
                 draw_text_list.append(
                     "[004]:身体部位:当前精液量int，输入4,0,5即可把0号部位的精液量改为5"
@@ -1904,74 +1908,56 @@ class Debug_Panel:
                     new_value = int(change_value_panel.draw())
 
                     # 根据第几项更改对应值
-                    if value_index == 3:
-                        target_data.dirty.a_clean = new_value
-                    elif value_index == 8:
-                        for i in range(len(target_data.dirty.body_semen)):
-                            target_data.dirty.body_semen[i][1] += new_value
-                            target_data.dirty.body_semen[i][2] = (
+                    with dirty.editing(target_data.cid) as d:
+                        if value_index == 3:
+                            d.a_clean = new_value
+                        elif value_index == 8:
+                            for i in range(len(d.body_semen)):
+                                d.body_semen[i][1] += new_value
+                                d.body_semen[i][2] = (
+                                    attr_calculation.get_semen_now_level(
+                                        d.body_semen[i][1], i, 0
+                                    )
+                                )
+                            for i in range(len(d.cloth_semen)):
+                                d.cloth_semen[i][1] += new_value
+                                d.cloth_semen[i][2] = (
+                                    attr_calculation.get_semen_now_level(
+                                        d.cloth_semen[i][1], i, 1
+                                    )
+                                )
+                            for i in range(len(d.cloth_locker_semen)):
+                                d.cloth_locker_semen[i][1] += new_value
+                                d.cloth_locker_semen[i][2] = (
+                                    attr_calculation.get_semen_now_level(
+                                        d.cloth_locker_semen[i][1], i, 2
+                                    )
+                                )
+                        elif value_index[0] in (0, 1, 2):
+                            tbl = (
+                                d.body_semen,
+                                d.cloth_semen,
+                                d.cloth_locker_semen,
+                            )[value_index[0]]
+                            tbl[value_index[1]][value_index[2]] = new_value
+                        elif value_index[0] == 4:
+                            d.body_semen[value_index[1]][1] = new_value
+                            d.body_semen[value_index[1]][2] = (
                                 attr_calculation.get_semen_now_level(
-                                    target_data.dirty.body_semen[i][1], i, 0
+                                    new_value, value_index[1], 0
                                 )
                             )
-                        for i in range(len(target_data.dirty.cloth_semen)):
-                            target_data.dirty.cloth_semen[i][1] += new_value
-                            target_data.dirty.cloth_semen[i][2] = (
+                        elif value_index[0] == 5:
+                            d.body_semen[value_index[1]][2] = new_value
+                        elif value_index[0] == 6:
+                            d.cloth_semen[value_index[1]][1] = new_value
+                            d.cloth_semen[value_index[1]][2] = (
                                 attr_calculation.get_semen_now_level(
-                                    target_data.dirty.cloth_semen[i][1], i, 1
+                                    new_value, value_index[1], 1
                                 )
                             )
-                        for i in range(
-                            len(target_data.dirty.cloth_locker_semen)
-                        ):
-                            target_data.dirty.cloth_locker_semen[i][
-                                1
-                            ] += new_value
-                            target_data.dirty.cloth_locker_semen[i][2] = (
-                                attr_calculation.get_semen_now_level(
-                                    target_data.dirty.cloth_locker_semen[i][1],
-                                    i,
-                                    2,
-                                )
-                            )
-                    elif value_index[0] == 0:
-                        target_data.dirty.body_semen[value_index[1]][
-                            value_index[2]
-                        ] = new_value
-                    elif value_index[0] == 1:
-                        target_data.dirty.cloth_semen[value_index[1]][
-                            value_index[2]
-                        ] = new_value
-                    elif value_index[0] == 2:
-                        target_data.dirty.cloth_locker_semen[value_index[1]][
-                            value_index[2]
-                        ] = new_value
-                    elif value_index[0] == 4:
-                        target_data.dirty.body_semen[value_index[1]][
-                            1
-                        ] = new_value
-                        target_data.dirty.body_semen[value_index[1]][2] = (
-                            attr_calculation.get_semen_now_level(
-                                new_value, value_index[1], 0
-                            )
-                        )
-                    elif value_index[0] == 5:
-                        target_data.dirty.body_semen[value_index[1]][
-                            2
-                        ] = new_value
-                    elif value_index[0] == 6:
-                        target_data.dirty.cloth_semen[value_index[1]][
-                            1
-                        ] = new_value
-                        target_data.dirty.cloth_semen[value_index[1]][2] = (
-                            attr_calculation.get_semen_now_level(
-                                new_value, value_index[1], 1
-                            )
-                        )
-                    elif value_index[0] == 7:
-                        target_data.dirty.cloth_semen[value_index[1]][
-                            2
-                        ] = new_value
+                        elif value_index[0] == 7:
+                            d.cloth_semen[value_index[1]][2] = new_value
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False
@@ -1980,26 +1966,27 @@ class Debug_Panel:
             # 本次H数据
             elif key_index == 13:
                 draw_text_list = []
+                hs_view = h_state.view(target_data.cid)
                 draw_text_list.append(
-                    f"[000]:身体道具情况:编号int:[道具名str,当前有无bool,状态的结束时间datetime.datetime]：\n{target_data.h_state.body_item}"
+                    f"[000]:身体道具情况:编号int:[道具名str,当前有无bool,状态的结束时间datetime.datetime]：\n{hs_view.body_item}"
                 )
                 draw_text_list.append(
-                    f"\n[001]:绳子捆绑情况:编号int：{target_data.h_state.bondage}"
+                    f"\n[001]:绳子捆绑情况:编号int：{hs_view.bondage}"
                 )
                 draw_text_list.append(
-                    f"\n[002]:阴茎插入位置，int，-1为未插入，其他同身体部位：{target_data.h_state.insert_position}"
+                    f"\n[002]:阴茎插入位置，int，-1为未插入，其他同身体部位：{hs_view.insert_position}"
                 )
                 draw_text_list.append(
-                    f"\n[003]:身体上的射精位置，int，-1为未射精，其他同身体部位：{target_data.h_state.shoot_position_body}"
+                    f"\n[003]:身体上的射精位置，int，-1为未射精，其他同身体部位：{hs_view.shoot_position_body}"
                 )
                 draw_text_list.append(
-                    f"\n[004]:衣服上的射精位置，int，-1为未射精，其他同衣服部位：{target_data.h_state.shoot_position_cloth}"
+                    f"\n[004]:衣服上的射精位置，int，-1为未射精，其他同衣服部位：{hs_view.shoot_position_cloth}"
                 )
                 draw_text_list.append(
-                    f"\n[005]:高潮程度记录，每3级一个循环，1为小绝顶，2为普绝顶，3为强绝顶：\n{target_data.h_state.orgasm_level}"
+                    f"\n[005]:高潮程度记录，每3级一个循环，1为小绝顶，2为普绝顶，3为强绝顶：\n{hs_view.orgasm_level}"
                 )
                 draw_text_list.append(
-                    f"\n[006]:衣服上的射精位置，int，-1为未射精，其他同衣服部位：\n{target_data.h_state.orgasm_count}"
+                    f"\n[006]:衣服上的射精位置，int，-1为未射精，其他同衣服部位：\n{hs_view.orgasm_count}"
                 )
 
                 # 进行显示
@@ -2028,26 +2015,25 @@ class Debug_Panel:
                     new_value = int(change_value_panel.draw())
 
                     # 根据第几项更改对应值
-                    if value_index == 1:
-                        target_data.h_state.bondage = new_value
-                    elif value_index == 2:
-                        target_data.h_state.insert_position = new_value
-                    elif value_index == 3:
-                        target_data.h_state.shoot_position_body = new_value
-                    elif value_index == 4:
-                        target_data.h_state.shoot_position_cloth = new_value
-                    elif value_index[0] == 0:
-                        target_data.h_state.body_item[value_index[1]][
-                            value_index[2]
-                        ] = new_value
-                    elif value_index[0] == 5:
-                        target_data.h_state.orgasm_level[value_index[1]] = (
-                            new_value
-                        )
-                    elif value_index[0] == 6:
-                        target_data.h_state.orgasm_count[value_index[1]][
-                            value_index[2]
-                        ] = new_value
+                    with h_state.editing(target_data.cid) as hs:
+                        if value_index == 1:
+                            hs.bondage = new_value
+                        elif value_index == 2:
+                            hs.insert_position = new_value
+                        elif value_index == 3:
+                            hs.shoot_position_body = new_value
+                        elif value_index == 4:
+                            hs.shoot_position_cloth = new_value
+                        elif value_index[0] == 0:
+                            hs.body_item[value_index[1]][
+                                value_index[2]
+                            ] = new_value
+                        elif value_index[0] == 5:
+                            hs.orgasm_level[value_index[1]] = new_value
+                        elif value_index[0] == 6:
+                            hs.orgasm_count[value_index[1]][
+                                value_index[2]
+                            ] = new_value
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False
@@ -2502,19 +2488,16 @@ class Debug_Panel:
 
             # 催眠数据
             elif key_index == 21:
+                hyp_view = hypnosis.view(target_data.cid)
                 info_text = ""
+                info_text += f"[000]:催眠程度：{hyp_view.hypnosis_degree}\n"
+                info_text += f"[001]:体控-敏感度提升：{hyp_view.increase_body_sensitivity}\n"
                 info_text += (
-                    f"[000]:催眠程度：{target_data.hypnosis.hypnosis_degree}\n"
+                    f"[002]:体控-强制排卵：{hyp_view.force_ovulation}\n"
                 )
-                info_text += f"[001]:体控-敏感度提升：{target_data.hypnosis.increase_body_sensitivity}\n"
-                info_text += f"[002]:体控-强制排卵：{target_data.hypnosis.force_ovulation}\n"
-                info_text += (
-                    f"[003]:体控-木头人：{target_data.hypnosis.blockhead}\n"
-                )
-                info_text += (
-                    f"[004]:体控-逆推：{target_data.hypnosis.active_h}\n"
-                )
-                info_text += f"[005]:心控-角色扮演，0为无，其他见Roleplay.csv：{target_data.hypnosis.roleplay}\n"
+                info_text += f"[003]:体控-木头人：{hyp_view.blockhead}\n"
+                info_text += f"[004]:体控-逆推：{hyp_view.active_h}\n"
+                info_text += f"[005]:心控-角色扮演，0为无，其他见Roleplay.csv：{hyp_view.roleplay}\n"
                 info_draw.text = info_text
                 info_draw.draw()
                 line_feed.draw()
@@ -2536,19 +2519,32 @@ class Debug_Panel:
                         info_draw.draw()
                         continue
                     if value_index[0] == 0:
-                        target_data.hypnosis.hypnosis_degree = value_index[1]
+                        hypnosis.set(
+                            target_data.cid, hypnosis_degree=value_index[1]
+                        )
                     elif value_index[0] == 1:
-                        target_data.hypnosis.increase_body_sensitivity = (
-                            value_index[1]
+                        hypnosis.set(
+                            target_data.cid,
+                            increase_body_sensitivity=bool(value_index[1]),
                         )
                     elif value_index[0] == 2:
-                        target_data.hypnosis.force_ovulation = value_index[1]
+                        hypnosis.set(
+                            target_data.cid,
+                            force_ovulation=bool(value_index[1]),
+                        )
                     elif value_index[0] == 3:
-                        target_data.hypnosis.blockhead = value_index[1]
+                        hypnosis.set(
+                            target_data.cid, blockhead=bool(value_index[1])
+                        )
                     elif value_index[0] == 4:
-                        target_data.hypnosis.active_h = value_index[1]
+                        hypnosis.set(
+                            target_data.cid, active_h=bool(value_index[1])
+                        )
                     elif value_index[0] == 5:
-                        target_data.hypnosis.roleplay.append(value_index[1])
+                        hypnosis.set_roleplay(
+                            target_data.cid,
+                            [*hyp_view.roleplay, value_index[1]],
+                        )
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False
                     continue

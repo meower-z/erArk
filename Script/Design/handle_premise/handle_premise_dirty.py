@@ -4,6 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.UI.Panel import dirty_panel
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import dirty
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -21,7 +22,7 @@ def handle_a_shit(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.a_clean in [1, 3]:
+    if dirty.get(character_data.cid, "a_clean") in [1, 3]:
         return 1
     return 0
 
@@ -39,7 +40,7 @@ def handle_t_a_shit(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.a_clean in [1, 3]:
+    if dirty.get(target_data.cid, "a_clean") in [1, 3]:
         return 1
     return 0
 
@@ -54,7 +55,7 @@ def handle_enema(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.a_clean in [1, 3]:
+    if dirty.get(character_data.cid, "a_clean") in [1, 3]:
         return 1
     return 0
 
@@ -72,7 +73,7 @@ def handle_t_enema(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.a_clean in [1, 3]:
+    if dirty.get(target_data.cid, "a_clean") in [1, 3]:
         return 1
     return 0
 
@@ -90,7 +91,7 @@ def handle_not_enema(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.a_clean not in [1, 3]:
+    if dirty.get(target_data.cid, "a_clean") not in [1, 3]:
         return 1
     return 0
 
@@ -108,7 +109,7 @@ def handle_t_not_enema(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.a_clean not in [1, 3]:
+    if dirty.get(target_data.cid, "a_clean") not in [1, 3]:
         return 1
     return 0
 
@@ -123,7 +124,7 @@ def handle_enema_end(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.a_clean in [2, 4]:
+    if dirty.get(character_data.cid, "a_clean") in [2, 4]:
         return 1
     return 0
 
@@ -141,7 +142,7 @@ def handle_t_enema_end(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.a_clean in [2, 4]:
+    if dirty.get(target_data.cid, "a_clean") in [2, 4]:
         return 1
     return 0
 
@@ -156,7 +157,7 @@ def handle_normal_enema(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.a_clean in [1]:
+    if dirty.get(character_data.cid, "a_clean") in [1]:
         return 1
     return 0
 
@@ -174,7 +175,7 @@ def handle_t_normal_enema(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.a_clean in [1]:
+    if dirty.get(target_data.cid, "a_clean") in [1]:
         return 1
     return 0
 
@@ -189,7 +190,7 @@ def handle_semen_enema(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.a_clean in [3]:
+    if dirty.get(character_data.cid, "a_clean") in [3]:
         return 1
     return 0
 
@@ -207,7 +208,7 @@ def handle_t_semen_enema(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.a_clean in [3]:
+    if dirty.get(target_data.cid, "a_clean") in [3]:
         return 1
     return 0
 
@@ -222,7 +223,7 @@ def handle_normal_enema_end(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.a_clean in [2]:
+    if dirty.get(character_data.cid, "a_clean") in [2]:
         return 1
     return 0
 
@@ -240,7 +241,7 @@ def handle_t_normal_enema_end(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.a_clean in [2]:
+    if dirty.get(target_data.cid, "a_clean") in [2]:
         return 1
     return 0
 
@@ -255,7 +256,7 @@ def handle_semen_enema_end(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.a_clean in [4]:
+    if dirty.get(character_data.cid, "a_clean") in [4]:
         return 1
     return 0
 
@@ -273,7 +274,7 @@ def handle_t_semen_enema_end(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.a_clean in [4]:
+    if dirty.get(target_data.cid, "a_clean") in [4]:
         return 1
     return 0
 
@@ -288,7 +289,7 @@ def handle_enama_capacity_0(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return character_data.dirty.enema_capacity == 0
+    return dirty.enema_capacity(character_data.cid) == 0
 
 
 @add_premise(constant_promise.Premise.T_ENEMA_CAPACITY_0)
@@ -314,7 +315,7 @@ def handle_enama_capacity_ge_1(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return character_data.dirty.enema_capacity >= 1
+    return dirty.enema_capacity(character_data.cid) >= 1
 
 
 @add_premise(constant_promise.Premise.T_ENEMA_CAPACITY_GE_1)
@@ -340,7 +341,7 @@ def handle_enama_capacity_5(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return character_data.dirty.enema_capacity == 5
+    return dirty.enema_capacity(character_data.cid) == 5
 
 
 @add_premise(constant_promise.Premise.T_ENEMA_CAPACITY_5)
@@ -366,7 +367,7 @@ def handle_enama_capacity_l_5(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return character_data.dirty.enema_capacity < 5
+    return dirty.enema_capacity(character_data.cid) < 5
 
 
 @add_premise(constant_promise.Premise.T_ENEMA_CAPACITY_L_5)
@@ -395,7 +396,7 @@ def handle_t_hair_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.body_semen[0][1]:
+    if dirty.body_semen_amount(target_data.cid, 0):
         return 1
     return 0
 
@@ -413,7 +414,7 @@ def handle_t_womb_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.body_semen[7][1]:
+    if dirty.body_semen_amount(target_data.cid, 7):
         return 1
     return 0
 
@@ -592,9 +593,7 @@ def handle_pl_penis_semen_dirty(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
-    penis_dirty = pl_character_data.dirty.penis_dirty_dict.get("semen", False)
-    if penis_dirty:
+    if dirty.view(0).penis_dirty_dict.get("semen", False):
         return 1
     return 0
 
@@ -623,7 +622,7 @@ def handle_hat_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[0][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 0):
         return 1
     return 0
 
@@ -641,7 +640,7 @@ def handle_t_hat_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[0][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 0):
         return 1
     return 0
 
@@ -656,7 +655,7 @@ def handle_glass_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[1][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 1):
         return 1
     return 0
 
@@ -674,7 +673,7 @@ def handle_t_glass_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[1][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 1):
         return 1
     return 0
 
@@ -689,7 +688,7 @@ def handle_in_ear_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[2][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 2):
         return 1
     return 0
 
@@ -707,7 +706,7 @@ def handle_t_in_ear_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[2][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 2):
         return 1
     return 0
 
@@ -722,7 +721,7 @@ def handle_in_neck_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[3][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 3):
         return 1
     return 0
 
@@ -740,7 +739,7 @@ def handle_t_in_neck_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[3][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 3):
         return 1
     return 0
 
@@ -755,7 +754,7 @@ def handle_in_mouse_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[4][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 4):
         return 1
     return 0
 
@@ -773,7 +772,7 @@ def handle_t_in_mouse_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[4][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 4):
         return 1
     return 0
 
@@ -788,7 +787,7 @@ def handle_up_cloth_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[5][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 5):
         return 1
     return 0
 
@@ -806,7 +805,7 @@ def handle_t_up_cloth_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[5][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 5):
         return 1
     return 0
 
@@ -821,7 +820,7 @@ def handle_bra_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[6][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 6):
         return 1
     return 0
 
@@ -839,7 +838,7 @@ def handle_t_bra_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[6][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 6):
         return 1
     return 0
 
@@ -854,7 +853,7 @@ def handle_glove_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[7][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 7):
         return 1
     return 0
 
@@ -872,7 +871,7 @@ def handle_t_glove_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[7][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 7):
         return 1
     return 0
 
@@ -887,7 +886,7 @@ def handle_down_cloth_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[8][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 8):
         return 1
     return 0
 
@@ -905,7 +904,7 @@ def handle_t_botton_cloth_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[8][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 8):
         return 1
     return 0
 
@@ -920,7 +919,7 @@ def handle_pan_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[9][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 9):
         return 1
     return 0
 
@@ -938,7 +937,7 @@ def handle_t_pan_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[9][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 9):
         return 1
     return 0
 
@@ -953,7 +952,7 @@ def handle_socks_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[10][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 10):
         return 1
     return 0
 
@@ -971,7 +970,7 @@ def handle_t_socks_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[10][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 10):
         return 1
     return 0
 
@@ -986,7 +985,7 @@ def handle_shoes_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[11][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 11):
         return 1
     return 0
 
@@ -1004,7 +1003,7 @@ def handle_t_shoes_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[11][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 11):
         return 1
     return 0
 
@@ -1019,7 +1018,7 @@ def handle_weapon_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[12][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 12):
         return 1
     return 0
 
@@ -1037,7 +1036,7 @@ def handle_t_weapon_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[12][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 12):
         return 1
     return 0
 
@@ -1052,7 +1051,7 @@ def handle_extras_semen(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.dirty.cloth_semen[13][1]:
+    if dirty.cloth_semen_amount(character_data.cid, 13):
         return 1
     return 0
 
@@ -1070,6 +1069,6 @@ def handle_t_extras_semen(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    if target_data.dirty.cloth_semen[13][1]:
+    if dirty.cloth_semen_amount(target_data.cid, 13):
         return 1
     return 0
