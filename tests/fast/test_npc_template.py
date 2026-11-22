@@ -3,14 +3,11 @@
 世界生成的角色模板在内核状态里（roster.npc_templates）
 ======================================================
 - 往返：局内生成的模板经存读档后属性不变，编号排在 ids() 末尾，静态模板仍是配置原对象。
-- 版本 22 存档：读档导入文件 "1" 里的局内生成模板，从它的素质里去掉 6 与 7（Talent.csv 里没有的素质），
+- 版本 22 旧存档：读档导入文件 "1" 里的局内生成模板，从它的素质里去掉 6 与 7（Talent.csv 里没有的素质），
   保留其余字段并建出对应角色。
 - 隔离：存档后当前对局新增的局内生成模板，读回该存档后不在模板表与角色表里。
 """
 
-import json
-import os
-import pickle
 import tempfile
 from unittest import mock
 
@@ -20,8 +17,8 @@ from Script.Design import character_handle
 from Script.Kernel import core
 from Script.Modules.domains import country, identity, npc_template
 from Script.Modules.domains import playthrough, roster
-from Script.Modules.save_load import index, kernel_state
-from tests import kernel_data
+from Script.Modules.save_load import index
+from tests import kernel_data, legacy_save
 from tests.fast.base import FastTestCase
 
 SAVE_ID = "npc_template_test"
@@ -61,30 +58,14 @@ class NpcTemplateTest(FastTestCase):
         kernel_data.written(country.fill)
         kernel_data.written(playthrough.reset_difficulty_and_birth)
 
-    def file_path(self, name: str) -> str:
-        """返回测试存档目录下指定文件的路径"""
-        return os.path.join(index.path(SAVE_ID), name)
-
     def make_version_22(self, templates: dict[int, object]) -> None:
         """
-        把已写出的测试存档改写为版本 22 格式，在文件 "1" 中写入 npc_tem_data 并把文件 "2" 的版本设为 22
+        把已写出的测试槽位换成版本 22 的旧存档，其文件 "1" 的 npc_tem_data 存放 templates
         Keyword arguments:
-        templates -- 写入缓存文件 npc_tem_data 的模板字典
+        templates -- 写入旧存档文件 "1" 的 npc_tem_data 字典
         """
-        with open(self.file_path("1"), "rb") as f:
-            legacy = pickle.load(f)
-        vars(legacy)["npc_tem_data"] = templates
-        with open(self.file_path("1"), "wb") as f:
-            pickle.dump(legacy, f)
-        with open(
-            self.file_path(kernel_state.SAVE_FILE), encoding="utf-8"
-        ) as f:
-            data = json.load(f)
-        data["version"] = 22
-        with open(
-            self.file_path(kernel_state.SAVE_FILE), "w", encoding="utf-8"
-        ) as f:
-            json.dump(data, f, ensure_ascii=False)
+        cache = legacy_save.old("Cache", npc_tem_data=templates)
+        legacy_save.to_legacy(SAVE_ID, cache, version=22)
 
     def test_generated_template_survives_save_and_load(self) -> None:
         """局内生成的模板经存读档后属性不变，编号排在末尾，静态模板仍是配置原对象"""

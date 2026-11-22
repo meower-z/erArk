@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """
 基地经济与贸易的状态（domains.economy 的全局键）
-=================================================
+================================================
 - 交易：买入 120 个后，供需系数从 1 升两次到 1.0199，今日买卖总量为 120。
   再卖出 60 个，系数按总量 120 下调一次，今日买卖总量为 180。
 - 每天的供需波动之后，除龙门币外每种资源的今日买卖总量为 0，供需系数不低于 0.1。
@@ -9,7 +9,7 @@
 - 货架：3 名已招募干员时，新的一天每家餐馆进 3 份本店食谱的食物，品质 3 到 7。
   地摊小贩进 3 份零食或饮料，品质 1 到 8。
   拿走的食物带着货架上的 uid、食谱、品质与食谱名，没有制作者。货架上不再有它，再拿时为 None。
-  货架上食谱与食物的先后经过存档文件 "2" 的编码与解码不变。
+  货架上食谱与食物的先后经过 kernel_state 的编码与解码不变。
 - 交易员：名单是职位为交易员的干员，按已招募干员集合的遍历顺序排列。
   刷新岗位后，不是交易员的主交易员与不存在的角色改为空缺。
 - 读档：罗德岛对象带着旧经济属性时，值写进 GameState，属性从对象上删掉。之后角色换id，主交易员跟着换。
@@ -21,7 +21,6 @@ import json
 import uuid
 
 from Script.Config import game_config
-from Script.Core import game_type
 from Script.Design import basement
 from Script.Kernel import core
 from Script.Modules.domains import economy, roster, warehouse, work
@@ -34,6 +33,7 @@ from Script.UI.Panel import resource_exchange_panel as trade
 from tests.fast.base import FastTestCase
 from Script.Modules.domains import chara_life
 from tests import kernel_data
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 def _tradable() -> int:
@@ -156,11 +156,11 @@ class EconomyStateTest(FastTestCase):
         self.assertIsNone(economy.take(rid, recipe, uid))
 
     def test_shelf_order_survives_save_file(self) -> None:
-        """进货后的货架写进存档文件 "2" 再读回，各商店里食谱与食物的先后不变"""
+        """进货后的货架经 kernel_state 编码为 JSON 再解码读回，各商店里食谱与食物的先后不变"""
         with working.based_on(core.state()) as stocked:
             self.restock()
             game = core.preview(core.state(), stocked.effects())
-        text = json.dumps(kernel_state.encode(game, "t"), ensure_ascii=False)
+        text = json.dumps(kernel_state.encode(game), ensure_ascii=False)
         loaded = kernel_state.decode(json.loads(text), True)
         shops: list[int | str] = [*game_config.config_restaurant, economy.STALL]
         for shop in shops:
@@ -196,16 +196,16 @@ class EconomyStateTest(FastTestCase):
         expected = [cid for cid in roster.active() if cid in (3, 1050)]
         self.assertEqual(economy.trade_operator_ids(), expected)
 
-    def old_island(self) -> game_type.Rhodes_Island:
+    def old_island(self) -> LegacyObject:
         """
         带着九个旧经济属性的罗德岛对象，餐馆 5 与地摊小贩的货架上各有一份食物
         Return arguments:
-        Rhodes_Island -- 罗德岛对象
+        LegacyObject -- 旧存档罗德岛对象
         """
         recipe = next(iter(game_config.config_recipes))
         made = cooking.create_food("", recipe, 6, "")
         sold = cooking.create_food("", recipe, 2, "")
-        island = game_type.Rhodes_Island()
+        island = LegacyObject()
         vars(island).update(
             all_income=88,
             shop_open_list=["店甲", "店乙"],
@@ -256,7 +256,7 @@ class EconomyStateTest(FastTestCase):
     def test_current_island_writes_nothing(self) -> None:
         """新建的罗德岛对象没有旧经济属性，adopt_economy 什么也不写"""
         with working.based_on(core.state()) as load:
-            upgrade.adopt_economy({"rhodes_island": game_type.Rhodes_Island()})
+            upgrade.adopt_economy({"rhodes_island": LegacyObject()})
             self.assertEqual(load.effects(), ())
 
     def test_island_checks(self) -> None:

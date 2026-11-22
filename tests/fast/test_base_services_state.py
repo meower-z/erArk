@@ -12,7 +12,7 @@
 - 读档：罗德岛对象带着这九项旧属性时，值写进 GameState，属性从对象上删掉。招募线的元组照列表读，列表形式的
   主招聘专员取其中的id，效率一项不留。队列与履历里的时间换成分钟数存下，读出时还是那个时间。
   类型不符的属性取默认值并计入交回的个数。之后换id时主招聘专员、待确认名单、借书人与外交官跟着换。
-- 存档：九项写进文件 "2" 的 JSON 再读回，读到的值不变。
+- 存档：九项经 kernel_state 编码为 JSON 再解码读回，读到的值不变。
 """
 
 import datetime
@@ -300,7 +300,7 @@ class BaseServicesStateTest(FastTestCase):
         self.assertEqual(recruit.pending(), {7})
 
     def test_save_round_trip(self) -> None:
-        """九项写进文件 "2" 的 JSON 再读回，读到的值不变"""
+        """九项经 kernel_state 编码为 JSON 再解码读回，读到的值不变"""
         self.adopt(self.old_island(), 0)
         readers = (
             recruit.lines,
@@ -315,6 +315,6 @@ class BaseServicesStateTest(FastTestCase):
         )
         before = [read() for read in readers]
         game = core.preview(core.state(), self.buffer.effects())
-        text = json.dumps(kernel_state.encode(game, "t"))
+        text = json.dumps(kernel_state.encode(game))
         decoded = kernel_state.decode(json.loads(text), tagged=True)
         self.assertEqual([read(decoded) for read in readers], before)

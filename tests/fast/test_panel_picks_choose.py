@@ -1,14 +1,12 @@
 # -*- coding: UTF-8 -*-
 """
-面板定下玩家的行动时缓存不变
-============================
-选择路径上的面板经 player_pick.choose 抛出 Chosen：行动的数据经得起 JSON 往返，
-抛出前后游戏缓存逐字节相同（按 pickle 比较），只有面板id（界面状态）可以变。
-要改的数据（食物进背包、脱衣、睡觉时间）留到行动开始时由 panel_starters 写入。
+界面面板定下玩家行动
+====================
+选择路径上的面板经 player_pick.choose 抛出 Chosen，行动数据经 JSON 往返不变。
+需要改动的数据（食物入包、脱衣、睡眠时长等）在行动开始时由 panel_starters 写入。
 """
 
 import json
-import pickle
 from collections.abc import Callable
 from types import SimpleNamespace
 from typing import Any
@@ -29,17 +27,6 @@ from Script.Modules.domains import inventory
 from tests import kernel_data
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
-
-
-def pickled(cache: Any) -> dict[str, bytes]:
-    """
-    序列化缓存的每个顶层属性
-    Keyword arguments:
-    cache -- 游戏缓存
-    Return arguments:
-    dict[str, bytes] -- 属性名到 pickle 字节的映射
-    """
-    return {k: pickle.dumps(v) for k, v in vars(cache).items()}
 
 
 def _food(name: str) -> game_type.Food:
@@ -66,8 +53,8 @@ def _panel(**attrs: object) -> Any:
     return SimpleNamespace(**attrs)
 
 
-class PanelPicksLeaveCache(FastTestCase):
-    """每个面板的选择：抛出 Chosen，数据是 JSON，缓存不变"""
+class PanelPicksChoose(FastTestCase):
+    """各面板选择都抛出带纯 JSON 数据的 Chosen"""
 
     def chosen(self, pick: Callable[[], object]) -> dict[str, Any]:
         """
@@ -77,16 +64,10 @@ class PanelPicksLeaveCache(FastTestCase):
         Return arguments:
         dict -- 定下的行动：kind 与 JSON 往返后的 action_data
         """
-        before = pickled(self.cache)
         with self.assertRaises(player_pick.Chosen) as raised:
             pick()
         act = raised.exception.action
         data = json.loads(json.dumps(act.action_data))
-        now = pickled(self.cache)
-        changed = sorted(
-            k for k in before.keys() | now.keys() if before.get(k) != now.get(k)
-        )
-        self.assertEqual(changed, [], "选择里缓存不变")
         self.assertEqual(act.who, "0")
         return {"kind": act.action_id.split(".", 1)[1], **data}
 

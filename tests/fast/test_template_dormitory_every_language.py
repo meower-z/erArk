@@ -28,9 +28,6 @@ import json
 import sys
 
 sys.path.insert(0, sys.argv[1])
-from Script.Core import cache_control, game_type
-
-cache_control.cache = game_type.Cache()
 from Script.Config import normal_config
 
 normal_config.init_normal_config()
@@ -47,7 +44,6 @@ from Script.Modules.gameplay_resolution import working
 from Script.System.Dormitory_System import common
 from Script.Core import constant
 
-cache = cache_control.cache
 with working.based_on(core.state()):
   for adv_id, tem in character_config.character_tem_list.items():
     if tem.Dormitory != "无":

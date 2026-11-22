@@ -52,11 +52,6 @@ class ActivityStateTest(FastTestCase):
         self.world.chara(NPC, "干员")
         self.enterContext(working.based_on(core.state()))
 
-    def test_character_has_no_activity_attributes(self) -> None:
-        """角色对象上没有这十个属性"""
-        fields = vars(game_type.Character())
-        self.assertEqual([n for n in activity.PICKLED if n in fields], [])
-
     def test_defaults_match_old_character(self) -> None:
         """没写过的角色读出各键的默认值，行为与事件的字段同 Behavior()、Chara_Event()（食物的 uid 除外）"""
         self.assertEqual(activity.state(NOBODY), 0)
@@ -253,7 +248,7 @@ class ActivityStateTest(FastTestCase):
             activity.set_dead(NPC, True)
             effects = buf.effects()
         state = core.preview(core.state(), effects)
-        encoded = kernel_state.encode(state, "tok")
+        encoded = kernel_state.encode(state)
         self.assertEqual(encoded["version"], upgrade.CURRENT)
         self.assertGreaterEqual(upgrade.CURRENT, 22)
         decoded = kernel_state.decode(encoded, tagged=True)

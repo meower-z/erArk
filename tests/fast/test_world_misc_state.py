@@ -1,12 +1,12 @@
 # -*- coding: UTF-8 -*-
 """
 世界设定、周目、国家、模式、吵醒名单、成就、事件与指令记录与计划队列
-================================================================
+====================================================================
 - 本周目设定与周目数随 kernel_state 编解码完整往返，读取的键是整数。
 - 玩家选行动时写入模式开关，选择期间 core.state() 不变，行动开始时落盘。
 - 重置到空状态后写回周目数加一、成就、难度与生殖方式设定，模式开关、计划队列与路线保持清空。
-- 旧存档导入（adopt_old_save）：版本 11 齐备字段全部迁入并从缓存字典删掉，版本 12 空字典不改写已有状态且计数为 0，
-  版本 0 缺项与错类型按默认补齐并计数。
+- 旧存档导入（adopt_old_save）：版本 11 齐备字段全部迁入并从属性表删掉，
+  版本 12 空字典不改写已有状态且计数为 0，版本 0 缺项与错类型按默认补齐并计数。
 - 成就的各项写入助手与 view() 隔离，修改 view() 不改 GameState。
 - 计划队列经 plan.queue 保存，queue_head 只读答出队首，pop 弹出并清掉空队列条目。
 - 路线始终读成新列表且修改不影响状态，country.fill 补齐配置并把影响系数夹在 0.1 到 3.0。
@@ -55,7 +55,7 @@ class WorldMiscStateTest(FastTestCase):
             playthrough.set_setting(playthrough.FIRST_BONUS, 5, True)
             playthrough.set_setting(playthrough.WORLD, 7, 2)
             playthrough.set_game_round(4)
-        encoded = kernel_state.encode(core.state(), "tok")
+        encoded = kernel_state.encode(core.state())
         self.assertEqual(encoded["version"], upgrade.CURRENT)
         decoded = kernel_state.decode(encoded, tagged=True)
         self.assertEqual(
@@ -192,7 +192,7 @@ class WorldMiscStateTest(FastTestCase):
         self.assertEqual(plan.route(), [["中枢", "走廊"], ["中枢", "会议室"]])
         self.assertTrue(plan.sleep_save())
 
-        # 版本 12 缓存里没有这 20 个字段：不改写已有状态，计数为 0
+        # 版本 12 旧存档属性表里没有这 20 个字段：不改写已有状态，计数为 0
         v12_loaded: dict[str, Any] = {}
         with (
             mock.patch.object(draw, "NormalDraw", Quiet),

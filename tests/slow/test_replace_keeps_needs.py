@@ -1,19 +1,21 @@
 # -*- coding: UTF-8 -*-
 """
 角色替换时 body.needs、主调控员、岗位名册与监狱长跟到新id
-==========================================================
-开新游戏，取一名在场干员当旧角色，一名不在场角色的id当新id（从存档属性表的角色表里删掉它），按这个映射跑读档的角色替换。
+=========================================================
+开新游戏，取一名在场干员当旧角色，一名不在场角色的id当新id
+（从存档属性表的角色表里删掉它），按这个映射跑读档的角色替换。
 - 当前存档：新id的 body.needs 里体力与气力上限取新id的模板，醉酒为 0，其余各项等于旧角色的。
 - 主调控员是旧角色时，替换后 base.power 里的主调控员是新id。
 - 旧角色在招聘专员名册里、也是监狱长时，替换后名册里她的位置换成新id，监狱长是新id，名册里别人不变。
 - 旧存档：旧角色对象带着疲劳、饥饿、尿意属性时，这些属性抄到新角色对象上，留给读档后面的 upgrade.adopt_v0。
-- 版本 1 与 2 的存档：疲劳、饥饿、尿意、乳汁在 GameState 里，旧角色对象带着体力等十项属性。
+- 版本 1 与 2 的旧存档：疲劳、饥饿、尿意、乳汁在 GameState 里，旧角色对象带着体力等十项属性。
   新角色对象抄过属性、再经读档后面的 upgrade.adopt_pickled 写进 body.needs 之后，与当前存档得到的相同。
 """
 
 import importlib
 from fractions import Fraction
 from types import ModuleType
+from typing import Any
 
 from tests.slow.base import SlowTestCase
 from tests import kernel_data
@@ -37,7 +39,7 @@ NEEDS = {
 }
 """ 旧角色的十四项数值。版本 1 的存档用例里，其中十项是旧角色对象的属性，GS1_NEEDS 的四项写进 body.needs """
 GS1_NEEDS = ("tired", "hunger", "urine", "milk")
-""" 版本 1 的存档里已在 GameState（文件 "2"）里的四项 """
+""" 版本 1 旧存档里已在 GameState（文件 "2"）里的四项 """
 OTHER = 99999
 """ 名册里不参与替换的另一个角色id """
 
@@ -51,7 +53,7 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
     """读档的角色替换带走生理需求"""
 
     def setUp(self) -> None:
-        """选出旧角色与新id，浅拷贝缓存属性作存档属性表，并用除新id外的空旧角色对象填充 character_data"""
+        """选出旧角色与新id，存档属性表只有 character_data：除新id外每个角色一个空的旧角色对象"""
         super().setUp()
         self.old = min(
             cid for cid in kernel_data.domain("roster").active() if cid != 0
@@ -62,8 +64,8 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
             if cid not in kernel_data.domain("roster").active()
             and cid in game("Script.Config.character_config").character_tem_list
         )
-        self.loaded = dict(vars(self.cache))
-        stub = game("Script.Core.game_type").Character
+        stub = game("Script.Modules.save_load.legacy_pickle").LegacyObject
+        self.loaded: dict[str, Any] = {}
         self.loaded["character_data"] = {
             cid: stub() for cid in identity.ids() if cid != self.new
         }
@@ -96,7 +98,7 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
         self.assertEqual(got, want)
 
     def test_pickled_stats_copy_attributes(self) -> None:
-        """版本 1 与 2 的存档：新角色对象抄过属性、再经 adopt_pickled 写进 body.needs 之后，与当前存档得到的相同"""
+        """版本 1 与 2 旧存档：新角色抄过属性并经 adopt_pickled 写入 body.needs 后与当前存档相同"""
         core = game("Script.Kernel.core")
         game_type = game("Script.Core.game_type")
         needs = game("Script.Modules.domains.needs")

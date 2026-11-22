@@ -13,11 +13,10 @@
   版本 13 之前的存档缺一个属性计 1 条跨版本更新，版本 13 的不计。派对排期或冰箱的表不是 dict 时计 1 条，按默认值读。
 """
 
-import pickle
 from unittest import mock
 
 from Script.Config import game_config
-from Script.Core import game_type, get_text, save_handle
+from Script.Core import get_text, save_handle
 from Script.Design import basement, character_handle
 from Script.Kernel import core
 from Script.Modules.domains import (
@@ -34,6 +33,7 @@ from Script.UI.Moudle import draw
 from Script.UI.Panel import aromatherapy_panel, manage_library
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 SLOT = "base_tallies"
 """ 读档用的存档id。测试换掉 save_handle.load_save，不读文件 """
@@ -173,12 +173,12 @@ class BaseTalliesStateTest(FastTestCase):
         bonus = 2 * medical_constant.HOSPITAL_DOCTOR_BED_BONUS
         self.assertEqual(medical.state().bed_limit, start + bonus)
 
-    def install(self, saved: object) -> None:
+    def install(self, saved: dict[str, object]) -> None:
         """
         按版本 12 跑读档的 Reset 步骤（save_handle.install_save），读入 saved。
         画面输出换成不画的对象。小世界没有国家数据，补国家数据的 country.fill 换成什么也不做的函数
         Keyword arguments:
-        saved -- 存档里的游戏缓存
+        saved -- 模拟旧存档的属性表
         """
 
         class Quiet:
@@ -203,14 +203,14 @@ class BaseTalliesStateTest(FastTestCase):
     def test_old_save_moves_into_state(self) -> None:
         """
         版本 12 的罗德岛对象带着全部八个属性：派对排期周三为读书会，旅馆房间档次 2，四项计数 250、70、2、30，
-        冰箱两个表各一名干员。读档后 GameState 里是这些值，缓存上没有罗德岛对象
+        冰箱两个表各一名干员。读档后 GameState 里是这些值
         """
-        saved = pickle.loads(pickle.dumps(self.cache))
+        saved: dict[str, object] = {}
         party = {d: 0 for d in range(7)} | {2: READING}
         counts = dict(zip(tallies.PICKLED, (250, 70, 2, 30), strict=True))
         tables = dict(zip(fridge.PICKLED, ({1: 40}, {2: 15}), strict=True))
-        saved.rhodes_island = game_type.Rhodes_Island()
-        vars(saved.rhodes_island).update(
+        saved["rhodes_island"] = LegacyObject()
+        vars(saved["rhodes_island"]).update(
             {entertainment.PICKLED_PARTY: party, entertainment.PICKLED_HOTEL: 2}
             | counts
             | tables
@@ -224,7 +224,6 @@ class BaseTalliesStateTest(FastTestCase):
         self.assertEqual(
             {old: fridge.table(k) for old, k in fridge.PICKLED.items()}, tables
         )
-        self.assertNotIn("rhodes_island", vars(self.cache))
 
     def test_old_save_counts_missing_and_wrong_types(self) -> None:
         """
@@ -249,7 +248,7 @@ def adopted(attrs: dict[str, object], version: int) -> int:
     Return arguments:
     int -- 三个函数交回的条数之和
     """
-    island = game_type.Rhodes_Island()
+    island = LegacyObject()
     vars(island).update(attrs)
     loaded = {"rhodes_island": island}
     adopters = (entertainment, tallies, fridge)

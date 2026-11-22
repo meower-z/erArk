@@ -3,15 +3,18 @@
 存档与读档带着内核的 GameState，读档后从玩家的选择接着跑
 ========================================================
 - 读档：新游戏里等待三次后经 save_handle 写盘存档，再等待一次后读档。
-  读档后内核的时钟与游戏时间是存档时的。各干员的内核行动（行动id、行动数据、结束时刻）与角色数据和存档时相同。玩家的行动结束在当前时钟。
-- 读带 open 键的内核状态：等待三次后存档，给文件 "2" 里每个角色加上 open（玩家为 None，干员的行为还在进行时为真，
-  否则为 None）。读档后没有 open，open 为真的干员保留行为，其余角色是同样起止的 kernel.Idle；
-  之后等待一次，每个行动至多收尾一次，读档前已收尾的行动不会第二次收尾，读档时还在进行的干员行为各在结束时收尾。
-- 读旧存档：等待一次后，从缓存里删掉计划队列与玩家的寻路，再写盘存档。存档后给一名干员排一个睡觉，给博士留一段寻路。
+  读档后内核的时钟与游戏时间是存档时的。各干员的内核行动（行动id、行动数据、结束时刻）与角色数据和存档时相同。
+  玩家的行动结束在当前时钟。
+- 读带 open 键的内核状态：等待三次后存档，给 save.json 里每个角色加上 open
+  （玩家为 None，干员的行为还在进行时为真，否则为 None）。读档后没有 open，
+  open 为真的干员保留行为，其余角色是同样起止的 kernel.Idle；之后等待一次，每个行动至多收尾一次，
+  读档前已收尾的行动不会第二次收尾，读档时还在进行的干员行为各在结束时收尾。
+- 读无计划与寻路的存档：等待一次后写盘存档，再给一名干员排一个睡觉、给博士留一段寻路。
   读档后，这名干员没有排着的行动，博士没有寻路。
 - 新周目：等待 12 次后，给一名干员排一个睡觉，给博士留一段寻路，再开新周目。
   新周目开局时，这名干员没有排着的行动，博士没有寻路，面板回到场景主面板。
-  新周目的游戏时间早于开新周目之前的时钟。之后等待一次，每个角色的内核行动都开始在新周目开局的时钟与当前时钟之间。
+  新周目的游戏时间早于开新周目之前的时钟。之后等待一次，
+  每个角色的内核行动都开始在新周目开局的时钟与当前时钟之间。
 """
 
 import importlib
@@ -110,12 +113,11 @@ class SaveLoadKernelStateTest(SlowTestCase):
         actions = game("Script.Modules.gameplay_resolution.actions")
         save_handle = game("Script.Core.save_handle")
         index = game("Script.Modules.save_load.index")
-        kernel_state = game("Script.Modules.save_load.kernel_state")
         self.wait(3)
         clock = kernel.state().clock
         save_handle.establish_save(SAVE_ID)
         try:
-            path = os.path.join(index.path(SAVE_ID), kernel_state.SAVE_FILE)
+            path = os.path.join(index.path(SAVE_ID), index.SAVE_FILE)
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
             running = set()

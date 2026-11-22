@@ -3,12 +3,12 @@
 存档角色标记、行动记录、玩家能力与收藏品往返测试
 ================================================
 开新游戏（SlowTestCase.setUp），存档目录换成临时目录。
-- 写入四个新键的非默认值（含 Fraction 类型的 today_sanity_point_cost），存盘后校验文件 "2" 版本为当前版本、
+- 写入四个新键的非默认值（含 Fraction 类型的 today_sanity_point_cost），存盘后校验 save.json 版本为当前版本、
   含 "$frac" 与四个新键，且重读后数值与类型完整保留；
-- 存盘后再存一次，文件 "2"（除存档标记外）逐字相同；
-- 存盘前后以相同随机种子推进 60 分钟，内核状态、花名册顺序与四项域快照一致；
-- 构造带四个旧属性的 v16 存档读回，验证 adopt_old_save 把 float 转为精确 Fraction、忽略 unnormal_flag，
-  且载入后的 Character 对象不含这四个属性。
+- 存盘后再存一次，save.json（除 head 外）相同；
+- 存盘前后以相同随机种子推进 60 分钟，内核状态、花名册顺序与随机数状态一致；
+- 构造带四个旧属性的 v16 旧存档读回，验证 adopt_old_save 把 float 转为精确 Fraction，
+  且载入后的 Identity 对象不含这四个属性。
 """
 
 import hashlib
@@ -77,15 +77,13 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
         """序列化当前内核状态以便跨轮比较"""
         kernel = game("Script.Kernel.core")
         kernel_state = game("Script.Modules.save_load.kernel_state")
-        return json.dumps(
-            kernel_state.encode(kernel.state(), "fixed"), sort_keys=True
-        )
+        return json.dumps(kernel_state.encode(kernel.state()), sort_keys=True)
 
     def test_round_trip_and_continue(self) -> None:
         """四个新角色键存读、$frac 保留、二次存盘一致、续玩 60 分钟一致"""
         save_handle = game("Script.Core.save_handle")
         kernel = game("Script.Kernel.core")
-        kernel_state = game("Script.Modules.save_load.kernel_state")
+        index = game("Script.Modules.save_load.index")
         upgrade = game("Script.Modules.save_load.upgrade")
         flags = kd.domain("flags")
         action_info = kd.domain("action_info")
@@ -112,7 +110,7 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
 
         before_save = self.state_json()
         save_handle.establish_save(SLOT)
-        path = os.path.join(self.folder, SLOT, kernel_state.SAVE_FILE)
+        path = os.path.join(self.folder, SLOT, index.SAVE_FILE)
         with open(path, encoding="utf-8") as f:
             first_file = json.load(f)
         self.assertEqual(first_file["version"], upgrade.CURRENT)
@@ -163,14 +161,15 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
         with open(path, encoding="utf-8") as f:
             second_file = json.load(f)
         for doc in (first_file, second_file):
-            doc.pop(kernel_state.TOKEN)
+            doc.pop("head")
         self.assertEqual(second_file, first_file)
 
     def test_adopt_synthetic_v16_save(self) -> None:
         """合成 v16 旧存档（角色带四个旧属性、float 理智消耗）读档后完整迁入内核并删去旧属性"""
         game_type = game("Script.Core.game_type")
         save_handle = game("Script.Core.save_handle")
-        kernel_state = game("Script.Modules.save_load.kernel_state")
+        index = game("Script.Modules.save_load.index")
+        legacy_save = game("tests.legacy_save")
         flags = kd.domain("flags")
         action_info = kd.domain("action_info")
         player_ability = kd.domain("player_ability")
@@ -181,11 +180,10 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
         )
         save_handle.establish_save("v16_old")
 
-        # 改写文件 "2" 为 v16 且去掉四个新键
-        p2 = os.path.join(self.folder, "v16_old", kernel_state.SAVE_FILE)
+        # 去掉 save.json 里的四个新键
+        p2 = index.file("v16_old", index.SAVE_FILE)
         with open(p2, encoding="utf-8") as f:
             doc = json.load(f)
-        doc["version"] = 16
         for entry in doc["characters"].values():
             for k in (
                 flags.KEY,
@@ -197,23 +195,23 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
         with open(p2, "w", encoding="utf-8") as f:
             json.dump(doc, f, ensure_ascii=False)
 
-        # 改写文件 "1"：给玩家和一名干员挂上旧属性
-        loaded = save_handle.load_save("v16_old")
-        vars(loaded)["character_data"] = chara_projection.pickled_characters()
+        # 换成 v16 旧存档，文件 "1" 里给玩家和一名干员挂上旧属性
+        characters = chara_projection.pickled_characters()
         sp = game_type.SPECIAL_FLAG()
         sp.vistor = 2
-        vars(loaded.character_data[npc_id])["sp_flag"] = sp
+        vars(characters[npc_id])["sp_flag"] = sp
         ai = game_type.ACTION_INFO()
         ai.health_check_today = 1
-        vars(loaded.character_data[npc_id])["action_info"] = ai
+        vars(characters[npc_id])["action_info"] = ai
         pa = game_type.PLAYER_ABILITY()
         vars(pa)["today_sanity_point_cost"] = 0.25
         pa.jj_size = 3
-        vars(loaded.character_data[0])["pl_ability"] = pa
+        vars(characters[0])["pl_ability"] = pa
         pc = game_type.PLAYER_COLLECTION()
         pc.used_condoms = [7, 9]
-        vars(loaded.character_data[0])["pl_collection"] = pc
-        save_handle.write_save_data("v16_old", "1", loaded)
+        vars(characters[0])["pl_collection"] = pc
+        cache = legacy_save.old("Cache", character_data=characters)
+        legacy_save.to_legacy("v16_old", cache, version=16)
 
         self.load("v16_old")
         self.assertEqual(flags.get(npc_id, "vistor"), 2)

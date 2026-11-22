@@ -13,21 +13,22 @@
 - 角色换 id 时，医生名单与分科配置里的旧 id 换成新 id。
 """
 
+import datetime
 import io
 import pickle
-import sys
-import types
 from collections.abc import Mapping
 from types import MappingProxyType
 from typing import cast
+from unittest import mock
 
-from Script.Core import game_type, save_handle
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.domains import medical, medical_patient
 from Script.Modules.gameplay_resolution import working
 from Script.System.Medical_System import medical_constant as mc
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load import legacy_pickle
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 def full_patient(pid: int) -> medical_patient.MedicalPatient:
@@ -209,14 +210,14 @@ class MedicalStateTest(FastTestCase):
 
     def test_old_island_moves_into_state(self) -> None:
         """旧存档的罗德岛对象带着医疗部属性与旧病人计数。值写进 GameState，这些属性从对象上删掉"""
-        bag = medical.PickledPatient()
+        bag = LegacyObject()
         vars(bag).update(
             patient_id=9,
             state=mc.MedicalPatientState.HOSPITALIZED,
             need_resources={7: 1.0},
             retired_field=1,
         )
-        island = game_type.Rhodes_Island()
+        island = LegacyObject()
         vars(island).update(
             medical_hospitalized={9: bag},
             medical_patients_today={},
@@ -249,34 +250,30 @@ class MedicalStateTest(FastTestCase):
         )
         gone = set(medical.OLD_NAMES) | set(medical.DEAD_FIELDS)
         self.assertEqual(gone & set(vars(island)), set())
-        self.assertEqual(gone & set(vars(game_type.Rhodes_Island())), set())
 
     def test_current_island_keeps_state(self) -> None:
         """当前存档的罗德岛对象没有医疗部属性。GameState 里的医疗部数据不变"""
         with medical.editing() as m:
             m.income_total = 8
         before = working.get(None, medical.KEY)
-        medical.adopt_island({"rhodes_island": game_type.Rhodes_Island()})
+        medical.adopt_island({"rhodes_island": LegacyObject()})
         self.assertIs(working.get(None, medical.KEY), before)
 
     def test_old_patient_class_unpickles_to_bag(self) -> None:
-        """旧存档里 medical_constant 模块的病人对象解开成 medical.PickledPatient，属性照旧"""
-        name = "sw5_old_save.medical_constant"
-        module = types.ModuleType(name)
-        old = type("MedicalPatient", (), {"__module__": name})
-        vars(module)["MedicalPatient"] = old
-        for key, value in (
-            ("sw5_old_save", types.ModuleType("sw5_old_save")),
-            (name, module),
-        ):
-            sys.modules[key] = value
-            self.addCleanup(sys.modules.pop, key)
+        """旧存档的 medical_constant.MedicalPatient 对象加载为 LegacyObject 并保留全部属性"""
+        old = type(
+            "MedicalPatient",
+            (),
+            {"__module__": mc.__name__, "__qualname__": "MedicalPatient"},
+        )
         patient = old()
         vars(patient).update(patient_id=4, stay_days=2)
-        loaded = save_handle.SaveUnpickler(
-            io.BytesIO(pickle.dumps(patient))
+        with mock.patch.object(mc, "MedicalPatient", old, create=True):
+            data = pickle.dumps(patient)
+        loaded = legacy_pickle.LegacyUnpickler(
+            io.BytesIO(data), datetime.datetime
         ).load()
-        self.assertIs(type(loaded), medical.PickledPatient)
+        self.assertIs(type(loaded), LegacyObject)
         self.assertEqual(vars(loaded), {"patient_id": 4, "stay_days": 2})
 
     def test_remap_doctors(self) -> None:

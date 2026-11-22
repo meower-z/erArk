@@ -2,38 +2,42 @@
 """
 行为快照：逐步记下游戏状态，比较两次运行
 ========================================
-记录：每一步调用 capture(cache, log) 取一份状态，名字 -> 值。名字固定、可读：
+记录：每一步调用 capture(log) 取一份状态，名字 -> 值。名字固定、可读：
     clock                                   游戏时间
-    chara.<id>.<字段>[.<键>...]             每个角色（含离线、未招募的）的字段（SKIPPED_CHARACTER_FIELDS 除外），如
+    chara.<id>.<字段>[.<键>...]             每个角色（含离线、未招募的）的字段
+                                            （SKIPPED_CHARACTER_FIELDS 除外），如
         chara.12.position                     角色 12 所在场景
         chara.12.talent.20                    角色 12 的素质 20
         chara.12.behavior.behavior_id         角色 12 的行为id
         chara.12.pregnancy.fertilization_time 角色 12 的受精时间
-    world.<区域>.<键>[...]                  游戏缓存与 GameState 里的世界状态
-                                            （区域见 CACHE_AREAS 与 SKIPPED_CACHE_FIELDS），如
+    world.<区域>.<键>[...]                  GameState 里的世界状态（按旧格式字段名投影，
+                                            区域映射见 CACHE_AREAS），如
         world.commission.ongoing_field_commissions.9   进行中的委托 9
         world.vehicle.vehicles.5                       载具 5 的 [拥有数, 外勤中数]
         world.library.book_borrow_dict.12              书 12 的借阅者
         world.medical.medical_patients_today.13.state  门诊病人 13 的状态
-    scene.<场景路径>.occupants / close_flag 场景里的角色id列表（升序，取自 scene_state.occupants）与关门状态（取自
-    scene_state.close_flag）
-    log.talk / log.event                    这一步里交去显示的口上id（含随后被显示判断挡下的）、触发的事件id（ActionLog
-    记下，只记id，不记文本）
-角色与世界的字段按对象的属性、字典的键逐层展开到叶子：叶子是布尔、数、字符串、时间、UUID、枚举，或每一项都是叶子的列表、集合（集合排序成列表）；
+    scene.<场景路径>.occupants / close_flag 场景里的角色id列表（升序，取自 scene_state.occupants）
+                                            与关门状态（取自 scene_state.close_flag）
+    log.talk / log.event                    这一步里交去显示的口上id（含随后被显示判断挡下的）、
+                                            触发的事件id（ActionLog 记下，只记id，不记文本）
+角色与世界的字段按对象的属性、字典的键逐层展开到叶子：叶子是布尔、数、字符串、时间、UUID、枚举，
+或每一项都是叶子的列表、集合（集合排序成列表）；
 时间记作「年-月-日 时:分」，UUID 记作它的字符串，枚举记作它的值。
 值为 0、假、空串、空容器或 None 的叶子不记，比较时这样的名字值为 null。
 值只有 JSON 能表达的数据，记不下的类型抛 TypeError，不用 repr 兜底。
 
-文件：每行「步<TAB>名字<TAB>值的 JSON」。第一步写下全部名字，之后每步只写变了、新出现或消失的名字，消失的名字值写 null，
-所以文件里一行就是一处变化。步是从 0000 开始的序号（时停中游戏时间不走，序号仍各不相同）。
+文件：每行「步<TAB>名字<TAB>值的 JSON」。第一步写下全部名字，之后每步只写变了、新出现或消失的名字，
+消失的名字值写 null，所以文件里一行就是一处变化。
+步是从 0000 开始的序号（时停中游戏时间不走，序号仍各不相同）。
 文件名以 .gz 结尾时按 gzip 读写。
 
 比较：python -m tests.snapshot compare <基准文件> <新文件> [--allow <放行文件>] [--limit N]
-把两份文件还原成每一步的全部状态，逐步逐名比较；一处差异是 (步, 名字, 基准值, 新值)，某一边没有这个名字时值记作 null；
-某一边整步缺失时只报一处名为 step 的差异，有这一步的一边值为 "present"，另一边为 null。
+把两份文件还原成每一步的全部状态，逐步逐名比较；一处差异是 (步, 名字, 基准值, 新值)，
+某一边没有这个名字时值记作 null；某一边整步缺失时只报一处名为 step 的差异，
+有这一步的一边值为 "present"，另一边为 null。
 报告先列最早出现差异的一步的全部差异，再按步逐条列出差异（最多 --limit 条，默认 200，0 为不限），
-最后是没放行的差异的两份汇总：按角色（角色id与名字、差异数、最早的步、涉及的字段）与按字段（角色id换成 *，差异数、
-最早的步、涉及的角色）。
+最后是没放行的差异的两份汇总：按角色（角色id与名字、差异数、最早的步、涉及的字段）
+与按字段（角色id换成 *，差异数、最早的步、涉及的角色）。
 每条差异写明步与这一步的基准游戏时间、名字（角色名字里带上角色的名字）、基准值与新值。
 放行文件是 JSON 列表，每条放行一处差异：
     {"step": "0012", "name": "chara.12.position", "baseline": ["中枢", "走廊"], "new": ["中枢", "会议室"],
@@ -62,7 +66,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any, TextIO
 
-    from Script.Core import game_type
     from Script.UI.Panel import draw_event_text_panel
 
 ABSENT = None
@@ -78,13 +81,7 @@ SKIPPED_CHARACTER_FIELDS = {
 CACHE_AREAS = {
     "game_round": "clock",
 }
-""" 游戏缓存字段所属的区域；没列出的字段以字段名为区域，如 world.country.<键> """
-
-SKIPPED_CACHE_FIELDS = {
-    "character_data": "按 chara.<id> 单独记",
-    "daily_intsruce": "玩家当天的指令记录（文本）",
-}
-""" 不记的游戏缓存字段: 理由 """
+""" 世界字段所属的区域映射；没列出的字段以字段名为区域，如 world.country.<键> """
 
 
 SCALAR_TYPES = (bool, int, float, str)
@@ -341,23 +338,22 @@ class ActionLog:
 
 
 def capture(
-    cache: game_type.Cache,
     log: ActionLog | None = None,
     memo: dict[int, tuple[bytes | None, dict[str, object]]] | None = None,
 ) -> dict:
     """
     取当前游戏状态的一份快照
     Keyword arguments:
-    cache -- 游戏缓存
     log -- 口上与事件的记录，给出时取走它此前的记录
-    memo -- 逐步调用时传同一个空字典，记下每个角色上一次的 pickle 字节与展开结果，字节相同的角色直接沿用结果
+    memo -- 逐步调用时传同一个空字典，记下每个角色身份字段上一次的 pickle 字节与展开结果，
+            字节相同的角色直接沿用结果
     Return arguments:
     dict[str, object] -- 名字到值
     功能描述:
-        时钟，每个角色的全部字段（SKIPPED_CHARACTER_FIELDS 除外），
-        GameState 里的生理需求与供电策略（按它们在缓存里时的名字），
-        游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 除外，按 CACHE_AREAS 分区），有人的场景里的角色，
-        关着门的场景的关门状态，口上与事件的id。memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同。
+        时钟，每个角色的身份字段（SKIPPED_CHARACTER_FIELDS 除外），
+        经 project_state 与 chara_key_projection.project 投影的 GameState 世界与角色状态，
+        有人的场景里的角色，关着门的场景的关门状态，口上与事件的id。
+        memo 只省时间：pickle 字节相同的身份字典展开结果也相同。
     """
     from Script.Core import constant
     from Script.Design import game_time
@@ -384,16 +380,8 @@ def capture(
         state.update(names)
         if memo is not None:
             memo[cid] = (pickled, names)
-    project_state(cache, state)
-    chara_key_projection.project(cache, state)
-    for field in sorted(vars(cache)):
-        if field in SKIPPED_CACHE_FIELDS:
-            continue
-        flatten(
-            f"world.{CACHE_AREAS.get(field, field)}.{field}",
-            getattr(cache, field),
-            state,
-        )
+    project_state(state)
+    chara_key_projection.project(state)
     for path in constant.scene_data:
         prefix = f"scene.{path.replace(os.sep, '/')}."
         if occupants := scene_state.occupants(path):

@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 """
-养成状态、存档版本与编解码、草稿回放、静态自检与缓冲区写保护
-============================================================
+养成状态、存档版本与编解码、选择写入回放、静态自检与缓冲区写保护
+================================================================
 - 养成（growth.child）：惰性创建、全部 25 项字段存取、可重入 editing、边界与旧存档导入。
 - 存档版本（不低于 18 且含步骤 17、编码版本同 upgrade.CURRENT）与 kernel_state
-  编解码往返、选行动草稿回放、静态自检与缓冲区外写保护。
+  编解码往返、选行动写入回放、静态自检与缓冲区外写保护。
 """
 
 from Script.Config import game_config
@@ -17,6 +17,7 @@ from Script.Modules.save_load import kernel_state, upgrade
 from Script.System.Education_System import growth_handle
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 class GrowthStateTest(FastTestCase):
@@ -31,8 +32,7 @@ class GrowthStateTest(FastTestCase):
         self.enterContext(working.based_on(core.state()))
 
     def test_lazy_creation_and_legacy_apis_removed(self) -> None:
-        """Character 不再持有 child_growth，growth_handle 不再有 get_child_growth，只读不写"""
-        self.assertFalse(hasattr(game_type.Character(), "child_growth"))
+        """growth_handle 没有 get_child_growth，只读接口不惰性创建养成数据"""
         self.assertFalse(hasattr(growth_handle, "get_child_growth"))
         self.assertFalse(growth.has(1))
         self.assertIsNone(growth.of(1))
@@ -139,7 +139,7 @@ class GrowthStateTest(FastTestCase):
         legacy_g.event_history = {
             "萝莉1": {"time": game_time.now(), "choice": 1}
         }
-        npc = game_type.Character()
+        npc = LegacyObject()
         vars(npc)["child_growth"] = legacy_g
         growth.adopt_old_save({"character_data": {1: npc}}, 15)
         self.assertFalse(hasattr(npc, "child_growth"))
@@ -154,7 +154,7 @@ class GrowthStateTest(FastTestCase):
 
 
 class CodecPickAndChecksTest(FastTestCase):
-    """存档版本检查、kernel_state 编解码、选行动草稿回放与静态自检"""
+    """存档版本检查、kernel_state 编解码、选行动写入回放与静态自检"""
 
     def setUp(self) -> None:
         """放入玩家与干员"""
@@ -189,7 +189,7 @@ class CodecPickAndChecksTest(FastTestCase):
                 g.selected_course = {0: {0: [0, "理论教室一"]}}
             effects = buf.effects()
         state = core.preview(core.state(), effects)
-        encoded = kernel_state.encode(state, "tok")
+        encoded = kernel_state.encode(state)
         self.assertEqual(encoded["version"], upgrade.CURRENT)
         decoded = kernel_state.decode(encoded, tagged=True)
         self.assertEqual(roster.active_sorted(decoded), (1,))

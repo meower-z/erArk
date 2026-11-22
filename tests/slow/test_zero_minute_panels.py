@@ -4,16 +4,16 @@
 ==================================================================
 - add_panel 登记的每个面板（player_pick.UNDRAFTED、标题与建角色面板、OPENED_BY_SETTLEMENT 之外）各打开一次，
   每次等输入时按屏幕上的「返回」（没有时按「退出」「离开」「取消」「关闭」），直到面板退出：
-  内核没有开始玩家的行动，缓存的指纹（tests.pick_guard.fingerprint）不变。新游戏与用户存档 99 各走一遍
-  （存档 99 不入库，装在 save/99 时才跑，没装时报跳过）。打开时写缓存的面板（旧存档的修补、显示前的重算）
+  内核没有开始玩家的行动，状态指纹（tests.pick_guard.fingerprint）不变。新游戏与用户存档 99 各走一遍
+  （存档 99 不入库，装在 save/99 时才跑，没装时报跳过）。打开时写游戏状态的面板（旧存档的修补、显示前的重算）
   会让看一眼也定下一个 0 分钟的 Edit，这里把它们都找出来。
-- 新游戏里文本生成AI的设置还是空的，且属于全局设置（不是游戏状态）。在设置面板里改一项不触发内核行动。改完后每项 AI
-  设置都有值（没改的是默认值）。干员个人设置改一项则是一个 0 分钟的 Edit。
+- 新游戏里文本生成AI的设置还是空的，且属于全局设置（不是游戏状态）。
+  在设置面板里改一项不触发内核行动。改完后每项 AI 设置都有值（没改的是默认值）。
+  干员个人设置改一项则是一个 0 分钟的 Edit。
 """
 
 import importlib
 import os
-import pickle
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -42,7 +42,7 @@ class CannotLeave(AssertionError):
 
 
 class ZeroMinutePanelsTest(SlowTestCase):
-    """打开每个面板再离开：没有行动，缓存不变"""
+    """打开每个面板再离开：没有行动，状态指纹不变"""
 
     time_limit = 1200
     maxDiff = None
@@ -117,18 +117,11 @@ class ZeroMinutePanelsTest(SlowTestCase):
 
         return reset
 
-    def parts(self) -> dict[str, bytes]:
-        """序列化缓存中除顶层界面状态与全局设置外的全部顶层属性"""
-        out: dict[str, bytes] = {}
-        for name, value in vars(self.cache).items():
-            out[name] = pickle.dumps(value)
-        return out
-
     def sweep(self) -> tuple[int, dict[str, str]]:
         """
         每个面板打开再离开
         Return arguments:
-        tuple -- (打开的面板数, {面板名: 定下的行动与变了的缓存属性，或出的错})
+        tuple -- (打开的面板数, {面板名: 定下的行动与指纹里变了的部分，或出的错})
         """
         from Script.UI.Moudle import view
 
@@ -153,7 +146,6 @@ class ZeroMinutePanelsTest(SlowTestCase):
             reset()
             self.world.player.planned.clear()
             before = self.pick_guard.fingerprint()
-            parts = self.parts()
             self.started.clear()
             try:
                 self.tests_world.act(self.constant.panel_data[panel])
@@ -164,30 +156,27 @@ class ZeroMinutePanelsTest(SlowTestCase):
                 continue
             after = self.pick_guard.fingerprint()
             if self.player_starts() or after != before:
-                now = self.parts()
-                moved = sorted(
-                    key
-                    for key in parts.keys() | now.keys()
-                    if parts.get(key) != now.get(key)
-                )
-                extra = [
+                moved = [
                     label
-                    for label, i in (("内核", 1), ("随机数", 2), ("打断", 3))
+                    for label, i in (
+                        ("内核", 0),
+                        ("随机数", 1),
+                        ("打断", 2),
+                        ("自动存档", 3),
+                    )
                     if before[i] != after[i]
                 ]
-                problems[name] = (
-                    f"行动 {self.player_starts()}，变了 {moved + extra}"
-                )
+                problems[name] = f"行动 {self.player_starts()}，变了 {moved}"
             view.now_panel_id = self.constant.Panel.IN_SCENE
         return len(panels), problems
 
     def test_new_game_open_and_leave(self) -> None:
-        """新游戏里每个面板打开再离开：玩家没有开始行动，缓存的指纹不变"""
+        """新游戏里每个面板打开再离开：玩家没有开始行动，状态指纹不变"""
         count, problems = self.sweep()
         self.assertEqual(problems, {}, f"打开了 {count} 个面板")
 
     def test_save_99_open_and_leave(self) -> None:
-        """存档 99 里每个面板打开再离开：玩家没有开始行动，缓存的指纹不变"""
+        """存档 99 里每个面板打开再离开：玩家没有开始行动，状态指纹不变"""
         from Script.UI.Moudle import view
 
         save_handle = importlib.import_module("Script.Core.save_handle")
@@ -202,11 +191,11 @@ class ZeroMinutePanelsTest(SlowTestCase):
         self, origin: str, fn: Callable[[], None], edit: bool = True
     ) -> None:
         """
-        在 origin 对应的玩家选择草稿里执行 fn，并断言内核时钟不变。edit 为 True 时断言定下一个 0 分钟 Edit，为
-        False 时断言没有开始任何玩家行动。
+        在 origin 对应的玩家选择上下文（drafting）里执行 fn，并断言内核时钟不变。
+        edit 为 True 时断言定下一个 0 分钟 Edit，为 False 时断言没有开始任何玩家行动。
         Keyword arguments:
-        origin -- 草稿来源标识
-        fn -- 在草稿上下文中执行的函数
+        origin -- 选择来源标识
+        fn -- 在 drafting 上下文中执行的函数
         edit -- 是否预期定下一个 0 分钟 Edit（默认为 True）
         """
         clock = self.core.state().clock

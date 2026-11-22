@@ -26,6 +26,7 @@ from Script.Modules.save_load import index
 from Script.Test.Static_Check import snapshot
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 SAVE_ID = "identity_test"
 """ 测试用的存档id """
@@ -140,7 +141,7 @@ class AdoptOldSaveTest(FastTestCase):
         版本 24 之前的角色对象经 adopt_old_save 导入身份表，身份属性从对象移除，其余属性保留。
         缺失或类型不符的字段取默认值
         """
-        first = game_type.Character()
+        first = LegacyObject()
         vars(first).update(
             cid=8,
             name="庚",
@@ -154,7 +155,7 @@ class AdoptOldSaveTest(FastTestCase):
             token_text="信物",
             pregnancy="留着",
         )
-        second = game_type.Character()
+        second = LegacyObject()
         vars(second).update(name=None, sex="1", talk_size=2.5)
         loaded: dict[str, Any] = {"character_data": {8: first, 3: second}}
         identity.adopt_old_save(loaded)
@@ -191,7 +192,7 @@ class AdoptOldSaveTest(FastTestCase):
         self.assertEqual(identity.ids(), (0, 21, 4))
         self.assertEqual(list(loaded["character_data"]), [0, 21, 4])
         for chara in loaded["character_data"].values():
-            self.assertIsInstance(chara, game_type.Character)
+            self.assertIsInstance(chara, LegacyObject)
             self.assertEqual(vars(chara), {})
 
 
@@ -204,11 +205,10 @@ class FirstRecordAfterAdoptTest(FastTestCase):
         干员（键 6）的平铺 V 处女记录转入 first_part_sex_dict[6] 并重置 first_sex_id。
         玩家（键 0）的平铺记录保持不变
         """
-        loaded = game_type.Cache()
         characters = {}
         records = {}
         for cid in (0, 6):
-            chara = game_type.Character()
+            chara = LegacyObject()
             records[cid] = game_type.FIRST_RECORD()
             del records[cid].first_part_sex_dict
             records[cid].first_sex_id = 0
@@ -216,9 +216,9 @@ class FirstRecordAfterAdoptTest(FastTestCase):
                 cid=cid, name=f"角色{cid}", first_record=records[cid]
             )
             characters[cid] = chara
-        vars(loaded)["character_data"] = characters
+        loaded: dict[str, Any] = {"character_data": characters}
         with working.based_on(core.state()):
-            identity.adopt_old_save(vars(loaded))
+            identity.adopt_old_save(loaded)
             save_handle._normalize_loaded_save_paths(loaded)
         npc, player = records[6], records[0]
         self.assertEqual(
@@ -254,7 +254,7 @@ class CheckSnapshotTest(FastTestCase):
         self.world.chara(0, "博士")
         for cid, name in ((7, "丑"), (8, "寅")):
             kernel_data.put(identity.put, record(cid, name, adv=cid))
-        got = snapshot.build_snapshot(self.cache, {7, 99})
+        got = snapshot.build_snapshot({7, 99})
         self.assertEqual(sorted(got[identity.KEY]), ["0", "7"])
         self.assertEqual(got[identity.KEY]["7"]["name"], "丑")
         self.assertIn("[0, 7]", got[f"{identity.KEY}_omitted"])

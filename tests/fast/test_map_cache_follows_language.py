@@ -31,9 +31,6 @@ import json
 import sys
 
 sys.path.insert(0, sys.argv[1])
-from Script.Core import cache_control, game_type
-
-cache_control.cache = game_type.Cache()
 from Script.Config import normal_config
 
 normal_config.init_normal_config()
@@ -43,7 +40,6 @@ from Script.Core import constant
 from Script.Design import map_handle
 
 map_config.init_map_data()
-cache = cache_control.cache
 print(json.dumps({
     "scene_names": {k: v.scene_name for k, v in constant.scene_data.items()},
     "map_names": {k: v.map_name for k, v in constant.map_data.items()},

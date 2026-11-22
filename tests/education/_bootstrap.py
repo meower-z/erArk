@@ -1,13 +1,15 @@
 # -*- coding: UTF-8 -*-
-"""生长养成系统回归测试的公共引导
+"""
+生长养成系统回归测试的公共引导
 
 每个 test_*.py 开头从 _bootstrap 导入它用到的名字，即可拿到：
-    已初始化的游戏配置与缓存（不启动 Tk）、被屏蔽并可记录文本的绘制类、
+    已初始化的游戏配置与内核状态（不启动 Tk）、被屏蔽并可记录文本的绘制类、
     check() / section() / finish() 三个断言工具、make_character() 角色 fixture 工厂、
     set_time() / move_to() / open_all_classroom() / clear_schedules() 等环境工具。
 
 铁律（详见 .agents/skills/headless-game-test/SKILL.md）：
-    1. 脚本末尾必须调用 finish()。它打印汇总行，并按断言结果设退出码。慢速层的套件测试靠这两样判定脚本是否通过。
+    1. 脚本末尾必须调用 finish()。它打印汇总行，并按断言结果设退出码。
+       慢速层的套件测试靠这两样判定脚本是否通过。
     2. 含中文的脚本一律写成文件跑，不要走 heredoc / stdin（GBK 会把中文喂坏）
     3. 只读：绝不调用 save_handle.establish_save()，不 inline 调用 init_character_behavior()
 """
@@ -93,9 +95,7 @@ def finish() -> None:
 # ==== 1. 初始化链（照 game.py 的顺序，顺序不能乱） ====
 import auto_build_config  # noqa: F401,E402  增量构建游戏数据
 from Script.Config import normal_config  # noqa: E402
-from Script.Core import game_type, cache_control  # noqa: E402
 
-cache_control.cache = game_type.Cache()  # 必须在 game_config.init() 之前
 normal_config.init_normal_config()
 from Script.Config import game_config, character_config  # noqa: E402
 
@@ -139,8 +139,6 @@ from Script.Modules.domains import warehouse
 from tests.education._growth_ref import child_growth as child_growth
 
 kernel_state.reset_clock(kernel_state.first_clock())
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 # ==== 2. 全局前置 ====
 normal_config.system_setting = attr_calculation.get_system_setting_zero()
@@ -320,7 +318,7 @@ def make_character(
 
 def remove_character(cid: int) -> None:
     """
-    把一个 fixture 角色从缓存里撤掉
+    把一个 fixture 角色从身份表与在编名册里撤掉
     Keyword arguments:
     cid -- 角色id
     Return arguments:
@@ -381,14 +379,15 @@ def period_time(
 
 
 _kernel_left: object = None
-""" 上一次 play / start 停下时的 GameState：内核还是它时接着跑，不再从缓存投影 """
+""" 上一次 play / start 停下时的 GameState：内核还是它时接着跑，不重新投影 """
 
 
 def sync(keep_queue: bool = False) -> None:
     """
-    内核状态不是上一次 play 停下时的那个（脚本改过缓存或拨过时钟）时，用 kernel_data.reprojected 在此刻重新投影。
-    各角色的行动由缓存投影，各角色留着自己的 GameState 数据。玩家的行为截在此刻，玩家第一步就选行动。
-    计划队列清空（脚本直接调结算时排下、内核没跑过的计划）。干员缓存里行为的时长为 0 时，第一步就收尾、重新选
+    内核状态不是上一次 play 停下时的那个（脚本改过游戏数据或拨过时钟）时，
+    用 kernel_data.reprojected 在此刻重新投影。各角色的行动由 activity.behavior 投影，
+    各角色留着自己的 GameState 数据。玩家的行为截在此刻，玩家第一步就选行动。
+    计划队列清空（脚本直接调结算时排下、内核没跑过的计划）。干员当前行为的时长为 0 时，第一步就收尾、重新选
     Keyword arguments:
     keep_queue -- 为真时不清计划队列
     """
@@ -464,9 +463,9 @@ def play(
 def npc_turn(character_id: int, keep_queue: bool = False) -> None:
     """
     只让一名干员此刻选、开始下一个行动（PickNextAction、StartAction 走内核），别的角色不动：
-    sync() 之后，内核里别的角色的行动延到很久以后，这名干员换成此刻用完的 0 分钟 kernel.Idle、不经行为的结束函数收尾
-    （脚本造的角色没有结算过时间，收尾的结算会从很久以前算起）；这一步里事件的条件一律不成立。
-    之后的 play / sync 由缓存重新投影
+    sync() 之后，内核里别的角色的行动延到很久以后，这名干员换成此刻用完的 0 分钟 kernel.Idle、
+    不经行为的结束函数收尾（脚本造的角色没有结算过时间，收尾的结算会从很久以前算起）；
+    这一步里事件的条件一律不成立。之后的 play / sync 由领域数据重新投影
     Keyword arguments:
     character_id -- 干员的角色id
     keep_queue -- 为真时不清计划队列（sync），队首的行动先开始

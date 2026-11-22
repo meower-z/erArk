@@ -4,20 +4,17 @@
 ==============================
 - 收藏地点（map.bookmarks）与 debug 模式（mode.debug）随 kernel_state 编解码往返。
 - 「当前地点在收藏列表中」的前提随收藏与取消收藏变化。建玩家时收藏四个地点。
-- 读版本 26 的存档时，缓存里的 debug 模式、收藏地点与输入记录（input_cache）写进 GameState（对应
-  mode.debug、map.bookmarks 与 log.inputs）。读档后的缓存上没有这三项、两个不用的字段与罗德岛对象。
-  界面输入历史（view.input_cache）不随读档改变。
-- 缓存上没有罗德岛对象时，医疗部的日结算照常完成。
+- 读版本 26 的旧存档时，文件 "1" 里的 debug 模式、收藏地点与输入记录（input_cache）写进 GameState
+  （对应 mode.debug、map.bookmarks 与 log.inputs）。界面输入历史（view.input_cache）不随读档改变。
+- 医疗部初始化后的日结算照常完成。
 - 静态检查日志的最近输入文本读取界面输入历史（view.input_cache）的末尾十条。
 存档写在临时目录里（index.SAVE_DIR 换成它）。
 """
 
-import os
-import pickle
 import tempfile
 from unittest import mock
 
-from Script.Core import constant_promise, game_type, save_handle
+from Script.Core import constant_promise, save_handle
 from Script.Design import character, handle_premise
 from Script.Kernel import core
 from Script.Modules.domains import activity, bookmarks, country, history, modes
@@ -25,20 +22,11 @@ from Script.Modules.save_load import index, kernel_state
 from Script.System.Medical_System import medical_service
 from Script.Test.Static_Check import check_log
 from Script.UI.Moudle import draw, view
-from tests import kernel_data
+from tests import kernel_data, legacy_save
 from tests.fast.base import FastTestCase
 
 SLOT = "bookmarks_debug"
 """ 测试用的存档id """
-GONE = (
-    "debug_mode",
-    "collect_position_list",
-    "input_cache",
-    "old_character_id",
-    "over_behavior_character",
-    "rhodes_island",
-)
-""" 版本 26 的存档缓存带着、读档后的缓存上没有的字段 """
 
 
 class Quiet:
@@ -80,7 +68,7 @@ class BookmarksDebugStateTest(FastTestCase):
             bookmarks.add(["书", "藏品馆"])
             modes.set_debug(True)
         decoded = kernel_state.decode(
-            kernel_state.encode(core.state(), "tok"), tagged=True
+            kernel_state.encode(core.state()), tagged=True
         )
         self.assertEqual(
             bookmarks.places(decoded), [["中枢", "博士房间"], ["书", "藏品馆"]]
@@ -113,19 +101,19 @@ class BookmarksDebugStateTest(FastTestCase):
 
     def test_v26_save_moves_fields(self) -> None:
         """
-        版本 26 的存档缓存带着六个字段：读档后 debug 模式、收藏地点与最近输入（log.inputs）取自存档，
-        缓存上没有这六项，界面输入历史（view.input_cache）不变
+        版本 26 的旧存档带着六个字段：读档后 debug 模式、收藏地点与最近输入（log.inputs）取自存档，
+        界面输入历史（view.input_cache）不变
         """
-        old = pickle.loads(pickle.dumps(self.cache))
-        old.debug_mode = True
-        old.collect_position_list = [["中枢", "博士办公室"]]
-        old.input_cache = ["9"]
-        old.old_character_id = 1
-        old.over_behavior_character = {0}
-        old.rhodes_island = game_type.Rhodes_Island()
-        os.makedirs(index.path(SLOT))
-        with open(os.path.join(index.path(SLOT), index.CACHE_FILE), "wb") as f:
-            pickle.dump(old, f)
+        old = legacy_save.old(
+            "Cache",
+            debug_mode=True,
+            collect_position_list=[["中枢", "博士办公室"]],
+            input_cache=["9"],
+            old_character_id=1,
+            over_behavior_character={0},
+            rhodes_island=legacy_save.old("Rhodes_Island"),
+        )
+        legacy_save.write_cache(SLOT, old)
         self.enterContext(mock.patch.object(view, "input_cache", ["1", "2"]))
         with (
             mock.patch.object(draw, "NormalDraw", Quiet),
@@ -137,12 +125,10 @@ class BookmarksDebugStateTest(FastTestCase):
             self.assertTrue(modes.debug())
             self.assertEqual(bookmarks.places(), [["中枢", "博士办公室"]])
             self.assertEqual(history.inputs(), ["9"])
-        self.assertFalse(set(GONE) & vars(self.cache).keys())
         self.assertEqual(view.input_cache, ["1", "2"])
 
     def test_medical_settles_without_island(self) -> None:
-        """缓存上没有罗德岛对象时，医疗部初始化后的日结算成功"""
-        self.assertNotIn("rhodes_island", vars(self.cache))
+        """医疗部初始化后的日结算成功"""
         with kernel_data.writing():
             medical_service.init_medical_department_data()
             report = medical_service.settle_medical_department(draw_flag=False)

@@ -1,14 +1,13 @@
 # -*- coding: UTF-8 -*-
 """
-干员选行动只读缓存，交回只含 JSON 的意图
-========================================
-每个状态机在一个空闲干员身上跑一遍：交回计划前后游戏缓存逐字节相同（按 pickle 比较），
-计划变成的内核行动的数据经 json 往返不变，行动的种类已登记开始函数。
+干员选行动交回纯 JSON 意图
+==========================
+每个状态机在空闲干员上各运行一次：计划转换出的内核行动数据经 JSON 往返不变，
+且行动种类有已登记的开始函数。
 目标 10100（原地待机5分钟，状态机id为0）是一个行动；没有可选的行动时干员发呆到下一次 Tick。
 """
 
 import json
-import pickle
 from types import MappingProxyType
 from typing import Any
 from unittest import mock
@@ -32,32 +31,6 @@ WAIT_TARGET = "10100"
 """ 原地待机5分钟的目标 """
 
 
-def pickled(cache: Any) -> dict[str, bytes]:
-    """
-    序列化缓存的每个顶层属性
-    Keyword arguments:
-    cache -- 游戏缓存
-    Return arguments:
-    dict[str, bytes] -- 属性名到 pickle 字节的映射
-    """
-    return {k: pickle.dumps(v) for k, v in vars(cache).items()}
-
-
-def changed(before: dict[str, bytes], cache: Any) -> list[str]:
-    """
-    缓存里与 before 不同的属性名
-    Keyword arguments:
-    before -- 属性名 -> pickle
-    cache -- 游戏缓存
-    Return arguments:
-    list -- 变了的属性
-    """
-    now = pickled(cache)
-    return sorted(
-        k for k in before.keys() | now.keys() if before.get(k) != now.get(k)
-    )
-
-
 def thawed(value: core.JSON) -> Any:
     """
     内核冻结的 JSON 值换回 json 模块的形状（元组换成列表，映射换成字典）
@@ -74,7 +47,7 @@ def thawed(value: core.JSON) -> Any:
 
 
 class NpcIntentsPureTest(FastTestCase):
-    """状态机只交回意图，不写缓存"""
+    """状态机只交回意图，不直接修改游戏状态"""
 
     def setUp(self) -> None:
         """
@@ -119,16 +92,14 @@ class NpcIntentsPureTest(FastTestCase):
 
     def test_every_state_machine_reads_only(self) -> None:
         """
-        每个状态机交回计划时缓存不变（跑到一半抛错的也算），交回的行动是 JSON 意图；至少要跑起来大半
+        每个状态机的计划都是纯 JSON 意图，小世界里过半状态机正常运行
         Keyword arguments:
         无
         Return arguments:
         无
         """
-        wrote: dict[int, list[str]] = {}
         failed: dict[int, str] = {}
         ran = 0
-        before = pickled(self.cache)
         for state_machine_id in sorted(handle_state_machine.plans):
             with self.subTest(state_machine_id=state_machine_id):
                 try:
@@ -138,24 +109,17 @@ class NpcIntentsPureTest(FastTestCase):
                 else:
                     ran += 1
                     self.assert_json_intent(plan.action())
-                diff = changed(before, self.cache)
-                if diff:
-                    wrote[state_machine_id] = diff
-                    before = pickled(self.cache)
-        self.assertEqual(wrote, {}, "状态机写了缓存")
         self.assertGreater(ran, len(failed), f"失败的状态机：{failed}")
 
     def test_pick_reads_only(self) -> None:
         """
-        choose.choose 选出行动时缓存不变，行动是 JSON 意图
+        choose.choose 交回纯 JSON 意图
         Keyword arguments:
         无
         Return arguments:
         无
         """
-        before = pickled(self.cache)
         act = choose.choose(NPC)
-        self.assertEqual(changed(before, self.cache), [])
         self.assert_json_intent(act)
 
     def test_wait_target_starts_five_minute_wait(self) -> None:

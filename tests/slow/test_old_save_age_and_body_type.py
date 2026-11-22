@@ -354,14 +354,14 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         import json
         import os
         from Script.Core import save_handle
-        from Script.Modules.save_load import index, kernel_state
+        from Script.Modules.save_load import index
 
         save_handle.establish_save(SAVE_ID)
         self.assertTrue(
             save_handle.judge_save_file_exist(SAVE_ID), "存档应已写到盘上"
         )
         if inject_active:
-            path = os.path.join(index.path(SAVE_ID), kernel_state.SAVE_FILE)
+            path = os.path.join(index.path(SAVE_ID), index.SAVE_FILE)
             with open(path, encoding="utf-8") as f:
                 payload = json.load(f)
             active = set(payload["data"].get("roster.active", []))

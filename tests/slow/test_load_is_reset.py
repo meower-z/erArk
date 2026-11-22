@@ -2,17 +2,20 @@
 """
 读档是一次 Reset
 ================
-存档写在临时目录里（index.SAVE_DIR 换成它），存档面板从第 0 页显示，经主界面的「读写存档」指令在玩家的选择里操作。
-- 浏览：打开存档列表、点开存档、返回、退出列表：缓存（界面状态除外）、内核状态与存档目录都不变。
-- 读档：等待一次后在存档面板里确认读取：内核状态等于存档时的 GameState；Reset 时 core.state() 与
-  game_time.now() 已是存档的时钟；这次选择（从选择开始、经 Reset、到玩家再次选行动）没有行动开始；读档后回到主界面。
-- 旧存档（没有文件 "2"）：读档后内核的时钟是存档头的游戏时间，角色是缓存里的名单，全局数据有 ticked 与 settled_day。
-- 旧存档，系统设置 14 打开：读档时修复跑一次，跑时游戏时间已是存档的；读档后的静态检查没有时钟健全性（BEHAV-02）的失败。
+存档写在临时目录里（index.SAVE_DIR 换成它），存档面板从第 0 页显示，
+经主界面的「读写存档」指令在玩家的选择里操作。
+- 浏览：打开存档列表、点开存档、返回、退出列表：状态指纹、内核状态与存档目录都不变。
+- 读档：等待一次后在存档面板里确认读取：内核状态等于存档时的 GameState；
+  Reset 时 core.state() 与 game_time.now() 已是存档的时钟；
+  这次选择（从选择开始、经 Reset、到玩家再次选行动）没有行动开始；读档后回到主界面。
+- 旧存档（没有文件 "2"）：读档后内核的时钟是存档头的游戏时间，角色是在编名单，
+  全局数据有 ticked 与 settled_day。
+- 旧存档，系统设置 14 打开：读档时修复跑一次，跑时游戏时间已是存档的；
+  读档后的静态检查没有时钟健全性（BEHAV-02）的失败。
 """
 
 import importlib
 import os
-import pickle
 import sys
 import tempfile
 from types import ModuleType
@@ -107,7 +110,8 @@ class LoadIsResetTest(SlowTestCase):
 
     def save(self, old: bool = False) -> "core.GameState":
         """
-        等待一次后存档，old 为真时删掉存档里的文件 "2" 与存档头里的标记，做成旧存档。再等待一次，忘掉此前的 Reset 记录
+        等待一次后存档，old 为真时把它换成版本 0 的旧存档（文件 "0" 是没有标记的存档头，文件 "1" 是缓存）。
+        再等待一次，忘掉此前的 Reset 记录
         Keyword arguments:
         old -- 是否做成旧存档
         Return arguments:
@@ -116,29 +120,23 @@ class LoadIsResetTest(SlowTestCase):
         core = game("Script.Kernel.core")
         save_handle = game("Script.Core.save_handle")
         index = game("Script.Modules.save_load.index")
-        kernel_state = game("Script.Modules.save_load.kernel_state")
+        legacy_save = game("tests.legacy_save")
         self.instruct("WAIT")
         saved = core.state()
         save_handle.establish_save(SAVE_ID)
         if old:
             roster = game("Script.Modules.domains.roster")
-            cache_path = os.path.join(self.folder, SAVE_ID, "1")
-            with open(cache_path, "rb") as f:
-                legacy_cache = pickle.load(f)
-            vars(legacy_cache)["npc_id_got"] = roster.active()
-            vars(legacy_cache)["forbidden_npc_id"] = roster.forbidden()
-            vars(legacy_cache)["npc_name_data"] = roster.names()
-            vars(legacy_cache)[
-                "character_data"
-            ] = chara_projection.pickled_characters()
-            with open(cache_path, "wb") as f:
-                pickle.dump(legacy_cache, f)
-            os.remove(
-                os.path.join(self.folder, SAVE_ID, kernel_state.SAVE_FILE)
+            legacy_cache = legacy_save.old(
+                "Cache",
+                npc_id_got=roster.active(),
+                forbidden_npc_id=roster.forbidden(),
+                npc_name_data=roster.names(),
+                character_data=chara_projection.pickled_characters(),
             )
             head = index.head(SAVE_ID)
-            del head[kernel_state.TOKEN]
-            index.write_head(SAVE_ID, head)
+            os.remove(index.file(SAVE_ID, index.SAVE_FILE))
+            legacy_save.write_head(SAVE_ID, head)
+            legacy_save.write_cache(SAVE_ID, legacy_cache)
         self.instruct("WAIT")
         self.assertNotEqual(core.state().clock, saved.clock)
         self.resets.clear()
@@ -149,7 +147,7 @@ class LoadIsResetTest(SlowTestCase):
         self.instruct("SAVE", f"No.{SAVE_ID} ", "读取", "确认读取存档")
 
     def test_browse_writes_nothing(self) -> None:
-        """打开存档列表、点开存档、返回、退出：缓存、内核状态与存档目录都不变"""
+        """打开存档列表、点开存档、返回、退出：状态指纹、内核状态与存档目录都不变"""
         from tests import pick_guard
 
         core = game("Script.Kernel.core")
@@ -178,7 +176,7 @@ class LoadIsResetTest(SlowTestCase):
         self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
 
     def test_old_save_projects_characters(self) -> None:
-        """旧存档：内核时钟是存档头的游戏时间，角色是缓存里的名单，全局数据有 ticked 与 settled_day"""
+        """旧存档：内核时钟是存档头的游戏时间，角色是在编名单，全局数据有 ticked 与 settled_day"""
         core = game("Script.Kernel.core")
         actions = game("Script.Modules.gameplay_resolution.actions")
         saved = self.save(old=True)

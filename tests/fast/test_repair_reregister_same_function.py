@@ -16,14 +16,12 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
 
-    from Script.Core import game_type
-
 CHECK_ID = "TEST-REREG-01"
 """ 本测试注册的修复对应的检查项id，不与真实修复重复 """
 
 SOURCE = """
 @register_repair(CHECK_ID, NAME)
-def {func}(cache):
+def {func}():
     return []
 """
 """ 一个带装饰器的修复函数定义，{func} 为函数名；每次 exec 都生成新的函数对象 """
@@ -33,7 +31,7 @@ def define(
     name: str,
     module: str = "tests.fast.fake_repair_module",
     func: str = "repair",
-) -> "Callable[[game_type.Cache], list[dict]]":
+) -> "Callable[[], list[dict]]":
     """
     在名为 module 的模块命名空间里执行一次 SOURCE
     Keyword arguments:

@@ -7,8 +7,9 @@
 - scene_state.occupants 按角色 id 升序返回玩家 0 与在编干员，每次返回新列表。
 - 同一写入缓冲区内修改位置或移出名册后，occupants 立即反映最新状态，传入旧 GameState 时仍读旧状态。
 - 玩家在已锁房间内时其他角色离开不解锁，玩家离开后解锁。
-- adopt_old_save 从旧存档缓存字典移除 scene_data，仅导入存在于 constant.scene_data 且 close_flag 非 0 的门锁。
-- adopt_old_save 在缓存不含 scene_data 时同样清理 scene.closed，统一异系统分隔符为 os.sep 并剔除不存在的场景。
+- adopt_old_save 从旧存档属性表移除 scene_data，仅导入存在于 constant.scene_data 且 close_flag 非 0 的门锁。
+- adopt_old_save 在属性表不含 scene_data 时同样清理 scene.closed，
+  统一异系统分隔符为 os.sep 并剔除不存在的场景。
 - snapshot.build_snapshot 的 scene_data 只收录有角色或已关门的场景，并附升序 character_list 与 close_flag。
 """
 
@@ -50,7 +51,7 @@ class SceneStateTest(FastTestCase):
     def test_close_flag_survives_codec(self) -> None:
         """门锁状态经 kernel_state 编解码往返后不变，写出的存档版本等于 upgrade.CURRENT"""
         kernel_data.put(scene_state.set_close_flag, ROOM_PATH, 2)
-        encoded = kernel_state.encode(core.state(), "tok")
+        encoded = kernel_state.encode(core.state())
         self.assertEqual(encoded["version"], upgrade.CURRENT)
         decoded = kernel_state.decode(encoded, tagged=True)
         self.assertEqual(scene_state.close_flag(ROOM_PATH, decoded), 2)
@@ -112,7 +113,7 @@ class SceneStateTest(FastTestCase):
         self.assertEqual(scene_state.closed(), {ROOM_PATH: 1})
 
     def test_adopt_old_save_tidies_stored_flags(self) -> None:
-        """adopt_old_save 在缓存不含 scene_data 时仍规范化已存门锁的异系统分隔符并剔除不存在的场景"""
+        """adopt_old_save 在属性表不含 scene_data 时仍规范化已存门锁的异系统分隔符并剔除无效场景"""
         foreign = "\\" if os.sep == "/" else "/"
         kernel_data.put(scene_state.set_close_flag, foreign.join(ROOM), 1)
         kernel_data.put(
@@ -126,7 +127,7 @@ class SceneStateTest(FastTestCase):
         """build_snapshot 的 scene_data 只列出有角色或已关门的场景，并附升序 character_list 与 close_flag"""
         kernel_data.put(scene_state.set_close_flag, ROOM_PATH, 1)
         self.assertEqual(
-            snapshot.build_snapshot(self.cache)["scene_data"],
+            snapshot.build_snapshot()["scene_data"],
             {
                 ROOM_PATH: {"character_list": [1, 3], "close_flag": 1},
                 CORRIDOR_PATH: {"character_list": [0, 2], "close_flag": 0},

@@ -1,16 +1,14 @@
 # -*- coding: UTF-8 -*-
 """
-选行动只读的检查：缓存与内核状态的指纹，和记下每一轮选择是否写了东西的包装
-==========================================================================
-- fingerprint()：游戏缓存的 pickle，加上 core.state()、
-  随机数状态、计划队列里待交给内核的打断数与自动存档的请求。
+选行动只读的检查：内核状态的指纹，和记下每一轮选择是否写了东西的包装
+====================================================================
+- fingerprint()：采集 core.state()、随机数状态、计划队列里待交给内核的打断数与自动存档的请求。
 - watch()：包住一轮选择（player_pick.chooser 或交给 tests.world.act 的操作），每轮记下面板id、
   是否抛出 Chosen、这一轮里（Chosen 抛出之前）指纹是否变了，以及这一轮里为写打开的文件。
 """
 
 import builtins
 import os
-import pickle
 import random
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -18,25 +16,22 @@ from dataclasses import dataclass, field
 from types import TracebackType
 from typing import Any, Self
 
-from Script.Core import cache_control
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.save_load import autosave
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import view
 
-type Fingerprint = tuple[bytes, core.GameState, object, int, bool]
+type Fingerprint = tuple[core.GameState, object, int, bool]
 
 
 def fingerprint() -> Fingerprint:
     """
-    游戏缓存的全部内容、内核状态、随机数状态、待交给内核的打断数与自动存档的请求
+    采集内核状态、随机数状态、待交给内核的打断数与自动存档的请求
     Return arguments:
-    Fingerprint -- (缓存的 pickle, core.state(), random.getstate(), 打断数, 自动存档请求)
+    Fingerprint -- (core.state(), random.getstate(), 打断数, 自动存档请求)
     """
-    data = dict(vars(cache_control.cache))
     return (
-        pickle.dumps(sorted(data.items())),
         core.state(),
         random.getstate(),
         len(plan_queue._pending),

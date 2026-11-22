@@ -22,10 +22,8 @@ from tests.world import ROOT
 
 CHILD_CODE = """
 import sys
-from Script.Core import game_type, cache_control
 from Script.Config import normal_config
 
-cache_control.cache = game_type.Cache()
 normal_config.init_normal_config()
 from Script.Config import game_config
 
@@ -37,7 +35,7 @@ import Script.Settle
 print("导入完成", "Script.System.Instruct_System.handle_instruct" in sys.modules)
 """
 """
-子进程执行的代码。代码新建游戏缓存，载入游戏配置，
+子进程执行的代码。代码载入游戏配置，
 再导入 Script.Design.update、Script.StateMachine.default 和 Script.Settle。
 最后一行打印“导入完成”和 handle_instruct 是否在 sys.modules 中。代码里没有 os._exit 调用。
 代码跑完后，进程靠解释器的正常退出流程结束。

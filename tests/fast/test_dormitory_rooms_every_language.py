@@ -35,9 +35,6 @@ import json
 import sys
 
 sys.path.insert(0, sys.argv[1])
-from Script.Core import cache_control, game_type
-
-cache_control.cache = game_type.Cache()
 from Script.Config import normal_config
 
 normal_config.init_normal_config()
@@ -50,7 +47,6 @@ map_config.init_map_data()
 from Script.Design import attr_calculation, basement, game_time
 from Script.System.Dormitory_System import common
 
-cache = cache_control.cache
 from types import MappingProxyType
 from Script.Kernel import core
 

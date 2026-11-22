@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 """
 角色的能力、经验、宝珠与素质表随存档存读往返并可继续推进
-======================================================
+========================================================
 新游戏里等待三次后，改写玩家的能力表，以及一名干员的经验表、宝珠表与素质表，再经 save_handle 存档。
-存档的文件 "1" 里角色对象没有这四个属性，文件 "2" 里这名干员的数据有这四个键。
+存档目录里只有 save.json，其中这名干员的数据有这四个键。
 存档后再改写这些表，读档后每个角色的四张表都回到存档时的值。读档后再等待三次，时钟比存档时晚 15 分钟。
 """
 
@@ -36,6 +36,7 @@ class AbilitiesSaveRoundTripTest(SlowTestCase):
         constant = game("Script.Core.constant")
         core = game("Script.Kernel.core")
         save_handle = game("Script.Core.save_handle")
+        index = game("Script.Modules.save_load.index")
         abilities = game("Script.Modules.domains.abilities")
         roster = game("Script.Modules.domains.roster")
 
@@ -64,8 +65,10 @@ class AbilitiesSaveRoundTripTest(SlowTestCase):
         save_handle.establish_save(SAVE_ID)
         path = save_handle.get_save_dir_path(SAVE_ID)
         try:
-            pickled = save_handle.load_save(SAVE_ID)
-            with open(os.path.join(path, "2"), encoding="utf-8") as f:
+            files = os.listdir(path)
+            with open(
+                os.path.join(path, index.SAVE_FILE), encoding="utf-8"
+            ) as f:
                 state = json.load(f)
             with kernel_data.writing():
                 abilities.ability(0)[first[abilities.ABILITY]] = 0
@@ -74,7 +77,7 @@ class AbilitiesSaveRoundTripTest(SlowTestCase):
             save_handle.input_load_save(SAVE_ID)
         finally:
             shutil.rmtree(path, ignore_errors=True)
-        self.assertNotIn("character_data", vars(pickled))
+        self.assertEqual(files, [index.SAVE_FILE])
         stored = {
             *state["data"].get("roster.offstage", {}).get(str(npc), {}),
             *state["characters"].get(str(npc), {}).get("data", {}),

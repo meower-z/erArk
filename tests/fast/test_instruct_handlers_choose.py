@@ -2,10 +2,9 @@
 """
 玩家指令只选不写
 ================
-每个指令处理函数在玩家选行动时跑一遍：定下行动的抛出 player_pick.Chosen，行动数据是能原样过 JSON 的 Intent，
-抛出前缓存逐字节相同（按 pickle 比较）；
-不定行动的换面板、问玩家后返回，或是零时间的操作。
-种类 Instruct 的开始代码（handle_instruct.start_instruct）在行动开始时才写缓存。
+每个已注册的指令处理函数在玩家选择中各运行一次：
+定下行动的函数抛出 player_pick.Chosen，其 Intent 经 JSON 往返不变；
+未定下行动的函数切换面板、询问玩家后返回或执行零时间操作。
 """
 
 import json
@@ -18,7 +17,6 @@ from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
 from tests.fast.base import FastTestCase
-from tests.fast.test_npc_pick_leaves_cache import changed, pickled
 from tests import kernel_data
 from tests.chara_activity import aim
 from Script.Modules.domains import activity, scene_state
@@ -30,11 +28,11 @@ NPC = 1
 
 
 class InstructHandlersChooseTest(FastTestCase):
-    """指令处理函数只交回选择，不写缓存"""
+    """指令处理函数只交回选择，不直接修改游戏状态"""
 
     def setUp(self) -> None:
         """
-        玩家与一个当交互对象的干员；内核状态由缓存投影
+        玩家与一个当交互对象的干员；内核状态由领域数据投影
         Keyword arguments:
         无
         Return arguments:
@@ -62,18 +60,16 @@ class InstructHandlersChooseTest(FastTestCase):
 
     def test_handlers_choose_without_writing(self) -> None:
         """
-        定下行动的处理函数抛出 Chosen 前缓存不变，行动数据是 JSON；大半指令能在小世界里定下行动
+        定下行动的指令处理函数交回 JSON 行动数据，小世界里过半指令能定下行动
         Keyword arguments:
         无
         Return arguments:
         无
         """
         chosen: dict[str, core.Action] = {}
-        writers: dict[str, list[str]] = {}
         failed: dict[str, str] = {}
         for instruct_id in sorted(constant.handle_instruct_data):
             self.setUp()
-            before = pickled(self.cache)
             try:
                 act = self.pick(instruct_id)
             except Exception as error:
@@ -82,15 +78,11 @@ class InstructHandlersChooseTest(FastTestCase):
             if act is None:
                 continue
             chosen[instruct_id] = act
-            written = changed(before, self.cache)
-            if written:
-                writers[instruct_id] = written
             with self.subTest(instruct=instruct_id):
                 self.assertEqual(act.who, "0")
                 self.assertTrue(act.action_id.startswith(intent.KIND_PREFIX))
                 data = act.action_data
                 self.assertEqual(json.loads(json.dumps(data)), data)
-        self.assertEqual(writers, {}, "定下行动前写了缓存")
         self.assertGreater(
             len(chosen),
             len(constant.handle_instruct_data) // 2,

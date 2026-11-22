@@ -5,12 +5,12 @@
 验证 chara.flags、chara.action_info、player.ability、player.collection 四个角色键：
 - 稀疏存储与默认值读写，恢复默认值时从表里删去，无变化写入不产出效果；
 - 时间戳公元 1 年占位（year <= 1 -> None -> datetime(1, 1, 1)）与真实游戏时间往返；
-- today_sanity_point_cost 保留精确数值类型（int / Fraction）并经文件 "2" 编解码往返；
+- today_sanity_point_cost 保留精确数值类型（int / Fraction）并经 kernel_state 编解码往返；
 - 收藏品整数键、元组与体外无壳卵编解码、新周目继承携带；
-- 旧存档 adopt_old_save（含忽略 unnormal_flag、float 经 num.exact 转 Fraction、删去旧属性）、copy_to 与 remap；
+- 旧存档 adopt_old_save（忽略 unnormal_flag、float 经 num.exact 转 Fraction、删去旧属性）、
+  copy_to 与 remap；
 - choice.Plan.get 与 starts.write_field 对 sp_flag.* / action_info.* 路径的转发；
-- events 触发函数按传入的 GameState 读标记与能力；
-- Character 不含这四个属性，存档版本不低于 17 且 STEPS[16] 存在。
+- events 触发函数按传入的 GameState 读标记与能力。
 """
 
 import datetime
@@ -25,10 +25,11 @@ from Script.Modules.domains import action_info, activity, flags, player_ability
 from Script.Modules.domains import player_collection
 from Script.Modules.gameplay_resolution import events, starts, working
 from Script.Modules.npc_action_choice import choice
-from Script.Modules.save_load import kernel_state, upgrade
+from Script.Modules.save_load import kernel_state
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.Modules.domains import identity
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 class CharaFlagsPlayerTest(FastTestCase):
@@ -40,14 +41,6 @@ class CharaFlagsPlayerTest(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.op_a = self.world.chara(1, "干员甲")
         self.op_b = self.world.chara(2, "干员乙")
-
-    def test_character_has_no_legacy_attrs_and_version_17(self) -> None:
-        """Character 实例不含四个角色键对应的旧属性，存档版本不低于 17 且 STEPS[16] 存在"""
-        fresh = game_type.Character()
-        for attr in ("sp_flag", "action_info", "pl_ability", "pl_collection"):
-            self.assertFalse(hasattr(fresh, attr), attr)
-        self.assertGreaterEqual(upgrade.CURRENT, 17)
-        self.assertIn(16, upgrade.STEPS)
 
     def test_flags_sparse_coerce_reset_copy_remap_adopt(self) -> None:
         """chara.flags：稀疏读写、类型规整、reset、copy_to、remap 与 adopt_old_save"""
@@ -85,7 +78,7 @@ class CharaFlagsPlayerTest(FastTestCase):
         with self.assertRaises(KeyError):
             flags.get(1, "no_such_flag")
 
-        legacy = game_type.Character()
+        legacy = LegacyObject()
         sp = game_type.SPECIAL_FLAG()
         sp.tired = True
         sp.vistor = 2
@@ -158,7 +151,7 @@ class CharaFlagsPlayerTest(FastTestCase):
         self.assertEqual(action_info.get(2, "talk_time"), now)
         self.assertEqual(action_info.get(2, "wake_time"), now)
 
-        legacy = game_type.Character()
+        legacy = LegacyObject()
         ai = game_type.ACTION_INFO()
         ai.health_check_today = 2
         ai.last_gift_time = now
@@ -192,7 +185,7 @@ class CharaFlagsPlayerTest(FastTestCase):
             player_ability.get(0, "air_hypnosis_position"), ["中枢", "0"]
         )
 
-        encoded = kernel_state.encode(core.state(), "tok")
+        encoded = kernel_state.encode(core.state())
         raw_text = json.dumps(encoded, ensure_ascii=False)
         self.assertIn('"$frac"', raw_text)
         decoded = kernel_state.decode(json.loads(raw_text), True)
@@ -201,7 +194,7 @@ class CharaFlagsPlayerTest(FastTestCase):
         self.assertIs(type(back_val), Fraction)
         self.assertEqual(back_val, Fraction(1, 3))
 
-        legacy = game_type.Character()
+        legacy = LegacyObject()
         pa = game_type.PLAYER_ABILITY()
         vars(pa)["today_sanity_point_cost"] = 0.1
         pa.carry_chara_id_in_time_stop = 2
@@ -260,7 +253,7 @@ class CharaFlagsPlayerTest(FastTestCase):
         kernel_data.put(player_collection.remove_soft_egg, soft_id)
         self.assertFalse(player_collection.has_soft_eggs())
 
-        legacy = game_type.Character()
+        legacy = LegacyObject()
         pc = game_type.PLAYER_COLLECTION()
         pc.token_list[2] = True
         pc.used_condoms = [5, 8]
@@ -330,10 +323,10 @@ class CharaFlagsPlayerTest(FastTestCase):
             identity.put(identity.Identity(cid, adv=450))
             return identity.of(cid)
 
-        moved = game_type.Character()
-        characters: dict[int, game_type.Character] = {
+        moved = LegacyObject()
+        characters: dict[int, LegacyObject] = {
             1: moved,
-            2: game_type.Character(),
+            2: LegacyObject(),
         }
         loaded: dict[str, object] = {
             "character_data": characters,

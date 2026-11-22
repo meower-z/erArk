@@ -443,7 +443,7 @@ def run(world: FullWorld, state_name: str) -> Recorder:
     log.install()
     recorder = Recorder()
     memo: dict[int, tuple[bytes | None, dict[str, object]]] = {}
-    recorder.record("0000", capture(world.cache, log, memo))
+    recorder.record("0000", capture(log, memo))
     step = 0
 
     def record() -> None:
@@ -456,7 +456,7 @@ def run(world: FullWorld, state_name: str) -> Recorder:
         """
         nonlocal step
         step += 1
-        recorder.record(f"{step:04d}", capture(world.cache, log, memo))
+        recorder.record(f"{step:04d}", capture(log, memo))
 
     for action in PLANS[state_name]:
         if action[0] == "walk":

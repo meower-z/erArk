@@ -51,7 +51,7 @@ def project(state: dict[str, object]) -> None:
 
 def pickled_characters() -> dict[int, object]:
     """
-    按身份表顺序把每个角色转为版本 24 之前存档文件 "1" 里 character_data 的旧角色对象，
+    按身份表顺序把每个角色转为版本 24 之前旧存档文件 "1" 里 character_data 的 LegacyObject，
     写入十项身份属性并将生日转为当日零点的 datetime
     Return arguments:
     dict[int, object] -- 角色id到旧角色对象的映射
@@ -59,11 +59,11 @@ def pickled_characters() -> dict[int, object]:
     import dataclasses
     import datetime
 
-    from Script.Core import game_type
+    from Script.Modules.save_load.legacy_pickle import LegacyObject
 
     out: dict[int, object] = {}
     for one in identity.table().values():
-        chara = game_type.Character()
+        chara = LegacyObject()
         attrs = vars(chara)
         attrs.update(dataclasses.asdict(one))
         day = one.birthday

@@ -3,14 +3,14 @@
 读档时重新得出的数据
 ====================
 每个测试先开新游戏（SlowTestCase.setUp），把存档目录换成临时目录，再等待 60 分钟。
-- 存档后读档：仓库容量、干员人数上限、床位上限和角色模板都与存档前相同，constant.map_data 是游戏启动时载入的那份。
-- 直接 pickle 整个缓存的旧存档里，罗德岛对象上与 LIMITS 同名的三个属性都是 99，缓存里的 map_data 为空。
-  读这个存档后，三个上限回到存档前的值，constant.map_data 仍是游戏启动时载入的那份。
+- 存档后读档：仓库容量、干员人数上限、床位上限和角色模板都与存档前相同，
+  constant.map_data 是游戏启动时载入的那份。
+- 版本 27 的旧存档（文件 "1" 是缓存的 pickle）里，罗德岛对象上与 LIMITS 同名的三个属性都是 99，
+  缓存里的 map_data 为空。读这个存档后，三个上限回到存档前的值，
+  constant.map_data 仍是游戏启动时载入的那份。
 """
 
 import importlib
-import os
-import pickle
 import tempfile
 from typing import Any
 from unittest import mock
@@ -112,20 +112,17 @@ class LoadRebuildsDerivedTest(SlowTestCase):
         self.assertIs(constant.map_data, self.boot_map)
 
     def test_old_save_gets_rebuilt_values(self) -> None:
-        """旧存档里三个上限是 99、缓存里的 map_data 为空，读档后三个上限回到存档前的值，constant.map_data
-        仍是游戏启动时载入的那份"""
+        """
+        旧存档文件 "1" 里三个上限是 99、map_data 为空，读档后三个上限回到存档前的值，
+        constant.map_data 仍是游戏启动时载入的那份
+        """
         constant = game("Script.Core.constant")
         save_handle = game("Script.Core.save_handle")
-        index = game("Script.Modules.save_load.index")
+        legacy_save = game("tests.legacy_save")
         save_handle.establish_save(SLOT)
-        old = pickle.loads(pickle.dumps(self.cache))
-        old.rhodes_island = game("Script.Core.game_type").Rhodes_Island()
-        for name in LIMITS:
-            setattr(old.rhodes_island, name, 99)
-        old.map_data = {}
-        file_path = os.path.join(index.path(SLOT), index.CACHE_FILE)
-        with open(file_path, "wb") as f:
-            pickle.dump(old, f)
+        island = legacy_save.old("Rhodes_Island", **dict.fromkeys(LIMITS, 99))
+        old = legacy_save.old("Cache", rhodes_island=island, map_data={})
+        legacy_save.to_legacy(SLOT, old)
         self.load()
         values = self.values()
         self.assertEqual(

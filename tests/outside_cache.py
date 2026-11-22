@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 """
-测试复原游戏缓存之外的进程状态
+测试复原内核状态之外的进程状态
 ==============================
 全局设置（save_load.settings、normal_config.system_setting 与 normal_config.ai_setting）
-与界面临时状态（Script.UI.Moudle.view）不在游戏缓存里，
-MinimalWorld 复原缓存时由 fresh 把它们也复原。本模块顶部不导入游戏模块（慢速层收集测试时不能载入游戏）。
+与界面临时状态（Script.UI.Moudle.view）不在 GameState 里，
+MinimalWorld 复原基线时由 fresh 把它们也复原。本模块顶部不导入游戏模块（慢速层收集测试时不能载入游戏）。
 """
 
 import contextlib

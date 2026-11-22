@@ -79,13 +79,13 @@ class NeedsChecksTest(FastTestCase):
     def test_repair_pulls_angry_back(self) -> None:
         """SUPP-05 的修复把愤怒 -3 拉回 0，写进 body.needs"""
         needs.set(1, angry=-3)
-        repair.repair_angry_point_lower_bound(self.cache)
+        repair.repair_angry_point_lower_bound()
         self.assertEqual(needs.of(1)["angry"], 0)
 
     def test_repair_pulls_tired_back(self) -> None:
         """NUM-27 的修复把越界的疲劳拉回 160，饥饿不动"""
         needs.set(1, tired=Fraction(321, 2), hunger=Fraction(7, 3))
-        repair.repair_fatigue_family_range(self.cache)
+        repair.repair_fatigue_family_range()
         stats = needs.of(1)
         self.assertEqual(
             (stats["tired"], stats["hunger"]), (160, Fraction(7, 3))

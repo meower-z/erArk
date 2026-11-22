@@ -71,8 +71,7 @@ class WorldTest(FastTestCase):
             self.world.scene(["没有", "这里"])
 
     def test_reset_restores_state(self) -> None:
-        """复原后角色、场景、游戏时间、角色模板都回到基线，缓存对象不变"""
-        cache = self.cache
+        """reset 之后，角色表、场景状态、游戏时间与角色模板都回到基线"""
         game_time = clock.now()
         self.world.chara(0, "博士", position=ROOM)
         room = self.world.scene(ROOM)
@@ -82,7 +81,6 @@ class WorldTest(FastTestCase):
         template.AdvNpc = 9999
         kernel_data.written(npc_template.add, template)
         self.world.reset()
-        self.assertIs(self.cache, cache)
         self.assertEqual(identity.table(), {})
         self.assertEqual(scene_state.close_flag(room.scene_path), 0)
         self.assertEqual(scene_state.occupants(room.scene_path), [])

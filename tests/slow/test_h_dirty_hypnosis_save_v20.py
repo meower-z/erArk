@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 """
-存档版本 20 往返与续玩：h.meters、h.shoot_position、h.state、body.dirty、mind.hypnosis、
-history.first_record 与 history.first_record_history
-==========================================================================================
+存档版本 20 起七个键的往返与续玩：h.meters、h.shoot_position、h.state、body.dirty、
+mind.hypnosis、history.first_record 与 history.first_record_history
+===================================================================================
 开新游戏后给玩家与一名成年干员写入七个键的代表值（含洗浴按比例保留产生的 Fraction 精确数值），存档到临时槽位：
-- 文件 "2" 版本为 20，含全部七个键与 "$frac" 标签；
-- 旧缓存与角色对象上不再有这十一个旧属性；
+- save.json 版本不低于 20，含全部七个键与 "$frac" 标签；
+- 角色身份对象上没有这十个旧属性；
 - 读档后内核状态与存档前 JSON 逐字节相同，洗浴保留后的精液量保持精确 Num（无 float）且继续吸收后仍为精确 Num；
-  再存一次文件 "2"（除 token 外）不变；
+  再存一次 save.json（除 head 外）不变；
 - 存档后接着等 60 分钟与读档后接着等 60 分钟（同随机种子）内核状态、花名册、行动序列与随机数状态完全相同。
 """
 
@@ -82,9 +82,7 @@ class HDirtyHypnosisSaveV20Test(SlowTestCase):
     def _state_json(self) -> str:
         kernel = _mod("Script.Kernel.core")
         kernel_state = _mod("Script.Modules.save_load.kernel_state")
-        return json.dumps(
-            kernel_state.encode(kernel.state(), "fixed"), sort_keys=True
-        )
+        return json.dumps(kernel_state.encode(kernel.state()), sort_keys=True)
 
     def _digest(self) -> tuple[object, ...]:
         kernel = _mod("Script.Kernel.core")
@@ -100,7 +98,7 @@ class HDirtyHypnosisSaveV20Test(SlowTestCase):
         """七个键写入、洗浴精确保留、存读往返、吸收后仍精确与 60 分钟续玩一致，且旧属性已删除"""
         save_handle = _mod("Script.Core.save_handle")
         game_type = _mod("Script.Core.game_type")
-        kernel_state = _mod("Script.Modules.save_load.kernel_state")
+        index = _mod("Script.Modules.save_load.index")
         game_time = _mod("Script.Design.game_time")
         settle_default = _mod("Script.Settle.default")
         realtime_settle = _mod("Script.Settle.realtime_settle")
@@ -148,7 +146,6 @@ class HDirtyHypnosisSaveV20Test(SlowTestCase):
                 },
             )
 
-        self.assertFalse(hasattr(self.cache, "shoot_position"))
         for attr in (
             "eja_point_max",
             "eja_point",
@@ -165,7 +162,7 @@ class HDirtyHypnosisSaveV20Test(SlowTestCase):
 
         before_save = self._state_json()
         save_handle.establish_save(SLOT)
-        path = os.path.join(self.folder, SLOT, kernel_state.SAVE_FILE)
+        path = os.path.join(self.folder, SLOT, index.SAVE_FILE)
         with open(path, encoding="utf-8") as f:
             first_file = json.load(f)
         self.assertGreaterEqual(first_file["version"], 20)
@@ -208,8 +205,8 @@ class HDirtyHypnosisSaveV20Test(SlowTestCase):
         save_handle.establish_save(SLOT)
         with open(path, encoding="utf-8") as f:
             second_file = json.load(f)
-        first_file.pop(kernel_state.TOKEN)
-        second_file.pop(kernel_state.TOKEN)
+        first_file.pop("head")
+        second_file.pop("head")
         self.assertEqual(second_file, first_file)
         with kernel_data.writing():
             realtime_settle.semen_absorb(npc_id, 5, 7)

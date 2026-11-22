@@ -1274,8 +1274,8 @@ def begin(
 
 def leave_minutes(cid: int) -> int:
     """
-    学生此刻的行为做到哪一刻收手：从行为开始到 class_ai.get_student_leave_time 的分钟数，不截时为行为时长
-    （截短由 Tick 在离开时刻之后结束行动，缓存里的时长不改）
+    学生此刻的行为做到哪一刻收手：从行为开始到 class_ai.get_student_leave_time 的分钟数，
+    不截时为行为时长（截短由 Tick 在离开时刻之后结束行动，activity.behavior 里的时长不改）
     Keyword arguments:
     cid -- 角色id
     Return arguments:

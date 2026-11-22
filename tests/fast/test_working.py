@@ -6,7 +6,7 @@
 - 一开始没有的键 put 两次：只有一个 old 为 None 的 StateChange，内核接受。
 - 只有处理函数经缓冲区的写入让触发函数变为不成立：写入在这一步套用，不报 EventStillTrue。
 - 干员选行动时写入报错。结算出错的一步写下的东西不留到下一步。
-- 选择里的写入（含 forget）随行动走，行动开始时生效。只有写入、没有草稿的玩家选择也定下 Edit。
+- 选择里的写入（含 forget）随行动走，行动开始时生效。只写了 GameState 数据的玩家选择也定下 Edit。
 - based_on 里读得到自己的写入，套用效果后的状态有它。
 - 角色离开花名册再回来，数据还在。forget 丢掉 roster.offstage 里的一项。
 """
@@ -254,7 +254,7 @@ class WorkingTest(KernelTestCase):
         self.assertEqual(dict(cast(Mapping[str, Any], offstage)), {})
 
     def test_pick_with_only_effects_commits_an_edit(self) -> None:
-        """玩家选择里只写了 GameState 数据：草稿关闭时定下一个草稿为空、带这些写入的 Edit"""
+        """玩家选择里只写了 GameState 数据：选择块结束时定下一个带这些写入、没有打断的 Edit"""
         self.run_world(game(0, {"0": 9}))
         with (
             self.assertRaises(player_pick.Chosen) as chosen,
@@ -265,7 +265,7 @@ class WorkingTest(KernelTestCase):
         act = chosen.exception.action
         self.assertEqual(act.action_id, edits.EDIT)
         data = cast(Mapping[str, Any], act.action_data)
-        self.assertEqual(data["draft"], ())
+        self.assertEqual(data["interrupts"], ())
         self.assertEqual(
             data["effects"],
             ({"who": None, "key": self.plain, "old": None, "new": 1},),

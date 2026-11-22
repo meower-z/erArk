@@ -11,10 +11,11 @@
 - set_ward 在一步之外换掉医疗部的住院病人表。
 - put 调用一个领域模块的写函数，在一步之外时经 written 套用（例如换公务事件队列）。
 - set_book_holders 改借阅表里给出的书的借书人。
-- reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
-- project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册、监狱长、
-  仓库、生产线、食堂货架、医疗部、外勤委托、载具、访客、罗德岛位置、招募、公务、外交、宿舍管理员与图书馆等数据的值，
-  角色的能力、经验、宝珠与素质表也这样记下。快照因此能与按缓存属性录下的快照比较。
+- reprojected 按当前在编名册与角色行为重新投影各角色的行动，每个角色的数据留在角色数据或 roster.offstage 里。
+- project_state 在快照里按旧格式属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册、监狱长、
+  仓库、生产线、食堂货架、医疗部、外勤委托、载具、访客、罗德岛位置、招募、公务、外交、
+  宿舍管理员与图书馆等数据的值，角色的能力、经验、宝珠与素质表也这样记下。
+  快照因此能与按旧格式录下的基准比较。
 """
 
 from __future__ import annotations
@@ -32,7 +33,6 @@ if TYPE_CHECKING:
     import datetime
     from collections.abc import Callable, Iterator
 
-    from Script.Core import game_type
     from Script.Core.num import Num
     from Script.Kernel import core
     from Script.Modules.domains.needs import Needs
@@ -245,7 +245,7 @@ def set_ward(*patient_ids: int) -> None:
 
 def reprojected(game: core.GameState) -> core.GameState:
     """
-    由 actions.state_from_cache 从缓存投影出各角色的行动，时钟取自 game。
+    由 actions.state_from_cache 按当前在编名册与角色行为投影出各角色的行动，时钟取自 game。
     全局数据取自 game，只有 ticked 与 settled_day 取投影的值（时钟改过之后，第一次 Tick 从投影的时钟结算）。
     投影里原来就在 game 里的角色留着自己的数据，只去掉 open。
     离开投影的角色去掉 open 后还有数据时，数据放进 roster.offstage。
@@ -301,18 +301,20 @@ def _without_open(game: core.GameState, who: str) -> dict[str, core.JSON]:
     return {k: v for k, v in data.items() if k != actions.OPEN}
 
 
-def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
+def project_state(state: dict[str, object]) -> None:
     """
-    快照里按旧缓存的属性名记下 GameState 里的生理需求、体力等数值、动力与仓库，以便与按这些名字录下的基准逐项比较。
+    快照里按旧格式属性名记下 GameState 里的生理需求、体力等数值、动力与仓库，
+    以便与按这些名字录下的基准逐项比较。
     body.needs 记作 chara.<id>.tired_point、hunger_point、urinate_point、pregnancy.milk
     与 upgrade.PICKLED_NEEDS 里的属性名，乳汁上限记作 chara.<id>.pregnancy.milk_max。
     每个大区块的生效策略记作 world.base.power_supply_strategy.<区块id>。
     设施等级、待开放设施的开放情况与基地效率记作 world.base 下的 facility_level.<设施id>、
     facility_open.<待开放设施id> 与 effectiveness。
     动力记在 world.base 下，名字为 power_storage、power_storage_max、power_operator_ids_list、
-    main_power_facility_operator_ids、orundum_reactor_list（主反应炉等级与副反应炉数量）、other_power_facility_list
-    与 battery_list。岗位名册与监狱长记在 world.base 下，名字为 all_work_npc_set（岗位id到角色id的集合）、
-    work_people_now、hr_operator_ids_list 与 current_warden_id。
+    main_power_facility_operator_ids、orundum_reactor_list（主反应炉等级与副反应炉数量）、
+    other_power_facility_list 与 battery_list。岗位名册与监狱长记在 world.base 下，
+    名字为 all_work_npc_set（岗位id到角色id的集合）、work_people_now、hr_operator_ids_list
+    与 current_warden_id。
     资源库存记作 world.base.materials_resouce.<资源id>，已用的仓储空间扩展模块数记作
     world.base.used_extra_warehouse_capacity_module。
     生产线按旧的五项列表记作 world.base.<production.PICKLED_LINES 里的属性名>.<线id>。
@@ -324,7 +326,6 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     周目、模式、成就等全局键、基地计数与角色的活动由 kernel_project.project_rest 记下。
     角色的能力、经验、宝珠与素质表由 chara_abilities.project 记下。
     Keyword arguments:
-    cache -- 游戏缓存
     state -- 快照，原地补上
     """
     from Script.Config import game_config
@@ -397,8 +398,8 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     _project_economy(state)
     _project_travel(state)
     base_projection.project(state)
-    kernel_project.project_rest(cache, state)
-    chara_abilities.project(cache, state)
+    kernel_project.project_rest(state)
+    chara_abilities.project(state)
 
 
 def _project_travel(state: dict[str, object]) -> None:

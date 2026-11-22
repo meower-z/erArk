@@ -13,6 +13,7 @@
 - 再写盘、读档一次，三人两表的精液量不变。
 """
 
+import importlib
 import shutil
 
 from tests.slow.base import SlowTestCase
@@ -139,9 +140,10 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
             )
 
         save_handle.establish_save(SAVE_ID)
-        loaded = save_handle.load_save(SAVE_ID)
-        vars(loaded)["character_data"] = legacy
-        save_handle.write_save_data(SAVE_ID, "1", loaded)
+        legacy_save = importlib.import_module("tests.legacy_save")
+        legacy_save.to_legacy(
+            SAVE_ID, legacy_save.old("Cache", character_data=legacy)
+        )
         save_handle.input_load_save(SAVE_ID)
         for cid in expected:
             self.assertEqual(

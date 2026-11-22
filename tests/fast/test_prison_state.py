@@ -156,7 +156,7 @@ class PrisonStateTest(FastTestCase):
             prison.toggle_assistant_behavior("act_1")
             effects = buf.effects()
         state = core.preview(core.state(), effects)
-        encoded = kernel_state.encode(state, "tok")
+        encoded = kernel_state.encode(state)
         self.assertEqual(encoded["version"], upgrade.CURRENT)
         decoded = kernel_state.decode(encoded, tagged=True)
         self.assertEqual(prison.prisoners(decoded), {30: [now, 7]})

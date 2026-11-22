@@ -14,7 +14,6 @@
 - 公务事件把储能设为取整后的值，读出 float。
 """
 
-from Script.Core import game_type
 from Script.Kernel import core
 from Script.Modules.domains import power, power_supply, warehouse, work
 from Script.Modules.gameplay_resolution import working
@@ -25,6 +24,7 @@ from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
 from Script.Modules.domains import chara_life
 from tests import kernel_data
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 class PowerStateTest(FastTestCase):
@@ -117,7 +117,7 @@ class PowerStateTest(FastTestCase):
 
     def test_old_island_moves_into_state(self) -> None:
         """旧存档的罗德岛对象带着全部动力属性。动力值写进 GameState，这些属性从对象上删掉"""
-        island = game_type.Rhodes_Island()
+        island = LegacyObject()
         vars(island).update(
             power_use=0,
             power_max=0,
@@ -146,7 +146,7 @@ class PowerStateTest(FastTestCase):
 
     def test_old_island_missing_fields(self) -> None:
         """旧存档的罗德岛对象只带一部分动力属性。缺的取 DEFAULT_PLANT 的值，储能为 0.0"""
-        island = game_type.Rhodes_Island()
+        island = LegacyObject()
         vars(island)["battery_list"] = [0, 1, 0]
         upgrade.adopt_power({"rhodes_island": island})
         self.assertEqual(
@@ -158,7 +158,7 @@ class PowerStateTest(FastTestCase):
         """当前存档的罗德岛对象没有动力属性。GameState 里的动力不变"""
         power.set_plant(batteries=(3, 0, 0))
         power.set_storage(7)
-        upgrade.adopt_power({"rhodes_island": game_type.Rhodes_Island()})
+        upgrade.adopt_power({"rhodes_island": LegacyObject()})
         self.assertEqual(power.plant()["batteries"], (3, 0, 0))
         self.assertEqual(power.storage(), 7)
 
@@ -178,7 +178,7 @@ class PowerStateTest(FastTestCase):
         self.assertFalse(self.flagged("ISLAND-28"))
         power.set_plant(main_operators=(1, 9999, 0, 0))
         self.assertTrue(self.flagged("ISLAND-28"))
-        repair.repair_main_power_operator_slots(self.cache)
+        repair.repair_main_power_operator_slots()
         self.assertEqual(power.plant()["main_operators"], (1, 0, 0, 0))
 
     def test_official_event_power(self) -> None:

@@ -3,19 +3,18 @@
 基地仓库（base.stock 与 base.warehouse_modules）
 ================================================
 - 一个缓冲区里的几次写入依次叠加，读到的是叠加后的值。套用效果后的状态与之相同，资源按配置的先后排列。
-- 读旧存档：罗德岛对象带着库存与扩展模块数时，库存按存档里的先后写进 GameState，存档里缺的配置资源补在最后、记为 0。
-  扩展模块数写进 GameState，仓库容量算上这些模块，读档后的缓存上没有罗德岛对象。
+- 读旧存档：罗德岛对象带着库存与扩展模块数时，库存按存档里的先后写进 GameState，
+  存档里缺的配置资源补在最后、记为 0。扩展模块数写进 GameState，仓库容量算上这些模块。
 - 冰箱里的母乳入库后超过仓库容量时，库存停在容量上。
 - 自检 ISLAND-05、NUM-25 与 SUPP-07 各试一种合法情形与一种违规情形。
 """
 
-import pickle
 from dataclasses import replace
 from types import MappingProxyType
 from unittest import mock
 
 from Script.Config import game_config
-from Script.Core import game_type, save_handle
+from Script.Core import save_handle
 from Script.Design import basement
 from Script.Kernel import core
 from Script.Modules.domains import country, fridge, warehouse
@@ -24,6 +23,7 @@ from Script.Test.Static_Check.check_registry import get_all_checks
 from Script.UI.Moudle import draw
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 SLOT = "warehouse"
 """ 读档用的存档id。测试换掉 save_handle.load_save，不读文件 """
@@ -69,23 +69,22 @@ class WarehouseTest(FastTestCase):
     def test_old_save_moves_into_state(self) -> None:
         """
         存档的罗德岛对象带着倒序的库存（缺最后一种配置资源）与 2 个扩展模块，内核状态里没有 base.stock。
-        读档后库存按存档里的先后，缺的资源补在最后、记为 0，扩展模块数为 2，缓存上没有罗德岛对象。
+        读档后库存按存档里的先后，缺的资源补在最后、记为 0，扩展模块数为 2。
         把模块数改回 0 再算设施上限，仓库容量少 400
         """
         old = {rid: index_ + 1 for index_, rid in enumerate(self.ids[:-1])}
         old = dict(reversed(old.items()))
-        saved = pickle.loads(pickle.dumps(self.cache))
-        saved.rhodes_island = game_type.Rhodes_Island()
-        vars(saved.rhodes_island).update(
+        island = LegacyObject()
+        vars(island).update(
             materials_resouce=old, used_extra_warehouse_capacity_module=2
         )
+        saved = {"rhodes_island": island}
         self.without_stock()
         with mock.patch.object(save_handle, "load_save", lambda _id: saved):
             self.install()
         self.assertEqual(warehouse.stock(), old | {self.ids[-1]: 0})
         self.assertEqual(list(warehouse.stock()), [*old, self.ids[-1]])
         self.assertEqual(warehouse.extra_modules(), 2)
-        self.assertNotIn("rhodes_island", vars(self.cache))
         with_modules = warehouse.capacity()
         with kernel_data.writing():
             warehouse.set_extra_modules(0)
@@ -93,7 +92,7 @@ class WarehouseTest(FastTestCase):
 
     def without_stock(self, kept: dict[str, int] | None = None) -> None:
         """
-        把内核状态换成没有 base.stock 的（如同旧存档的文件 "2"）。给了 kept 时 base.stock 只有 kept
+        把内核状态换成没有 base.stock 的（如同旧存档的内核状态）。给了 kept 时 base.stock 只有 kept
         Keyword arguments:
         kept -- 资源id的字符串到库存
         """
