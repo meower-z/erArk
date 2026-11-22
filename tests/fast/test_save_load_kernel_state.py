@@ -9,6 +9,7 @@
 - save_handle 存档再读档：难度取存档里的，系统设置是全局的，读档不换它。内核换成存档时的 GameState。
 - 存档的内核状态里带 open 键（开始了、还没收尾的行为为真）。读档后 open 不为真的角色换成同样起止的 kernel.Idle，
   为真的保留行为，open 一律去掉。行为的结束函数只对还没收尾的角色各运行一次。
+- 读档后，各设施当前等级够得上的待开放设施设为已开放，等级未够到的保持未开放。
 存档都写在临时目录里（index.SAVE_DIR 换成它）。
 """
 
@@ -21,10 +22,12 @@ from types import MappingProxyType, ModuleType
 from typing import Any
 from unittest import mock
 
+from Script.Config import game_config
 from Script.Core import save_handle
 from Script.Kernel import core
 from Script.Modules import load_order
-from Script.Modules.domains import abilities, country, medical, physical_exam
+from Script.Modules.domains import abilities, country, facility, medical
+from Script.Modules.domains import physical_exam
 from Script.Modules.domains import player_collection, playthrough, warehouse
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
@@ -34,6 +37,8 @@ from Script.Config import normal_config
 
 SAVE_ID = "kernel_state_test"
 """ 测试用的存档id """
+DORMITORY = 4
+""" 宿舍区的设施id """
 _serial = itertools.count()
 
 
@@ -152,7 +157,8 @@ class KernelStateTest(FastTestCase):
         """
         存档时难度 1 为 3、系统设置 1 号为 0。之后把难度改成 1、系统设置改成 1，再读档。
         难度回到 3，系统设置还是 1、还是同一个对象。
-        内核的 GameState 除去全局键 roster.offstage、医疗部的三个键、体检设置与角色数据里 abilities 的四个键之外，
+        内核的 GameState 除去全局键（roster.offstage、医疗部的三个键、体检设置、
+        待开放设施开放情况）和角色数据里的 abilities 四个键与玩家收藏品键之外，
         与存档时相同。这几项存档里没有，是读档修补补上的
         """
         self.world.chara(0, "博士")
@@ -185,6 +191,7 @@ class KernelStateTest(FastTestCase):
             medical.CLINIC,
             medical.WARD,
             physical_exam.SETTING,
+            facility.OPEN,
         ):
             data.pop(key, None)
         tables = abilities.PICKLED.values()
@@ -279,3 +286,29 @@ class KernelStateTest(FastTestCase):
                 if c.action.duration == 60
             }
         self.assertEqual(ended, ["1", "2"], "还没收尾的两名干员各收尾一次")
+
+    def test_load_opens_rooms_the_levels_reach(self) -> None:
+        """
+        宿舍区设为 2 级且 2 级待开放设施都未开放时存档再读档。读档后 2 级待开放设施全部设为已开放，
+        3 级待开放设施仍未开放
+        """
+        self.world.chara(0, "博士")
+        self.cache.npc_id_got = {0}
+        kernel_data.written(country.fill)
+        name = game_config.config_facility[DORMITORY].name
+        effects = game_config.config_facility_effect_data[name]
+        rooms = {
+            level: [
+                cid
+                for cid, room in game_config.config_facility_open.items()
+                if room.zone_cid == effects[level]
+            ]
+            for level in (2, 3)
+        }
+        self.assertTrue(rooms[2] and rooms[3])
+        kernel_data.written(facility.set_level, DORMITORY, 2)
+        self.assertFalse(any(facility.is_open(cid) for cid in rooms[2]))
+        save_handle.establish_save(SAVE_ID)
+        save_handle.input_load_save(SAVE_ID)
+        self.assertTrue(all(facility.is_open(cid) for cid in rooms[2]))
+        self.assertFalse(any(facility.is_open(cid) for cid in rooms[3]))
