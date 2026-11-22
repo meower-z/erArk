@@ -28,7 +28,8 @@ from Script.Modules.gameplay_resolution import (
 from Script.Settle import realtime_settle
 from Script.Modules.load_order import LOAD_ORDER
 from tests.fast.base import FastTestCase
-from tests import kernel_data
+from tests import chara_data, kernel_data
+from tests.world import STANDARD_OUTFIT
 
 CLOCK = game_time.minutes(datetime(2020, 12, 22, 10, 40))
 """ 内核时钟 """
@@ -56,12 +57,11 @@ class BridgeInterruptsTest(FastTestCase):
 
     def _reset(self, roster_ids: tuple[str, ...], ticked: int = CLOCK) -> None:
         """
-        GameState 换成 roster_ids 里的角色各做一件 START 开始、120 分钟长的事
+        GameState 换成 roster_ids 里的角色各做一件 START 开始、120 分钟长的事。
+        随后给这些角色写下置零的服装、状态值与身体管理，并穿上 STANDARD_OUTFIT
         Keyword arguments:
         roster_ids -- 角色键
         ticked -- 上一次 Tick 结算到的时钟
-        Return arguments:
-        无
         """
         characters = {
             who: core.Character(
@@ -83,6 +83,8 @@ class BridgeInterruptsTest(FastTestCase):
                 )
             )
         )
+        for who in roster_ids:
+            chara_data.seed(int(who), STANDARD_OUTFIT)
 
     @contextmanager
     def _noise(self, maker: int, sleeper: int) -> Iterator[None]:

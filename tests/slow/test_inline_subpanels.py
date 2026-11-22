@@ -13,8 +13,8 @@ import importlib
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -75,13 +75,23 @@ class InlineSubpanelTest(SlowTestCase):
 
     def test_cloth_switch_commits_edit_and_stays(self) -> None:
         """H 中脱下一件衣服：一个 0 分钟 Edit，之后衣服在 cloth_off；下一次选择取消也不会穿回去"""
+        from Script.Modules.domains import wardrobe
+
         cloth_panel = importlib.import_module("Script.UI.Panel.cloth_panel")
         game_config = importlib.import_module("Script.Config.game_config")
         cloth_id = min(game_config.config_clothing_tem)
         clothing_type = game_config.config_clothing_tem[cloth_id].clothing_type
         target = self.cache.character_data[self.npcs[0]]
-        target.cloth.cloth_wear[clothing_type] = [cloth_id]
-        target.cloth.cloth_off[clothing_type] = []
+        kernel_data.put(
+            wardrobe.set_part,
+            target.cid,
+            "cloth_wear",
+            clothing_type,
+            [cloth_id],
+        )
+        kernel_data.put(
+            wardrobe.set_part, target.cid, "cloth_off", clothing_type, []
+        )
 
         def click() -> None:
             panel = cloth_panel.SwitchCharacterClothPanel(0, 120, 20, 0, False)
@@ -94,8 +104,12 @@ class InlineSubpanelTest(SlowTestCase):
         self.assertEqual(end, start)
         self.assertFalse(changed, "点击时缓存被写了")
         target = self.cache.character_data[self.npcs[0]]
-        self.assertIn(cloth_id, target.cloth.cloth_off[clothing_type])
-        self.assertNotIn(cloth_id, target.cloth.cloth_wear[clothing_type])
+        self.assertIn(
+            cloth_id, wardrobe.of(target.cid).cloth_off[clothing_type]
+        )
+        self.assertNotIn(
+            cloth_id, wardrobe.of(target.cid).cloth_wear[clothing_type]
+        )
 
         player_pick = importlib.import_module(
             "Script.Modules.tk_ui.player_pick"
@@ -103,7 +117,9 @@ class InlineSubpanelTest(SlowTestCase):
 
         self.run_pick(player_pick.back)
         target = self.cache.character_data[self.npcs[0]]
-        self.assertIn(cloth_id, target.cloth.cloth_off[clothing_type])
+        self.assertIn(
+            cloth_id, wardrobe.of(target.cid).cloth_off[clothing_type]
+        )
 
     def test_target_clicks_commit_edit(self) -> None:
         """立绘按钮与场景角色名按钮换交互对象：各是一个 0 分钟 Edit，之后交互对象已换"""

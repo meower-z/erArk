@@ -14,8 +14,8 @@ talk.talk_common_judge 不能依赖这个顺序：里层排在外层前面时，
 渲染出的通用口上不留下任何通用占位符，渲染也不抛异常。
 """
 
-from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.slow.base import SlowTestCase
 
 ROOM = ["中枢", "会议室"]
 MOUTH = 21
@@ -27,6 +27,8 @@ class TalkCommonNestedTest(SlowTestCase):
 
     def test_reversed_order_climax_line(self) -> None:
         """倒序时杜宾的口喉高潮渲染出通用口上，文本里不留通用占位符"""
+        from Script.Modules.domains import status
+
         from Script.Config import normal_config
         from Script.Config import game_config
         from Script.Core import constant
@@ -34,7 +36,6 @@ class TalkCommonNestedTest(SlowTestCase):
 
         self.walk(ROOM)
         operator_id = self.npc("杜宾")
-        operator = self.cache.character_data[operator_id]
         self.world.move(operator_id, ROOM)
         kernel_data.put(
             kernel_data.domain("flags").set,
@@ -52,9 +53,14 @@ class TalkCommonNestedTest(SlowTestCase):
             )
         )
         # 0 级的上限就是 1 级的下限
-        operator.status_data[MOUTH] = next(
-            iter(game_config.config_character_state_level.values())
-        ).max_value
+        kernel_data.put(
+            status.set,
+            operator_id,
+            MOUTH,
+            next(
+                iter(game_config.config_character_state_level.values())
+            ).max_value,
+        )
         rendered = []
         """ talk_common_judge 每次的输入与输出 """
         real_judge = talk.talk_common_judge

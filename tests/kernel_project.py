@@ -5,20 +5,18 @@
 供 tests/kernel_data.project_state 调用，把 GameState 里的全局键按旧缓存的属性名记进快照。
 project_world_misc 记世界设定、周目、国家、模式、吵醒名单、成就、事件与指令记录、计划队列与寻路，共 14 个全局键。
 指令记录只记最近行为，每日记录不在快照里。
+project_world_misc 还经 chara_data.project 记下各角色的道具、食物背包、服装、身体管理与状态值。
 project_base_tallies 记基地的派对排期、旅馆房间档次、计数与冰箱，共 4 个全局键。
 它还记干员人数上限与仓库容量，这两项读时算出。
-stepping 与 auto_commit_outside_step 供教育区测试在内核单步之外自动套用指定全局键的写入。
+stepping 与 auto_commit_outside_step 供教育区测试在内核单步之外自动套用指定键的写入。
 """
 
 from __future__ import annotations
 
 import contextlib
 import importlib
-from collections.abc import Collection, Iterator
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from Script.Kernel import core
+from collections.abc import Callable, Collection, Iterator
+from typing import Any
 
 _in_step = 0
 """ 经 stepping() 包住的内核单步嵌套层数 """
@@ -43,29 +41,32 @@ def stepping() -> Iterator[None]:
 
 def auto_commit_outside_step(keys: Collection[str]) -> None:
     """
-    包装 working.put：在 stepping() 之外且没有打开缓冲区时，
-    把 keys 里全局键的写入经 kernel_data.writing() 套用到内核状态。
-    stepping() 内、角色键与其余全局键原样走 working.put
+    包装 working.put 与 working.change：在 stepping() 之外且没有打开缓冲区时，
+    把 keys 里的键（全局键或角色键）的写入经 kernel_data.writing() 套用到内核状态。
+    stepping() 内与其余键的写入原样走 working
     Keyword arguments:
-    keys -- 允许在一步之外自动套用的全局键集合
+    keys -- 允许在一步之外自动套用的键集合
     """
     from Script.Modules.gameplay_resolution import working
     from tests import kernel_data
 
     allowed = frozenset(keys)
-    raw_put = working.put
 
-    def put(who: str | None, key: str, new: core.JSON) -> None:
-        if _in_step or key not in allowed:
-            raw_put(who, key, new)
-            return
-        try:
-            raw_put(who, key, new)
-        except RuntimeError:
-            with kernel_data.writing():
-                raw_put(who, key, new)
+    def wrapped(raw: Callable[..., None]) -> Callable[..., None]:
+        def write(who: str | None, key: str, *args: Any) -> None:
+            if _in_step or key not in allowed:
+                raw(who, key, *args)
+                return
+            try:
+                raw(who, key, *args)
+            except RuntimeError:
+                with kernel_data.writing():
+                    raw(who, key, *args)
 
-    working.put = put
+        return write
+
+    working.put = wrapped(working.put)
+    working.change = wrapped(working.change)
 
 
 def domain(name: str) -> Any:
@@ -93,7 +94,8 @@ def mode(name: str) -> bool:
 def project_world_misc(state: dict[str, object]) -> None:
     """
     快照里按旧缓存的属性名记下 GameState 里的本周目设定、周目数、势力与国家、模式开关、
-    被吵醒的角色、成就、事件与最近行为记录、计划队列、寻路与睡觉存档标记
+    被吵醒的角色、成就、事件与最近行为记录、计划队列、寻路与睡觉存档标记。
+    随后经 chara_data.project 记下各角色的道具、食物背包、服装、身体管理与状态值
     Keyword arguments:
     state -- 快照，原地补上
     """
@@ -110,6 +112,7 @@ def project_world_misc(state: dict[str, object]) -> None:
         pregnancy,
         roster,
     )
+    from tests import chara_data
     from tests.snapshot import CACHE_AREAS, flatten
 
     world_country = game_type.Country()
@@ -148,6 +151,7 @@ def project_world_misc(state: dict[str, object]) -> None:
         cg = growth.of(cid)
         if cg is not None:
             flatten(f"chara.{cid}.child_growth", cg, state)
+    chara_data.project(state)
 
 
 def project_base_tallies(state: dict[str, object]) -> None:

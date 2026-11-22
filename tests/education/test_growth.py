@@ -12,7 +12,7 @@ from Script.Design import handle_ability
 import inspect
 from Script.System.Official_Event_System import official_event_handle
 from tests import chara_abilities as ca, kernel_data, world
-from Script.Modules.domains import library
+from Script.Modules.domains import library, status
 
 open_all_classroom()
 clear_schedules()
@@ -86,14 +86,13 @@ section("学生侧结算")
 set_time(period_time(0))
 exp_id = growth_handle.get_subject_exp_id(45)
 check("学识科目的经验 id 能从 AbilityUp.csv 解出", exp_id > 0, exp_id)
-state_before = student.status_data.get(education_constant.LEARN_STATE_ID, 0)
+LEARN = education_constant.LEARN_STATE_ID
+state_before = status.of(student.cid).get(LEARN, 0)
 exp_before = ca.experience(student).get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, 101, 45, education_constant.COURSE_TYPE_THEORY, 45
 )
-state_gain = (
-    student.status_data.get(education_constant.LEARN_STATE_ID, 0) - state_before
-)
+state_gain = status.of(student.cid).get(LEARN, 0) - state_before
 exp_gain = ca.experience(student).get(exp_id, 0) - exp_before
 check("习得状态增加", state_gain > 0, state_gain)
 check(
@@ -209,13 +208,12 @@ set_time(period_time(0))
 
 section("教师侧结算")
 t_exp_before = ca.experience(teacher).get(exp_id, 0)
-t_state_before = teacher.status_data.get(education_constant.LEARN_STATE_ID, 0)
+t_state_before = status.of(teacher.cid).get(LEARN, 0)
 growth_handle.settle_teacher_class_gain(101, 45, 45)
 check(
     "教学相长：教师加该科经验与习得",
     ca.experience(teacher).get(exp_id, 0) > t_exp_before
-    and teacher.status_data.get(education_constant.LEARN_STATE_ID, 0)
-    > t_state_before,
+    and status.of(teacher.cid).get(LEARN, 0) > t_state_before,
 )
 growth_handle.settle_teacher_class_gain(101, 45, 0)
 check("add_time=0 不结算", True)
@@ -469,12 +467,12 @@ check(
 assert growth.has(theory_student.cid)
 theory_growth = child_growth(theory_student.cid)
 theory_growth.last_attend_period = []
-learn_before = theory_student.status_data.get(E6.LEARN_STATE_ID, 0)
+learn_before = status.of(theory_student.cid).get(E6.LEARN_STATE_ID, 0)
 exp_snapshot = dict(ca.experience(theory_student))
 growth_handle.settle_student_class_gain(205, 101, 76, E6.COURSE_TYPE_THEORY, 45)
 check(
     "腰技课只给习得、不给任何经验",
-    theory_student.status_data.get(E6.LEARN_STATE_ID, 0) > learn_before
+    status.of(theory_student.cid).get(E6.LEARN_STATE_ID, 0) > learn_before
     and dict(ca.experience(theory_student)) == exp_snapshot,
 )
 remove_character(205)

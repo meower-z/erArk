@@ -75,6 +75,8 @@ class NumDisplayTest(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.Modules.domains import status
+
         needs = importlib.import_module("Script.Modules.domains.needs")
         for character in (self.player, self.operator):
             needs.set(character.cid, **dict.fromkeys(NEEDS, 10 + extra))
@@ -87,8 +89,10 @@ class NumDisplayTest(SlowTestCase):
                 setattr(character, name, getattr(character, max_name) + extra)
             for name in PLAIN:
                 setattr(character, name, 10 + extra)
-            for status_id in character.status_data:
-                character.status_data[status_id] = STATUS_VALUE + extra
+            for status_id in status.of(character.cid):
+                kernel_data.put(
+                    status.set, character.cid, status_id, STATUS_VALUE + extra
+                )
             for slot in character.dirty.body_semen.values():
                 slot[1] = 10 + extra
                 slot[2] = 1
@@ -151,6 +155,8 @@ class NumDisplayTest(SlowTestCase):
 
     def test_settle_text_lists_only_seen_changes(self) -> None:
         """显示值没变的 ±1/3 不列出，显示值变了 2 的列出 +2"""
+        from Script.Modules.domains import status
+
         from Script.Config import normal_config
 
         game_config = importlib.import_module("Script.Config.game_config")
@@ -160,10 +166,12 @@ class NumDisplayTest(SlowTestCase):
         )
 
         self.set_values(Fraction(0))
-        quiet_up, quiet_down, seen = sorted(self.operator.status_data)[:3]
-        self.operator.status_data[quiet_up] = STATUS_VALUE + THIRD
-        self.operator.status_data[quiet_down] = STATUS_VALUE
-        self.operator.status_data[seen] = STATUS_VALUE + 2
+        quiet_up, quiet_down, seen = sorted(status.of(self.operator.cid))[:3]
+        kernel_data.put(
+            status.set, self.operator.cid, quiet_up, STATUS_VALUE + THIRD
+        )
+        kernel_data.put(status.set, self.operator.cid, quiet_down, STATUS_VALUE)
+        kernel_data.put(status.set, self.operator.cid, seen, STATUS_VALUE + 2)
         change = game_type.CharacterStatusChange()
         target_change = game_type.TargetChange()
         target_change.status_data = {

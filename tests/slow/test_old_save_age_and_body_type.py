@@ -124,14 +124,14 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         ca.talent(minor_id)[6] = 1
         ca.talent(minor_id)[7] = 1
         del ca.talent(minor_id)[28]
-        cache.character_data[minor_id].item[31] = 1
+        kd.put(kd.domain("inventory").set_item, minor_id, 31, 1)
         shrink_id = min(
             cid
             for cid in static_id_list
             if self._template_body(cache.character_data[cid].adv)
             in ([105], [106])
         )
-        cache.character_data[0].item[32] = 2
+        kd.put(kd.domain("inventory").set_item, 0, 32, 2)
         roster = kd.domain("roster")
         mother_id = min(cid for cid in roster.active() if cid in static_id_list)
         id_dict: dict[str, Any] = {
@@ -252,17 +252,17 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             map_handle.get_map_system_path_str_for_list(player.position)
         ].close_flag = 1
         clothing_type = min(game_config.config_clothing_type)
-        child.cloth.cloth_wear[clothing_type] = []
-        child.cloth.cloth_off[clothing_type] = [
-            min(game_config.config_clothing_tem)
-        ]
+        cloth = kd.domain("wardrobe").of(child.cid)
+        cloth.cloth_wear[clothing_type] = []
+        cloth.cloth_off[clothing_type] = [min(game_config.config_clothing_tem)]
+        kd.put(kd.domain("wardrobe").put, child.cid, cloth)
         mother.behavior.behavior_id = "wait"
         pleasure_state = min(
             state_id
             for state_id, state in game_config.config_character_state.items()
             if state.type == 0
         )
-        child.status_data[pleasure_state] = 500
+        kd.put(kd.domain("status").set, child.cid, pleasure_state, 500)
         child.hypnosis.hypnosis_degree = 50
         child.event.event_id = "test_event"
         child.must_settle_second_behavior_id_list = ["test_second_behavior"]
@@ -412,7 +412,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             growth = growth_mod.of(cid)
             snapshot[cid] = (
                 dict(ca.talent(chara)),
-                dict(chara.item),
+                dict(kd.domain("inventory").items(chara.cid)),
                 chara.behavior.behavior_id,
                 chara.state,
                 list(chara.entertainment.entertainment_type),
@@ -421,12 +421,11 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 ai.get(chara.cid, "carry_chara_id"),
                 repr(
                     (
-                        chara.cloth.cloth_wear,
-                        chara.cloth.cloth_off,
+                        vars(kd.domain("wardrobe").of(chara.cid)),
                         chara.hypnosis.hypnosis_degree,
                         chara.event.event_id,
                         chara.must_settle_second_behavior_id_list,
-                        sorted(chara.status_data.items()),
+                        sorted(kd.domain("status").of(chara.cid).items()),
                     )
                 ),
                 chara.assistant_character_id,
@@ -497,7 +496,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 if ca.talent(chara).get(talent_id, 0)
             ]
             self.assertFalse(
-                chara.item.get(31, 0) or chara.item.get(32, 0),
+                any(kd.domain("inventory").items(cid).get(i) for i in (31, 32)),
                 f"角色{cid}的道具栏里不应有外表年龄药",
             )
             cg = growth_mod.of(cid)
@@ -921,18 +920,19 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             0,
             "结束H后房门打开",
         )
+        cloth = kd.domain("wardrobe").of(child.cid)
         self.assertEqual(
             (
                 fl.get(child.cid, "is_h"),
-                child.cloth.cloth_off[clothing_type],
-                cloth_id in child.cloth.cloth_wear[clothing_type],
+                cloth.cloth_off[clothing_type],
+                cloth_id in cloth.cloth_wear[clothing_type],
             ),
             (False, [], True),
             "孩子不在H中，穿回了脱下的衣服",
         )
         self.assertEqual(
             (
-                child.status_data[id_dict["pleasure_state"]],
+                kd.domain("status").of(child.cid)[id_dict["pleasure_state"]],
                 child.hypnosis.hypnosis_degree,
                 child.event.event_id,
                 child.must_settle_second_behavior_id_list,

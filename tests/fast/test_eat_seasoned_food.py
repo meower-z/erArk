@@ -13,6 +13,8 @@ from Script.Config import game_config
 from Script.Core import constant
 from Script.System.Cooking_System import cooking, food_bag_panel
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import inventory
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
 from tests import chara_abilities as ca
@@ -52,7 +54,7 @@ class EatSeasonedFoodTest(FastTestCase):
         )
         self.food = cooking.create_food("0", recipe_id)
         self.food.special_seasoning = SEMEN_HIDDEN
-        self.player.food_bag[self.food.uid] = self.food
+        kernel_data.put(inventory.put_food, self.player.cid, self.food)
         view.now_panel_id = constant.Panel.IN_SCENE
 
     def test_eating_seasoned_food_picks_eat(self) -> None:

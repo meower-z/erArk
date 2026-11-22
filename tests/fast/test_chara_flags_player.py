@@ -10,7 +10,7 @@
 - 旧存档 adopt_old_save（含忽略 unnormal_flag、float 经 num.exact 转 Fraction、删去旧属性）、copy_to 与 remap；
 - choice.Plan.get 与 starts.write_field 对 sp_flag.* / action_info.* 路径的转发；
 - events 触发函数按传入的 GameState 读标记与能力；
-- Character 不含这四个属性，存档版本为 17 且 STEPS[16] 存在。
+- Character 不含这四个属性，存档版本不低于 17 且 STEPS[16] 存在。
 """
 
 import datetime
@@ -41,7 +41,7 @@ class CharaFlagsPlayerTest(FastTestCase):
         self.op_b = self.world.chara(2, "干员乙")
 
     def test_character_has_no_legacy_attrs_and_version_17(self) -> None:
-        """Character 实例不含四个角色键对应的旧属性，存档版本为 17"""
+        """Character 实例不含四个角色键对应的旧属性，存档版本不低于 17 且 STEPS[16] 存在"""
         fresh = game_type.Character()
         for attr in ("sp_flag", "action_info", "pl_ability", "pl_collection"):
             self.assertFalse(hasattr(fresh, attr), attr)

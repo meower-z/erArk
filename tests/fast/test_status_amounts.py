@@ -10,6 +10,8 @@ import datetime
 
 from Script.Core import constant, constant_effect, game_type
 from Script.Settle import realtime_settle
+from Script.Modules.domains import status
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
 
@@ -30,8 +32,8 @@ class StatusAmountsTest(FastTestCase):
         effect = constant.settle_behavior_effect_data[
             constant_effect.BehaviorEffect.TARGET_ADD_SMALL_S_FEEL
         ]
-        effect(0, 7, change, datetime.datetime(2025, 1, 1))
-        written = self.npc.status_data[0]
+        kernel_data.written(effect, 0, 7, change, datetime.datetime(2025, 1, 1))
+        written = status.of(self.npc.cid)[0]
         recorded = change.target_change[1].status_data[0]
         self.assertGreater(written, 0)
         self.assertIs(type(written), int)
@@ -43,9 +45,11 @@ class StatusAmountsTest(FastTestCase):
         self.npc.dirty.enema_capacity = 1
         ca.ability(self.npc)[15] = 1
         for _ in range(5):
-            realtime_settle.settle_conscious_continuous(1, 1)
-        pieces = self.npc.status_data[17]
-        self.npc.status_data[17] = 0
-        realtime_settle.settle_conscious_continuous(1, 5)
-        self.assertEqual(pieces, self.npc.status_data[17])
+            kernel_data.written(
+                realtime_settle.settle_conscious_continuous, 1, 1
+            )
+        pieces = status.of(self.npc.cid)[17]
+        kernel_data.put(status.set, self.npc.cid, 17, 0)
+        kernel_data.written(realtime_settle.settle_conscious_continuous, 1, 5)
+        self.assertEqual(pieces, status.of(self.npc.cid)[17])
         self.assertNotEqual(pieces, int(pieces))

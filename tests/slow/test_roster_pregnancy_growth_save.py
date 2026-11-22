@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 """
-版本 18 存档往返：名册、妊娠与养成状态
-====================================
+存档往返（版本不低于 18）：名册、妊娠与养成状态
+============================================
 开一局新游戏，写入名册（在编、禁用、已用姓名）、成年干员的妊娠数据与养成数据，
-真实写盘再读档，核对文件 "2" 版本为 18、文件 "1" 不带旧属性、三个领域状态往返一致、
-继续推进后再次写盘的文件 "2" 稳定。
+真实写盘再读档，核对文件 "2" 版本等于 upgrade.CURRENT 且当前版本不低于 18、
+文件 "1" 不带旧属性、三个领域状态往返一致、继续推进后再次写盘的文件 "2" 稳定。
 """
 
 import importlib
@@ -20,7 +20,7 @@ SLOT = "v18_roster_pregnancy_growth"
 
 
 class RosterPregnancyGrowthSaveTest(SlowTestCase):
-    """新游戏写入名册、妊娠与养成数据后的版本 18 存档往返与续跑"""
+    """新游戏写入名册、妊娠与养成数据后的存档往返与续跑（版本不低于 18）"""
 
     def test_v18_round_trip_and_continuation(self) -> None:
         """写盘、读档、核对字段与续跑"""
@@ -79,8 +79,8 @@ class RosterPregnancyGrowthSaveTest(SlowTestCase):
             os.path.join(save_dir, kernel_state.SAVE_FILE), encoding="utf-8"
         ) as f:
             first_file = json.load(f)
-        self.assertEqual(first_file["version"], 18)
-        self.assertEqual(upgrade.CURRENT, 18)
+        self.assertEqual(first_file["version"], upgrade.CURRENT)
+        self.assertGreaterEqual(upgrade.CURRENT, 18)
 
         with open(os.path.join(save_dir, "1"), "rb") as f:
             raw_cache = save_handle.SaveUnpickler(f).load()

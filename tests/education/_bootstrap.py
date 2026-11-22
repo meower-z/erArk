@@ -122,23 +122,17 @@ from Script.Core import (
     save_handle,
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
-from tests import chara_abilities as ca, kernel_data, kernel_project, world
+from tests import chara_abilities as ca, chara_data, kernel_data, kernel_project
+from tests import world
 
 _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
 
 from Script.Modules.save_load import kernel_state
-from Script.Modules.domains import (
-    education,
-    growth as growth,
-    modes,
-    official,
-    plan,
-    playthrough,
-    pregnancy as pregnancy,
-    roster as roster,
-    warehouse,
-)
+from Script.Modules.domains import body_manage, education, growth as growth
+from Script.Modules.domains import inventory, modes, official, plan, playthrough
+from Script.Modules.domains import pregnancy as pregnancy, roster as roster
+from Script.Modules.domains import status, wardrobe, warehouse
 from tests.education._growth_ref import child_growth as child_growth
 
 character_handle.init_character_tem()
@@ -150,8 +144,17 @@ cache: game_type.Cache = cache_control.cache
 normal_config.system_setting = attr_calculation.get_system_setting_zero()
 kernel_data.written(playthrough.reset_difficulty_and_birth)
 kernel_data.written(warehouse.start, {})
+# 教育测试允许游戏函数在单步外写入教育、名册、妊娠、养成及角色的状态值、道具、食物背包、服装与身体管理键
+chara_keys = (status.KEY, inventory.ITEMS, inventory.FOODS, wardrobe.KEY)
 kernel_project.auto_commit_outside_step(
-    (*education.KEYS, *roster.KEYS, pregnancy.KEY, growth.KEY)
+    {
+        *education.KEYS,
+        *roster.KEYS,
+        pregnancy.KEY,
+        growth.KEY,
+        *chara_keys,
+        body_manage.KEY,
+    }
 )
 ca.auto_commit_outside_step()
 # 书库：library.holders() 把配置里的每本书读作在架、没被借走；兴趣课读书要先借书（Plan 29）
@@ -299,18 +302,9 @@ def make_character(
     cd.adv = 0
     cd.sex = 1
     cd.race = 0
-    cd.cloth = attr_calculation.get_cloth_zero()
-    cd.cloth.cloth_locker_in_dormitory = (
-        attr_calculation.get_cloth_locker_in_dormitory_zero()
-    )
-    cd.cloth.cloth_locker_in_shower = (
-        attr_calculation.get_shower_cloth_locker_zero()
-    )
     cd.dirty = attr_calculation.get_zero_dirty()
-    cd.status_data = attr_calculation.get_status_zero({})
     cd.second_behavior = attr_calculation.get_second_behavior_zero({})
     cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)
-    cd.body_manage = attr_calculation.get_body_manage_zero()
     cd.favorability = {0: 0}
     cd.assistant_services = (
         attr_calculation.get_assistant_services_zero()
@@ -331,6 +325,7 @@ def make_character(
                 mother_data.relationship.child_id_list.append(cid)
     cd.position = list(position if position is not None else SCENE_DORM)
     cache.character_data[cid] = cd
+    chara_data.seed(cid, {})
     if daughter:
         pregnancy.update(
             cid,

@@ -22,11 +22,11 @@ from Script.System.Cooking_System import cooking, make_food_panel
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Pregnancy_System import egg_handle, pregnancy_handle
 from Script.UI.Panel import gift_panel, play_gomoku_panel, talent_up_panel
+from Script.Modules.domains import achievement, inventory, pregnancy
 from tests import chara_abilities as ca, kernel_data, pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
-from Script.Modules.domains import achievement, pregnancy
 
 LOADED_FIRST = (update, handle_instruct)
 """ 先于 Script.Modules 导入的 update；handle_instruct 登记指令处理函数 """
@@ -46,13 +46,14 @@ class PanelSubMenusReadOnly(FastTestCase):
     """送礼、五子棋、素质升级、做饭的子菜单：取消什么都不写，定下的值在开始时写"""
 
     def setUp(self) -> None:
-        """博士与一名干员在场景里，干员是交互对象；内核停在玩家选行动"""
+        """博士与一名干员在场景里，干员是交互对象。博士的道具 DRUG 为 0。内核停在玩家选行动"""
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
         self.player.target_character_id = NPC
         if not self.cache.recipe_data:
             cooking.init_recipes()
+        kernel_data.put(inventory.set_item, 0, DRUG, 0)
         view.now_panel_id = constant.Panel.IN_SCENE
         self.answers: list[str] = []
         self.enterContext(
@@ -221,7 +222,12 @@ class PanelSubMenusReadOnly(FastTestCase):
                 {"behavior.gift_id": 39, "behavior.gift_child_id": 3},
             )
         with self.subTest("送出道歉礼物，开始时"):
-            self.player.item[game_config.config_gift_items[2].item_id] = 1
+            kernel_data.put(
+                inventory.set_item,
+                self.player.cid,
+                game_config.config_gift_items[2].item_id,
+                1,
+            )
             behavior = self.assert_commits([], lambda: panel.select_gift(2))
             self.assertEqual(
                 (behavior.behavior_id, behavior.gift_id),
@@ -297,7 +303,7 @@ class PanelSubMenusReadOnly(FastTestCase):
 
     def bag(self) -> Iterator[game_type.Food]:
         """玩家背包里的食物"""
-        return iter(self.player.food_bag.values())
+        return iter(inventory.foods(self.player.cid).values())
 
     def test_cooking_backs_out(self) -> None:
         """做饭：筛选、调整数量后取消、材料不够时都不写游戏数据"""
@@ -314,7 +320,6 @@ class PanelSubMenusReadOnly(FastTestCase):
                 lambda: self.food_button(0, 0).make_food_for_sure(),
             )
         with self.subTest("药物调味没有药"):
-            self.player.item[DRUG] = 0
             self.assert_backs_out(
                 ["确认"], lambda: self.food_button(DRUG, 0).make_food_for_sure()
             )
@@ -322,7 +327,7 @@ class PanelSubMenusReadOnly(FastTestCase):
     def test_cooking_commits(self) -> None:
         """做饭：确认后开始时才做出食物、用掉药、计入成就；精细模式的品质是答题的结果"""
         with self.subTest("药物调味做两份"):
-            self.player.item[DRUG] = 2
+            kernel_data.put(inventory.set_item, self.player.cid, DRUG, 2)
             made_before = achievement.get("make_food_count")
             button = self.food_button(DRUG, 0)
             data = self.chosen(["增加", "确认"], button.make_food_for_sure)
@@ -335,7 +340,7 @@ class PanelSubMenusReadOnly(FastTestCase):
             )
             foods = list(self.bag())
             self.assertEqual(len(foods), 2)
-            self.assertEqual(self.player.item[DRUG], 0)
+            self.assertEqual(inventory.items(self.player.cid)[DRUG], 0)
             self.assertEqual(
                 achievement.get("make_food_count"), made_before + 2
             )
@@ -345,7 +350,7 @@ class PanelSubMenusReadOnly(FastTestCase):
                 [food.special_seasoning for food in foods], [DRUG, DRUG]
             )
         with self.subTest("精细模式答题"):
-            self.player.food_bag.clear()
+            kernel_data.put(inventory.replace_foods, self.player.cid, {})
             normal_config.system_setting.makefood_make_count = {}
             button = self.food_button(0, 1)
             questions = cooking.get_food_cook_questions(int(button.cid))

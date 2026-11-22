@@ -15,7 +15,6 @@ from typing import Any
 
 from Script.Config import game_config
 from Script.Core import constant, game_type
-from Script.Modules.domains import kitchen
 from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import food_bag_panel
 from Script.UI.Panel import (
@@ -25,6 +24,7 @@ from Script.UI.Panel import (
     normal_panel,
     read_book_panel,
 )
+from Script.Modules.domains import inventory, kitchen
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 
@@ -103,7 +103,7 @@ class PanelPicksLeaveCache(FastTestCase):
         shop_food = _food("shop")
         kernel_data.written(kitchen.stock, "1", shop_food)
         bag_food = _food("bag")
-        self.cache.character_data[0].food_bag[bag_food.uid] = bag_food
+        kernel_data.put(inventory.put_food, 0, bag_food)
         self.cache.character_data[0].target_character_id = 1
         cases: list[tuple[str, Callable[[], object], dict[str, Any]]] = [
             (

@@ -106,6 +106,8 @@ class PickDraftWorldTest(SlowTestCase):
         Return arguments:
         int -- 内裤的服装id
         """
+        from Script.Modules.domains import wardrobe
+
         from Script.Config import game_config
 
         pan_id = next(
@@ -115,7 +117,13 @@ class PickDraftWorldTest(SlowTestCase):
         )
         self.world.move(0, LOCKER_ROOM)
         npc = self.cache.character_data[self.chara_id]
-        npc.cloth.cloth_locker_in_shower[PANTIES] = [pan_id]
+        kernel_data.put(
+            wardrobe.set_part,
+            npc.cid,
+            "cloth_locker_in_shower",
+            PANTIES,
+            [pan_id],
+        )
         npc.dirty.cloth_locker_semen[PANTIES] = [
             game_config.config_clothing_type[PANTIES].name,
             0,
@@ -150,6 +158,8 @@ class PickDraftWorldTest(SlowTestCase):
 
     def test_locker_steal_rides_edit(self) -> None:
         """偷走内裤再退出：一个 0 分钟的 Edit，之后内裤在玩家的藏品里，衣柜空了"""
+        from Script.Modules.domains import wardrobe
+
         from Script.Core import constant
 
         pan_id = self.fill_locker()
@@ -165,7 +175,9 @@ class PickDraftWorldTest(SlowTestCase):
             ],
             [pan_id],
         )
-        self.assertEqual(npc.cloth.cloth_locker_in_shower[PANTIES], [])
+        self.assertEqual(
+            wardrobe.of(npc.cid).cloth_locker_in_shower[PANTIES], []
+        )
 
     def test_locker_look_only_commits_nothing(self) -> None:
         """进了干员的衣柜什么也不做，一层层退出：没有行动，缓存不变，交互对象不变"""
@@ -186,6 +198,8 @@ class PickDraftWorldTest(SlowTestCase):
 
     def test_food_bag_judges_at_start(self) -> None:
         """给交互对象吃特殊调味的饭：选择时不判定，开始时判定一次，被拒时开始的是拒绝食用"""
+        from Script.Modules.domains import inventory
+
         from types import SimpleNamespace
         from unittest import mock
 
@@ -208,7 +222,7 @@ class PickDraftWorldTest(SlowTestCase):
         )
         food = cooking.create_food("0", recipe_id)
         food.special_seasoning = SPECIAL_SEASONING
-        player.food_bag[food.uid] = food
+        kernel_data.put(inventory.put_food, 0, food)
         judged: list[bool] = []
 
         def refuse(_who: int, _food: object) -> bool:
@@ -244,6 +258,8 @@ class PickDraftWorldTest(SlowTestCase):
 
     def test_time_stop_refused_food_takes_no_time(self) -> None:
         """时停中给交互对象吃特殊调味的饭被拒：开始的拒绝食用在内核里是 0 分钟，时钟不动"""
+        from Script.Modules.domains import inventory
+
         from types import SimpleNamespace
         from unittest import mock
 
@@ -266,7 +282,7 @@ class PickDraftWorldTest(SlowTestCase):
         )
         food = cooking.create_food("0", recipe_id)
         food.special_seasoning = SPECIAL_SEASONING
-        player.food_bag[food.uid] = food
+        kernel_data.put(inventory.put_food, 0, food)
         modes = importlib.import_module("Script.Modules.domains.modes")
         kernel_data.set_world(modes.set_time_stop, True)
 
@@ -306,6 +322,8 @@ class PickDraftWorldTest(SlowTestCase):
 
     def test_fridge_take_milk_rides_edit(self) -> None:
         """冰箱里带走干员的母乳：一个 0 分钟的 Edit，之后背包里有这份母乳，冰箱里没有了"""
+        from Script.Modules.domains import inventory
+
         from Script.Core import constant
 
         fridge = importlib.import_module("Script.Modules.domains.fridge")
@@ -313,17 +331,19 @@ class PickDraftWorldTest(SlowTestCase):
         self.world.player.press("[带走]", "返回")
         start, end, changed = self.run_pick(self.show(constant.Panel.FRIDGE))
         self.assert_one_edit(start, end, changed)
-        bag = self.cache.character_data[0].food_bag.values()
+        bag = inventory.foods(0).values()
         self.assertEqual([f.milk_ml for f in bag if f.milk_ml], [120])
         self.assertNotIn(self.chara_id, fridge.table(fridge.MILK))
 
     def test_drug_rides_edit(self) -> None:
         """使用理智恢复剂：一个 0 分钟的 Edit，之后药少了一瓶，理智回升"""
+        from Script.Modules.domains import inventory
+
         from Script.Modules.tk_ui import player_pick
         from Script.UI.Panel import see_item_info_panel
 
         player = self.cache.character_data[0]
-        player.item[0] = 1
+        kernel_data.put(inventory.set_item, 0, 0, 1)
         kernel_data.set_needs(player.cid, sanity=0)
 
         def pick() -> None:
@@ -332,7 +352,7 @@ class PickDraftWorldTest(SlowTestCase):
 
         start, end, changed = self.run_pick(pick)
         self.assert_one_edit(start, end, changed)
-        self.assertEqual(player.item[0], 0)
+        self.assertEqual(inventory.items(0)[0], 0)
         self.assertGreater(kernel_data.needs_of(player.cid)["sanity"], 0)
 
     def test_call_all_follow_rides_edit(self) -> None:
@@ -359,6 +379,8 @@ class PickDraftWorldTest(SlowTestCase):
 
     def test_load_drops_old_format_food(self) -> None:
         """存档里玩家背包有一份没有母乳量的旧版本食物：读档后它不在了，另一份新版本的食物还在"""
+        from Script.Modules.domains import inventory
+
         import shutil
 
         from Script.Core import save_handle
@@ -367,12 +389,11 @@ class PickDraftWorldTest(SlowTestCase):
         if not self.cache.recipe_data:
             cooking.init_recipes()
         recipe_id = next(rid for rid in self.cache.recipe_data if rid != -1)
-        bag = self.cache.character_data[0].food_bag
         old = cooking.create_food("0", recipe_id)
         del old.milk_ml
         new = cooking.create_food("0", recipe_id)
-        bag[old.uid] = old
-        bag[new.uid] = new
+        bag = {old.uid: old, new.uid: new}
+        kernel_data.put(inventory.replace_foods, 0, bag)
         save_id = "test_pick_draft_world"
         save_handle.establish_save(save_id)
         try:
@@ -381,7 +402,7 @@ class PickDraftWorldTest(SlowTestCase):
             shutil.rmtree(
                 save_handle.get_save_dir_path(save_id), ignore_errors=True
             )
-        bag = self.cache.character_data[0].food_bag
+        bag = inventory.foods(0)
         self.assertNotIn(old.uid, bag)
         self.assertIn(new.uid, bag)
 

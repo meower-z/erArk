@@ -16,7 +16,7 @@ from _bootstrap import semester_handle, set_time, sex_class_handle, start
 from Script.Settle import common_default, default as settle_default
 from Script.System.Instruct_System import handle_instruct
 from Script.Design import character_behavior, second_behavior
-from Script.Modules.domains import flags, modes
+from Script.Modules.domains import flags, modes, status
 from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
@@ -326,28 +326,26 @@ check(
     "日程活动的自习（本节没排课）不计出勤（第五轮）",
     student_a_growth.attend_class_count == attend_before,
 )
-student_a.status_data[19] = 100
+kernel_data.put(status.set, 201, 19, 100)
 EFFECT[549](201, 45, change, game_time.now())
 check(
     "翘课：置 flag、抑郁回落一节课的量",
-    student_a_growth.skip_class_flag and student_a.status_data[19] == 55,
+    student_a_growth.skip_class_flag and status.of(201)[19] == 55,
 )
 
 section("623 翘课被抓 / 622 炫耀")
-dep_before = student_a.status_data.get(19, 0)
-fear_before = student_a.status_data.get(18, 0)
+dep_before = status.of(201).get(19, 0)
+fear_before = status.of(201).get(18, 0)
 SECOND[SE.CAUGHT_SKIP_CLASS](201, change)
 check(
     "被抓：清 flag、抑郁与恐怖上升",
     not student_a_growth.skip_class_flag
-    and student_a.status_data.get(19, 0) > dep_before
-    and student_a.status_data.get(18, 0) > fear_before,
+    and status.of(201).get(19, 0) > dep_before
+    and status.of(201).get(18, 0) > fear_before,
 )
-dep_before = student_a.status_data.get(19, 0)
+dep_before = status.of(201).get(19, 0)
 SECOND[SE.CAUGHT_SKIP_CLASS](201, change)
-check(
-    "没翘课时被抓结算什么都不做", student_a.status_data.get(19, 0) == dep_before
-)
+check("没翘课时被抓结算什么都不做", status.of(201).get(19, 0) == dep_before)
 student_a_growth.show_off_ability = {45: 3}
 
 favor_calls = []

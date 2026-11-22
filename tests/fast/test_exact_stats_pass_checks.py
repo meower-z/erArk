@@ -10,9 +10,9 @@ from fractions import Fraction
 
 from Script.Core import save_handle
 from Script.Kernel import core
-from Script.Modules.domains import needs
 from Script.Modules.gameplay_resolution import working
 from Script.Test.Static_Check.check_registry import get_all_checks
+from Script.Modules.domains import needs, status
 from tests.fast.base import FastTestCase
 from Script.Config import normal_config
 from tests import kernel_data
@@ -66,7 +66,7 @@ class ExactStatsPassChecksTest(FastTestCase):
             for field, value in FIELDS.items():
                 setattr(chara, field, value + extra)
             needs.set(chara.cid, **{k: v + extra for k, v in NEEDS.items()})
-            chara.status_data[0] = 1 + extra
+            kernel_data.put(status.set, chara.cid, 0, 1 + extra)
 
     def failures(self) -> set[tuple[str, str]]:
         """
@@ -105,4 +105,4 @@ class ExactStatsPassChecksTest(FastTestCase):
                     {k: v for k, v in stats if k in NEEDS},
                     {k: v + THIRD for k, v in NEEDS.items()},
                 )
-                self.assertEqual(chara.status_data[0], 1 + THIRD)
+                self.assertEqual(status.of(chara.cid)[0], 1 + THIRD)

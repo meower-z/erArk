@@ -42,14 +42,22 @@ class ChildStageDirtTextTest(SlowTestCase):
         无
         """
         super().setUp()
+        from Script.Modules.domains import wardrobe
+
         from Script.Config import normal_config
 
         self.target_id = min(
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
         self.target = self.cache.character_data[self.target_id]
-        for clothing_type in self.target.cloth.cloth_wear:
-            self.target.cloth.cloth_wear[clothing_type] = []
+        for clothing_type in wardrobe.of(self.target.cid).cloth_wear:
+            kernel_data.put(
+                wardrobe.set_part,
+                self.target.cid,
+                "cloth_wear",
+                clothing_type,
+                [],
+            )
         self.cache.character_data[0].target_character_id = self.target_id
         normal_config.system_setting.draw_setting[FULL_DIRTY_SETTING] = 1
 
