@@ -66,13 +66,19 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         """
         from Script.Config import game_config
         from Script.Core import constant
+        from Script.Modules.domains import hypnosis
+        from tests import kernel_data
 
         pl = self.cache.character_data[0]
         operator_id = self.npc(name)
         operator = self.cache.character_data[operator_id]
-        operator.hypnosis.hypnosis_degree = game_config.config_hypnosis_type[
-            CALM
-        ].hypnosis_degree
+        kernel_data.put(
+            hypnosis.set,
+            operator_id,
+            hypnosis_degree=game_config.config_hypnosis_type[
+                CALM
+            ].hypnosis_degree,
+        )
         self.walk(ROOM)
         self.world.player.press("召集到自己当前位置", name, "返回")
         self.instruct(constant.Instruct.ALL_NPC_POSITION)

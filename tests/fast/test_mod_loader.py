@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch
 
 from Script.Config import game_config
 from Script.Core import mod_manager
-from Script.Modules.domains import action_info, tallies
+from Script.Modules.domains import action_info, h_meters, h_state, tallies
 from Script.Design import handle_premise
 from tests import kernel_data
 from tests.fast.base import FastTestCase
@@ -112,12 +112,10 @@ class ModLoaderTest(FastTestCase):
         self.assertEqual(handle_premise.handle_pl_semen_le_2(0), 0)
         player = self.world.chara(0, "博士")
         player.target_character_id = 0
-        player.semen_point = 50
-        player.tem_extra_semen_point = 0
-        kernel_data.put(
-            action_info.set, player.cid, "day_first_shoot_semen", False
-        )
-        player.h_state.endure_not_shot_count = 0
+        with kernel_data.writing():
+            action_info.set(player.cid, "day_first_shoot_semen", False)
+            h_meters.set(0, semen=50, extra_semen=0)
+            h_state.set(0, endure_not_shot_count=0)
         for flag in ("p_orgasm_strong", "p_orgasm_normal"):
             player.second_behavior[flag] = 0
         for name in (
@@ -145,8 +143,8 @@ class ModLoaderTest(FastTestCase):
         self.assertEqual(amount, 400)
         self.assertIn(game_config.config_aromatherapy_recipes[7].name, text)
         self.assertEqual(tallies.get(tallies.SEMEN), before + amount)
-        self.assertEqual(player.semen_point, 0)
-        self.assertEqual(player.h_state.just_shoot, 1)
+        self.assertEqual(h_meters.of(0)["semen"], 0)
+        self.assertEqual(h_state.get(0, "just_shoot"), 1)
 
     def test_semen_mod_loads_when_guarded_import_fails(self) -> None:
         """

@@ -15,7 +15,7 @@ from unittest import mock
 from Script.Core import constant, game_type
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import needs, player_ability
+from Script.Modules.domains import dirty, h_meters, needs, player_ability
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
@@ -138,13 +138,13 @@ class SettlePiecesTest(FastTestCase):
 
         def prepare() -> game_type.Character:
             player = self.world.chara(0, "博士")
-            player.semen_point = 0
-            player.semen_point_max = 100
+            h_meters.set(0, semen=0, semen_max=100)
             self.behave(0, constant.Behavior.WAIT, 8)
             return player
 
         self.assert_exact(
-            self.by_cuts(prepare, lambda c: c.semen_point), Fraction(2, 5)
+            self.by_cuts(prepare, lambda c: h_meters.of(c.cid)["semen"]),
+            Fraction(2, 5),
         )
 
     def test_visual_sanity(self) -> None:
@@ -182,14 +182,15 @@ class SettlePiecesTest(FastTestCase):
 
     def test_absorb_and_hunger_on_grid(self) -> None:
         """体内 250 ml、饥饿 100、体力气力全满，5 分钟：吸收 max(1/5, 250/500) * 5 = 5/2 ml，饥饿加 5 * 3/4 再减 5/2"""
-        chara = self.npc(constant.Behavior.WAIT)
-        chara.dirty.body_semen[8][1] = 250
+        self.npc(constant.Behavior.WAIT)
         self.enterContext(working.based_on(core.state()))
+        with dirty.editing(1) as d:
+            d.body_semen[8][1] = 250
         needs.set(1, hunger=100)
         with mock.patch("random.randint", return_value=100):
             self.settle(1, [0, 5])
-        self.assertEqual(chara.dirty.body_semen[8][1], Fraction(495, 2))
-        self.assertEqual(chara.dirty.absorbed_total_semen, Fraction(5, 2))
+        self.assertEqual(dirty.body_semen_amount(1, 8), Fraction(495, 2))
+        self.assertEqual(dirty.get(1, "absorbed_total_semen"), Fraction(5, 2))
         self.assertEqual(needs.of(1)["hunger"], Fraction(405, 4))
 
     def test_hunger_rate_on_grid(self) -> None:

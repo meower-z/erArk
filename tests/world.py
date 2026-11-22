@@ -476,9 +476,7 @@ class MinimalWorld:
         cd.adv = adv
         cd.sex = 1
         cd.race = race
-        cd.dirty = attr_calculation.get_zero_dirty()
         cd.second_behavior = attr_calculation.get_second_behavior_zero({})
-        cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)
         cd.assistant_services = attr_calculation.get_assistant_services_zero()
         cd.favorability = {0: 0}
         ca.zero_tables(cid)

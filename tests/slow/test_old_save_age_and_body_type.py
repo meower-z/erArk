@@ -174,30 +174,25 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             dormitory_common.get_open_dormitory_room_occupancy(),
             "存档前102的孩子住在开放的普通宿舍里",
         )
-        from Script.Modules.domains import action_info as ai, education
-        from Script.Modules.domains import flags as fl, physical_exam as exam
+        from Script.Modules.domains import action_info as ai, dirty, education
+        from Script.Modules.domains import flags as fl, h_state, hypnosis
+        from Script.Modules.domains import physical_exam as exam
         from Script.Modules.domains import player_ability as pa
         from Script.Modules.domains import player_collection as pc, prison
 
-        child.dirty.body_semen[min(game_config.config_body_part)] = [
-            "",
-            20,
-            20,
-            1,
-        ]
+        with kd.writing(), dirty.editing(id_dict["d102"]) as d:
+            d.body_semen[min(game_config.config_body_part)] = ["", 20, 20, 1]
         player = cache.character_data[0]
         player.target_character_id = id_dict["d102"]
         mother.target_character_id = id_dict["d102"]
         player.assistant_character_id = id_dict["d102"]
         child.assistant_services[min(child.assistant_services)] = 1
-        mother.h_state.group_sex_body_template_dict["A"][0]["mouth"] = [
-            id_dict["d102"],
-            5,
-        ]
-        mother.h_state.group_sex_body_template_dict["B"][1] = [
-            [id_dict["d102"], 0],
-            3,
-        ]
+        with kd.writing(), h_state.editing(mother_id) as mhs:
+            mhs.group_sex_body_template_dict["A"][0]["mouth"] = [
+                id_dict["d102"],
+                5,
+            ]
+            mhs.group_sex_body_template_dict["B"][1] = [[id_dict["d102"], 0], 3]
         child_id = id_dict["d102"]
         commission_id = min(game_config.config_commission)
         team = [child_id, mother_id]
@@ -247,7 +242,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         cache.old_character_id = child_id
         # 玩家与她在单人H中（双方都在H、玩家所在房间关着门，她脱了一件衣服），母亲正对她做着别的行为；
         #    她身上有快感、催眠、待触发事件与必须结算的二段行为
-        player.h_state.insert_position = 2
+        kd.put(h_state.set, 0, insert_position=2)
         cache.scene_data[
             map_handle.get_map_system_path_str_for_list(player.position)
         ].close_flag = 1
@@ -263,7 +258,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             if state.type == 0
         )
         kd.put(kd.domain("status").set, child.cid, pleasure_state, 500)
-        child.hypnosis.hypnosis_degree = 50
+        kd.put(hypnosis.set, child_id, hypnosis_degree=50)
         child.event.event_id = "test_event"
         child.must_settle_second_behavior_id_list = ["test_second_behavior"]
         id_dict["cloth"] = (clothing_type, min(game_config.config_clothing_tem))
@@ -309,23 +304,25 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         baby = cache.character_data[id_dict["d101"]]
         body_part = min(game_config.config_body_part)
         clothing_type = min(game_config.config_clothing_type)
-        baby.dirty.body_semen[body_part] = ["", 50, 50, 1]
-        baby.dirty.cloth_semen[clothing_type] = ["", 50, 50, 1]
-        baby.dirty.cloth_locker_semen[clothing_type] = ["", 50, 50, 1]
-        baby.h_state.body_item[min(game_config.config_body_item)] = [
-            "",
-            True,
-            None,
-        ]
-        baby.h_state.orgasm_count[
-            min(
-                state_id
-                for state_id, state in game_config.config_character_state.items()
-                if state.type == 0
-            )
-        ] = [3, 3]
         baby_id = baby.cid
         with kd.writing():
+            with dirty.editing(baby_id) as bd:
+                bd.body_semen[body_part] = ["", 50, 50, 1]
+                bd.cloth_semen[clothing_type] = ["", 50, 50, 1]
+                bd.cloth_locker_semen[clothing_type] = ["", 50, 50, 1]
+            with h_state.editing(baby_id) as bhs:
+                bhs.body_item[min(game_config.config_body_item)] = [
+                    "",
+                    True,
+                    None,
+                ]
+                bhs.orgasm_count[
+                    min(
+                        s
+                        for s, st in game_config.config_character_state.items()
+                        if st.type == 0
+                    )
+                ] = [3, 3]
             fl.set(baby_id, is_h=True, milk=True, masturebate=1)
             fl.set(baby_id, go_to_join_group_sex=True)
             pc.put("held_eggs", {0: (baby_id, 0)})
@@ -389,8 +386,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         dict -- 角色id到数据的字典，外加世界设定、日程模板、玩家收藏品里的卵、当前干员列表、各场景的角色、GameState 的
            全部全局数据，以及场景面板记着的角色
         """
-        from Script.Modules.domains import action_info as ai, education
+        from Script.Modules.domains import action_info as ai, dirty, education
         from Script.Modules.domains import flags as fl, growth as growth_mod
+        from Script.Modules.domains import h_state, hypnosis
         from Script.Modules.domains import player_ability as pa
         from Script.Modules.domains import player_collection as pc
         from Script.Modules.domains import pregnancy as pregnancy_mod, roster
@@ -422,7 +420,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 repr(
                     (
                         vars(kd.domain("wardrobe").of(chara.cid)),
-                        chara.hypnosis.hypnosis_degree,
+                        hypnosis.degree(cid),
                         chara.event.event_id,
                         chara.must_settle_second_behavior_id_list,
                         sorted(kd.domain("status").of(chara.cid).items()),
@@ -458,8 +456,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                     [
                         sorted(vars(part).items())
                         for part in (
-                            chara.dirty,
-                            chara.h_state,
+                            dirty.view(cid),
+                            h_state.view(cid),
                             pregnancy_mod.of(cid),
                         )
                     ]
@@ -616,11 +614,14 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             0,
             "日程模板里表里没有的娱乐换成0",
         )
+        from Script.Modules.domains import dirty, h_state
+
         baby = cache.character_data[id_dict["d101"]]
+        baby_dirty, baby_hs = dirty.view(baby.cid), h_state.view(baby.cid)
         for semen_table in (
-            baby.dirty.body_semen,
-            baby.dirty.cloth_semen,
-            baby.dirty.cloth_locker_semen,
+            baby_dirty.body_semen,
+            baby_dirty.cloth_semen,
+            baby_dirty.cloth_locker_semen,
         ):
             self.assertEqual(
                 [
@@ -634,7 +635,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         self.assertEqual(
             [
                 key
-                for key, item_data in baby.h_state.body_item.items()
+                for key, item_data in baby_hs.body_item.items()
                 if item_data[1]
             ],
             [],
@@ -643,7 +644,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         self.assertEqual(
             [
                 key
-                for key, count in baby.h_state.orgasm_count.items()
+                for key, count in baby_hs.orgasm_count.items()
                 if count != [0, 0]
             ],
             [],
@@ -743,9 +744,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 f"没有角色以{stage}的孩子为目标",
             )
         player = cache.character_data[0]
-        template_dict = cache.character_data[
+        template_dict = h_state.view(
             id_dict["mother"]
-        ].h_state.group_sex_body_template_dict
+        ).group_sex_body_template_dict
         self.assertEqual(
             (
                 ai.get(0, "carry_chara_id"),
@@ -782,7 +783,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 fl.get(child.cid, "is_h"),
                 [
                     key
-                    for key, semen_list in child.dirty.body_semen.items()
+                    for key, semen_list in dirty.view(
+                        child.cid
+                    ).body_semen.items()
                     if any(semen_list[1:])
                 ],
             ),
@@ -901,13 +904,15 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         player = cache.character_data[0]
         child = cache.character_data[id_dict["d102"]]
         mother = cache.character_data[id_dict["mother"]]
+        from Script.Modules.domains import h_state, hypnosis
+
         clothing_type, cloth_id = id_dict["cloth"]
         fl = kd.domain("flags")
         self.assertEqual(
             (
                 fl.get(0, "is_h"),
                 player.target_character_id,
-                player.h_state.insert_position,
+                h_state.get(0, "insert_position"),
                 fl.get(0, "hidden_sex_mode"),
             ),
             (False, 0, -1, 0),
@@ -933,7 +938,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         self.assertEqual(
             (
                 kd.domain("status").of(child.cid)[id_dict["pleasure_state"]],
-                child.hypnosis.hypnosis_degree,
+                hypnosis.degree(child.cid),
                 child.event.event_id,
                 child.must_settle_second_behavior_id_list,
             ),
@@ -1023,23 +1028,18 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             modes.set_group_sex(True)
             for cid in (0, child_id, other_id):
                 fl.set(cid, is_h=True)
-        player.h_state.group_sex_body_template_dict["A"][0]["L_hand"] = [
-            other_id,
-            5,
-        ]
-        if child_in_template:
-            player.target_character_id = child_id
-            player.h_state.group_sex_body_template_dict["A"][0]["mouth"] = [
-                child_id,
-                5,
-            ]
-            player.h_state.group_sex_body_template_dict["B"][1] = [
-                [child_id, other_id],
-                3,
-            ]
-        else:
-            player.target_character_id = other_id
-        player.h_state.insert_position = 2
+        from Script.Modules.domains import h_state
+
+        with kd.writing(), h_state.editing(0) as phs:
+            tpl = phs.group_sex_body_template_dict
+            tpl["A"][0]["L_hand"] = [other_id, 5]
+            if child_in_template:
+                player.target_character_id = child_id
+                tpl["A"][0]["mouth"] = [child_id, 5]
+                tpl["B"][1] = [[child_id, other_id], 3]
+            else:
+                player.target_character_id = other_id
+            phs.insert_position = 2
         scene_path = map_handle.get_map_system_path_str_for_list(
             player.position
         )
@@ -1069,15 +1069,14 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                         child_id,
                         f"角色{character_id}的交互对象不是孩子",
                     )
+                tpls = h_state.view(
+                    character_id
+                ).group_sex_body_template_dict.values()
                 template_id_list = [
                     part[0]
-                    for template in chara.h_state.group_sex_body_template_dict.values()
+                    for template in tpls
                     for part in template[0].values()
-                ] + [
-                    one
-                    for template in chara.h_state.group_sex_body_template_dict.values()
-                    for one in template[1][0]
-                ]
+                ] + [one for template in tpls for one in template[1][0]]
                 self.assertEqual(
                     set(template_id_list),
                     {-1},
@@ -1086,7 +1085,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             loaded_player = cache.character_data[0]
             self.assertEqual(
                 (
-                    loaded_player.h_state.insert_position,
+                    h_state.get(0, "insert_position"),
                     loaded_player.target_character_id,
                 ),
                 (-1, 0 if child_in_template else other_id),

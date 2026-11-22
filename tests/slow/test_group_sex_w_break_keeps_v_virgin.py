@@ -54,10 +54,12 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
         self.assertTrue(
             handle_premise.handle_group_sex_mode_on(0), "进入了群交"
         )
-        amiya = self.cache.character_data[AMIYA_ID]
+        from Script.Modules.domains import h_state
+        from tests import kernel_data
+
         for talent_id, value in enumerate((1, 1, 0, 0, 1)):
             ca.talent(AMIYA_ID)[talent_id] = value
-        amiya.h_state.insert_position = 6
+        kernel_data.put(h_state.set, AMIYA_ID, insert_position=6)
         ca.ability(self.pl)[76] = 4
 
     def summon(self, chara_id: int, mode: tuple) -> None:

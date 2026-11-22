@@ -90,8 +90,10 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
             ],
             [behavior_id],
         )
+        from Script.Modules.domains import h_state
+
         self.assertEqual(self.world.scene(ROOM).close_flag, 1)
-        self.assertTrue(self.operator.h_state.npc_active_h)
+        self.assertTrue(h_state.get(self.operator_id, "npc_active_h"))
         self.assertTrue(
             kernel_data.domain("flags").get(self.operator.cid, "is_h")
         )

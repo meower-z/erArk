@@ -16,7 +16,7 @@ from _bootstrap import semester_handle, set_time, sex_class_handle, start
 from Script.Settle import common_default, default as settle_default
 from Script.System.Instruct_System import handle_instruct
 from Script.Design import character_behavior, second_behavior
-from Script.Modules.domains import flags, modes, status
+from Script.Modules.domains import first_record, flags, hypnosis, modes, status
 from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
@@ -269,13 +269,13 @@ check(
 )
 reset_mark(202)
 kernel_data.put(flags.set, teacher.cid, unconscious_h=6)
-teacher.hypnosis.blockhead = True
+kernel_data.put(hypnosis.set, teacher.cid, blockhead=True)
 EFFECT[557](202, 45, change, game_time.now())
 check(
     "M3 体控-木头人的教师（每轮被锁成原地等待）：人就在教室也不结算",
     student_b_growth.last_attend_period == [],
 )
-teacher.hypnosis.blockhead = False
+kernel_data.put(hypnosis.set, teacher.cid, blockhead=False)
 kernel_data.put(flags.set, teacher.cid, unconscious_h=0)
 # 授课者是玩家（当天的临时实操课）：那是课堂 H，不是授课
 sex_class_handle.set_temp_class(
@@ -529,8 +529,8 @@ check(
 check(
     "512 舌技理论课：师生的口交经验（42）不变、都没有口交初体验履历",
     (student_a_exp.get(42, 0), teacher_exp.get(42, 0)) == oral_before
-    and 2 not in student_a.first_record.first_part_sex_dict
-    and 2 not in teacher.first_record.first_part_sex_dict,
+    and not first_record.has_part_sex(201, 2)
+    and not first_record.has_part_sex(101, 2),
 )
 schedule_handle.set_class_cell(ROOM1, 0, 7, 74, -1)
 schedule_handle.set_selected_course(201, 0, 7, E.COURSE_TYPE_THEORY, ROOM1)

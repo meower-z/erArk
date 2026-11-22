@@ -148,10 +148,11 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
     def test_orgasm_count(self) -> None:
         """[013] 本次H 改一个部位的一项高潮计数，前提照新值判断"""
         from Script.Design.handle_premise import handle_premise_H
+        from Script.Modules.domains import h_state
 
         npc_id = self.other_npc()
         npc = self.cache.character_data[npc_id]
-        count = list(npc.h_state.orgasm_count[S_PART])
+        count = list(h_state.view(npc_id).orgasm_count[S_PART])
         self.use_panel(
             ("press", "[NPC角色]"),
             ("press", f"[{str(npc.adv).rjust(4, '0')}]：{npc.name}"),
@@ -162,7 +163,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
             ("press", "[返回]"),
         )
         self.assertEqual(
-            npc.h_state.orgasm_count[S_PART],
+            h_state.view(npc_id).orgasm_count[S_PART],
             [count[0], 5],
             "只改这个部位的总次计数",
         )

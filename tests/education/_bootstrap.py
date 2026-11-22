@@ -302,9 +302,7 @@ def make_character(
     cd.adv = 0
     cd.sex = 1
     cd.race = 0
-    cd.dirty = attr_calculation.get_zero_dirty()
     cd.second_behavior = attr_calculation.get_second_behavior_zero({})
-    cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)
     cd.favorability = {0: 0}
     cd.assistant_services = (
         attr_calculation.get_assistant_services_zero()

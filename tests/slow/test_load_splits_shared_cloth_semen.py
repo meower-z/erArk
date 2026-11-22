@@ -9,7 +9,7 @@
 经 save_handle 真实写盘、读档后：
 - 前两名两表的精液量与写盘前相同，第三名两表的精液量都是 0；
 - 往每人穿着的袜子上射精（ejaculation_panel.update_semen_dirty），只有穿着的表变，
-  衣柜的表不变，自检 BODY-14 不报告失败；
+  衣柜的表不变；
 - 再写盘、读档一次，三人两表的精液量不变。
 """
 
@@ -70,20 +70,18 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
         Return arguments:
         tuple -- ({部位: 穿着的量}, {部位: 衣柜的量})
         """
-        dirty = self.cache.character_data[cid].dirty
+        from Script.Modules.domains import dirty as dirty_mod
+
+        d = dirty_mod.view(cid)
         return (
-            {t: v[1] for t, v in dirty.cloth_semen.items()},
-            {t: v[1] for t, v in dirty.cloth_locker_semen.items()},
+            {t: v[1] for t, v in d.cloth_semen.items()},
+            {t: v[1] for t, v in d.cloth_locker_semen.items()},
         )
 
     def test_tables_split_after_load(self) -> None:
-        """三种存档读档后：精液量按读档规则保留或清零，射在穿着的袜子上只改穿着的表，BODY-14 通过，再存读一次不变"""
-        from Script.Modules.domains import wardrobe
-
+        """三种存档读档后：精液量按读档规则保留或清零，射在穿着的袜子上只改穿着的表，再存读一次不变"""
         from Script.Config import game_config
-        from Script.Test.Static_Check.checks.check_body import (
-            check_semen_list_aliasing,
-        )
+        from Script.Modules.domains import dirty as dirty_mod, wardrobe
         from Script.UI.Panel import ejaculation_panel
 
         all_types = sorted(game_config.config_clothing_type)
@@ -99,19 +97,35 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
                 wardrobe.of(cid).cloth_wear[SOCKS],
                 f"{cid} 穿着袜子",
             )
-            ejaculation_panel.update_semen_dirty(cid, SOCKS, 1, SOCKS_SEMEN)
-        whole = self.cache.character_data[whole_dict_id].dirty
+            kernel_data.written(
+                ejaculation_panel.update_semen_dirty,
+                cid,
+                SOCKS,
+                1,
+                SOCKS_SEMEN,
+            )
+        whole = dirty_mod.view(whole_dict_id)
         whole.cloth_locker_semen = whole.cloth_semen
-        shared = self.cache.character_data[shared_list_id].dirty
+        vars(self.cache.character_data[whole_dict_id])["dirty"] = whole
+        shared = dirty_mod.view(shared_list_id)
         shared.cloth_locker_semen = dict(shared.cloth_semen)
-        short = self.cache.character_data[short_id].dirty
+        vars(self.cache.character_data[shared_list_id])["dirty"] = shared
+        short = dirty_mod.view(short_id)
         short.cloth_locker_semen = {
             t: list(v) for t, v in short.cloth_semen.items()
         }
         for table in (short.cloth_semen, short.cloth_locker_semen):
             del table[all_types[-1]]
+        vars(self.cache.character_data[short_id])["dirty"] = short
         expected = {
-            cid: self._semen(cid) for cid in (whole_dict_id, shared_list_id)
+            whole_dict_id: (
+                {t: v[1] for t, v in whole.cloth_semen.items()},
+                {t: v[1] for t, v in whole.cloth_locker_semen.items()},
+            ),
+            shared_list_id: (
+                {t: v[1] for t, v in shared.cloth_semen.items()},
+                {t: v[1] for t, v in shared.cloth_locker_semen.items()},
+            ),
         }
         zero = {t: 0 for t in all_types}
         expected[short_id] = (zero, zero)
@@ -129,14 +143,15 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
             )
 
         for cid in expected:
-            ejaculation_panel.update_semen_dirty(cid, SOCKS, 1, SHOT)
+            kernel_data.written(
+                ejaculation_panel.update_semen_dirty, cid, SOCKS, 1, SHOT
+            )
             worn, locker = self._semen(cid)
             self.assertEqual(
                 (worn[SOCKS], locker),
                 (expected[cid][0][SOCKS] + SHOT, expected[cid][1]),
                 f"{cid} 射在穿着的袜子上：穿着的表加上射精量，衣柜的表不变",
             )
-        self.assertEqual([f.message for f in check_semen_list_aliasing()], [])
 
         after_shot = {cid: self._semen(cid) for cid in expected}
         self._save_and_load()

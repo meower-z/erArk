@@ -140,11 +140,13 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         from Script.Config import game_config
         from Script.Core import flow_handle
         from Script.System.Sex_System import group_sex_panel
+        from tests import kernel_data
 
         panel = group_sex_panel.Edit_Group_Sex_Temple_Panel(120)
-        panel.reset_template()
-        self.world.player.press(f"[{KALTSIT_ID:04d}]")
-        panel.show_target_chara_list("A", body_part)
+        with kernel_data.writing():
+            panel.reset_template()
+            self.world.player.press(f"[{KALTSIT_ID:04d}]")
+            panel.show_target_chara_list("A", body_part)
         # 等输入前记下屏幕上的按钮：按下返回之后按钮表就清空了
         shown: list[str] = []
         order_deal = flow_handle.order_deal

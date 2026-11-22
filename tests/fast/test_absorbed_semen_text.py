@@ -9,9 +9,11 @@
 from fractions import Fraction
 
 from Script.Design import handle_talent
+from Script.Modules.domains import dirty, first_record
 from Script.System.First_Record_System import first_record_panel
+from tests import kernel_data
 from tests.fast.base import FastTestCase
-from tests import chara_abilities as ca, kernel_data
+from tests import chara_abilities as ca
 
 TALENT_CUMFLATION = 32
 """ 素质：精液膨腹 """
@@ -33,15 +35,16 @@ class AbsorbedSemenTextTest(FastTestCase):
         super().setUp()
         self.world.chara(0, "博士")
         self.chara = self.world.chara(1, "干员")
-        self.chara.dirty.body_semen[7][1] = 6000 + Fraction(2, 5)
-        self.chara.dirty.body_semen[15][3] = 10
-        self.chara.dirty.absorbed_total_semen = Fraction(117, 5)
+        with kernel_data.writing(), dirty.editing(1) as d:
+            d.body_semen[7][1] = 6000 + Fraction(2, 5)
+            d.body_semen[15][3] = 10
+            d.absorbed_total_semen = Fraction(117, 5)
 
     def test_cumflation_record_is_whole(self) -> None:
         """获得精液膨腹时，特殊履历里记的是 6000ml"""
         ca.talent(self.chara)[TALENT_CUMFLATION] = 0
         kernel_data.written(handle_talent.npc_gain_and_lost_cumflation, 1)
-        record = self.chara.first_record.first_special_record_dict.get(
+        record = first_record.view(1).first_special_record_dict.get(
             SPECIAL_CUMFLATION
         )
         self.assertIsNotNone(record)

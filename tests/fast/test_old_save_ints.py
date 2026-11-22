@@ -22,16 +22,18 @@ import datetime
 from Script.Core import game_type, save_handle
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import working
-from Script.Modules.save_load import upgrade
-from Script.Settle import realtime_settle
 from Script.Modules.domains import (
+    dirty,
+    h_meters,
     needs,
     player_ability,
     power,
     pregnancy,
     status,
 )
+from Script.Modules.gameplay_resolution import working
+from Script.Modules.save_load import upgrade
+from Script.Settle import realtime_settle
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 
@@ -42,18 +44,18 @@ class OldSaveIntsTest(FastTestCase):
     def test_defaults_keep_int_and_fraction(self) -> None:
         """存档里的 int 与 Fraction 补齐字段后值与类型不变，缺的字段取默认值 0"""
         loaded = game_type.Character()
-        loaded.eja_point = 7
-        loaded.semen_point = Fraction(10, 3)
-        del loaded.tem_extra_semen_point
+        loaded.trust = 7
+        vars(loaded)["cid"] = Fraction(10, 3)
+        del loaded.sex
         save_handle.update_dict_with_default(
             loaded.__dict__, game_type.Character().__dict__
         )
         got = [
             (type(v), v)
             for v in (
-                loaded.eja_point,
-                loaded.semen_point,
-                loaded.tem_extra_semen_point,
+                loaded.trust,
+                loaded.cid,
+                loaded.sex,
             )
         ]
         self.assertEqual(got, [(int, 7), (Fraction, Fraction(10, 3)), (int, 0)])
@@ -61,14 +63,10 @@ class OldSaveIntsTest(FastTestCase):
     def test_exact_stats_turns_floats_exact(self) -> None:
         """经 vars 写入的 float 由 status.adopt_old_save 与 exact_stats 换成相等的 Fraction，int 与 Fraction 不动"""
         npc = self.world.chara(0, "博士")
-        vars(npc).update(
-            eja_point=12.5,
-            semen_point=Fraction(1, 3),
-            status_data={1: 0.25, 2: 4},
-        )
-        vars(npc.dirty)["absorbed_total_semen"] = 3.5
-        npc.dirty.body_semen = {0: ["头发", 1.5, 0, 2]}
-        npc.dirty.semen_flow = [
+        old_dirty = game_type.DIRTY()
+        vars(old_dirty)["absorbed_total_semen"] = 3.5
+        old_dirty.body_semen = {0: ["头发", 1.5, 0, 2]}
+        old_dirty.semen_flow = [
             {
                 "source": {"type": "body", "id": 0},
                 "targets": [
@@ -78,21 +76,31 @@ class OldSaveIntsTest(FastTestCase):
         ]
         pa = game_type.PLAYER_ABILITY()
         vars(pa)["today_sanity_point_cost"] = 0.1
-        vars(npc)["pl_ability"] = pa
+        vars(npc).update(
+            eja_point=12.5,
+            semen_point=Fraction(1, 3),
+            dirty=old_dirty,
+            pl_ability=pa,
+            status_data={1: 0.25, 2: 4},
+        )
         loaded = {"character_data": {npc.cid: npc}}
         kernel_data.written(status.adopt_old_save, loaded)
         kernel_data.written(save_handle.exact_stats)
         with working.based_on(core.state()):
-            player_ability.adopt_old_save({"character_data": {0: npc}})
+            h_meters.adopt_old_save(loaded)
+            dirty.adopt_old_save(loaded)
+            player_ability.adopt_old_save(loaded)
+            meters = h_meters.of(0)
+            d_view = dirty.view(0)
             adopted_cost = player_ability.get(0, "today_sanity_point_cost")
         got = [
-            npc.eja_point,
-            npc.semen_point,
+            meters["eja"],
+            meters["semen"],
             status.of(npc.cid)[1],
             status.of(npc.cid)[2],
-            npc.dirty.absorbed_total_semen,
-            npc.dirty.body_semen[0][1],
-            npc.dirty.semen_flow[0]["targets"][0]["remaining_volume"],
+            d_view.absorbed_total_semen,
+            d_view.body_semen[0][1],
+            d_view.semen_flow[0]["targets"][0]["remaining_volume"],
             adopted_cost,
         ]
         want = [

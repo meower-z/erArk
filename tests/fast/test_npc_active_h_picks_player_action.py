@@ -14,6 +14,7 @@ from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import update
 from Script.Kernel import core
+from Script.Modules.domains import h_state
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct, see_instruct_panel
@@ -56,7 +57,11 @@ class NpcActiveHPicksPlayerActionTest(FastTestCase):
         Return arguments:
         Action -- 定下的行动
         """
-        with self.assertRaises(player_pick.Chosen) as chosen:
+        with (
+            self.assertRaises(player_pick.Chosen) as chosen,
+            player_pick.picking(),
+            player_pick.drafting(instruct_id),
+        ):
             constant.handle_instruct_data[instruct_id]()
         act = chosen.exception.action
         self.assertEqual((act.who, act.duration), ("0", 10))
@@ -69,7 +74,7 @@ class NpcActiveHPicksPlayerActionTest(FastTestCase):
 
     def test_keep_enjoy_starts_now(self) -> None:
         """继续享受：交互对象已在主动H中，定下的是 10 分钟的性爱行为"""
-        self.npc.h_state.npc_active_h = True
+        kernel_data.put(h_state.set, NPC, npc_active_h=True)
         self.pick(constant.Instruct.KEEP_ENJOY)
 
     def test_change_top_and_bottom_starts_now(self) -> None:

@@ -24,12 +24,12 @@ WIDTH = 120
 """ 绘制宽度 """
 THIRD = Fraction(1, 3)
 """ 加在每个连续数值上的零头 """
-PLAIN_MAX = {"semen_point": "semen_point_max"}
-""" 角色对象上有上限、画成数值条的连续数值到它的上限属性：n 取上限 """
+H_METERS_MAX = {"semen": "semen_max"}
+""" h.meters 里有上限、画成数值条的连续数值到它的上限项：n 取上限 """
 NEEDS_MAX = {"hit": "hit_max", "mana": "mana_max", "sanity": "sanity_max"}
 """ body.needs 里有上限、画成数值条的连续数值到它的上限项：n 取上限 """
-PLAIN = ("eja_point",)
-""" 其余直接存放在角色上的连续数值：n 取 10 """
+H_METERS = ("eja",)
+""" h.meters 里其余的连续数值：n 取 10 """
 NEEDS = ("tired", "urine", "hunger", "milk", "sleep", "drunk")
 """ body.needs 里其余的连续数值：n 取 10 """
 STATUS_VALUE = 1000
@@ -77,6 +77,8 @@ class NumDisplayTest(SlowTestCase):
         """
         from Script.Modules.domains import status
 
+        dirty = importlib.import_module("Script.Modules.domains.dirty")
+        h_meters = importlib.import_module("Script.Modules.domains.h_meters")
         needs = importlib.import_module("Script.Modules.domains.needs")
         for character in (self.player, self.operator):
             needs.set(character.cid, **dict.fromkeys(NEEDS, 10 + extra))
@@ -85,17 +87,20 @@ class NumDisplayTest(SlowTestCase):
                 character.cid,
                 **{k: current[m] + extra for k, m in NEEDS_MAX.items()},
             )
-            for name, max_name in PLAIN_MAX.items():
-                setattr(character, name, getattr(character, max_name) + extra)
-            for name in PLAIN:
-                setattr(character, name, 10 + extra)
+            meters = h_meters.of(character.cid)
+            h_meters.set(
+                character.cid,
+                **{k: meters[m] + extra for k, m in H_METERS_MAX.items()},
+                **dict.fromkeys(H_METERS, 10 + extra),
+            )
             for status_id in status.of(character.cid):
                 kernel_data.put(
                     status.set, character.cid, status_id, STATUS_VALUE + extra
                 )
-            for slot in character.dirty.body_semen.values():
-                slot[1] = 10 + extra
-                slot[2] = 1
+            with dirty.editing(character.cid) as d:
+                for slot in d.body_semen.values():
+                    slot[1] = 10 + extra
+                    slot[2] = 1
 
     def screen(self, extra: Fraction) -> list[str]:
         """

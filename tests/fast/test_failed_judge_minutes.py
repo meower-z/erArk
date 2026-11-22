@@ -15,6 +15,7 @@ from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import update
 from Script.Kernel import core
+from Script.Modules.domains import h_state
 from Script.Modules.gameplay_resolution import (
     intent,
     player_starters,
@@ -79,13 +80,12 @@ class FailedJudgeMinutesTest(FastTestCase):
         data = json.loads(json.dumps(gated.action_data))
         self.world.wait_texts.clear()
         handle_instruct.start_instruct(0, cast(intent.Intent, data))
-        target = self.cache.character_data[NPC]
         self.assertEqual(
             (
                 data["behavior_id"],
                 any("进入H模式失败" in t for t in self.world.wait_texts),
-                self.player.h_state.h_in_love_hotel,
-                target.h_state.h_in_love_hotel,
+                h_state.get(0, "h_in_love_hotel"),
+                h_state.get(NPC, "h_in_love_hotel"),
             ),
             (constant.Behavior.DO_H_FAIL, True, False, False),
             "（开始的行为，提示了失败，玩家记下爱情旅馆，对方记下爱情旅馆）",
