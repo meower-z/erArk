@@ -1068,9 +1068,11 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
 
 def update_settings(loaded_dict: dict[str, Any]) -> int:
     """
-    补全存档里的设置（AI、体检、监禁调教），并给全局的角色口上选择补上缺的角色
+    读档时按需收下存档里的 AI 设置，并补全全局口上选择、AI 设置与本存档的体检、监禁调教设置
     Keyword arguments:
-    loaded_dict -- 存档数据
+    loaded_dict -- 存档缓存的属性字典
+    Return arguments:
+    int -- 补全的口上选择、体检与监禁调教设置项总数（不含全局 AI 设置）
     """
     update_count = 0
     # 角色口上选择设置是全局的：补上缺的角色与本存档女儿的默认值
@@ -1090,14 +1092,10 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
         now_draw.style = "gold_enrod"
         now_draw.text = draw_text
         now_draw.draw()
-    # 更新AI设置
-    if len(loaded_dict["ai_setting"].ai_chat_setting) != len(
-        game_config.config_ai_chat_setting
-    ):
-        for key in game_config.config_ai_chat_setting:
-            if key not in loaded_dict["ai_setting"].ai_chat_setting:
-                loaded_dict["ai_setting"].ai_chat_setting[key] = 0
-                update_count += 1
+    # 弹出 ai_setting 防写回缓存，交给 adopt_ai 准备并待 Reset 生效。补全项不计入存档更新数。
+    from Script.Modules.save_load import settings
+
+    if settings.adopt_ai(loaded_dict.pop("ai_setting", None)):
         now_draw = draw.NormalDraw()
         draw_text = _("\n文本生成AI设置已更新，如有需要请手动修改\n")
         now_draw.style = "gold_enrod"

@@ -125,7 +125,7 @@ AI处理并回复 → 流式或批量显示结果 → 记录对话历史
 
 ### 3. 数据持久化
 - **API密钥**: 存储在`ai_chat_api_key.csv`文件中
-- **配置缓存**: 通过`cache.ai_setting`管理运行时配置
+- **全局配置**: 运行时通过`normal_config.ai_setting`读写，由`Script/Modules/save_load/settings.py`持久化到游戏根目录的`settings.json`（`"ai_setting"`键），不随存档保存
 - **生成内容**: 可自动保存到`data/talk/ai/ai_talk.csv`
 
 ## 使用场景

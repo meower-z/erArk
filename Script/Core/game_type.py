@@ -1566,8 +1566,6 @@ class Cache:
         """ 罗德岛相关属性 """
         # self.system_setting: Dict[int, int] = {}
         # """ 系统设定，见System_Setting.csv """
-        self.ai_setting: Ai_Setting = Ai_Setting()
-        """ ai设定 """
 
 
 class TargetChange:

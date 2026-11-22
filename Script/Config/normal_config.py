@@ -14,6 +14,8 @@ config_normal: game_type.NormalConfig = game_type.NormalConfig()
 """ 游戏通用配置数据 """
 system_setting: game_type.System_Setting = game_type.System_Setting()
 """ 全局的系统设置与玩家的面板选择（settings.json），由 save_load.settings 装好与写出 """
+ai_setting: game_type.Ai_Setting = game_type.Ai_Setting()
+""" 全局的文本生成 AI 设置（settings.json 的 "ai_setting" 键），由 save_load.settings 装好与写出 """
 package_path = os.path.join("package.json")
 DEFAULTS_ONLY_ENV = "ERARK_CONFIG_DEFAULTS_ONLY"
 """ 环境变量名。这个变量非空时，init_normal_config 只读 config.ini。 """
