@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 位置/场景/跟随/助理/交互对象领域检查
-本模块实现 PLACE 组的30条不变量检查（PLACE-01 ~ PLACE-25、PLACE-27 ~ PLACE-31），覆盖角色位置、场景名册、
-门锁状态、移动路径、收藏地点、宿舍、交互对象、助理、跟随、装袋搬运等状态的一致性约束。
+本模块实现 PLACE 组的 26 条不变量检查（PLACE-01、PLACE-02、PLACE-04、PLACE-08 ~ PLACE-25、PLACE-27 ~ PLACE-31），
+覆盖角色位置、门锁状态、移动路径、收藏地点、宿舍、交互对象、助理、跟随、装袋搬运等状态的一致性约束。
 
 约定与踩坑说明（写在此处，避免散落在各检查函数注释里重复）：
 1. `["0", "0"]` 不是哨兵值，是真实场景「罗德岛出口」，也是 `activity.position` 的默认值，
    离线角色被置为它是合法的稳定状态。
 2. 新生儿写入身份表（`identity.characters`）但不进在编名单（`roster.active()`）、也不移动，
-   所以"角色→场景名册"方向的检查必须以 `LIVE = roster.active() | {0}` 为域，不能用全体身份表。
+   所以面向在图角色的检查必须以 `LIVE = roster.active() | {0}` 为域，不能用全体身份表。
 3. 当前地图更新会把不存在的场景内的角色迁到区域入口或["0", "0"]，位置检查仍检查迁移后的实际状态，
    不预设异常成因。
 4. 全部字段访问一律使用 getattr/dict.get 加默认值防御，避免因旧存档缺字段或类型不符抛异常。
@@ -19,17 +19,16 @@
 
 from __future__ import annotations
 
-import collections
 from typing import TypeGuard
 
-from Script.Core import cache_control
+from Script.Core import cache_control, constant
 from Script.Design import map_handle
 from Script.Modules.domains import action_info, activity, education, flags
 from Script.Modules.domains import growth, roster, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import chara_life, relations
+from Script.Modules.domains import chara_life, relations, scene_state
 from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
@@ -50,7 +49,7 @@ def _valid_scene_path(
     """
     参数:
         value: 待校验的路径字段原始值（期望是字符串列表）
-        scene_data (dict): cache.scene_data
+        scene_data (dict): constant.scene_data
     返回值:
         bool: value是字符串列表且拼接后是scene_data合法键时为True，否则False（类型不符时直接返回False，不抛异常）
     功能:
@@ -69,7 +68,7 @@ def _valid_scene_path_or_empty(
     """
     参数:
         value: 待校验的路径字段原始值（期望是字符串列表）
-        scene_data (dict): cache.scene_data
+        scene_data (dict): constant.scene_data
     返回值:
         bool: value是字符串列表，且为空列表或拼接后是scene_data合法键时为True
     功能:
@@ -117,7 +116,7 @@ def check_character_dict_key_matches_cid() -> list[CheckFailure]:
     返回值: List[CheckFailure]: 失败记录列表，身份表每个键都等于对应 Identity 的 cid 时返回空列表
     功能:
         校验身份表（identity.table()）的每个键都等于对应 Identity 的 cid 字段，
-        防止场景名册、交互目标、助理引用等按 id 索引却指向身份不一致的记录
+        防止场景内角色、交互目标、助理引用等按 id 索引却指向身份不一致的记录
     """
     failures = []
     character_data = identity.table()
@@ -145,12 +144,11 @@ def check_scene_and_map_self_key_consistency() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验cache.scene_data[k].scene_path == k 且 cache.map_data[k].map_path == k。
+        校验 constant.scene_data[k].scene_path == k 且 constant.map_data[k].map_path == k。
         加载器直接以对象自身路径为键，不一致只可能来自损坏或半截迁移
     """
-    cache = cache_control.cache
     failures = []
-    scene_data = getattr(cache, "scene_data", {}) or {}
+    scene_data = constant.scene_data
     for k, v in scene_data.items():
         scene_path = getattr(v, "scene_path", None)
         if k != scene_path:
@@ -164,46 +162,15 @@ def check_scene_and_map_self_key_consistency() -> list[CheckFailure]:
                     ),
                 )
             )
-    map_data = getattr(cache, "map_data", {}) or {}
-    for k, v in map_data.items():
-        map_path = getattr(v, "map_path", None)
+    map_data = constant.map_data
+    for k, m in map_data.items():
+        map_path = getattr(m, "map_path", None)
         if k != map_path:
             failures.append(
                 make_failure(
                     "PLACE-02",
                     "场景/地图自描述键一致",
-                    f"map_data字典键={k}，但地图对象自身map_path={map_path}，map_name={getattr(v, 'map_name', '')}",
-                )
-            )
-    return failures
-
-
-@register_check("PLACE-03", "场景名册id必须存在")
-def check_scene_roster_ids_exist() -> list[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]: 失败记录列表
-    功能:
-        校验任一Scene.character_list中的id都必须存在于身份表（identity.characters）。
-        名册写入点只写已存在角色id，无合法悬空来源。本条应先于PLACE-05/06报告，后两者跳过缺失id不重复报
-    """
-    cache = cache_control.cache
-    failures = []
-    character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
-    for sc in scene_data.values():
-        character_list = getattr(sc, "character_list", None) or []
-        missing_ids = sorted(
-            cid for cid in character_list if cid not in character_data
-        )
-        if missing_ids:
-            failures.append(
-                make_failure(
-                    "PLACE-03",
-                    "场景名册id必须存在",
-                    f"场景{getattr(sc, 'scene_path', '?')}({getattr(sc, 'scene_name', '')})的character_list="
-                    f"{sorted(character_list)}中，以下id不在character_data中: {missing_ids}",
-                    missing_ids,
+                    f"map_data字典键={k}，但地图对象自身map_path={map_path}，map_name={getattr(m, 'map_name', '')}",
                 )
             )
     return failures
@@ -219,10 +186,9 @@ def check_character_position_is_existing_scene() -> list[CheckFailure]:
         级别为warning，只报告角色位置未落在现有场景中的事实，不推断地图迁移原因。
         save_handle地图更新会迁移失效场景内的角色，若命中角色在LIVE中应优先处理
     """
-    cache = cache_control.cache
     failures = []
     character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
+    scene_data = constant.scene_data
     npc_id_got: set[int] = roster.active()
     for cid, c in character_data.items():
         position = activity.position(c.cid)
@@ -250,164 +216,7 @@ def check_character_position_is_existing_scene() -> list[CheckFailure]:
     return failures
 
 
-@register_check("PLACE-05", "角色→场景方向一致")
-def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]: 失败记录列表
-    功能:
-        校验每个在图角色（LIVE域）必须出现在自己position所指场景的character_list里。
-        先验证角色存在、position合法，避免因悬空id或非法位置键而抛异常——那两类问题分别由PLACE-03、PLACE-04定位，
-        本条对它们做出的是"记为不变量失败"而非"检查异常"的守卫
-    """
-    cache = cache_control.cache
-    failures = []
-    character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
-    npc_id_got: set[int] = roster.active()
-    for cid in _live_ids(cache):
-        c = character_data.get(cid)
-        if c is None:
-            failures.append(
-                make_failure(
-                    "PLACE-05",
-                    "角色→场景方向一致",
-                    f"角色id={cid}在LIVE集合(npc_id_got∪{{0}})中，但不在character_data中（悬空id，另见PLACE-03/CORE-01）",
-                    [cid],
-                )
-            )
-            continue
-        position = activity.position(c.cid)
-        if not _valid_scene_path(position, scene_data):
-            failures.append(
-                make_failure(
-                    "PLACE-05",
-                    "角色→场景方向一致",
-                    (
-                        f"角色id={cid} name={getattr(c, 'name', '')}的position={position}不是合法场景键（另见PLACE-04）"
-                        f"，无法核对名册方向一致性"
-                    ),
-                    [cid],
-                )
-            )
-            continue
-        path = P(position)
-        sc = scene_data.get(path)
-        character_list = getattr(sc, "character_list", None) or []
-        if cid not in character_list:
-            behavior = activity.behavior(c.cid)
-            failures.append(
-                make_failure(
-                    "PLACE-05",
-                    "角色→场景方向一致",
-                    (
-                        f"角色id={cid} name={getattr(c, 'name', '')}的position={position}指向场景{path}，"
-                        f"但该场景character_list="
-                        f"{sorted(character_list)}中不含该id；behavior_id={getattr(behavior, 'behavior_id', None)}，"
-                        f"move_src={getattr(behavior, 'move_src', None)}，"
-                        f"move_target={getattr(behavior, 'move_target', None)}，"
-                        f"be_bagged={flags.get(cid, 'be_bagged')}，"
-                        f"field_commission={flags.get(cid, 'field_commission')}，"
-                        f"escaping={flags.get(cid, 'escaping')}，是否在npc_id_got中={cid in npc_id_got}"
-                    ),
-                    [cid],
-                )
-            )
-    return failures
-
-
-@register_check("PLACE-06", "场景→角色方向一致")
-def check_scene_to_character_direction_consistency() -> list[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]: 失败记录列表
-    功能:
-        校验场景名册里的每个角色，其position必须正好指回该场景，抓"旧场景没删干净"的残影，与PLACE-05互补。
-        悬空id交给PLACE-03报告，本条对其做跳过而非KeyError
-    """
-    cache = cache_control.cache
-    failures = []
-    character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
-    pl = character_data.get(0)
-    bagging_id = (
-        flags.get(pl.cid, "bagging_chara_id") if pl is not None else None
-    )
-    # 预先构建 cid -> 所在全部场景路径的映射，避免每条失败都重新全表扫描
-    cid_to_scenes = collections.defaultdict(list)
-    for path, sc in scene_data.items():
-        for cid in getattr(sc, "character_list", None) or []:
-            cid_to_scenes[cid].append(path)
-    for path, sc in scene_data.items():
-        for cid in getattr(sc, "character_list", None) or []:
-            c = character_data.get(cid)
-            if c is None:
-                continue
-            position = activity.position(c.cid)
-            if (
-                isinstance(position, list)
-                and all(isinstance(p, str) for p in position)
-                and P(position) == path
-            ):
-                continue
-            behavior = activity.behavior(c.cid)
-            failures.append(
-                make_failure(
-                    "PLACE-06",
-                    "场景→角色方向一致",
-                    (
-                        f"场景{path}的character_list中含角色id={cid} name={getattr(c, 'name', '')}，"
-                        f"但其position={position}并不指回该场景，"
-                        f"实际出现在的全部场景={cid_to_scenes.get(cid, [])}；"
-                        f"behavior_id={getattr(behavior, 'behavior_id', None)}，"
-                        f"move_src={getattr(behavior, 'move_src', None)}，"
-                        f"move_target={getattr(behavior, 'move_target', None)}，"
-                        f"pl.sp_flag.bagging_chara_id={bagging_id}"
-                    ),
-                    [cid],
-                )
-            )
-    return failures
-
-
-@register_check("PLACE-07", "角色不得同时出现在多个场景")
-def check_character_not_in_multiple_scenes() -> list[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]: 失败记录列表
-    功能:
-        校验同一角色id在所有Scene.character_list中最多出现一次。单趟Counter计数，逻辑上被PLACE-06蕴含，
-        保留是为了给"分身"这种状态一句直白的失败文案
-    """
-    cache = cache_control.cache
-    failures = []
-    character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
-    counter: collections.Counter[int] = collections.Counter()
-    cid_to_scenes = collections.defaultdict(list)
-    for path, sc in scene_data.items():
-        for cid in getattr(sc, "character_list", None) or []:
-            counter[cid] += 1
-            cid_to_scenes[cid].append(path)
-    for cid, count in counter.items():
-        if count > 1:
-            c = character_data.get(cid)
-            failures.append(
-                make_failure(
-                    "PLACE-07",
-                    "角色不得同时出现在多个场景",
-                    (
-                        f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}同时出现在{count}个场景的character_li"
-                        f"st中: "
-                        f"{cid_to_scenes[cid]}，position={activity.position(c.cid) if c else None}"
-                    ),
-                    [cid],
-                )
-            )
-    return failures
-
-
-@register_check("PLACE-08", "场景名册只容纳在册角色/离线角色必须退出名册")
+@register_check("PLACE-08", "离线角色必须退出在编名册")
 def check_scene_roster_only_registered_and_offline_must_exit() -> (
     list[CheckFailure]
 ):
@@ -415,41 +224,11 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        两个方向合成一条：(a) 任何场景名册成员必须是玩家或在npc_id_got中；(b) 带明确离线标记
-        （被装袋/外勤中/逃跑中）的角色必须已退出npc_id_got。不检查离线角色"当前位置"对应的名册——
-        离线流程先删旧名册再把position改成["0","0"]，只查0/0会漏报真残影
+        校验带有明确离线标记（be_bagged、field_commission、escaping）的角色均不在在编名册（roster.active()）中
     """
-    cache = cache_control.cache
     failures = []
     character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
     npc_id_got: set[int] = roster.active()
-
-    cid_to_scenes = collections.defaultdict(list)
-    for path, sc in scene_data.items():
-        for cid in getattr(sc, "character_list", None) or []:
-            cid_to_scenes[cid].append(path)
-
-    # (a) 名册成员必须是玩家或在npc_id_got中
-    for cid, paths in cid_to_scenes.items():
-        if cid != 0 and cid not in npc_id_got:
-            c = character_data.get(cid)
-            failures.append(
-                make_failure(
-                    "PLACE-08",
-                    "场景名册只容纳在册角色/离线角色必须退出名册",
-                    (
-                        f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}出现在场景名册{paths}中，"
-                        f"但既非玩家也不在npc_id_got中；"
-                        f"position={activity.position(c.cid) if c else None}，"
-                        f"be_bagged={flags.get(cid, 'be_bagged') if c else None}，"
-                        f"field_commission={flags.get(cid, 'field_commission') if c else None}，"
-                        f"escaping={flags.get(cid, 'escaping') if c else None}，"
-                        f"vistor={flags.get(cid, 'vistor') if c else None}"
-                    ),
-                    [cid],
-                )
-            )
 
     # (b) 带明确离线标记的角色必须已退出npc_id_got
     for cid, c in character_data.items():
@@ -457,14 +236,13 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
             failures.append(
                 make_failure(
                     "PLACE-08",
-                    "场景名册只容纳在册角色/离线角色必须退出名册",
+                    "离线角色必须退出在编名册",
                     (
                         f"角色id={cid} name={getattr(c, 'name', '')}带有离线标记(be_bagged="
                         f"{flags.get(cid, 'be_bagged')}，"
                         f"field_commission={flags.get(cid, 'field_commission')}，"
                         f"escaping={flags.get(cid, 'escaping')})，"
                         f"但仍在npc_id_got中；position={activity.position(c.cid)}，"
-                        f"所在场景名册={cid_to_scenes.get(cid, [])}，"
                         f"vistor={flags.get(cid, 'vistor')}"
                     ),
                     [cid],
@@ -479,24 +257,21 @@ def check_locked_room_not_empty() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验close_flag != 0的场景其character_list不应为空。关门只由屋内角色发起，正常离开时会解锁；
-        "空着还锁"意味着有人以非移动方式离场（例如在屋内直接离线）留下的死锁
+        校验 scene_state.closed() 中每个已关门场景的在场角色（scene_state.occupants(path)）均不为空。
+        关门由屋内角色发起并在正常离开时解锁，空房间仍处于关门状态意味着有角色未经移动流程离场（例如在屋内直接离线）留下了未解的锁
     """
-    cache = cache_control.cache
     failures = []
-    scene_data = getattr(cache, "scene_data", {}) or {}
-    for sc in scene_data.values():
-        close_flag = getattr(sc, "close_flag", 0)
-        character_list = getattr(sc, "character_list", None) or []
-        if close_flag != 0 and len(character_list) == 0:
+    for path, close_flag in scene_state.closed().items():
+        sc = constant.scene_data.get(path)
+        if not scene_state.occupants(path):
             failures.append(
                 make_failure(
                     "PLACE-09",
                     "空房间不该锁着门",
                     (
-                        f"场景{getattr(sc, 'scene_path', '?')}({getattr(sc, 'scene_name', '')})的close_flag="
+                        f"场景{path}({getattr(sc, 'scene_name', '')})的close_flag="
                         f"{close_flag}非0，"
-                        f"但character_list为空；close_type={getattr(sc, 'close_type', None)}，"
+                        f"但场景里没有角色，close_type={getattr(sc, 'close_type', None)}，"
                         f"scene_tag={getattr(sc, 'scene_tag', None)}，"
                         f"room_area={getattr(sc, 'room_area', None)}"
                     ),
@@ -514,12 +289,10 @@ def check_door_type_and_flag_enum_valid() -> list[CheckFailure]:
         校验close_type ∈ {0,1,2}（无门/普通门/隔间门），且close_flag只能是0或本场景的close_type。
         取close_flag in {0, close_type}而非close_flag<=close_type，避免放过close_type==2且close_flag==1的错位
     """
-    cache = cache_control.cache
     failures = []
-    scene_data = getattr(cache, "scene_data", {}) or {}
-    for sc in scene_data.values():
+    for sc in constant.scene_data.values():
         close_type = getattr(sc, "close_type", 0)
-        close_flag = getattr(sc, "close_flag", 0)
+        close_flag = scene_state.close_flag(sc.scene_path)
         if close_type not in (0, 1, 2) or close_flag not in (0, close_type):
             failures.append(
                 make_failure(
@@ -531,7 +304,7 @@ def check_door_type_and_flag_enum_valid() -> list[CheckFailure]:
                         f"{close_type}，"
                         f"close_flag={close_flag}不满足close_type∈{{0,1,2}}且close_flag∈{{0,close_type}}；"
                         f"room_area={getattr(sc, 'room_area', None)}，"
-                        f"character_list={sorted(getattr(sc, 'character_list', None) or [])}"
+                        f"occupants={scene_state.occupants(sc.scene_path)}"
                     ),
                 )
             )
@@ -547,9 +320,8 @@ def check_room_area_enum_valid() -> list[CheckFailure]:
         校验room_area只能是0/1/2/3（对应满员判定的10/50/100/9999四档）。不检查"人数<=容量"——
         容量只是常规寻路准入策略，玩家豁免、character_move_scene与handle_chara_on_line均不查容量，合法越界可达
     """
-    cache = cache_control.cache
     failures = []
-    scene_data = getattr(cache, "scene_data", {}) or {}
+    scene_data = constant.scene_data
     for sc in scene_data.values():
         room_area = getattr(sc, "room_area", 0)
         if room_area not in (0, 1, 2, 3):
@@ -560,7 +332,7 @@ def check_room_area_enum_valid() -> list[CheckFailure]:
                     (
                         f"场景{getattr(sc, 'scene_path', '?')}({getattr(sc, 'scene_name', '')})的room_area={room_area}"
                         f"不在合法枚举{{0,1,2,3}}中；"
-                        f"当前人数={len(getattr(sc, 'character_list', None) or [])}"
+                        f"当前人数={len(scene_state.occupants(sc.scene_path))}"
                     ),
                 )
             )
@@ -573,14 +345,13 @@ def check_move_path_fields_are_existing_scenes() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验behavior.move_src/move_target/move_final_target只要非空，就必须拼成cache.scene_data的合法键；
+        校验 behavior.move_src/move_target/move_final_target 只要非空，就必须拼成 constant.scene_data 的合法键。
         空列表合法（寻路失败时会先写behavior_id=move再写空move_target）。级别为warning：
         唯一已知命中源与PLACE-04同因（老存档地图更新后场景键被删却未迁移角色）
     """
-    cache = cache_control.cache
     failures = []
     character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
+    scene_data = constant.scene_data
     for cid, c in character_data.items():
         behavior = activity.behavior(cid)
         for field_name in ("move_src", "move_target", "move_final_target"):
@@ -618,10 +389,9 @@ def check_past_move_position_list_valid() -> list[CheckFailure]:
         校验action_info.past_move_position_list最多10条，每条都必须是合法场景路径。该字段只在标准移动入口
         追加、超10立即pop(0)，长度超限一定是绕过character_move_scene的写入
     """
-    cache = cache_control.cache
     failures = []
     character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
+    scene_data = constant.scene_data
     for cid, c in character_data.items():
         past_list = action_info.get(cid, "past_move_position_list")
         bad_items = [
@@ -649,12 +419,12 @@ def check_collect_position_list_valid() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验cache.collect_position_list每一项都是场景路径列表，必须存在于cache.scene_data；
+        校验 cache.collect_position_list 的每一项都是场景路径列表且存在于 constant.scene_data，
         否则地图收藏面板点一下就会跳进不存在的场景
     """
     cache = cache_control.cache
     failures: list[CheckFailure] = []
-    scene_data = getattr(cache, "scene_data", {}) or {}
+    scene_data = constant.scene_data
     collect_list = getattr(cache, "collect_position_list", None)
     if not isinstance(collect_list, list):
         return failures
@@ -679,13 +449,13 @@ def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验LIVE域内角色的dormitory（场景路径字符串）只允许是cache.scene_data的键，或未分配哨兵""/"无"。
+        校验 LIVE 域内角色的 dormitory（场景路径字符串）只允许是 constant.scene_data 的键，或未分配哨兵 ""/"无"。
         两个哨兵都必须放行：宿舍管理允许在线角色暂时落在""空白位，初始化与访客分房合法使用"无"
     """
     cache = cache_control.cache
     failures = []
     character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
+    scene_data = constant.scene_data
     for cid in _live_ids(cache):
         c = character_data.get(cid)
         if c is None:
@@ -1131,13 +901,12 @@ def check_bagging_consistency() -> list[CheckFailure]:
     功能:
         校验"装袋搬走"状态的双向一致性：(1) 只有玩家(id 0)可以持有非零bagging_chara_id；
         (2) 全体be_bagged=True的角色集合必须恰好等于{玩家当前装袋的角色id}（未装袋时为空集）；
-        (3) 被装袋角色必须已完成离线三件套：退出npc_id_got、position归为["0","0"]、不在任何场景名册中。
-        "position==['0','0']"单独不具区分力（那是真实场景"罗德岛出口"），与"不在任何场景名册"合取后才有效
+        (3) 被装袋角色必须已完成离线三件套：退出 roster.active()、position 归为 ["0", "0"]、不在任何场景的在场角色中。
+        "position==['0','0']"单独不具区分力（那是真实场景"罗德岛出口"），与"不在任何场景的在场角色中"合取后才有效
     """
-    cache = cache_control.cache
     failures: list[CheckFailure] = []
     character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
+    scene_data = constant.scene_data
     npc_id_got: set[int] = roster.active()
     pl = character_data.get(0)
     if pl is None:
@@ -1207,9 +976,7 @@ def check_bagging_consistency() -> list[CheckFailure]:
             in_got = bid in npc_id_got
             position = activity.position(target.cid)
             scenes_with_bid = [
-                p
-                for p, s in scene_data.items()
-                if bid in (getattr(s, "character_list", None) or [])
+                p for p in scene_data if bid in scene_state.occupants(p)
             ]
             if not (
                 be_bagged
@@ -1224,7 +991,7 @@ def check_bagging_consistency() -> list[CheckFailure]:
                         (
                             f"被装袋角色id={bid} name={getattr(target, 'name', '')}未完成离线三件套："
                             f"be_bagged={be_bagged}，"
-                            f"是否仍在npc_id_got中={in_got}，position={position}，仍出现在场景名册={scenes_with_bid}"
+                            f"是否仍在npc_id_got中={in_got}，position={position}，仍出现在场景={scenes_with_bid}"
                             f"（已知隐患：Script/Settle/default.py的handle_t_be_bagged效果id "
                             f"451在Behavior_Effect.csv中无引用，是死代码）"
                         ),
@@ -1329,12 +1096,11 @@ def _has_scene_tag(scene: object, tag: str) -> bool:
 @register_check("PLACE-30", "教室标签索引")
 def check_place_30() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 教育标签索引内路径须存在且带该标签，场景带标签时也须出现在索引中。"""
-    cache = cache_control.cache
     from Script.Core import constant
 
-    scenes = getattr(cache, "scene_data", None)
+    scenes = constant.scene_data
     places = getattr(constant, "place_data", None)
-    if not isinstance(scenes, dict) or not isinstance(places, dict):
+    if not isinstance(places, dict):
         return []
     failures = []
     for tag in sorted(_education_tags()):
@@ -1403,12 +1169,9 @@ def _check_room_name(
 def check_place_31() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；
     功能: 全局课表与个人0–3课型的场景名须唯一对应匹配教育标签的场景，未开放或关闭不报错。"""
-    cache = cache_control.cache
     from Script.System.Education_System import education_constant
 
-    scenes = getattr(cache, "scene_data", None)
-    if not isinstance(scenes, dict):
-        return []
+    scenes = constant.scene_data
     failures: list[CheckFailure] = []
     classroom_tags = set(
         education_constant.CLASSROOM_TAG_BY_COURSE_TYPE.values()

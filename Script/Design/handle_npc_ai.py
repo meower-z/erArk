@@ -17,7 +17,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, action_info, activity, chara_life
 from Script.Modules.domains import entertainment, facility, flags, hypnosis
-from Script.Modules.domains import needs, roster, identity
+from Script.Modules.domains import needs, roster, identity, scene_state
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -115,10 +115,9 @@ def commit_group_sex_tired_exit(character_id: int) -> None:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(0)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     remaining_ids = [
         chara_id
-        for chara_id in scene_data.character_list
+        for chara_id in scene_state.occupants(scene_path_str)
         if chara_id
         and chara_id != character_id
         and flags.get(chara_id, "is_h")
@@ -256,7 +255,7 @@ def judge_character_cant_move(character_id: int) -> int:
         now_scene_str = map_handle.get_map_system_path_str_for_list(
             now_position
         )
-        now_scene_data = cache.scene_data[now_scene_str]
+        now_scene_data = constant.scene_data[now_scene_str]
         if "Inpatient_Department" not in now_scene_data.scene_tag:
             to_Inpatient_Department = map_handle.get_map_system_path_for_str(
                 random.choice(constant.place_data["Inpatient_Department"])
@@ -1058,10 +1057,9 @@ def select_random_free_character(character_id: int) -> int:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     available_characters = []
     # 遍历所有角色
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         # 跳过自己
         if chara_id == character_id:
             continue

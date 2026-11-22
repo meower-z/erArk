@@ -10,7 +10,7 @@ from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import abilities, activity, entertainment, flags
 from Script.Modules.domains import player_collection, playthrough, pregnancy
-from Script.Modules.domains import roster, chara_life
+from Script.Modules.domains import roster, chara_life, scene_state
 from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
@@ -396,8 +396,7 @@ def find_identifiable_egg_owner_in_scene(character_id: int) -> int:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         if chara_id == 0:
             continue
         if len(get_identifiable_eggs(chara_id)):
@@ -418,8 +417,7 @@ def nursery_worker_on_duty_in_scene(character_id: int) -> bool:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data = cache.scene_data[scene_path_str]
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         if chara_id == 0 or chara_id == character_id:
             continue
         if (

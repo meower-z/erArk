@@ -1,7 +1,7 @@
 """性行为履历的读取与记录：部位初体验、特殊履历与H模式初体验"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import cache_control, game_type, get_text, constant
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Design import game_time
@@ -12,7 +12,7 @@ from Script.Modules.domains import (
     flags,
     h_state,
 )
-from Script.Modules.domains import modes
+from Script.Modules.domains import modes, scene_state
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -179,10 +179,8 @@ def check_first_h_mode(character_id: int) -> None:
             activity.position(character_id)
         )
         scene_character_count = 0
-        if scene_path_str in cache.scene_data:
-            scene_character_count = len(
-                cache.scene_data[scene_path_str].character_list
-            )
+        if scene_path_str in constant.scene_data:
+            scene_character_count = len(scene_state.occupants(scene_path_str))
         record_first_h_mode(
             character_id, "group_sex", str(scene_character_count)
         )

@@ -14,7 +14,7 @@ from Script.Modules.domains import chara_profile, facility, flags, growth
 from Script.Modules.domains import history, modes, needs, physical_exam
 from Script.Modules.domains import player_ability, player_collection, pregnancy
 from Script.Modules.domains import npc_template, relations, status, visitor
-from Script.Modules.domains import identity
+from Script.Modules.domains import identity, scene_state
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -931,9 +931,9 @@ def handle_position_in_nursery_and_flag_baby_exist(character_id: int) -> int:
 
     now_position = activity.position(character_id)
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
-    now_scene_data = cache.scene_data[now_scene_str]
+    now_scene_data = constant.scene_data[now_scene_str]
     if "Nursery" in now_scene_data.scene_tag:
-        for chara_id in now_scene_data.character_list:
+        for chara_id in scene_state.occupants(now_scene_str):
             if abilities.talent(chara_id)[101]:
                 return 1
 

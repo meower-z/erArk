@@ -15,6 +15,7 @@ from Script.Modules.domains import (
     needs,
 )
 from Script.Modules.domains import player_ability, pregnancy, status, identity
+from Script.Modules.domains import scene_state
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -59,8 +60,7 @@ def get_inserted_character_id() -> int:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(0)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    for character_id in scene_data.character_list:
+    for character_id in scene_state.occupants(scene_path_str):
         # 排除玩家和已检测的交互对象
         if character_id == 0 or character_id == target_id:
             continue

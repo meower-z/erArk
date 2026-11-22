@@ -51,7 +51,7 @@ class Check_locker_Panel:
         map_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(0)
         )
-        map_data = cache.scene_data[map_path_str]
+        map_data = constant.scene_data[map_path_str]
         title_draw = draw.TitleLineDraw(
             _("{0}的衣柜").format(map_name), self.width
         )
@@ -280,7 +280,7 @@ class FindDraw:
         map_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(0)
         )
-        map_data = cache.scene_data[map_path_str]
+        map_data = constant.scene_data[map_path_str]
 
         # 获取当前衣柜是哪个衣柜
         self.locker_type = clothing.get_cloth_locker_type_by_scene(
@@ -550,7 +550,7 @@ class Ejaculation_NameDraw:
         map_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(0)
         )
-        map_data = cache.scene_data[map_path_str]
+        map_data = constant.scene_data[map_path_str]
 
         # 获取当前衣柜是哪个衣柜（2大浴场更衣室/3宿舍，博士房间按宿舍处理）
         self.locker_type = clothing.get_cloth_locker_type_by_scene(

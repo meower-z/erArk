@@ -23,6 +23,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from Script.Core import game_type
+
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -243,6 +245,10 @@ panel_data: dict[int, Callable[..., object]] = {}
 """
 place_data: dict[str, list[str]] = {}
 """ 按房间类型分类的场景列表 场景标签:场景路径列表 """
+scene_data: dict[str, game_type.Scene] = {}
+""" 只读场景静态表，启动时由 map_config 加载，场景路径:场景对象 """
+map_data: dict[str, game_type.Map] = {}
+""" 只读地图静态表，启动时由 map_config 加载，地图路径:地图对象 """
 cmd_map: dict[int | str, Callable[[], object]] = {}
 """ cmd存储 """
 settle_behavior_effect_data: dict[int, Callable[..., object]] = {}

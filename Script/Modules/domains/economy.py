@@ -17,12 +17,13 @@ from collections.abc import Mapping
 from typing import cast
 from uuid import UUID
 
-from Script.Core import cache_control, game_type
+from Script.Core import game_type
 from Script.Kernel import core
 from Script.Modules.domains import roster, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.domains import chara_life
 from Script.Modules.domains import identity
+from Script.Config import game_config
 
 INCOME = "base.income_today"
 """ 今日总收入在全局数据里的键 """
@@ -254,7 +255,7 @@ def food(recipe: str, uid: str, quality: int) -> game_type.Food:
     made = game_type.Food(UUID(uid))
     made.quality = quality
     made.recipe = int(recipe)
-    made.name = cache_control.cache.recipe_data[made.recipe].name
+    made.name = game_config.config_recipes[made.recipe].name
     return made
 
 

@@ -8,15 +8,12 @@ from Script.Core import (
     json_handle,
     get_text,
     text_handle,
-    cache_control,
     constant,
     rich_text,
     dijkstra,
 )
 from Script.Design import map_handle
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 map_data_path = os.path.join("data", "map")
 """ 地图配置数据路径 """
 scene_path_edge_path = os.path.join("data", "ScenePath")
@@ -51,8 +48,8 @@ def init_map_data() -> None:
                 ):
                     loaded[path] = data
     if len(loaded) == len(pickle_paths):
-        cache.scene_data = loaded[all_scene_data_path]
-        cache.map_data = loaded[all_map_data_path]
+        constant.scene_data = loaded[all_scene_data_path]
+        constant.map_data = loaded[all_map_data_path]
         constant.place_data = loaded[all_place_data_path]
         map_handle.scene_path_edge = json_handle.load_json(scene_path_edge_path)
     else:
@@ -61,7 +58,7 @@ def init_map_data() -> None:
             dict[str, game_type.Scene],
             dict[str, game_type.Map],
             dict[str, list[str]],
-        ] = (cache.scene_data, cache.map_data, constant.place_data)
+        ] = (constant.scene_data, constant.map_data, constant.place_data)
         for path, built_data in zip(pickle_paths, built, strict=False):
             with open(path, "wb") as built_file:
                 pickle.dump(built_data, built_file)
@@ -102,7 +99,6 @@ def load_dir_now(data_path: str) -> None:
                     # 如果场景的图片项存在且不为空，则加载场景图片
                     if load_scene_data.get("Scene_Img"):
                         now_scene_data.scene_img = load_scene_data["Scene_Img"]
-                    now_scene_data.close_flag = 0
                     scene_tag_list = load_scene_data["SceneTag"]
                     if "|" not in scene_tag_list:
                         now_scene_data.scene_tag.append(scene_tag_list)
@@ -110,7 +106,9 @@ def load_dir_now(data_path: str) -> None:
                         scene_tag_list = scene_tag_list.split("|")
                         for scene_tag in scene_tag_list:
                             now_scene_data.scene_tag.append(scene_tag)
-                    cache.scene_data[now_scene_data.scene_path] = now_scene_data
+                    constant.scene_data[now_scene_data.scene_path] = (
+                        now_scene_data
+                    )
                     for scene_tag in now_scene_data.scene_tag:
                         constant.place_data.setdefault(scene_tag, [])
                         constant.place_data[scene_tag].append(
@@ -132,7 +130,7 @@ def load_dir_now(data_path: str) -> None:
                     now_map_data.sorted_path = get_sorted_map_path_data(
                         now_map_data.path_edge
                     )
-                    cache.map_data[now_map_data.map_path] = now_map_data
+                    constant.map_data[now_map_data.map_path] = now_map_data
         else:
             load_dir_now(now_path)
 

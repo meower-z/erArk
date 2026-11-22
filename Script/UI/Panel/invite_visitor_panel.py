@@ -190,11 +190,6 @@ def visitor_leave(character_id: int) -> None:
     roster.discard(character_id)
 
     # 位置初始化
-    scene_path_str = map_handle.get_map_system_path_str_for_list(
-        activity.position(character_id)
-    )
-    if character_id in cache.scene_data[scene_path_str].character_list:
-        cache.scene_data[scene_path_str].character_list.remove(character_id)
     activity.set_position(character_id, ["0", "0"])
 
 
@@ -490,7 +485,7 @@ class Invite_Visitor_Panel:
                 map_path_str = map_handle.get_map_system_path_str_for_list(
                     ["泰拉"]
                 )
-                map_data: game_type.Map = cache.map_data[map_path_str]
+                map_data: game_type.Map = constant.map_data[map_path_str]
                 path_edge = map_data.path_edge
                 near_scene_path = path_edge[now_country_name].copy()
                 # 仅需要keys

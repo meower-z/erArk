@@ -18,11 +18,11 @@ import math
 import os
 
 from Script.Config import game_config
-from Script.Core import cache_control
+from Script.Core import cache_control, constant
 from Script.Modules.domains import abilities, activity, chara_life, commission
 from Script.Modules.domains import diplomacy, facility, flags, location, modes
 from Script.Modules.domains import playthrough, prison, recruit, relations
-from Script.Modules.domains import roster, visitor, work, identity
+from Script.Modules.domains import roster, scene_state, visitor, work, identity
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -52,7 +52,7 @@ def _prison_dorms(cache: game_type.Cache) -> set[str]:
     """
     return {
         p
-        for p, s in cache.scene_data.items()
+        for p, s in constant.scene_data.items()
         if "Prison" in getattr(s, "scene_tag", [])
     }
 
@@ -65,7 +65,7 @@ def _guest_rooms(cache: game_type.Cache) -> set[str]:
     """
     return {
         p
-        for p, s in cache.scene_data.items()
+        for p, s in constant.scene_data.items()
         if "Guest_Room" in getattr(s, "scene_tag", [])
     }
 
@@ -79,15 +79,15 @@ def _warden_dorm() -> str:
     return _spath(["关押", "休息室"])
 
 
-def _scene_membership(cache: game_type.Cache) -> dict[int, list[str]]:
+def _scene_membership() -> dict[int, list[str]]:
     """
-    参数: cache -- 全局缓存
     返回值: Dict[int, List[str]] -- 角色id到其出现的全部场景路径列表的反向索引(正常应恰好一条)
-    功能: 遍历cache.scene_data建立场景成员关系反向索引，供在编/离线一致性类检查复用，避免重复遍历529个场景
+    功能: 遍历 constant.scene_data 与各场景的 scene_state.occupants 建立角色到场景路径列表的反向索引，
+    供在编与离线一致性检查复用，避免重复遍历全部场景
     """
     membership: dict[int, list[str]] = {}
-    for path, scene in cache.scene_data.items():
-        for cid in getattr(scene, "character_list", []):
+    for path in constant.scene_data:
+        for cid in scene_state.occupants(path):
             if cid != 0:
                 membership.setdefault(cid, []).append(path)
     return membership
@@ -195,9 +195,9 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
     cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    membership = _scene_membership(cache)
-    for path, scene in cache.scene_data.items():
-        for cid in getattr(scene, "character_list", []):
+    membership = _scene_membership()
+    for path in constant.scene_data:
+        for cid in scene_state.occupants(path):
             if cid == 0:
                 continue
             if cid not in cd:
@@ -205,7 +205,7 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
                     make_failure(
                         "ROSTER-03",
                         "在编干员与场景名册双向一致",
-                        f"{warn}场景{path}的character_list中含幽灵角色id={cid}，character_data中不存在该id",
+                        f"{warn}场景{path}的在场角色（scene_state.occupants）中含幽灵角色id={cid}，character_data中不存在该id",
                         [cid],
                     )
                 )
@@ -241,7 +241,7 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
                 )
                 continue
             expected = _spath(pos)
-            if expected not in cache.scene_data:
+            if expected not in constant.scene_data:
                 failures.append(
                     make_failure(
                         "ROSTER-03",
@@ -293,7 +293,7 @@ def check_offline_source_flag_matches_real_offline_state() -> (
     cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    membership = _scene_membership(cache)
+    membership = _scene_membership()
     off = ("field_commission", "escaping", "be_bagged")
     for cid, c in cd.items():
         if cid == 0 or not any(flags.get(cid, k) for k in off):
@@ -551,7 +551,7 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
     cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    membership = _scene_membership(cache)
+    membership = _scene_membership()
     for cid, c in cd.items():
         if cid == 0 or not flags.get(c.cid, "escaping"):
             continue
@@ -1380,7 +1380,7 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
     cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    membership_scene = _scene_membership(cache)
+    membership_scene = _scene_membership()
     membership: dict[int, int] = {}
     for mid, r in commission.ongoing().items():
         for cid in r.team:
@@ -1808,7 +1808,7 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
             )
         )
     if b and b in cd:
-        membership = _scene_membership(cache)
+        membership = _scene_membership()
         c = cd[b]
         problems = []
         if roster.has(b):

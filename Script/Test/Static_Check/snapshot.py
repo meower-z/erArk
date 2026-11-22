@@ -12,6 +12,9 @@ import json
 
 from typing import TYPE_CHECKING
 
+from Script.Core import constant
+from Script.Modules.domains import scene_state
+
 if TYPE_CHECKING:
     from typing import Any
     from Script.Core import game_type
@@ -20,9 +23,7 @@ if TYPE_CHECKING:
 # 这些字段要么是静态配置数据（游戏启动后不再随玩家操作变化，快照价值低且体积巨大），
 # 要么是纯渲染/绘制用的中间缓存（不反映游戏逻辑状态，只会让快照膨胀并干扰阅读）
 EXCLUDED_TOP_LEVEL_FIELDS = {
-    "map_data",  # 地图静态数据
     "random_npc_list",  # 旧存档读档后会留在cache上的随机npc数据，Cache本身不声明它
-    "recipe_data",  # 菜谱静态数据
 }
 # 字段名前缀黑名单：以这些前缀开头的字段均为渲染缓存中间数据，一并排除
 EXCLUDED_FIELD_PREFIXES = ("text_",)
@@ -119,6 +120,26 @@ def _to_json_safe(value: object, depth: int, visited: set) -> Any:
         return "<不可repr对象>"
 
 
+def _scene_snapshot() -> dict[str, dict[str, Any]]:
+    """
+    返回值:
+        dict[str, dict[str, Any]]: 按 constant.scene_data 顺序排列的非空或已关门场景快照字典
+    功能:
+        从内核状态构造场景快照，按 constant.scene_data 顺序收录有在场角色或门锁非 0 的场景。
+        每项为 {"character_list": 升序在场角色 id 列表, "close_flag": 门锁状态}，省略无人且未关门的场景以控制体积
+    """
+    doors = scene_state.closed()
+    scenes = {}
+    for path in constant.scene_data:
+        people = scene_state.occupants(path)
+        if people or path in doors:
+            scenes[path] = {
+                "character_list": people,
+                "close_flag": doors.get(path, 0),
+            }
+    return scenes
+
+
 def build_snapshot(
     cache: game_type.Cache,
     involved_character_ids: list[int] | set[int] | None = None,
@@ -131,22 +152,13 @@ def build_snapshot(
         dict: 当前全局状态的JSON可序列化快照
     功能:
         将传入cache的顶层字段转为JSON可序列化数据（排除EXCLUDED_TOP_LEVEL_FIELDS与text_前缀字段）。
-        scene_data仅保留有角色的场景。
         角色身份表写入identity.characters键：传入involved_character_ids时仅保留涉事角色与玩家（最多
-        MAX_SNAPSHOT_CHARACTERS人），并附identity.characters_omitted说明，未传入时全量保留
+        MAX_SNAPSHOT_CHARACTERS人），并附identity.characters_omitted说明，未传入时全量保留。
+        随后从内核状态补充 scene_data 节，只记有角色或门锁非 0 的场景（character_list 与 close_flag），失败时写占位文本
     """
     snapshot = {}
     for field_name, field_value in vars(cache).items():
         if _is_excluded_top_level_field(field_name):
-            continue
-        if field_name == "scene_data":
-            # 仅保留角色集合非空的场景，过滤掉大量空场景以控制快照体积
-            filtered_scene_data = {
-                scene_path: scene
-                for scene_path, scene in field_value.items()
-                if getattr(scene, "character_list", None)
-            }
-            snapshot[field_name] = _to_json_safe(filtered_scene_data, 0, set())
             continue
         try:
             snapshot[field_name] = _to_json_safe(field_value, 0, set())
@@ -167,6 +179,10 @@ def build_snapshot(
     snapshot[identity.KEY] = _to_json_safe(
         {cid: dataclasses.asdict(table[cid]) for cid in dumped_ids}, 0, set()
     )
+    try:
+        snapshot["scene_data"] = _scene_snapshot()
+    except Exception as e:
+        snapshot["scene_data"] = f"<字段快照失败: {e}>"
     return snapshot
 
 

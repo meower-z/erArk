@@ -13,6 +13,7 @@ from Script.Modules.domains import abilities, activity, dirty, prison, wardrobe
 from Script.Modules.domains import npc_template
 from Script.UI.Moudle import draw
 from Script.Modules.domains import identity
+from Script.Core import constant
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -92,7 +93,7 @@ def get_now_cloth_locker_type(character_id: int) -> int:
     now_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    now_scene_data = cache.scene_data[now_scene_str]
+    now_scene_data = constant.scene_data[now_scene_str]
     return get_cloth_locker_type_by_scene(now_scene_data.scene_tag)
 
 
@@ -661,13 +662,11 @@ def chara_special_wear_cloth(character_id: int) -> list[int]:
         if talent[205]:
             if 751 not in wardrobe.of(character_id).cloth_wear[7]:
                 wardrobe.append(character_id, "cloth_wear", 7, 751)
-                # print("换上戒指了")
             return_list.append(751)
         # 项圈同理
         elif talent[215]:
             if 352 not in wardrobe.of(character_id).cloth_wear[3]:
                 wardrobe.append(character_id, "cloth_wear", 3, 352)
-                # print("换上项圈了")
             return_list.append(352)
     return return_list
 

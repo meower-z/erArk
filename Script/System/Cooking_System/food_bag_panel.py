@@ -371,8 +371,8 @@ class FoodGroupDraw:
 
         # 获取食物名称和介绍，并按食谱类型决定按食用还是饮用判断能否点击
         now_panel = ""
-        if recipe_id != -1 and recipe_id in cache.recipe_data:
-            food_recipe: game_type.Recipes = cache.recipe_data[recipe_id]
+        if recipe_id != -1 and recipe_id in game_config.config_recipes:
+            food_recipe = game_config.config_recipes[recipe_id]
             self.food_name = food_recipe.name
             self.food_introduce = food_recipe.introduce
             if food_recipe.type in {0, 1, 5}:
@@ -410,8 +410,8 @@ class FoodGroupDraw:
         # 食谱等级
         recipe_difficulty = 0
         recipe_difficulty_str = ""
-        if recipe_id != -1 and recipe_id in cache.recipe_data:
-            recipe_difficulty = cache.recipe_data[recipe_id].difficulty
+        if recipe_id != -1 and recipe_id in game_config.config_recipes:
+            recipe_difficulty = game_config.config_recipes[recipe_id].difficulty
             # 食谱等级大于8的按0级显示
             if recipe_difficulty > 8:
                 recipe_difficulty = 0

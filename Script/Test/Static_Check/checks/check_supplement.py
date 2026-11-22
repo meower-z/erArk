@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-from Script.Core import cache_control
+from Script.Core import cache_control, constant
 from Script.Config import game_config
 from Script.Design import map_handle
 from Script.Modules.domains import (
@@ -270,13 +270,12 @@ def check_officeroom_reference_valid() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验身份表（identity.characters）中每个角色的officeroom只允许是空列表或cache.scene_data的合法键。
-        officeroom非空时会被角色信息面板交给get_scene_path_text并直接索引cache.scene_data。
+        校验身份表（identity.characters）中每个角色的officeroom只允许是空列表或constant.scene_data的合法键。
+        officeroom非空时会被角色信息面板交给get_scene_path_text并直接索引constant.scene_data。
         级别为warning，主要后果是打开角色信息面板时渲染失败
     """
-    cache = cache_control.cache
     character_data = identity.table()
-    scene_data = getattr(cache, "scene_data", {}) or {}
+    scene_data = constant.scene_data
     failures = []
     for cid, c in character_data.items():
         officeroom = chara_life.officeroom(cid)
@@ -292,8 +291,8 @@ def check_officeroom_reference_valid() -> list[CheckFailure]:
                     "SUPP-08",
                     "办公室场景引用合法",
                     (
-                        f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的officeroom={officeroom}非空但不是cache."
-                        f"scene_data的合法键，"
+                        f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的officeroom={officeroom}非空但不是"
+                        f"constant.scene_data的合法键，"
                         f"打开该角色信息面板时get_scene_path_text会索引失败；position={activity.position(c.cid)}"
                     ),
                     [cid],

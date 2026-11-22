@@ -4,6 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import activity, flags, identity
+from Script.Config import game_config
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -275,7 +276,7 @@ def handle_food_recipe_difficulty_low(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.difficulty <= 3:
         return 1
     return 0
@@ -293,7 +294,7 @@ def handle_food_recipe_difficulty_medium(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if 4 <= recipe_data.difficulty <= 5:
         return 1
     return 0
@@ -311,7 +312,7 @@ def handle_food_recipe_difficulty_high(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if 6 <= recipe_data.difficulty <= 7:
         return 1
     return 0
@@ -329,7 +330,7 @@ def handle_food_recipe_difficulty_highest(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.difficulty >= 8:
         return 1
     return 0
@@ -347,7 +348,7 @@ def handle_food_type_0(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.type == 0:
         return 1
     return 0
@@ -365,7 +366,7 @@ def handle_food_type_1(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.type == 1:
         return 1
     return 0
@@ -383,7 +384,7 @@ def handle_food_type_2(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.type == 2:
         return 1
     return 0
@@ -401,7 +402,7 @@ def handle_food_type_3(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.type == 3:
         return 1
     return 0
@@ -419,7 +420,7 @@ def handle_food_type_4(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.type == 4:
         return 1
     return 0
@@ -437,7 +438,7 @@ def handle_food_type_5(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.type == 5:
         return 1
     return 0
@@ -455,7 +456,7 @@ def handle_food_type_8(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.type == 8:
         return 1
     return 0
@@ -473,7 +474,7 @@ def handle_food_type_9(character_id: int) -> int:
     recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
-    recipe_data = cache.recipe_data[recipe_id]
+    recipe_data = game_config.config_recipes[recipe_id]
     if recipe_data.type == 9:
         return 1
     return 0
@@ -490,8 +491,7 @@ def handlefind_food_weird_flag_0(character_id: int) -> int:
     """
     if flags.get(character_id, "find_food_weird") == 0:
         return 1
-    else:
-        return 0
+    return 0
 
 
 @add_premise(constant_promise.Premise.FIND_FOOD_WEIRD_FLAG_1)
@@ -505,8 +505,7 @@ def handlefind_food_weird_flag_1(character_id: int) -> int:
     """
     if flags.get(character_id, "find_food_weird") == 1:
         return 1
-    else:
-        return 0
+    return 0
 
 
 @add_premise(constant_promise.Premise.T_FIND_FOOD_WEIRD_FLAG_0)

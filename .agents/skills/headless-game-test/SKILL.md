@@ -42,11 +42,11 @@ description: 在不启动图形界面的情况下无头运行 erArk：加载游�
 # ① 数值结算会读全局设置 normal_config.system_setting 的各项，System_Setting() 默认是空壳
 normal_config.system_setting = attr_calculation.get_system_setting_zero()
 
-# ② 场景路径必须是 cache.scene_data 里真实存在的键，["0"]、["0","0"] 这类占位值会让
+# ② 场景路径必须是 constant.scene_data 里真实存在的键，["0"] 这类占位值会让
 #    关门(752)、移动(751/761/762)、地点判定类结算 KeyError
 SCENE = ["宿舍", "1区", "101"]        # 一间真实宿舍
 PREV_SCENE = ["宿舍", "1区", "0"]     # 它所在区的入口，测「推回前一场景」时用
-assert map_handle.get_map_system_path_str_for_list(SCENE) in cache.scene_data
+assert map_handle.get_map_system_path_str_for_list(SCENE) in constant.scene_data
 ```
 
 ### fixture 字段与置零函数对照表
@@ -185,7 +185,7 @@ rm -f data/Character_Talk.json
 | `AttributeError: module 'attr_calculation' has no attribute 'get_xxx_zero'` | 置零函数名记错，查上表 |
 | `TypeError: get_xxx_zero() missing 1 required positional argument` | 该置零函数要传 dict，查上表 |
 | `KeyError` 出现在 `common_default.chara_base_state_adjust` | 漏了 `normal_config.system_setting` |
-| `KeyError: '0'` 出现在 `cache.scene_data[...]` | 场景路径不是真实场景 |
+| `KeyError: '0'` 出现在 `constant.scene_data[...]` | 场景路径不是真实场景 |
 | `KeyError: 24` 出现在 `handle_premise_body_manage` | 漏了 `chara_data.seed` |
 | `KeyError: 0` 出现在 `handle_favorability_*` | 漏了 `favorability`（口上前提会走到） |
 | 断言全过但数值没变 | `add_time` 传了 0 |

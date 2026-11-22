@@ -301,7 +301,6 @@ def new_game_minimal_init() -> None:
 
     # 5. 烹饪 / 食品店 / 其他系统
     try:
-        cooking.init_recipes()
         cooking.init_food_shop_data(new_day_flag=True)
     except Exception as e:
         log(f"cooking 初始化忽略异常: {e}")

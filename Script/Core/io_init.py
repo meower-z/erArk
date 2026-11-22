@@ -8,16 +8,13 @@ import queue
 import json
 import time
 from Script.Config import game_config, normal_config
-from Script.Core import cache_control, perf_hook
+from Script.Core import perf_hook
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
     from types import ModuleType
-
-# 获取全局缓存
-cache = cache_control.cache
 
 # Tkinter main_frame 延迟导入状态（解决无显示环境下的导入问题）
 _main_frame_module: ModuleType | None = None
@@ -389,18 +386,20 @@ def warm_up_text_metrics() -> None:
               （地图制表符等特殊字形尤其明显）。本函数在启动加载末尾绘制若干屏
               典型内容：①主场景互动面板（in_scene_panel）及其状态栏/服装栏/身体栏/
               图片栏/污浊栏/指令面板所用文本的去重字形集；②data/map 各级目录 Map
-              原文件的地图绘制文本（cache.map_data 即其加载结果）。随后推送
+              原文件的地图绘制文本（constant.map_data 即其加载结果）。随后推送
               metrics_sync 标记让 GUI 线程强制完成全部行度量，并立即清屏——
               全程在同一渲染批内处理，玩家不可见，度量成本被移入加载期。
     """
-    # 1. 地图面板内容：cache.map_data 即 data/map 各级目录下 Map 原文件的加载结果。
+    # 1. 地图面板内容：constant.map_data 即 data/map 各级目录下 Map 原文件的加载结果。
     #    抽取部分真实行保留行结构（制表符对齐是地图界面度量成本的大头），
     #    其余行的字形并入去重字形集，保证全部地图的字形都被覆盖
+    from Script.Core import constant
+
     sample_lines = []
     glyph_set: set[str] = set()
     try:
         raw_line_quota = 40
-        for map_data in cache.map_data.values():
+        for map_data in constant.map_data.values():
             map_draw = getattr(map_data, "map_draw", None)
             if map_draw is None:
                 continue
@@ -423,7 +422,7 @@ def warm_up_text_metrics() -> None:
         "场景当前位置的角色一览:收起展开状态栏服装身体图片详细污浊(锁)预热样本：体力气力理智熟练欲望快感绝顶0123456789ABCabc[]（），。！？→○◆·—/%+-|"
     )
     try:
-        from Script.Core import get_text, constant
+        from Script.Core import get_text
 
         translate = get_text._
         # 主界面各子面板所用配置表的名字字段：

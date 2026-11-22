@@ -16,7 +16,7 @@ from Script.UI.Panel import dirty_panel
 
 import random
 from Script.Modules.domains import abilities, achievement, activity, flags
-from Script.Modules.domains import h_state, identity
+from Script.Modules.domains import h_state, identity, scene_state
 
 panel_info_data: dict[str, object] = {}
 
@@ -98,10 +98,9 @@ def get_hidden_sex_targets(character_id: int) -> list[int]:
 
     position = activity.position(character_id)
     scene_path = map_handle.get_map_system_path_str_for_list(position)
-    scene_data: game_type.Scene = cache.scene_data[scene_path]
     result: list[int] = []
     # 遍历场景中所有角色
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path):
         # 跳过玩家自身
         if chara_id == character_id:
             continue
@@ -125,11 +124,10 @@ def get_nearby_conscious_unfallen_characters(character_id: int) -> list[int]:
     position = activity.position(character_id)
     scene_path = map_handle.get_map_system_path_str_for_list(position)
     # 从缓存中取出该场景数据
-    scene_data: game_type.Scene = cache.scene_data[scene_path]
 
     result: list[int] = []
     # 遍历场景中所有角色
-    for chara_cid in scene_data.character_list:
+    for chara_cid in scene_state.occupants(scene_path):
         if chara_cid == character_id:
             # 排除自身
             continue
@@ -209,8 +207,7 @@ def settle_hidden_value_by_action(
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    other_chara_adjust = max(len(scene_data.character_list) - 2, 1)
+    other_chara_adjust = max(len(scene_state.occupants(scene_path_str)) - 2, 1)
     # 增加
     if add_flag:
         adjust = now_intensity * mode_adjust / abi_adjust * other_chara_adjust
@@ -567,8 +564,7 @@ class Select_Hidden_Sex_Mode_Panel:
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(0)
         )
-        scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-        other_chara_count = len(scene_data.character_list) - 2
+        other_chara_count = len(scene_state.occupants(scene_path_str)) - 2
         # 成就初始化
         achievement.put(
             "hidden_sex_record",

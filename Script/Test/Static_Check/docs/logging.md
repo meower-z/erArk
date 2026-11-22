@@ -33,8 +33,8 @@
 
 ## 状态快照
 
-`snapshot.build_snapshot(cache, ids)` 使用调用方传入的 cache，角色身份写在 `identity.characters` 键下。未传入涉事角色 id 时全量转储。传入涉事角色 id 时只转储玩家与存在的涉事角色（最多 30 人），并附 `identity.characters_omitted` 说明转储与未转储的 id。`scene_data` 只保留有角色的场景。
+`snapshot.build_snapshot(cache, ids)` 使用调用方传入的 cache，角色身份写在 `identity.characters` 键下。未传入涉事角色 id 时全量转储。传入涉事角色 id 时只转储玩家与存在的涉事角色（最多 30 人），并附 `identity.characters_omitted` 说明转储与未转储的 id。缓存字段之后会从内核状态补充 `scene_data` 节，按 `constant.scene_data` 顺序只记录有在场角色或门锁非 0 的场景（含 `character_list` 与 `close_flag`），省略无人且未关门的场景。构造该节异常时，写入与其他字段相同的失败占位文本。
 
-排除静态配置字段（`map_data`、`random_npc_list`、`recipe_data`、天文表）、流水字段（每日指令文本、已触发事件 id）与 `text_` 前缀字段。界面临时状态不在缓存里，快照里本就没有。医疗部的病人表在内核的 GameState 里，不在缓存里，快照里也没有。
+排除静态配置字段（`random_npc_list`、天文表）、流水字段（每日指令文本、已触发事件 id）与 `text_` 前缀字段。静态地图、场景表与菜谱表分别位于 `constant` 与 `game_config`，不在缓存里。界面临时状态不在缓存里，快照里本就没有。医疗部的病人表在内核的 GameState 里，不在缓存里，快照里也没有。
 
 转换遇到循环引用时写占位文本，达到 15 层或对象不可序列化时用 `repr` 兜底。

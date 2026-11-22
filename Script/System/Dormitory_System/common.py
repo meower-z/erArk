@@ -90,9 +90,9 @@ def _get_dormitory_room_no(scene_path: str) -> int:
     输出类型: int
     功能: 场景带 Dormitory 标签且路径最后一段是数字时，返回这个数字。其他路径返回0。
     """
-    if scene_path not in cache.scene_data:
+    if scene_path not in constant.scene_data:
         return 0
-    if "Dormitory" not in cache.scene_data[scene_path].scene_tag:
+    if "Dormitory" not in constant.scene_data[scene_path].scene_tag:
         return 0
     room_dir_name = scene_path.split(os.sep)[-1]
     if not room_dir_name.isdecimal():
@@ -126,7 +126,7 @@ def get_open_dormitory_rooms_by_layer() -> dict[int, list[tuple[str, str]]]:
         layer = room_no // 100
         if layer <= 0 or layer > max_open_layer:
             continue
-        room_name = cache.scene_data[room_path].scene_name
+        room_name = constant.scene_data[room_path].scene_name
         # 101 号到 _get_base_open_room_upper_no() 号的房间不在 Facility_open.csv 里。
         # 宿舍区 1 级起，这些房间就开放。
         is_base_room = (
@@ -394,7 +394,6 @@ def init_character_dormitory() -> None:
     分配角色宿舍
     角色分配到csv里所写的宿舍名所对应的房间坐标
     """
-    cache = cache_control.cache
     dormitory_place_data = {
         key: constant.place_data[key]
         for key in constant.place_data
@@ -422,7 +421,7 @@ def init_character_dormitory() -> None:
             # scene_name 是场景名的译文，所以模板的中文场景名也先经过 _ 再比较
             template_scene_name = _(chara_life.dormitory(character_id))
             for n in list(dormitory.keys()):
-                if cache.scene_data[n].scene_name == template_scene_name:
+                if constant.scene_data[n].scene_name == template_scene_name:
                     # 如果要住宿舍的话，那先检测宿舍是否已经有人住了
                     if "宿舍" in chara_life.dormitory(character_id):
                         already_live = False
@@ -487,7 +486,7 @@ def new_character_get_dormitory(character_id: int) -> None:
             for room_full_path in guest_room_sorted:
                 if (
                     game_config.config_facility_open[room_id].name
-                    == cache.scene_data[room_full_path].scene_name
+                    == constant.scene_data[room_full_path].scene_name
                 ):
                     final_room_list.append(room_full_path)
 

@@ -14,7 +14,7 @@ from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
 from Script.Design import game_time
 from Script.Modules.domains import action_info, activity, chara_profile, flags
-from Script.Modules.domains import inventory, wardrobe
+from Script.Modules.domains import inventory, wardrobe, scene_state
 from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
@@ -67,7 +67,7 @@ def handle_talk(character_id: int) -> None:
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             activity.position(character_id)
         )
-        for chara_id in cache.scene_data[scene_path_str].character_list:
+        for chara_id in scene_state.occupants(scene_path_str):
             # 要求对象是NPC，且没有跟随玩家
             if chara_id > 0 and handle_premise.handle_not_follow(chara_id):
                 # 每个NPC用独立的前提字典，避免复用玩家的缓存把sys_0(是否玩家)误判为1而刷屏
@@ -1182,7 +1182,7 @@ def code_text_to_draw_text(
     # 地点
     scene_path = activity.position(character_data.cid)
     scene_path_str = map_handle.get_map_system_path_str_for_list(scene_path)
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+    scene_data: game_type.Scene = constant.scene_data[scene_path_str]
     scene_name = scene_data.scene_name
 
     # 移动前地点
@@ -1191,9 +1191,9 @@ def code_text_to_draw_text(
         src_scene_path_str = map_handle.get_map_system_path_str_for_list(
             activity.behavior(0).move_src
         )
-        src_scene_data: game_type.Scene = cache.scene_data[src_scene_path_str]
+        src_scene_data = constant.scene_data[src_scene_path_str]
         src_scene_name = src_scene_data.scene_name
-        for chara_id in src_scene_data.character_list:
+        for chara_id in scene_state.occupants(src_scene_path_str):
             if chara_id:
                 src_random_chara_name = identity.of(chara_id).name
                 break
@@ -1204,18 +1204,16 @@ def code_text_to_draw_text(
         target_scene_path_str = map_handle.get_map_system_path_str_for_list(
             activity.behavior(character_data.cid).move_target
         )
-        target_scene_data: game_type.Scene = cache.scene_data[
-            target_scene_path_str
-        ]
+        target_scene_data = constant.scene_data[target_scene_path_str]
         target_scene_name = target_scene_data.scene_name
-        for chara_id in target_scene_data.character_list:
+        for chara_id in scene_state.occupants(target_scene_path_str):
             if chara_id:
                 tar_random_chara_name = identity.of(chara_id).name
                 break
 
     # 地点角色
     random_chara_name = ""
-    for chara_id in scene_data.character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         if chara_id:
             random_chara_name = identity.of(chara_id).name
             break

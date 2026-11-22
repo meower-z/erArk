@@ -10,6 +10,7 @@ import uuid
 from types import FunctionType
 from Script.Core import (
     cache_control,
+    constant,
     game_path_config,
     game_type,
     get_text,
@@ -35,7 +36,7 @@ from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import prison, production, recruit, roster, status
 from Script.Modules.domains import tallies, visitor, wardrobe, warehouse
 from Script.Modules.domains import chara_life, chara_profile, identity
-from Script.Modules.domains import npc_template, relations
+from Script.Modules.domains import npc_template, relations, scene_state
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -464,12 +465,9 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
     Return arguments:
     None
     """
-    scene_data = getattr(loaded_cache, "scene_data", None)
+    scene_data = vars(loaded_cache).get("scene_data")
     if isinstance(scene_data, dict):
-        loaded_cache.scene_data = _normalize_save_path_keys(scene_data)
-        for scene in loaded_cache.scene_data.values():
-            if hasattr(scene, "scene_path"):
-                scene.scene_path = _normalize_save_path(scene.scene_path)
+        vars(loaded_cache)["scene_data"] = _normalize_save_path_keys(scene_data)
 
     # 无壳卵生开关：本函数早于 playthrough.adopt_old_save 执行，且此时全局cache尚未被替换，只能从存档自身读：
     # 版本 12 之前的存档在缓存上，版本 12 起在换入的 GameState 里，更旧的存档在设置对象里
@@ -659,7 +657,6 @@ def install_save(save_id: str, version: int) -> None:
     version -- 存档的版本，旧存档为 0
     """
     from Script.Design import basement
-    from Script.System.Cooking_System import cooking
     from Script.System.Medical_System import medical_service
 
     # 创建一个新的类实例，这个实例会包含所有的默认键值
@@ -891,9 +888,6 @@ def install_save(save_id: str, version: int) -> None:
                     ):
                         facility.set_open(all_cid)
                         break
-    # 读到的存档里没有菜谱与地图，这里换上按数据文件新建的菜谱和游戏启动时载入的地图
-    loaded_dict["recipe_data"] = cooking.init_recipes()
-    loaded_dict["map_data"] = cache.map_data
     # 去掉书籍配置里没有的书与书籍类型的引用
     update_count += _drop_unknown_books(loaded_dict)
 
@@ -914,6 +908,7 @@ def install_save(save_id: str, version: int) -> None:
 
     # 更新游戏地图
     update_count += update_map(loaded_dict)
+    scene_state.adopt_old_save(loaded_dict)
 
     # 更新医疗系统存档结构
     medical_service.update_medical_save_data_structure(loaded_dict)
@@ -1001,87 +996,62 @@ def update_dict_with_default(
 
 def update_map(loaded_dict: dict[str, Any]) -> int:
     """
-    更新地图
+    读档时校验地图变动并迁回停留在无效场景中的角色。
+    若 loaded_dict 含有旧存档的 scene_data，则将其与 constant.scene_data 对比，统计新增场景及 scene_tag、scene_img、
+    room_area 差异。
+    存在差异时，若旧表含「贸易\\人气快餐开封菜」则把该处角色迁至「约翰老妈汉堡店」，累加已不存在的场景数并提示地图已更新。
+    随后逐一检查 loaded_dict["character_data"] 中全部角色的 activity.position，将不在 constant.scene_data
+    中的角色迁回同区块入口或 ["0", "0"]
     Keyword arguments:
-    loaded_dict -- 存档数据
+    loaded_dict -- 读档阶段加载的缓存字段字典
+    Return arguments:
+    int -- 统计到的场景差异项数与被迁回角色数之和
     """
 
     update_count = 0
-
-    # 遍历地图数据，如果该地图在缓存数据中但不在存档中，将其添加到存档中
-    change_map_flag = False
-    for key, value in cache.scene_data.items():
-        if key not in loaded_dict["scene_data"]:
-            loaded_dict["scene_data"][key] = value
+    saved = loaded_dict.get("scene_data") or {}
+    for key, value in constant.scene_data.items() if saved else ():
+        old = saved.get(key)
+        if old is None:
             update_count += 1
-            change_map_flag = True
-        if value.scene_tag != loaded_dict["scene_data"][key].scene_tag:
-            loaded_dict["scene_data"][key].scene_tag = value.scene_tag
-            update_count += 1
-            change_map_flag = True
-        if (
-            not hasattr(loaded_dict["scene_data"][key], "scene_img")
-            or value.scene_img != loaded_dict["scene_data"][key].scene_img
-        ):
-            loaded_dict["scene_data"][key].scene_img = value.scene_img
-            update_count += 1
-            change_map_flag = True
-        if (
-            not hasattr(loaded_dict["scene_data"][key], "room_area")
-            or value.room_area != loaded_dict["scene_data"][key].room_area
-        ):
-            loaded_dict["scene_data"][key].room_area = value.room_area
-            update_count += 1
-            change_map_flag = True
-    # 如果地图数据有变化，将地图路径也更新，同时删除不存在的地图数据
-    if change_map_flag:
+            continue
+        update_count += value.scene_tag != old.scene_tag
+        update_count += value.scene_img != getattr(old, "scene_img", None)
+        update_count += value.room_area != getattr(old, "room_area", None)
+    # 旧存档场景表与当前 constant.scene_data 有差异时，迁移更名场景内的角色，补计缺失场景数并提示地图已更新
+    if update_count:
         # 在2024.7月的版本中将人气快餐开封菜改为了约翰老妈汉堡店
-        if "贸易\\人气快餐开封菜" in loaded_dict["scene_data"]:
+        if "贸易\\人气快餐开封菜" in saved:
             for cid in loaded_dict["character_data"]:
                 position = activity.position(cid)
                 if position[-1] == "人气快餐开封菜":
                     activity.set_position(
                         cid, [*position[:-1], "约翰老妈汉堡店"]
                     )
-        for key, _value in loaded_dict["scene_data"].copy().items():
-            if key not in cache.scene_data:
-                del loaded_dict["scene_data"][key]
-                update_count += 1
+        update_count += len(saved.keys() - constant.scene_data.keys())
         now_draw = draw.LeftDraw()
         draw_text = _("\n游戏地图已更新\n")
         now_draw.text = draw_text
         now_draw.draw()
 
-    # 把站在已被删除的场景里的角色挪回来
-    # 地图改建会删掉旧场景（如教育区改建把原本的单间「教室」拆成了6间理论教室、3间实践教室与大礼堂），
-    # 但站在里面的角色，position 不会跟着改，此后每一次 cache.scene_data[该路径] 都会直接 KeyError
-    # 必须放在 change_map_flag 之外无条件执行：上面那个删除循环只在地图有变动的那一次读取里跑，
-    #    它把死场景删掉了却没管站在里面的人，之后每次读取 change_map_flag 都是假，
-    #    坏位置于是永远留在存档里，再也没有代码会去碰它
+    # 把站在不存在的场景里的角色挪回来
+    # 地图改建会移除旧场景（例如把单间「教室」拆成多间理论教室、实践教室与大礼堂），
+    # 站在里面的角色若 position 仍指向旧路径，后续访问 constant.scene_data[该路径] 会直接 KeyError
+    # 此处在 if update_count 之外无条件执行，因为当前存档不含 scene_data，且旧存档只多出已删除的场景时 update_count
+    # 也为 0
     move_back_count = 0
     for character_id in loaded_dict["character_data"]:
         position = activity.position(character_id)
         old_position_str = map_handle.get_map_system_path_str_for_list(position)
-        if old_position_str in cache.scene_data:
+        if old_position_str in constant.scene_data:
             continue
         # 回落到同一区块的入口——每个区块都有一个"0"号入口场景；整个区块都没了才回落到地图原点
         new_position = [position[0], "0"] if position else ["0", "0"]
         if (
             map_handle.get_map_system_path_str_for_list(new_position)
-            not in cache.scene_data
+            not in constant.scene_data
         ):
             new_position = ["0", "0"]
-        new_position_str = map_handle.get_map_system_path_str_for_list(
-            new_position
-        )
-        # 死场景可能还留在存档里（本次读取没触发上面的删除），要先把人从它的名单里摘掉
-        if old_position_str in loaded_dict["scene_data"]:
-            loaded_dict["scene_data"][old_position_str].character_list.discard(
-                character_id
-            )
-        loaded_dict["scene_data"][new_position_str].character_list.add(
-            character_id
-        )
         activity.set_position(character_id, new_position)
         update_count += 1
         move_back_count += 1

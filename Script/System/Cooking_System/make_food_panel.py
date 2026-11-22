@@ -1066,7 +1066,7 @@ class SeeFoodListByFoodNameDraw:
         from Script.Design import handle_premise
 
         recipe_id = int(self.food_cid)
-        food_recipe: game_type.Recipes = cache.recipe_data[recipe_id]
+        food_recipe = game_config.config_recipes[recipe_id]
 
         if not cooking.player_can_season(self.special_seasoning):
             py_cmd.clr_cmd()

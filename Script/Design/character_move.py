@@ -5,7 +5,7 @@ from Script.Design import map_handle, update
 from Script.UI.Moudle import draw, view
 from Script.Modules.domains import action_info, activity, flags, inventory, plan
 from types import FunctionType
-from Script.Modules.domains import chara_profile
+from Script.Modules.domains import chara_profile, scene_state
 from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
@@ -180,7 +180,7 @@ def character_move(
         return "end", [], [], 0
     now_position_str = map_handle.get_map_system_path_str_for_list(now_position)
     target_scene_str = map_handle.get_map_system_path_str_for_list(target_scene)
-    # target_scene_data = cache.scene_data[target_scene_str]
+    # target_scene_data = constant.scene_data[target_scene_str]
     # if character_data.name == "阿米娅":
     #     print(f"debug 阿米娅，now_position_str = {now_position_str},target_scene_str = {target_scene_str}")
     if (
@@ -199,7 +199,7 @@ def character_move(
         )
         # 玩家移动，且目标地点锁门时
         if character_id == 0 and access_type == "door_lock":
-            now_scene_data = cache.scene_data[target_scene_str]
+            now_scene_data = constant.scene_data[target_scene_str]
             from Script.System.Dormitory_System.common import (
                 check_have_move_target_room_key,
             )
@@ -214,7 +214,7 @@ def character_move(
                     "\n  ●你拿出了该楼层的复制钥匙，悄悄打开了门\n\n"
                 )
                 info_draw.draw()
-                now_scene_data.close_flag = 0
+                scene_state.set_close_flag(target_scene_str, 0)
                 access_type = "open"
             # 如果这是宿舍或客房，且玩家持有一次性钥匙则消耗钥匙并解锁
             elif (
@@ -227,7 +227,7 @@ def character_move(
                 )
                 info_draw.draw()
                 inventory.add_item(character_id, 152, -1)
-                now_scene_data.close_flag = 0
+                scene_state.set_close_flag(target_scene_str, 0)
                 access_type = "open"
         # 其他不可进入情况
         if access_type not in ["open", "private"]:
@@ -316,7 +316,7 @@ def private_move_outcome(
         # 如果是因为想逆推
         if flags.get(character_id, "npc_masturebate_for_player"):
             # 如果门没关的话，就依然进去
-            if cache.scene_data[target_scene_str].close_flag == 0:
+            if scene_state.close_flag(target_scene_str) == 0:
                 return True, False, ""
             # 超过一个小时就放弃逆推，否则门外等待
             if wait_time >= 60:

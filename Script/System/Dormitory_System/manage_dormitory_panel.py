@@ -951,10 +951,10 @@ class Manage_Dormitory_Panel:
             "Dormitory_Manager_Room", []
         ):
             return True
-        if dormitory_path in cache.scene_data:
+        if dormitory_path in constant.scene_data:
             return (
                 "Dormitory_Manager_Room"
-                in cache.scene_data[dormitory_path].scene_tag
+                in constant.scene_data[dormitory_path].scene_tag
             )
         return False
 
@@ -1005,6 +1005,6 @@ class Manage_Dormitory_Panel:
         """
         if dormitory_path == "":
             return _("暂无")
-        if dormitory_path not in cache.scene_data:
+        if dormitory_path not in constant.scene_data:
             return dormitory_path.split(os.sep)[-1]
-        return cache.scene_data[dormitory_path].scene_name
+        return constant.scene_data[dormitory_path].scene_name

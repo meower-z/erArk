@@ -25,7 +25,7 @@ from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info, activity
 from Script.Modules.domains import dirty, flags, h_state, history, hypnosis
 from Script.Modules.domains import needs, player_ability, wardrobe
-from Script.Modules.domains import identity
+from Script.Modules.domains import identity, scene_state
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -200,7 +200,6 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
 
     # 如果角色不在无意识H状态，则直接返回
     if flags.get(target_data.cid, "unconscious_h") == 0:
@@ -243,7 +242,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
             datetime.datetime(1, 1, 1),
         )
         # 结算交互对象以外的其他角色，遍历在角色列表的副本上进行，结算中囚犯干员会被移回监牢而改动该列表
-        for chara_id in scene_data.character_list.copy():
+        for chara_id in scene_state.occupants(scene_path_str):
             # 如果是玩家，则跳过
             if chara_id == character_id:
                 continue
@@ -285,7 +284,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
     # 否则对象只等1分钟，地点开门；双方H结构体由排上的结束无意识H在补体力气力上限之后重置
     else:
         wait_minutes = 1
-        scene_data.close_flag = 0
+        scene_state.set_close_flag(scene_path_str, 0)
     plan_queue.plan_next(
         target_data.cid,
         constant.Behavior.WAIT,

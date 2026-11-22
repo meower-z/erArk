@@ -12,7 +12,7 @@ from Script.Core import (
 from Script.Design import attr_calculation
 from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw
-from Script.Config import normal_config
+from Script.Config import normal_config, game_config
 from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
@@ -47,7 +47,7 @@ def run_cook_question_flow(
     }
     quality = base_quality
     max_quality = cooking.get_max_food_quality()
-    food_name = cache.recipe_data[food_id].name
+    food_name = game_config.config_recipes[food_id].name
     question_lib = cooking.get_food_cook_questions(food_id)
     # 特殊调味对应的阶段替换规则（如精液替换调味/装盘阶段、药物替换调味阶段）
     stage_override = cooking.get_special_seasoning_question_stage(

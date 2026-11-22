@@ -28,6 +28,7 @@ from Script.Modules.domains import abilities, action_info, activity, dirty
 from Script.Modules.domains import entertainment, facility, flags, h_meters
 from Script.Modules.domains import h_state, modes, needs, player_ability
 from Script.Modules.domains import playthrough, pregnancy, prison, identity
+from Script.Modules.domains import scene_state
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -738,10 +739,9 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
 
     # 遍历玩家当前场景内所有睡眠中的NPC
-    for sleeper_id in list(scene_data.character_list):
+    for sleeper_id in list(scene_state.occupants(scene_path_str)):
         # 上一个被吵醒的角色可能已经把玩家赶出了本场景，此时不再继续结算，避免玩家被连续推开多个场景
         if (
             map_handle.get_map_system_path_str_for_list(

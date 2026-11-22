@@ -36,7 +36,7 @@ from Script.Modules.domains import (
     flags,
 )
 from Script.Modules.domains import h_state, needs, player_collection, roster
-from Script.Modules.domains import relations
+from Script.Modules.domains import relations, scene_state
 from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
@@ -779,7 +779,7 @@ def _start_teach(who: int, chosen: intent.Intent) -> None:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(who)
     )
-    for chara_id in cache.scene_data[scene_path_str].character_list:
+    for chara_id in scene_state.occupants(scene_path_str):
         if chara_id == who:
             continue
         # 只拉学生岗、不在 H / 睡觉 / 翘课 / 休息中的人，已经在听别的教师讲课的不抢
@@ -907,7 +907,7 @@ def handle_hypnosis_one() -> None:
         activity.position(0)
     )
     door: dict[str, object] = {}
-    if cache.scene_data[now_scene_str].close_flag == 0:
+    if scene_state.close_flag(now_scene_str) == 0:
         door = ask_close_door()
     chara_handle_instruct_common_settle(
         constant.Behavior.HYPNOSIS_ONE, args=door
@@ -928,8 +928,7 @@ def handle_hypnosis_all() -> None:
         activity.position(0)
     )
     # 计算当前理智值是否足够进行催眠
-    scene_data: game_type.Scene = cache.scene_data[now_scene_str]
-    now_npc_num = len(scene_data.character_list) - 1
+    now_npc_num = len(scene_state.occupants(now_scene_str)) - 1
     sanity_point_cost = 10 + 10 * now_npc_num
     if needs.of(character_data.cid)["sanity"] < sanity_point_cost:
         now_draw = draw.WaitDraw()
@@ -940,7 +939,7 @@ def handle_hypnosis_all() -> None:
         now_draw.draw()
         return
     door: dict[str, object] = {}
-    if cache.scene_data[now_scene_str].close_flag == 0:
+    if scene_state.close_flag(now_scene_str) == 0:
         door = ask_close_door()
     chara_handle_instruct_common_settle(
         constant.Behavior.HYPNOSIS_ALL, args=door
@@ -1337,10 +1336,12 @@ def _close_door(who: int, close: bool) -> None:
     """
     action_info.set(who, "ask_close_door_flag", True)
     if close:
-        now_scene_data = cache.scene_data[
+        now_scene_data = constant.scene_data[
             map_handle.get_map_system_path_str_for_list(activity.position(who))
         ]
-        now_scene_data.close_flag = now_scene_data.close_type
+        scene_state.set_close_flag(
+            now_scene_data.scene_path, now_scene_data.close_type
+        )
 
 
 @start_part("door")
@@ -1354,11 +1355,11 @@ def _set_door(who: int, chosen: intent.Intent) -> None:
     now_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(who)
     )
-    now_scene_data = cache.scene_data[now_scene_str]
+    now_scene_data = constant.scene_data[now_scene_str]
     if chosen["args"]["lock"]:
-        now_scene_data.close_flag = now_scene_data.close_type
+        scene_state.set_close_flag(now_scene_str, now_scene_data.close_type)
     else:
-        now_scene_data.close_flag = 0
+        scene_state.set_close_flag(now_scene_str, 0)
 
 
 @add_instruct(constant.Instruct.CHARA_DIY_INSTRUCT)
@@ -1706,10 +1707,10 @@ def _start_do_h(who: int, chosen: intent.Intent) -> None:
         activity.position(who)
     )
     # 如果没关门，则自动将门关上
-    if cache.scene_data[now_scene_str].close_flag == 0:
-        cache.scene_data[now_scene_str].close_flag = cache.scene_data[
-            now_scene_str
-        ].close_type
+    if scene_state.close_flag(now_scene_str) == 0:
+        scene_state.set_close_flag(
+            now_scene_str, constant.scene_data[now_scene_str].close_type
+        )
         now_draw_text += _("已自动关门\n")
     flags.set(target_data.cid, is_follow=0)
     action_info.set(target_data.cid, "last_conscious_h_time", game_time.now())
@@ -1773,7 +1774,7 @@ def handle_sleep_obscenity() -> None:
     now_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(0)
     )
-    if cache.scene_data[now_scene_str].close_flag == 0:
+    if scene_state.close_flag(now_scene_str) == 0:
         door = ask_close_door()
         if door:
             _close_door(0, bool(door[CLOSE_DOOR]))
@@ -1818,9 +1819,9 @@ def handle_unconscious_h(type_name: str = "") -> None:
         activity.position(0)
     )
     door: dict[str, object] = {}
-    if cache.scene_data[
+    if scene_state.close_flag(
         now_scene_str
-    ].close_flag == 0 and handle_premise.handle_time_stop_off(0):
+    ) == 0 and handle_premise.handle_time_stop_off(0):
         door = ask_close_door()
     chara_handle_instruct_common_settle(
         constant.Behavior.H,
@@ -1951,9 +1952,7 @@ def _group_members(character_id: int) -> list[int]:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
-    return [
-        c for c in cache.scene_data[scene_path_str].character_list if c != 0
-    ]
+    return [c for c in scene_state.occupants(scene_path_str) if c != 0]
 
 
 def _judged_group_sex(behavior_id: str, character_id: int) -> str:

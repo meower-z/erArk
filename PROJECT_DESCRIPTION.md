@@ -151,7 +151,7 @@ Script/
 │   ├── normal_config.py    # config.ini -> config_normal
 │   ├── game_config.py      # data/*.json -> 运行时配置字典/对象
 │   ├── character_config.py # Character.json -> NpcTem 模板
-│   ├── map_config.py       # 地图 JSON -> cache.scene_data/cache.map_data
+│   ├── map_config.py       # 地图 JSON -> constant.scene_data/constant.map_data
 │   └── config_def.py       # 【自动生成】每张 CSV 一个带中文注释的类
 ├── Core/                   # 引擎层
 │   ├── cache_control.py    # 全局 cache 句柄
@@ -404,7 +404,7 @@ Script/
 - **渲染/输入**：`input_cache`
 - **角色世界**：（角色身份表不在缓存，在 GameState 键 `identity.characters`，由 `Modules/domains/identity.py` 读写）
 - **时间**：`game_time`, `pre_game_time`
-- **地图**：`map_data`, `scene_data`, `collect_position_list`
+- **地图**：`collect_position_list`（静态地图表与场景表在 `constant.map_data`、`constant.scene_data`，门锁状态在 GameState 全局键 `scene.closed`，由 `Modules/domains/scene_state.py` 读写，场景内角色由 `scene_state.occupants` 按位置与在编名册实时算出）
 - **行为循环**：`over_behavior_character`
 - **基地/世界**：`rhodes_island`, `ai_setting`
 - **不在缓存里**：界面临时状态（`now_panel_id`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`；全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，存在 settings.json；在编/禁用/已用姓名名册（`roster.active`、`roster.forbidden`、`roster.names`，由 `Modules/domains/roster.py` 读写）、局内生成的角色模板（`roster.npc_templates`，由 `Modules/domains/npc_template.py` 读写，数据文件里的静态模板留在 `character_config.character_tem_list`）、本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件与指令记录（`events.triggered`、`events.triggered_today`、`log.instructions`）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写。角色的十项活动（状态、之前的行为、当前行为、二段行为、必须结算与必须显示的二段行为id列表、事件、位置、交互对象、是否死亡）在 GameState 的角色键 `activity.*` 里，用 `Modules/domains/activity.py` 读写

@@ -432,16 +432,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                     old_to_new_id.get(fid, fid) for fid in rel.firend_id_list
                 ]
 
-    # 5.7 场景数据中的角色列表
-    if "scene_data" in loaded_dict:
-        for _scene_name, scene in loaded_dict["scene_data"].items():
-            if hasattr(scene, "character_list"):
-                old_list = scene.character_list.copy()
-                scene.character_list = set()
-                for old_id in old_list:
-                    scene.character_list.add(old_to_new_id.get(old_id, old_id))
-
-    # 5.8 cache级别的角色ID引用
+    # 5.7 cache级别的角色ID引用
     # forbidden_npc_id
     if "forbidden_npc_id" in loaded_dict:
         old_forbidden = loaded_dict["forbidden_npc_id"].copy()
@@ -458,7 +449,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
             loaded_dict["old_character_id"], loaded_dict["old_character_id"]
         )
 
-    # 5.9 achievement中的角色ID引用
+    # 5.8 achievement中的角色ID引用
     if "achievement" in loaded_dict:
         ach = loaded_dict["achievement"]
 
@@ -879,16 +870,7 @@ def migrate_character_replacement(
         # 关押区囚犯名册
         prison.remap(old_to_new_id_map)
 
-    # ========== 9. 更新场景数据中的角色列表 ==========
-    if "scene_data" in loaded_dict:
-        for _scene_name, scene in loaded_dict["scene_data"].items():
-            if hasattr(scene, "character_list") and scene.character_list:
-                old_list = scene.character_list.copy()
-                scene.character_list = set()
-                for oid in old_list:
-                    scene.character_list.add(old_to_new_id_map.get(oid, oid))
-
-    # ========== 10. 更新其他cache级别的角色ID引用 ==========
+    # ========== 9. 更新其他cache级别的角色ID引用 ==========
     # forbidden_npc_id
     if "forbidden_npc_id" in loaded_dict and loaded_dict["forbidden_npc_id"]:
         old_forbidden = loaded_dict["forbidden_npc_id"].copy()
@@ -905,7 +887,7 @@ def migrate_character_replacement(
             loaded_dict["old_character_id"], loaded_dict["old_character_id"]
         )
 
-    # ========== 11. 更新achievement中的角色ID引用 ==========
+    # ========== 10. 更新achievement中的角色ID引用 ==========
     if "achievement" in loaded_dict:
         ach = loaded_dict["achievement"]
 
@@ -927,7 +909,7 @@ def migrate_character_replacement(
                         old_to_new_id_map.get(oid, oid) for oid in record_list
                     ]
 
-    # ========== 12. 删除旧角色数据 ==========
+    # ========== 11. 删除旧角色数据 ==========
     for old_id in old_to_new_id_map.keys():
         if old_id in character_data:
             del character_data[old_id]
@@ -1774,10 +1756,6 @@ def _take_young_child_off_line(
     count = 0
     if not young_child_id_set:
         return count
-    for scene in loaded_dict["scene_data"].values():
-        for character_id in young_child_id_set & set(scene.character_list):
-            scene.character_list.remove(character_id)
-            count += 1
     if "npc_id_got" in loaded_dict:
         for character_id in young_child_id_set & set(loaded_dict["npc_id_got"]):
             loaded_dict["npc_id_got"].remove(character_id)

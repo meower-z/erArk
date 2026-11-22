@@ -25,7 +25,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Kernel import core
-from Script.Modules.domains import h_state
+from Script.Modules.domains import h_state, scene_state
 from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, realtime_settle
@@ -148,9 +148,7 @@ def scene_characters(scene_data: game_type.Scene) -> list[int]:
     Return arguments:
     list -- 角色id
     """
-    character_set = scene_data.character_list.copy()
-    character_set.discard(0)
-    return list(character_set)
+    return [c for c in scene_state.occupants(scene_data.scene_path) if c != 0]
 
 
 def settle_player_target() -> None:
@@ -163,7 +161,7 @@ def settle_player_target() -> None:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(0)
     )
-    character_list = scene_characters(cache.scene_data[scene_path_str])
+    character_list = scene_characters(constant.scene_data[scene_path_str])
     target = activity.target(0)
     if not character_list:
         activity.set_target(0, 0)
@@ -189,7 +187,7 @@ def target_left(character_id: int, game: core.GameState) -> bool:
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id, game)
     )
-    return target not in cache.scene_data[scene_path_str].character_list
+    return target not in scene_state.occupants(scene_path_str)
 
 
 def judge_character_status(character_id: int) -> int:
