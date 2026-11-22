@@ -15,7 +15,7 @@ from Script.Core.num import Num
 from Script.Design import game_time
 from Script.Config import game_config
 from Script.Modules.domains import abilities, facility, hypnosis, chara_life
-from Script.Modules.domains import relations
+from Script.Modules.domains import npc_template, relations
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -39,7 +39,7 @@ def get_system_setting_zero() -> game_type.System_Setting:
         empty_system_setting.draw_setting[system_setting] = (
             drawing_setting_data.default_value
         )
-    for __, tem_data in cache.npc_tem_data.items():
+    for tem_data in npc_template.table().values():
         chara_adv_id = tem_data.AdvNpc
         empty_system_setting.character_text_version[chara_adv_id] = 1
     return empty_system_setting

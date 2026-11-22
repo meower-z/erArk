@@ -12,7 +12,7 @@ from Script.Design import attr_calculation, basement, game_time
 from Script.Kernel import core
 from Script.Modules.domains import abilities, country, physical_exam
 from Script.Modules.domains import player_ability, playthrough, prison, roster
-from Script.Modules.domains import visitor, warehouse, work
+from Script.Modules.domains import npc_template, visitor, warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
@@ -38,17 +38,14 @@ def creator_character_panel() -> None:
     """创建角色面板。建角色写的 GameState 数据记在以当前状态为底的缓冲区里，换成效果后交给 kernel_state.new_game"""
     from Script.System.Medical_System import medical_service
 
-    # 清掉同一进程里上一局残留的角色与已获得集合，并从干净的全局配置池重新拷贝一份角色模板：
-    #    上一局生的女儿，其模板会随 born_new_character 留在运行时的 npc_tem_data 里、角色也留在
-    #    character_data 里，而标题画面开新游戏并不重置这些运行时数据。不清的话 init_character_list
-    #    会把上一局的女儿一并实例化进这一局，从而触发本局并不存在的女儿的相关事件（跨存档 / 跨局泄漏）
+    # 清掉同一进程里上一局留在 cache.character_data 中的角色，避免它们混入新游戏。
+    # 局内生成的角色模板存在内核状态里。紧接着的 kernel_state.reset_clock 会把内核换成空状态，因此无需另清模板。
     cache.character_data.clear()
     # 时钟回到开局：建角色时读到的游戏时间都是开局时刻
     clock = kernel_state.first_clock()
     kernel_state.reset_clock(clock)
     with working.based_on(core.state()) as buffer:
         roster.clear_active()
-        character_handle.init_character_tem()
         cache.character_data[0] = game_type.Character()
         character_handle.init_character_list()
         while 1:
@@ -372,7 +369,7 @@ class Character_FirstNPC:
         """ 是否显示口上干员选择面板 """
         self.show_special_chara_handle_panel = False
         """ 是否显示特殊干员选择面板 """
-        self.id_list = list(cache.npc_tem_data.keys())
+        self.id_list = npc_template.ids()
         """ 当前显示的NPC列表 """
         self.talk_character_list: list[int] = []
         """ 口上干员列表 """
@@ -824,7 +821,7 @@ class Character_FirstNPC:
 
     def select_all(self) -> None:
         """一键全选"""
-        for adv_id in cache.npc_tem_data.keys():
+        for adv_id in npc_template.ids():
             if not roster.has(adv_id):
                 roster.add(adv_id)
 
@@ -833,9 +830,7 @@ class Character_FirstNPC:
         self.reset_select()
         # 获取当前未选择的NPC
         not_got_npc = [
-            adv_id
-            for adv_id in cache.npc_tem_data.keys()
-            if not roster.has(adv_id)
+            adv_id for adv_id in npc_template.ids() if not roster.has(adv_id)
         ]
         # 随机选择三个，然后加到列表中
         random_npc = random.sample(not_got_npc, 3)
@@ -854,7 +849,7 @@ class Character_FirstNPC:
         self.age_filter_flag = 0
         self.chest_filter_flag = 0
         self.race_filter_flag = 0
-        self.id_list = list(cache.npc_tem_data.keys())
+        self.id_list = npc_template.ids()
         self.prepare_filter()
         self.show_normal_handle_panel = False
         self.show_talk_chara_handle_panel = True
@@ -878,7 +873,7 @@ class Character_FirstNPC:
             self.talk_character_list = []
         # 退出筛选模式
         else:
-            self.id_list = list(cache.npc_tem_data.keys())
+            self.id_list = npc_template.ids()
         self.name_filter_flag = not self.name_filter_flag
         self.show_normal_handle_panel = True
 
@@ -886,7 +881,7 @@ class Character_FirstNPC:
         """胸围筛选"""
         self.chest_filter_flag = (self.chest_filter_flag + 1) % 6
         if self.chest_filter_flag == 0:
-            self.id_list = list(cache.npc_tem_data.keys())
+            self.id_list = npc_template.ids()
         elif self.chest_filter_flag == 1:
             self.id_list = self.chest_filter_id_dict[_("绝壁")]
         elif self.chest_filter_flag == 2:
@@ -905,7 +900,7 @@ class Character_FirstNPC:
         """外表年龄筛选"""
         self.age_filter_flag = (self.age_filter_flag + 1) % 7
         if self.age_filter_flag == 0:
-            self.id_list = list(cache.npc_tem_data.keys())
+            self.id_list = npc_template.ids()
         else:
             # 筛选名单按素质名登记（见上面建名单处），这里同样从素质id取名，素质改名时不会对不上
             age_talent_id = [102, 103, 104, 105, 106, 107][
@@ -924,7 +919,7 @@ class Character_FirstNPC:
             game_config.config_race
         )
         if self.race_filter_flag == 0:
-            self.id_list = list(cache.npc_tem_data.keys())
+            self.id_list = npc_template.ids()
         else:
             now_cid = self.race_filter_flag
             race_name = game_config.config_race[now_cid].name
@@ -948,7 +943,7 @@ class Character_FirstNPC:
         self.age_filter_flag = 0
         self.chest_filter_flag = 0
         self.race_filter_flag = 0
-        self.id_list = list(cache.npc_tem_data.keys())
+        self.id_list = npc_template.ids()
         self.talk_character_list = []
         # 去掉特殊干员
         self.special_chara_list = []

@@ -5,9 +5,8 @@
 其中一部分字段能由数据文件或别的状态算出，读档时 save_handle.install_save 重新算出它们。
 其余是类里没有声明的字段名，旧存档里可能还存着它们。
 dump 写缓存文件时略过这些字段。别处的 pickle（如 draft.py 的复制）照常带上它们。
-dump 还把角色模板里与 character_config.character_tem_list 是同一个对象的条目写成 None。
-游戏里生成的模板照常写入，如游戏中出生的孩子的模板。
-restore 在读档解开缓存文件之后运行，它补全 dump 略过的内容。
+restore 在读档解开缓存文件之后运行，删掉旧存档留下的 UNSAVED 字段，
+并把版本 23 之前存档的 npc_tem_data 里存成 None 的条目换回配置模板或删掉。
 fill_defaults 在读档补默认值之前运行，dump 略过的字段因此不计入跨版本更新的条数。
 本模块不登记行动、事件或规则，也不在 LOAD_ORDER 里。
 """
@@ -47,18 +46,12 @@ def _reduce(obj: Any) -> tuple[Any, ...]:
         return reduced
     names = UNSAVED[type(obj)]
     state = {k: v for k, v in saved.items() if k not in names}
-    templates = state.get("npc_tem_data")
-    if type(obj) is game_type.Cache and isinstance(templates, dict):
-        config = character_config.character_tem_list
-        state["npc_tem_data"] = {
-            k: None if v is config.get(k) else v for k, v in templates.items()
-        }
     return (func, args, state, *rest)
 
 
 def dump(value: object, file: IO[bytes]) -> None:
     """
-    用 pickle 把 value 写进 file。UNSAVED 列出的字段不写。角色模板里与配置是同一个对象的条目写成 None。
+    用 pickle 把 value 写进 file，UNSAVED 列出的字段不写。
     Keyword arguments:
     value -- 要写的对象，存档时是游戏缓存
     file -- 以二进制写入方式打开的文件
@@ -73,8 +66,8 @@ def dump(value: object, file: IO[bytes]) -> None:
 
 def restore(loaded: game_type.Cache) -> None:
     """
-    补全刚解开的缓存。删掉缓存、rhodes_island 和每个角色上旧存档带来的 UNSAVED 字段。
-    写成 None 的角色模板换回配置的模板。配置里没有该键的条目直接删掉。
+    处理刚解开的缓存。删掉缓存、rhodes_island 和每个角色上旧存档带来的 UNSAVED 字段。
+    版本 23 之前的存档带着 npc_tem_data 时，其中为 None 的条目换回配置的模板，配置里没有该键的条目直接删掉。
     Keyword arguments:
     loaded -- 刚解开的游戏缓存
     """

@@ -16,11 +16,11 @@ from Script.Design import (
     basement,
     game_time,
 )
-from Script.Config import game_config, character_config, normal_config
+from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, activity, facility, flags, needs
 from Script.Modules.domains import player_collection, playthrough, roster
 from Script.Modules.domains import tallies, visitor, wardrobe, chara_key
-from Script.Modules.domains import chara_life, relations
+from Script.Modules.domains import chara_life, npc_template, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -32,7 +32,7 @@ def init_character_list() -> None:
     """
     初始生成所有npc数据
     """
-    for adv_id, now_npc_data in cache.npc_tem_data.items():
+    for adv_id, now_npc_data in npc_template.table().items():
         # print("adv_id=",adv_id,". now_npc_data:",now_npc_data)
         init_character(adv_id, now_npc_data, collect_reset=False)
 
@@ -131,17 +131,6 @@ def first_NPC_work() -> None:
     basement.update_work_people()
 
 
-def init_character_tem() -> None:
-    """
-    初始化角色模板数据
-    """
-    # 必须浅拷贝而非直接引用 character_config.character_tem_list：后者是模块级全局配置池，
-    #    进程内持久且跨存档 / 跨周目共享，而 born_new_character 会往 cache.npc_tem_data 写运行时
-    #    生成的女儿模板（adv 9000~9999）。直接共享引用会把某一局的女儿写进全局池，使别的存档 /
-    #    新开的周目也能看到，进而触发本存档并不存在的女儿的相关事件（跨存档泄漏）
-    cache.npc_tem_data = dict(character_config.character_tem_list)
-
-
 def create_empty_character_tem() -> game_type.NpcTem:
     """
     生成空的角色模板数据
@@ -204,7 +193,7 @@ def born_new_character(mother_id: int, child_name: str) -> int:
     now_tem.Hp = random.randint(1000, 2000)
     now_tem.Mp = random.randint(1000, 2000)
     now_id = now_tem.AdvNpc  # 使用adv作为id
-    cache.npc_tem_data[now_id] = now_tem
+    npc_template.add(now_tem)
     # 给父母加上该孩子的社会关系
     child_id_list = relations.child_id_list(0)
     child_id_list.append(now_id)
@@ -216,7 +205,7 @@ def born_new_character(mother_id: int, child_name: str) -> int:
 
     first_record_handle.record_first_special_record(mother_id, 2, child_name)
     # roster.add(now_id)
-    init_character(now_id, cache.npc_tem_data[now_id])
+    init_character(now_id, now_tem)
     return now_id
 
 

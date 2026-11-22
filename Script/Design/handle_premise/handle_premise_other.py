@@ -13,7 +13,7 @@ from Script.Modules.domains import abilities, action_info, activity, chara_life
 from Script.Modules.domains import chara_profile, facility, flags, growth
 from Script.Modules.domains import history, modes, needs, physical_exam
 from Script.Modules.domains import player_ability, player_collection, pregnancy
-from Script.Modules.domains import relations, status, visitor
+from Script.Modules.domains import npc_template, relations, status, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -909,7 +909,7 @@ def handle_flag_baby_exist(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    for adv_id in cache.npc_tem_data.keys():
+    for adv_id in npc_template.ids():
         chara_id = adv_id
         if chara_id in cache.character_data:
             if abilities.talent(chara_id)[101]:

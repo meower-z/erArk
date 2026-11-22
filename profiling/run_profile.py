@@ -248,14 +248,13 @@ def new_game_minimal_init() -> None:
     from Script.Config import game_config, normal_config
     from Script.System.Dormitory_System import common as dormitory_common
     from Script.Modules.domains import physical_exam, playthrough, roster
-    from Script.Modules.domains import warehouse
+    from Script.Modules.domains import npc_template, warehouse
 
     cache = cache_control.cache
 
     # 1. 创建玩家角色
     cache.character_data[0] = game_type.Character()
     # 初始化玩家基础属性
-    character_handle.init_character_tem()  # 从全局配置池拷贝 NPC 模板
     character_handle.init_character_list()  # 按模板建出各角色
     character.init_attr(0)
 
@@ -281,7 +280,7 @@ def new_game_minimal_init() -> None:
 
     base_adv_set = core_constant.first_NPC_adv_set
 
-    for cid, npc_tem in cache.npc_tem_data.items():
+    for cid, npc_tem in npc_template.table().items():
         # 简化：如果模板的干员编号在基础集合里，就确保加入 npc_id_got
         try:
             adv = getattr(npc_tem, "AdvNpc", None)

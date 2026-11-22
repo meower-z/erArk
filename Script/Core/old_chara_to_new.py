@@ -6,7 +6,7 @@ import datetime
 from types import FunctionType
 from Script.Core import cache_control, constant, game_path_config, game_type
 from Script.Core import get_text
-from Script.Config import game_config
+from Script.Config import character_config, game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import Any, TypedDict
 from Script.Design import game_time
@@ -521,11 +521,11 @@ def migrate_character_replacement(
             continue
 
         # 检查新角色模板是否存在于当前游戏配置中
-        if new_id not in cache.npc_tem_data:
+        if new_id not in character_config.character_tem_list:
             continue
 
         old_character = character_data[old_id]
-        new_tem = cache.npc_tem_data[new_id]
+        new_tem = character_config.character_tem_list[new_id]
         old_name = old_character.name
         new_name = new_tem.Name
 
@@ -763,7 +763,7 @@ def migrate_character_replacement(
         # ========== 5. 更新npc_tem_data ==========
         if old_id in npc_tem_data:
             del npc_tem_data[old_id]
-        npc_tem_data[new_id] = cache.npc_tem_data[new_id]
+        npc_tem_data[new_id] = new_tem
 
         # 记录迁移日志
         migration_log.append((old_name, new_name, old_id, new_id))
@@ -952,8 +952,8 @@ def update_tem_character(loaded_dict: dict[str, Any]) -> int:
 
     update_count = 0
 
-    # cache.npc_tem_data 现在是Dict，直接使用
-    cache_dict = dict(cache.npc_tem_data)
+    # 浅拷贝静态角色模板字典，供下方循环删去已匹配项并补入新增模板，不改动全局配置
+    cache_dict = dict(character_config.character_tem_list)
 
     # 更新loaded_dict["npc_tem_data"]，用新的角色预设属性代替旧的属性
     for adv_id, now_npc_tem_data in list(loaded_dict["npc_tem_data"].items()):

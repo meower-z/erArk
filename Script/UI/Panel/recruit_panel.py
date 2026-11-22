@@ -15,7 +15,7 @@ from Script.Modules.save_load import reset
 
 import random
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities, relations
+from Script.Modules.domains import abilities, npc_template, relations
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -121,7 +121,7 @@ def find_recruitable_npc() -> list[int]:
             diplomat_id_set.add(post["diplomat"])
     pending = recruit.pending()
 
-    for adv_id, tem_data in cache.npc_tem_data.items():
+    for adv_id, tem_data in npc_template.table().items():
         chara_id = adv_id
         # 跳过玩家
         if chara_id == 0:

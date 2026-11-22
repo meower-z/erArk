@@ -35,6 +35,7 @@ from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import prison, production, recruit, roster, status
 from Script.Modules.domains import tallies, visitor, wardrobe, warehouse
 from Script.Modules.domains import chara_life, chara_profile, relations
+from Script.Modules.domains import npc_template
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -649,11 +650,11 @@ def input_load_save(save_id: str) -> None:
 
 def install_save(save_id: str, version: int) -> None:
     """
-    读档的 Reset 步骤：装入文件 "1" 并修补旧存档。版本 0 补生理需求与供电策略，23 个 adopt 搬罗德岛属性（18 个计数）。
-    ID 迁移之后 flags、action_info、player_ability、player_collection 搬四项；修编号后、替换前 abilities（计数）与
-    inventory、wardrobe、body_manage、status 搬四张表及道具、食物、服装、身体管理、状态值；替换先调 chara_key.lift，
-    重建前 relations、chara_life、chara_profile 搬角色键；重建后 adopt_pickled、activity（计数）、pregnancy、growth 搬
-    数值、活动、妊娠、养成，h_meters、h_state、dirty、hypnosis、first_record、roster 与周目等七模块计数；最后收尾会话。
+    读档的 Reset 步骤：解开文件 "1" 后调 npc_template.lift，版本 0 补默认值，23 个 adopt 搬罗德岛属性（18 计数）。
+    ID 迁移后 flags、action_info、player_ability、player_collection 搬四项。修编号后 abilities（计数）与 inventory、
+    wardrobe、body_manage、status 搬入。替换先调 chara_key.lift，重建前搬 relations、chara_life、chara_profile。
+    重建后 adopt_pickled、npc_template（存局内模板并删 6/7 号素质，计数）、activity（计数）、pregnancy、growth 搬入。
+    再由 h_meters、h_state、dirty、hypnosis、first_record、roster 与周目等七模块计数，最后收尾会话。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -668,7 +669,7 @@ def install_save(save_id: str, version: int) -> None:
     update_count = 0
 
     # 从存档中加载字典
-    loaded_dict = load_save(save_id).__dict__
+    loaded_dict = npc_template.lift(load_save(save_id).__dict__)
     if version == 0:
         upgrade.fill_v0_defaults(loaded_dict)
     upgrade.adopt_power(loaded_dict)
@@ -781,9 +782,7 @@ def install_save(save_id: str, version: int) -> None:
             new_character_data, key
         )
         # 当前角色模板数据（使用Dict方式访问，兼容新旧存档）
-        tem_character = loaded_dict["npc_tem_data"].get(
-            new_character_data.cid, None
-        )
+        tem_character = loaded_dict["npc_tem_data"].get(new_character_data.cid)
         if tem_character is None:
             # 如果找不到，尝试用adv
             tem_character = loaded_dict["npc_tem_data"].get(
@@ -883,6 +882,7 @@ def install_save(save_id: str, version: int) -> None:
     if version == 0:
         upgrade.adopt_v0(loaded_dict)
     upgrade.adopt_pickled(loaded_dict)
+    update_count += npc_template.adopt_old_save(loaded_dict)
     update_count += activity.adopt_old_save(loaded_dict)
     pregnancy.adopt_old_save(loaded_dict, version)
     growth.adopt_old_save(loaded_dict, version)

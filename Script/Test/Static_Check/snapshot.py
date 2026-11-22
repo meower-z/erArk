@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 # 要么是纯渲染/绘制用的中间缓存（不反映游戏逻辑状态，只会让快照膨胀并干扰阅读）
 EXCLUDED_TOP_LEVEL_FIELDS = {
     "map_data",  # 地图静态数据
-    "npc_tem_data",  # npc模板静态数据
     "random_npc_list",  # 旧存档读档后会留在cache上的随机npc数据，Cache本身不声明它
     "recipe_data",  # 菜谱静态数据
 }

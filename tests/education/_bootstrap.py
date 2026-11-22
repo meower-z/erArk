@@ -106,7 +106,6 @@ from Script.Config import map_config  # noqa: E402
 map_config.init_map_data()
 from Script.Design import (  # noqa: E402
     attr_calculation,
-    character_handle,
     game_time,
     handle_premise,
     map_handle,
@@ -138,7 +137,6 @@ from Script.Modules.domains import relations, roster, status, wardrobe
 from Script.Modules.domains import warehouse
 from tests.education._growth_ref import child_growth as child_growth
 
-character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """

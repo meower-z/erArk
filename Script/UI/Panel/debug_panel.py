@@ -33,6 +33,7 @@ from Script.Modules.domains import (
     action_info,
     activity,
     entertainment,
+    npc_template,
     physical_exam,
 )
 from Script.Modules.domains import abilities, chara_life, dirty, h_state, roster
@@ -139,7 +140,6 @@ def build_csv_config(
                 elif now_type == "float":
                     row[k] = float(row[k])
                 if k == "cid":
-                    # if "-" in file_id:
                     row[k] = file_id + row[k]
             # 设置版本号，默认为1
             row["version"] = 1
@@ -906,7 +906,7 @@ class Debug_Panel:
 
                 draw_items.append(line_feed)
 
-                id_list = list(cache.npc_tem_data.keys())
+                id_list = npc_template.ids()
                 id_list.append(0)
                 npc_count = 0
 
@@ -1101,7 +1101,7 @@ class Debug_Panel:
                         name = cache.character_data[chara_id].name
                         info_text += f"{chara_id}:{name} "
                     info_text += "\n\n全干员id列表：\n"
-                    for adv_id in cache.npc_tem_data.keys():
+                    for adv_id in npc_template.ids():
                         chara_id = adv_id
                         if chara_id not in cache.character_data:
                             continue

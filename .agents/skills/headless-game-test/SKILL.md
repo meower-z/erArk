@@ -216,12 +216,11 @@ game_config.init()
 character_config.init_character_tem_data()
 from Script.Config import map_config
 map_config.init_map_data()
-from Script.Design import character_handle, game_time, character_behavior, instuct_judege, map_handle
+from Script.Design import game_time, character_behavior, instuct_judege, map_handle
 import Script.Settle, Script.StateMachine      # 注册全部结算器与状态机，缺了会 KeyError
 from Script.Core import constant, save_handle, flow_handle
 from Script.UI.Moudle import draw
 from Script.Modules.save_load import kernel_state
-character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
 ```
 

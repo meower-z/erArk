@@ -56,8 +56,8 @@ DEFAULT_SCENE = ["宿舍", "1区", "101"]
 STANDARD_OUTFIT = {5: [501], 6: [651], 9: [951], 11: [1101]}
 """ 默认穿的衣服，衣物类型: 衣服id 列表：罗德岛制服夹克、纯白色胸罩、纯白色内裤、深蓝色小皮鞋 """
 
-SHALLOW_CACHE_FIELDS = ("map_data", "npc_tem_data")
-""" 复原时只浅拷贝的字典字段（地图与角色模板）：键复原到基线，值对象共用，测试不能改这些值对象 """
+SHALLOW_CACHE_FIELDS = ("map_data",)
+""" 复原时只浅拷贝的字典字段（地图）：键复原到基线，值对象共用，测试不能改这些值对象 """
 
 
 class FixtureError(AssertionError):
@@ -323,7 +323,6 @@ class MinimalWorld:
         self.cache = cache_control.cache
         """ 游戏缓存（对象一直不变，复原时原地改写） """
         cache = self.cache
-        cache.npc_tem_data = dict(character_config.character_tem_list)
         kernel_data.reset_clock(start_time(), {})
         kernel_data.written(playthrough.reset_difficulty_and_birth)
         cache.rhodes_island = kernel_data.new_island()
@@ -708,8 +707,8 @@ class PlayerInput:
 
 class FullWorld(MinimalWorld):
     """
-    完整的无头世界：小世界之外再注册结算器、状态机与界面流程，初始化角色模板，供慢速层用
-    绘制照常执行，玩家输入由 self.player（PlayerInput）给出；new_game() 走一遍开新游戏的界面流程。
+    完整的无头世界：小世界之外再注册结算器、状态机与界面流程，供慢速层用。
+    绘制照常执行，玩家输入由 self.player（PlayerInput）给出，new_game() 走一遍开新游戏的界面流程。
     不做复原：慢速层每个测试一个新进程。
     """
 
@@ -731,7 +730,8 @@ class FullWorld(MinimalWorld):
 
     def _load_game(self) -> None:
         """
-        先载入小世界，再导入 Script.Settle、Script.StateMachine、医疗系统与界面流程（靠装饰器注册），并初始化角色模板
+        先载入小世界，再导入 Script.Settle、Script.StateMachine、医疗系统与界面流程（靠装饰器注册），
+        随后重置缓存外状态并加载内核模块
         Keyword arguments:
         无
         Return arguments:
@@ -742,11 +742,9 @@ class FullWorld(MinimalWorld):
         import Script.StateMachine  # noqa: F401
         import Script.System.Medical_System  # noqa: F401
         import Script.UI.Flow  # noqa: F401
-        from Script.Design import character_handle
         from Script.Kernel import core
         from Script.Modules import load_order
 
-        character_handle.init_character_tem()
         outside_cache.fresh()
         core.load(load_order.LOAD_ORDER)
 
