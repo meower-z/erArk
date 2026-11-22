@@ -21,7 +21,7 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import h_meters, h_state, history, hypnosis, modes
 from Script.Modules.domains import needs, player_ability, player_collection
-from Script.Modules.domains import playthrough, status, relations
+from Script.Modules.domains import playthrough, status, relations, identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -733,7 +733,7 @@ def base_chara_favorability_and_trust_common_settle(
     # 判断交互对象
     if target_character_id == 0:
         target_character_id = activity.target(character_id)
-    target_data: game_type.Character = cache.character_data[target_character_id]
+    target_data: identity.Identity = identity.of(target_character_id)
 
     # 防止重复结算
     if (
@@ -1173,7 +1173,7 @@ def base_chara_experience_common_settle(
     change_data -- 状态变更信息记录对象\n
     change_data_to_target_change -- 交互对象结算信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     experience_type = game_config.config_experience[experience_id].type
     final_character_id = character_id
     if activity.dead(character_data.cid):
@@ -1181,7 +1181,7 @@ def base_chara_experience_common_settle(
     # 改为加到交互对象身上
     if target_flag:
         final_character_id = activity.target(character_data.cid)
-        character_data = cache.character_data[final_character_id]
+        character_data = identity.of(final_character_id)
 
     # 深度无意识下心理经验不结算
     if experience_type == 7 and not handle_premise.handle_normal_6(

@@ -10,7 +10,7 @@ from Script.Modules.domains import (
     recruit,
     warehouse,
 )
-from Script.Modules.domains import abilities, work, chara_life
+from Script.Modules.domains import abilities, work, chara_life, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1226,7 +1226,7 @@ def handle_have_patient_need_surgery_and_can_do(character_id: int) -> int:
     if not handle_medical_surgery_wait(character_id):
         return 0
 
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return 0
 

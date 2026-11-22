@@ -30,6 +30,7 @@ from . import snapshot as snapshot_module
 from .check_registry import CheckFailure, get_all_checks
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -221,7 +222,7 @@ def _build_involved_character_text(
     text_list = []
     for character_id in involved_character_ids:
         try:
-            character_name = cache.character_data[character_id].name
+            character_name = identity.of(character_id).name
             text_list.append(f"{character_id}({character_name})")
         except Exception:
             text_list.append(f"{character_id}(未知角色)")

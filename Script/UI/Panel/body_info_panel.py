@@ -9,6 +9,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, relations
+from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 
@@ -245,7 +246,7 @@ class CharacterBodyText:
             else:
                 now_text += _("  为博士生下了  ")
                 for chara_id in relations.child_id_list(character_id):
-                    now_text += f"{cache.character_data[chara_id].name}  "
+                    now_text += f"{identity.of(chara_id).name}  "
                 now_text += _("共{0}个孩子\n").format(
                     len(relations.child_id_list(character_id))
                 )
@@ -267,9 +268,9 @@ class CharacterBodyText:
             now_text = _("\n 【其他】\n")
             # 母亲情况
             if relations.mother_id(character_id) != -1:
-                mother_data: game_type.Character = cache.character_data[
+                mother_data: identity.Identity = identity.of(
                     relations.mother_id(character_id)
-                ]
+                )
                 child_id_list = relations.child_id_list(mother_data.cid)
                 if character_id in child_id_list:
                     child_index = child_id_list.index(character_id)

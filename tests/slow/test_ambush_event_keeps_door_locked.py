@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from tests.slow.base import SlowTestCase
 from tests import kernel_data
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from typing import Any
@@ -43,7 +44,7 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
 
         self.walk(ROOM)
         self.operator_id = self.npc("杜宾")
-        self.operator = self.cache.character_data[self.operator_id]
+        self.operator = identity.of(self.operator_id)
         kernel_data.put(
             kernel_data.domain("flags").set,
             self.operator.cid,

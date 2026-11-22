@@ -12,6 +12,7 @@ from Script.Modules.save_load import reset
 from Script.Config import game_config, normal_config
 
 import random
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -66,7 +67,7 @@ def chose_assistant() -> None:
     while 1:
         # 显示当前助手
         assistant_id = relations.assistant_character_id(0)
-        target_data: game_type.Character = cache.character_data[assistant_id]
+        target_data: identity.Identity = identity.of(assistant_id)
         if assistant_id != 0:
             now_npc_text = _("当前助理为 [{0}]{1}，请选择新的助理：\n").format(
                 str(target_data.adv).rjust(4, "0"), target_data.name
@@ -108,7 +109,7 @@ def select_random_assistant() -> None:
     # 绘制提示信息
     info_draw = draw.WaitDraw()
     info_text = _("\n○本周抽签选中了{0}作为{1}的助理\n").format(
-        cache.character_data[assistant_id].name, cache.character_data[0].name
+        identity.of(assistant_id).name, identity.of(0).name
     )
     info_draw.text = info_text
     info_draw.width = window_width
@@ -126,10 +127,10 @@ def assistant_replace(new_assistant_id: int) -> None:
     old_id = relations.assistant_character_id(0)
 
     # 判断是否有旧助理
-    old_assistant_data: game_type.Character | None = None
+    old_assistant_data: identity.Identity | None = None
     if old_id != 0:
         # 去掉旧助理的跟随状态
-        old_assistant_data = cache.character_data[old_id]
+        old_assistant_data = identity.of(old_id)
         flags.set(old_id, is_follow=0)
         # 去掉旧助理的同居状态
         if chara_life.dormitory(
@@ -154,9 +155,7 @@ def assistant_replace(new_assistant_id: int) -> None:
         relations.assistant_character_id.set(0, 0)
     # 新助理状态异常时，无法任命
     elif handle_premise.handle_unnormal_27(new_assistant_id):
-        new_assistant_data: game_type.Character = cache.character_data[
-            new_assistant_id
-        ]
+        new_assistant_data: identity.Identity = identity.of(new_assistant_id)
         info_text += _("\n{0}的状态异常，无法任命为助理干员\n").format(
             new_assistant_data.name
         )
@@ -164,7 +163,7 @@ def assistant_replace(new_assistant_id: int) -> None:
     # 正常情况下，设置新助理
     else:
         relations.assistant_character_id.set(0, new_assistant_id)
-        new_assistant_data = cache.character_data[new_assistant_id]
+        new_assistant_data = identity.of(new_assistant_id)
         flags.set(new_assistant_id, is_follow=1)
         relations.assistant_services.set_item(new_assistant_id, 2, 1)
         second_behavior.character_get_second_behavior(
@@ -199,7 +198,7 @@ def assistant_replace(new_assistant_id: int) -> None:
 @reset.repair
 def repair_follow_flag() -> None:
     """读档时修补：跟随状态超出 0-4 的角色归零"""
-    for character_data in cache.character_data.values():
+    for character_data in identity.table().values():
         if flags.get(character_data.cid, "is_follow") > 4:
             flags.set(character_data.cid, is_follow=0)
 
@@ -224,7 +223,7 @@ class Assistant_Panel:
 
         while 1:
             assistant_id = relations.assistant_character_id(0)
-            assistant_data = cache.character_data[assistant_id]
+            assistant_data = identity.of(assistant_id)
             services = relations.assistant_services(assistant_id)
 
             title_draw.draw()
@@ -345,7 +344,7 @@ class Assistant_Panel:
     def chose_button(self, service_cid: int, service_option_len: int) -> None:
         """玩家点击了选项"""
         assistant_id = relations.assistant_character_id(0)
-        assistant_data = cache.character_data[assistant_id]
+        assistant_data = identity.of(assistant_id)
 
         # 选择助理
         if service_cid == 0:
@@ -724,7 +723,7 @@ class SeeNPCButtonList:
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
 
-        target_data: game_type.Character = cache.character_data[self.chara_id]
+        target_data: identity.Identity = identity.of(self.chara_id)
         button_text = (
             f"[{str(target_data.adv).rjust(4,'0')}]：{target_data.name}"
         )

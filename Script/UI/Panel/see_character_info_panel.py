@@ -18,6 +18,7 @@ from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import abilities, activity, chara_life, h_state
 from Script.Modules.domains import player_collection, relations, roster, status
 from Script.Modules.domains import visitor
+from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 cache: game_type.Cache = cache_control.cache
@@ -34,7 +35,7 @@ window_width = normal_config.config_normal.text_width
 @reset.repair
 def repair_eqip_token() -> None:
     """读档时修补旧版本的信物数据：[0, [0]] 改为 [1, []]"""
-    if 0 in cache.character_data:
+    if identity.exists(0):
         if player_collection.get("eqip_token") == [0, [0]]:
             player_collection.set_eqip_token(1, [])
 
@@ -356,7 +357,7 @@ class SeeCharacterStatusPanel:
         """ 居中绘制状态文本 """
         self.type_number = type_number
         """ 显示的状态类型 """
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
 
         # 润滑单独处理，归到快感里
         other_status_ids = [8]
@@ -407,7 +408,7 @@ class SeeCharacterStatusPanel:
                 self.draw_list.append(line_feed)
 
     def _draw_status_bar(
-        self, character_data: game_type.Character, status_id: int
+        self, character_data: identity.Identity, status_id: int
     ) -> bool:
         """绘制单个状态条
         返回True表示成功绘制，False表示跳过"""
@@ -493,9 +494,7 @@ class CharacterRoomText:
         """ 要绘制的角色id """
         self.width = width
         """ 当前最大可绘制宽度 """
-        character_data: game_type.Character = cache.character_data[
-            self.character_id
-        ]
+        character_data: identity.Identity = identity.of(self.character_id)
         dormitory = chara_life.dormitory(character_data.cid)
         dormitory_text = ""
         if dormitory == "":
@@ -548,7 +547,7 @@ class CharacterBirthdayText:
         """ 要绘制的角色id """
         self.width = width
         """ 当前最大可绘制宽度 """
-        character_data = cache.character_data[self.character_id]
+        character_data = identity.of(self.character_id)
         # age_text = _("年龄:{character_age}岁").format(character_age=character_data.age)
         birthday_text = _("生日:{birthday_month}月{birthday_day}日").format(
             birthday_month=character_data.birthday.month,
@@ -585,7 +584,7 @@ class CharacterabiText:
         """ 当前绘制类型 """
         # self.column = column
         # """ 每行状态最大个数 """
-        character_data = cache.character_data[self.character_id]
+        character_data = identity.of(self.character_id)
         """ 角色数据 """
         self.draw_list: list = []
         """ 绘制对象列表 """
@@ -735,7 +734,7 @@ class CharacterExperienceText:
         """ 当前面板监听的按钮列表 """
         self.center_status: bool = center_status
         """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         type_data = _("经验")
         type_line = draw.LittleTitleLineDraw(type_data, width, ":")
         self.draw_list.append(type_line)
@@ -837,7 +836,7 @@ class CharacterTalentText:
         """ 当前面板监听的按钮列表 """
         self.center_status: bool = center_status
         """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         profession_text = game_config.config_profession[
             character_data.profession
         ].name
@@ -1120,7 +1119,7 @@ class CharacterJuelText:
         """ 当前面板监听的按钮列表 """
         self.center_status: bool = center_status
         """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         type_data = _("宝珠")
         type_line = draw.LittleTitleLineDraw(type_data, width, ":")
         self.draw_list.append(type_line)
@@ -1197,7 +1196,7 @@ class CharacterTokenText:
             if token_id == 0:
                 continue
             if token_list.get(token_id) == 1:
-                target_character_data = cache.character_data[token_id]
+                target_character_data = identity.of(token_id)
                 character_name = target_character_data.name
                 token_text = target_character_data.token_text
                 now_text = _(" 已拥有{0}的信物:{1}").format(
@@ -1304,8 +1303,8 @@ class PlayerAbilityText:
         for chara_id in eqip[1]:
             if chara_id == 0:
                 continue
-            now_text += f"  {cache.character_data[chara_id].name}："
-            token_text = cache.character_data[chara_id].token_text
+            now_text += f"  {identity.of(chara_id).name}："
+            token_text = identity.of(chara_id).token_text
             now_text += f"{token_text}\n"
         token_info_draw = draw.LeftDraw()
         token_info_draw.text = now_text
@@ -1367,9 +1366,7 @@ class PlayerAbilityText:
                 # 如果已经选择，则绘制为金色
                 if character_id in now_equiped:
                     draw_style = "gold_enrod"
-                character_data: game_type.Character = cache.character_data[
-                    character_id
-                ]
+                character_data: identity.Identity = identity.of(character_id)
                 character_name = character_data.name
                 character_adv = character_data.adv
                 character_token = character_data.token_text
@@ -1514,7 +1511,7 @@ class SeeCharacterInfoByNameDraw:
         """ 数字按钮的id """
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
-        character_data = cache.character_data[self.character_id]
+        character_data = identity.of(self.character_id)
         character_name = character_data.name
         name_draw: draw.NormalDraw | draw.CenterButton
         name_draw = draw.NormalDraw()
@@ -1588,9 +1585,7 @@ class SeeCharacterInfoByNameDrawInScene:
         """ 数字按钮的id """
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
-        character_data: game_type.Character = cache.character_data[
-            self.character_id
-        ]
+        character_data: identity.Identity = identity.of(self.character_id)
         character_name = character_data.name
         name_draw: draw.NormalDraw | draw.CenterButton
         name_draw = draw.NormalDraw()
@@ -1664,9 +1659,7 @@ class SeeCharacterInfoByimageDrawInScene:
         """ 数字按钮的id """
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
-        character_data: game_type.Character = cache.character_data[
-            self.character_id
-        ]
+        character_data: identity.Identity = identity.of(self.character_id)
         # sex_text = game_config.config_sex_tem[character_data.sex].name
         character_name = character_data.name
         # character_name = character_data.name + f"({sex_text})"
@@ -1715,7 +1708,7 @@ class SeeCharacterInfoOnSocialPanel:
         self.return_list: list[str] = []
         """ 当前面板监听的按钮列表 """
         self.now_draw: SeeCharacterInfoHandle = SeeCharacterInfoHandle(
-            character_id, width, list(cache.character_data.keys())
+            character_id, width, list(identity.table().keys())
         )
         """ 角色属性面板 """
 

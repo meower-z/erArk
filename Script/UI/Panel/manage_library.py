@@ -13,6 +13,7 @@ from Script.UI.Panel import common_select_NPC
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import entertainment, library
 from Script.Modules.domains import chara_life
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -157,9 +158,7 @@ class Manage_Library_Panel:
                             f"  [{str(book_count).rjust(3,'0')}]("
                             f"{book_type_data.son_type_name}){book_data.name}"
                         )
-                        borrow_npc_name = cache.character_data[
-                            borrow_npc_id
-                        ].name
+                        borrow_npc_name = identity.of(borrow_npc_id).name
                         book_text += _("  (被{0}借走)").format(borrow_npc_name)
 
                         button_draw = draw.LeftButton(
@@ -193,7 +192,7 @@ class Manage_Library_Panel:
     def return_book(self, chara_id: int) -> None:
         """角色还书"""
 
-        character_data = cache.character_data[chara_id]
+        character_data = identity.of(chara_id)
         chara_life.book_return_possibility.set(
             chara_id, chara_life.book_return_possibility(chara_id) + 100
         )
@@ -321,7 +320,7 @@ class Manage_Library_Panel:
 
         # 创建角色列表，包含所有有借阅历史的角色
         character_list = []
-        for character_id in cache.character_data:
+        for character_id in identity.table():
             if character_id == 0:  # 跳过玩家
                 continue
             # 检查是否有借阅历史记录
@@ -394,7 +393,7 @@ class Manage_Library_Panel:
     def show_character_history(self, character_id: int) -> None:
         """显示指定角色的借阅历史"""
 
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
 
         while 1:
             return_list = []

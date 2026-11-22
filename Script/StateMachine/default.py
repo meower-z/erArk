@@ -17,16 +17,11 @@ from Script.Design import (
     basement,
 )
 from Script.Core import get_text, cache_control, game_type, constant
-from Script.Modules.domains import (
-    abilities,
-    action_info,
-    activity,
-    economy,
-    h_state,
-)
-from Script.Modules.domains import kitchen, maintenance, modes, production
+from Script.Modules.domains import abilities, action_info, activity, economy
+from Script.Modules.domains import h_state, kitchen, maintenance, modes
+from Script.Modules.domains import production, body_manage, inventory
+from Script.Modules.domains import chara_life, relations, identity
 from Script.UI.Moudle import draw
-from Script.Modules.domains import body_manage, inventory, chara_life, relations
 
 if TYPE_CHECKING:
     from Script.Modules.npc_action_choice import choice
@@ -113,7 +108,7 @@ def _draw_move_intent(character_id: int, target_scene_str: str) -> None:
     character_id -- 角色id
     target_scene_str -- 目标场景的路径字符串
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if (
         activity.position(character_id) == activity.position(0)
         and normal_config.system_setting.draw_setting[8] == 1
@@ -353,7 +348,7 @@ def character_move_to_toilet(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     plan.set("target_character_id", character_id)
     # 当前大区块
     now_position = activity.position(character_id)[0]
@@ -1559,7 +1554,7 @@ def character_move_to_training_room(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if character_data.profession in {1, 5, 6, 8}:
         room_name = "Fight_Room"
     else:
@@ -2425,7 +2420,7 @@ def character_pee(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     plan.set("target_character_id", character_id)
     plan.set("behavior.behavior_id", constant.Behavior.PEE)
     plan.set("state", constant.CharacterStatus.STATUS_PEE)
@@ -2586,7 +2581,7 @@ def character_help_buy_food(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     plan.set("sp_flag.help_buy_food", 1)
     plan.set("target_character_id", character_id)
     plan.set("behavior.behavior_id", constant.Behavior.SHARE_BLANKLY)
@@ -2607,7 +2602,7 @@ def character_help_make_food(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     plan.set("sp_flag.help_make_food", 1)
     plan.set("target_character_id", character_id)
     plan.set("behavior.behavior_id", constant.Behavior.SHARE_BLANKLY)
@@ -2862,7 +2857,7 @@ def character_wear_to_locker(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     plan.set("target_character_id", character_id)
     plan.set("behavior.behavior_id", constant.Behavior.WEAR_TO_LOCKER)
     plan.set("state", constant.CharacterStatus.STATUS_WEAR_TO_LOCKER)
@@ -2880,7 +2875,7 @@ def character_locker_to_wear(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     plan.set("target_character_id", character_id)
     plan.set("behavior.behavior_id", constant.Behavior.LOCKER_TO_WEAR)
     plan.set("state", constant.CharacterStatus.STATUS_LOCKER_TO_WEAR)
@@ -2934,7 +2929,7 @@ def character_get_shower_cloth_and_clean_locker(
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     plan.set("target_character_id", character_id)
     plan.set("behavior.behavior_id", constant.Behavior.PUT_SHOWER_CLOTH)
     plan.set("state", constant.CharacterStatus.STATUS_PUT_SHOWER_CLOTH)
@@ -3217,7 +3212,7 @@ def character_work_start_surgery(character_id: int) -> choice.Plan:
     plan = handle_state_machine.new_plan(character_id)
     from Script.System.Medical_System import medical_service
 
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     # 获取所有可进行手术的患者列表
     available_patients_list = medical_service.get_surgery_candidate_patient_ids(
@@ -3790,7 +3785,7 @@ def character_morning_salutation_1(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     plan.set("target_character_id", 0)
     plan.set("behavior.behavior_id", constant.Behavior.MORNING_SALUTATION_1)
@@ -3817,7 +3812,7 @@ def character_morning_salutation_2(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     plan.set("target_character_id", 0)
     plan.set("behavior.behavior_id", constant.Behavior.MORNING_SALUTATION_2)
@@ -3844,7 +3839,7 @@ def character_morning_salutation_3(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     plan.set("target_character_id", 0)
     plan.set("behavior.behavior_id", constant.Behavior.MORNING_SALUTATION_3)
@@ -3871,7 +3866,7 @@ def character_night_salutation_1(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     plan.set("target_character_id", 0)
     plan.set("behavior.behavior_id", constant.Behavior.NIGHT_SALUTATION_1)
@@ -3900,7 +3895,7 @@ def character_night_salutation_2(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     plan.set("target_character_id", 0)
     plan.set("behavior.behavior_id", constant.Behavior.NIGHT_SALUTATION_2)
@@ -3928,7 +3923,7 @@ def character_night_salutation_3(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     plan.set("target_character_id", 0)
     plan.set("behavior.behavior_id", constant.Behavior.NIGHT_SALUTATION_3)

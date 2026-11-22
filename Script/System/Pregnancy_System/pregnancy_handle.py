@@ -30,6 +30,7 @@ from Script.Modules.domains import activity, dirty, h_state, hypnosis
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.domains import abilities, chara_life, growth, npc_template
 from Script.Modules.domains import pregnancy, relations, roster, work
+from Script.Modules.domains import identity
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -196,7 +197,7 @@ def get_baby_id_list(mother_id: int) -> list:
     """
     baby_id_list = []
     for child_id in relations.child_id_list(mother_id):
-        if child_id not in cache.character_data:
+        if not identity.exists(child_id):
             continue
         if (
             handle_premise.handle_self_is_baby(child_id)
@@ -229,7 +230,7 @@ def get_fetus_count_draw_text(character_id: int) -> str:
     Return arguments:
     str -- 胎数说明文本（含首尾换行）
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     preg = pregnancy.of(character_id)
     fetus_count = preg.fetus_count
     if fetus_count < 2:
@@ -266,7 +267,7 @@ def get_multiple_birth_range(character_id: int) -> tuple:
 
     if not egg_handle.is_multiple_birth(character_id):
         return (1, 1)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     race_config = game_config.config_race.get(character_data.race)
     range_text = str(getattr(race_config, "multiple_birth_num", "1~1"))
     try:
@@ -287,8 +288,8 @@ def get_fertilization_rate(character_id: int) -> tuple[float, str]:
     draw_text: str 受精概率变动信息
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
+    character_data: identity.Identity = identity.of(character_id)
+    pl_character_data: identity.Identity = identity.of(0)
     draw_text = ""
 
     womb_semen = dirty.view(character_id).body_semen[7]
@@ -369,7 +370,7 @@ def check_fertilization(character_id: int) -> int | None:
     from Script.System.Pregnancy_System import egg_handle
 
     talent = abilities.talent(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     draw_text = ""
 
     with pregnancy.editing(character_id) as preg:
@@ -544,7 +545,7 @@ def check_pregnancy(character_id: int) -> None:
     """
     判断是否由受精变为怀孕
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 需要已经是受精状态
     if handle_premise.handle_fertilization_1(character_id):
         # 计算经过的天数（含妊娠加速药的加速天数）
@@ -587,7 +588,7 @@ def check_near_born(character_id: int) -> None:
     """
     判断是否开始临盆
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 需要已经是妊娠状态
     if handle_premise.handle_pregnancy_1(character_id):
         # 计算经过的天数（含妊娠加速药的加速天数）
@@ -642,14 +643,12 @@ def check_rearing(character_id: int) -> None:
     """
     判断是否开始育儿
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 需要已经是产后状态
     if handle_premise.handle_postpartum_1(character_id):
         # 计算最新一个孩子出生后经过的有效天数（含成长加速药）
         child_id = relations.child_id_list(character_id)[-1]
-        child_character_data: game_type.Character = cache.character_data[
-            child_id
-        ]
+        child_character_data: identity.Identity = identity.of(child_id)
         past_day = get_child_grow_day(child_id)
         if past_day >= pregnancy_constant.POSTPARTUM_REST_DAY:
             abilities.talent(character_id).merge({23: 0, 24: 1})
@@ -663,7 +662,7 @@ def check_rearing(character_id: int) -> None:
             )
             # 列出名下全部婴儿（多胞胎为多个），无婴儿时退回最新的孩子
             baby_name_list = [
-                cache.character_data[baby_id].name
+                identity.of(baby_id).name
                 for baby_id in get_baby_id_list(character_id)
             ]
             baby_name_text = (
@@ -697,8 +696,8 @@ def _settle_baby_grow_up(character_id: int, child_id: int) -> None:
     """
     from Script.System.Education_System import growth_event_handle
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    child_character_data: game_type.Character = cache.character_data[child_id]
+    character_data: identity.Identity = identity.of(character_id)
+    child_character_data: identity.Identity = identity.of(child_id)
     child_talent = abilities.talent(child_id)
     child_talent[101] = 0
     child_talent[102] = 1
@@ -757,7 +756,7 @@ def check_grow_to_loli(character_id: int) -> None:
     判断是否成长为学员：素质102→103，孩子上线、置为学生岗，开始在教育区上课
     """
     talent = abilities.talent(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 需要是女儿，而且已经是幼女状态，且没有处于成长停滞（素质28）
     if (
         handle_premise.handle_self_is_player_daughter(character_id)
@@ -817,7 +816,7 @@ def check_grow_to_girl(character_id: int) -> None:
     判断是否成长为少女
     """
     talent = abilities.talent(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 需要是女儿，而且已经是学员状态，且没有处于成长停滞（素质28）
     if (
         handle_premise.handle_self_is_player_daughter(character_id)
@@ -917,7 +916,7 @@ def check_all_child_grow_to_loli() -> None:
     幼女离线、不在 npc_id_got 里，逐角色的 check_all_pregnancy 轮不到她，所以从玩家的子女名单里找
     """
     for child_id in list(relations.child_id_list(0)):
-        if child_id in cache.character_data:
+        if identity.exists(child_id):
             check_grow_to_loli(child_id)
 
 
@@ -948,9 +947,9 @@ def chest_grow(character_id: int, print_flag: bool = False) -> str:
     进行胸部生长判定
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     mom_id = relations.mother_id(character_id)
-    mom_character_data: game_type.Character = cache.character_data[mom_id]
+    mom_character_data: identity.Identity = identity.of(mom_id)
     # 跳过机械
     if mom_character_data.race == 2:
         return ""
@@ -1010,9 +1009,9 @@ def body_part_grow(character_id: int, print_flag: bool = False) -> str:
     进行除胸部外其他部位的生长判定
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     mom_id = relations.mother_id(character_id)
-    mom_character_data: game_type.Character = cache.character_data[mom_id]
+    mom_character_data: identity.Identity = identity.of(mom_id)
     now_text = ""
 
     # 跳过机械
@@ -1080,7 +1079,7 @@ def judge_suspected_abnormal_daughter(character_id: int) -> bool:
     Return arguments:
     bool -- 是否为疑似误入的女儿
     """
-    if character_id == 0 or character_id not in cache.character_data:
+    if character_id == 0 or not identity.exists(character_id):
         return False
     if relations.father_id(character_id) != 0:
         return False
@@ -1097,7 +1096,7 @@ def get_all_player_daughter_id_list() -> list:
     """
     return [
         cid
-        for cid in sorted(cache.character_data)
+        for cid in sorted(identity.table())
         if cid != 0 and relations.father_id(cid) == 0
     ]
 
@@ -1144,11 +1143,11 @@ def remove_abnormal_daughter(character_id: int) -> bool:
         cache.scene_data[scene_path_str].character_list.remove(character_id)
     # 删掉角色数据与已获得集合，用 working.forget 丢掉停放的数据，再删掉角色模板，免得再被实例化
     roster.discard(character_id)
-    cache.character_data.pop(character_id, None)
+    identity.discard(character_id)
     working.forget(character_id)
     npc_template.remove(character_id)
     # 清掉其他角色对她的引用：血缘子女名单与当前交互对象
-    for other_data in cache.character_data.values():
+    for other_data in identity.table().values():
         child_id_list = relations.child_id_list(other_data.cid)
         if character_id in child_id_list:
             child_id_list.remove(character_id)

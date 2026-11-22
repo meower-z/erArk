@@ -18,6 +18,7 @@ from Script.Design import game_time, attr_calculation, basement
 from Script.System.Education_System import education_constant, schedule_handle
 from Script.UI.Moudle import draw, view
 from Script.Modules.domains import abilities, flags, roster, chara_life
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -62,7 +63,7 @@ def get_teacher_absent_mark(teacher_id: int, short: bool = False) -> str:
              被监禁的人要等玩家放人；不在岛上的人回来就能照常授课。
           只标这几种长期状态，睡着、H 中这类一节之内会恢复的不标；玩家与没排教师的格子不标
     """
-    if teacher_id <= 0 or teacher_id not in cache.character_data:
+    if teacher_id <= 0 or not identity.exists(teacher_id):
         return ""
     if chara_life.work_type(teacher_id) != education_constant.TEACHER_WORK_TYPE:
         return _("（离岗）") if short else _("（已离岗）")
@@ -423,8 +424,8 @@ class Class_Schedule_Panel:
                         and temp_class.get("classroom", "") == classroom
                         else ""
                     )
-                    if cell[1] in cache.character_data:
-                        teacher_name = cache.character_data[cell[1]].name
+                    if identity.exists(cell[1]):
+                        teacher_name = identity.of(cell[1]).name
                         absent_mark = get_teacher_absent_mark(
                             cell[1], short=True
                         )
@@ -653,9 +654,9 @@ class Class_Schedule_Panel:
                 )
             ]
             name_list = [
-                cache.character_data[cid].name
+                identity.of(cid).name
                 for cid in selected_list
-                if cid in cache.character_data
+                if identity.exists(cid)
             ]
             student_draw = draw.NormalDraw()
             student_draw.width = self.width
@@ -679,16 +680,16 @@ class Class_Schedule_Panel:
                 )
             student_draw.draw()
             blocked_name_list = [
-                cache.character_data[cid].name
+                identity.of(cid).name
                 for cid in course_ok_list
-                if cid not in selected_list and cid in cache.character_data
+                if cid not in selected_list and identity.exists(cid)
             ]
             # 点名必修只豁免前置修习：状态与成年学生的实行值开课拉人时照判（check_course=False），
             #    点名之后才被监禁、意识模糊或实行值跌破的必修生，同样列进这一行（实施复审补）
             blocked_name_list += [
-                cache.character_data[cid].name
+                identity.of(cid).name
                 for cid in must_attend
-                if cid in cache.character_data
+                if identity.exists(cid)
                 and not sex_class_handle.judge_can_join_sex_class(
                     cid, check_course=False
                 )
@@ -702,9 +703,9 @@ class Class_Schedule_Panel:
                 ).format(len(blocked_name_list), "、".join(blocked_name_list))
                 blocked_draw.draw()
             no_course_name_list = [
-                cache.character_data[cid].name
+                identity.of(cid).name
                 for cid in all_selected_list
-                if cid not in course_ok_list and cid in cache.character_data
+                if cid not in course_ok_list and identity.exists(cid)
             ]
             if no_course_name_list:
                 no_course_draw = draw.NormalDraw()
@@ -718,9 +719,9 @@ class Class_Schedule_Panel:
                 no_course_draw.draw()
 
             must_name_list = [
-                cache.character_data[cid].name
+                identity.of(cid).name
                 for cid in must_attend
-                if cid in cache.character_data
+                if identity.exists(cid)
             ]
             must_draw = draw.NormalDraw()
             must_draw.width = self.width
@@ -808,9 +809,7 @@ class Class_Schedule_Panel:
             student_width = int(self.width / 6)
             count = 0
             for character_id in growth_handle.get_course_candidate_list():
-                character_data: game_type.Character = cache.character_data[
-                    character_id
-                ]
+                character_data: identity.Identity = identity.of(character_id)
                 # 必修名单豁免前置修习（口径 63 宽松版）：点名本身就是玩家的决定，这里只做状态守卫
                 if not sex_class_handle.judge_can_join_sex_class(
                     character_id, check_course=False
@@ -938,11 +937,11 @@ class Class_Schedule_Panel:
             )
             if week_cell is None:
                 week_text = _("未排课")
-            elif week_cell[1] in cache.character_data:
+            elif identity.exists(week_cell[1]):
                 # 教师已离岗 / 不在岛上的标注与周表格子一致（Plan 31 §3.10）
                 week_text = (
                     f"{game_config.config_ability[week_cell[0]].name}/"
-                    f"{cache.character_data[week_cell[1]].name}"
+                    f"{identity.of(week_cell[1]).name}"
                     f"{get_teacher_absent_mark(week_cell[1])}"
                 )
             else:
@@ -1079,9 +1078,7 @@ class Class_Schedule_Panel:
             count = 0
             now_draw: draw.LeftDraw | draw.LeftButton
             for teacher_id in teacher_list:
-                teacher_data: game_type.Character = cache.character_data[
-                    teacher_id
-                ]
+                teacher_data: identity.Identity = identity.of(teacher_id)
                 level = int(abilities.ability(teacher_id).get(ability_id, 0))
                 # 本周已排节数：反查全局课表数出来，让玩家一眼看出谁已经被排满了。
                 # 不能只看本节冲不冲——不冲突的老师里也有已经排了三十节的
@@ -1128,7 +1125,7 @@ class Class_Schedule_Panel:
                 )
                 if conflict:
                     conflict_text_list.append(
-                        f"{cache.character_data[teacher_id].name}（{conflict}）"
+                        f"{identity.of(teacher_id).name}（{conflict}）"
                     )
             if conflict_text_list:
                 conflict_draw = draw.NormalDraw()

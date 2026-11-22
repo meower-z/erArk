@@ -7,7 +7,7 @@ from _bootstrap import datetime, education, education_constant, finish
 from _bootstrap import game_config, game_time, make_character, move_to
 from _bootstrap import open_all_classroom, period_time, pl, remove_character
 from _bootstrap import scene_str, schedule_handle, schedule_template_handle
-from _bootstrap import section, set_time, sex_class_handle
+from _bootstrap import identity, section, set_time, sex_class_handle
 import inspect
 from tests import chara_abilities as ca, kernel_data
 from Script.Modules.domains import activity, chara_life, flags, library
@@ -567,7 +567,7 @@ check(
 schedule_handle.set_selected_course(
     201, _wd, 0, education_constant.COURSE_TYPE_INTEREST, _read_cid
 )
-_reader = cache.character_data[201]
+_reader = identity.of(201)
 check(
     "书库有书：成立，是一节课",
     schedule_handle.judge_personal_course_valid(201, read_course)

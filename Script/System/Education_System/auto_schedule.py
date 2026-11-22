@@ -18,6 +18,7 @@ from Script.Core import cache_control, game_type
 from Script.Design import game_time
 from Script.System.Education_System import education_constant, schedule_handle
 from Script.Modules.domains import abilities
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -174,7 +175,7 @@ def auto_fill_selected_course(character_id: int) -> tuple[int, int]:
           等级越低离升级越近，收益也越大（get_learn_speed 的师生等级差曲线）。
           只填空格，已有的选课一节都不动
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return 0, 0
     room_list = schedule_handle.get_classroom_list()
     if not room_list:

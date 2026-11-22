@@ -13,6 +13,7 @@ from unittest import mock
 from tests import kernel_data
 from tests.slow.base import SlowTestCase
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 EXAM_ROOM = ["医疗", "体检科"]
 DR_OFFICE = ["中枢", "博士办公室"]
@@ -165,7 +166,7 @@ class HealthCheckTestCase(SlowTestCase):
 
         recruits = sorted(
             cid
-            for cid in self.cache.character_data
+            for cid in identity.table()
             if cid and cid not in kernel_data.domain("roster").active()
         )[:10]
         for cid in recruits:

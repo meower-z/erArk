@@ -6,7 +6,7 @@ from Script.Design import attr_calculation, clothing, handle_premise
 from Script.Design import map_handle, settle_behavior
 from Script.Core import cache_control, constant_effect, game_type, get_text
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import activity, dirty
+from Script.Modules.domains import activity, dirty, identity
 from Script.UI.Moudle import draw
 from Script.Modules.domains import flags, wardrobe
 
@@ -354,7 +354,7 @@ def handle_self_cloth_back(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     cloth = wardrobe.of(character_id)
 
     # 穿回脱下的衣服

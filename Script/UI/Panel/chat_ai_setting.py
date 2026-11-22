@@ -67,8 +67,6 @@ class Chat_Ai_Setting_Panel:
         # """ 当前绘制的页面 """
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的文本列表 """
-        self.pl_character_data = cache.character_data[0]
-        """ 玩家的属性 """
         self.test_flag = 0
         """ 测试标志，0为未测试，1为测试通过，2为测试不通过 """
         self.error_message = ""

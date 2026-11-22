@@ -13,7 +13,7 @@ from collections.abc import Callable
 from Script.Config import config_def, game_config
 from Script.Core import game_type
 from Script.System.Medical_System import medical_constant, medical_core
-from Script.Modules.domains import medical, medical_patient, warehouse
+from Script.Modules.domains import medical, medical_patient, warehouse, identity
 
 
 def try_hospitalize(
@@ -118,7 +118,7 @@ def process_single_hospitalized_patient(
     patient: medical_patient.MedicalPatient | None,
     consume_medicine: Callable[[medical_patient.MedicalPatient], bool],
     *,
-    doctor: game_type.Character | None = None,
+    doctor: identity.Identity | None = None,
 ) -> dict[str, object]:
     """对单名住院病人执行一次巡诊流程。
 
@@ -126,7 +126,7 @@ def process_single_hospitalized_patient(
         rhodes_island (game_type.Rhodes_Island): 巡诊所在的基地实例。
         patient (Optional[medical_patient.MedicalPatient]): 目标病人，若 None 则直接跳过。
         consume_medicine (Callable[[medical_patient.MedicalPatient], bool]): 用于扣药的回调。
-        doctor (Optional[game_type.Character]): 记录巡诊医生信息的角色对象。
+        doctor (Optional[identity.Identity]): 记录巡诊医生信息的角色对象。
     返回:
         Dict[str, object]: 巡诊结果与收益统计。
     """

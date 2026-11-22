@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING
 from tests import chara_abilities as ca, chara_data, kernel_data, outside_cache
 from tests.chara_activity import place
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -439,43 +440,36 @@ class MinimalWorld:
         naked: bool = False,
         race: int = 0,
         adv: int = 0,
-    ) -> game_type.Character:
+    ) -> identity.Identity:
         """
-        造一个角色放进 cache.character_data，核对她的状态，通过后登记进所在场景
+        造一个角色写入身份表（identity.characters），核对她的状态，通过后登记进在编名单与所在场景
         Keyword arguments:
-        cid -- 角色id（0 为玩家；造 NPC 前须先造玩家）
+        cid -- 角色id（0 为玩家，造 NPC 前须先造玩家）
         name -- 角色名
         position -- 初始场景路径列表，默认 DEFAULT_SCENE
-        naked -- 为真时不穿衣服（全裸）；默认穿 STANDARD_OUTFIT
+        naked -- 为真时不穿衣服（全裸），默认穿 STANDARD_OUTFIT
         race -- 种族id
         adv -- 剧情npc编号
         Return arguments:
-        game_type.Character -- 已登记的角色对象
+        identity.Identity -- 已登记的角色身份
         功能描述:
-            game_type.Character() 的多数容器字段初值是空 dict，游戏代码直接下标访问，这里全部按置零函数预填。
-            默认角色当场核对：穿着衣服（不是大致全裸），NPC 的异常位1~7全部正常（normal_all 为 1）。
-            naked=True 的角色当场核对：全裸；NPC 还须只有位4异常（玩家的异常位恒为正常）。
-            不符合时把她从 cache.character_data 里删掉，再抛 FixtureError。这时她还没登记进 npc_id_got 和场景。
+            角色在 GameState 里的多项字典默认是空的，游戏代码直接下标访问，这里全部按置零函数预填。
+            默认角色当场核对：穿着衣服（不是大致全裸），NPC 的异常位 1~7 全部正常（normal_all 为 1）。
+            naked=True 的角色当场核对：全裸，NPC 还须只有位 4 异常（玩家的异常位恒为正常）。
+            不符合时把她从身份表里删掉，再抛 FixtureError。这时她还没登记进在编名单和场景。
         """
         from Script.Modules.domains import chara_life, relations
         from Script.Core import game_type
         from Script.Design import attr_calculation, game_time, map_handle
 
-        cache = self.cache
-        if cid in cache.character_data:
+        if identity.exists(cid):
             raise FixtureError(f"角色 {cid} 已存在")
-        if cid != 0 and 0 not in cache.character_data:
+        if cid != 0 and not identity.exists(0):
             raise FixtureError(
                 "先造玩家（cid 0）再造 NPC：异常位的判定要读玩家数据"
             )
         position = list(position if position is not None else DEFAULT_SCENE)
         scene = self.scene(position)
-        cd = game_type.Character()
-        cd.cid = cid
-        cd.name = name
-        cd.adv = adv
-        cd.sex = 1
-        cd.race = race
         services = attr_calculation.get_assistant_services_zero()
         kernel_data.put(relations.assistant_services.set, cid, services)
         kernel_data.put(relations.favorability.set, cid, {0: 0})
@@ -483,19 +477,22 @@ class MinimalWorld:
         ca.talent(cid)[121] = 1
         dormitory = map_handle.get_map_system_path_str_for_list(DEFAULT_SCENE)
         kernel_data.put(chara_life.dormitory.set, cid, dormitory)
-        place(cd.cid, position, start_time=game_time.now())
-        cache.character_data[cid] = cd
+        place(cid, position, start_time=game_time.now())
+        kernel_data.put(
+            identity.put,
+            identity.Identity(cid, name=name, sex=1, adv=adv, race=race),
+        )
         chara_data.seed(cid, {} if naked else STANDARD_OUTFIT)
         kernel_data.set_needs(cid, hit_max=100, hit=100, mana_max=100, mana=100)
         try:
             self._check_chara(cid, naked)
         except FixtureError:
-            del cache.character_data[cid]
+            kernel_data.put(identity.discard, cid)
             raise
         if cid:
             kernel_data.put(kernel_data.domain("roster").add, cid)
         scene.character_list.add(cid)
-        return cd
+        return identity.of(cid)
 
     def _check_chara(self, cid: int, naked: bool) -> None:
         """

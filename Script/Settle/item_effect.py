@@ -22,6 +22,7 @@ from Script.Modules.domains import (
     inventory,
 )
 from Script.Modules.domains import kitchen, needs, status
+from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 window_width: int = normal_config.config_normal.text_width
@@ -1258,7 +1259,7 @@ def handle_npc_make_food_to_shop(
             cookable_recipes_list.remove(alcohol_recipe)
     recipes_id = random.choice(cookable_recipes_list)
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     cook_ability_lv = abilities.ability(character_id)[43]
     # NPC制作食物的品质上限为6
     food_quality_limit = min(6, cook_ability_lv)
@@ -1298,7 +1299,7 @@ def handle_npc_make_food_to_bag(
     if not add_time:
         return
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 随机选择一个食谱，根据食谱难度，高难度的有高出现权重
     cookable_recipes_list = cooking.get_character_cookable_recipes(
         character_id, weight_flag=True
@@ -1335,7 +1336,7 @@ def handle_assistant_make_food_to_bag(
     if not add_time:
         return
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 获取全食谱
     cookable_recipes_list = cooking.get_character_cookable_recipes(
         character_id, weight_flag=True
@@ -1452,9 +1453,7 @@ def handle_target_add_huge_lubrication(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.dead(target_data.cid):
         return
     status.setdefault(target_data.cid, 8, 0)
@@ -1491,9 +1490,7 @@ def handle_target_add_huge_desire_and_submit(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.dead(target_data.cid):
         return
 
@@ -1551,9 +1548,7 @@ def handle_target_enema(
 
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.dead(target_data.cid):
         return
 
@@ -1615,9 +1610,7 @@ def handle_target_enema_end(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.dead(target_data.cid):
         return
 

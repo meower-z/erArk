@@ -14,6 +14,7 @@ from Script.Design import talk, handle_premise
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import activity
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -40,9 +41,7 @@ def get_target_chara_diy_instruct(
     """
     son_event_list = []  # 子事件列表
     if activity.target(character_id):
-        target_character_data = cache.character_data[
-            activity.target(character_id)
-        ]
+        target_character_data = identity.of(activity.target(character_id))
         # 判断是否存在该行为对应的事件
         if (
             constant.Behavior.CHARA_DIY_INSTRUCT
@@ -149,9 +148,7 @@ class Event_option_Panel:
 
     def draw(self) -> None:
         """绘制对象"""
-        character_data: game_type.Character = cache.character_data[
-            self.character_id
-        ]
+        character_data: identity.Identity = identity.of(self.character_id)
         behavior_id = activity.behavior(character_data.cid).behavior_id
         father_event_id = activity.event(character_data.cid).event_id
 
@@ -235,12 +232,8 @@ class multi_layer_event_option_Panel:
 
     def draw(self) -> None:
         """绘制对象"""
-        character_data: game_type.Character = cache.character_data[
-            self.character_id
-        ]
-        target_character_data = cache.character_data[
-            activity.target(character_data.cid)
-        ]
+        character_data: identity.Identity = identity.of(self.character_id)
+        target_character_data = identity.of(activity.target(character_data.cid))
         behavior_id = activity.behavior(character_data.cid).behavior_id
 
         tem_event_list = []  # 临时事件列表
@@ -379,7 +372,5 @@ class SonEventDraw:
 
     def run_son_event(self) -> None:
         """点击后运行对应的子事件"""
-        character_data: game_type.Character = cache.character_data[
-            self.character_id
-        ]
+        character_data: identity.Identity = identity.of(self.character_id)
         activity.update_event(character_data.cid, son_event_id=self.event_id)

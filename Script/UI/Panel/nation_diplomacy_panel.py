@@ -12,6 +12,7 @@ from Script.Modules.save_load import reset
 from Script.Modules.domains import abilities, country, diplomacy, facility
 from Script.Modules.domains import flags, location, medical, roster, chara_life
 from Script.Modules.domains import relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -404,9 +405,7 @@ class Nation_Diplomacy_Panel:
                     "diplomat"
                 ]
                 if now_diplomat_chara_id != 0:
-                    now_diplomat_chara_data = cache.character_data[
-                        now_diplomat_chara_id
-                    ]
+                    now_diplomat_chara_data = identity.of(now_diplomat_chara_id)
                     now_diplomat_name = now_diplomat_chara_data.name
                 else:
                     now_diplomat_name = _("无")
@@ -528,9 +527,7 @@ class Nation_Diplomacy_Panel:
                     "diplomat"
                 ]
                 if now_diplomat_chara_id != 0:
-                    now_diplomat_chara_data = cache.character_data[
-                        now_diplomat_chara_id
-                    ]
+                    now_diplomat_chara_data = identity.of(now_diplomat_chara_id)
                     now_diplomat_name = now_diplomat_chara_data.name
                     now_diplomat_adv = now_diplomat_chara_data.adv
                     now_diplomat_ability_lv = abilities.ability(
@@ -651,9 +648,7 @@ class Nation_Diplomacy_Panel:
                 chara_list.add(now_diplomat_chara_id)
             # 遍历角色列表，绘制符合条件的角色为按钮
             for character_id in chara_list:
-                character_data: game_type.Character = cache.character_data[
-                    character_id
-                ]
+                character_data: identity.Identity = identity.of(character_id)
                 # 跳过出身地或势力不是当前势力的干员
                 if (
                     relations.birthplace(character_data.cid) != country_id
@@ -664,7 +659,7 @@ class Nation_Diplomacy_Panel:
                 # 如果已经选择，则绘制为金色
                 if character_id == now_diplomat_chara_id:
                     draw_style = "gold_enrod"
-                character_data = cache.character_data[character_id]
+                character_data = identity.of(character_id)
                 character_name = character_data.name
                 character_adv = character_data.adv
                 character_ability_lv = abilities.ability(character_id)[40]
@@ -735,7 +730,7 @@ class Nation_Diplomacy_Panel:
 
         # 任命新的外交官
         if character_id != 0 and character_id != old_diplomat_id:
-            new_diplomat_chara_data = cache.character_data[character_id]
+            new_diplomat_chara_data = identity.of(character_id)
             # 设置外交官的工作类型和负责区域数据
             chara_life.work_type.set(character_id, 131)
             diplomacy.set_post(country_id, diplomat=character_id)

@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -139,7 +140,7 @@ class SaveV1Test(SlowTestCase):
         stats = repr(
             [
                 (cid, [needs.of(cid)[k] for k in STATS])
-                for cid in sorted(self.cache.character_data)
+                for cid in sorted(identity.table())
             ]
         )
         rng = hashlib.sha256(repr(random.getstate()).encode()).hexdigest()

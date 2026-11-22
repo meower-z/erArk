@@ -15,6 +15,7 @@ from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import see_item_info_panel
 from Script.Modules.domains import achievement, facility, warehouse
 from Script.Modules.domains import inventory, chara_profile
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -214,7 +215,7 @@ class BuyItemByItemNameDraw:
         """ 数字按钮的id """
         self.button_return: str = str(text)
         """ 按钮返回值 """
-        self.character_data: game_type.Character = cache.character_data[0]
+        self.character_data: identity.Identity = identity.of(0)
         """ 人物属性 """
         self.now_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
         item_config = game_config.config_item[self.text]

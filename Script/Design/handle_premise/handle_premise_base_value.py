@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.Design import attr_calculation
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import activity, needs, pregnancy
+from Script.Modules.domains import activity, needs, pregnancy, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -196,7 +196,7 @@ def handle_target_hp_low(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     value = (
         needs.of(target_data.cid)["hit"] / needs.of(target_data.cid)["hit_max"]
     )
@@ -215,7 +215,7 @@ def handle_target_hp_high(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     value = (
         needs.of(target_data.cid)["hit"] / needs.of(target_data.cid)["hit_max"]
     )
@@ -234,7 +234,7 @@ def handle_target_hp_ne_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if needs.of(target_data.cid)["hit"] > 1:
         return 1
     else:
@@ -250,7 +250,7 @@ def handle_target_mp_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     value = needs.of(target_data.cid)["mana"]
     if value == 0:
         return 1
@@ -267,7 +267,7 @@ def handle_target_mp_low(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     value = (
         needs.of(target_data.cid)["mana"]
         / needs.of(target_data.cid)["mana_max"]
@@ -287,7 +287,7 @@ def handle_target_mp_high(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     value = (
         needs.of(target_data.cid)["mana"]
         / needs.of(target_data.cid)["mana_max"]
@@ -307,7 +307,7 @@ def handle_self_and_target_hp_ge_70(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     value1 = needs.of(character_id)["hit"] / needs.of(character_id)["hit_max"]
     value2 = (
         needs.of(target_data.cid)["hit"] / needs.of(target_data.cid)["hit_max"]
@@ -327,7 +327,7 @@ def handle_t_hp_or_mp_low(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     value1 = (
         needs.of(target_data.cid)["hit"] / needs.of(target_data.cid)["hit_max"]
     )
@@ -920,9 +920,9 @@ def handle_target_milk_le_29(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_character_data: game_type.Character = cache.character_data[
+    target_character_data: identity.Identity = identity.of(
         activity.target(character_id)
-    ]
+    )
 
     value = needs.of(target_character_data.cid)["milk"] / pregnancy.milk_max(
         target_character_data.cid
@@ -942,9 +942,9 @@ def handle_target_milk_ge_30(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_character_data: game_type.Character = cache.character_data[
+    target_character_data: identity.Identity = identity.of(
         activity.target(character_id)
-    ]
+    )
 
     value = needs.of(target_character_data.cid)["milk"] / pregnancy.milk_max(
         target_character_data.cid
@@ -964,9 +964,9 @@ def handle_target_milk_le_79(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_character_data: game_type.Character = cache.character_data[
+    target_character_data: identity.Identity = identity.of(
         activity.target(character_id)
-    ]
+    )
 
     value = needs.of(target_character_data.cid)["milk"] / pregnancy.milk_max(
         target_character_data.cid
@@ -986,9 +986,9 @@ def handle_target_milk_ge_80(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_character_data: game_type.Character = cache.character_data[
+    target_character_data: identity.Identity = identity.of(
         activity.target(character_id)
-    ]
+    )
 
     value = needs.of(target_character_data.cid)["milk"] / pregnancy.milk_max(
         target_character_data.cid

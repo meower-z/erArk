@@ -7,13 +7,8 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.tk_ui import drawn_see, player_pick
-from Script.Modules.domains import (
-    abilities,
-    activity,
-    dirty,
-    player_ability,
-    wardrobe,
-)
+from Script.Modules.domains import abilities, activity, dirty, player_ability
+from Script.Modules.domains import wardrobe, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -78,7 +73,7 @@ class SeeCharacterClothPanel:
         """ 居中绘制状态文本 """
         self.type_number = type_number
         """ 显示的状态类型 """
-        target_character_data = cache.character_data[activity.target(0)]
+        target_character_data = identity.of(activity.target(0))
         cloth = wardrobe.of(target_character_data.cid)
 
         type_line = draw.LittleTitleLineDraw(_("服装"), width, ":")
@@ -474,7 +469,7 @@ class SwitchCharacterClothPanel:
         self.draw_list.clear()
         self.button_list.clear()
         seen: dict[int, bool] = {}
-        target_character_data = cache.character_data[activity.target(0)]
+        target_character_data = identity.of(activity.target(0))
         cloth = wardrobe.of(target_character_data.cid)
         # 添加标题
         type_line = draw.LittleTitleLineDraw(_("服装"), self.width, ":")
@@ -679,7 +674,7 @@ class SwitchClothButton(draw.LeftButton):
         切换衣服穿脱状态
         """
         with player_pick.drafting("cloth switch"):
-            target_character_data = cache.character_data[activity.target(0)]
+            target_character_data = identity.of(activity.target(0))
             # 如果当前穿着，则脱下
             if self.is_wear:
                 if (

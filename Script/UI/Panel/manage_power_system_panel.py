@@ -16,7 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.domains import facility, power, power_supply, warehouse
-from Script.Modules.domains import abilities, location
+from Script.Modules.domains import abilities, location, identity
 
 from typing import TYPE_CHECKING
 
@@ -363,7 +363,7 @@ class Manage_Power_System_Panel:
                 names = []
                 for cid in other_ops:
                     name = self._get_chara_name(cid) or _("(未知)")
-                    chara_data = cache.character_data.get(cid)
+                    chara_data = identity.get(cid)
                     if chara_data:
                         abi_lv = abilities.ability(chara_data.cid).get(48, 0)
                         name += _("(制造lv{0})").format(abi_lv)
@@ -830,7 +830,7 @@ class Manage_Power_System_Panel:
         if chara_id == 0:
             return ""
         try:
-            chara = cache.character_data.get(chara_id)
+            chara = identity.get(chara_id)
             if chara and hasattr(chara, "name"):
                 return str(chara.name)
         except Exception:

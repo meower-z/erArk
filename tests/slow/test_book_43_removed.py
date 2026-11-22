@@ -27,6 +27,7 @@ from tests import kernel_data
 from tests.chara_activity import behave
 from tests.slow.base import SlowTestCase
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from typing import Any
@@ -398,7 +399,7 @@ class Book43RemovedTest(SlowTestCase):
             references.append("借阅表")
         if BOOK_TYPE in library.recommended():
             references.append("阅读推荐")
-        for character_id, character_data in self.cache.character_data.items():
+        for character_id, character_data in identity.table().items():
             if BOOK in chara_life.borrow_book_id_set(character_id):
                 references.append(f"角色 {character_id} 的借书集合")
             if any(
@@ -449,7 +450,7 @@ class Book43RemovedTest(SlowTestCase):
             if book_id in unknown:
                 continue
             now_holder = book_borrow_dict.get(book_id, "missing")
-            holder_data = self.cache.character_data.get(holder)
+            holder_data = identity.get(holder)
             returned = now_holder == -1 and (
                 holder_data is None
                 or book_id not in chara_life.borrow_book_id_set(holder_data.cid)

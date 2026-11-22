@@ -18,6 +18,7 @@ from Script.Modules.gameplay_resolution import starts
 from Script.Modules.gameplay_resolution.intent import Intent
 from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, activity, flags
+from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 
@@ -55,15 +56,13 @@ class Sex_Be_Discovered_Panel:
         """ 发现H的角色id """
         self.from_hidden_sex_flag = from_hidden_sex_flag
         """ 本次是否由隐奸被发现触发（隐奸被发现结算会先清零双方隐奸标记，需由此参数传递上下文） """
-        self.find_chara_data: game_type.Character = cache.character_data[
-            self.character_id
-        ]
+        self.find_chara_data: identity.Identity = identity.of(self.character_id)
         """ 发现H的角色数据 """
-        self.pl_chara_data: game_type.Character = cache.character_data[0]
+        self.pl_chara_data: identity.Identity = identity.of(0)
         """ 玩家角色数据 """
-        self.target_chara_data = cache.character_data[
+        self.target_chara_data = identity.of(
             activity.target(self.pl_chara_data.cid)
-        ]
+        )
         """ 玩家交互对象数据 """
         self.discoverer_reaction_settled = False
         """ 发现者反应是否已结算 """
@@ -80,9 +79,7 @@ class Sex_Be_Discovered_Panel:
                 )
             )
             for chara_id in now_scene_character_list:
-                target_character_data: game_type.Character = (
-                    cache.character_data[chara_id]
-                )
+                target_character_data: identity.Identity = identity.of(chara_id)
                 if handle_premise.handle_self_is_h(chara_id):
                     activity.set_target(self.pl_chara_data.cid, chara_id)
                     self.target_chara_data = target_character_data

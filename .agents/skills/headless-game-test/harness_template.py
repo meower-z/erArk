@@ -88,7 +88,7 @@ cache = world.cache
 from Script.Core import io_init, save_handle
 from Script.Design import character_behavior, game_time, handle_npc_ai
 from Script.Kernel import core
-from Script.Modules.domains import activity, flags, modes, needs
+from Script.Modules.domains import activity, flags, identity, modes, needs
 from Script.System.Field_Commission_System import field_commission_function
 from Script.System.Instruct_System import handle_instruct
 from tests.world import act
@@ -123,10 +123,10 @@ def capture_print(string, *args, **kwargs):
 io_init.era_print = capture_print
 
 save_handle.input_load_save(SAVE_ID)
-pl = cache.character_data[0]
+pl = identity.of(0)
 WATCH = {
     cid
-    for cid, cd in cache.character_data.items()
+    for cid, cd in identity.table().items()
     if WATCH_NAME and cd.name == WATCH_NAME
 }
 
@@ -139,7 +139,7 @@ def describe(cid):
     Return arguments:
     str -- 状态描述
     """
-    cd = cache.character_data[cid]
+    cd = identity.of(cid)
     kernel = core.state().characters.get(str(cid))
     end = (
         game_time.at(kernel.action.start + kernel.action.duration)

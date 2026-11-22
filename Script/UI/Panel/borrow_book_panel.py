@@ -15,6 +15,7 @@ import random
 from Script.Design import game_time
 from Script.Modules.domains import abilities, activity, chara_life, facility
 from Script.Modules.domains import library
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -432,9 +433,7 @@ class Borrow_Book_Panel:
                             book_style = "gold_enrod"
                         else:
                             borrow_npc_id = holders[book_cid]
-                            borrow_npc_name = cache.character_data[
-                                borrow_npc_id
-                            ].name
+                            borrow_npc_name = identity.of(borrow_npc_id).name
                             book_text += _("(已被{0}借走)").format(
                                 borrow_npc_name
                             )

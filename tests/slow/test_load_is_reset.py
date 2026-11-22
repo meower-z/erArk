@@ -19,6 +19,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 from unittest import mock
 
+from tests import chara_projection
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -127,6 +128,9 @@ class LoadIsResetTest(SlowTestCase):
             vars(legacy_cache)["npc_id_got"] = roster.active()
             vars(legacy_cache)["forbidden_npc_id"] = roster.forbidden()
             vars(legacy_cache)["npc_name_data"] = roster.names()
+            vars(legacy_cache)[
+                "character_data"
+            ] = chara_projection.pickled_characters()
             with open(cache_path, "wb") as f:
                 pickle.dump(legacy_cache, f)
             os.remove(

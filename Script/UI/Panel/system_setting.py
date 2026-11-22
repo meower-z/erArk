@@ -14,7 +14,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
 from Script.Modules.save_load import settings
-from Script.Modules.domains import playthrough, roster, chara_profile
+from Script.Modules.domains import playthrough, roster, chara_profile, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -50,7 +50,7 @@ class System_Setting_Panel:
         """ 绘制的最大宽度 """
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的文本列表 """
-        self.pl_character_data = cache.character_data[0]
+        self.pl_character_data = identity.of(0)
         """ 玩家的属性 """
         self.type_show = {_("基础"): True, _("难度"): False, _("绘制"): False}
         """ 当前显示的设置类型 """
@@ -338,7 +338,7 @@ class System_Setting_Panel:
         if type_name == _("绘制"):
             # 全角色是否使用通用文本
             if cid == 2:
-                for character_id in cache.character_data:
+                for character_id in identity.table():
                     chara_profile.chara_setting.set_item(
                         character_id,
                         1,
@@ -614,11 +614,11 @@ class System_Setting_Panel:
             line_feed.draw()
             npc_count = 0  # 计数
             # 遍历全部干员
-            for npc_id in cache.character_data:
+            for npc_id in identity.table():
                 # 跳过玩家
                 if npc_id == 0:
                     continue
-                npc_data = cache.character_data[npc_id]
+                npc_data = identity.of(npc_id)
                 button_text = (
                     f"[{str(npc_data.adv).rjust(4,'0')}]：{npc_data.name}"
                 )
@@ -670,7 +670,7 @@ class System_Setting_Panel:
                 # 输出提示信息
                 now_draw = draw.NormalDraw()
                 info_text = _("\n\n{0}干员已离岛\n\n").format(
-                    cache.character_data[npc_id].name
+                    identity.of(npc_id).name
                 )
                 now_draw.text = info_text
                 now_draw.width = self.width

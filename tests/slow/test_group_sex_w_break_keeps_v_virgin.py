@@ -20,6 +20,7 @@ from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 AMIYA_ID = 1
 """ 阿米娅的角色id """
@@ -46,7 +47,7 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
         from Script.Core import constant
         from Script.Design import handle_premise
 
-        self.pl = self.cache.character_data[0]
+        self.pl = identity.of(0)
         self.walk(["中枢", "博士办公室"])
         # 干员位置一览记住上次选的召集方式，只在第一次按
         self.summon(KALTSIT_ID, ("召集到自己当前位置",))
@@ -76,7 +77,7 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
         from Script.Modules.domains import relations
         from Script.Core import constant
 
-        chara = self.cache.character_data[chara_id]
+        chara = identity.of(chara_id)
         self.world.player.press(*mode, chara.name, "返回")
         self.instruct(constant.Instruct.ALL_NPC_POSITION)
         self.show_panel()

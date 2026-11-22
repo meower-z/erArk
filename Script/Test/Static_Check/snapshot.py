@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import json
 
@@ -125,14 +126,14 @@ def build_snapshot(
     """
     参数:
         cache: 当前游戏缓存对象
-        involved_character_ids (Set[int]): 本次失败涉及的角色id集合，默认为None时character_data全量保留
+        involved_character_ids (list[int] | set[int] | None): 涉事角色id集合，为None时全量转储角色身份表
     返回值:
         dict: 当前全局状态的JSON可序列化快照
     功能:
-        将传入cache的顶层字段逐一转换为JSON可序列化数据（排除静态配置/渲染缓存字段，见EXCLUDED_TOP_LEVEL_FIELDS）。
-        character_data字段在传入involved_character_ids时仅保留涉事角色与玩家（全量354个角色的快照可达数MB，
-        而排查一次失败通常只需要涉事角色的数据），未传入时全量保留；
-        scene_data字段仅保留角色集合非空的场景（角色所在位置是排查问题的关键信息，空场景则无排查价值）
+        将传入cache的顶层字段转为JSON可序列化数据（排除EXCLUDED_TOP_LEVEL_FIELDS与text_前缀字段）。
+        scene_data仅保留有角色的场景。
+        角色身份表写入identity.characters键：传入involved_character_ids时仅保留涉事角色与玩家（最多
+        MAX_SNAPSHOT_CHARACTERS人），并附identity.characters_omitted说明，未传入时全量保留
     """
     snapshot = {}
     for field_name, field_value in vars(cache).items():
@@ -147,30 +148,25 @@ def build_snapshot(
             }
             snapshot[field_name] = _to_json_safe(filtered_scene_data, 0, set())
             continue
-        if (
-            field_name == "character_data"
-            and involved_character_ids is not None
-            and isinstance(field_value, dict)
-        ):
-            # 仅保留涉事角色与玩家（id 0）的完整数据，且总数不超过MAX_SNAPSHOT_CHARACTERS，其余角色只记id
-            keep_ids = sorted(
-                (set(involved_character_ids) | {0}) & set(field_value)
-            )
-            dumped_ids = keep_ids[:MAX_SNAPSHOT_CHARACTERS]
-            filtered_character_data = {
-                cid: field_value[cid] for cid in dumped_ids
-            }
-            snapshot[field_name] = _to_json_safe(
-                filtered_character_data, 0, set()
-            )
-            snapshot["character_data_omitted"] = (
-                f"共{len(field_value)}个角色，涉事{len(keep_ids)}个，仅转储前{len(dumped_ids)}个{dumped_ids}，未转储的涉事角色id={keep_ids[MAX_SNAPSHOT_CHARACTERS:]}"
-            )
-            continue
         try:
             snapshot[field_name] = _to_json_safe(field_value, 0, set())
         except Exception as e:
             snapshot[field_name] = f"<字段快照失败: {e}>"
+    from Script.Modules.domains import identity
+
+    table = identity.table()
+    if involved_character_ids is None:
+        dumped_ids = list(table)
+    else:
+        # 仅保留涉事角色与玩家（id 0）的身份，最多 MAX_SNAPSHOT_CHARACTERS 人，超出的涉事角色只记 id
+        keep_ids = sorted((set(involved_character_ids) | {0}) & set(table))
+        dumped_ids = keep_ids[:MAX_SNAPSHOT_CHARACTERS]
+        snapshot[f"{identity.KEY}_omitted"] = (
+            f"共{len(table)}个角色，涉事{len(keep_ids)}个，仅转储前{len(dumped_ids)}个{dumped_ids}，未转储的涉事角色id={keep_ids[MAX_SNAPSHOT_CHARACTERS:]}"
+        )
+    snapshot[identity.KEY] = _to_json_safe(
+        {cid: dataclasses.asdict(table[cid]) for cid in dumped_ids}, 0, set()
+    )
     return snapshot
 
 
@@ -197,7 +193,7 @@ def dump_snapshot_json(
     """
     参数:
         cache: 当前游戏缓存对象
-        involved_character_ids (Set[int]): 本次失败涉及的角色id集合，默认为None时character_data全量保留
+        involved_character_ids (list[int] | set[int] | None): 涉事角色id集合，为None时全量转储角色身份表
     返回值:
         str: 当前全局状态快照的JSON字符串（ensure_ascii=False，保留中文可读性）
     功能:

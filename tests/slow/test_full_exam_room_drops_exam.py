@@ -15,6 +15,7 @@
 from tests.slow.health_check import EXAM_ROOM, SLOT_START, HealthCheckTestCase
 from tests import kernel_data
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 GIVE_UP_MINUTES = 30
 """ 坐满体检科后，等她放弃的最长分钟数（新干员原地等待的时长） """
@@ -33,7 +34,7 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         """
         super().setUp()
         self.operator_id = self.book_daily_exam("可露希尔")
-        self.operator = self.cache.character_data[self.operator_id]
+        self.operator = identity.of(self.operator_id)
         self.sleep_through_midnight()
         self.start = SLOT_START[
             kernel_data.domain("action_info").get(

@@ -51,7 +51,7 @@ assert map_handle.get_map_system_path_str_for_list(SCENE) in cache.scene_data
 
 ### fixture 字段与置零函数对照表
 
-`game_type.Character()` 的多数容器字段初值是**空 dict**，而代码里普遍用 `xxx[key]` 直接下标访问，不预填就 KeyError。置零函数的命名和签名**不规律**，凭印象写必错，照抄下表：
+自建角色 fixture 时，漏填部分字段的初始值会在下标访问时触发 KeyError。`attr_calculation` 中各置零函数的命名和签名**不规律**。下表列出各项字段的初始值与置零写法：
 
 | 字段 | 置零函数 | 坑 |
 | --- | --- | --- |
@@ -157,7 +157,7 @@ pregnancy_handle.character_handle.get_new_character = lambda cid, visitor_flag=F
 
 # ⑥ 事件里的"随机选一名医生/干员"用 random.choice(列表)，列表空会 IndexError：
 #    cache.npc_id_got 要非空，并给一个角色 profession = 3（医疗）
-cache.npc_id_got = {101, 102}; cache.character_data[101].profession = 3
+cache.npc_id_got = {101, 102}; kernel_data.put(identity.update, 101, profession=3)
 
 # ⑦ 想数"创建了几个角色"，包一层真函数而不是替换掉它：
 born_calls = []; _real = character_handle.born_new_character
@@ -253,10 +253,10 @@ draw.WaitDraw.draw = record_draw
 ```python
 save_handle.input_load_save("5")     # 存档目录 save/5/，纯读入内存
 cache = cache_control.cache
-pl = cache.character_data[0]
+pl = identity.of(0)
 ```
 
-- 按名字找角色：遍历 `cache.character_data.items()` 比对 `cd.name`。
+- 按名字找角色：遍历 `identity.table().values()`，比对每条角色身份的 `.name`。
 - 体检清单（排查行为类 BUG 时先打印这些）：`activity.behavior(cid)` 的 `behavior_id / duration / start_time`、`activity.state(cid)`、`activity.position(cid)`、`activity.target(cid)`、`needs.of(cid)`（疲劳 `tired`、饥饿 `hunger`、尿意 `urine`、乳汁 `milk`、熟睡值 `sleep`、体力 `hit` 与上限 `hit_max`、气力 `mana` 与上限 `mana_max`）、`sp_flag` 全量（`sleep / rest / tired / sleep_h_awake / unconscious_h / imprisonment / is_follow / is_h / hidden_sex_mode`）、醉酒等级 `drunk_sex_common.get_drunk_level(cid)`、安眠药 `h_state.body_item[9][1]`、`work.work_type`、`entertainment.entertainment_type`。
 - 需要移动角色到某场景：`map_handle.character_move_scene(旧位置, 新位置, cid)`。
 
@@ -355,7 +355,6 @@ random.randint = lambda a, b: a    # 所有 randint 返回下界 → 概率判�
 ```python
 _orig = handle_npc_ai.judge_interrupt_character_behavior
 def patched(cid):
-    cd = cache.character_data[cid]
     if <候选修复条件>: return 0
     return _orig(cid)
 handle_npc_ai.judge_interrupt_character_behavior = patched

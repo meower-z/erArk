@@ -16,7 +16,7 @@
 import shutil
 
 from tests.slow.base import SlowTestCase
-from tests import kernel_data
+from tests import chara_projection, kernel_data
 
 SAVE_ID = "test_load_splits_shared_cloth_semen"
 """ 本测试写入 save/ 的存档id，测试结束时删掉 """
@@ -81,6 +81,7 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
     def test_tables_split_after_load(self) -> None:
         """三种存档读档后：精液量按读档规则保留或清零，射在穿着的袜子上只改穿着的表，再存读一次不变"""
         from Script.Config import game_config
+        from Script.Core import save_handle
         from Script.Modules.domains import dirty as dirty_mod, wardrobe
         from Script.UI.Panel import ejaculation_panel
 
@@ -104,19 +105,20 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
                 1,
                 SOCKS_SEMEN,
             )
+        legacy = chara_projection.pickled_characters()
         whole = dirty_mod.view(whole_dict_id)
         whole.cloth_locker_semen = whole.cloth_semen
-        vars(self.cache.character_data[whole_dict_id])["dirty"] = whole
+        vars(legacy[whole_dict_id])["dirty"] = whole
         shared = dirty_mod.view(shared_list_id)
         shared.cloth_locker_semen = dict(shared.cloth_semen)
-        vars(self.cache.character_data[shared_list_id])["dirty"] = shared
+        vars(legacy[shared_list_id])["dirty"] = shared
         short = dirty_mod.view(short_id)
         short.cloth_locker_semen = {
             t: list(v) for t, v in short.cloth_semen.items()
         }
         for table in (short.cloth_semen, short.cloth_locker_semen):
             del table[all_types[-1]]
-        vars(self.cache.character_data[short_id])["dirty"] = short
+        vars(legacy[short_id])["dirty"] = short
         expected = {
             whole_dict_id: (
                 {t: v[1] for t, v in whole.cloth_semen.items()},
@@ -136,7 +138,11 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
                 f"{cid} 写盘前两表袜子上的精液",
             )
 
-        self._save_and_load()
+        save_handle.establish_save(SAVE_ID)
+        loaded = save_handle.load_save(SAVE_ID)
+        vars(loaded)["character_data"] = legacy
+        save_handle.write_save_data(SAVE_ID, "1", loaded)
+        save_handle.input_load_save(SAVE_ID)
         for cid in expected:
             self.assertEqual(
                 self._semen(cid), expected[cid], f"{cid} 读档后两表的精液量"

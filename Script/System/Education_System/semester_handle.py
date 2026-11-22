@@ -21,7 +21,7 @@
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import game_time, attr_calculation
-from Script.Modules.domains import growth
+from Script.Modules.domains import growth, identity
 from Script.System.Education_System import education_constant, growth_handle
 from Script.Modules.domains import abilities, chara_life
 
@@ -126,7 +126,7 @@ def get_semester_attend(character_id: int) -> tuple[int, int]:
     Return arguments:
     Tuple[int, int] -- (本学期听课节数, 本学期缺课节数)
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return 0, 0
     growth_data = growth.of(character_id)
     if growth_data is None:
@@ -165,7 +165,7 @@ def get_semester_level_change(character_id: int) -> dict[int, list[int]]:
     Dict[int, List[int]] -- 键为科目能力id，值为[本学期开始时的等级, 现在的等级]，只含真涨了的
     """
     result: dict[int, list[int]] = {}
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return result
     growth_data = growth.of(character_id)
     if growth_data is None:
@@ -187,7 +187,7 @@ def get_top_ability(character_id: int) -> tuple[int, int]:
     Return arguments:
     Tuple[int, int] -- (科目能力id, 等级)，一门都没学过则为(-1, 0)
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return -1, 0
     top_ability_id = -1
     top_level = 0
@@ -244,9 +244,9 @@ def get_report_incomplete_reason(character_id: int) -> str:
     Return arguments:
     str -- 理由文本；成绩单完整（或角色不存在）时为空串
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return ""
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     work_type = chara_life.work_type(character_id)
     growth_data = growth.of(character_id)
     base_work_type = (
@@ -290,7 +290,7 @@ def judge_adult_out_of_school(character_id: int) -> bool:
     功能: 学期结算（整学期都不在学生岗的不再出空成绩单）与「检查成绩单」的前提共用。
           学员不在学生岗的不算：照出成绩单并写明理由
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     # 104 少女即毕业后的阶段素质，成长链走完后一直挂着
     if growth_handle.get_character_stage(character_id) != 104:
@@ -313,7 +313,7 @@ def judge_report_card_checkable(character_id: int) -> bool:
              这时也挡掉的话待查看永远消不掉；看完 flag 清掉，指令随之不可用。
           只管这一条：是不是女儿、是不是婴儿由指令前提串里的 target_is_player_daughter / t_baby_0 判。只读不写
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     if not judge_adult_out_of_school(character_id):
         return True
@@ -367,7 +367,7 @@ def get_report_card_history(character_id: int) -> list[dict]:
     Return arguments:
     List[dict] -- 成绩单快照列表，最新的一份在末尾；没有则为空列表
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return []
     growth_data = growth.of(character_id)
     if growth_data is None:
@@ -505,7 +505,7 @@ def get_report_card_text(
     str -- 成绩单正文
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     semester_text = get_semester_name(
         report_data.get("year", 0), report_data.get("month", 0)
     )

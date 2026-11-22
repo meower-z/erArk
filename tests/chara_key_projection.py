@@ -11,6 +11,7 @@ tests/snapshot.py 的 capture 调用 project。
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -34,6 +35,6 @@ def project(cache: game_type.Cache, state: dict[str, object]) -> None:
 
     every = (*relations.KEYS, *chara_life.KEYS, *chara_profile.KEYS)
     keys = [key for key in every if key.old not in SKIPPED]
-    for cid in cache.character_data:
+    for cid in identity.table():
         for key in keys:
             flatten(f"chara.{cid}.{key.old}", key(cid), state)

@@ -9,6 +9,7 @@
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 EVENT_ID = "108c4126-9c89-4fb5-9de3-b56a94de9d5e"
 """ 星熊的子事件，效果含 CVE_A2_J|0_G_1 """
@@ -28,10 +29,9 @@ class JuelEventEffectTest(SlowTestCase):
         from Script.Core import game_type
         from Script.Design import settle_behavior
 
-        cache = self.cache
         npc_id = next(
             cid
-            for cid, chara in cache.character_data.items()
+            for cid, chara in identity.table().items()
             if chara.adv == ADV_ID
         )
         aim(0, npc_id)

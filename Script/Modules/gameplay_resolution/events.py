@@ -21,6 +21,7 @@ from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, plan_queue, time_hooks
 from Script.Modules.domains import activity, flags, modes, needs
 from Script.Modules.domains import player_ability
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -193,7 +194,7 @@ def player_spent(who: str) -> core.Effects:
     from Script.System.Instruct_System import handle_instruct
 
     character_id = int(who)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if flags.get(character_id, "is_h"):
         _draw(character_data.name + _("太累了，无法继续H\n"))
     flags.set(character_id, tired=False)
@@ -233,7 +234,7 @@ def h_end(who: str) -> core.Effects:
     from Script.System.Instruct_System import handle_instruct
 
     character_id = int(who)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     flags.set(character_id, is_h=False)
     _draw(character_data.name + _("太累了，H 结束\n"))
     return handle_instruct.plan_h_end(constant.Behavior.T_H_HP_0)
@@ -297,7 +298,7 @@ def stop_following(who: str) -> core.Effects:
     Effects -- 空
     """
     character_id = int(who)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     text = (
         _("太累了，无法继续跟随\n")
         if flags.get(character_id, "tired")

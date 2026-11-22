@@ -5,6 +5,7 @@ from Script.Design import talk
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
 from Script.Modules.domains import activity
+from Script.Modules.domains import identity
 
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
@@ -42,7 +43,7 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
         """ 绘制文本的样式 """
         self.tooltip: str = ""
         """ 绘制文本的悬停提示 """
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data: identity.Identity = identity.of(character_id)
         if activity.position(0) not in [
             activity.position(character_data.cid),
             activity.behavior(character_data.cid).move_target,
@@ -94,10 +95,10 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
 
         # 口上颜色
         if event_data.adv_id not in {"", "0", 0}:
-            character_data = cache.character_data[character_id]
-            target_character_data: game_type.Character = cache.character_data[
+            character_data = identity.of(character_id)
+            target_character_data: identity.Identity = identity.of(
                 activity.target(character_data.cid)
-            ]
+            )
             text_color = character_data.text_color
             tar_text_color = target_character_data.text_color
             if text_color:

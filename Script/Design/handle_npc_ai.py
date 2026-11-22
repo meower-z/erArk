@@ -17,7 +17,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, action_info, activity, chara_life
 from Script.Modules.domains import entertainment, facility, flags, hypnosis
-from Script.Modules.domains import needs, roster
+from Script.Modules.domains import needs, roster, identity
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -890,7 +890,7 @@ def judge_same_position_npc_follow() -> None:
     from Script.Modules.gameplay_resolution import plan_queue
 
     for character_id in roster.active():
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data: identity.Identity = identity.of(character_id)
         # 跳过不在同一位置的NPC
         if activity.position(character_id) != activity.position(0):
             continue
@@ -1065,7 +1065,7 @@ def select_random_free_character(character_id: int) -> int:
         # 跳过自己
         if chara_id == character_id:
             continue
-        now_character_data = cache.character_data[chara_id]
+        now_character_data = identity.of(chara_id)
         # 跳过H状态
         if flags.get(now_character_data.cid, "is_h"):
             continue

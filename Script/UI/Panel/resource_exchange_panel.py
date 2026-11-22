@@ -14,6 +14,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import warehouse
 import random
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -76,7 +77,7 @@ def calculate_trade_multiplier(
         ability_lv = abilities.ability(main_id).get(40, 0)
         main_bonus = ability_lv * TRADE_MAIN_RATE
     for chara_id in trade_ids:
-        if chara_id == main_id or chara_id not in cache.character_data:
+        if chara_id == main_id or not identity.exists(chara_id):
             continue
         ability_lv = abilities.ability(chara_id).get(40, 0)
         sub_bonus += ability_lv * TRADE_SUB_RATE
@@ -507,7 +508,7 @@ class Resource_Exchange_Line_Panel:
 
             main_trader_info = draw.NormalDraw()
             if main_id > 0:
-                main_name = cache.character_data[main_id].name
+                main_name = identity.of(main_id).name
             else:
                 main_name = _("空缺")
                 main_trader_info.style = "warning"
@@ -521,7 +522,7 @@ class Resource_Exchange_Line_Panel:
             sub_ops = [
                 cid
                 for cid in economy.trade_operator_ids()
-                if cid != main_id and cid in cache.character_data
+                if cid != main_id and identity.exists(cid)
             ]
             sub_trader_info = draw.NormalDraw()
             sub_trader_info.text = _(
@@ -529,7 +530,7 @@ class Resource_Exchange_Line_Panel:
             ).format(len(sub_ops), sub_bonus * 100)
 
             if sub_ops:
-                sub_names = [cache.character_data[cid].name for cid in sub_ops]
+                sub_names = [identity.of(cid).name for cid in sub_ops]
                 sub_trader_info.text += _("    - {0}\n").format(
                     ", ".join(sub_names)
                 )
@@ -916,9 +917,7 @@ class Resource_Exchange_Line_Panel:
                 if main_id:
                     main_ids.add(main_id)
                 main_name = (
-                    cache.character_data[main_id].name
-                    if main_id > 0
-                    else _("空缺")
+                    identity.of(main_id).name if main_id > 0 else _("空缺")
                 )
                 abi_lv = abilities.ability(main_id).get(40, 0)
                 abi_lv_text = (
@@ -955,13 +954,13 @@ class Resource_Exchange_Line_Panel:
             other_ops = [
                 cid
                 for cid in economy.trade_operator_ids()
-                if cid not in main_ids and cid in cache.character_data
+                if cid not in main_ids and identity.exists(cid)
             ]
             sub_draw = draw.NormalDraw()
             if other_ops:
                 other_names = []
                 for c in other_ops:
-                    chara = cache.character_data[c]
+                    chara = identity.of(c)
                     abi_lv = abilities.ability(c).get(40, 0)
                     other_names.append(
                         _("{chara_name}(话术lv{abi_lv})").format(

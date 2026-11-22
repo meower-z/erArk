@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 
-from Script.Core import cache_control
 from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import player_collection, playthrough
@@ -12,6 +11,7 @@ from Script.Modules.domains import pregnancy as pregnancy_domain
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -60,15 +60,10 @@ def check_birth_01() -> list[CheckFailure]:
 def check_birth_02() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 按原始种族生育方式检查关闭后的卵、无壳排卵机会与博士持卵索引，
     不检查胎数。"""
-    cache = cache_control.cache
     values = playthrough.settings(playthrough.BIRTH_TYPE)
-    characters = getattr(cache, "character_data", None)
+    characters = identity.table()
     races = getattr(game_config, "config_race", None)
-    if (
-        not isinstance(values, dict)
-        or not isinstance(characters, dict)
-        or not isinstance(races, dict)
-    ):
+    if not isinstance(values, dict) or not isinstance(races, dict):
         return []
     disabled = {
         kind

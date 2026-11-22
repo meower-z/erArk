@@ -15,6 +15,7 @@ from types import ModuleType
 
 from tests import kernel_data
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 SAVE_ID = "test_abilities_save_round_trip"
 """ 本测试写进 save/ 的存档id，读档后删掉这个存档 """
@@ -40,7 +41,6 @@ class AbilitiesSaveRoundTripTest(SlowTestCase):
 
         for _ in range(3):
             instruct(self.world, constant.Instruct.WAIT)
-        cache = self.world.cache
         npc = next(cid for cid in roster.active_sorted() if cid)
         first = {
             key: next(iter(abilities.Table(npc, key)))
@@ -55,7 +55,7 @@ class AbilitiesSaveRoundTripTest(SlowTestCase):
         def tables() -> dict[tuple[int, str], dict[int, int]]:
             return {
                 (cid, key): abilities.Table(cid, key).copy()
-                for cid in sorted(cache.character_data)
+                for cid in sorted(identity.table())
                 for key in abilities.PICKLED.values()
             }
 
@@ -74,9 +74,7 @@ class AbilitiesSaveRoundTripTest(SlowTestCase):
             save_handle.input_load_save(SAVE_ID)
         finally:
             shutil.rmtree(path, ignore_errors=True)
-        for chara in pickled.character_data.values():
-            for name in abilities.PICKLED:
-                self.assertNotIn(name, vars(chara))
+        self.assertNotIn("character_data", vars(pickled))
         stored = {
             *state["data"].get("roster.offstage", {}).get(str(npc), {}),
             *state["characters"].get(str(npc), {}).get("data", {}),

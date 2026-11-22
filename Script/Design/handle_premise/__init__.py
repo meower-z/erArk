@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from collections.abc import Callable, Collection, Iterable
-from Script.Core import cache_control, constant, game_type, get_text, num
+from Script.Core import cache_control, constant, get_text, num
 from Script.Core import constant_promise
 from Script.Design import attr_calculation, character, instuct_judege
 from Script.Config import game_config
@@ -39,6 +39,7 @@ from Script.Modules.domains import (
 from Script.Modules.domains import h_state, history, hypnosis, needs
 from Script.Modules.domains import physical_exam, roster, status, chara_profile
 from Script.Modules.domains import relations
+from Script.Modules.domains import identity
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -302,7 +303,7 @@ def get_listen_manual_teach_course(character_id: int) -> tuple | None:
     """
     from Script.System.Education_System import schedule_handle
 
-    if character_id == 0 or character_id not in cache.character_data:
+    if character_id == 0 or not identity.exists(character_id):
         return None
     if (
         activity.behavior(character_id).behavior_id
@@ -447,9 +448,9 @@ def handle_comprehensive_value_premise(
     Return arguments:
     int -- 前提权重加成
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     pl_target_character_id = activity.target(0)
-    pl_target_character_data = cache.character_data[pl_target_character_id]
+    pl_target_character_data = identity.of(pl_target_character_id)
 
     # 罗德岛全局数值的主体RI（Plan 23）：资源、声望、公务量这类不属于任何角色的数值
     # 必须在角色主体的判别之前提前返回：下面那段数值B的判别是按「类型|子id」拆的，
@@ -468,15 +469,13 @@ def handle_comprehensive_value_premise(
     final_character_data = character_data
     if premise_all_value_list[0] == "A2":
         final_character_id = activity.target(character_id)
-        final_character_data = cache.character_data[
-            activity.target(character_id)
-        ]
+        final_character_data = identity.of(activity.target(character_id))
     elif premise_all_value_list[0][:2] == "A3":
         final_character_adv = int(premise_all_value_list[0][3:])
         final_character_id = character.get_character_id_from_adv(
             final_character_adv
         )
-        final_character_data = cache.character_data[final_character_id]
+        final_character_data = identity.of(final_character_id)
         # 如果还没拥有该角色，则返回0
         if not roster.has(final_character_id):
             return 0
@@ -602,22 +601,20 @@ def handle_comprehensive_value_premise(
         elif "Relationship" in premise_all_value_list[1]:
             target_character_type = premise_all_value_list[1].split("|")[1]
             if target_character_type == "是玩家的":
-                target_character_data = cache.character_data[0]
+                target_character_data = identity.of(0)
             elif target_character_type == "是自己的":
                 target_character_data = final_character_data
             elif target_character_type == "是交互对象的":
-                target_character_data = cache.character_data[
+                target_character_data = identity.of(
                     activity.target(final_character_data.cid)
-                ]
+                )
             # 是指定id角色的
             else:
                 target_character_adv = int(premise_all_value_list[3])
                 target_character_id = character.get_character_id_from_adv(
                     target_character_adv
                 )
-                target_character_data = cache.character_data[
-                    target_character_id
-                ]
+                target_character_data = identity.of(target_character_id)
             relation_type = premise_all_value_list[2]
             if relation_type == "父亲":
                 return final_character_id == relations.father_id(
@@ -1687,7 +1684,7 @@ def handle_t_normal_256_or_unconscious_flag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     target_chara_id = activity.target(character_id)
     if _check_normal_combo(target_chara_id, (2, 5, 6)):
         return 1
@@ -1707,7 +1704,7 @@ def handle_t_normal_56_or_unconscious_flag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     target_chara_id = activity.target(character_id)
     if _check_normal_combo(target_chara_id, (5, 6)):
         return 1

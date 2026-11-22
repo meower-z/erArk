@@ -13,7 +13,7 @@
 
 from types import FunctionType
 
-from Script.Core import cache_control, game_type, get_text, flow_handle
+from Script.Core import get_text, flow_handle
 from Script.Design import attr_calculation
 from Script.System.Education_System import (
     education_constant,
@@ -21,9 +21,8 @@ from Script.System.Education_System import (
     growth_handle,
 )
 from Script.UI.Moudle import draw, panel
+from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()
@@ -412,7 +411,7 @@ class Schedule_Template_Panel:
             # 每行6个：190/6=31列。原来整个循环没有换行，孩子一多就会串行
             index = 0
             for child_id in child_list:
-                child_data: game_type.Character = cache.character_data[child_id]
+                child_data: identity.Identity = identity.of(child_id)
                 mark = "√" if child_id in selected_set else "  "
                 now_draw = draw.LeftButton(
                     _("[{0}{1}]").format(mark, child_data.name),

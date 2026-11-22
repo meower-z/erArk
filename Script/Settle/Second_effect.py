@@ -25,7 +25,7 @@ from Script.Modules.domains import (
     growth,
 )
 from Script.Modules.domains import h_meters, h_state, needs, player_collection
-from Script.Modules.domains import pregnancy, status
+from Script.Modules.domains import pregnancy, status, identity
 
 
 def _bump_orgasm_count(character_id: int, part_id: int) -> None:
@@ -3139,7 +3139,7 @@ def handle_milking_machine(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
 
@@ -3196,7 +3196,7 @@ def handle_urine_collector(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
 
@@ -3238,7 +3238,7 @@ def handle_b_orgasm_to_milk(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
 
@@ -3289,7 +3289,7 @@ def handle_u_orgasm_to_pee(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
 
@@ -3337,7 +3337,7 @@ def handle_extra_orgasm(
     change_data -- 状态变更信息记录对象
     """
     ability = abilities.ability(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
 
@@ -4130,7 +4130,7 @@ def handle_show_off_study(
         base_chara_favorability_and_trust_common_settle,
     )
 
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     with growth.editing(character_id, create=False) as growth_data:
         if growth_data is None or not growth_data.show_off_ability:
             return

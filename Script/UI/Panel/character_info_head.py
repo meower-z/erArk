@@ -11,6 +11,7 @@ from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, activity
 from Script.Modules.domains import chara_profile, flags, h_meters, h_state
 from Script.Modules.domains import hypnosis, inventory, needs, relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -102,7 +103,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
                     "target": classroom,
                 }
             )
-            teacher_name = cache.character_data[0].name
+            teacher_name = identity.of(0).name
             # 节次外的手动授课没有「第几节」可写
             if period == -1:
                 return False, _("{0}｜授课：{1}").format(
@@ -134,9 +135,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
             return False, _("自习·{0}｜本节无教师，按自习收益｜第{1}节").format(
                 text, period + 1
             )
-        teacher_data: game_type.Character = cache.character_data[
-            now_course["teacher_id"]
-        ]
+        teacher_data: identity.Identity = identity.of(now_course["teacher_id"])
         return False, _("{0}｜授课：{1}｜第{2}节").format(
             text, teacher_data.name, period + 1
         )
@@ -182,9 +181,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
                         return False, _(
                             "{0}｜本节无人在岗，降为见习｜第{1}节"
                         ).format(text, period + 1)
-                    mentor_data: game_type.Character = cache.character_data[
-                        mentor_id
-                    ]
+                    mentor_data: identity.Identity = identity.of(mentor_id)
                     return False, _("{0}｜带教：{1}｜第{2}节").format(
                         text, mentor_data.name, period + 1
                     )
@@ -487,9 +484,7 @@ def get_character_status_list(
     bag_draw = draw.LeftDraw()
     if flags.get(character_id, "bagging_chara_id"):
         bag_text = _(" <携袋:{0}>").format(
-            cache.character_data[
-                flags.get(character_id, "bagging_chara_id")
-            ].name
+            identity.of(flags.get(character_id, "bagging_chara_id")).name
         )
         bag_draw.tooltip = _(
             "将失去意识的干员装进了袋子中，用于在关押区监禁到牢房里"
@@ -662,7 +657,7 @@ class CharacterInfoHead:
             auto_use_sanity_drug,
         )
 
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data: identity.Identity = identity.of(character_id)
 
         # 好感与信赖
         favorability_and_trust_text = ""

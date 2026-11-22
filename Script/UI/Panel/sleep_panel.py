@@ -27,6 +27,7 @@ from Script.Modules.domains import (
     needs,
     relations,
 )
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -81,7 +82,7 @@ class Sleep_Panel:
         """ 睡眠时间_小时 """
         self.sleep_time_min = 0
         """ 睡眠时间_分钟 """
-        self.pl_character_data: game_type.Character = cache.character_data[0]
+        self.pl_character_data: identity.Identity = identity.of(0)
         """ 玩家角色数据 """
         self.min_to_moring_service_min = 0
         """ 睡到早安服务的时间_分钟 """

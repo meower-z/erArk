@@ -402,7 +402,7 @@ Script/
 全局唯一 `cache_control.cache`，关键字段分组：
 
 - **渲染/输入**：`input_cache`
-- **角色世界**：`character_data`（角色ID -> Character）
+- **角色世界**：（角色身份表不在缓存，在 GameState 键 `identity.characters`，由 `Modules/domains/identity.py` 读写）
 - **时间**：`game_time`, `pre_game_time`
 - **地图**：`map_data`, `scene_data`, `collect_position_list`
 - **行为循环**：`over_behavior_character`

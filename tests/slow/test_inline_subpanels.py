@@ -17,6 +17,7 @@ from tests import kernel_data
 from tests.chara_activity import aim
 from tests.kernel_project import activity
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -82,7 +83,7 @@ class InlineSubpanelTest(SlowTestCase):
         game_config = importlib.import_module("Script.Config.game_config")
         cloth_id = min(game_config.config_clothing_tem)
         clothing_type = game_config.config_clothing_tem[cloth_id].clothing_type
-        target = self.cache.character_data[self.npcs[0]]
+        target = identity.of(self.npcs[0])
         kernel_data.put(
             wardrobe.set_part,
             target.cid,
@@ -104,7 +105,7 @@ class InlineSubpanelTest(SlowTestCase):
         self.assertEqual(self.player_starts(), [(self.edits.EDIT, 0)])
         self.assertEqual(end, start)
         self.assertFalse(changed, "点击时缓存被写了")
-        target = self.cache.character_data[self.npcs[0]]
+        target = identity.of(self.npcs[0])
         self.assertIn(
             cloth_id, wardrobe.of(target.cid).cloth_off[clothing_type]
         )
@@ -117,7 +118,7 @@ class InlineSubpanelTest(SlowTestCase):
         )
 
         self.run_pick(player_pick.back)
-        target = self.cache.character_data[self.npcs[0]]
+        target = identity.of(self.npcs[0])
         self.assertIn(
             cloth_id, wardrobe.of(target.cid).cloth_off[clothing_type]
         )

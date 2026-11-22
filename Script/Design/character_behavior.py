@@ -37,6 +37,7 @@ from Script.Modules.domains import (
     history,
 )
 from Script.Modules.domains import modes, plan, roster
+from Script.Modules.domains import identity
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -271,7 +272,7 @@ def character_instruct_record(character_id: int) -> str:
     Return arguments:
     str -- 指令记录文本
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     name = character_data.name
     instruct_text = ""
     # 记录时间的小时数和分钟数
@@ -296,9 +297,9 @@ def character_instruct_record(character_id: int) -> str:
         ].name
         # 如果是交互指令则记录交互对象
         if activity.target(character_id) != character_id:
-            target_character_data: game_type.Character = cache.character_data[
+            target_character_data: identity.Identity = identity.of(
                 activity.target(character_id)
-            ]
+            )
             target_name = target_character_data.name
             instruct_text += _("对{0}进行了{1}\n").format(
                 target_name, now_chara_behavior_name
@@ -317,9 +318,9 @@ def judge_before_pl_behavior() -> None:
     无
     """
     if activity.target(0) != 0:
-        target_character_data: game_type.Character = cache.character_data[
+        target_character_data: identity.Identity = identity.of(
             activity.target(0)
-        ]
+        )
         # 重置交互对象的射精部位
         h_state.set(
             target_character_data.cid,
@@ -343,7 +344,7 @@ def judge_before_pl_behavior() -> None:
     for character_id in roster.active():
         if character_id == 0:
             continue
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data: identity.Identity = identity.of(character_id)
         action_info.set(
             character_data.cid, "have_shown_waiting_in_now_instruct", False
         )

@@ -19,6 +19,7 @@ from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca
 from tests.chara_activity import aim
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 
 class PickDraftHTest(SlowTestCase):
@@ -267,7 +268,7 @@ class PickDraftHTest(SlowTestCase):
             for c in kernel_data.domain("roster").active()
             if c and c not in here
         )
-        guest_data = self.cache.character_data[guest]
+        guest_data = identity.of(guest)
         calls = self.watch_judge("群交")
         self.world.player.press("▶邀请", guest_data.name, "返回", "返回")
         start, end, changed = self.run_pick(

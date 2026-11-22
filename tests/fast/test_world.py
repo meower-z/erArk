@@ -21,6 +21,7 @@ from tests import kernel_data, world
 from tests.fast import FORBIDDEN, FastLayerImportError
 from tests.fast.base import FastTestCase
 from tests.world import FixtureError
+from Script.Modules.domains import identity
 
 ROOM = ["中枢", "博士房间"]
 
@@ -54,13 +55,13 @@ class WorldTest(FastTestCase):
             self.world.chara(1, "干员")
 
     def test_failed_check_leaves_no_chara(self) -> None:
-        """状态核对失败的角色不留在 cache.character_data 里。同一个 id 随后可以再造"""
+        """状态核对失败的角色不留在身份表（identity.characters）里。同一个 id 随后可以再造"""
         self.world.chara(0, "博士")
         with mock.patch.object(world, "STANDARD_OUTFIT", {}), self.assertRaises(
             FixtureError
         ):
             self.world.chara(1, "干员")
-        self.assertNotIn(1, self.cache.character_data)
+        self.assertNotIn(1, identity.table())
         self.world.chara(1, "干员")
         self.assertEqual(handle_premise.handle_normal_all(1), 1)
 
@@ -82,7 +83,7 @@ class WorldTest(FastTestCase):
         kernel_data.written(npc_template.add, template)
         self.world.reset()
         self.assertIs(self.cache, cache)
-        self.assertEqual(cache.character_data, {})
+        self.assertEqual(identity.table(), {})
         self.assertEqual(room.close_flag, 0)
         self.assertEqual(room.character_list, set())
         self.assertEqual(clock.now(), game_time)

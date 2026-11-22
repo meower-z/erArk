@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.Design import map_handle
 from Script.Config import game_config
-from Script.Modules.domains import maintenance
+from Script.Modules.domains import maintenance, identity
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import action_info, activity, chara_life
 from Script.Modules.domains import entertainment, flags, location, relations
@@ -343,12 +343,12 @@ def handle_scene_someone_h_but_not_hidden_sex(character_id: int) -> int:
     # if len(scene_data.character_list) > 2 and not (character_data.sp_flag.is_follow or character_data.sp_flag.is_h):
     if len(character_list) <= 2:
         return 0
-    character_data_all = cache.character_data
+    character_data_all = identity.table()
     # 遍历当前角色列表
     for chara_id in character_list:
         # 遍历非自己且非玩家的角色
         if chara_id != character_id and chara_id != 0:
-            other_character_data: game_type.Character = character_data_all[
+            other_character_data: identity.Identity = character_data_all[
                 chara_id
             ]
             # 检测是否在非隐奸H
@@ -1656,7 +1656,7 @@ def handle_in_problem_target_dormitory(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 获取目标宿舍路径，若无有效目标则进入返回舍管房阶段
     target_room = chara_life.dormitory_admin_target_room(character_data.cid)
     if target_room == "":
@@ -1664,7 +1664,7 @@ def handle_in_problem_target_dormitory(character_id: int) -> int:
 
     # 检查当前场景是否已在目标宿舍
     target_scene = map_handle.get_map_system_path_for_str(target_room)
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     if activity.position(character_data.cid) == target_scene:
         return 1
     return 0

@@ -28,6 +28,7 @@ from Script.Design import (
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import activity, modes
 import logging, time
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -80,7 +81,7 @@ class InScenePanel:
             # 绘制标题
             title_draw.draw()
             # 玩家数据
-            pl_character_data: game_type.Character = cache.character_data[0]
+            pl_character_data: identity.Identity = identity.of(0)
             # 场景数据
             scene_path_str = map_handle.get_map_system_path_str_for_list(
                 activity.position(0)
@@ -377,7 +378,7 @@ class InScenePanel:
                 character_image_list=character_list
                 character_image_list.reverse()
                 for image_cid in character_image_list:
-                    image_character_data = cache.character_data[image_cid]
+                    image_character_data = identity.of(image_cid)
                     flow_handle.print_image_cmd(image_character_data.name,"立绘按钮")
                 """
                 line_feed.draw()

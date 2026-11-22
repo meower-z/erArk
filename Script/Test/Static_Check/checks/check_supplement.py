@@ -26,6 +26,7 @@ from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
 from Script.Modules.domains import chara_life
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -172,15 +173,14 @@ def check_time_stop_unconscious_survives_off_list() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        来源: MO-03。非时停时，character_data中任何角色都不应残留专属时停无意识值
-        unconscious_h==3；不得以是否在npc_id_got中过滤（TIME_STOP_ON/OFF都只扫描当时的npc_id_got|{0}，
-        角色可能在时停中因访客离开或debug操作被移出名单，关闭时停后便再也清不到）。级别为warning：
-        新周目继承整张character_data也可能把历史残留带入
+        非时停时，身份表（identity.characters）中任何角色都不应残留时停无意识值unconscious_h==3。
+        不得按在编名单过滤，因为时停开关只扫描当时的在编名单与玩家，时停中离队的角色可能漏清。
+        级别为warning，新周目沿用身份表也可能带入残留状态
     """
     cache = cache_control.cache
     if cache is None or modes.time_stop():
         return []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     npc_id_got: set[int] = roster.active()
     failures = []
     for cid, c in character_data.items():
@@ -214,8 +214,7 @@ def check_angry_point_lower_bound() -> list[CheckFailure]:
         来源: NO-01。校验每个角色的愤怒值（needs.of(cid)["angry"]）是int且不小于0。
         道歉等指令减愤怒值时以0为下限，本条防新的写入破坏这一点。级别为warning
     """
-    cache = cache_control.cache
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     failures = []
     for cid, c in character_data.items():
         angry_point = needs.of(cid)["angry"]
@@ -271,13 +270,12 @@ def check_officeroom_reference_valid() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        来源: PO-02。校验character_data中每个角色的officeroom（列表字段）只允许是空列表或
-        cache.scene_data的合法键。officeroom非空时会被角色信息面板交给get_scene_path_text，后者把坐标
-        拼成路径后直接索引cache.scene_data；存档迁移只原样复制而不校验。级别为warning：当前主要后果是
-        打开角色信息时渲染失败，且旧档兼容是主要来源
+        校验身份表（identity.characters）中每个角色的officeroom只允许是空列表或cache.scene_data的合法键。
+        officeroom非空时会被角色信息面板交给get_scene_path_text并直接索引cache.scene_data。
+        级别为warning，主要后果是打开角色信息面板时渲染失败
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     failures = []
     for cid, c in character_data.items():

@@ -5,6 +5,7 @@ from Script.Core import cache_control, game_type
 from Script.UI.Panel import draw_event_text_panel
 from Script.Config import game_config
 from Script.Modules.domains import activity, history
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -74,9 +75,9 @@ def handle_event(
 
         _handle_premise = _handle_premise_module
     handle_premise = _handle_premise
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     target_character_id = activity.target(character_id)
-    target_character_data = cache.character_data[target_character_id]
+    target_character_data = identity.of(target_character_id)
     behavior_id = activity.behavior(character_id).behavior_id
     weighted_event_ids: list[str] = []
     weighted_values: list[float] = []

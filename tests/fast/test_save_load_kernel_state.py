@@ -33,12 +33,12 @@ from Script.Modules.domains import abilities, body_manage, country, facility
 from Script.Modules.domains import inventory, medical, physical_exam
 from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import roster, status, wardrobe, warehouse
-from Script.Modules.domains import chara_key, chara_profile, relations
+from Script.Modules.domains import chara_key, chara_profile, identity, relations
 from Script.Design import attr_calculation
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
 from Script.System.Pregnancy_System import pregnancy_constant
-from tests import kernel_data
+from tests import chara_projection, kernel_data
 from tests.fast.base import FastTestCase
 
 SAVE_ID = "kernel_state_test"
@@ -50,14 +50,14 @@ _serial = itertools.count()
 
 def game(clock: int, ends: dict[str, int]) -> core.GameState:
     """
-    一个 GameState：每个角色一个带行动数据的 Idle，在 ends 给出的分钟结束。角色与全局数据里有各种 JSON 值。
-    每个角色的 profile.chara_setting 与 social.assistant_services 各项齐全，读档补全设置时不改它们。
-    全局数据里的 base.stock、本周目设定与势力和国家取自当前状态，换上这个 GameState 后它们不变
+    构造测试用 GameState：每名角色执行带行动数据的 Idle 并在 ends 指定的分钟结束，角色与全局数据包含多种 JSON 值。
+    每名角色的 profile.chara_setting 与 social.assistant_services 各项齐全，读档补全设置时保持不变。
+    全局数据中的 base.stock、本周目设定、国家势力、在编名单与角色身份表取自当前状态
     Keyword arguments:
     clock -- 时钟
-    ends -- 角色（如 "1"）到其行动结束的分钟
+    ends -- 角色键（如 "1"）到其行动结束分钟的映射
     Return arguments:
-    GameState -- 冻结的 GameState
+    core.GameState -- 冻结的 GameState
     """
     characters = {
         who: core.Character(
@@ -94,6 +94,7 @@ def game(clock: int, ends: dict[str, int]) -> core.GameState:
                 playthrough.SETTINGS,
                 country.KEY,
                 roster.ACTIVE,
+                identity.KEY,
             )
         },
     }
@@ -182,7 +183,8 @@ class KernelStateTest(FastTestCase):
         难度回到 3，系统设置还是 1、还是同一个对象。
         内核的 GameState 除去全局键（roster.offstage、医疗部的三个键、体检设置、
         待开放设施开放情况）和角色数据里的 abilities 四个键、玩家收藏品键，
-        以及角色的状态值、道具、身体管理和服装之外，与存档时相同。这几项存档里没有，是读档修补补上的
+        以及角色的状态值、道具、身体管理和服装之外，与存档时相同。这几项存档里没有，是读档修补补上的。
+        身份表（identity.characters）在最前保留存档时的角色顺序与内容，末尾追加读档补上的模板角色
         """
         self.world.chara(0, "博士")
         kernel_data.put(roster.set_active, {0})
@@ -237,7 +239,15 @@ class KernelStateTest(FastTestCase):
             for who, c in loaded.characters.items()
         }
         loaded = replace(loaded, characters=MappingProxyType(characters))
-        self.assertEqual(replace(loaded, data=MappingProxyType(data)), saved)
+        saved_table = list(identity.table(saved).items())
+        loaded_table = list(identity.table(loaded).items())
+        self.assertEqual(loaded_table[: len(saved_table)], saved_table)
+        data.pop(identity.KEY)
+        saved_data = {k: v for k, v in saved.data.items() if k != identity.KEY}
+        self.assertEqual(
+            replace(loaded, data=MappingProxyType(data)),
+            replace(saved, data=MappingProxyType(saved_data)),
+        )
 
     def test_open_keys_load_and_no_end_runs_twice(self) -> None:
         """
@@ -270,6 +280,7 @@ class KernelStateTest(FastTestCase):
                     "ticked": clock,
                     "settled_day": clock // 1440,
                     roster.ACTIVE: (0, 1, 2),
+                    identity.KEY: core.value(core.state(), None, identity.KEY),
                 },
             )
         )
@@ -387,7 +398,10 @@ class KernelStateTest(FastTestCase):
             legacy.npc_id_got = {0, soft_cid}
             legacy.forbidden_npc_id = set()
             legacy.npc_name_data = {"博士", soft_tem.Name}
-            saved_npc = legacy.character_data[soft_cid]
+            vars(legacy)[
+                "character_data"
+            ] = chara_projection.pickled_characters()
+            saved_npc = vars(legacy)["character_data"][soft_cid]
             vars(saved_npc)["talent"] = {21: 1, 26: 1}
             preg = game_type.PREGNANCY()
             preg.fetus_count = 1

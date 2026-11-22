@@ -2,19 +2,19 @@
 """
 静态检查系统 - 位置/场景/跟随/助理/交互对象领域检查
 本模块实现 PLACE 组的30条不变量检查（PLACE-01 ~ PLACE-25、PLACE-27 ~ PLACE-31），覆盖角色位置、场景名册、
-门锁状态、移动路径、
-收藏地点、宿舍、交互对象、助理、跟随、装袋搬运等状态的一致性约束。
+门锁状态、移动路径、收藏地点、宿舍、交互对象、助理、跟随、装袋搬运等状态的一致性约束。
 
 约定与踩坑说明（写在此处，避免散落在各检查函数注释里重复）：
-1. `["0", "0"]` 不是哨兵值，是真实场景「罗德岛出口」，也是 `activity.position` 的默认值；
-离线角色被置为它是合法的稳定状态。
-2. 新生儿写入 `character_data` 但不进 `npc_id_got`、也不移动，所以"角色→场景名册"方向的检查必须以
-   `LIVE = roster.active() | {0}` 为域，不能用全体 `character_data`。
-3. 当前地图更新会把已删除场景内的角色迁到区域入口或["0", "0"]；位置检查仍检查迁移后的实际状态，不预设异常成因。
-4. 全部字段访问一律使用 getattr/dict.get 加默认值防御，绝不能因为老存档缺字段或类型不符而抛异常；
-   若某个结构性假设本身就是不变量的一部分（例如字段类型、字段是否存在），则让比较结果记为"不变量失败"，而不是让检查器自己崩溃。
-5. 依赖的 game_config 配置表在独立脚本环境下可能不可用；本模块的全部检查项均未依赖 game_config
-   （PLACE-20 的服务值域上界、PLACE-11 的房间档位等均为不变量文档中给出的字面枚举值），因此无需对配置表缺失做降级处理。
+1. `["0", "0"]` 不是哨兵值，是真实场景「罗德岛出口」，也是 `activity.position` 的默认值，
+   离线角色被置为它是合法的稳定状态。
+2. 新生儿写入身份表（`identity.characters`）但不进在编名单（`roster.active()`）、也不移动，
+   所以"角色→场景名册"方向的检查必须以 `LIVE = roster.active() | {0}` 为域，不能用全体身份表。
+3. 当前地图更新会把不存在的场景内的角色迁到区域入口或["0", "0"]，位置检查仍检查迁移后的实际状态，
+   不预设异常成因。
+4. 全部字段访问一律使用 getattr/dict.get 加默认值防御，避免因旧存档缺字段或类型不符抛异常。
+   若结构假设本身是不变量的一部分（例如字段类型或是否存在），比较结果记为不变量失败，不让检查器崩溃。
+5. 本模块的全部检查项均不依赖 game_config（PLACE-20 的服务值域上界、PLACE-11 的房间档位等均用字面枚举值），
+   因此无需对配置表缺失做降级处理。
 """
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
 from Script.Modules.domains import chara_life, relations
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -113,15 +114,13 @@ def _offline_flags(cid: int) -> bool:
 def check_character_dict_key_matches_cid() -> list[CheckFailure]:
     """
     参数: 无
-    返回值: List[CheckFailure]: 失败记录列表，character_data每个键都等于角色自身cid时返回空列表
+    返回值: List[CheckFailure]: 失败记录列表，身份表每个键都等于对应 Identity 的 cid 时返回空列表
     功能:
-        校验cache.character_data的每个字典键都等于该角色对象自身的cid字段，防止场景名册、交互目标、
-        助理引用等按字典键索引却指向身份不一致的对象。写入点仅character_handle.py与old_chara_to_new.py两处，
-        平时零产出，是id重映射回归的探针
+        校验身份表（identity.table()）的每个键都等于对应 Identity 的 cid 字段，
+        防止场景名册、交互目标、助理引用等按 id 索引却指向身份不一致的记录
     """
-    cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     for dict_key, c in character_data.items():
         c_cid = getattr(c, "cid", None)
         if dict_key != c_cid:
@@ -185,12 +184,12 @@ def check_scene_roster_ids_exist() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验任一Scene.character_list中的id都必须是cache.character_data的键；名册全部写入点都只写已存在角色id，
-        无合法悬空来源。本条应先于PLACE-05/06报告，后两者对缺失id都做了跳过处理，不重复报
+        校验任一Scene.character_list中的id都必须存在于身份表（identity.characters）。
+        名册写入点只写已存在角色id，无合法悬空来源。本条应先于PLACE-05/06报告，后两者跳过缺失id不重复报
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     for sc in scene_data.values():
         character_list = getattr(sc, "character_list", None) or []
@@ -216,13 +215,13 @@ def check_character_position_is_existing_scene() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验cache.character_data中每个角色（全域，不限LIVE）的position拼成的路径必须是scene_data的键。
-        级别为warning：只报告角色位置未落在现有场景中的事实，不推断地图迁移原因；
-        当前save_handle地图更新会迁移已删除场景内的角色。若命中角色在LIVE中，应优先处理
+        校验身份表（identity.characters）中每个角色（全域，不限LIVE）的position拼成的路径必须是scene_data的键。
+        级别为warning，只报告角色位置未落在现有场景中的事实，不推断地图迁移原因。
+        save_handle地图更新会迁移失效场景内的角色，若命中角色在LIVE中应优先处理
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     npc_id_got: set[int] = roster.active()
     for cid, c in character_data.items():
@@ -263,7 +262,7 @@ def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     npc_id_got: set[int] = roster.active()
     for cid in _live_ids(cache):
@@ -328,7 +327,7 @@ def check_scene_to_character_direction_consistency() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     pl = character_data.get(0)
     bagging_id = (
@@ -382,7 +381,7 @@ def check_character_not_in_multiple_scenes() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     counter: collections.Counter[int] = collections.Counter()
     cid_to_scenes = collections.defaultdict(list)
@@ -422,7 +421,7 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     npc_id_got: set[int] = roster.active()
 
@@ -580,7 +579,7 @@ def check_move_path_fields_are_existing_scenes() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     for cid, c in character_data.items():
         behavior = activity.behavior(cid)
@@ -621,7 +620,7 @@ def check_past_move_position_list_valid() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     for cid, c in character_data.items():
         past_list = action_info.get(cid, "past_move_position_list")
@@ -685,7 +684,7 @@ def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     for cid in _live_ids(cache):
         c = character_data.get(cid)
@@ -717,12 +716,11 @@ def check_target_character_id_exists() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验每个角色的交互对象id（activity.target）必须是cache.character_data的键。自指（==cid）是"无交互对象"的
-        默认值，合法；对NPC而言==0表示"目标是玩家"，同样合法（settle_behavior.py据此互换双方结算数据）
+        校验每个角色的交互对象id（activity.target）必须存在于身份表（identity.characters）。
+        自指（==cid）是"无交互对象"的默认值，对NPC而言==0表示目标是玩家，两者均合法
     """
-    cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     for cid, c in character_data.items():
         target_id = activity.target(c.cid)
         if target_id not in character_data:
@@ -756,7 +754,7 @@ def check_h_state_target_same_scene() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     pl = character_data.get(0)
     bagging_id = (
         flags.get(pl.cid, "bagging_chara_id") if pl is not None else None
@@ -805,9 +803,8 @@ def check_assistant_field_only_for_player() -> list[CheckFailure]:
         校验只有id 0可以有非零assistant_character_id；NPC上非零都是脏数据（面板与前提只读玩家那一份，
         NPC上的值永远失效却会随存档迁移传播）
     """
-    cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     pl = character_data.get(0)
     pl_aid = relations.assistant_character_id(0) if pl is not None else None
     for cid, c in character_data.items():
@@ -836,12 +833,12 @@ def check_current_assistant_valid_and_online() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验pl.assistant_character_id非0时，该id必须存在于character_data、在npc_id_got中、未死亡、
-        且不带任何离线标记。短路顺序：先查存在再解引用，避免持有id损坏时抛KeyError
+        校验玩家助理id（relations.assistant_character_id(0)）非0时，该id必须存在于身份表
+        （identity.characters）、在编名单（roster.active()）中、未死亡且不带任何离线标记。
+        先查存在再读取活动状态，避免id无效时报错
     """
-    cache = cache_control.cache
     failures: list[CheckFailure] = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     npc_id_got: set[int] = roster.active()
     pl = character_data.get(0)
     if pl is None:
@@ -894,9 +891,8 @@ def check_assistant_services_value_range() -> list[CheckFailure]:
         校验assistant_services中每个已知服务键的值不得超过CSV给出的选项下标上界，且不得为负。
         不排除bool值——服务2的写入点本身就是Python bool，True==1语义有效，消费端做的都是真值判断
     """
-    cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     pl = character_data.get(0)
     pl_aid = relations.assistant_character_id(0) if pl is not None else None
     for cid, c in character_data.items():
@@ -933,9 +929,8 @@ def check_assistant_services_key_set_complete() -> list[CheckFailure]:
         校验每个角色的assistant_services应恰好包含服务键2..10。级别为warning：assistant_panel.py与
         handle_premise_assistant.py均用setdefault兜底缺键，老存档迁移可能暂时缺键
     """
-    cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     for cid, c in character_data.items():
         services = relations.assistant_services(cid)
         keys = set(services.keys())
@@ -966,9 +961,8 @@ def check_cohabitation_service_matches_dormitory() -> list[CheckFailure]:
         当前助理同时任命为监狱长(work_type==191)是合法状态，予以豁免；不要求permanent_dormitory非空
         （Character.dormitory初值即""，该子句守不住任何真实约束）
     """
-    cache = cache_control.cache
     failures: list[CheckFailure] = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     pl = character_data.get(0)
     if pl is None:
         return failures
@@ -1017,7 +1011,7 @@ def check_follow_mode_value_valid() -> list[CheckFailure]:
     if bool(getattr(cache, "debug_mode", False)):
         return []
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     pl = character_data.get(0)
     pl_aid = relations.assistant_character_id(0) if pl is not None else 0
     for cid, c in character_data.items():
@@ -1051,7 +1045,7 @@ def check_player_not_following_self() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures: list[CheckFailure] = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     pl = character_data.get(0)
     if pl is None:
         return failures
@@ -1091,9 +1085,8 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
         访客到期离开的手写下线流程不清is_follow，"一键全跟随"又不过滤访客，可组合出持久的遗留状态，
         属遗留垃圾而非崩溃源（角色若回归，handle_chara_on_line会整体重建sp_flag）
     """
-    cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     npc_id_got: set[int] = roster.active()
     for cid, c in character_data.items():
         is_follow = flags.get(cid, "is_follow")
@@ -1143,7 +1136,7 @@ def check_bagging_consistency() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures: list[CheckFailure] = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     scene_data = getattr(cache, "scene_data", {}) or {}
     npc_id_got: set[int] = roster.active()
     pl = character_data.get(0)
@@ -1255,7 +1248,7 @@ def check_permanent_dormitory_not_equal_to_dormitory() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     for cid in _live_ids(cache):
         c = character_data.get(cid)
         if c is None:
@@ -1291,7 +1284,7 @@ def check_permanent_dormitory_is_valid_normal_room() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
+    character_data = identity.table()
     from Script.System.Dormitory_System import common as dormitory_common
 
     normal_rooms = set(dormitory_common.get_open_dormitory_room_occupancy())
@@ -1430,10 +1423,7 @@ def check_place_31() -> list[CheckFailure]:
             f"base.class_schedule[{name!r}]",
             failures,
         )
-    characters = getattr(cache, "character_data", None)
-    if not isinstance(characters, dict):
-        return failures
-    for cid in characters:
+    for cid in identity.ids():
         selected = getattr(growth.of(cid), "selected_course", None)
         if not isinstance(selected, dict):
             continue

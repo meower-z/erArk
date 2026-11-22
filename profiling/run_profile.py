@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
 """
-erArk 专用性能基准 & 函数级 cProfile 采集脚本 (升级版)
-
-本版本修复：
-- 初始化顺序导致的 game_config.config_font KeyError
-- 缺失玩家与 NPC 行为初始数据导致的 cache.character_data[0] KeyError
-- 无存档环境下的全新游戏最小可运行初始化流程
+erArk 性能基准与函数级 cProfile 采集脚本
 
 特性：
-- 支持：自动尝试读取存档 / 新建最小可运行世界
-- 可配置：tick 数、预热、每 tick 推进分钟、是否加载存档
-- 若存在 auto 存档或指定存档，可直接载入，以便更真实的 Profile
-- 若无存档则走“新建游戏最小初始化”流程（参考 creator_character_flow & game_start 中关键步骤的精简版本）
+- 支持自动尝试读取存档或新建最小可运行世界
+- 可配置 tick 数、预热、每 tick 推进分钟与加载存档
+- 存在 auto 存档或指定存档时直接载入，无存档时走新建游戏最小初始化流程
 - 可选加载前提统计补丁 premise_profiler_patch
-- 生成：cProfile 原始 .prof + TopN JSON 汇总 + （可选）premise_stats.json
+- 生成 cProfile 原始 .prof、TopN JSON 汇总与可选的 premise_stats.json
 
 使用示例：
 1) 全新（无存档）基准 4 小时（240 tick，每 tick 1 分钟）：
@@ -28,7 +22,7 @@ erArk 专用性能基准 & 函数级 cProfile 采集脚本 (升级版)
 4) 与 py-spy 联用（采样火焰图）：
    py-spy record -o flame.svg -- python -m profiling.run_profile --ticks 600
 
-5) 开启前提统计（确保你已放置补丁文件）：
+5) 开启前提统计（需已放置补丁文件）：
    python -m profiling.run_profile --with-premise-profiler
 
 查看：
@@ -247,13 +241,13 @@ def new_game_minimal_init() -> None:
     from Script.System.Medical_System import medical_service
     from Script.Config import game_config, normal_config
     from Script.System.Dormitory_System import common as dormitory_common
-    from Script.Modules.domains import physical_exam, playthrough, roster
-    from Script.Modules.domains import npc_template, warehouse
+    from Script.Modules.domains import identity, physical_exam, playthrough
+    from Script.Modules.domains import npc_template, roster, warehouse
 
     cache = cache_control.cache
 
     # 1. 创建玩家角色
-    cache.character_data[0] = game_type.Character()
+    identity.put(identity.Identity(0))
     # 初始化玩家基础属性
     character_handle.init_character_list()  # 按模板建出各角色
     character.init_attr(0)
@@ -322,7 +316,7 @@ def new_game_minimal_init() -> None:
     from Script.Modules.domains import activity
 
     for cid in roster.active():
-        if cid not in cache.character_data:
+        if not identity.exists(cid):
             continue
         activity.update_behavior(
             cid, behavior_id=cst.Behavior.SHARE_BLANKLY, duration=5

@@ -21,6 +21,7 @@ from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 WIDTH = 120
 """ 绘制宽度 """
@@ -50,11 +51,11 @@ class NumDisplayTest(SlowTestCase):
         无
         """
         super().setUp()
-        self.player = self.cache.character_data[0]
+        self.player = identity.of(0)
         self.operator_id = min(
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
-        self.operator = self.cache.character_data[self.operator_id]
+        self.operator = identity.of(self.operator_id)
         kernel_data.put(
             activity.set_position,
             self.operator.cid,

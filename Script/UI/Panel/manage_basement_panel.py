@@ -11,6 +11,7 @@ from Script.Modules.domains import abilities, activity, body_manage, chara_life
 from Script.Modules.domains import chara_profile, commission, economy, facility
 from Script.Modules.domains import hypnosis, maintenance, needs, prison, recruit
 from Script.Modules.domains import relations, roster, visitor, warehouse, work
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -797,7 +798,7 @@ class Manage_Basement_Panel:
 
                     # ================= 5. 遍历渲染当前页干员 =================
                     for character_id in current_page_charas:
-                        character_data = cache.character_data[character_id]
+                        character_data = identity.of(character_id)
                         name = character_data.name
                         id_str = str(character_data.adv).rjust(4, "0")
 
@@ -1254,7 +1255,7 @@ class Manage_Basement_Panel:
                     )
                     if work.roster(all_cid):
                         for npc_id in work.roster(all_cid):
-                            npc_name = cache.character_data[npc_id].name
+                            npc_name = identity.of(npc_id).name
                             now_text += f" {npc_name}"
                     else:
                         now_text += _(" 暂无")
@@ -1281,7 +1282,7 @@ class Manage_Basement_Panel:
                     if len(place):
                         if now_count % 3 == 0:
                             npc_and_place_text += "\n"
-                        chara_name = cache.character_data[chara_id].name
+                        chara_name = identity.of(chara_id).name
                         npc_and_place_text += f"    {chara_name}-{place}"
                         now_count += 1
                 if npc_and_place_text == "":
@@ -1327,7 +1328,7 @@ class Manage_Basement_Panel:
                     # 参与干员名字
                     commision_chara_id_list = one.team
                     commision_chara_name_list = [
-                        cache.character_data[chara_id].name
+                        identity.of(chara_id).name
                         for chara_id in commision_chara_id_list
                     ]
                     commision_chara_name_str = "、".join(
@@ -1480,7 +1481,7 @@ class Change_Npc_Work_Panel:
                     continue
                 if not handle_premise.handle_normal_7(npc_id):
                     continue
-                npc_data = cache.character_data[npc_id]
+                npc_data = identity.of(npc_id)
                 work_type_id = chara_life.work_type(npc_data.cid)
                 if work_type_id in self.work_type_npc_dict:
                     self.work_type_npc_dict[work_type_id].append(npc_id)
@@ -1529,7 +1530,7 @@ class Change_Npc_Work_Panel:
                     chara_count = 0
                     # 遍历干员列表，获取每个干员的信息
                     for npc_id in npc_list:
-                        character_data = cache.character_data[npc_id]
+                        character_data = identity.of(npc_id)
                         name = character_data.name
                         adv_id = str(character_data.adv).rjust(4, "0")
                         button_text = f"[{adv_id}]{name}"
@@ -1610,9 +1611,7 @@ class Change_Npc_Work_Panel:
             info_draw.width = window_width
             return_list = []
 
-            target_data: game_type.Character = cache.character_data[
-                character_id
-            ]
+            target_data: identity.Identity = identity.of(character_id)
             info_text = _("{0}的当前工作为：").format(target_data.name)
             work_type_id = chara_life.work_type(character_id)
             work_data = game_config.config_work_type[work_type_id]

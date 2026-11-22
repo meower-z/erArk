@@ -9,7 +9,7 @@ from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities, activity
+from Script.Modules.domains import abilities, activity, identity
 from Script.Modules.domains import first_record as first_record_domain, flags
 from Script.Modules.domains import growth, h_state, status
 
@@ -149,7 +149,7 @@ def check_second_effect(
     # print("进入第二结算")
     orgasm_list = []
     mark_list = []
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 仅在存在激活的二段行为时才构建分类列表：
     # 无激活行为时，下游 second_behavior_effect 会因"无任何二段行为"直接返回，
     # 列表内容不会被使用，跳过每次约两百次的子串扫描
@@ -165,7 +165,7 @@ def check_second_effect(
 
     # 玩家检测自己
     if character_id == 0:
-        character_data = cache.character_data[0]
+        character_data = identity.of(0)
         # 高潮结算
         orgasm_settle.orgasm_judge(character_id, change_data)
         # 道具结算
@@ -629,7 +629,7 @@ def mark_effect(
     # print()
     # print("进入刻印结算")
     ability = abilities.ability(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # print(f"name = {character_data.name},change_data.status_data = {change_data.status_data}")
     now_draw = draw.WaitDraw()
     now_draw_text = ""

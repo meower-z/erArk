@@ -29,6 +29,7 @@ from Script.Modules.domains import inventory, needs, player_ability
 from Script.Modules.domains import player_collection, pregnancy, roster, status
 from Script.Modules.domains import wardrobe, chara_key, chara_life
 from Script.Modules.domains import chara_profile, relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -257,6 +258,6 @@ def get_character_id_from_adv(adv_id: int) -> int:
     Return arguments:
     int -- 角色id
     """
-    if adv_id in cache.character_data:
+    if identity.exists(adv_id):
         return adv_id
     return 0

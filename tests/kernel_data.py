@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 from tests.kernel_project import domain as domain, mode as mode
 from tests.kernel_project import set_world_setting as set_world_setting
 from tests.kernel_project import world_settings as world_settings
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     import datetime
@@ -353,7 +354,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     names = {"tired": "tired_point", "hunger": "hunger_point"}
     names.update(urine="urinate_point", milk="pregnancy.milk")
     names.update({stat: name for name, stat in upgrade.PICKLED_NEEDS.items()})
-    for cid in cache.character_data:
+    for cid in identity.table():
         for stat, value in needs.of(cid).items():
             flatten(f"chara.{cid}.{names[stat]}", value, state)
         name = f"chara.{cid}.pregnancy.milk_max"

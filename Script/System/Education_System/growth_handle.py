@@ -20,15 +20,14 @@
 
 import datetime
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
 from Script.Modules.domains import abilities, activity, chara_life, facility
 from Script.Modules.domains import growth, pregnancy, relations, roster
 from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
+from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -69,7 +68,7 @@ def get_student_candidate_list() -> list[int]:
 
     result = []
     for character_id in list(roster.active_sorted()):
-        if character_id not in cache.character_data:
+        if not identity.exists(character_id):
             continue
         if (
             get_character_stage(character_id)
@@ -98,7 +97,7 @@ def get_course_candidate_list() -> list[int]:
     """
     result = []
     for character_id in list(roster.active_sorted()):
-        if character_id not in cache.character_data:
+        if not identity.exists(character_id):
             continue
         if chara_life.work_type(character_id) == STUDENT_WORK_TYPE:
             result.append(character_id)
@@ -192,7 +191,7 @@ def get_growth_stop_adjust(character_id: int) -> float:
     功能: 停滞期间可以继续上课，但一切学习收益减半，作为无限期养成的代价。
           只看学生自己的素质，教师停滞与否与教学无关
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return 1.0
     if abilities.talent(character_id).get(
         education_constant.GROWTH_STOP_TALENT_ID, 0
@@ -219,7 +218,7 @@ def get_class_adjust(
         student_id
     )
     # 无教师则走自习：没有教师就没有等级差可算，速度系数恒取1.0
-    if teacher_id == -1 or teacher_id not in cache.character_data:
+    if teacher_id == -1 or not identity.exists(teacher_id):
         return zone_adjust
     student_level = int(abilities.ability(student_id).get(ability_id, 0))
     teacher_level = int(abilities.ability(teacher_id).get(ability_id, 0))
@@ -275,7 +274,7 @@ def settle_student_class_gain(
             if growth_data.last_attend_period == now_mark:
                 return False
 
-        no_teacher = teacher_id == -1 or teacher_id not in cache.character_data
+        no_teacher = teacher_id == -1 or not identity.exists(teacher_id)
         # 表里没有的课型回落到理论课的基础值，按课型常量取，不写死编号（Plan 32 L28）
         learn_base = education_constant.COURSE_LEARN_BASE.get(
             course_type,
@@ -352,7 +351,7 @@ def judge_absent_this_period(
     """
     from Script.Design import game_time
 
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     growth_data = growth.of(character_id)
     if growth_data is None:
@@ -381,7 +380,7 @@ def judge_selected_cell_real(
     """
     from Script.System.Education_System import schedule_handle
 
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return False
@@ -411,7 +410,7 @@ def judge_have_course_type(character_id: int, course_type: int) -> bool:
     功能: 日常事件在 0 点推送，读「此刻这一节」的 CVP CourseType 恒为 -1，写不出课型前提，这里查整张个人课表。
           只读 child_growth，不惰性创建养成数据，前提路径上可以调用
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     growth_data = growth.of(character_id)
     if growth_data is None or not growth_data.selected_course:
@@ -442,7 +441,7 @@ def settle_course_attend(character_id: int) -> bool:
     """
     from Script.Design import game_time
 
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     if (
         relations.father_id(character_id) != 0
@@ -542,7 +541,7 @@ def settle_personality_pair(character_id: int, pair_id: int) -> int:
     """
     talent = abilities.talent(character_id)
     if (
-        character_id not in cache.character_data
+        not identity.exists(character_id)
         or pair_id not in education_constant.PERSONALITY_PAIR_TALENT
     ):
         return 0
@@ -582,7 +581,7 @@ def settle_adult_personality_pair(character_id: int, pair_id: int) -> int:
     """
     from Script.Design import handle_premise
 
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return 0
     if get_character_stage(
         character_id
@@ -603,7 +602,7 @@ def settle_personality_talent(character_id: int) -> str:
     Return arguments:
     str -- 要输出给玩家的文本
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     growth_data = growth.of(character_id)
     if growth_data is None:
         return _("\n{0}的性格尚未定型\n").format(character_data.name)
@@ -629,7 +628,7 @@ def get_career_suggestion_text(character_id: int) -> str:
     Return arguments:
     str -- 提示文本，没有任何科目有等级时为空串
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     best_ability_id = 0
     best_level = 0
     # 只看技能类科目（Ability.csv 类型 4，即 40~49）：性技与其它能力不对应岗位，拿来推岗位没有意义；
@@ -724,7 +723,7 @@ def get_stage_day(character_id: int) -> int:
     """
     from Script.Design import game_time
 
-    if character_id not in cache.character_data or not get_character_stage(
+    if not identity.exists(character_id) or not get_character_stage(
         character_id
     ):
         return 0

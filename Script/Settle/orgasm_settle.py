@@ -8,7 +8,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel, ejaculation_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement, activity
+from Script.Modules.domains import abilities, achievement, activity, identity
 from Script.Modules.domains import first_record, h_meters, h_state, status
 
 cache: game_type.Cache = cache_control.cache
@@ -551,7 +551,7 @@ def judge_orgasm_edge_success(
     bool -- 是否成功
     """
     orgasm_edge_success_flag = False
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 目前的高潮寸止数量，同一部位寸止次数越多，成功率越低
     all_orgasm_edge_count = 0
     if not orgasm_edge_count:

@@ -6,6 +6,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.Modules.domains import chara_profile
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -52,7 +53,7 @@ class CharacterSetting:
 
     def draw(self) -> None:
         """绘制面板"""
-        character_data = cache.character_data[self.character_id]
+        character_data = identity.of(self.character_id)
         type_data = _("角色设置")
         type_line = draw.LittleTitleLineDraw(type_data, self.width, ":")
         type_line.draw()
@@ -158,7 +159,7 @@ class CharacterSetting:
         """修改设置"""
         from Script.Design import character
 
-        character_data = cache.character_data[self.character_id]
+        character_data = identity.of(self.character_id)
         with chara_profile.chara_setting.editing(
             character_data.cid
         ) as chara_setting:

@@ -27,7 +27,7 @@ from Script.Core import cache_control, constant, game_type, get_text
 from Script.Config import game_config
 from Script.System.Official_Event_System import ri_value
 from Script.Design import game_time
-from Script.Modules.domains import activity, growth, official
+from Script.Modules.domains import activity, growth, official, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -227,7 +227,7 @@ def judge_premise_pass(
     premise_set = get_premise_set(premise_text)
     if not premise_set:
         return 1
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return 0
     with activity.target_as(character_id, partner_id):
         now_weight, _unused = handle_premise.get_weight_from_premise_dict(
@@ -277,7 +277,7 @@ def judge_event_done(uid: str, character_id: int) -> bool:
     Return arguments:
     bool -- 是否已触发过
     """
-    if character_id and character_id in cache.character_data:
+    if character_id and identity.exists(character_id):
         growth_data = growth.of(character_id)
         if growth_data is not None:
             return uid in growth_data.event_history
@@ -295,7 +295,7 @@ def record_event_done(uid: str, character_id: int, option_index: int) -> None:
     无
     """
     now_record = {"time": game_time.now(), "choice": option_index}
-    if character_id and character_id in cache.character_data:
+    if character_id and identity.exists(character_id):
         with growth.editing(character_id, create=False) as growth_data:
             if growth_data is not None:
                 growth_data.event_history[uid] = now_record
@@ -474,13 +474,13 @@ def clean_official_event_queue() -> None:
     valid = []
     changed = False
     for one in queue:
-        if one.get("chara_id", 0) not in cache.character_data:
+        if not identity.exists(one.get("chara_id", 0)):
             changed = True
             continue
         if one.get("uid") not in game_config.config_official_event:
             changed = True
             continue
-        if one.get("partner_id", 0) not in cache.character_data:
+        if not identity.exists(one.get("partner_id", 0)):
             one["partner_id"] = 0
             changed = True
         if "department" not in one:

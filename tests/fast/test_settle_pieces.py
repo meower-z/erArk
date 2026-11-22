@@ -12,7 +12,7 @@ from collections.abc import Callable
 from fractions import Fraction
 from unittest import mock
 
-from Script.Core import constant, game_type
+from Script.Core import constant
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.domains import dirty, h_meters, needs, player_ability
@@ -21,6 +21,7 @@ from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
 from tests import kernel_data
 from tests.chara_activity import behave
+from Script.Modules.domains import identity
 
 CUTS = {
     "8": [0, 8],
@@ -61,8 +62,8 @@ class SettlePiecesTest(FastTestCase):
 
     def by_cuts(
         self,
-        prepare: Callable[[], game_type.Character],
-        read: Callable[[game_type.Character], object],
+        prepare: Callable[[], identity.Identity],
+        read: Callable[[identity.Identity], object],
     ) -> dict[str, object]:
         """
         每种切法在复原的世界里各结算一次，读写的 GameState 数据记在以复原后的状态为底的缓冲区里
@@ -92,7 +93,7 @@ class SettlePiecesTest(FastTestCase):
         """
         self.assertEqual(values, dict.fromkeys(CUTS, expected))
 
-    def npc(self, behavior_id: str) -> game_type.Character:
+    def npc(self, behavior_id: str) -> identity.Identity:
         """
         造玩家与一名干员，干员从开局时刻起做 8 分钟的 behavior_id
         Keyword arguments:
@@ -108,7 +109,7 @@ class SettlePiecesTest(FastTestCase):
     def test_tired(self) -> None:
         """干员醒着等待 8 分钟：疲劳加 8 * 7/72 = 7/9"""
 
-        def prepare() -> game_type.Character:
+        def prepare() -> identity.Identity:
             chara = self.npc(constant.Behavior.WAIT)
             needs.set(chara.cid, tired=0)
             return chara
@@ -121,7 +122,7 @@ class SettlePiecesTest(FastTestCase):
     def test_sleep_tired(self) -> None:
         """睡 8 分钟：疲劳 100 减 8/3"""
 
-        def prepare() -> game_type.Character:
+        def prepare() -> identity.Identity:
             chara = self.npc(constant.Behavior.SLEEP)
             needs.set(chara.cid, tired=100)
             return chara
@@ -134,7 +135,7 @@ class SettlePiecesTest(FastTestCase):
     def test_player_semen(self) -> None:
         """玩家等待 8 分钟：精液加 8/20"""
 
-        def prepare() -> game_type.Character:
+        def prepare() -> identity.Identity:
             player = self.world.chara(0, "博士")
             h_meters.set(0, semen=0, semen_max=100)
             self.behave(0, constant.Behavior.WAIT, 8)
@@ -148,7 +149,7 @@ class SettlePiecesTest(FastTestCase):
     def test_visual_sanity(self) -> None:
         """视觉系技艺开着等待 8 分钟：理智 100 减 8/12"""
 
-        def prepare() -> game_type.Character:
+        def prepare() -> identity.Identity:
             player = self.world.chara(0, "博士")
             kernel_data.put(player_ability.set, player.cid, visual=True)
             kernel_data.set_needs(player.cid, sanity=100)
@@ -165,7 +166,7 @@ class SettlePiecesTest(FastTestCase):
     def test_drunk(self) -> None:
         """微醺（醉酒值 40）、不饿不饱、醒着等待 8 分钟：醉酒值减 8/10"""
 
-        def prepare() -> game_type.Character:
+        def prepare() -> identity.Identity:
             chara = self.npc(constant.Behavior.WAIT)
             kernel_data.set_needs(chara.cid, drunk=40)
             needs.set(chara.cid, hunger=120)

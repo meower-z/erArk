@@ -22,6 +22,7 @@ from tests.slow.health_check import (
 from tests import kernel_data
 from tests.chara_activity import aim
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 FOLLOW_MINUTES = 90
 """ 博士带着她在办公室里等待的分钟数 """
@@ -40,7 +41,7 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
         """
         super().setUp()
         self.operator_id = self.book_daily_exam("可露希尔")
-        self.operator = self.cache.character_data[self.operator_id]
+        self.operator = identity.of(self.operator_id)
         self.sleep_through_midnight()
         self.start = SLOT_START[
             kernel_data.domain("action_info").get(

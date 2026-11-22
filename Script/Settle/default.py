@@ -43,6 +43,7 @@ from Script.Modules.domains import official, physical_exam, player_ability
 from Script.Modules.domains import player_collection, pregnancy, prison, recruit
 from Script.Modules.domains import roster, status, visitor, wardrobe, warehouse
 from Script.Modules.domains import chara_life, relations
+from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -858,9 +859,9 @@ def handle_add_both_small_hit_point(
         needs.set(character_id, hit=needs.of(character_id)["hit_max"])
     # 交互对象也同样#
     if activity.target(character_id) != character_id:
-        target_data: game_type.Character = cache.character_data[
+        target_data: identity.Identity = identity.of(
             activity.target(character_id)
-        ]
+        )
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
         )
@@ -914,9 +915,9 @@ def handle_add_both_small_mana_point(
         needs.set(character_id, mana=needs.of(character_id)["mana_max"])
     # 交互对象也同样#
     if activity.target(character_id) != character_id:
-        target_data: game_type.Character = cache.character_data[
+        target_data: identity.Identity = identity.of(
             activity.target(character_id)
-        ]
+        )
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
         )
@@ -958,7 +959,7 @@ def handle_move_to_target_scene(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
     if len(activity.behavior(character_id).move_target):
@@ -1006,9 +1007,7 @@ def handle_first_kiss(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     # target_data.social_contact_data.setdefault(character_id, 0)
 
     if abilities.talent(character_id)[4] == 1:
@@ -1056,9 +1055,7 @@ def handle_first_sex(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
 
     item_flag = False
 
@@ -1152,9 +1149,7 @@ def handle_first_a_sex(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
 
     # 判定是否为道具性交
     item_flag = False
@@ -1214,9 +1209,7 @@ def handle_first_u_sex(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
 
     # 判定是否为道具性交，已废弃
     # item_flag = False
@@ -1274,9 +1267,7 @@ def handle_first_w_sex(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
 
     # 获取玩家最近一条非中断H指令的中文名，避免中断指令覆盖真实破处体位
     behavior_id = get_last_valid_sex_behavior_id()
@@ -1377,9 +1368,7 @@ def handle_first_kiss_to_penis(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     talent = abilities.talent(target_data.cid)
     # target_data.social_contact_data.setdefault(character_id, 0)
     if activity.target(character_id) == character_id:
@@ -1518,8 +1507,8 @@ def handle_hypnosis_one(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[activity.target(character_id)]
+    character_data: identity.Identity = identity.of(character_id)
+    target_character_data = identity.of(activity.target(character_id))
     change_data.target_change.setdefault(
         target_character_data.cid, game_type.TargetChange()
     )
@@ -1591,11 +1580,11 @@ def handle_hypnosis_all(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_data.cid):
         return
     # 获取当前场景的全角色名单
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_data.cid)
     )
@@ -1626,7 +1615,7 @@ def handle_hypnosis_all(
     player_ability.add_sanity_cost(character_data.cid, sanity_point_cost)
     # 遍历催眠角色列表
     for target_id in hypnosis_character_list:
-        target_character_data = cache.character_data[target_id]
+        target_character_data = identity.of(target_id)
         change_data.target_change.setdefault(
             target_character_data.cid, game_type.TargetChange()
         )
@@ -1657,7 +1646,7 @@ def handle_hypnosis_all(
     # 判断是否理智已耗尽导致催眠结束
     if needs.of(character_data.cid)["sanity"] == 0:
         for target_id in scene_character_list:
-            target_character_data = cache.character_data[target_id]
+            target_character_data = identity.of(target_id)
             # 空气催眠则重置催眠地点和解开门锁
             if flags.get(target_character_data.cid, "unconscious_h") == 5:
                 player_ability.set(character_data.cid, air_hypnosis_position="")
@@ -1689,7 +1678,7 @@ def handle_hypnosis_cancel(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     # 空气催眠则重置催眠地点和解开门锁
@@ -1723,7 +1712,7 @@ def handle_target_hypnosis_increase_body_sensitivity_on(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     santi_down = 10
@@ -1752,7 +1741,7 @@ def handle_target_hypnosis_increase_body_sensitivity_off(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     hypnosis.set(target_character_data.cid, increase_body_sensitivity=False)
@@ -1809,7 +1798,7 @@ def handle_target_hypnosis_force_ovulation_on(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     santi_down = 10
@@ -1845,7 +1834,7 @@ def handle_target_hypnosis_force_ovulation_off(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     hypnosis.set(target_character_data.cid, force_ovulation=False)
@@ -1870,7 +1859,7 @@ def handle_target_hypnosis_blockhead_switch_change(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     # 清理会复位全部行为模式标志，本次操作是开启还是关闭须以清理前的开关状态判断
@@ -1904,7 +1893,7 @@ def handle_target_hypnosis_blockhead_off(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     if hypnosis.get(target_character_data.cid, "blockhead"):
@@ -1931,7 +1920,7 @@ def handle_target_hypnosis_active_h_switch_change(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     # 清理会复位全部行为模式标志，本次操作是开启还是关闭须以清理前的开关状态判断
@@ -1967,7 +1956,7 @@ def handle_target_hypnosis_active_h_off(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     if hypnosis.get(target_character_data.cid, "active_h"):
@@ -1995,7 +1984,7 @@ def handle_target_hypnosis_pain_as_pleasure_switch_change(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     if hypnosis.get(target_character_data.cid, "pain_as_pleasure"):
@@ -2027,7 +2016,7 @@ def handle_target_hypnosis_pain_as_pleasure_off(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     hypnosis.set(target_character_data.cid, pain_as_pleasure=False)
@@ -2054,7 +2043,7 @@ def handle_time_stop_on(
     target_chara_set = roster.active()
     target_chara_set.add(0)
     for chara_id in target_chara_set:
-        chara_data = cache.character_data[chara_id]
+        chara_data = identity.of(chara_id)
         flags.set(chara_data.cid, unconscious_h=3)
         # 重置时停中的角色的时停高潮计数
         with h_state.editing(chara_id) as hs:
@@ -2084,7 +2073,7 @@ def handle_time_stop_off(
     target_chara_set = roster.active()
     target_chara_set.add(0)
     for chara_id in target_chara_set:
-        chara_data = cache.character_data[chara_id]
+        chara_data = identity.of(chara_id)
         flags.set(chara_data.cid, unconscious_h=0)
 
 
@@ -2254,7 +2243,7 @@ def handle_target_npc_active_h_on(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     h_state.set(target_character_data.cid, npc_active_h=True)
@@ -2279,7 +2268,7 @@ def handle_target_npc_active_h_off(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     h_state.set(target_character_data.cid, npc_active_h=False)
@@ -2656,7 +2645,7 @@ def handle_target_get_weeknesss_by_dr(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     abilities.talent(target_character_data.cid)[402] = 1
@@ -2687,7 +2676,7 @@ def handle_self_get_weeknesss_to_dr(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
     abilities.talent(character_id)[401] = 1
@@ -2764,7 +2753,7 @@ def handle_wait_unitl_traget_action_end(
         return
     from Script.Modules.gameplay_resolution import plan_queue
 
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
     if activity.dead(character_id):
         return
     target_start_time = activity.behavior(target_character_data.cid).start_time
@@ -3112,9 +3101,7 @@ def handle_interrupt_target_activity(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.dead(target_data.cid):
         return
     if activity.target(character_id) == 0:
@@ -3643,9 +3630,7 @@ def handle_target_add_small_p_feel(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.dead(target_data.cid):
         return
     status.setdefault(target_data.cid, 3, 0)
@@ -3790,9 +3775,7 @@ def handle_target_add_small_lubrication(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     base_chara_state_common_settle(
         activity.target(character_id),
         add_time,
@@ -3821,9 +3804,7 @@ def handle_target_add_small_learn(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     base_chara_state_common_settle(
         activity.target(character_id),
         add_time,
@@ -3852,9 +3833,7 @@ def handle_target_add_small_repect(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -3885,9 +3864,7 @@ def handle_target_add_small_friendly(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -3918,9 +3895,7 @@ def handle_target_add_small_desire(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -3951,9 +3926,7 @@ def handle_target_add_small_happy(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -3984,9 +3957,7 @@ def handle_target_add_small_lead(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -4017,9 +3988,7 @@ def handle_target_add_small_submit(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -4050,9 +4019,7 @@ def handle_target_add_small_shy(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -4083,9 +4050,7 @@ def handle_target_add_small_pain(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -4116,9 +4081,7 @@ def handle_target_add_small_terror(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -4179,9 +4142,7 @@ def handle_target_add_small_disgust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
@@ -4951,9 +4912,7 @@ def handle_update_orgasm_level(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     with h_state.editing(character_id) as hs, h_state.editing(
         target_data.cid
     ) as ths:
@@ -5047,7 +5006,7 @@ def handle_all_character_unconscious_semen_reset(
     """
     if not add_time:
         return
-    for chara_id in cache.character_data:
+    for chara_id in identity.table():
         with dirty.editing(chara_id) as d:
             d.body_semen_in_unconscious = []
             d.cloth_semen_in_unconscious = []
@@ -5172,9 +5131,7 @@ def handle_t_be_bagged(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     flags.set(target_data.cid, be_bagged=True)
 
 
@@ -5197,9 +5154,7 @@ def handle_t_be_imprisonment(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     flags.set(target_data.cid, imprisonment=True)
 
 
@@ -6446,7 +6401,7 @@ def handle_target_angry_with_player_flag_to_0(
     """
     if not add_time:
         return
-    target_character = cache.character_data[activity.target(character_id)]
+    target_character = identity.of(activity.target(character_id))
     flags.set(target_character.cid, angry_with_player=False)
 
 
@@ -6602,7 +6557,7 @@ def handle_all_chara_masturebate_in_group_sex_flag_0(
     if not add_time:
         return
     for chara_id in roster.active():
-        character_data: game_type.Character = cache.character_data[chara_id]
+        character_data: identity.Identity = identity.of(chara_id)
         if handle_premise.handle_masturebate_flag_3(chara_id):
             flags.set(character_data.cid, masturebate=0)
 
@@ -6649,9 +6604,7 @@ def handle_talk_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -6756,9 +6709,7 @@ def handle_target_coffee_add_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -6894,9 +6845,7 @@ def handle_official_work_add_adjust(
         return
     from Script.Design import basement
 
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
 
     if activity.dead(character_id):
         return
@@ -6966,7 +6915,7 @@ def handle_cure_patient_add_just(
         return
     from Script.System.Medical_System import medical_constant, medical_service
 
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
 
@@ -7085,7 +7034,7 @@ def handle_perform_surgery(
     if not add_time:
         return
 
-    doctor_data: game_type.Character = cache.character_data[character_id]
+    doctor_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
 
@@ -7123,7 +7072,7 @@ def handle_ward_round_process(
     if not add_time:
         return
 
-    doctor_data: game_type.Character = cache.character_data[character_id]
+    doctor_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
 
@@ -7249,10 +7198,8 @@ def handle_recruit_add_just(
 
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    character_data: identity.Identity = identity.of(character_id)
+    target_data: identity.Identity = identity.of(activity.target(character_id))
 
     if activity.dead(character_id):
         return
@@ -7340,10 +7287,8 @@ def handle_invite_visitor_add_adjust(
 
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    character_data: identity.Identity = identity.of(character_id)
+    target_data: identity.Identity = identity.of(activity.target(character_id))
 
     if activity.dead(character_id):
         return
@@ -7475,7 +7420,7 @@ def handle_aromatherapy_add_adjust(
     """
     if not add_time:
         return
-    target_character_data = cache.character_data[activity.target(character_id)]
+    target_character_data = identity.of(activity.target(character_id))
 
     # 如果没有选择配方则直接返回
     if flags.get(target_character_data.cid, "aromatherapy") == 0:
@@ -7512,9 +7457,7 @@ def handle_urethral_swab_add_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -7569,9 +7512,7 @@ def handle_urethral_finger_insertion_add_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -7832,7 +7773,7 @@ def handle_end_h_add_hpmp_max(
     if activity.target(character_id) != character_id:
         id_list.append(activity.target(character_id))
     for chara_id in id_list:
-        now_character_data: game_type.Character = cache.character_data[chara_id]
+        now_character_data: identity.Identity = identity.of(chara_id)
         info_text = now_character_data.name
         # 如果玩家有忍耐的射精次数，则射出
         if chara_id == 0 and handle_premise.handle_pl_endure_orgasm_count_ge_1(
@@ -7921,7 +7862,7 @@ def handle_group_sex_end_h_add_hpmp_max(
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
-        now_character_data: game_type.Character = cache.character_data[chara_id]
+        now_character_data: identity.Identity = identity.of(chara_id)
         # 统计绝顶奖励前，先为该在场参与者解放并结算其累计的寸止绝顶，使其计入退出奖励；无累计者不建立空TargetChange条目
         if h_state.get(chara_id, "orgasm_edge") != 0:
             orgasm_settle.release_orgasm_edge_now(
@@ -8040,10 +7981,8 @@ def handle_board_game_win_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    character_data: identity.Identity = identity.of(character_id)
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
@@ -8120,9 +8059,7 @@ def handle_board_game_lose_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
@@ -8212,7 +8149,7 @@ def handle_train_prisoners_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     now_train_id = prison.setting(1)
     all_prisoner_ids = prison.prisoner_ids()
     # 如果未设定训练则返回
@@ -8448,9 +8385,7 @@ def handle_give_gift_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     gift_id = activity.behavior(character_id).gift_id
     # 如果没有礼物则返回
     if gift_id == 0:
@@ -8626,7 +8561,7 @@ def handle_read_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     if activity.dead(character_id):
         return
@@ -8843,7 +8778,7 @@ def _settle_class_student(
     ):
         return False
     if teacher_id == 0:
-        student_data: game_type.Character = cache.character_data[student_id]
+        student_data: identity.Identity = identity.of(student_id)
         for favorability_flag in (True, False):
             base_chara_favorability_and_trust_common_settle(
                 teacher_id,
@@ -9055,7 +8990,7 @@ def handle_attent_class_add_just(
         return
     teacher_id = now_course["teacher_id"]
     # 没排教师（-1）与玩家的临时实操课（0）都不是这里的事
-    if teacher_id <= 0 or teacher_id not in cache.character_data:
+    if teacher_id <= 0 or not identity.exists(teacher_id):
         return
     classroom = now_course["classroom"]
     if not class_ai.judge_in_scene(character_id, classroom):
@@ -9180,9 +9115,9 @@ def handle_check_report_card_add_just(
     )
 
     target_id = activity.target(character_id)
-    if target_id == character_id or target_id not in cache.character_data:
+    if target_id == character_id or not identity.exists(target_id):
         return
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: identity.Identity = identity.of(target_id)
     with growth.editing(target_id) as growth_data:
         assert growth_data is not None
         # 两条路径：有还没看过的新成绩单（学期结算时**冻结**的那一份，report_card_flag 置着）就发那份；
@@ -9255,9 +9190,7 @@ def handle_bagging_and_moving_add_just(
     if not add_time:
         return
     # 获取角色数据
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     # 玩家数据结算
     flags.set(character_id, bagging_chara_id=activity.target(character_id))
     # 对方数据结算
@@ -9287,9 +9220,7 @@ def handle_release_from_bag_add_just(
     if not add_time:
         return
     # 获取角色数据
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     # 玩家数据结算
     flags.set(character_id, bagging_chara_id=0)
     # 对方数据结算
@@ -9365,9 +9296,7 @@ def handle_set_free_add_just(
     if not add_time:
         return
     # 获取角色数据
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     flags.set(target_data.cid, imprisonment=False)
     from Script.System.Dormitory_System import common as dormitory_common
 
@@ -9428,7 +9357,7 @@ def handle_eat_add_just(
         eat_food_chara_id_list.append(activity.target(character_id))
     # 判断是否是玩家制作的
     pl_make_flag = False
-    if food_maker == cache.character_data[0].name:
+    if food_maker == identity.of(0).name:
         pl_make_flag = True
 
     # 计算食物效果
@@ -9443,7 +9372,7 @@ def handle_eat_add_just(
     )
     # 对要吃食物的人进行结算
     for chara_id in eat_food_chara_id_list:
-        target_data: game_type.Character = cache.character_data[chara_id]
+        target_data: identity.Identity = identity.of(chara_id)
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
         )
@@ -9606,7 +9535,7 @@ def handle_add_hpmp_max(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if activity.dead(character_id):
         return
     # 设施效率
@@ -9636,9 +9565,9 @@ def handle_add_hpmp_max(
         now_draw.draw()
     # 交互对象也同样#
     if activity.target(character_id) != character_id:
-        target_data: game_type.Character = cache.character_data[
+        target_data: identity.Identity = identity.of(
             activity.target(character_id)
-        ]
+        )
         add_hp = 128.961 * math.exp(
             -0.0016 * needs.of(target_data.cid)["hit_max"]
         ) + 28.578 * math.exp(
@@ -9691,9 +9620,7 @@ def handle_sing_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
 
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -9726,7 +9653,7 @@ def handle_sing_add_adjust(
             # 跳过睡觉中的角色
             if handle_premise.handle_action_sleep(chara_id):
                 continue
-            target_data = cache.character_data[chara_id]
+            target_data = identity.of(chara_id)
 
             change_data.target_change.setdefault(
                 target_data.cid, game_type.TargetChange()
@@ -9834,9 +9761,7 @@ def handle_play_instrument_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     # print(f"debug 演奏，角色 = {character_data.name}，目标= {target_data.name}")
     # 对着自己演奏乐器不进行该结算
     if activity.target(character_id) == character_id:
@@ -9872,7 +9797,7 @@ def handle_play_instrument_add_adjust(
             # 跳过睡觉中的角色
             if handle_premise.handle_action_sleep(chara_id):
                 continue
-            target_data = cache.character_data[chara_id]
+            target_data = identity.of(chara_id)
 
             change_data.target_change.setdefault(
                 target_data.cid, game_type.TargetChange()
@@ -9980,9 +9905,7 @@ def handle_tech_add_s_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10030,9 +9953,7 @@ def handle_tech_add_b_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10080,9 +10001,7 @@ def handle_tech_add_c_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10131,9 +10050,7 @@ def handle_tech_add_p_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10199,9 +10116,7 @@ def handle_tech_add_v_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10249,9 +10164,7 @@ def handle_tech_add_a_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10299,9 +10212,7 @@ def handle_tech_add_u_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10349,9 +10260,7 @@ def handle_tech_add_w_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10399,9 +10308,7 @@ def handle_tech_add_m_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10449,9 +10356,7 @@ def handle_tech_add_f_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10499,9 +10404,7 @@ def handle_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -10546,9 +10449,7 @@ def handle_target_lubrication_adjust_add_pain(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10591,9 +10492,7 @@ def handle_target_v_adjust_add_pain(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10651,9 +10550,7 @@ def handle_target_a_adjust_add_pain(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10711,9 +10608,7 @@ def handle_target_u_adjust_add_pain(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10772,9 +10667,7 @@ def handle_target_w_adjust_add_pain(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10837,9 +10730,7 @@ def handle_target_v_adjust_add_by_sex(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10899,9 +10790,7 @@ def handle_target_a_adjust_add_by_sex(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -10961,9 +10850,7 @@ def handle_target_u_adjust_add_by_sex(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -11023,9 +10910,7 @@ def handle_target_w_adjust_add_by_sex(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -11085,9 +10970,7 @@ def handle_target_pain_to_h_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
     ):
@@ -11157,9 +11040,7 @@ def handle_finger_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -11206,9 +11087,7 @@ def handle_tongue_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -11255,9 +11134,7 @@ def handle_feet_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -11304,9 +11181,7 @@ def handle_breast_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -11353,9 +11228,7 @@ def handle_vagina_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -11402,9 +11275,7 @@ def handle_anus_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     ability = abilities.ability(target_data.cid)
     if activity.target(character_id) != character_id and (
         not character_id or not activity.target(character_id)
@@ -11452,9 +11323,9 @@ def handle_low_obscenity_failed_adjust(
     if not add_time:
         return
     if activity.target(character_id):
-        target_data: game_type.Character = cache.character_data[
+        target_data: identity.Identity = identity.of(
             activity.target(character_id)
-        ]
+        )
 
         # 不需要再进行该判断
         # if not character.calculation_instuct_judege(0,character_data.target_character_id,"初级骚扰"):
@@ -11500,9 +11371,9 @@ def handle_high_obscenity_failed_adjust(
     if not add_time:
         return
     if activity.target(character_id):
-        target_data: game_type.Character = cache.character_data[
+        target_data: identity.Identity = identity.of(
             activity.target(character_id)
-        ]
+        )
 
         # 不需要再进行该判断
         # if not character.calculation_instuct_judege(0,character_data.target_character_id,"严重骚扰"):
@@ -11570,9 +11441,9 @@ def handle_do_h_failed_adjust(
     if not add_time:
         return
     if activity.target(character_id):
-        target_data: game_type.Character = cache.character_data[
+        target_data: identity.Identity = identity.of(
             activity.target(character_id)
-        ]
+        )
 
         # 高陷落不进行该判断
         chara_fall = attr_calculation.get_character_fall_level(
@@ -11791,9 +11662,7 @@ def handle_target_sleep_point_zero(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     needs.set(target_data.cid, sleep=0)
 
 
@@ -11863,9 +11732,7 @@ def handle_target_desire_point_zero(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     needs.set(target_data.cid, desire=0)
 
 
@@ -11910,9 +11777,7 @@ def handle_target_desire_point_to_79(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     needs.set(target_data.cid, desire=79)
 
 
@@ -12121,9 +11986,7 @@ def handle_penis_in_t_reset(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=-1)
     h_state.set(character_id, insert_position=-1)
 
@@ -12156,7 +12019,7 @@ def handle_scene_all_characters_penis_in_reset(
 
 
 def record_first_part_sex(
-    character_id: int, target_data: game_type.Character, item: int = -1
+    character_id: int, target_data: identity.Identity, item: int = -1
 ) -> None:
     """
     部位交初体验记录（键取自insert_position，未记录才写入；破处handler的完整写入会覆盖本条目）\n
@@ -12208,9 +12071,7 @@ def handle_penis_in_t_hair(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=0)
     record_first_part_sex(character_id, target_data)
 
@@ -12234,9 +12095,7 @@ def handle_penis_in_t_face(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=1)
     record_first_part_sex(character_id, target_data)
 
@@ -12260,9 +12119,7 @@ def handle_penis_in_t_mouse(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=2)
     record_first_part_sex(character_id, target_data)
 
@@ -12286,9 +12143,7 @@ def handle_penis_in_t_breast(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=3)
     record_first_part_sex(character_id, target_data)
 
@@ -12312,9 +12167,7 @@ def handle_penis_in_t_axilla(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=4)
     record_first_part_sex(character_id, target_data)
 
@@ -12338,9 +12191,7 @@ def handle_penis_in_t_hand(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=5)
     record_first_part_sex(character_id, target_data)
 
@@ -12364,9 +12215,7 @@ def handle_penis_in_t_vagina(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=6)
     record_first_part_sex(character_id, target_data)
 
@@ -12390,9 +12239,7 @@ def handle_penis_in_t_womb(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=7)
     record_first_part_sex(character_id, target_data)
 
@@ -12416,9 +12263,7 @@ def handle_penis_in_t_anal(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=8)
     record_first_part_sex(character_id, target_data)
 
@@ -12442,9 +12287,7 @@ def handle_penis_in_t_urethral(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=9)
     record_first_part_sex(character_id, target_data)
 
@@ -12468,9 +12311,7 @@ def handle_penis_in_t_leg(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=10)
     record_first_part_sex(character_id, target_data)
 
@@ -12494,9 +12335,7 @@ def handle_penis_in_t_foot(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=11)
     record_first_part_sex(character_id, target_data)
 
@@ -12520,9 +12359,7 @@ def handle_penis_in_t_tail(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=12)
     record_first_part_sex(character_id, target_data)
 
@@ -12546,9 +12383,7 @@ def handle_penis_in_t_horn(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=13)
     record_first_part_sex(character_id, target_data)
 
@@ -12572,9 +12407,7 @@ def handle_penis_in_t_ears(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=14)
     record_first_part_sex(character_id, target_data)
 
@@ -12598,9 +12431,7 @@ def handle_penis_in_t_deep_throat(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=15)
     record_first_part_sex(character_id, target_data)
 
@@ -12624,9 +12455,7 @@ def handle_penis_in_t_hat(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=20)
 
 
@@ -12649,9 +12478,7 @@ def handle_penis_in_t_classes(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=21)
 
 
@@ -12674,9 +12501,7 @@ def handle_penis_in_t_ear_ornament(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=22)
 
 
@@ -12699,9 +12524,7 @@ def handle_penis_in_t_neck_ornament(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=23)
 
 
@@ -12724,9 +12547,7 @@ def handle_penis_in_t_mouth_ornament(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=24)
 
 
@@ -12749,9 +12570,7 @@ def handle_penis_in_t_top(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=25)
 
 
@@ -12774,9 +12593,7 @@ def handle_penis_in_t_corset(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=26)
 
 
@@ -12799,9 +12616,7 @@ def handle_penis_in_t_gloves(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=27)
 
 
@@ -12824,9 +12639,7 @@ def handle_penis_in_t_skirt(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=28)
 
 
@@ -12849,9 +12662,7 @@ def handle_penis_in_t_underwear(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=29)
 
 
@@ -12874,9 +12685,7 @@ def handle_penis_in_t_socks(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=30)
 
 
@@ -12899,9 +12708,7 @@ def handle_penis_in_t_shoes(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=31)
 
 
@@ -12924,9 +12731,7 @@ def handle_penis_in_t_weapoms(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=32)
 
 
@@ -12949,9 +12754,7 @@ def handle_penis_in_t_trousers(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(target_data.cid, insert_position=28)
 
 
@@ -12974,9 +12777,7 @@ def handle_cancel_penis_in_face_or_mouse(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if h_state.get(target_data.cid, "insert_position") in {1, 2}:
         h_state.set(target_data.cid, insert_position=-1)
 
@@ -13352,9 +13153,7 @@ def handle_h_in_love_hotel_to_false(
     """
     if not add_time:
         return
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     h_state.set(character_id, h_in_love_hotel=False)
     h_state.set(target_data.cid, h_in_love_hotel=False)
 
@@ -13382,9 +13181,8 @@ def handle_take_chara_eggs_settle(
 
     target_character_id = activity.target(character_id)
     # 无有效交互对象时不结算
-    if (
-        target_character_id == character_id
-        or target_character_id not in cache.character_data
+    if target_character_id == character_id or not identity.exists(
+        target_character_id
     ):
         return
     egg_handle.take_eggs_from_chara(target_character_id)
@@ -13543,7 +13341,7 @@ def handle_prenatal_add_adjust(
     from Script.System.Education_System import baby_growth_handle
 
     target_id = activity.target(character_id)
-    if target_id == character_id or target_id not in cache.character_data:
+    if target_id == character_id or not identity.exists(target_id):
         return
     baby_growth_handle.add_prenatal_point(target_id)
 
@@ -13576,7 +13374,7 @@ def handle_nuirse_child_add_adjust(
     from Script.System.Education_System import education_constant
 
     target_id = activity.target(character_id)
-    if target_id == character_id or target_id not in cache.character_data:
+    if target_id == character_id or not identity.exists(target_id):
         return
     # 只对婴儿生效
     if not abilities.talent(target_id).get(101, 0):

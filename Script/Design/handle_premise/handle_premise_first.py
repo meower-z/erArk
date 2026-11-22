@@ -5,6 +5,7 @@ from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design import game_time
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import abilities, activity, first_record
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -50,7 +51,7 @@ def handle_first_sex_in_today(character_id: int) -> int:
     返回:
         int: 权重
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # 玩家的童贞记录仍为平铺字段，NPC的V破处记录在first_part_sex_dict[6]
     if character_id == 0:
         first_time = first_record.get(character_data.cid, "first_sex_time")
@@ -89,7 +90,7 @@ def handle_first_a_sex_in_today(character_id: int) -> int:
     返回:
         int: 权重
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # A破处记录在first_part_sex_dict[8]
     record = first_record.part_sex(character_data.cid, 8)
     if record is None:
@@ -124,7 +125,7 @@ def handle_first_u_sex_in_today(character_id: int) -> int:
     返回:
         int: 权重
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # U破处记录在first_part_sex_dict[9]
     record = first_record.part_sex(character_data.cid, 9)
     if record is None:
@@ -159,7 +160,7 @@ def handle_first_w_sex_in_today(character_id: int) -> int:
     返回:
         int: 权重
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # W破处记录在first_part_sex_dict[7]
     record = first_record.part_sex(character_data.cid, 7)
     if record is None:
@@ -194,7 +195,7 @@ def handle_first_m_sex_in_today(character_id: int) -> int:
     返回:
         int: 权重
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # 口交初体验记录在first_part_sex_dict[2]
     record = first_record.part_sex(character_data.cid, 2)
     if record is None:
@@ -486,9 +487,7 @@ def handle_target_no_first_kiss(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[4] == 0
 
 
@@ -501,9 +500,7 @@ def handle_target_have_first_kiss(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[4] == 1
 
 
@@ -552,9 +549,7 @@ def handle_target_have_virgin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[0] == 1
 
 
@@ -603,9 +598,7 @@ def handle_target_have_a_virgin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[1] == 1
 
 

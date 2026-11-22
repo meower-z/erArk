@@ -42,7 +42,7 @@ game_config.init()
 character_config.init_character_tem_data()
 map_config.init_map_data()
 from Script.Kernel import core
-from Script.Modules.domains import chara_life, roster
+from Script.Modules.domains import chara_life, identity, roster
 from Script.Modules.gameplay_resolution import working
 from Script.System.Dormitory_System import common
 
@@ -50,7 +50,7 @@ cache = cache_control.cache
 with working.based_on(core.state()):
   for adv_id, tem in character_config.character_tem_list.items():
     if tem.Dormitory != "无":
-      cache.character_data[adv_id] = game_type.Character()
+      identity.put(identity.Identity(adv_id))
       chara_life.dormitory.set(adv_id, tem.Dormitory)
       roster.add(adv_id)
   common.init_character_dormitory()

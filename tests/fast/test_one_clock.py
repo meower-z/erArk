@@ -16,6 +16,7 @@ from unittest import mock
 
 from Script.Design import game_time
 from Script.Kernel import core
+from Script.Modules.domains import identity
 from Script.Modules.gameplay_resolution import time_hooks
 from Script.Settle import past_day_settle, realtime_settle
 from tests.fast.base import FastTestCase
@@ -67,7 +68,7 @@ class OneClockTest(FastTestCase):
 
     def start(self, clock: int) -> None:
         """
-        玩家与一名干员各做一个 10 小时的行动，从 clock 开始
+        建立玩家与一名干员各做 10 小时 Idle 行动的起始状态，从 clock 开始，并沿用当前状态的身份表
         Keyword arguments:
         clock -- 起始时钟
         """
@@ -85,6 +86,9 @@ class OneClockTest(FastTestCase):
                 MappingProxyType(characters),
                 MappingProxyType(
                     {
+                        identity.KEY: core.value(
+                            core.state(), None, identity.KEY
+                        ),
                         time_hooks.TICKED: clock,
                         time_hooks.SETTLED_DAY: game_time.day(clock),
                     }
@@ -172,10 +176,14 @@ class OneClockTest(FastTestCase):
         """换进来的 GameState 没有 ticked / settled_day 时，从它的时钟记起，Tick 5 分钟后来"""
         clock = game_time.minutes(datetime.datetime(2019, 12, 30, 23, 58))
         self.start(clock)
-        core.reset_state(replace(core.state(), data=MappingProxyType({})))
+        table = core.value(core.state(), None, identity.KEY)
+        core.reset_state(
+            replace(core.state(), data=MappingProxyType({identity.KEY: table}))
+        )
         self.assertEqual(
             dict(core.state().data),
             {
+                identity.KEY: table,
                 time_hooks.TICKED: clock,
                 time_hooks.SETTLED_DAY: game_time.day(clock),
             },

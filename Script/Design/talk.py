@@ -15,6 +15,7 @@ from Script.Config import normal_config, game_config
 from Script.Design import game_time
 from Script.Modules.domains import action_info, activity, chara_profile, flags
 from Script.Modules.domains import inventory, wardrobe
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -28,9 +29,7 @@ def handle_talk(character_id: int) -> None:
     Keyword arguments:\n
     character_id -- 角色id\n
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     behavior_id = activity.behavior(character_id).behavior_id
     # 已计算过的前提字典
     calculated_premise_dict: dict[str, float] = {}
@@ -154,10 +153,8 @@ def handle_talk_sub(
     calculated_premise_dict -- 已计算过的前提字典
     unconscious_pass_flag -- 是否无视昏迷状态，默认为False
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    character_data: identity.Identity = identity.of(character_id)
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     tem_talk_list = []  # 临时口上列表
     if behavior_id in game_config.config_talk_data_by_chara_adv:
         # 获取通用口上
@@ -440,7 +437,7 @@ def handle_talk_draw(
     """
     from Script.Design import handle_chat_ai
 
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 二段结算前会单独绘制一个信息文本
     if second_behavior_id != "":
         second_behavior_info_text(character_id, second_behavior_id)
@@ -486,7 +483,7 @@ def handle_talk_draw(
         final_color = "standard"
         if unusual_talk_flag:
             # 首选当前口上所对应的角色id的文本颜色
-            talk_character_data = cache.character_data[unusual_talk_flag]
+            talk_character_data = identity.of(unusual_talk_flag)
             if talk_character_data.text_color:
                 now_draw.style = talk_character_data.name
                 final_color = talk_character_data.name
@@ -500,8 +497,8 @@ def handle_talk_draw(
                     final_color = character_data.name
                 # 如果还没有则选择交互对象
                 else:
-                    target_character_data: game_type.Character = (
-                        cache.character_data[activity.target(character_id)]
+                    target_character_data: identity.Identity = identity.of(
+                        activity.target(character_id)
                     )
                     tar_text_color = target_character_data.text_color
                     if tar_text_color:
@@ -613,7 +610,7 @@ def second_behavior_info_text(
     character_id -- 角色id
     second_behavior_id -- 二段行为id
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     chara_name = character_data.name
     info_draw = draw.WaitDraw()
     info_text = ""
@@ -1091,11 +1088,11 @@ def code_text_to_draw_text(
     Return arguments:
     now_talk_text -- 转化后的文本
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    player_data: game_type.Character = cache.character_data[0]
-    target_data: game_type.Character = cache.character_data[
+    character_data: identity.Identity = identity.of(character_id)
+    player_data: identity.Identity = identity.of(0)
+    target_data: identity.Identity = identity.of(
         activity.target(character_data.cid)
-    ]
+    )
 
     # 输入的原文本
     now_talk_text, __ = special_code_judge(talk_text)
@@ -1108,8 +1105,8 @@ def code_text_to_draw_text(
     # 如果是纸娃娃地文文本，则将当前id改为玩家id
     if common_talk_flag:
         character_id = 0
-        character_data = cache.character_data[character_id]
-        target_data = cache.character_data[common_target_character_id]
+        character_data = identity.of(character_id)
+        target_data = identity.of(common_target_character_id)
 
     # 专属称呼处理
     # 他人对自己的称呼
@@ -1153,7 +1150,7 @@ def code_text_to_draw_text(
     pl_target_id = common_target_character_id
     pl_target_name = ""
     if pl_target_id != 0:
-        pl_target_data: game_type.Character = cache.character_data[pl_target_id]
+        pl_target_data: identity.Identity = identity.of(pl_target_id)
         pl_target_name = pl_target_data.name
 
     # 当前行为食物
@@ -1198,7 +1195,7 @@ def code_text_to_draw_text(
         src_scene_name = src_scene_data.scene_name
         for chara_id in src_scene_data.character_list:
             if chara_id:
-                src_random_chara_name = cache.character_data[chara_id].name
+                src_random_chara_name = identity.of(chara_id).name
                 break
 
     # 移动后地点
@@ -1213,14 +1210,14 @@ def code_text_to_draw_text(
         target_scene_name = target_scene_data.scene_name
         for chara_id in target_scene_data.character_list:
             if chara_id:
-                tar_random_chara_name = cache.character_data[chara_id].name
+                tar_random_chara_name = identity.of(chara_id).name
                 break
 
     # 地点角色
     random_chara_name = ""
     for chara_id in scene_data.character_list:
         if chara_id:
-            random_chara_name = cache.character_data[chara_id].name
+            random_chara_name = identity.of(chara_id).name
             break
 
     # 服装，来自于NPC当前穿的衣服，或行动传入的变量

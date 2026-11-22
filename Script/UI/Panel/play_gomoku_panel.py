@@ -20,7 +20,7 @@ from Script.Config import normal_config, game_config
 from Script.Modules.tk_ui import player_pick
 
 from typing import TYPE_CHECKING, NoReturn
-from Script.Modules.domains import abilities, activity
+from Script.Modules.domains import abilities, activity, identity
 
 if TYPE_CHECKING:
     from typing import Any
@@ -1581,8 +1581,8 @@ class GomokuPanel:
         self.last_ai_move: tuple[int, int] | None = None  # 记录AI的上一步棋
 
         # 玩家与NPC的角色数据
-        self.pl_character_data = cache.character_data[0]
-        self.target_character_data = cache.character_data[activity.target(0)]
+        self.pl_character_data = identity.of(0)
+        self.target_character_data = identity.of(activity.target(0))
 
         # 选择AI难度
         self.choose_ai_difficulty()

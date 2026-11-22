@@ -28,6 +28,7 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import h_meters, h_state, needs, plan
 from Script.Modules.domains import player_ability, roster, status, relations
+from Script.Modules.domains import identity
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -60,7 +61,7 @@ def update_sleep() -> None:
 
     # 角色刷新
     for character_id in id_list:
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data: identity.Identity = identity.of(character_id)
         # 结算数值为珠
         settle_character_juel(character_id)
         # 玩家结算
@@ -132,7 +133,7 @@ def settle_character_juel(character_id: int) -> int:
     bool -- 本次update时间切片内活动是否已完成
     """
     juel = abilities.juel(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     for status_id in game_config.config_character_state:
         if character_data.sex == 0:
             if status_id in {2, 4, 7, 8}:
@@ -208,7 +209,7 @@ def sanity_point_grow() -> None:
     Keyword arguments:
     无
     """
-    character_data: game_type.Character = cache.character_data[0]
+    character_data: identity.Identity = identity.of(0)
     today_cost = player_ability.get(0, "today_sanity_point_cost")
     player_ability.set(0, today_sanity_point_cost=0)
     # 消耗超过90时进行成长

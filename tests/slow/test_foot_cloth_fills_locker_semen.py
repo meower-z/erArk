@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from tests import kernel_data
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     import datetime
@@ -48,7 +49,7 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
 
     def foot_cloth_to_locker(
         self,
-    ) -> "tuple[game_type.Character, list[int], list[int]]":
+    ) -> "tuple[identity.Identity, list[int], list[int]]":
         """
         开局的阿米娅鞋上有 30ml 精液时，跑一次脱鞋袜进大浴场衣柜的结算
         Keyword arguments:
@@ -63,7 +64,7 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
         from Script.Settle import default_cloth
 
         cid = self.npc("阿米娅")
-        cd = self.cache.character_data[cid]
+        cd = identity.of(cid)
         self.assertEqual(
             dirty.view(cid).cloth_locker_semen, {}, "开局的衣柜精液表"
         )

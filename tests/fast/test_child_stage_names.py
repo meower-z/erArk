@@ -21,7 +21,7 @@ from tests import chara_abilities as ca, kernel_data
 from Script.Modules.domains import relations
 
 if TYPE_CHECKING:
-    from Script.Core import game_type
+    from Script.Modules.domains import identity
 
 STAGE_NAME = {102: "幼女", 103: "学员"}
 """ 素质 102、103 的名称 """
@@ -53,7 +53,7 @@ PANEL_WIDTH = 100
 """ 礼物面板的绘制宽度 """
 
 
-def set_stage(character: "game_type.Character", talent_id: int) -> None:
+def set_stage(character: "identity.Identity", talent_id: int) -> None:
     """
     把角色的成长阶段素质换成 talent_id
     Keyword arguments:
@@ -101,14 +101,14 @@ class ChildStageNamesTest(FastTestCase):
         for name in UNUSED_NAMES:
             self.assertNotIn(name, text, f"{label}里有「{name}」：{text}")
 
-    def make_daughter(self, cid: int, talent_id: int) -> "game_type.Character":
+    def make_daughter(self, cid: int, talent_id: int) -> "identity.Identity":
         """
         造博士的女儿并设好成长阶段
         Keyword arguments:
         cid -- 角色id
         talent_id -- 成长阶段素质
         Return arguments:
-        game_type.Character -- 女儿
+        identity.Identity -- 女儿
         """
         daughter = self.world.chara(cid, f"女儿{cid}")
         kernel_data.put(relations.father_id.set, daughter.cid, 0)

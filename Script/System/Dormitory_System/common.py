@@ -8,7 +8,7 @@ from collections import defaultdict
 from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
 from Script.Modules.domains import facility, inventory, roster, visitor
-from Script.Modules.domains import chara_life
+from Script.Modules.domains import chara_life, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -166,7 +166,7 @@ def get_dormitory_resident_id_set() -> set[int]:
     resident_id_set: set[int] = roster.active()
     resident_id_set.discard(0)
     # 遍历所有角色，追加处于异常7(离岛)状态但不在拥有干员列表中的角色
-    for character_id in cache.character_data:
+    for character_id in identity.table():
         if character_id == 0:
             continue
         if character_id in resident_id_set:
@@ -314,7 +314,7 @@ def get_dormitory_occupants_text() -> str:
             live_dormitory = chara_life.dormitory(npc_id)
             # 如果该角色住在该宿舍，则在text中加入名字信息
             if live_dormitory == dormitory_place:
-                chara_name = cache.character_data[npc_id].name
+                chara_name = identity.of(npc_id).name
                 # 如果是异常7的角色，则在名字后加上离岛
                 if npc_id in unnormal_7_npc_id_set:
                     chara_name += _("(离岛)")
@@ -457,7 +457,7 @@ def new_character_get_dormitory(character_id: int) -> None:
     Keyword arguments:
     character_id -- 角色id
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # 分为访客和普通干员
     if visitor.is_visitor(character_id):
         from Script.UI.Panel import invite_visitor_panel

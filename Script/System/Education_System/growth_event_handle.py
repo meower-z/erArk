@@ -17,7 +17,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
-from Script.Modules.domains import activity, growth, official, roster
+from Script.Modules.domains import activity, growth, official, roster, identity
 from Script.System.Official_Event_System import official_event_handle
 from Script.Modules.domains import relations
 
@@ -60,7 +60,7 @@ def get_growth_event_character_list() -> list[int]:
     from Script.Design import handle_premise
 
     result = []
-    for character_id in sorted(cache.character_data):
+    for character_id in sorted(identity.table()):
         # 玩家自己不参与
         if character_id == 0:
             continue
@@ -330,11 +330,11 @@ def get_growth_event_title(queue_data: dict) -> str:
     from Script.System.Education_System import growth_handle
 
     character_id = queue_data.get("chara_id", 0)
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return official_event_handle.get_department_name(
             education_constant.GROWTH_EVENT_DEPARTMENT
         )
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     stage = get_character_stage(character_id)
     # STAGE_TALENT_NAME 取自 Talent.csv，载入时已翻译过，不再包 _()
     stage_name = education_constant.STAGE_TALENT_NAME.get(
@@ -449,7 +449,7 @@ def judge_premise_all_pass(
     premise_set = official_event_handle.get_premise_set(premise_text)
     if not premise_set:
         return True
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     with activity.target_as(character_id, partner_id):
         for premise in sorted(premise_set):

@@ -18,6 +18,7 @@ from tests import kernel_data
 from tests.chara_activity import aim, behave
 from tests.slow.base import SlowTestCase
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 AMIYA_ID = 1
 """ 阿米娅的角色id """
@@ -41,9 +42,9 @@ class EventsTiredChainTest(SlowTestCase):
         super().setUp()
         from Script.Core import constant
 
-        self.pl = self.cache.character_data[0]
-        self.amiya = self.cache.character_data[AMIYA_ID]
-        self.kaltsit = self.cache.character_data[KALTSIT_ID]
+        self.pl = identity.of(0)
+        self.amiya = identity.of(AMIYA_ID)
+        self.kaltsit = identity.of(KALTSIT_ID)
         for cid in (AMIYA_ID, KALTSIT_ID):
             self.assertIn(
                 cid,

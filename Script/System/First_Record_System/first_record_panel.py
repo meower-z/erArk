@@ -10,7 +10,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_text, game_time
 from Script.UI.Panel import character_info_head, hypnosis_panel
 from Script.Modules.domains import dirty, first_record as first_record_domain
-from Script.Modules.domains import playthrough
+from Script.Modules.domains import playthrough, identity
 
 if TYPE_CHECKING:
     import datetime
@@ -154,8 +154,8 @@ def _get_character_name(character_id: int) -> str:
     Return arguments:
     str -- 角色名，查不到时为空串
     """
-    if character_id in cache.character_data:
-        return cache.character_data[character_id].name
+    if identity.exists(character_id):
+        return identity.of(character_id).name
     return ""
 
 

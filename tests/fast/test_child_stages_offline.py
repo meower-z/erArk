@@ -22,7 +22,7 @@ from tests.fast.base import FastTestCase
 from tests.chara_activity import aim
 
 if TYPE_CHECKING:
-    from Script.Core import game_type
+    from Script.Modules.domains import identity
 
 BABY = 101
 """ 婴儿素质 """
@@ -46,7 +46,7 @@ DAUGHTER_INSTRUCT_CID_LIST = (5204, 6003)
 """ 交互对象为玩家女儿的乱伦H指令在 InstructConfig.csv 的 cid：5204 邀请乱伦H、6003 结束乱伦H """
 
 
-def set_stage(character: "game_type.Character", talent_id: int) -> None:
+def set_stage(character: "identity.Identity", talent_id: int) -> None:
     """
     把角色的成长阶段素质换成 talent_id
     Keyword arguments:

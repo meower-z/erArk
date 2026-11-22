@@ -32,6 +32,7 @@ from Script.Modules.domains import (
     player_collection,
     pregnancy,
 )
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -108,7 +109,7 @@ def judge_external_ovulation(
         return False
     if not have_external_ovulation_chance(character_id):
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if not handle_premise.handle_in_player_scene(character_id):
         return False
     if child_stage_gate.is_child_stage(character_id):
@@ -140,7 +141,7 @@ def lay_soft_egg(character_id: int) -> int:
     Return arguments:
     int -- 新卵的编号
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 精液转移：子宫(7)与小穴(6)各转移八成，部位剩余量与等级同步刷新（累计量不动）
     transfer_count = 0
     with dirty.editing(character_id) as d:
@@ -267,9 +268,7 @@ def get_soft_egg_name(egg_id: int) -> str:
         return _("无壳卵块")
     mother_id = soft_eggs[egg_id]["mother_id"]
     mother_name = (
-        cache.character_data[mother_id].name
-        if mother_id in cache.character_data
-        else _("某人")
+        identity.of(mother_id).name if identity.exists(mother_id) else _("某人")
     )
     return _("{0}排出的卵块").format(mother_name)
 
@@ -350,7 +349,7 @@ def check_soft_eggs_fertilization() -> None:
         egg_name = get_soft_egg_name(egg_id)
         player_collection.remove_soft_egg(egg_id)
         draw_text = "\n※※※※※※※※※\n"
-        if success_count >= 1 and mother_id in cache.character_data:
+        if success_count >= 1 and identity.exists(mother_id):
             with pregnancy.editing(mother_id) as mother_preg:
                 for _index in range(success_count):
                     new_egg_id = egg_handle.add_egg(mother_id, True, soft=True)

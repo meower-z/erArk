@@ -21,6 +21,7 @@ from tests import kernel_data
 from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 LOCKER_ROOM = ["大浴场", "更衣室"]
 """ 大浴场的更衣室（浴场衣柜） """
@@ -121,7 +122,7 @@ class PickDraftWorldTest(SlowTestCase):
         from tests import kernel_data
 
         self.world.move(0, LOCKER_ROOM)
-        npc = self.cache.character_data[self.chara_id]
+        npc = identity.of(self.chara_id)
         with kernel_data.writing():
             wardrobe.set_part(
                 npc.cid, "cloth_locker_in_shower", PANTIES, [pan_id]
@@ -170,7 +171,7 @@ class PickDraftWorldTest(SlowTestCase):
             self.show(constant.Panel.CHECK_LOCKER)
         )
         self.assert_one_edit(start, end, changed)
-        npc = self.cache.character_data[self.chara_id]
+        npc = identity.of(self.chara_id)
         self.assertEqual(
             kernel_data.domain("player_collection").get("npc_panties_tem")[
                 self.chara_id
@@ -340,7 +341,7 @@ class PickDraftWorldTest(SlowTestCase):
         from Script.Modules.tk_ui import player_pick
         from Script.UI.Panel import see_item_info_panel
 
-        player = self.cache.character_data[0]
+        player = identity.of(0)
         kernel_data.put(inventory.set_item, 0, 0, 1)
         kernel_data.set_needs(player.cid, sanity=0)
 

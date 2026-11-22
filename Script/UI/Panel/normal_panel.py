@@ -7,7 +7,7 @@ from Script.Core import get_text
 from Script.Config import game_config, normal_config
 from Script.Design import map_handle, game_time
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, action_info, activity
+from Script.Modules.domains import abilities, action_info, activity, identity
 from Script.Modules.domains import entertainment, fridge, inventory, playthrough
 from Script.Modules.domains import npc_template, warehouse
 
@@ -141,11 +141,11 @@ class Take_Care_Baby_Panel:
             # 遍历婴儿名字并输出按钮
             for adv_id in npc_template.ids():
                 chara_id = adv_id
-                if chara_id not in cache.character_data:
+                if not identity.exists(chara_id):
                     continue
                 if abilities.talent(chara_id)[101]:
-                    name = cache.character_data[chara_id].name
-                    chara_adv_id = cache.character_data[chara_id].adv
+                    name = identity.of(chara_id).name
+                    chara_adv_id = identity.of(chara_id).adv
                     button_text = f"[{str(chara_adv_id).rjust(4,'0')}]:{name} "
 
                     button_draw = draw.LeftButton(
@@ -171,7 +171,7 @@ class Take_Care_Baby_Panel:
     def choice_take_care(self, chara_id: int) -> None:
         """选择照顾的方式"""
         self.target_chara_id = chara_id
-        name = cache.character_data[self.target_chara_id].name
+        name = identity.of(self.target_chara_id).name
 
         button_text_list = [
             _("抱一抱她"),
@@ -352,7 +352,7 @@ class Fridge_Panel:
 
             # 获得冰箱内的乳制品
             for character_id, character_milk in milk_table.items():
-                character_data = cache.character_data[character_id]
+                character_data = identity.of(character_id)
                 character_name = character_data.name
                 draw_text = ("  [{}]{}：{}ml").format(
                     str(character_data.adv).rjust(4, "0"),
@@ -404,7 +404,7 @@ class Fridge_Panel:
         """拿走母乳并放进玩家背包"""
         from Script.System.Cooking_System import cooking
 
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
 
         # 创建食物对象，并放进玩家的背包里
         new_food = cooking.create_food("", 1001, 5, character_data.name)
@@ -421,7 +421,7 @@ class Fridge_Panel:
 
     def turn_milk(self, character_id: int) -> None:
         """转化母乳为资源【鲜母乳】"""
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
 
         # 拿走冰箱里的母乳，转化为鲜母乳
         milk = fridge.take(fridge.MILK, character_id)

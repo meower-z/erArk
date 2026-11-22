@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Mapping
 from typing import Any
 
 from Script.Core import cache_control
@@ -32,6 +33,7 @@ from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
 from Script.Modules.domains import chara_life
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -69,10 +71,10 @@ def _eff(ri: game_type.Rhodes_Island, facility_cid: int) -> int | None:
         return None
 
 
-def _chara_name(cd: dict[int, Any], cid: int) -> str:
+def _chara_name(cd: Mapping[int, Any], cid: int) -> str:
     """
     参数:
-        cd (Dict[int, Any]): cache.character_data 角色数据字典
+        cd (Mapping[int, Any]): 角色身份表（identity.table()）
         cid: 待查询的角色id
     返回值:
         str: 角色名字，角色不存在时返回"(不存在)"
@@ -112,12 +114,11 @@ def check_island_01_npc_id_got_ref() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验cache.npc_id_got中的每个id都存在于cache.character_data，且0号玩家角色存在。大量核心循环拿名单id
-        直接无保护索引角色数据，缺一个即崩。应先于本域其余检查运行——ISLAND-07/09/19等都会用名单id索引角色，
-        缺失时它们会抛检查器异常而不是给出清晰结论
+        校验在编名单（roster.active()）中的每个id都存在于角色身份表（identity.characters），且0号玩家存在。
+        核心循环按名单id直接查询角色数据，缺失会引发异常。本条应先于本域其余检查运行，
+        避免ISLAND-07/09/19等在缺失角色时抛出检查器异常
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     if 0 not in cd:
         failures.append(
@@ -312,8 +313,7 @@ def check_island_07_work_type_valid() -> list[CheckFailure]:
         校验每个在编非玩家干员的work.work_type存在于WorkType.csv。非法值在下一次刷新时会进岗位名册；
         cid in cd的守卫交给ISLAND-01，这里再判一次只是防止本条自身抛异常
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     valid_work_types = set(game_config.config_work_type)
     failures = []
     for cid in roster.active():
@@ -345,8 +345,7 @@ def check_island_08_work_rosters_self_consistent() -> list[CheckFailure]:
         必须等于所在岗位。绝不能加roster.has(cid)——外勤/关押/外派会把人移出名单而名册保留他，
         是主线玩法下的必现误报
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     rosters = work.rosters()
     key_diff_extra = sorted(set(rosters) - set(game_config.config_work_type))
     violations: list[tuple[Any, Any, str, int | None]] = []
@@ -383,8 +382,7 @@ def check_island_09_work_set_recompute() -> list[CheckFailure]:
         work.work_type却不调update_work_people()；离线角色留在名册里而重算式扫不到他。报告时按sp_flag把
         "离线残留"与"面板漏刷新"分类
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     for wid in game_config.config_work_type:
         cached_set = set(work.roster(wid))
@@ -441,7 +439,7 @@ def check_island_11_work_lists_superset() -> list[CheckFailure]:
         每个列表必须包含对应岗位名册的全部成员，漏人是真bug。三个列表都只断言超集，不报多出的成员。
         多出来的是离线残留，合法可达，交给ISLAND-12
     """
-    cd = cache_control.cache.character_data
+    cd = identity.table()
     failures = []
     for field, wid in _WORK_LIST_FIELDS:
         lst = _work_list(field)
@@ -486,7 +484,7 @@ def check_island_12_work_lists_stale_members() -> list[CheckFailure]:
         滞后于成员实际状态。日结时update_work_people()会整体重置并按在编角色重建这些列表，本条覆盖的是
         两次重建之间可能出现的瞬态漂移
     """
-    cd = cache_control.cache.character_data
+    cd = identity.table()
     failures = []
     for field, wid in _WORK_LIST_FIELDS:
         lst = _work_list(field)
@@ -605,8 +603,7 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
         前三类的线与人员列表从 base.production 读。base.main_traders 里的主交易员必须是0或一名职位为111的存在角色。
         不要求主负责人在npc_id_got：主管、种植员与招聘专员都能被派外勤，岗位与槽位都保留
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     main_list = {
         **{wid: production.workers(k) for k, wid in production.KINDS.items()},
@@ -685,8 +682,7 @@ def check_island_16_dormitory_managers_structure() -> list[CheckFailure]:
         用<=而非==range(1,10)：旧档若存在残缺字典不会被修复；缺层
         不会崩溃，全部消费点都用.get(layer,0)。不要求管理员在npc_id_got（舍管可被派外勤）
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     dormitory_managers = dormitory.managers()
     illegal_layers = [
         layer for layer in dormitory_managers if layer not in range(1, 10)
@@ -732,8 +728,7 @@ def check_island_17_dormitory_manager_work_type_and_layers() -> (
         联动缺失（select_new_work把现任舍管改派成别的岗位时只改work.work_type，不碰各层管理员），
         后者指向旧档迁移残缺
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     dormitory_managers = dormitory.managers()
     failures = []
     missing_layers = sorted(set(range(1, 10)) - set(dormitory_managers))
@@ -775,8 +770,7 @@ def check_island_18_closed_layer_no_manager() -> list[CheckFailure]:
         校验层号高于当前宿舍区等级理论开放上限的层，其管理员必须为0。低优先级、近乎恒真的守卫；
         任命入口只对open_layers出按钮，实际只能抓存档编辑/mod
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     dormitory_managers = dormitory.managers()
     try:
         max_open_layer = dorm_common.get_dormitory_max_open_layer()
@@ -812,7 +806,7 @@ def check_island_19_dormitory_path_valid() -> list[CheckFailure]:
         面板是模态阻塞的，回合快照看不到面板中途状态，不因"可能在编辑面板内"而抑制本条
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     for cid in roster.active():
         if cid == 0 or cid not in cd:
@@ -845,7 +839,7 @@ def check_island_20_dormitory_room_capacity() -> list[CheckFailure]:
         容忍超员（max(2,实际人数)撑容量），超员可以合法持续到玩家升级宿舍；本函数仅在确有超员时给出经营告警
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     try:
         resident_ids = dorm_common.get_dormitory_resident_id_set()
     except Exception:
@@ -896,8 +890,7 @@ def check_island_21_book_borrow_consistency() -> list[CheckFailure]:
         互为反向索引；书籍id必须合法；单人持书不超过3本。两处状态必须成对更新，是典型易漏点；书籍id合法性
         不是冗余——自动借书直接索引config_book[book_id]，失效键会崩
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     book_borrow_dict = library.holders()
     failures = []
     for book, holder in book_borrow_dict.items():
@@ -1028,7 +1021,7 @@ def check_island_23_entertainment_type() -> list[CheckFailure]:
         名单：该字段是角色自带属性，离线角色归队后同样会被AI读取。已知合法误报源：debug面板允许输入任意三元组
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     for cid, ch in cd.items():
         et = chara_life.entertainment_type(ch.cid)
@@ -1196,12 +1189,11 @@ def check_island_26_field_commission_flag_consistency() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验每个进行中委托的id必须合法；成员必须是存在的角色、不被两个委托同时派遣、其sp_flag.field_commission
-        等于该委托id；反过来，任何field_commission!=0的角色都必须恰好出现在对应委托的名单里。反向检查必须
-        遍历character_data而不是npc_id_got——外勤成员必然不在npc_id_got里，用名单遍历会必现漏检
+        校验每个进行中委托的id必须合法，成员必须是身份表里存在的角色、不被两个委托同时派遣、
+        且sp_flag.field_commission等于该委托id。反过来，field_commission!=0的角色都必须恰好出现在对应委托名单里。
+        反向检查须遍历身份表（identity.table()）而非在编名单，因为外勤成员不在在编名单里
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     seen = set()
     for com_id, c in commission.ongoing().items():
@@ -1314,8 +1306,7 @@ def check_island_28_main_power_operator_slots() -> list[CheckFailure]:
         校验 base.power 的 main_operators 是火/水/风/光 4 槽、每个非0值是 work.work_type==11 的现有角色、4 槽互不重复。
         不要求角色在 npc_id_got 里，派外勤的调控员保留岗位与槽位
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     slots = power.plant()["main_operators"]
     if len(slots) != 4:
         return [
@@ -1362,8 +1353,7 @@ def check_island_29_warden_and_prisoners() -> list[CheckFailure]:
         校验监狱长（work.warden）为0或指向一名存在的、work.work_type==191的角色；每个囚犯id必须存在，逃脱概率
         落在0..100。去掉了"在npc_id_got"子句——监狱长可能被关押或逃脱而离线，此时work_type仍是191，引用合法
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     warden_id = work.warden()
     if warden_id != 0 and not (
@@ -1414,7 +1404,7 @@ def check_island_30_facility_damage_and_maintenance() -> list[CheckFailure]:
         （外勤中的工程师留着检修地点）。不要求检修目标当前仍有损坏记录（无损坏时会随机选目标）
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     illegal_damage = [
         (p, v)
@@ -1469,8 +1459,7 @@ def check_island_31_visitor_and_recruited_id() -> list[CheckFailure]:
         不断言"访客必须在npc_id_got"（可能被绑架而离线）。
         不断言"干员数<=people_max"（访客计入名单但只受客房数约束，属设计内流程，不在本条硬检查范围）
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     visitors = visitor.visitors()
     ghost_visitors = [v for v in visitors if v not in cd]
@@ -1574,8 +1563,7 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
         映射所指的人。定为告警是因为有UI可达的破坏路径（改派现任外交官为别的岗位、任命候选表不排除已负责
         他国的角色），都是设计缺陷而非数据损坏
     """
-    cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     failures = []
     seen: dict[int, int] = {}
     for country, post in diplomacy.table().items():

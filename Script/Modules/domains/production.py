@@ -9,11 +9,11 @@
 from collections.abc import Iterable, Mapping
 from typing import Any, TypedDict, cast
 
-from Script.Core import cache_control
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.domains import chara_life
+from Script.Modules.domains import identity
 
 KEY = "base.production"
 """ 生产线在全局数据里的键 """
@@ -158,11 +158,11 @@ def change_product(kind: str, line_id: int, product: int) -> None:
 
 def release_mains(kind: str) -> None:
     """
-    职位不是这类生产线职位的主负责人设为 0（空缺）。不在 character_data 里的主负责人保留
+    职位不是这类生产线职位的主负责人设为 0（空缺）。不在身份表（identity.characters）里的主负责人保留
     Keyword arguments:
     kind -- KINDS 里的种类
     """
-    characters = cache_control.cache.character_data
+    characters = identity.table()
     current = lines(kind)
     for line_id, line in current.items():
         main = line["main"]

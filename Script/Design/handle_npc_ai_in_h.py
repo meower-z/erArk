@@ -25,6 +25,7 @@ from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info, activity
 from Script.Modules.domains import dirty, flags, h_state, history, hypnosis
 from Script.Modules.domains import needs, player_ability, wardrobe
+from Script.Modules.domains import identity
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -195,9 +196,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
     from Script.Modules.gameplay_resolution import plan_queue
     from Script.Settle import default
 
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(character_id)
     )
@@ -479,8 +478,8 @@ def wake_by_noise(character_id: int, target_character_id: int) -> None:
     """
     from Script.Modules.gameplay_resolution import plan_queue
 
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[target_character_id]
+    now_character_data: identity.Identity = identity.of(character_id)
+    target_data: identity.Identity = identity.of(target_character_id)
     # 清空疲劳和睡眠程度
     needs.set(target_character_id, tired=0, sleep=0)
     if flags.get(target_character_id, "unconscious_h") == 1:
@@ -638,7 +637,7 @@ def npc_active_h() -> int:
     from Script.System.Instruct_System import see_instruct_panel
 
     target_character_id = activity.target(0)
-    target_character_data = cache.character_data[target_character_id]
+    target_character_data = identity.of(target_character_id)
 
     # 如果对方不是主动H状态，则返回
     if not hypnosis.of(target_character_data.cid)[

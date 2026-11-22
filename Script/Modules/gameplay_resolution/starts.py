@@ -146,13 +146,7 @@ def write_field(who: int, path: str, value: core.JSON) -> None:
     if root == "behavior" and len(names) == 1:
         activity.update_behavior(who, **{names[0]: plain(value)})
         return
-    node: object = getattr(cache.character_data[who], root)
-    *parents, last = names
-    for name in parents:
-        node = getattr(node, name)
-    if not hasattr(node, last):
-        raise AttributeError(f"{path} 不是角色身上已有的字段")
-    setattr(node, last, plain(value))
+    raise AttributeError(f"{path} 不是角色身上已有的字段")
 
 
 def begin(who: int, act: core.Action, chosen: intent.Intent) -> None:

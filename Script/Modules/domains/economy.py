@@ -22,6 +22,7 @@ from Script.Kernel import core
 from Script.Modules.domains import roster, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.domains import chara_life
+from Script.Modules.domains import identity
 
 INCOME = "base.income_today"
 """ 今日总收入在全局数据里的键 """
@@ -370,10 +371,11 @@ def set_main_trader(res_type: str, chara_id: int) -> None:
 
 def drop_invalid_traders() -> None:
     """
-    把无效的主交易员改为 0（空缺）。主交易员不是 int、不在 character_data 里或职位不是 TRADER_WORK 时无效。
+    把无效的主交易员设为 0（空缺）。
+    主交易员不是 int、不在身份表（identity.characters）里或职位不是 TRADER_WORK 时无效。
     表有变化时才写进当前缓冲区
     """
-    characters = cache_control.cache.character_data
+    characters = identity.table()
     table = main_traders()
     for res_type, main_id in table.items():
         if (

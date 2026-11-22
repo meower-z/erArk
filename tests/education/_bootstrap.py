@@ -132,7 +132,8 @@ _ = get_text._
 from Script.Modules.save_load import kernel_state
 from Script.Modules.domains import activity, body_manage, chara_key, chara_life
 from Script.Modules.domains import education, facility, growth, inventory, modes
-from Script.Modules.domains import official, plan, playthrough, pregnancy
+from Script.Modules.domains import identity, official, plan, playthrough
+from Script.Modules.domains import pregnancy
 from Script.Modules.domains import relations, roster, status, wardrobe
 from Script.Modules.domains import warehouse
 from tests.education._growth_ref import child_growth as child_growth
@@ -266,7 +267,7 @@ def set_time(now_time: datetime.datetime) -> None:
     """
     now_time = game_time.to_game_time(now_time)
     world.set_clock(now_time)
-    for character_data in cache.character_data.values():
+    for character_data in identity.table().values():
         behave(character_data.cid, start_time=now_time)
 
 
@@ -279,49 +280,43 @@ def make_character(
     mother_id: int = -1,
     position: list[str] | None = None,
     born_days: int = 30,
-) -> game_type.Character:
+) -> identity.Identity:
     """
-    造一个能跑通结算 / 前提 / 面板链路的最小角色 fixture，登记进 cache，
+    造一个能跑通结算 / 前提 / 面板链路的最小角色 fixture，写入角色身份表并登记进场景，
     再把它的疲劳、饥饿、尿意、乳汁设为 0（吃饱、歇足），体力、气力与它们的上限设为 100
     Keyword arguments:
     cid -- 角色id（0 为玩家）
     name -- 角色名
     work_type -- 岗位id（151 教师 / 152 学生 / 153 保育员）
     daughter -- 是否为玩家的女儿（father_id = 0）
-    stage -- 成长阶段素质id（101 至 104），0 为成年干员。stage 为 101（婴儿）时不进 npc_id_got
+    stage -- 成长阶段素质id（101 至 104），0 为成年干员。stage 为 101 或 102 时不进在编名单
     mother_id -- 母亲的角色id
     position -- 初始场景路径，默认宿舍
     born_days -- 出生距今的游戏天数（成长天数用）
     Return arguments:
-    game_type.Character -- 角色对象
+    identity.Identity -- 角色身份
     """
-    cd = game_type.Character()
-    cd.cid = cid
-    cd.name = name
-    cd.adv = 0
-    cd.sex = 1
-    cd.race = 0
-    relations.favorability.set(cd.cid, {0: 0})
+    relations.favorability.set(cid, {0: 0})
     relations.assistant_services.set(
-        cd.cid, attr_calculation.get_assistant_services_zero()
+        cid, attr_calculation.get_assistant_services_zero()
     )  # 实行值计算会读助理服务[8]
     ca.zero_tables(cid)
     ca.talent(cid)[121] = 1
-    chara_life.work_type.set(cd.cid, work_type)
-    chara_life.dormitory.set(cd.cid, scene_str(SCENE_DORM))
-    behave(cd.cid, start_time=game_time.now())
+    chara_life.work_type.set(cid, work_type)
+    chara_life.dormitory.set(cid, scene_str(SCENE_DORM))
+    behave(cid, start_time=game_time.now())
     if stage:
-        ca.talent(cd)[stage] = 1
+        ca.talent(cid)[stage] = 1
     if daughter:
-        relations.father_id.set(cd.cid, 0)
-        relations.mother_id.set(cd.cid, mother_id)
-        if mother_id in cache.character_data:
+        relations.father_id.set(cid, 0)
+        relations.mother_id.set(cid, mother_id)
+        if identity.exists(mother_id):
             with relations.child_id_list.editing(mother_id) as children:
                 if cid not in children:
                     children.append(cid)
     where = list(position if position is not None else SCENE_DORM)
-    kernel_data.put(activity.set_position, cd.cid, where)
-    cache.character_data[cid] = cd
+    kernel_data.put(activity.set_position, cid, where)
+    kernel_data.put(identity.put, identity.Identity(cid, name=name, sex=1))
     chara_data.seed(cid, {})
     if daughter:
         pregnancy.update(
@@ -333,8 +328,8 @@ def make_character(
     # 婴儿/幼女不进在编名册，与真实成长阶段边界一致
     if cid and stage not in (101, 102):
         roster.add(cid)
-    _scene_list_add(scene_str(activity.position(cd.cid)), cid)
-    return cd
+    _scene_list_add(scene_str(activity.position(cid)), cid)
+    return identity.of(cid)
 
 
 def remove_character(cid: int) -> None:
@@ -345,9 +340,9 @@ def remove_character(cid: int) -> None:
     Return arguments:
     无
     """
-    if cid in cache.character_data:
+    if identity.exists(cid):
         _scene_list_remove(scene_str(activity.position(cid)), cid)
-        del cache.character_data[cid]
+        kernel_data.put(identity.discard, cid)
     roster.discard(cid)
 
 

@@ -19,6 +19,7 @@ from Script.UI.Moudle import draw
 from Script.Config import normal_config
 from Script.Modules.domains import abilities, flags, growth, history, needs
 from Script.Modules.domains import pregnancy, roster, tallies, relations
+from Script.Modules.domains import identity
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -73,7 +74,7 @@ def update_new_day() -> None:
     all_chara_id_set = roster.active()
     all_chara_id_set.add(0)  # 包含玩家
     for character_id in all_chara_id_set:
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data: identity.Identity = identity.of(character_id)
         # 处理持有食物变质与过期，并获取过期食物数量
         if normal_config.system_setting.base_setting.get(10, 1):
             expired_food_num = cooking.handle_food_deterioration(character_id)
@@ -142,9 +143,7 @@ def update_new_day() -> None:
         now_draw.text = _(
             "\n【学期结束】{0}的成绩单出来了，可以用「检查成绩单」指令查看\n"
         ).format(
-            "、".join(
-                cache.character_data[one].name for one in report_character_list
-            )
+            "、".join(identity.of(one).name for one in report_character_list)
         )
         # now_draw 是本函数复用的同一个对象，改了 style 必须改回来，否则后面所有输出都变成金色
         now_draw.style = "gold_enrod"

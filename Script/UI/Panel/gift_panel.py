@@ -9,6 +9,7 @@ from Script.Design import game_time, handle_premise
 from Script.Modules.domains import activity, pregnancy
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import abilities, action_info, flags, inventory
+from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 
@@ -32,7 +33,7 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
     """
     from Script.Design import handle_talent
 
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     now_draw = draw.WaitDraw()
     now_draw.text = "\n  "
     # 身体部位修改药剂处理
@@ -170,9 +171,7 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
                     "选中的婴儿已经不在婴儿期，药物没有产生效果\n"
                 )
         if child_id != -1:
-            child_character_data: game_type.Character = cache.character_data[
-                child_id
-            ]
+            child_character_data: identity.Identity = identity.of(child_id)
             add_day = pregnancy_handle.get_child_growth_acceleration_amount(
                 child_id
             )
@@ -384,9 +383,9 @@ class Gift_Panel:
         """
         from Script.System.Pregnancy_System import egg_handle, pregnancy_panel
 
-        target_character_data: game_type.Character = cache.character_data[
+        target_character_data: identity.Identity = identity.of(
             activity.target(0)
-        ]
+        )
         accelerable_eggs = egg_handle.get_accelerable_hatching_eggs(
             target_character_data.cid
         )
@@ -443,9 +442,9 @@ class Gift_Panel:
             pregnancy_panel,
         )
 
-        target_character_data: game_type.Character = cache.character_data[
+        target_character_data: identity.Identity = identity.of(
             activity.target(0)
-        ]
+        )
         accelerable_babies = pregnancy_handle.get_accelerable_babies(
             target_character_data.cid
         )
@@ -460,9 +459,7 @@ class Gift_Panel:
             return_list = []
             title_draw.draw()
             for child_id in accelerable_babies:
-                child_character_data: game_type.Character = (
-                    cache.character_data[child_id]
-                )
+                child_character_data: identity.Identity = identity.of(child_id)
                 grow_day = pregnancy_handle.get_child_grow_day(child_id)
                 child_preg = pregnancy.of(child_id)
                 acc_day = int(child_preg.growth_acceleration_days)
@@ -506,9 +503,9 @@ class Gift_Panel:
         """
         from Script.Design import second_behavior
 
-        target_character_data: game_type.Character = cache.character_data[
+        target_character_data: identity.Identity = identity.of(
             activity.target(0)
-        ]
+        )
         gift_data = game_config.config_gift_items[gift_id]
         # 药物礼物的情况
         if gift_data.type == 11:
@@ -582,7 +579,7 @@ class Gift_Panel:
         return True
 
     def is_drug_effective(
-        self, drug_id: int, target_character_data: game_type.Character
+        self, drug_id: int, target_character_data: identity.Identity
     ) -> bool:
         """
         检查药物是否对目标角色有效

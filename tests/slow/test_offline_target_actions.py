@@ -17,6 +17,7 @@ from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 BABY = 101
 """ 婴儿素质的id """
@@ -69,7 +70,7 @@ class OfflineTargetActionsTest(SlowTestCase):
             cid
             for cid in sorted(kernel_data.domain("npc_template").ids())
             if cid
-            and cid in self.cache.character_data
+            and identity.exists(cid)
             and cid not in kernel_data.domain("roster").active()
         )
 
@@ -82,7 +83,7 @@ class OfflineTargetActionsTest(SlowTestCase):
         from tests import world
 
         baby_id = self.offline_chara()
-        baby = self.cache.character_data[baby_id]
+        baby = identity.of(baby_id)
         ca.talent(baby_id)[BABY] = 1
         offstage = cast(Mapping, core.state().data.get(working.OFFSTAGE) or {})
         before = (pickle.dumps(baby), offstage.get(str(baby_id)))

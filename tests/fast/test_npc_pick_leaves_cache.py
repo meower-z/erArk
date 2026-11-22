@@ -27,12 +27,12 @@ WRITERS = frozenset({constant.StateMachine.SEE_H_AND_MOVE_TO_DORMITORY})
 
 def changed(before: dict[str, bytes], cache: Any) -> list[str]:
     """
-    缓存里与 before 不同的属性名；character_data 按角色比
+    返回缓存中 pickle 字节与 before 不同的属性名列表
     Keyword arguments:
-    before -- 属性名 -> pickle
+    before -- 属性名到 pickle 字节的映射
     cache -- 游戏缓存
     Return arguments:
-    list -- 变了的属性
+    list[str] -- 发生变化的属性名（按名称排序）
     """
     now = pickled(cache)
     return sorted(
@@ -42,20 +42,13 @@ def changed(before: dict[str, bytes], cache: Any) -> list[str]:
 
 def pickled(cache: Any) -> dict[str, bytes]:
     """
-    缓存的每个属性（character_data 拆成每个角色）的 pickle
+    序列化缓存的每个顶层属性
     Keyword arguments:
     cache -- 游戏缓存
     Return arguments:
-    dict -- 属性名 -> pickle
+    dict[str, bytes] -- 属性名到 pickle 字节的映射
     """
-    out = {
-        k: pickle.dumps(v)
-        for k, v in vars(cache).items()
-        if k != "character_data"
-    }
-    for cid, data in cache.character_data.items():
-        out[f"character_data[{cid}]"] = pickle.dumps(data)
-    return out
+    return {k: pickle.dumps(v) for k, v in vars(cache).items()}
 
 
 class NpcPickLeavesCacheTest(FastTestCase):

@@ -15,6 +15,7 @@ import importlib
 from tests import kernel_data
 from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 PARTY_ENTERTAINMENT = 101
 """ 派对用的娱乐：读书（图书馆的读书会也排这个娱乐） """
@@ -128,7 +129,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
 
         chara_id = min(
             cid
-            for cid in self.cache.character_data
+            for cid in identity.table()
             if cid and cid not in kernel_data.domain("roster").active()
         )
         self.use_panel(
@@ -153,7 +154,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
         from Script.Modules.domains import h_state
 
         npc_id = self.other_npc()
-        npc = self.cache.character_data[npc_id]
+        npc = identity.of(npc_id)
         count = list(h_state.view(npc_id).orgasm_count[S_PART])
         self.use_panel(
             ("press", "[NPC角色]"),

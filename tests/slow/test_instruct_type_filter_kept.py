@@ -14,6 +14,7 @@ from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca
 from tests.chara_activity import aim
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 AGE_TALENTS = range(101, 109)
 """ 年龄素质 """
@@ -37,7 +38,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
         无
         """
         super().setUp()
-        self.pl = self.cache.character_data[0]
+        self.pl = identity.of(0)
         self.adult_id = self.npc("杜宾")
         self.world.move(self.adult_id, activity.position(self.pl.cid))
 

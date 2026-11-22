@@ -18,7 +18,8 @@ from Script.Config import character_config
 from Script.Core import game_type, save_handle
 from Script.Design import character_handle
 from Script.Kernel import core
-from Script.Modules.domains import country, npc_template, playthrough, roster
+from Script.Modules.domains import country, identity, npc_template
+from Script.Modules.domains import playthrough, roster
 from Script.Modules.save_load import index, kernel_state
 from tests import kernel_data
 from tests.fast.base import FastTestCase
@@ -116,7 +117,7 @@ class NpcTemplateTest(FastTestCase):
             (loaded.Name, loaded.Hp, loaded.Mp), ("甲", 1500, 1200)
         )
         self.assertEqual(npc_template.ids(), [*config, GENERATED])
-        self.assertIn(GENERATED, self.cache.character_data)
+        self.assertIn(GENERATED, identity.table())
 
     def test_load_keeps_running_game_templates_out(self) -> None:
         """存档后当前对局新增的局内生成模板，读回该存档后不在模板表与角色表里"""
@@ -124,4 +125,4 @@ class NpcTemplateTest(FastTestCase):
         kernel_data.written(npc_template.add, generated({0: 1}))
         save_handle.input_load_save(SAVE_ID)
         self.assertIsNone(npc_template.get(GENERATED))
-        self.assertNotIn(GENERATED, self.cache.character_data)
+        self.assertNotIn(GENERATED, identity.table())

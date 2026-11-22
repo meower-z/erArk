@@ -86,9 +86,7 @@ class RosterPregnancyGrowthSaveTest(SlowTestCase):
             raw_cache = save_handle.SaveUnpickler(f).load()
         for attr in ("npc_id_got", "forbidden_npc_id", "npc_name_data"):
             self.assertFalse(hasattr(raw_cache, attr))
-        for ch in raw_cache.character_data.values():
-            self.assertFalse(hasattr(ch, "pregnancy"))
-            self.assertFalse(hasattr(ch, "child_growth"))
+        self.assertNotIn("character_data", vars(raw_cache))
 
         save_handle.input_load_save(SLOT)
         self.assertEqual(roster.active_sorted(), expected_active)

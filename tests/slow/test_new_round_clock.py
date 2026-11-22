@@ -11,6 +11,7 @@ import importlib
 from types import ModuleType
 
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 
 def game(name: str) -> ModuleType:
@@ -41,7 +42,7 @@ class NewRoundClockTest(SlowTestCase):
         game_time = game("Script.Design.game_time")
         kernel_state = game("Script.Modules.save_load.kernel_state")
         new_round = game("Script.UI.Panel.new_round")
-        cache_control = game("Script.Core.cache_control")
+        game("Script.Core.cache_control")
         playthrough = game("Script.Modules.domains.playthrough")
         first = kernel_state.first_clock()
         self.wait(12)
@@ -51,7 +52,6 @@ class NewRoundClockTest(SlowTestCase):
         self.world.player.press("醒来")
         world.act(handle.start_new_round)
         self.world.player.check_done()
-        cache = cache_control.cache
         self.assertEqual(playthrough.game_round(), before_round + 1)
         game_state = core.state()
         self.assertEqual(game_state.clock, first, "新周目从开局时刻开始")
@@ -59,7 +59,7 @@ class NewRoundClockTest(SlowTestCase):
         visitor = game("Script.Modules.domains.visitor")
         self.assertEqual(game_time.minutes(visitor.last_arrival()), first)
         action_info = game("Script.Modules.domains.action_info")
-        for chara_id in cache.character_data:
+        for chara_id in identity.table():
             stamps = {
                 "talk_time": action_info.get(chara_id, "talk_time"),
                 "last_move_time": action_info.get(chara_id, "last_move_time"),

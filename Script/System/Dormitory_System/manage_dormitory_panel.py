@@ -18,6 +18,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
 from Script.Modules.domains import activity, chara_life, dormitory, facility
 from Script.Modules.domains import inventory, roster, work
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -151,8 +152,8 @@ class Manage_Dormitory_Panel:
         temp_blank_list = self._get_temp_blank_character_ids()
         temp_blank_names = []
         for character_id in temp_blank_list:
-            if character_id in cache.character_data:
-                temp_blank_names.append(cache.character_data[character_id].name)
+            if identity.exists(character_id):
+                temp_blank_names.append(identity.of(character_id).name)
 
         info_draw = draw.NormalDraw()
         info_draw.width = self.width
@@ -178,8 +179,8 @@ class Manage_Dormitory_Panel:
 
         for layer in open_layers:
             manager_id = dormitory.managers().get(layer, 0)
-            if manager_id and manager_id in cache.character_data:
-                manager_name = cache.character_data[manager_id].name
+            if manager_id and identity.exists(manager_id):
+                manager_name = identity.of(manager_id).name
                 info_draw.text += _("  {0}层：{1}\n").format(
                     layer, manager_name
                 )
@@ -290,7 +291,7 @@ class Manage_Dormitory_Panel:
         while 1:
             chara_ids = sorted(
                 [cid for cid in roster.active() if cid != 0],
-                key=lambda x: cache.character_data[x].adv,
+                key=lambda x: identity.of(x).adv,
             )
             final_list = []
             for chara_id in chara_ids:
@@ -326,13 +327,11 @@ class Manage_Dormitory_Panel:
         open_layers = sorted(open_rooms_by_layer.keys())
 
         # 显示已被任命为宿舍管理员，但是还没有被分配层级的干员
-        manager_pool = sorted(
-            work.roster(31), key=lambda x: cache.character_data[x].adv
-        )
+        manager_pool = sorted(work.roster(31), key=lambda x: identity.of(x).adv)
         now_text = _("\n 以下干员已被任命为宿舍管理员，但尚未分配管理层级：")
         unassigned_managers = []
         for chara_id in manager_pool:
-            character_data = cache.character_data[chara_id]
+            character_data = identity.of(chara_id)
             if chara_id in dormitory.managers().values():
                 continue
             unassigned_managers.append(character_data.name)
@@ -365,8 +364,8 @@ class Manage_Dormitory_Panel:
 
         for layer in open_layers:
             manager_id = dormitory.managers().get(layer, 0)
-            if manager_id and manager_id in cache.character_data:
-                manager_name = cache.character_data[manager_id].name
+            if manager_id and identity.exists(manager_id):
+                manager_name = identity.of(manager_id).name
                 layer_text = _("[{0}层] 当前管理员：{1}").format(
                     layer, manager_name
                 )
@@ -413,7 +412,7 @@ class Manage_Dormitory_Panel:
             now_draw.draw()
             return
 
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         open_rooms_by_layer = self._get_open_rooms_by_layer()
         occupancy = self._get_room_occupancy()
         temp_blank_list = self._get_temp_blank_character_ids()
@@ -472,7 +471,7 @@ class Manage_Dormitory_Panel:
                 if room_path in occupancy and occupancy[room_path] > 0:
                     resident_id_set = common.get_dormitory_resident_id_set()
                     occupants = [
-                        cache.character_data[cid].name
+                        identity.of(cid).name
                         for cid in resident_id_set
                         if chara_life.dormitory(cid) == room_path
                     ]
@@ -511,7 +510,7 @@ class Manage_Dormitory_Panel:
         输出类型: 无
         功能: 更新角色 dormitory 字段，不修改 permanent_dormitory
         """
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         old_text = self._get_dormitory_name(chara_life.dormitory(character_id))
         new_text = self._get_dormitory_name(dormitory_path)
         chara_life.dormitory.set(character_id, dormitory_path)
@@ -531,7 +530,7 @@ class Manage_Dormitory_Panel:
         输出类型: 无
         功能: 角色离开当前宿舍并加入临时空白位列表
         """
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         temp_blank_list = self._get_temp_blank_character_ids()
         if character_id not in temp_blank_list:
             temp_blank_list.append(character_id)
@@ -571,7 +570,7 @@ class Manage_Dormitory_Panel:
         while len(temp_blank_list) and len(free_slots):
             character_id = temp_blank_list[0]
             target_room = free_slots.pop(0)
-            if character_id in cache.character_data:
+            if identity.exists(character_id):
                 chara_life.dormitory.set(character_id, target_room)
                 assigned_count += 1
             temp_blank_list.pop(0)
@@ -624,8 +623,8 @@ class Manage_Dormitory_Panel:
         # 统一使用通用函数获取需要纳入统计的角色id集合（拥有干员 + 异常7离岛角色）
         resident_id_set = common.get_dormitory_resident_id_set()
         sorted_character_ids = sorted(
-            [cid for cid in resident_id_set if cid in cache.character_data],
-            key=lambda x: cache.character_data[x].adv,
+            [cid for cid in resident_id_set if identity.exists(cid)],
+            key=lambda x: identity.of(x).adv,
         )
         for character_id in sorted_character_ids:
             dormitory_path = chara_life.dormitory(character_id)
@@ -685,7 +684,7 @@ class Manage_Dormitory_Panel:
 
             basement.update_work_people()
             manager_pool = sorted(
-                work.roster(31), key=lambda x: cache.character_data[x].adv
+                work.roster(31), key=lambda x: identity.of(x).adv
             )
 
             info_draw = draw.NormalDraw()
@@ -696,7 +695,7 @@ class Manage_Dormitory_Panel:
             info_draw.draw()
 
             for chara_id in manager_pool:
-                character_data = cache.character_data[chara_id]
+                character_data = identity.of(chara_id)
                 button_text = f"[{str(character_data.adv).rjust(4, '0')}] {character_data.name}"
                 now_draw = draw.LeftButton(
                     button_text,
@@ -746,9 +745,7 @@ class Manage_Dormitory_Panel:
                     info_draw.width = self.width
                     info_draw.text = _(
                         "\n○{0}的{1}层管理员任命已被撤销，博士持有的该层钥匙已被收回\n"
-                    ).format(
-                        cache.character_data[character_id].name, other_layer
-                    )
+                    ).format(identity.of(character_id).name, other_layer)
                     info_draw.draw()
 
         # 替换当前层旧管理员：仅撤掉该层归属，不立即撤掉岗位，离开面板时统一清理未分配楼层者
@@ -766,7 +763,7 @@ class Manage_Dormitory_Panel:
         info_draw = draw.WaitDraw()
         info_draw.width = self.width
         info_draw.text = _("\n○已任命 {0} 为 {1}层宿舍管理员\n").format(
-            cache.character_data[character_id].name, layer
+            identity.of(character_id).name, layer
         )
         info_draw.draw()
 
@@ -798,7 +795,7 @@ class Manage_Dormitory_Panel:
             info_draw.width = self.width
             info_draw.text = _(
                 "\n○{0}的{1}层管理员任命已被撤销，博士持有的该层钥匙已被收回\n"
-            ).format(cache.character_data[manager_id].name, layer)
+            ).format(identity.of(manager_id).name, layer)
             info_draw.draw()
 
         info_draw = draw.WaitDraw()
@@ -820,7 +817,7 @@ class Manage_Dormitory_Panel:
         for character_id in roster.active():
             if character_id == 0:
                 continue
-            character_data = cache.character_data.get(character_id)
+            character_data = identity.get(character_id)
             if character_data is None:
                 continue
             if chara_life.work_type(character_data.cid) != 31:
@@ -845,10 +842,7 @@ class Manage_Dormitory_Panel:
 
         valid_ids = []
         for character_id in temp_blank_list:
-            if (
-                character_id in cache.character_data
-                and character_id not in valid_ids
-            ):
+            if identity.exists(character_id) and character_id not in valid_ids:
                 valid_ids.append(character_id)
         self.temp_blank_character_ids = valid_ids
         return self.temp_blank_character_ids

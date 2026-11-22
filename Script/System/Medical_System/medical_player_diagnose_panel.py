@@ -23,7 +23,7 @@ from Script.System.Medical_System import (
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw, view
 from Script.Modules.domains import abilities, activity, medical_patient
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import warehouse, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 全局缓存对象 """
@@ -91,7 +91,7 @@ class MedicalPlayerDiagnosePanel:
             None: 构造函数仅更新内部状态，不返回任何值。
         """
         self.width = width
-        self.player: game_type.Character | None = cache.character_data.get(0)
+        self.player: identity.Identity | None = identity.get(0)
         self._checks_executed: int = 0
 
         # 统一重置面板运行期标记，确保每次创建或切换病人时都能获得干净状态
@@ -182,7 +182,7 @@ class MedicalPlayerDiagnosePanel:
 
         # 如果存在交互对象，则追加一半能力值并应用最低阈值
         target_id = activity.target(self.player.cid)
-        if target_id != 0 and target_id in cache.character_data:
+        if target_id != 0 and identity.exists(target_id):
             level += int(
                 abilities.ability(target_id).get(
                     medical_constant.MEDICAL_ABILITY_ID, 0

@@ -4,6 +4,7 @@ from Script.Core import cache_control, constant_promise, game_type
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import activity, wardrobe
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -18,9 +19,7 @@ def handle_t_wear_hat(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[0]):
         return 1
     return 0
@@ -47,9 +46,7 @@ def handle_t_wear_glass(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[1]):
         return 1
     return 0
@@ -76,9 +73,7 @@ def handle_t_wear_in_ear(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[2]):
         return 1
     return 0
@@ -105,9 +100,7 @@ def handle_t_wear_in_neck(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[3]):
         return 1
     return 0
@@ -134,9 +127,7 @@ def handle_t_wear_in_mouse(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[4]):
         return 1
     return 0
@@ -270,9 +261,7 @@ def handle_t_wear_gloves(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[7]):
         return 1
     return 0
@@ -299,9 +288,7 @@ def handle_t_wear_in_down(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[8]):
         return 1
     return 0
@@ -344,9 +331,7 @@ def handle_t_wear_skirt(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[8]):
         cloth_id = wardrobe.of(target_data.cid).cloth_wear[8][0]
         if game_config.config_clothing_tem[cloth_id].tag == 5:
@@ -363,9 +348,7 @@ def handle_t_wear_trousers(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[8]):
         cloth_id = wardrobe.of(target_data.cid).cloth_wear[8][0]
         if game_config.config_clothing_tem[cloth_id].tag == 4:
@@ -409,9 +392,7 @@ def handle_t_wear_pan(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[9]):
         return 1
     return 0
@@ -506,9 +487,7 @@ def handle_t_wear_shoes(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[11]):
         return 1
     return 0
@@ -535,9 +514,7 @@ def handle_t_take_weapon(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[12]):
         return 1
     return 0
@@ -564,9 +541,7 @@ def handle_t_not_take_extras(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if len(wardrobe.of(target_data.cid).cloth_wear[13]):
         return 0
     return 1

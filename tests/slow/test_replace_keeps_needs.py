@@ -17,6 +17,7 @@ from types import ModuleType
 
 from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.kernel_project import identity
 
 NEEDS = {
     "tired": Fraction(7, 3),
@@ -50,20 +51,22 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
     """读档的角色替换带走生理需求"""
 
     def setUp(self) -> None:
-        """取旧角色与新id。存档属性表用缓存属性的浅拷贝，角色表另拷一份并删掉新id"""
+        """选出旧角色与新id，浅拷贝缓存属性作存档属性表，并用除新id外的空旧角色对象填充 character_data"""
         super().setUp()
         self.old = min(
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
         self.new = max(
             cid
-            for cid in self.cache.character_data
+            for cid in identity.table()
             if cid not in kernel_data.domain("roster").active()
             and cid in game("Script.Config.character_config").character_tem_list
         )
         self.loaded = dict(vars(self.cache))
-        self.loaded["character_data"] = dict(self.cache.character_data)
-        del self.loaded["character_data"][self.new]
+        stub = game("Script.Core.game_type").Character
+        self.loaded["character_data"] = {
+            cid: stub() for cid in identity.ids() if cid != self.new
+        }
 
     def replace(self) -> None:
         """按旧角色到新id的映射跑角色替换，断言替换了一名"""

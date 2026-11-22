@@ -7,6 +7,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.Modules.domains import abilities, growth, chara_life, relations
+from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -73,7 +74,7 @@ def gain_ability(character_id: int) -> None:
         遍历所有能力，判断是否满足升级条件，支持主需求和备选需求（AbilityUp.csv的up_need和up_need2），满足任一即可升级。
     """
     ability = abilities.ability(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 遍历全能力
     for ability_cid in game_config.config_ability:
         ability_data = game_config.config_ability[ability_cid]

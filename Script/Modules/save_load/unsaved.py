@@ -17,6 +17,7 @@ from typing import IO, Any
 
 from Script.Config import character_config
 from Script.Core import game_type
+from Script.Modules.domains import identity
 
 UNSAVED: dict[type, frozenset[str]] = {
     game_type.Cache: frozenset(
@@ -33,7 +34,7 @@ UNSAVED: dict[type, frozenset[str]] = {
             "soldier_max",
         }
     ),
-    game_type.Character: frozenset({"hit_point_tem", "mana_point_tem"}),
+    identity.Identity: frozenset({"hit_point_tem", "mana_point_tem"}),
 }
 """ 缓存文件不写的字段，类: 字段名 """
 

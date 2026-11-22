@@ -16,7 +16,7 @@ from Script.UI.Moudle import panel, draw, view
 from Script.Design import attr_calculation, handle_premise
 from Script.Modules.tk_ui import player_pick
 from Script.Config import normal_config, game_config
-from Script.Modules.domains import activity, inventory
+from Script.Modules.domains import activity, inventory, identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -135,7 +135,7 @@ class FoodBagPanel:
             [], FoodGroupDraw, 10, 1, self.width, True, False, 2
         )
         while 1:
-            character_data: game_type.Character = cache.character_data[0]
+            character_data: identity.Identity = identity.of(0)
             if view.now_panel_id != constant.Panel.FOOD_BAG:
                 break
 
@@ -184,10 +184,10 @@ class FoodBagPanel:
             now_draw.draw()
             line_feed.draw()
 
-            character_data = cache.character_data[0]
-            target_character_data: game_type.Character = cache.character_data[
+            character_data = identity.of(0)
+            target_character_data: identity.Identity = identity.of(
                 activity.target(character_data.cid)
-            ]
+            )
 
             now_draw = draw.NormalDraw()
             now_draw.text = _("○正常调味食物（共 {0} 种，{1} 个）\n").format(

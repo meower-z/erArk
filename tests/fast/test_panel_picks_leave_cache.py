@@ -33,20 +33,13 @@ from tests.fast.base import FastTestCase
 
 def pickled(cache: Any) -> dict[str, bytes]:
     """
-    缓存的每个属性（character_data 拆成每个角色）的 pickle
+    序列化缓存的每个顶层属性
     Keyword arguments:
     cache -- 游戏缓存
     Return arguments:
-    dict -- 属性名 -> pickle
+    dict[str, bytes] -- 属性名到 pickle 字节的映射
     """
-    out = {
-        k: pickle.dumps(v)
-        for k, v in vars(cache).items()
-        if k != "character_data"
-    }
-    for cid, data in cache.character_data.items():
-        out[f"character_data[{cid}]"] = pickle.dumps(data)
-    return out
+    return {k: pickle.dumps(v) for k, v in vars(cache).items()}
 
 
 def _food(name: str) -> game_type.Food:

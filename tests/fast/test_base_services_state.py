@@ -40,7 +40,7 @@ from Script.Test.Static_Check.check_registry import get_all_checks
 from Script.UI.Panel import borrow_book_panel, recruit_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
-from Script.Modules.domains import chara_life
+from Script.Modules.domains import chara_life, identity
 
 CIVIL = 7
 """ 文职部的设施id """
@@ -139,7 +139,7 @@ class BaseServicesStateTest(FastTestCase):
         assert head is not None
         self.assertEqual((head["uid"], head["chara_id"]), (uid_b, 0))
         self.assertEqual(head["add_time"], game_time.now())
-        del self.cache.character_data[sister]
+        kernel_data.put(identity.discard, sister)
         official_event_handle.clean_official_event_queue()
         self.assertEqual(official.queue(), [])
 

@@ -11,6 +11,7 @@ from Script.Config import game_config
 from Script.Modules.domains import education, growth as growth_domain, pregnancy
 from Script.System.Education_System import education_constant
 from ..check_registry import CheckFailure, register_check, make_failure
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from typing import Iterator, Any
@@ -33,10 +34,9 @@ _NAMES = {
 }
 
 
-def _characters(cache: game_type.Cache) -> dict[int, game_type.Character]:
+def _characters(cache: game_type.Cache) -> identity.Table:
     """参数: cache(缓存对象)；返回值: dict；功能: 只读取角色表，缺失或类型错误时跳过。"""
-    data = getattr(cache, "character_data", None)
-    return data if isinstance(data, dict) else {}
+    return identity.table()
 
 
 def _growths(
@@ -340,10 +340,8 @@ def check_edu_07() -> list[CheckFailure]:
 def check_edu_08() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；
     功能: 全局课表按星期、节次存[能力id,教师id]，教师可为-1，不要求在场或在岗。"""
-    cache = cache_control.cache
     schedule = education.class_schedule()
     abilities = getattr(game_config, "config_ability", None)
-    characters = getattr(cache, "character_data", None)
     failures: list[CheckFailure] = []
     for room, table in schedule.items():
         for key, cell in _cells(
@@ -354,11 +352,7 @@ def check_edu_08() -> list[CheckFailure]:
                 type(ability) is not int
                 or (isinstance(abilities, dict) and ability not in abilities)
                 or type(teacher) is not int
-                or (
-                    teacher != -1
-                    and isinstance(characters, dict)
-                    and teacher not in characters
-                )
+                or (teacher != -1 and not identity.exists(teacher))
             ):
                 failures.append(
                     _failure(

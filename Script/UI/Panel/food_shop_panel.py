@@ -19,6 +19,7 @@ from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -36,7 +37,7 @@ def put_selfmade_food_in() -> None:
     """
     将自制食物放入食堂
     """
-    character_data: game_type.Character = cache.character_data[0]
+    character_data: identity.Identity = identity.of(0)
 
     # 读取背包食物，并只提取uid列表
     id_list_normal = []

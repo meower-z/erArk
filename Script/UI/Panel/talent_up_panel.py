@@ -15,6 +15,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import abilities, relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -45,7 +46,7 @@ class Character_talent_show_Text:
         """ 当前最大可绘制宽度 """
         self.return_list: list[str] = []
         """ 监听的按钮列表 """
-        self.character_data = cache.character_data[self.character_id]
+        self.character_data = identity.of(self.character_id)
         """ 角色数据 """
 
     def _draw_condition(

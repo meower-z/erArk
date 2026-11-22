@@ -118,7 +118,7 @@ class ZeroMinutePanelsTest(SlowTestCase):
         return reset
 
     def parts(self) -> dict[str, bytes]:
-        """缓存里界面状态与全局设置之外每个顶层属性的 pickle，character_data 按角色分开"""
+        """序列化缓存中除顶层界面状态与全局设置外的全部顶层属性"""
         skip = {
             path
             for path in self.player_pick.UI_STATE | self.player_pick.META_STATE
@@ -127,10 +127,6 @@ class ZeroMinutePanelsTest(SlowTestCase):
         out: dict[str, bytes] = {}
         for name, value in vars(self.cache).items():
             if name in skip:
-                continue
-            if name == "character_data":
-                for cid, character in value.items():
-                    out[f"character_data[{cid}]"] = pickle.dumps(character)
                 continue
             out[name] = pickle.dumps(value)
         return out

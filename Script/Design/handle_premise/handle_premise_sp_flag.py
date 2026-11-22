@@ -10,6 +10,7 @@ from Script.Modules.domains import (
     location,
     needs,
 )
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -79,9 +80,7 @@ def handle_target_hp_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "tired") == 1:
         return 1
     else:
@@ -109,9 +108,7 @@ def handle_self_or_target_tired(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if flags.get(character_id, "tired") == 1:
         return 1
     elif flags.get(target_data.cid, "tired") == 1:
@@ -681,9 +678,7 @@ def handle_target_is_follow(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return flags.get(target_data.cid, "is_follow")
 
 
@@ -696,9 +691,7 @@ def handle_target_not_follow(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not flags.get(target_data.cid, "is_follow")
 
 
@@ -1536,7 +1529,7 @@ def handle_is_unconscious_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(0)]
+    target_data = identity.of(activity.target(0))
     if flags.get(target_data.cid, "unconscious_h") or flags.get(
         0, "unconscious_h"
     ):
@@ -1725,7 +1718,7 @@ def handle_t_unconscious_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h"):
         return 0
     else:
@@ -1741,7 +1734,7 @@ def handle_t_unconscious_flag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h"):
         return 1
     else:
@@ -1769,7 +1762,7 @@ def handle_t_unconscious_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 1:
         return 1
     else:
@@ -1797,7 +1790,7 @@ def handle_t_unconscious_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 2:
         return 1
     else:
@@ -1813,7 +1806,7 @@ def handle_t_unconscious_flag_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 3:
         return 1
     else:
@@ -1829,7 +1822,7 @@ def handle_t_unconscious_flag_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 4:
         return 1
     else:
@@ -1845,7 +1838,7 @@ def handle_t_not_unconscious_flag_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 4:
         return 0
     else:
@@ -1861,7 +1854,7 @@ def handle_t_unconscious_flag_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 5:
         return 1
     else:
@@ -1877,7 +1870,7 @@ def handle_t_not_unconscious_flag_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 5:
         return 0
     else:
@@ -1893,7 +1886,7 @@ def handle_t_unconscious_flag_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 6:
         return 1
     else:
@@ -1909,7 +1902,7 @@ def handle_t_not_unconscious_flag_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 6:
         return 0
     else:
@@ -1925,7 +1918,7 @@ def handle_t_unconscious_flag_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 7:
         return 1
     else:
@@ -1941,7 +1934,7 @@ def handle_t_not_unconscious_flag_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") == 7:
         return 0
     else:

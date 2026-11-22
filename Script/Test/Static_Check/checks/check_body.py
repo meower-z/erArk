@@ -27,10 +27,10 @@ from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
 from Script.Modules.domains import relations
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from Script.Core import game_type
 
 
 def _num(x: object) -> bool:
@@ -73,21 +73,16 @@ def _get_config_sets() -> tuple[set | None, set | None, dict | None]:
     return ct, bp, tem
 
 
-def _iter_charas() -> Iterator[tuple[int, game_type.Character]]:
+def _iter_charas() -> Iterator[tuple[int, identity.Identity]]:
     """
     参数:
         无
     返回值:
-        迭代器: 依次产出 (角色id, 角色对象) 二元组
+        迭代器: 依次产出 (角色id, identity.Identity) 二元组
     功能:
-        遍历cache.character_data中的全部角色，cache未初始化时产出空序列
+        遍历身份表（identity.table()）中的全部角色
     """
-    cache = cache_control.cache
-    if cache is None or not isinstance(
-        getattr(cache, "character_data", None), dict
-    ):
-        return
-    yield from cache.character_data.items()
+    yield from identity.table().items()
 
 
 def _name(chara: object) -> str:
@@ -126,7 +121,7 @@ def _cloth_locs(cid: int) -> list[tuple[str, dict]] | None:
     return locs
 
 
-def _talent_get(chara: game_type.Character, talent_id: int) -> int:
+def _talent_get(chara: identity.Identity, talent_id: int) -> int:
     """
     参数:
         chara: 角色对象
@@ -910,11 +905,7 @@ def check_player_no_semen_flow() -> list[CheckFailure]:
         玩家身上出现流通项说明写错了对象
     """
     cache = cache_control.cache
-    if (
-        cache is None
-        or not isinstance(getattr(cache, "character_data", None), dict)
-        or 0 not in cache.character_data
-    ):
+    if cache is None or not identity.exists(0):
         return []
     flow: object = dirty_domain.view(0).semen_flow
     if isinstance(flow, list) and flow == []:
@@ -1075,11 +1066,10 @@ def check_postpartum_child() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验素质23产后与24育儿互斥；两者任一成立时child_id_list须为非空list且末位id存在于character_data
-        （推进函数无保护读取child_id_list[-1]并索引character_data，空列表或悬空id直接崩溃）。
+        校验素质23产后与24育儿互斥。两者任一成立时，child_id_list须为非空list且末位id存在于身份表
+        （identity.characters），因为推进函数直接取child_id_list[-1]并调用identity.of，空列表或悬空id会崩溃。
         [-1]取值写在长度判断之后，避免检查器自身IndexError
     """
-    cache = cache_control.cache
     failures = []
     for cid, chara in _iter_charas():
         t23, t24 = _talent_get(chara, 23), _talent_get(chara, 24)
@@ -1097,7 +1087,7 @@ def check_postpartum_child() -> list[CheckFailure]:
             if not (
                 isinstance(child_list, list)
                 and len(child_list) > 0
-                and child_list[-1] in cache.character_data
+                and identity.exists(child_list[-1])
             ):
                 failures.append(
                     make_failure(
@@ -1442,7 +1432,6 @@ def check_child_born_time() -> list[CheckFailure]:
         仅在BODY-23的孩子引用有效时才评估，避免空列表/悬空id让检查器自身崩溃；
         debug面板会改写born_time推进育儿，故为warning
     """
-    cache = cache_control.cache
     now_time = game_time.now()
     failures = []
     for cid, chara in _iter_charas():
@@ -1453,10 +1442,10 @@ def check_child_born_time() -> list[CheckFailure]:
         if not (
             isinstance(child_list, list)
             and len(child_list) > 0
-            and child_list[-1] in cache.character_data
+            and identity.exists(child_list[-1])
         ):
             continue
-        child = cache.character_data[child_list[-1]]
+        child = identity.of(child_list[-1])
         born_time = pregnancy.of(child_list[-1]).born_time
         if not (
             isinstance(born_time, datetime.datetime)

@@ -20,7 +20,6 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import cast
 
-from Script.Core import cache_control
 from Script.Kernel import core
 
 OFFSTAGE = "roster.offstage"
@@ -202,7 +201,10 @@ class _Buffer:
                 if who == e.who:
                     kept[key] = hit.value
             moved.add(e.who)
-            if kept and int(e.who) in cache_control.cache.character_data:
+            from Script.Modules.domains import identity
+
+            present = self.read(None, identity.KEY) or {}
+            if kept and e.who in cast(Mapping[str, core.JSON], present):
                 offstage[e.who] = kept
         return e
 
@@ -437,7 +439,8 @@ def reconcile(game: core.GameState) -> core.GameState:
     Return arguments:
     GameState -- 每个角色的数据只在一处的状态
     """
-    present = cache_control.cache.character_data
+    from Script.Modules.domains import identity
+
     raw = cast(
         Mapping[str, Mapping[str, core.JSON]],
         core.value(game, None, OFFSTAGE) or {},
@@ -450,7 +453,7 @@ def reconcile(game: core.GameState) -> core.GameState:
                 raise RuntimeError(f"{who}'s data is in two places")
             for key, value in data.items():
                 game = core.with_value(game, who, key, value)
-        elif int(who) in present:
+        elif identity.exists(int(who), game):
             offstage[who] = data
     if offstage or raw:
         game = core.with_value(game, None, OFFSTAGE, offstage)

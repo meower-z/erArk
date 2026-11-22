@@ -10,13 +10,14 @@ from __future__ import annotations
 from types import FunctionType
 
 from Script.Config import game_config
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import game_type, get_text
 from Script.System.Medical_System import (
     medical_constant,
     medical_core,
     medical_service,
 )
 from Script.Modules.domains import chara_life, medical, medical_patient
+from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -47,13 +48,13 @@ def _clear_player_session_state(
 
 
 def _acquire_patient_for_player(
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
     rhodes_island: game_type.Rhodes_Island | None,
 ) -> medical_patient.MedicalPatient | None:
     """根据当前优先策略为玩家诊疗会话选定病人。
 
     参数:
-        doctor_character (Optional[game_type.Character]): 玩家当前操控的医生。
+        doctor_character (Optional[identity.Identity]): 玩家当前操控的医生。
         rhodes_island (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         Optional[medical_patient.MedicalPatient]: 分配到的病人对象，若无则返回 None。
@@ -91,7 +92,7 @@ def _acquire_patient_for_player(
 
 
 def start_player_diagnose_session(
-    doctor_character: game_type.Character | None = None,
+    doctor_character: identity.Identity | None = None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> medical_patient.MedicalPatient | None:
@@ -99,7 +100,7 @@ def start_player_diagnose_session(
     初始化玩家诊疗会话。
 
     参数:
-        doctor_character (Optional[game_type.Character]): 玩家当前操控的医生角色。
+        doctor_character (Optional[identity.Identity]): 玩家当前操控的医生角色。
         target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         Optional[medical_patient.MedicalPatient]: 分配到的病人对象，若无则返回 None。
@@ -112,9 +113,7 @@ def start_player_diagnose_session(
 
     # 玩家医生为空时默认使用主角（ID 0）。
     if doctor_character is None:
-        doctor_character = getattr(
-            cache_control.cache, "character_data", {}
-        ).get(0)
+        doctor_character = identity.get(0)
 
     if doctor_character is None:
         return None
@@ -148,7 +147,7 @@ def start_player_diagnose_session(
 
 
 def abort_player_diagnose_session(
-    doctor_character: game_type.Character | None = None,
+    doctor_character: identity.Identity | None = None,
     *,
     patient: medical_patient.MedicalPatient | None = None,
     target_base: game_type.Rhodes_Island | None = None,
@@ -188,15 +187,13 @@ def abort_player_diagnose_session(
 
     # 若未提供医生对象则默认选取主角。
     if doctor_character is None:
-        doctor_character = getattr(
-            cache_control.cache, "character_data", {}
-        ).get(0)
+        doctor_character = identity.get(0)
     if doctor_character is not None:
         chara_life.medical_patient_id.set(doctor_character.cid, 0)
 
 
 def commit_player_diagnose_session(
-    doctor_character: game_type.Character | None = None,
+    doctor_character: identity.Identity | None = None,
     *,
     patient: medical_patient.MedicalPatient | None = None,
     target_base: game_type.Rhodes_Island | None = None,
@@ -210,9 +207,7 @@ def commit_player_diagnose_session(
 
     # 缺省使用玩家作为执行医生
     if doctor_character is None:
-        doctor_character = getattr(
-            cache_control.cache, "character_data", {}
-        ).get(0)
+        doctor_character = identity.get(0)
 
     if doctor_character is None:
         return {"success": False, "reason": "no_doctor"}

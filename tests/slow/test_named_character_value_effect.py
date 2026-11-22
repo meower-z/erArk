@@ -9,6 +9,7 @@
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 
 class NamedCharacterValueEffectTest(SlowTestCase):
@@ -20,13 +21,12 @@ class NamedCharacterValueEffectTest(SlowTestCase):
         from Script.Core import game_type
         from Script.Design import settle_behavior
 
-        cache = self.cache
         npc_id = min(
             cid
             for cid in kernel_data.domain("roster").active()
-            if cache.character_data[cid].adv == cid
+            if identity.of(cid).adv == cid
         )
-        npc = cache.character_data[npc_id]
+        npc = identity.of(npc_id)
         aim(0, npc_id)
         status_id = min(game_config.config_character_state)
         ability_id = min(game_config.config_ability)

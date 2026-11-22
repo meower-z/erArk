@@ -44,26 +44,27 @@ class OldSaveIntsTest(FastTestCase):
 
     def test_defaults_keep_int_and_fraction(self) -> None:
         """存档里的 int 与 Fraction 补齐字段后值与类型不变，缺的字段取默认值 0"""
-        loaded = game_type.Character()
-        loaded.adv = 7
-        vars(loaded)["cid"] = Fraction(10, 3)
-        del loaded.sex
+        loaded = game_type.CHILD_GROWTH()
+        loaded.attend_class_count = 7
+        vars(loaded)["absent_count"] = Fraction(10, 3)
+        del loaded.skip_count
         save_handle.update_dict_with_default(
-            loaded.__dict__, game_type.Character().__dict__
+            loaded.__dict__, game_type.CHILD_GROWTH().__dict__
         )
         got = [
             (type(v), v)
             for v in (
-                loaded.adv,
-                loaded.cid,
-                loaded.sex,
+                loaded.attend_class_count,
+                loaded.absent_count,
+                loaded.skip_count,
             )
         ]
         self.assertEqual(got, [(int, 7), (Fraction, Fraction(10, 3)), (int, 0)])
 
     def test_exact_stats_turns_floats_exact(self) -> None:
         """经 vars 写入的 float 由 status.adopt_old_save 与 exact_stats 换成相等的 Fraction，int 与 Fraction 不动"""
-        npc = self.world.chara(0, "博士")
+        self.world.chara(0, "博士")
+        npc = game_type.Character()
         old_dirty = game_type.DIRTY()
         vars(old_dirty)["absorbed_total_semen"] = 3.5
         old_dirty.body_semen = {0: ["头发", 1.5, 0, 2]}
@@ -84,7 +85,7 @@ class OldSaveIntsTest(FastTestCase):
             pl_ability=pa,
             status_data={1: 0.25, 2: 4},
         )
-        loaded = {"character_data": {npc.cid: npc}}
+        loaded = {"character_data": {0: npc}}
         kernel_data.written(status.adopt_old_save, loaded)
         kernel_data.written(save_handle.exact_stats)
         with working.based_on(core.state()):
@@ -97,8 +98,8 @@ class OldSaveIntsTest(FastTestCase):
         got = [
             meters["eja"],
             meters["semen"],
-            status.of(npc.cid)[1],
-            status.of(npc.cid)[2],
+            status.of(0)[1],
+            status.of(0)[2],
             d_view.absorbed_total_semen,
             d_view.body_semen[0][1],
             d_view.semen_flow[0]["targets"][0]["remaining_volume"],
@@ -120,7 +121,8 @@ class OldSaveIntsTest(FastTestCase):
 
     def test_float_maxima_settle(self) -> None:
         """体力与气力上限是 float：换成相等的 Fraction，之后的时间结算不出错"""
-        npc = self.world.chara(0, "博士")
+        self.world.chara(0, "博士")
+        npc = game_type.Character()
         vars(npc).update(
             hit_point=500,
             hit_point_max=1000.5,
@@ -129,7 +131,7 @@ class OldSaveIntsTest(FastTestCase):
         )
         now = game_time.now()
         behave(
-            npc.cid,
+            0,
             start_time=now - datetime.timedelta(minutes=10),
             duration=10,
         )
@@ -152,7 +154,8 @@ class OldSaveIntsTest(FastTestCase):
         之后对象上没有体力、熟睡与 last_hunger_time，妊娠数据上没有乳汁上限
         """
         self.world.chara(0, "博士")
-        npc = self.world.chara(1, "干员")
+        self.world.chara(1, "干员")
+        npc = game_type.Character()
         vars(npc).update(
             hit_point=900,
             hit_point_max=1000,
@@ -199,7 +202,8 @@ class OldSaveIntsTest(FastTestCase):
         供电策略表写进 base.power_strategy
         """
         self.world.chara(0, "博士")
-        npc = self.world.chara(1, "干员")
+        self.world.chara(1, "干员")
+        npc = game_type.Character()
         vars(npc).update(tired_point=12.5, hunger_point=240, urinate_point=0.25)
         old_preg = game_type.PREGNANCY()
         vars(old_preg)["milk"] = 4.75
@@ -230,7 +234,8 @@ class OldSaveIntsTest(FastTestCase):
     def test_v0_defaults_and_missing_pregnancy(self) -> None:
         """缺需求属性的旧角色补上 0，重建后没有乳汁的妊娠数据读成乳汁 0，缺策略表的罗德岛补空表"""
         self.world.chara(0, "博士")
-        npc = self.world.chara(1, "干员")
+        self.world.chara(1, "干员")
+        npc = game_type.Character()
         rebuilt = game_type.PREGNANCY()
         island = game_type.Rhodes_Island()
         loaded = {"character_data": {1: npc}, "rhodes_island": island}

@@ -19,7 +19,7 @@ from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Design import game_time
 from Script.Modules.domains import achievement, facility, production, warehouse
-from Script.Modules.domains import abilities, maintenance
+from Script.Modules.domains import abilities, maintenance, identity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -71,8 +71,8 @@ def calculate_agriculture_line_efficiency(
     sub_bonus = 0.0
     parts_str = "["
     # 主
-    if main_id in cache.character_data and main_id != 0:
-        c = cache.character_data[main_id]
+    if identity.exists(main_id) and main_id != 0:
+        c = identity.of(main_id)
         base_effect = 10 * handle_ability.get_ability_adjust(
             abilities.ability(main_id).get(47, 0)
         )
@@ -85,7 +85,7 @@ def calculate_agriculture_line_efficiency(
 
     # 副（不在任一主列表中的其他该岗位干员）
     for cid in operator_ids:
-        if cid == 0 or cid not in cache.character_data:
+        if cid == 0 or not identity.exists(cid):
             continue
         if cid == main_id:
             continue
@@ -433,8 +433,8 @@ class Agriculture_Production_Panel:
             for line_id, line in production.lines("herb_garden").items():
                 main_id = line["main"]
                 name = (
-                    cache.character_data[main_id].name
-                    if main_id != 0 and main_id in cache.character_data
+                    identity.of(main_id).name
+                    if main_id != 0 and identity.exists(main_id)
                     else _("(空缺)")
                 )
                 abi_lv = abilities.ability(main_id).get(47, 0)
@@ -475,7 +475,7 @@ class Agriculture_Production_Panel:
             if other_ops:
                 other_names = []
                 for c in other_ops:
-                    chara = cache.character_data[c]
+                    chara = identity.of(c)
                     abi_lv = abilities.ability(c).get(47, 0)
                     other_names.append(
                         _("{chara_name}(农业lv{abi_lv})").format(
@@ -496,8 +496,8 @@ class Agriculture_Production_Panel:
                 for line_id, line in production.lines("green_house").items():
                     main_id = line["main"]
                     name = (
-                        cache.character_data[main_id].name
-                        if main_id != 0 and main_id in cache.character_data
+                        identity.of(main_id).name
+                        if main_id != 0 and identity.exists(main_id)
                         else _("(空缺)")
                     )
                     abi_lv = abilities.ability(main_id).get(47, 0)
@@ -537,7 +537,7 @@ class Agriculture_Production_Panel:
                 if other_ops:
                     other_names = []
                     for c in other_ops:
-                        chara = cache.character_data[c]
+                        chara = identity.of(c)
                         abi_lv = abilities.ability(c).get(47, 0)
                         other_names.append(
                             _("{chara_name}(农业lv{abi_lv})").format(

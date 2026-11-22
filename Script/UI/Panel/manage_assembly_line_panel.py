@@ -16,7 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Modules.domains import facility, medical, production, warehouse
-from Script.Modules.domains import abilities, achievement, maintenance
+from Script.Modules.domains import abilities, achievement, maintenance, identity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -58,8 +58,8 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
     sub_bonus = 0.0
     # 主工人加成
     worker_str = "["
-    if line_main_id in cache.character_data and line_main_id != 0:
-        char_data: game_type.Character = cache.character_data[line_main_id]
+    if identity.exists(line_main_id) and line_main_id != 0:
+        char_data: identity.Identity = identity.of(line_main_id)
         main_bonus = 10 * handle_ability.get_ability_adjust(ability[48])
         total += main_bonus
         worker_str = _("主:{0}(制造lv{1}:{2}%)").format(
@@ -69,7 +69,7 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
         worker_str += _("主:空缺")
     # 副工人加成
     for cid in production.workers("assembly"):
-        if cid == 0 or cid not in cache.character_data:
+        if cid == 0 or not identity.exists(cid):
             continue
         if cid in main_ids:
             continue
@@ -420,7 +420,7 @@ class Manage_Assembly_Line_Panel:
             # 各生产线主生产工人显示与任命按钮
             for line_id, line in production.lines("assembly").items():
                 main_id = line["main"]
-                main_chara_data = cache.character_data[main_id]
+                main_chara_data = identity.of(main_id)
                 name = main_chara_data.name if main_id != 0 else _("(空缺)")
                 abi_lv = abilities.ability(main_id).get(48, 0)
                 abi_lv_text = (
@@ -454,13 +454,13 @@ class Manage_Assembly_Line_Panel:
             other_ops = [
                 cid
                 for cid in production.workers("assembly")
-                if cid not in main_ids and cid in cache.character_data
+                if cid not in main_ids and identity.exists(cid)
             ]
             other_draw = draw.NormalDraw()
             if other_ops:
                 other_names = []
                 for c in other_ops:
-                    chara = cache.character_data[c]
+                    chara = identity.of(c)
                     abi_lv = abilities.ability(c).get(48, 0)
                     other_names.append(
                         _("{chara_name}(制造lv{abi_lv})").format(

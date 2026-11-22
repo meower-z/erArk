@@ -13,6 +13,7 @@ import unittest
 
 from tests.slow import remove_parent_guard
 from tests.world import FullWorld
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -95,9 +96,7 @@ class SlowTestCase(unittest.TestCase):
         from Script.Modules.domains import roster
 
         found = [
-            cid
-            for cid in roster.active()
-            if self.cache.character_data[cid].name == name
+            cid for cid in roster.active() if identity.of(cid).name == name
         ]
         self.assertEqual(len(found), 1, f"本局应有一名「{name}」")
         return found[0]

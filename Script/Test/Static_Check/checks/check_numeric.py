@@ -26,6 +26,7 @@ from Script.Modules.domains import player_ability, playthrough, status
 from Script.Modules.domains import warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 from Script.Modules.domains import abilities, relations
+from Script.Modules.domains import identity
 
 
 def _exact(value: object) -> TypeGuard[int | Fraction]:
@@ -95,9 +96,8 @@ def check_num_01_numeric_dict_fields_exist() -> list[CheckFailure]:
         _NUMERIC_DICT_FIELDS 为空元组，角色对象上没有纳入检查的数值字典字段，本检查返回空列表。
         状态值经 status.of 读，能力、经验、宝珠与素质表经 abilities 读，好感经 relations.favorability 读。
     """
-    cache = cache_control.cache
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         type_map = {
             f: type(getattr(chara, f, None)).__name__
             for f in _NUMERIC_DICT_FIELDS
@@ -129,13 +129,12 @@ def check_num_02_ability_dict_keys() -> list[CheckFailure]:
         （避免Python集合里True==1、1.0==1造成的伪装键）。多余键是合法的旧存档残留，仅记录不作为失败条件。
         若config_ability配表本身不存在（独立运行/未初始化），本检查退化为跳过。
     """
-    cache = cache_control.cache
     config_ability = getattr(game_config, "config_ability", None)
     if not isinstance(config_ability, dict):
         return []
     config_keys = set(config_ability)
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         ability = abilities.ability(chara.cid)
         missing = config_keys - set(ability)
         bad_key_type = not all(type(k) is int for k in ability)
@@ -179,7 +178,7 @@ def check_num_03_ability_value_valid_lv() -> list[CheckFailure]:
     )
     valid_keys = set(config_lv_adjust)
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         for ability_id, value in abilities.ability(chara.cid).items():
             if not (type(value) is int and value in valid_keys):
                 ability_name = (
@@ -225,7 +224,7 @@ def check_num_04_ability_level_upper_bound() -> list[CheckFailure]:
         else {}
     )
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         over = {
             k: v
             for k, v in abilities.ability(chara.cid).items()
@@ -275,7 +274,7 @@ def check_num_05_ability_sex_consistency() -> list[CheckFailure]:
     if not isinstance(config_ability, dict):
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         sex = getattr(chara, "sex", None)
         if type(sex) is not int or sex not in (0, 1):
             continue  # 性别本身不合法，交由NUM-06报告，避免级联噪声
@@ -313,9 +312,8 @@ def check_num_06_sex_domain() -> list[CheckFailure]:
         校验chara.sex只能是0或1。全库仅四处写.sex，均来自角色模板或玩家二选一创建流程，域外值无合法来源。
         本项是NUM-05的根因守卫。无debug_mode守卫（键集/取值域类检查不加该守卫）。
     """
-    cache = cache_control.cache
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         sex = getattr(chara, "sex", None)
         if not (type(sex) is int and sex in {0, 1}):
             failures.append(
@@ -341,13 +339,12 @@ def check_num_07_experience_dict_keys() -> list[CheckFailure]:
         以裸下标读经验表[need_type_id]，缺键即崩。多余键是合法残留，仅记录。
         若config_experience配表不存在，退化为跳过。
     """
-    cache = cache_control.cache
     config_experience = getattr(game_config, "config_experience", None)
     if not isinstance(config_experience, dict):
         return []
     config_keys = set(config_experience)
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         experience = abilities.experience(chara.cid)
         missing = config_keys - set(experience)
         bad_key_type = not all(type(k) is int for k in experience)
@@ -380,7 +377,7 @@ def check_num_08_experience_non_negative() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         bad = {
             k: v
             for k, v in abilities.experience(chara.cid).items()
@@ -409,13 +406,12 @@ def check_num_09_juel_dict_keys() -> list[CheckFailure]:
         校验config_juel的每个id都在角色的宝珠表中存在（配表⊆角色），键类型均为精确int。升级需求解析出的
         J<id>以裸下标读宝珠表[need_type_id]。多余键是合法残留，仅记录。若config_juel配表不存在，退化为跳过。
     """
-    cache = cache_control.cache
     config_juel = getattr(game_config, "config_juel", None)
     if not isinstance(config_juel, dict):
         return []
     config_keys = set(config_juel)
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         juel = abilities.juel(chara.cid)
         missing = config_keys - set(juel)
         bad_key_type = not all(type(k) is int for k in juel)
@@ -448,7 +444,7 @@ def check_num_10_juel_non_negative() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         bad = {
             k: v
             for k, v in abilities.juel(chara.cid).items()
@@ -479,13 +475,12 @@ def check_num_11_talent_dict_keys() -> list[CheckFailure]:
         取得完整config_talent键集，再由get_Dr_talent_zero额外设置几项，只增不减。多余键是迁移残留，仅记录。
         若config_talent配表不存在，退化为跳过。
     """
-    cache = cache_control.cache
     config_talent = getattr(game_config, "config_talent", None)
     if not isinstance(config_talent, dict):
         return []
     config_keys = set(config_talent)
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         talent = abilities.talent(chara.cid)
         missing = config_keys - set(talent)
         bad_key_type = not all(type(k) is int for k in talent)
@@ -516,13 +511,12 @@ def check_num_12_status_data_dict_keys() -> list[CheckFailure]:
         多余的键不算失败，有失败时一并写进说明。
         config_character_state配表不存在时跳过。
     """
-    cache = cache_control.cache
     config_state = getattr(game_config, "config_character_state", None)
     if not isinstance(config_state, dict):
         return []
     config_keys = set(config_state)
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         status_data = status.of(cid)
         missing = config_keys - set(status_data)
         bad_key_type = not all(type(k) is int for k in status_data)
@@ -554,7 +548,7 @@ def check_num_13_status_data_non_negative() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         bad = {
             k: v for k, v in status.of(cid).items() if not _exact(v) or v < 0
         }
@@ -593,7 +587,7 @@ def check_num_14_status_data_upper_bound() -> list[CheckFailure]:
         else {}
     )
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         over = {
             k: v
             for k, v in status.of(cid).items()
@@ -624,14 +618,13 @@ def check_num_15_favorability_keys() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        本域唯一方向为"角色⊆全局"的键集检查：校验角色键 social.favorability 的每个目标id都必须是cache.character_data
-        中现存角色，且必须含键0（玩家）——能力升级需求F<n>与事件通道均裸取/裸写favorability[0]。
-        未招募角色的好感不构成假阳性（每个模板NPC都建有character_data条目）。真正会命中的是存档迁移的悬空引用。
+        本域唯一方向为"角色⊆全局"的键集检查：校验角色键 social.favorability 的每个目标id都必须是身份表
+        （identity.characters）中现存角色，且必须含键0（玩家），因为能力升级需求F<n>与事件通道直接访问
+        favorability[0]。未招募角色也在身份表里有条目，因此不构成假阳性，真正会命中的是存档迁移遗留的悬空引用。
     """
-    cache = cache_control.cache
     failures = []
-    valid_cids = set(cache.character_data)
-    for cid, chara in cache.character_data.items():
+    valid_cids = set(identity.table())
+    for cid, chara in identity.table().items():
         favorability = relations.favorability(cid)
         dangling = set(favorability) - valid_cids
         has_player = 0 in favorability
@@ -663,7 +656,7 @@ def check_num_16_favorability_type() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         favorability = relations.favorability(cid)
         bad = {k: v for k, v in favorability.items() if type(v) is not int}
         if bad:
@@ -699,9 +692,8 @@ def check_num_17_trust_hypnosis_finite() -> list[CheckFailure]:
         靠日志发现的一类bug。不加上界（同NUM-16理由：事件与外勤委托的+=不钳制且可重复触发）。
         绝不先裸调math.isfinite——_is_finite_number先做类型短路，避免坏档写入None/字符串时检查器自身抛异常。
     """
-    cache = cache_control.cache
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         trust = relations.trust(cid)
         hypnosis_degree = hypnosis_domain.degree(cid)
         if not (
@@ -735,7 +727,7 @@ def check_num_18_hp_mp_max_positive() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         hp_max = needs.of(cid)["hit_max"]
         mp_max = needs.of(cid)["mana_max"]
         if not (
@@ -771,7 +763,7 @@ def check_num_19_player_only_max_fields() -> list[CheckFailure]:
     cache = cache_control.cache
     if cache.debug_mode:
         return []
-    chara = cache.character_data.get(0)
+    chara = identity.get(0)
     if chara is None:
         return []
     meters = h_meters.of(0)
@@ -809,7 +801,7 @@ def check_num_20_hit_point_range() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         if activity.dead(chara.cid):
             continue
         hp = needs.of(cid)["hit"]
@@ -848,7 +840,7 @@ def check_num_21_mana_point_range() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         mp = needs.of(cid)["mana"]
         mp_max = needs.of(cid)["mana_max"]
         if (
@@ -883,7 +875,7 @@ def check_num_22_sanity_point_range() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         sp = needs.of(cid)["sanity"]
         sp_max = needs.of(cid)["sanity_max"]
         if (
@@ -921,7 +913,7 @@ def check_num_23_eja_point_non_negative() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         meters = h_meters.of(cid)
         eja = meters["eja"]
         if not ((_exact(eja) or type(eja) is float) and eja >= 0):
@@ -957,7 +949,7 @@ def check_num_24_semen_point_range() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         meters = h_meters.of(cid)
         semen = meters["semen"]
         semen_max = meters["semen_max"]
@@ -1083,7 +1075,7 @@ def check_num_27_fatigue_family_range() -> list[CheckFailure]:
         "needs.drunk": 100,
     }
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         values = {f"needs.{k}": v for k, v in needs.of(cid).items()}
         bad_fields = {}
         for field, upper in bounds.items():
@@ -1121,7 +1113,7 @@ def check_num_28_urinate_point_non_negative() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         urinate = needs.of(cid)["urine"]
         if not (_exact(urinate) and urinate >= 0):
             failures.append(
@@ -1153,7 +1145,7 @@ def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
         return []
     difficulty_setting = playthrough.settings(playthrough.DIFFICULTY)
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         urinate = needs.of(cid)["urine"]
         if (_exact(urinate) or type(urinate) is float) and urinate > 300:
             failures.append(
@@ -1187,7 +1179,7 @@ def check_num_30_desire_point_non_negative() -> list[CheckFailure]:
     if cache.debug_mode:
         return []
     failures = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         desire = needs.of(cid)["desire"]
         if not (type(desire) is int and desire >= 0):
             ability_33 = abilities.ability(cid).get(33)

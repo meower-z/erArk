@@ -22,6 +22,7 @@ from Script.Kernel import core
 from Script.Modules.domains import roster
 from Script.Modules.gameplay_resolution import intent
 from Script.Modules.domains import abilities, activity
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -73,7 +74,7 @@ def target_gone(who: int, behavior_id: str, data: Data) -> bool:
     target = data.get(TARGET)
     if not isinstance(target, int):
         return False
-    target_data = cache.character_data.get(target)
+    target_data = identity.get(target)
     if target_data is None or activity.dead(target_data.cid):
         return True
     return bool(data.get("queued")) and target != 0 and not roster.has(target)
@@ -126,7 +127,7 @@ def takes_virginity(who: int, behavior_id: str, data: Data) -> bool:
     if who == 0 or target in (0, who):
         return False
     behavior_config = game_config.config_behavior.get(behavior_id)
-    target_data = cache.character_data.get(target)
+    target_data = identity.get(target)
     if behavior_config is None or target_data is None:
         return False
     return virgin_break_gate.takes_kept_virginity(

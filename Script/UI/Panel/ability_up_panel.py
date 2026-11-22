@@ -26,7 +26,7 @@ from Script.Design import (
     handle_ability,
     second_behavior,
 )
-from Script.Modules.domains import abilities, facility
+from Script.Modules.domains import abilities, facility, identity
 
 panel_info_data: dict[str, object] = {}
 
@@ -61,7 +61,7 @@ def expand_juel_entries(juel_entries: list[str]) -> list[str]:
 
 
 def total_juel_value_from_entries(
-    character_data: game_type.Character, juel_entries: list[str]
+    character_data: identity.Identity, juel_entries: list[str]
 ) -> int:
     """
     给定角色数据和宝珠条目列表，计算角色使用所有对应宝珠后可提供的总值。
@@ -98,7 +98,7 @@ class Characterabi_show_Text:
         """ 当前最大可绘制宽度 """
         self.return_list: list[str] = []
         """ 监听的按钮列表 """
-        self.character_data = cache.character_data[self.character_id]
+        self.character_data = identity.of(self.character_id)
         """ 角色数据 """
 
     def draw(self) -> None:
@@ -733,7 +733,7 @@ class Characterabi_cmd_Text:
         """ 当前的能力id """
         self.return_list: list[str] = []
         """ 监听的按钮列表 """
-        self.character_data = cache.character_data[self.character_id]
+        self.character_data = identity.of(self.character_id)
         """ 角色数据 """
         self.ability_level = abilities.ability(self.character_id)[ability_id]
         """ 能力等级 """

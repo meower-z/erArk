@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -65,29 +66,29 @@ def _table_class() -> type[Table]:
     return _committing
 
 
-def _table(who: int | game_type.Character, name: str) -> Table:
+def _table(who: int | identity.Identity, name: str) -> Table:
     from Script.Modules.domains import abilities
 
     cid = who if isinstance(who, int) else who.cid
     return _table_class()(cid, abilities.PICKLED[name])
 
 
-def ability(who: int | game_type.Character) -> Table:
+def ability(who: int | identity.Identity) -> Table:
     """角色的能力表"""
     return _table(who, "ability")
 
 
-def experience(who: int | game_type.Character) -> Table:
+def experience(who: int | identity.Identity) -> Table:
     """角色的经验表"""
     return _table(who, "experience")
 
 
-def juel(who: int | game_type.Character) -> Table:
+def juel(who: int | identity.Identity) -> Table:
     """角色的宝珠表"""
     return _table(who, "juel")
 
 
-def talent(who: int | game_type.Character) -> Table:
+def talent(who: int | identity.Identity) -> Table:
     """角色的素质表"""
     return _table(who, "talent")
 
@@ -133,7 +134,7 @@ def project(cache: game_type.Cache, state: dict[str, object]) -> None:
     from Script.Modules.gameplay_resolution import working
     from tests.snapshot import flatten
 
-    for cid in cache.character_data:
+    for cid in identity.table():
         for name, key in abilities.PICKLED.items():
             raw: Any = working.get(str(cid), key)
             hit = _memo.get((cid, key))

@@ -19,6 +19,7 @@ from unittest import mock
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from typing import Any
@@ -62,7 +63,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         )
         talk.must_show_talk_check = lambda character_id: None
         self.mother_id = min(cid for cid in roster.active() if cid)
-        self.mother = self.cache.character_data[self.mother_id]
+        self.mother = identity.of(self.mother_id)
         self.baby_id_list = [
             kernel_data.born(self.mother_id, f"测试女儿{index}")
             for index in (1, 2)
@@ -176,7 +177,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
             button_text_list.append(text)
             return real_left_button(text, *args, **kwargs)
 
-        first_baby_name = self.cache.character_data[self.baby_id_list[0]].name
+        first_baby_name = identity.of(self.baby_id_list[0]).name
         player_input.press(first_baby_name)
         with mock.patch.object(
             draw, "LeftButton", side_effect=record_left_button
@@ -194,7 +195,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         """婴儿、幼女与学员的下一阶段名依次是幼女、学员、少女"""
         from Script.System.Pregnancy_System import pregnancy_handle
 
-        child = self.cache.character_data[self.baby_id_list[0]]
+        child = identity.of(self.baby_id_list[0])
         for talent_id, next_name in NEXT_STAGE_NAME.items():
             for stage_id in NEXT_STAGE_NAME:
                 ca.talent(child)[stage_id] = 1 if stage_id == talent_id else 0
@@ -213,7 +214,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
 
         player_input = self.world.player
         child_id = self.baby_id_list[0]
-        child_name = self.cache.character_data[child_id].name
+        child_name = identity.of(child_id).name
         self.set_born_day(0)
         ca.talent(self.mother)[REARING_TALENT] = 1
         player_input.screen.clear()

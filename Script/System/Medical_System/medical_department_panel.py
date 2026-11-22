@@ -19,7 +19,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 from Script.UI.Moudle import draw, view
 from Script.System.Medical_System import medical_constant, medical_service
-from Script.Modules.domains import abilities, facility, medical
+from Script.Modules.domains import abilities, facility, medical, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 全局缓存对象 """
@@ -461,7 +461,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
                 role_key, doctor_id, category_key
             )
             if result.get("success"):
-                character = cache.character_data.get(doctor_id)
+                character = identity.get(doctor_id)
                 doctor_name = getattr(character, "name", str(doctor_id))
                 self.feedback_text = get_text._(
                     "已将 {0} 调整至「{1}」({2})"
@@ -526,7 +526,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
 
         total_speed = 0.0
         for doctor_id in medical.state().clinic_doctor_ids:
-            character = cache.character_data.get(doctor_id)
+            character = identity.get(doctor_id)
             if character is None:
                 continue
             ability_level = abilities.ability(character.cid).get(
@@ -758,7 +758,7 @@ class SurgeryManagementSubPanel(_BaseSubPanel):
         record_draw.width = self.width
         record_draw.text = _("近期手术记录：\n")
         for record in medical.state().surgery_records[-10:]:
-            doctor_data = cache.character_data.get(record.get("doctor_id", 0))
+            doctor_data = identity.get(record.get("doctor_id", 0))
             doctor_name = getattr(doctor_data, "name", "-")
             record_draw.text += _(
                 "  时间：{0} | 病例#{1} | 医生：{2} | 结果：{3}\n"

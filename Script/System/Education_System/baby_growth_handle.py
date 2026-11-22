@@ -20,6 +20,7 @@ from Script.Config import game_config
 from Script.Core import cache_control, game_type, get_text
 from Script.System.Education_System import education_constant
 from Script.Modules.domains import abilities, growth, pregnancy
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -39,7 +40,7 @@ def get_prenatal_point(mother_id: int) -> float:
     Return arguments:
     float -- 胎教值，角色不存在或旧档缺字段时为0
     """
-    if mother_id not in cache.character_data:
+    if not identity.exists(mother_id):
         return 0.0
     return float(pregnancy.of(mother_id).prenatal_point)
 
@@ -55,7 +56,7 @@ def add_prenatal_point(
     Return arguments:
     float -- 累积后的胎教值
     """
-    if mother_id not in cache.character_data:
+    if not identity.exists(mother_id):
         return 0.0
     with pregnancy.editing(mother_id) as preg:
         now_point = min(
@@ -74,7 +75,7 @@ def clear_prenatal_point(mother_id: int) -> None:
     Return arguments:
     无
     """
-    if mother_id not in cache.character_data:
+    if not identity.exists(mother_id):
         return
     pregnancy.update(mother_id, prenatal_point=0.0)
 
@@ -141,13 +142,13 @@ def settle_prenatal_to_child(mother_id: int, child_id: int) -> str:
     """
     juel = abilities.juel(child_id)
     prenatal_point = get_prenatal_point(mother_id)
-    if prenatal_point <= 0 or child_id not in cache.character_data:
+    if prenatal_point <= 0 or not identity.exists(child_id):
         return ""
     with growth.editing(child_id) as growth_data:
         assert growth_data is not None
         growth_data.prenatal_point = prenatal_point
     juel_value = get_prenatal_juel_value(prenatal_point)
-    child_data: game_type.Character = cache.character_data[child_id]
+    child_data: identity.Identity = identity.of(child_id)
     if juel_value > 0:
         juel.setdefault(education_constant.LEARN_STATE_ID, 0)
         juel[education_constant.LEARN_STATE_ID] += juel_value
@@ -175,7 +176,7 @@ def get_child_prenatal_juel(child_id: int) -> int:
     功能: 由记下的 child_growth.prenatal_point 按现行比例现算，不另存字段。
           Plan 26 之前出生的孩子当年拿的是经验，这里仍按珠显示，不回溯（方案 §6）
     """
-    if child_id not in cache.character_data:
+    if not identity.exists(child_id):
         return 0
     growth_data = growth.of(child_id)
     if growth_data is None:
@@ -191,7 +192,7 @@ def get_child_prenatal_count(child_id: int) -> int:
     Return arguments:
     int -- 胎教次数，没有养成数据时为0
     """
-    if child_id not in cache.character_data:
+    if not identity.exists(child_id):
         return 0
     growth_data = growth.of(child_id)
     if growth_data is None:

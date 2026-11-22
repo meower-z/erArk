@@ -2,8 +2,6 @@
 
 from types import FunctionType
 from Script.Core import (
-    cache_control,
-    game_type,
     get_text,
     flow_handle,
     constant,
@@ -11,9 +9,8 @@ from Script.Core import (
 from Script.Design import character, attr_calculation
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()
@@ -92,7 +89,7 @@ class Prts_Panel:
             return_list = []
             now_draw_list: list[draw.Drawable] = []
 
-            pl_name = cache.character_data[0].name
+            pl_name = identity.of(0).name
             info_text = _("身份验证通过，最高权限账户——管理员账户\n\n")
             info_text += _(
                 "Dr.{0}，欢迎访问普瑞赛斯终端，请问我可以为您做什么？\n\n"
@@ -286,7 +283,7 @@ class ShowCharaNameDraw:
             character_id = character.get_character_id_from_adv(
                 self.chara_adv_id
             )
-            character_data = cache.character_data[character_id]
+            character_data = identity.of(character_id)
             # 姓名信息
             name_text = character_data.name.ljust(12, "　")
             # 获取当前版本信息
@@ -370,7 +367,7 @@ class ShowCharaNameDraw:
         files = glob.glob(pattern)
         # 角色内部名：prts_panel 中使用 game_config 的 tip 数据或 character 数据去推断
         # 在 character_config 中，文件名中使用的是角色名的简写（在字符名之后的下划线部分），
-        # 这里我们尝试从 cache.character_data 中取出 find_name（如果存在），否则使用 adv id 数字匹配文件名中的数字
+        # 从角色身份表（identity）取出角色名作为 find_name，取不到时退回 adv id 字符串
         # 近似匹配策略：匹配文件名中下划线分段中等于角色的部分或包含 adv id
         # 构造候选名字
         # 获取角色名（用于匹配文件名中的角色部分）
@@ -378,7 +375,7 @@ class ShowCharaNameDraw:
             character_id = character.get_character_id_from_adv(
                 self.chara_adv_id
             )
-            character_data = cache.character_data[character_id]
+            character_data = identity.of(character_id)
             find_name = character_data.name
         except Exception:
             find_name = str(self.chara_adv_id)
@@ -431,7 +428,7 @@ class ShowCharaNameDraw:
 
         # 获取角色id
         character_id = character.get_character_id_from_adv(self.chara_adv_id)
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         # 获取当前版本信息
         tip_cid_list = game_config.config_tip_chara_data_by_adv[
             self.chara_adv_id

@@ -11,7 +11,7 @@ from typing import Any
 from types import FunctionType
 
 from Script.Config import game_config
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import constant, game_type, get_text
 from Script.Design import handle_ability, handle_premise
 from Script.System.Medical_System import (
     hospital_doctor_service,
@@ -19,7 +19,7 @@ from Script.System.Medical_System import (
     medical_core,
 )
 from Script.System.Medical_System import clinic_patient_management
-from Script.Modules.domains import medical, medical_patient, visitor
+from Script.Modules.domains import medical, medical_patient, visitor, identity
 from Script.Modules.domains import chara_life
 
 _: FunctionType = get_text._
@@ -171,13 +171,13 @@ def _resolve_doctor_specialization(
 
 def _bind_doctor_to_patient(
     patient: medical_patient.MedicalPatient | None,
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
 ) -> None:
     """记录医生与病人的绑定关系，避免存在未同步的引用。
 
     参数:
         patient (Optional[medical_patient.MedicalPatient]): 需要绑定的病人对象。
-        doctor_character (Optional[game_type.Character]): 即将接诊的医生对象。
+        doctor_character (Optional[identity.Identity]): 即将接诊的医生对象。
     返回:
         None
     """
@@ -193,13 +193,13 @@ def _bind_doctor_to_patient(
 
 def _clear_doctor_patient_binding(
     patient: medical_patient.MedicalPatient | None,
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
 ) -> None:
     """解除医生与病人的绑定，防止残留的旧引用。
 
     参数:
         patient (Optional[medical_patient.MedicalPatient]): 待解除绑定的病人。
-        doctor_character (Optional[game_type.Character]): 目标医生对象。
+        doctor_character (Optional[identity.Identity]): 目标医生对象。
     返回:
         None
     """
@@ -396,7 +396,7 @@ def get_doctor_specialization_overview(
     _ensure_specialization_structure(rhodes_island)
     categories = _get_specialization_categories()
     role_bucket = medical.state().doctor_specializations.get(role_key, {})
-    character_table = getattr(cache_control.cache, "character_data", {})
+    character_table = identity.table()
 
     overview: list[dict[str, Any]] = []
     for category in categories:
@@ -456,7 +456,7 @@ def get_doctor_specialization_overview(
 def _resolve_specialization_bonus(
     rhodes_island: game_type.Rhodes_Island,
     role_key: str,
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
     patient: medical_patient.MedicalPatient | None,
 ) -> tuple[str, bool, float]:
     """根据医生与病人信息计算分科加成。
@@ -464,7 +464,7 @@ def _resolve_specialization_bonus(
     参数:
         rhodes_island (game_type.Rhodes_Island): 目标基地对象。
         role_key (str): 医生角色键。
-        doctor_character (Optional[game_type.Character]): 实际医生对象。
+        doctor_character (Optional[identity.Identity]): 实际医生对象。
         patient (Optional[medical_patient.MedicalPatient]): 当前诊治的病人。
     返回:
         Tuple[str, bool, float]: 分别为分科键、是否匹配、加成倍数。
@@ -498,14 +498,14 @@ def _resolve_specialization_bonus(
 
 
 def acquire_patient_for_doctor(
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> medical_patient.MedicalPatient | None:
     """为门诊医生选取待诊病人。
 
     参数:
-        doctor_character (Optional[game_type.Character]): 待分配的医生对象。
+        doctor_character (Optional[identity.Identity]): 待分配的医生对象。
         target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         Optional[medical_patient.MedicalPatient]: 分配到的病人对象，若无则为 None。
@@ -559,7 +559,7 @@ def acquire_patient_for_doctor(
 
 
 def prepare_doctor_medical_behavior(
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
     behavior_id: str | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
@@ -567,7 +567,7 @@ def prepare_doctor_medical_behavior(
     """为指定行为预先准备医生与病人的绑定关系。
 
     参数:
-        doctor_character (Optional[game_type.Character]): 执行行为的医生对象。
+        doctor_character (Optional[identity.Identity]): 执行行为的医生对象。
         behavior_id (Optional[str]): 当前即将执行的行为 ID。
         target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
@@ -679,8 +679,7 @@ def _is_medical_doctor_candidate(
     if character_id == 0:
         return False
 
-    cache = cache_control.cache
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
 
     # 无基地上下文时不处理。

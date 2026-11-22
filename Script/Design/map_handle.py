@@ -7,7 +7,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from types import FunctionType
 from Script.Modules.domains import activity, chara_life, facility, flags
-from Script.Modules.domains import relations
+from Script.Modules.domains import relations, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -411,7 +411,7 @@ def get_scene_character_name_list(
     if remove_own_character:
         now_scene_character_list.remove(0)
     for character_id in now_scene_character_list:
-        character_name = cache.character_data[character_id].name
+        character_name = identity.of(character_id).name
         name_list.append(character_name)
     return name_list
 
@@ -656,7 +656,7 @@ def judge_scene_accessible(
 
     # print(f"debug target_scene_str = {target_scene_str}")
     now_scene_data = cache.scene_data[target_scene_str]
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # print(f"debug now_scene_data.name = {now_scene_data.scene_name}")
 
     # 遍历设施开放清单，如果名称和地图名称一样的话，则进行判断
@@ -698,8 +698,8 @@ def judge_scene_accessible(
                     ).format(now_scene_data.scene_name, zone_name, zone_lv)
                 # 也可能需要NPC才能解锁
                 if facility_npc_cid:
-                    for character_id in cache.character_data:
-                        character_data = cache.character_data[character_id]
+                    for character_id in identity.table():
+                        character_data = identity.of(character_id)
                         if character_data.adv == facility_npc_cid:
                             info_text += _(
                                 "\n  ●目标移动房间——{0}，当前尚未解锁，解锁需要获得干员{1}\n"

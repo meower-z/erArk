@@ -3,18 +3,16 @@
 
 from datetime import datetime
 
-from Script.Core import cache_control
 from Script.Modules.domains import growth, official
 from ..check_registry import CheckFailure, register_check, make_failure
+from Script.Modules.domains import identity
 
 
 @register_check("OFFICIAL-01", "队列条目")
 def check_official_01() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 检查队列及字段类型；角色引用失效单独警示。
     部门id由写入方保存为int。"""
-    cache = cache_control.cache
     queue = official.queue()
-    characters = getattr(cache, "character_data", None)
     failures = []
     for index, item in enumerate(queue):
         prefix = f"official_event_queue[{index}]"
@@ -42,9 +40,9 @@ def check_official_01() -> list[CheckFailure]:
                 )
             elif (
                 key in ("chara_id", "partner_id")
+                and isinstance(value, int)
                 and value != 0
-                and isinstance(characters, dict)
-                and value not in characters
+                and not identity.exists(value)
             ):
                 failures.append(
                     make_failure(
@@ -60,20 +58,17 @@ def check_official_01() -> list[CheckFailure]:
 @register_check("OFFICIAL-02", "事件履历")
 def check_official_02() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 全局与角色履历条目须为dict，time为datetime，choice为非负整数。"""
-    cache = cache_control.cache
     histories: list[tuple[int | None, str, object]] = [
         (None, "official_event_history", official.history())
     ]
-    characters = getattr(cache, "character_data", None)
-    if isinstance(characters, dict):
-        for cid in characters:
-            histories.append(
-                (
-                    cid,
-                    "child_growth.event_history",
-                    getattr(growth.of(cid), "event_history", None),
-                )
+    for chara_id in identity.ids():
+        histories.append(
+            (
+                chara_id,
+                "child_growth.event_history",
+                getattr(growth.of(chara_id), "event_history", None),
             )
+        )
     failures = []
     for cid, prefix, history in histories:
         if not isinstance(history, dict):

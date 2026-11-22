@@ -24,6 +24,7 @@ from Script.Modules.domains import (
 from Script.Modules.gameplay_resolution import actions, working
 from Script.Modules.save_load import upgrade
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import identity
 
 
 class RosterStateTest(FastTestCase):
@@ -137,7 +138,10 @@ class RosterStateTest(FastTestCase):
         with self.assertRaises(ValueError):
             actions.project(bad_state)
 
+        ones = [identity.of(cid) for cid in (9101, 9102, 9103)]
         with working.based_on(core.state()) as buf:
+            for one in ones:
+                identity.put(one)
             abilities.talent(9101)[101] = 1
             abilities.talent(9102)[102] = 1
             abilities.talent(9103)[103] = 1
@@ -179,7 +183,6 @@ class RosterStateTest(FastTestCase):
         self.world.chara(9200, "旧缓存幼童")
         abilities.talent(9200)[101] = 1
         adult_in_save = game_type.Character()
-        adult_in_save.cid = 9200
         vars(adult_in_save)["talent"] = {101: 0}
         self.assertEqual(
             roster.adopt_old_save(
@@ -195,7 +198,6 @@ class RosterStateTest(FastTestCase):
         )
         self.assertEqual(roster.active_sorted(), (9200,))
         child_in_save = game_type.Character()
-        child_in_save.cid = 1
         vars(child_in_save)["talent"] = {102: 1}
         with self.assertRaises(ValueError):
             roster.adopt_old_save(
@@ -222,7 +224,7 @@ class PregnancyStateTest(FastTestCase):
         """Character 不再持有 pregnancy 属性，未写入时读默认值且不写键"""
         fresh = game_type.Character()
         self.assertFalse(hasattr(fresh, "pregnancy"))
-        self.assertFalse(hasattr(self.cache.character_data[1], "pregnancy"))
+        self.assertFalse(hasattr(identity.of(1), "pregnancy"))
         self.assertEqual(pregnancy.milk_max(1), 200)
         p = pregnancy.of(1)
         self.assertEqual(p.fertilization_time, datetime.datetime(1, 1, 1))
@@ -356,7 +358,7 @@ class PregnancyStateTest(FastTestCase):
                 "acceleration_days": 999.0,
             }
         }
-        npc = self.cache.character_data[1]
+        npc = game_type.Character()
         vars(npc)["pregnancy"] = legacy_p
         pregnancy.adopt_old_save({"character_data": {1: npc}}, 14)
         self.assertFalse(hasattr(npc, "pregnancy"))
@@ -399,7 +401,10 @@ class PregnancyStateTest(FastTestCase):
         """同一步里 102 长成 103 并加入花名册时，flush 按待提交缓冲区里的最新素质放行"""
         self.world.chara(9106, "成长幼女")
         self.world.chara(9107, "未成长幼女")
+        ones = [identity.of(cid) for cid in (9106, 9107)]
         with working.based_on(core.state()) as setup_buf:
+            for one in ones:
+                identity.put(one)
             abilities.talent(9106)[102] = 1
             abilities.talent(9107)[102] = 1
             setup_effects = setup_buf.effects()
