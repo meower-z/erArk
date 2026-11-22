@@ -24,7 +24,8 @@ from typing import TypeGuard
 from Script.Core import cache_control, constant
 from Script.Design import map_handle
 from Script.Modules.domains import action_info, activity, education, flags
-from Script.Modules.domains import growth, roster, visitor, work
+from Script.Modules.domains import growth, roster, visitor, work, modes
+from Script.Modules.domains import bookmarks
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -419,15 +420,12 @@ def check_collect_position_list_valid() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验 cache.collect_position_list 的每一项都是场景路径列表且存在于 constant.scene_data，
+        校验收藏地点（map.bookmarks）的每一项都是场景路径列表且存在于 constant.scene_data，
         否则地图收藏面板点一下就会跳进不存在的场景
     """
-    cache = cache_control.cache
     failures: list[CheckFailure] = []
     scene_data = constant.scene_data
-    collect_list = getattr(cache, "collect_position_list", None)
-    if not isinstance(collect_list, list):
-        return failures
+    collect_list = bookmarks.places()
     bad_items = [
         pos for pos in collect_list if not _valid_scene_path(pos, scene_data)
     ]
@@ -436,7 +434,7 @@ def check_collect_position_list_valid() -> list[CheckFailure]:
             make_failure(
                 "PLACE-14",
                 "收藏地点必须是合法场景",
-                f"cache.collect_position_list中存在非法场景路径: {bad_items}；完整列表长度={len(collect_list)}，"
+                f"map.bookmarks中存在非法场景路径: {bad_items}；完整列表长度={len(collect_list)}，"
                 f"玩家当前position={activity.position(0)}",
             )
         )
@@ -774,11 +772,10 @@ def check_follow_mode_value_valid() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验sp_flag.is_follow只能取0-4。debug_panel.py可写任意值，调试会话下本条必噪，故cache.debug_mode
+        校验sp_flag.is_follow只能取0-4。debug_panel.py可写任意值，调试会话下本条必噪，故modes.debug()
         为True时直接跳过整条检查
     """
-    cache = cache_control.cache
-    if bool(getattr(cache, "debug_mode", False)):
+    if bool(modes.debug()):
         return []
     failures = []
     character_data = identity.table()
@@ -811,9 +808,8 @@ def check_player_not_following_self() -> list[CheckFailure]:
     返回值: List[CheckFailure]: 失败记录列表
     功能:
         校验id 0的sp_flag.is_follow必须为0。跟随语义是NPC跟随玩家，玩家带上跟随位没有任何合法产生路径
-        （唯一能写坏的是debug面板，这正是本条想抓的对象），cache.debug_mode为True时将消息降级为warning
+        （唯一能写坏的是debug面板，这正是本条想抓的对象），modes.debug()为True时将消息降级为warning
     """
-    cache = cache_control.cache
     failures: list[CheckFailure] = []
     character_data = identity.table()
     pl = character_data.get(0)
@@ -821,7 +817,7 @@ def check_player_not_following_self() -> list[CheckFailure]:
         return failures
     is_follow = flags.get(0, "is_follow")
     if is_follow != 0:
-        debug_mode = bool(getattr(cache, "debug_mode", False))
+        debug_mode = bool(modes.debug())
         prefix = (
             "[warning] （调试模式下降级，疑似debug面板写入）"
             if debug_mode

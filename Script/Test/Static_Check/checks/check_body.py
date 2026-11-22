@@ -26,7 +26,7 @@ from Script.Modules.domains import (
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import relations
+from Script.Modules.domains import relations, modes
 from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
@@ -1143,7 +1143,7 @@ def check_pregnancy_belly_talent() -> list[CheckFailure]:
         debug面板可单独改素质造成失步，debug模式下跳过，故为warning
     """
     cache = cache_control.cache
-    if cache is not None and getattr(cache, "debug_mode", False):
+    if cache is not None and modes.debug():
         return []
     failures = []
     for cid, chara in _iter_charas():
@@ -1400,7 +1400,7 @@ def check_mechanical_pregnancy() -> list[CheckFailure]:
         素质171可能被通用素质开关授予后又关掉，构成合法误报，且debug存档常见，故为warning且debug模式跳过
     """
     cache = cache_control.cache
-    if cache is not None and getattr(cache, "debug_mode", False):
+    if cache is not None and modes.debug():
         return []
     failures = []
     for cid, chara in _iter_charas():

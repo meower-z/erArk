@@ -3215,7 +3215,6 @@ def character_work_start_surgery(character_id: int) -> choice.Plan:
     # 获取所有可进行手术的患者列表
     available_patients_list = medical_service.get_surgery_candidate_patient_ids(
         doctor_character=character_data,
-        target_base=cache.rhodes_island,
     )
 
     # 赋予角色行为数据

@@ -28,7 +28,7 @@ from Script.Modules.domains import first_record, flags, h_meters, h_state
 from Script.Modules.domains import inventory, needs, player_ability
 from Script.Modules.domains import player_collection, pregnancy, roster, status
 from Script.Modules.domains import wardrobe, chara_key, chara_life
-from Script.Modules.domains import chara_profile, relations
+from Script.Modules.domains import bookmarks, chara_profile, relations
 from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
@@ -111,11 +111,7 @@ def init_attr(character_id: int) -> None:
             map_handle.get_map_system_path_str_for_list(["中枢", "博士房间"]),
         )  # 此处不可使用翻译
         # 初始收藏地点
-        cache.collect_position_list = []
-        cache.collect_position_list.append(["中枢", "博士房间"])
-        cache.collect_position_list.append(["中枢", "博士办公室"])
-        cache.collect_position_list.append(["贸易", "成人用品店"])
-        cache.collect_position_list.append(["书", "藏品馆"])
+        bookmarks.reset()
 
     # 一系列初始化函数
     instuct_judege.init_character_behavior_start_time(

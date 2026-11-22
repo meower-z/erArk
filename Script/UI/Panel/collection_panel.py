@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import player_collection, roster, warehouse
+from Script.Modules.domains import player_collection, roster, warehouse, modes
 from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
@@ -342,17 +342,17 @@ class Collection_Panel:
 
         # 比对相应的收集物数量，判断是否解锁成功
         if bonus_data.type == _("信物"):
-            if self.token_count >= bonus_data.count or cache.debug_mode:
+            if self.token_count >= bonus_data.count or modes.debug():
                 player_collection.set_bonus(bonus_id, True)
                 originium_prime_flag = True
                 token_flag = True
         elif bonus_data.type == _("内裤"):
-            if self.pan_count >= bonus_data.count or cache.debug_mode:
+            if self.pan_count >= bonus_data.count or modes.debug():
                 player_collection.set_bonus(bonus_id, True)
                 if bonus_id == 101:
                     originium_prime_flag = True
         elif bonus_data.type == _("袜子"):
-            if self.sock_count >= bonus_data.count or cache.debug_mode:
+            if self.sock_count >= bonus_data.count or modes.debug():
                 player_collection.set_bonus(bonus_id, True)
                 if bonus_id == 201:
                     originium_prime_flag = True

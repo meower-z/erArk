@@ -7,7 +7,7 @@ from Script.Design import attr_calculation, handle_premise, map_handle
 from Script.Design import second_behavior
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.domains import action_info, flags, roster, visitor, work
-from Script.Modules.domains import chara_life, relations
+from Script.Modules.domains import chara_life, relations, modes
 from Script.Modules.save_load import reset
 from Script.Config import game_config, normal_config
 
@@ -391,7 +391,7 @@ class Assistant_Panel:
                         assistant_id, service_cid, level + 1
                     )
                 # debug模式下不判断解锁条件
-                elif cache.debug_mode:
+                elif modes.debug():
                     relations.assistant_services.set_item(
                         assistant_id, service_cid, level + 1
                     )

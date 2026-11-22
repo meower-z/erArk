@@ -19,7 +19,7 @@ from Script.Modules.domains import (
     roster,
     visitor,
 )
-from Script.Modules.domains import identity
+from Script.Modules.domains import identity, modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -91,18 +91,8 @@ class All_Npc_Position_Panel:
             py_cmd.clr_cmd()
             return_list = []
 
-            # 暂时去掉同时跟随干员数量的提示信息
-            # info_draw = draw.NormalDraw()
-            # follow_count = cache.character_data[0].pl_ability.follow_count
-            # if not cache.debug_mode:
-            #     info_draw.text = f"●当前最大同时跟随角色数量：{str(follow_count)}，跟随中的角色会带*\n\n"
-            # else:
-            #     info_draw.text = "●当前最大同时跟随角色数量：999(debug模式)，跟随中的角色会带*\n\n"
-            # info_draw.width = self.width
-            # info_draw.draw()
-
             # 全跟随按钮
-            if cache.debug_mode:
+            if modes.debug():
                 text = _("  [debug用一键全跟随]")
                 name_draw = draw.LeftButton(
                     text, text, self.width, cmd_func=self.call_all
@@ -161,7 +151,7 @@ class All_Npc_Position_Panel:
             info_draw.draw()
             for move_type_id in range(len(move_type_list)):
                 # 仅在debug模式下显示debug用对方智能跟随
-                if move_type_id == 3 and not cache.debug_mode:
+                if move_type_id == 3 and not modes.debug():
                     continue
                 move_type_text = move_type_list[move_type_id]
                 if move_type_id == self.move_type:

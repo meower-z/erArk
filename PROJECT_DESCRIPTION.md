@@ -397,17 +397,13 @@ Script/
 
 `Script/Core/game_type.py` 定义全部运行时对象（行数约 1942）。
 
-### 9.1 Cache（62 个字段）
+### 9.1 Cache（无字段）
 
-全局唯一 `cache_control.cache`，关键字段分组：
+全局唯一 `cache_control.cache`，`Cache.__init__` 不声明任何字段，运行期没有代码向其写入属性。旧存档反序列化时先还原到该类实例，读档过程由 `unsaved.restore`、各领域导入步骤与 `save_handle.install_save` 清走旧字段。各类数据的存放位置如下：
 
-- **渲染/输入**：`input_cache`
-- **角色世界**：（角色身份表不在缓存，在 GameState 键 `identity.characters`，由 `Modules/domains/identity.py` 读写）
-- **时间**：`game_time`, `pre_game_time`
-- **地图**：`collect_position_list`（静态地图表与场景表在 `constant.map_data`、`constant.scene_data`，门锁状态在 GameState 全局键 `scene.closed`，由 `Modules/domains/scene_state.py` 读写，场景内角色由 `scene_state.occupants` 按位置与在编名册实时算出）
-- **行为循环**：`over_behavior_character`
-- **基地/世界**：`rhodes_island`
-- **不在缓存里**：界面临时状态（`now_panel_id`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`；全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，文本生成 AI 设置在 `normal_config.ai_setting`，两者都存在 settings.json；在编/禁用/已用姓名名册（`roster.active`、`roster.forbidden`、`roster.names`，由 `Modules/domains/roster.py` 读写）、局内生成的角色模板（`roster.npc_templates`，由 `Modules/domains/npc_template.py` 读写，数据文件里的静态模板留在 `character_config.character_tem_list`）、本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件与指令记录（`events.triggered`、`events.triggered_today`、`log.instructions`）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写。角色的十项活动（状态、之前的行为、当前行为、二段行为、必须结算与必须显示的二段行为id列表、事件、位置、交互对象、是否死亡）在 GameState 的角色键 `activity.*` 里，用 `Modules/domains/activity.py` 读写
+- **角色世界**：角色身份表在 GameState 键 `identity.characters`，由 `Modules/domains/identity.py` 读写
+- **地图**：收藏地点在 GameState 键 `map.bookmarks`，由 `Modules/domains/bookmarks.py` 读写。静态地图表与场景表在 `constant.map_data`、`constant.scene_data`。门锁状态在 GameState 全局键 `scene.closed`，由 `Modules/domains/scene_state.py` 读写。场景内角色由 `scene_state.occupants` 按位置与在编名册实时算出
+- **不在缓存里**：界面临时状态（`now_panel_id`、`input_cache`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`。全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，文本生成 AI 设置在 `normal_config.ai_setting`，两者都存在 settings.json。在编/禁用/已用姓名名册（`roster.active`、`roster.forbidden`、`roster.names`，由 `Modules/domains/roster.py` 读写）、局内生成的角色模板（`roster.npc_templates`，由 `Modules/domains/npc_template.py` 读写，数据文件里的静态模板留在 `character_config.character_tem_list`）、本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`、`mode.debug`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件、指令记录与玩家最近输入（`events.triggered`、`events.triggered_today`、`log.instructions`、`log.inputs`，其中 `log.inputs` 供前一指令前提等玩法判定读取）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写。角色的十项活动（状态、之前的行为、当前行为、二段行为、必须结算与必须显示的二段行为id列表、事件、位置、交互对象、是否死亡）在 GameState 的角色键 `activity.*` 里，用 `Modules/domains/activity.py` 读写
 
 ### 9.2 Character
 
@@ -434,7 +430,7 @@ Script/
 - `NpcTem`：角色模板（能力/经验/素质/服装/基础属性）
 - `Map` / `MapDraw` / `MapDrawLine` / `MapDrawText`：AA 地图与绘制
 - `Scene`：场景路径、名字、室内外、家具、门、面积、标签、角色列表、图片
-- `Rhodes_Island`：没有属性（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`。各岗位的干员名册与监狱长在全局键 `base.work` 与 `base.warden` 里，用 `work.roster(岗位id)` 与 `work.warden()` 读。生产线、工人名单与食堂货架在全局键 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写。外勤委托与载具表在全局键 `base.commission` 与 `base.vehicles` 里，用 `Modules/domains/commission.py` 读写。访客、上次随机来访的时刻、邀请与移动标记在全局键 `base.visitor` 里，用 `Modules/domains/visitor.py` 读写。访客上限不存下，由 `visitor.capacity()` 按已开放的客房算出。罗德岛所在的国家与移动在全局键 `base.location` 里，用 `Modules/domains/location.py` 读写。招募线与待确认招募名单、待处理的公务量、公务事件队列与履历、各国外交官、各层宿舍管理员、图书借阅表与推荐阅读的书籍类型在全局键 `base.recruit_lines`、`base.recruited`、`base.office_work`、`base.official_queue`、`base.official_history`、`base.diplomats`、`base.dormitory_managers`、`base.book_holders` 与 `base.book_recommend` 里，分别用 `Modules/domains/` 下的 `recruit.py`、`official.py`、`diplomacy.py`、`dormitory.py` 与 `library.py` 读写。派对排期与旅馆房间档次在全局键 `base.party_days` 与 `base.hotel_room` 里，用 `Modules/domains/entertainment.py` 读写。基地的四项计数在 `base.tallies` 里，冰箱的两个表在 `base.fridge` 里，分别用 `Modules/domains/tallies.py` 与 `Modules/domains/fridge.py` 读写。床位上限是 `base.medical` 里的 `bed_limit`，用 `Modules/domains/medical.py` 读写。关押区的囚犯名册与监禁调教设置在全局键 `base.prisoners` 与 `base.prison_settings` 里，由 `Modules/domains/prison.py` 读写。教育区的全局课表、临时实操课与日程模板在全局键 `base.class_schedule`、`base.temp_sex_class` 与 `base.child_schedule_template` 里，由 `Modules/domains/education.py` 读写。设施损坏、检修地点、铁匠的维修记录、装备维护设置与手动选择的装备维护对象在全局键 `base.facility_damage`、`base.maintenance_place`、`base.equipment_repair`、`base.equipment_setting` 与 `base.equipment_operators` 里，用 `Modules/domains/maintenance.py` 读写。体检设置、今日与进行中的体检记录、三份体检名单与体检日在七个以 `base.exam_` 开头的全局键里，用 `Modules/domains/physical_exam.py` 读写。干员人数上限与仓库容量不存，用 `facility.people_max()` 与 `warehouse.capacity()` 读）
+- `Rhodes_Island`：空类，用于反序列化旧存档，运行期 `Cache` 不持有其实例（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`。各岗位的干员名册与监狱长在全局键 `base.work` 与 `base.warden` 里，用 `work.roster(岗位id)` 与 `work.warden()` 读。生产线、工人名单与食堂货架在全局键 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写。外勤委托与载具表在全局键 `base.commission` 与 `base.vehicles` 里，用 `Modules/domains/commission.py` 读写。访客、上次随机来访的时刻、邀请与移动标记在全局键 `base.visitor` 里，用 `Modules/domains/visitor.py` 读写。访客上限不存下，由 `visitor.capacity()` 按已开放的客房算出。罗德岛所在的国家与移动在全局键 `base.location` 里，用 `Modules/domains/location.py` 读写。招募线与待确认招募名单、待处理的公务量、公务事件队列与履历、各国外交官、各层宿舍管理员、图书借阅表与推荐阅读的书籍类型在全局键 `base.recruit_lines`、`base.recruited`、`base.office_work`、`base.official_queue`、`base.official_history`、`base.diplomats`、`base.dormitory_managers`、`base.book_holders` 与 `base.book_recommend` 里，分别用 `Modules/domains/` 下的 `recruit.py`、`official.py`、`diplomacy.py`、`dormitory.py` 与 `library.py` 读写。派对排期与旅馆房间档次在全局键 `base.party_days` 与 `base.hotel_room` 里，用 `Modules/domains/entertainment.py` 读写。基地的四项计数在 `base.tallies` 里，冰箱的两个表在 `base.fridge` 里，分别用 `Modules/domains/tallies.py` 与 `Modules/domains/fridge.py` 读写。床位上限是 `base.medical` 里的 `bed_limit`，用 `Modules/domains/medical.py` 读写。关押区的囚犯名册与监禁调教设置在全局键 `base.prisoners` 与 `base.prison_settings` 里，由 `Modules/domains/prison.py` 读写。教育区的全局课表、临时实操课与日程模板在全局键 `base.class_schedule`、`base.temp_sex_class` 与 `base.child_schedule_template` 里，由 `Modules/domains/education.py` 读写。设施损坏、检修地点、铁匠的维修记录、装备维护设置与手动选择的装备维护对象在全局键 `base.facility_damage`、`base.maintenance_place`、`base.equipment_repair`、`base.equipment_setting` 与 `base.equipment_operators` 里，用 `Modules/domains/maintenance.py` 读写。体检设置、今日与进行中的体检记录、三份体检名单与体检日在七个以 `base.exam_` 开头的全局键里，用 `Modules/domains/physical_exam.py` 读写。干员人数上限与仓库容量不存，用 `facility.people_max()` 与 `warehouse.capacity()` 读）
 - `Country`：势力外交数据
 - `CharacterStatusChange` / `TargetChange`：结算数值变更累积器
 - `DIRTY`, `PREGNANCY`, `RELATIONSHIP`, `HYPNOSIS`, `CLOTH`, `BODY_H_STATE`, `FIRST_RECORD`, `ACTION_INFO`, `AUTHOR_FLAG` 等：角色各领域状态容器
@@ -446,18 +442,14 @@ Script/
 入口 `Script/Design/character_behavior.py`：
 
 ```text
-init_character_behavior()
-├── 清空 cache.over_behavior_character
-├── 玩家阶段：while 0 not in over_behavior_character
-│       pl_start_time/pl_duration 记录 -> character_behavior(0, game_time, pl_start_time)
-├── 时停模式：回退时间，直接结束
-├── field_commission_function.update_field_commission()
-├── NPC 阶段：id_list = roster.active() - {0}
-│       while len(over_behavior_character) <= len(id_list)
-│           for 每个未完成 NPC: character_behavior(id, game_time, pl_start_time)
-├── 跨天：game_time.day != pre_game_time.day -> past_day_settle.update_new_day()
-├── 睡觉存档：plan.sleep_save -> sleep_settle.update_save()
-└── 结束时成就结算（时停/群交）
+内核驱动角色行动生命周期：
+├── 行动开始（gameplay_resolution.starts.behave）-> settle_start(character_id, minutes)
+│       NPC：结算状态与事件（目睹 H 反应已结算时跳过一次，移动照常结算）
+│       玩家：记录指令历史，发呆直接返回，移动时处理跟随与重置目击 H -> 前置结算 -> judge_character_status() -> 睡眠与 H/猥亵/无意识结算 -> 时停累计
+├── 行动结束（actions.wrap_up）-> end_action(character_id)
+│       写入旧行为列表，重置为空行为与空闲状态，清空事件，结算自动获得的素质与能力
+└── 玩家收尾 -> player_after_end()
+        推进寻路或重定交互对象 -> realtime_settle.judge_pl_real_time_data() -> 睡觉存档标记触发自动存档 -> 时停/群交成就结算
 ```
 
 `character_behavior(character_id, now_time, pl_start_time)` 对每个角色：

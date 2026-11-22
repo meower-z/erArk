@@ -16,7 +16,7 @@
   - 轮询 `io_init` 推入的 JSON 消息并转化为文本插入 (`now_print`)、图片插入 (`textbox.image_create`)、命令按钮 (`io_print_cmd`) 等。
   - 支持清屏（`clear_screen`）、清命令（`io_clear_cmd`）、设背景色和动态样式注册。
 - **命令标签**：按钮输出通过 Tk `Text` 的 tag 机制实现，`io_print_cmd` 为每个 cmd 生成唯一 tag，绑定 `<1>/<Enter>/<Leave>` 事件以触发回调与 hover 样式。
-- **输入框行为**：`main_frame.send_input()` 从 `Entry` 读取文本，写入历史缓存 `cache.input_cache`，再触发绑定的输入处理函数。
+- **输入框行为**：`main_frame.send_input()` 从 `Entry` 读取文本，非空时写入界面输入历史 `view.input_cache`（最多保留 21 条），再触发绑定的输入处理函数。
 
 ## 3. IO 管线（`Script.Core.io_init`）
 

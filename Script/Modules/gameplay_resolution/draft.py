@@ -299,7 +299,7 @@ class Session:
         """
         打开草稿
         Keyword arguments:
-        keep -- 选择时可以直接写的缓存顶层属性名，如 "input_cache"
+        keep -- 选择时可以直接写的缓存顶层属性名
         """
         global _session
         if _session is not None:

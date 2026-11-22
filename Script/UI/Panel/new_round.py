@@ -13,7 +13,7 @@ from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
 from Script.Modules.domains import abilities, facility, first_record, h_meters
 from Script.Modules.domains import hypnosis, needs, npc_template
-from Script.Modules.domains import player_collection
+from Script.Modules.domains import player_collection, modes
 from Script.Modules.domains import playthrough, roster, chara_life, relations
 from Script.Modules.domains import identity
 from Script.Core import constant
@@ -164,7 +164,7 @@ class New_Round_Handle:
             info_draw.draw()
 
             # debug模式下补满
-            if cache.debug_mode:
+            if modes.debug():
                 self.round_point_all += 9999
                 info_text = _("debug模式+9999\n\n").format(self.round_point_all)
                 info_draw.text = info_text
@@ -1197,7 +1197,6 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     Keyword arguments:
     world_setting -- 新周目的世界设定
     """
-    from Script.Design import basement
     from Script.UI.Flow import creator_character_flow
     from Script.System.Medical_System import medical_service
 
@@ -1216,8 +1215,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
 
     # 开始重置
     cache_control.cache = cache
-    cache.rhodes_island = basement.get_base_zero()
-    medical_service.init_medical_department_data(cache.rhodes_island)
+    medical_service.init_medical_department_data()
     playthrough.reset_difficulty_and_birth()
     info_draw_text += _("游戏数据重置完毕\n")
 

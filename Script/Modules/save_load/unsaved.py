@@ -21,7 +21,14 @@ from Script.Modules.domains import identity
 
 UNSAVED: dict[type, frozenset[str]] = {
     game_type.Cache: frozenset(
-        {"map_data", "recipe_data", "sun_phase", "moon_phase"}
+        {
+            "map_data",
+            "recipe_data",
+            "sun_phase",
+            "moon_phase",
+            "old_character_id",
+            "over_behavior_character",
+        }
     ),
     game_type.Rhodes_Island: frozenset(
         {
@@ -36,7 +43,7 @@ UNSAVED: dict[type, frozenset[str]] = {
     ),
     identity.Identity: frozenset({"hit_point_tem", "mana_point_tem"}),
 }
-""" 缓存文件不写的字段，类: 字段名 """
+""" 缓存文件不写、读档时也从旧存档删掉的字段，类: 字段名 """
 
 
 def _reduce(obj: Any) -> tuple[Any, ...]:
@@ -67,13 +74,14 @@ def dump(value: object, file: IO[bytes]) -> None:
 
 def restore(loaded: game_type.Cache) -> None:
     """
-    处理刚解开的缓存。删掉缓存、rhodes_island 和每个角色上旧存档带来的 UNSAVED 字段。
+    补全刚解开的缓存：缺 rhodes_island 时暂补空对象供旧存档导入用，并删掉缓存、rhodes_island 与各角色上的 UNSAVED 字段。
     版本 23 之前的存档带着 npc_tem_data 时，其中为 None 的条目换回配置的模板，配置里没有该键的条目直接删掉。
     Keyword arguments:
     loaded -- 刚解开的游戏缓存
     """
     state = vars(loaded)
-    holders: list[object] = [loaded, state.get("rhodes_island")]
+    state.setdefault("rhodes_island", game_type.Rhodes_Island())
+    holders: list[object] = [loaded, state["rhodes_island"]]
     characters = state.get("character_data")
     if isinstance(characters, dict):
         holders.extend(characters.values())
@@ -99,11 +107,6 @@ def fill_defaults(loaded: dict[str, Any], default: game_type.Cache) -> None:
     loaded -- 刚解开的游戏缓存的属性字典
     default -- 新建的游戏缓存，带着各字段的默认值
     """
-    pairs: list[tuple[dict[str, Any], object]] = [(loaded, default)]
-    base = loaded.get("rhodes_island")
-    if isinstance(base, game_type.Rhodes_Island):
-        pairs.append((vars(base), default.rhodes_island))
-    for state, holder in pairs:
-        defaults = vars(holder)
-        for name in UNSAVED[type(holder)] & (defaults.keys() - state.keys()):
-            state[name] = defaults[name]
+    defaults = vars(default)
+    for name in UNSAVED[game_type.Cache] & (defaults.keys() - loaded.keys()):
+        loaded[name] = defaults[name]

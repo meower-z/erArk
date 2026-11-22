@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 基建/宿舍/岗位/资源/娱乐经营域检查
-覆盖 ISLAND-01…ISLAND-33，校验 cache.rhodes_island（罗德岛基建总数据）与相关派生结构（岗位集合与列表、
+覆盖 ISLAND-01…ISLAND-33，校验罗德岛基建域数据（GameState 中相关全局键）与派生结构（岗位集合与列表、
 设施等级与开放表、资源仓储、生产/农业/招募/交易线、宿舍管理员、图书借阅、派对排期、动力区、外勤委托、
 监狱、访客与外交官映射等）的内部一致性。
 
@@ -11,7 +11,7 @@
   外派外交官都会把角色移出名单但保留其岗位/槽位数据。
 - 派生表（岗位集合/列表等）只由玩家打开对应面板时触发重算，没有任何每日/每回合结算刷新点，因此"派生表与
   实时名单逐人相等"类断言天然可能长期漂移，此类条目统一为 warning 级。
-- 本文件所有检查函数都只读 cache，不做任何写入；对 cache.rhodes_island 及角色字段的访问一律用
+- 本文件所有检查函数只读 cache 与内核领域模块，不做任何写入。访问角色字段时用
   getattr/.get 加默认值，避免老存档缺字段时检查函数自身抛出未被期望的异常掩盖真实问题。
 """
 
@@ -21,28 +21,23 @@ from collections import Counter
 from collections.abc import Mapping
 from typing import Any
 
-from Script.Core import cache_control, constant
+from Script.Core import constant
 from Script.Config import game_config
 from Script.Modules.domains import commission, diplomacy, dormitory, economy
 from Script.Modules.domains import entertainment, facility, flags, library
 from Script.Modules.domains import location, maintenance, power, prison
 from Script.Modules.domains import production, recruit, roster, visitor
-from Script.Modules.domains import warehouse, work
+from Script.Modules.domains import modes, warehouse, work
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
-from typing import TYPE_CHECKING
 from Script.Design import game_time
 from Script.Modules.domains import chara_life
 from Script.Modules.domains import identity
 
-if TYPE_CHECKING:
-    from Script.Core import game_type
 
-
-def _eff(ri: game_type.Rhodes_Island, facility_cid: int) -> int | None:
+def _eff(facility_cid: int) -> int | None:
     """
     参数:
-        ri: cache.rhodes_island 罗德岛数据对象
         facility_cid (int): 设施配置cid（config_facility的键）
     返回值:
         int|None: 该设施在其当前等级下的效果数值(config_facility_effect.effect)，任何一环缺失/越界时返回None
@@ -270,9 +265,8 @@ def check_island_05_resource_stock() -> list[CheckFailure]:
     功能:
         校验当前Resource.csv的每种资源都在base.stock中有库存记录，值必须是非负int。负库存意味着某处扣减漏了余额检查。
         同样用<=比较键集：读档只补缺的配置资源，不删已下线的资源id。已知合法误报源：debug面板可以把资源1、2、4
-        的库存设成任意整数（含负数）。失败上下文附带cache.debug_mode供排查时参考，但不作硬豁免
+        的库存设成任意整数（含负数）。失败上下文附带mode.debug供排查时参考，但不作硬豁免
     """
-    cache = cache_control.cache
     materials = warehouse.stock()
     missing = [
         rid for rid in game_config.config_resouce if rid not in materials
@@ -295,7 +289,7 @@ def check_island_05_resource_stock() -> list[CheckFailure]:
                 "ISLAND-05",
                 "资源表键完整且库存为非负整数",
                 f"缺失的rid列表={missing}，违规(rid,资源名,数量,type)={violations}，历史多余键={extra_keys}，"
-                f"cache.debug_mode={getattr(cache, 'debug_mode', '?')}",
+                f"mode.debug={modes.debug()}",
                 [],
             )
         ]
@@ -1018,7 +1012,6 @@ def check_island_23_entertainment_type() -> list[CheckFailure]:
         合法cid(0=无)。会真实崩溃的非法态——无保护索引config_entertainment[…]。检查范围取全部角色而非在编
         名单：该字段是角色自带属性，离线角色归队后同样会被AI读取。已知合法误报源：debug面板允许输入任意三元组
     """
-    cache = cache_control.cache
     cd = identity.table()
     failures = []
     for cid, ch in cd.items():
@@ -1050,7 +1043,7 @@ def check_island_23_entertainment_type() -> list[CheckFailure]:
                 "ISLAND-23",
                 "干员娱乐安排固定三项且id合法",
                 f"角色cid={cid}({ch.name})的entertainment_type={et!r}不合法，非法项={illegal_items}，"
-                f"cache.debug_mode={getattr(cache, 'debug_mode', '?')}",
+                f"mode.debug={modes.debug()}",
                 [cid],
             )
         )
@@ -1498,10 +1491,8 @@ def check_island_32_shop_open_list() -> list[CheckFailure]:
         对应一个贸易区可建设施且该设施已开放。反向不成立、禁止加：贸易区5级会经zone_cid规则自动开放全部151-168号
         子设施而不调economy.open_shop，"facility_open为真⇒名字在base.shops_open里"是必现误报
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
     shop_open_list = economy.shops_open()
-    eff11 = _eff(ri, 11)
+    eff11 = _eff(11)
     trade_open = {
         o.name: oid
         for oid, o in game_config.config_facility_open.items()

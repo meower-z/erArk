@@ -145,14 +145,9 @@ class OverviewSubPanel(_BaseSubPanel):
 
     def draw(self) -> list[str]:
         return_list: list[str] = []
-        ri = cache.rhodes_island
 
-        outpatient_table = medical_service.get_patient_table(
-            target_base=ri, hospitalized=False
-        )
-        hospital_table = medical_service.get_patient_table(
-            target_base=ri, hospitalized=True
-        )
+        outpatient_table = medical_service.get_patient_table(hospitalized=False)
+        hospital_table = medical_service.get_patient_table(hospitalized=True)
         patients_today = list(outpatient_table.values())
         hospitalized = list(hospital_table.values())
         bed_limit = int(medical.state().bed_limit)
@@ -247,7 +242,6 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         """绘制医生管理页面并返回所有按钮的返回值列表"""
 
         return_list: list[str] = []
-        ri = cache.rhodes_island
 
         clinic_ids = medical_service.list_role_doctors(
             medical_constant.SPECIALIZATION_ROLE_CLINIC
@@ -256,9 +250,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
             medical_constant.SPECIALIZATION_ROLE_HOSPITAL
         )
         bed_limit = int(medical.state().bed_limit)
-        hospital_table = medical_service.get_patient_table(
-            target_base=ri, hospitalized=True
-        )
+        hospital_table = medical_service.get_patient_table(hospitalized=True)
         bed_occupied = len(hospital_table)
 
         info_draw = draw.NormalDraw()
@@ -507,7 +499,6 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         """估算当前门诊病人需要的剩余工时"""
 
         outpatient_table = medical_service.get_patient_table(
-            target_base=cache.rhodes_island,
             hospitalized=False,
         )
 
@@ -650,17 +641,12 @@ class MedicalDetailSubPanel(_BaseSubPanel):
         """绘制医疗明细并返回交互按钮列表"""
 
         return_list: list[str] = []
-        ri = cache.rhodes_island
 
         state_counter: dict[medical_constant.MedicalPatientState, int] = {
             state: 0 for state in medical_constant.MedicalPatientState
         }
-        outpatient_table = medical_service.get_patient_table(
-            target_base=ri, hospitalized=False
-        )
-        hospital_table = medical_service.get_patient_table(
-            target_base=ri, hospitalized=True
-        )
+        outpatient_table = medical_service.get_patient_table(hospitalized=False)
+        hospital_table = medical_service.get_patient_table(hospitalized=True)
 
         for patient in outpatient_table.values():
             state_counter[patient.state] += 1
@@ -723,11 +709,8 @@ class SurgeryManagementSubPanel(_BaseSubPanel):
         """绘制手术管理界面"""
 
         return_list: list[str] = []
-        ri = cache.rhodes_island
 
-        hospital_table = medical_service.get_patient_table(
-            target_base=ri, hospitalized=True
-        )
+        hospital_table = medical_service.get_patient_table(hospitalized=True)
         waiting_patients = [
             patient
             for patient in hospital_table.values()
@@ -782,7 +765,6 @@ class FinanceReportSubPanel(_BaseSubPanel):
         """绘制财务报表信息"""
 
         return_list: list[str] = []
-        ri = cache.rhodes_island
 
         info_draw = draw.NormalDraw()
         info_draw.width = self.width
@@ -849,12 +831,8 @@ class FinanceReportSubPanel(_BaseSubPanel):
         need_draw.width = self.width
         need_draw.text = _("待诊/住院病人尚需药品：\n")
         aggregated: dict[int, float] = {}
-        outpatient_table = medical_service.get_patient_table(
-            target_base=ri, hospitalized=False
-        )
-        hospital_table = medical_service.get_patient_table(
-            target_base=ri, hospitalized=True
-        )
+        outpatient_table = medical_service.get_patient_table(hospitalized=False)
+        hospital_table = medical_service.get_patient_table(hospitalized=True)
         for group in (outpatient_table.values(), hospital_table.values()):
             for patient in group:
                 if (

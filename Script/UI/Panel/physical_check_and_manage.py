@@ -16,7 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, achievement, action_info, activity
 from Script.Modules.domains import body_manage, chara_life, dirty, first_record
 from Script.Modules.domains import hypnosis, physical_exam, player_collection
-from Script.Modules.domains import pregnancy, relations, roster
+from Script.Modules.domains import pregnancy, relations, roster, modes
 import random
 
 from Script.UI.Panel import achievement_panel
@@ -517,7 +517,7 @@ class Physical_Check_And_Manage_Panel:
                         continue
 
                 # debug模式下直接通过
-                if cache.debug_mode:
+                if modes.debug():
                     judge_result = True
 
                 # 绘制按钮

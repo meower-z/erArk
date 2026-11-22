@@ -12,7 +12,7 @@ from typing import Any
 from types import FunctionType
 
 from Script.Config import normal_config
-from Script.Core import game_type, get_text
+from Script.Core import get_text
 from Script.Modules.domains import economy, medical
 
 from Script.System.Medical_System import (
@@ -112,29 +112,16 @@ render_medical_reports = log_system.render_medical_reports
 
 @edits
 def init_medical_department_data(
-    target_base: game_type.Rhodes_Island | None = None,
     *,
     reset_runtime: bool = True,
-    migrate_legacy: bool = False,
 ) -> None:
     """初始化医疗系统运行期数据结构。
 
     参数:
-        target_base (Optional[game_type.Rhodes_Island]): 指定目标基地对象，默认读取全局缓存。
-        reset_runtime (bool): 为 True 时重置全部运行期字段，通常在新开局或每日结算后调用。
-        migrate_legacy (bool): 为 True 时执行旧版字段迁移，保障读档兼容性。
+        reset_runtime (bool): 为 True 时重置全部运行期字段，为 False 时保留已有数据并补全缺失结构。
     返回:
-        None: 直接在目标基地对象上原地修改，无显式返回值。
+        None: 将初始化结果写入医疗域的内核状态，无返回值。
     """
-
-    # 解析目标基地对象，若为空则直接返回。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return
-
-    # 需要迁移旧字段时先处理历史数据，避免后续逻辑读到旧状态。
-    if migrate_legacy:
-        medical_core._migrate_legacy_income(rhodes_island)
 
     # 根据重置标记决定是否重新初始化所有运行期缓存字段。
     if reset_runtime:
@@ -162,13 +149,13 @@ def init_medical_department_data(
         medical.state().doctor_specializations = {}
     else:
         # 如果不重置则确保容器存在，并同步当前玩家诊疗状态。
-        medical_core._ensure_runtime_dict(rhodes_island)
+        medical_core._ensure_runtime_dict()
         medical.state().player_patient_id = int(
             medical.state().player_patient_id or 0
         )
 
     # 门诊医生的专业结构需要在复用前确保初始化。
-    clinic_doctor_service._ensure_specialization_structure(rhodes_island)
+    clinic_doctor_service._ensure_specialization_structure()
 
     # 没有收费系数时写入默认值，防止后续计算出现零值。
     if not medical.state().price_ratio or medical.state().price_ratio <= 0:
@@ -177,67 +164,51 @@ def init_medical_department_data(
         )
 
     # 依据当前配置重新计算床位上限并同步旧计数器。
-    medical.state().bed_limit = medical_core._calculate_medical_bed_limit(
-        rhodes_island
-    )
+    medical.state().bed_limit = medical_core._calculate_medical_bed_limit()
 
     # 若没有留存的病人数据则刷新今日病人列表。
     patient_table = medical.state().today
     should_refresh_patients = reset_runtime or not patient_table
     if should_refresh_patients:
-        refresh_medical_patients(target_base=rhodes_island)
+        refresh_medical_patients()
 
 
 @edits
 def update_medical_save_data_structure(cache_snapshot: dict[str, Any]) -> None:
-    """在读取旧存档时修复医疗系统相关字段。
+    """在读档时导入旧存档的医疗收入字段并补全医疗域数据结构。
 
     参数:
-        cache_snapshot (Dict[str, Any]): 读档后的缓存快照，需包含 rhodes_island 键。
+        cache_snapshot (Dict[str, Any]): 读档后的缓存属性字典，需包含 rhodes_island 键。
     返回:
-        None: 函数仅在快照对象上执行补全与迁移操作。
+        None: 将导入与初始化结果写入医疗域的内核状态，无返回值。
     """
 
-    # 仅当快照中存在合法的罗德岛对象时才执行迁移操作。
-    rhodes_island = cache_snapshot.get("rhodes_island")
-    if not isinstance(rhodes_island, game_type.Rhodes_Island):
-        return
-
-    # 使用运行期初始化逻辑对旧存档进行修复，避免重复代码。
-    init_medical_department_data(
-        rhodes_island, reset_runtime=False, migrate_legacy=True
-    )
+    medical_core._migrate_legacy_income(cache_snapshot["rhodes_island"])
+    init_medical_department_data(reset_runtime=False)
 
 
 @edits
 def settle_medical_department(
     *,
-    target_base: game_type.Rhodes_Island | None = None,
     draw_flag: bool = True,
 ) -> dict[str, Any]:
     """执行每日医疗经营结算并输出日志。
 
     参数:
-        target_base (Optional[game_type.Rhodes_Island]): 指定要结算的基地实例，默认使用全局缓存。
         draw_flag (bool): 为 True 时立即绘制文本日志，用于在 UI 中回显结算结果。
     返回:
         Dict[str, Any]: 汇总结算成功标记、收入、统计信息、队列快照以及日志文本。
     """
 
-    # 定位当前结算目标的基地对象。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return {"success": False, "reason": "no_base"}
-
     # 确保运行期容器完整，防止结算中断。
-    medical_core._ensure_runtime_dict(rhodes_island)
+    medical_core._ensure_runtime_dict()
 
     # 先处理住院病人的日常消耗，避免统计落后一步。
-    process_hospitalized_patients(target_base=rhodes_island)
+    process_hospitalized_patients()
 
     # 拉取显性日常计数器，确保结算阶段使用统一字段。
-    counters = medical_core._obtain_daily_counters(rhodes_island)
-    stats: dict[str, int] = counters.as_dict() if counters else {}
+    counters = medical_core._obtain_daily_counters()
+    stats: dict[str, int] = counters.as_dict()
 
     # 拉取实收收入与收费系数，供结算描述使用。
     income_today = int(medical.state().income_today or 0)
@@ -321,7 +292,6 @@ def settle_medical_department(
             "queue": queue_snapshot,
             "inventory_detail": inventory_snapshot,
         },
-        target_base=rhodes_island,
     )
 
     # 使用统一的日志渲染函数生成文本，并按需绘制在界面上。
@@ -374,15 +344,11 @@ def settle_medical_department(
     medical.state().daily_counters = medical_constant.MedicalDailyCounters()
 
     # 检查是否有待调整的收费系数，若有则应用并清空。
-    clinic_patient_management.apply_new_medical_price_ratio(
-        target_base=rhodes_island
-    )
+    clinic_patient_management.apply_new_medical_price_ratio()
 
     # 结算完成后刷新病人列表，使用更新后的收费系数。
-    refresh_medical_patients(target_base=rhodes_island)
-    medical.state().bed_limit = medical_core._calculate_medical_bed_limit(
-        rhodes_island
-    )
+    refresh_medical_patients()
+    medical.state().bed_limit = medical_core._calculate_medical_bed_limit()
 
     return {
         "success": True,

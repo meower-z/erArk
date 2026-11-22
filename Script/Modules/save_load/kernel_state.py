@@ -1,13 +1,13 @@
 """
 save_load 的内核状态：存档时把 GameState 写成 JSON 放在缓存旁边，读档、新游戏时换掉内核的 GameState
 ===================================================================================================
-存档目录里的文件 "2" 是 core.state() 的 JSON：版本、本次存档的标记、时钟、每个角色的行动与数据、全局数据。
+文件 "2" 是 orders.settled(core.state()) 的 JSON：版本、存档标记、时钟、各角色行动与数据、全局数据。
 Fraction 写成 {"$frac": str(分数)}，例如 Fraction(7, 72) 写成 "7/72"，Fraction(3, 1) 写成 "3"。
 存档头（文件 "0"）里记着同一个标记。头里有标记的是版本 1 起的存档。头里没有标记的是旧存档（版本 0）。
 头里有标记时，文件 "2" 缺失、损坏、标记不同或版本过高都拒绝读档。
 每次 core.reset_state 都带 why（{"cause": ...}），save_load.reset 按它选要跑的步骤。
 读档 load 换入文件 "2" 的 GameState，旧存档没有这个文件时换入存档头游戏时间的空 GameState。
-读档的步骤装好存档的缓存、修补，没有角色时由缓存投影。new_game 换入开局时刻的空 GameState，步骤由建好的缓存投影。
+读档步骤装好存档缓存并修补，无角色时由缓存投影。new_game 换入开局时刻空 GameState，步骤由缓存投影。
 new_round 以继承选择换入开局时刻，步骤建新周目。步骤运行时 game_time.now() 已是换入的时钟。
 core.reset_state 在玩家选行动时调用会中止这次选择，所以 load 与 new_game 总是调用方最后做的事。
 读档与新周目的步骤会改缓存。换入失败时，缓存与内核状态一起回到换入前。
@@ -27,6 +27,7 @@ from Script.Core import cache_control
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.save_load import index, upgrade
+from Script.Modules.tk_ui import orders
 
 SAVE_FILE = "2"
 """ 存档目录里内核状态的文件名 """
@@ -156,12 +157,12 @@ def decode(data: dict[str, Any], tagged: bool) -> core.GameState:
 
 def write(save_id: str, token: str) -> None:
     """
-    把 core.state() 写成存档目录里的文件 "2"：先写临时文件，再用 os.replace 换进去
+    把 orders.settled(core.state()) 写成存档目录里的文件 "2"：先写临时文件，再用 os.replace 换进去
     Keyword arguments:
     save_id -- 存档id
     token -- 本次存档的标记，与存档头里的相同
     """
-    data = encode(core.state(), token)
+    data = encode(orders.settled(core.state()), token)
     os.makedirs(index.path(save_id), exist_ok=True)
     file_path = os.path.join(index.path(save_id), SAVE_FILE)
     with open(file_path + ".tmp", "w", encoding="utf-8") as f:

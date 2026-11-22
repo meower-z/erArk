@@ -16,10 +16,10 @@ import math
 from fractions import Fraction
 from typing import TypeGuard
 
-from Script.Core import cache_control, num
+from Script.Core import num
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import activity, facility, flags, h_meters
+from Script.Modules.domains import activity, facility, flags, h_meters, modes
 from Script.Modules.domains import h_state as h_state_domain
 from Script.Modules.domains import hypnosis as hypnosis_domain, needs
 from Script.Modules.domains import player_ability, playthrough, status
@@ -162,14 +162,13 @@ def check_num_03_ability_value_valid_lv() -> list[CheckFailure]:
     功能:
         校验角色的能力表的每个值都是config_ability_lv_adjust中的合法键（配表键仅0-10）。get_ability_adjust用能力值
         直接做字典下标且无.get兜底，越界值会在下一次进入该调用点时KeyError崩游戏。type(v) is int而非isinstance，
-        避免False当键0、1.0当键1被放行。带cache.debug_mode守卫（debug面板可写任意整数）。
+        避免False当键0、1.0当键1被放行。带mode.debug守卫（debug面板可写任意整数）。
         若config_ability_lv_adjust配表不存在，本检查退化为跳过。
     """
-    cache = cache_control.cache
     config_lv_adjust = getattr(game_config, "config_ability_lv_adjust", None)
     if not isinstance(config_lv_adjust, dict):
         return []
-    if cache.debug_mode:
+    if modes.debug():
         return []
     config_ability = (
         getattr(game_config, "config_ability", {})
@@ -213,10 +212,9 @@ def check_num_04_ability_level_upper_bound() -> list[CheckFailure]:
     功能:
         校验角色的能力表的值不超过8（自动升级循环硬停在8）。能力71（舌技）在白名单内被排除——全库唯一一条能力
         事件效果CVE_A2_A|71_G_2可把已升到8的舌技推到10，不受此上限约束。超过8值得人工复核但不是硬失败，故为warning。
-        带cache.debug_mode守卫。若config_ability配表不存在，取名字时退化为"?"，不影响主体判定。
+        带mode.debug守卫。若config_ability配表不存在，取名字时退化为"?"，不影响主体判定。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     config_ability = (
         getattr(game_config, "config_ability", {})
@@ -265,10 +263,9 @@ def check_num_05_ability_sex_consistency() -> list[CheckFailure]:
     功能:
         校验sex_need标注为0(男)/1(女)的能力，对性别不符的角色应恒为0（自动升级明确跳过不符项）。非0说明角色性别
         被中途改写或存档串行。依赖NUM-02（键完整）与NUM-06（性别合法）先通过，本检查内部对二者做廉价复核以保持
-        独立性。定为warning，因为也可能反映设计内的"双性/扶她"类扩展。带cache.debug_mode守卫。
+        独立性。定为warning，因为也可能反映设计内的"双性/扶她"类扩展。带mode.debug守卫。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     config_ability = getattr(game_config, "config_ability", None)
     if not isinstance(config_ability, dict):
@@ -310,7 +307,7 @@ def check_num_06_sex_domain() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验chara.sex只能是0或1。全库仅四处写.sex，均来自角色模板或玩家二选一创建流程，域外值无合法来源。
-        本项是NUM-05的根因守卫。无debug_mode守卫（键集/取值域类检查不加该守卫）。
+        本项是NUM-05的根因守卫。无mode.debug守卫（键集/取值域类检查不加该守卫）。
     """
     failures = []
     for cid, chara in identity.table().items():
@@ -371,10 +368,9 @@ def check_num_08_experience_non_negative() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验角色的经验表的每个值都是非负整数。通用经验结算在任何增减后执行max(0, ...)，事件通道的经验操作
-        转发给同一函数，因此也走同一套下限钳制。带cache.debug_mode守卫（debug面板允许负数直写）。
+        转发给同一函数，因此也走同一套下限钳制。带mode.debug守卫（debug面板允许负数直写）。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -438,10 +434,9 @@ def check_num_10_juel_non_negative() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验角色的宝珠表的每个值都是非负整数。全部扣除路径都有前置校验或数学下界（升级前先比较再扣、面板夹到
-        持有量、睡眠反发珠双侧扣减不透支）。带cache.debug_mode守卫（debug面板可写负数）。
+        持有量、睡眠反发珠双侧扣减不透支）。带mode.debug守卫（debug面板可写负数）。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -542,10 +537,9 @@ def check_num_13_status_data_non_negative() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验角色的状态值（status.of）都是非负的int或Fraction。cache.debug_mode为真时跳过。
+        校验角色的状态值（status.of）都是非负的int或Fraction。mode.debug为真时跳过。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -574,10 +568,9 @@ def check_num_14_status_data_upper_bound() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验角色的状态值（status.of）不超过99999。越界报warning，不报error。
-        cache.debug_mode为真时跳过。
+        mode.debug为真时跳过。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     config_state = (
         getattr(game_config, "config_character_state", {})
@@ -650,10 +643,9 @@ def check_num_16_favorability_type() -> list[CheckFailure]:
     功能:
         只检查chara.favorability值的类型为int，不设上下界。下界：extra_adjust允许为负且无max(0,..)，负好感是
         设计内合法态。上界：事件直写与可重复的外勤委托奖励都不钳制100000，满好感角色再吃一次奖励即越界，属合法
-        流程假阳性，因此上界只作观测信息随失败一并输出，不构成失败条件本身。带cache.debug_mode守卫。
+        流程假阳性，因此上界只作观测信息随失败一并输出，不构成失败条件本身。带mode.debug守卫。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -723,8 +715,7 @@ def check_num_18_hp_mp_max_positive() -> list[CheckFailure]:
         实时结算用体力、气力除以各自的上限，上限为0时ZeroDivisionError。
         debug面板可以把上限改成0或负数，所以debug模式下不检查。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -760,8 +751,7 @@ def check_num_19_player_only_max_fields() -> list[CheckFailure]:
         且理智上限<=9999（理智上限的成长封顶在9999）。角色初始化只给玩家设这三项，NPC的停在默认值0，
         所以不查NPC。debug模式下不检查。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     chara = identity.get(0)
     if chara is None:
@@ -797,8 +787,7 @@ def check_num_20_hit_point_range() -> list[CheckFailure]:
         校验每个活着的角色的体力（needs.of(cid)["hit"]）在[1, 体力上限]内，体力的下限是1不是0。
         死亡角色不查。debug模式下不检查。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -836,8 +825,7 @@ def check_num_21_mana_point_range() -> list[CheckFailure]:
         校验每个角色的气力（needs.of(cid)["mana"]）在[0, 气力上限]内。
         上限为0时只有气力0合法，上限的问题由NUM-18报出。debug模式下不检查。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -871,8 +859,7 @@ def check_num_22_sanity_point_range() -> list[CheckFailure]:
     功能:
         校验每个角色的理智（needs.of(cid)["sanity"]）在[0, 理智上限]内。debug模式下不检查。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -907,10 +894,9 @@ def check_num_23_eja_point_non_negative() -> list[CheckFailure]:
     功能:
         校验chara.eja_point非负，不检查<=eja_point_max——槽满时"忍住射精"会直接return，合法保留
         eja_point>=eja_point_max。类型放宽到(int, float)：default.py:3298处的+=写入产出float而漏了int()转换，
-        属已知缺陷，硬性type is int会误报此路径；缺陷修好后本项可收紧回int。带cache.debug_mode守卫。
+        属已知缺陷，硬性type is int会误报此路径。缺陷修好后本项可收紧回int。带mode.debug守卫。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -943,10 +929,9 @@ def check_num_24_semen_point_range() -> list[CheckFailure]:
     功能:
         校验chara.semen_point在[0, semen_point_max]，chara.tem_extra_semen_point在[0, semen_point_max*4]。
         恢复侧封顶semen_point_max，临时槽封顶4倍，射精面板先扣临时槽再扣基础槽并max(0,...)。对NPC（两值均为0）
-        退化为0<=0<=0，不产生假阳性，可对全体跑。带cache.debug_mode守卫。
+        退化为0<=0<=0，不产生假阳性，可对全体跑。带mode.debug守卫。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -985,10 +970,9 @@ def check_num_25_base_resource() -> list[CheckFailure]:
         校验config_resouce的每个id都在base.stock中有记录，且值为非负整数。键集方向同NUM-02（配表⊆资源）：读档只补缺的
         配置资源，不删已下线的资源id，多余键合法。各面板按固定id直接取库存，没有统一的max(0,...)兜底，负库存意味着某条
         支付路径漏判。键类型也查，但warehouse.stock()给出的键总是int。不检查库存<=warehouse_capacity：外勤委托的奖励
-        入库不按容量截断。debug_mode下不查数值（debug面板可以把资源1、2、4设成任意整数），键集照查。
+        入库不按容量截断。mode.debug开启时不查数值（debug面板可以把资源1、2、4设成任意整数），键集照查。
         config_resouce不是dict时跳过。
     """
-    cache = cache_control.cache
     config_resouce = getattr(game_config, "config_resouce", None)
     if not isinstance(config_resouce, dict):
         return []
@@ -999,7 +983,7 @@ def check_num_25_base_resource() -> list[CheckFailure]:
     failures = []
     value_bad = (
         {}
-        if cache.debug_mode
+        if modes.debug()
         else {k: v for k, v in materials.items() if type(v) is not int or v < 0}
     )
     if missing or not key_type_ok or value_bad:
@@ -1031,10 +1015,9 @@ def check_num_26_warehouse_capacity() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验warehouse.capacity()为非负整数。日结按这个值截断资源31与资源12的库存，
-        负容量会把它们写成负数，比NUM-25更靠近根因。debug_mode下不查。
+        负容量会把它们写成负数，比NUM-25更靠近根因。mode.debug开启时不查。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     capacity = warehouse.capacity()
     if type(capacity) is int and capacity >= 0:
@@ -1065,8 +1048,7 @@ def check_num_27_fatigue_family_range() -> list[CheckFailure]:
         校验body.needs的tired∈[0,160]、hunger∈[0,240]、sleep∈[0,100]、drunk∈[0,100]，都须是int或Fraction。
         出界说明有写入越过了上下限。debug面板可以直接改写这四项，所以debug模式下不检查。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     bounds = {
         "needs.tired": 160,
@@ -1109,8 +1091,7 @@ def check_num_28_urinate_point_non_negative() -> list[CheckFailure]:
     功能:
         校验body.needs的urine是非负的int或Fraction。上界见NUM-29。debug模式下不检查。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():
@@ -1140,8 +1121,7 @@ def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
         校验所有角色（含玩家cid=0）body.needs的urine不超过300。失败记录带[warning]前缀。debug模式下不检查。
         300是设计上界，realtime_settle、drunk_sex_common与default.py加尿意时都用它封顶。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     difficulty_setting = playthrough.settings(playthrough.DIFFICULTY)
     failures = []
@@ -1175,8 +1155,7 @@ def check_num_30_desire_point_non_negative() -> list[CheckFailure]:
         校验每个角色的欲望值（needs.of(cid)["desire"]）是非负整数，不查上限。
         逐日结算按欲望等级累加欲望值而不封顶，前提函数在欲望值>=100时权重仍随数值增长。debug模式下不检查。
     """
-    cache = cache_control.cache
-    if cache.debug_mode:
+    if modes.debug():
         return []
     failures = []
     for cid, chara in identity.table().items():

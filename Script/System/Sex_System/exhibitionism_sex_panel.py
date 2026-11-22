@@ -12,7 +12,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config
 from Script.Design import handle_premise, map_handle
-from Script.Modules.domains import achievement, activity, flags
+from Script.Modules.domains import achievement, activity, flags, modes
 from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
@@ -114,7 +114,7 @@ class Select_Exhibitionism_Sex_Mode_Panel:
             for index, button_text in enumerate(mode_desc_list):
                 mode_id = index + 1
                 can_use = self._mode_available(mode_id)
-                if cache.debug_mode:
+                if modes.debug():
                     can_use = True
                 if can_use:
                     button_draw = draw.LeftButton(

@@ -323,7 +323,6 @@ class MinimalWorld:
 
         self.cache = cache_control.cache
         """ 游戏缓存（对象一直不变，复原时原地改写） """
-        cache = self.cache
         kernel_data.reset_clock(start_time(), {})
         kernel_data.written(playthrough.reset_difficulty_and_birth)
         kernel_data.reset_medical()

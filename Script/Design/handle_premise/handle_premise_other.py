@@ -1778,7 +1778,7 @@ def handle_debug_mode_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.debug_mode:
+    if modes.debug():
         return 1
     return 0
 
@@ -1792,7 +1792,7 @@ def handle_debug_mode_off(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.debug_mode:
+    if modes.debug():
         return 0
     return 1
 
@@ -1806,7 +1806,7 @@ def handle_todo(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.debug_mode:
+    if modes.debug():
         return 1
     return 0
 

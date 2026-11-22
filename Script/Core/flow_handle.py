@@ -18,6 +18,7 @@ from Script.Core import (
     cache_control,
     constant,
 )
+from Script.Modules.tk_ui import orders
 from Script.UI.Moudle import view
 
 # 全局缓存
@@ -317,7 +318,7 @@ def order_deal(
     返回值类型：str | None。flag 为 "str" 时返回输入的字符串，纯数字的输入先经 str(int(...)) 规范化。
     flag 为 "order" 时处理这条输入后返回 None。
     donot_return_null_str 为假且 view.wframe_mouse.w_frame_up 已置位时返回空串。
-    功能描述：处理用户输入的命令
+    功能描述：从输入队列取出用户输入的命令，交给 orders.accept 后按 flag 处理
     """
     global __skip_flag__
     __skip_flag__ = False
@@ -332,6 +333,7 @@ def order_deal(
             return ""
         while not io_init._order_queue.empty():
             order = io_init.get_order()
+            orders.accept(order)
             if print_order and order != "":
                 io_init.era_print("\n" + order + "\n")
             if flag == "str":

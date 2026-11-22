@@ -1,19 +1,17 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 行为/时间/状态机/主循环完整性相关检查
-覆盖角色行为(Behavior)、全局时钟(内核时钟与ticked/settled_day)、结算主循环状态标记(over_behavior_character等)相关的
-21条不变式(BEHAV-01~BEHAV-22，不含已删除的BEHAV-13)。来源见规划文档final_invariants_behavior.md，钩子点为
+覆盖角色行为(Behavior)、全局时钟(内核时钟与ticked/settled_day)与模式开关相关的
+19条不变式(BEHAV-01~BEHAV-22，无BEHAV-06、BEHAV-13与BEHAV-21)。钩子点为
 Script/UI/Panel/in_scene_panel.py主循环重绘处、flow_handle.askfor_all()之前。
 
-以下五条生命周期事实已烘焙进本文件全部检查，任何依赖它们的护栏都不得删除：
-1. cache.over_behavior_character在结算开始时清空、结算结束后保留；钩子处可能是上一次结算的残留值，
-   任何使用它的检查都必须容忍陈旧值。
-2. activity.state的整数取值(constant.CharacterStatus)与行为配表cid是两套已经漂移的编号，
+以下四条生命周期事实已烘焙进本文件全部检查，任何依赖它们的护栏都不得删除：
+1. activity.state的整数取值(constant.CharacterStatus)与行为配表cid是两套已经漂移的编号，
    任何"state必须等于/映射到行为cid"的断言一律不做。
-3. 时停模式下玩家结算完即break、全局时间回退pl_duration分钟，NPC本轮完全未结算；
+2. 时停模式下玩家结算完即break、全局时间回退pl_duration分钟，NPC本轮完全未结算。
    玩家合法领先game_time.now()，NPC数据合法陈旧。
-4. H中的NPC可以合法地持有已过期行为(handle_npc_ai.py的提前入集与character_behavior.py的H捷径都会让行为原样留存)。
-5. 新开局到达钩子时没有任何结算跑过，因此任何"必须刚结算过"语义的断言都不成立。
+3. H中的NPC可以合法地持有已过期行为(handle_npc_ai.py的提前入集与character_behavior.py的H捷径都会让行为原样留存)。
+4. 新开局到达钩子时没有任何结算跑过，因此任何"必须刚结算过"语义的断言都不成立。
 
 执行顺序约束：BEHAV-07(字段类型)在语义上必须先于一切时间比较类检查；本文件中BEHAV-10/11/12/22各自复用
 _behavior_type_ok()对同一角色重做一次同源判定，字段类型损坏时对该角色跳过判定(既不算失败也不算通过)，
@@ -377,9 +375,6 @@ def check_behavior_start_time_not_sentinel() -> list[CheckFailure]:
     cache = cache_control.cache
     character_data = identity.table()
     sentinel = datetime.datetime(1, 1, 1)
-    over_behavior_character = (
-        getattr(cache, "over_behavior_character", None) or set()
-    )
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -395,8 +390,7 @@ def check_behavior_start_time_not_sentinel() -> list[CheckFailure]:
                 (
                     f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time仍是哨兵0001-01-01，"
                     f"说明该角色被主循环跳过未处理；behavior_id={behavior.behavior_id!r}, "
-                    f"game_time={game_time.now()!r}, cid in "
-                    f"over_behavior_character={cid in over_behavior_character}"
+                    f"game_time={game_time.now()!r}"
                 ),
                 [cid],
             )
@@ -422,9 +416,6 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
         return []
     character_data = identity.table()
     game_t = game_time.now()
-    over_behavior_character = (
-        getattr(cache, "over_behavior_character", None) or set()
-    )
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -445,8 +436,7 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
                     f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time={behavior.start_time!r}"
                     f"晚于game_time.now()={game_t!r}；behavior_id={behavior.behavior_id!r}, "
                     f"duration={behavior.duration!r}, "
-                    f"time_stop_mode={modes.time_stop()}, cid in "
-                    f"over_behavior_character={cid in over_behavior_character}"
+                    f"time_stop_mode={modes.time_stop()}"
                 ),
                 [cid],
             )
@@ -892,49 +882,6 @@ def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
             f"群交分支；behavior_id={getattr(activity.behavior(player.cid), 'behavior_id', None)!r}, "
             f"当前在H中的角色样本(至多10个)={h_npcs}, time_stop_mode={modes.time_stop()}",
             [0],
-        )
-    ]
-
-
-@register_check("BEHAV-21", "完成集合里只能是存在的角色id")
-def check_over_behavior_character_ids_exist() -> list[CheckFailure]:
-    """
-    参数:
-        无
-    返回值:
-        List[CheckFailure] -- 失败记录列表
-    功能:
-        校验cache.over_behavior_character(结算完成集合)是set，且其中每个元素都是int且指向身份表
-        （identity.characters）中存在的角色。集合元素来自玩家0与在编名单，出现不存在的角色id是野指针信号。
-        成员域放宽到身份表里的存在角色而不收紧回在编名单，因为访客离开或新周目重建会让子集关系合法失效
-    """
-    cache = cache_control.cache
-    over_set = getattr(cache, "over_behavior_character", None)
-    character_data = identity.table()
-    if not isinstance(over_set, set):
-        return [
-            make_failure(
-                "BEHAV-21",
-                "完成集合里只能是存在的角色id",
-                f"cache.over_behavior_character类型为{type(over_set).__name__}，期望set",
-                [],
-            )
-        ]
-    bad = sorted(
-        x for x in over_set if not (type(x) is int and x in character_data)
-    )
-    if not bad:
-        return []
-    npc_id_got = roster.active()
-    involved = [x for x in bad if isinstance(x, int)]
-    return [
-        make_failure(
-            "BEHAV-21",
-            "完成集合里只能是存在的角色id",
-            f"cache.over_behavior_character中存在不是'存在角色id'的元素(野指针信号): {bad!r}，"
-            f"集合总长度={len(over_set)}, npc_id_got(前20个)={sorted(npc_id_got)[:20]}, "
-            f"time_stop_mode={modes.time_stop()}",
-            involved,
         )
     ]
 

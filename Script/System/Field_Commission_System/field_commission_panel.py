@@ -15,7 +15,7 @@ from Script.System.Field_Commission_System.field_commission_function import (
     get_commission_demand_and_reward,
     process_commission_text,
 )
-from Script.Modules.domains import abilities, commission, facility, flags
+from Script.Modules.domains import abilities, commission, facility, flags, modes
 from Script.Modules.domains import location, roster, chara_life, chara_profile
 from Script.Modules.domains import identity
 
@@ -170,7 +170,7 @@ class Field_Commission_Panel:
                 ):
                     continue
                 # 以下为非debug模式下会进行的跳过判断
-                if not cache.debug_mode:
+                if not modes.debug():
                     # 跳过未满足前置委托的委托
                     if (
                         commision_data.related_id != -1

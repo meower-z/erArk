@@ -35,6 +35,8 @@ text_wait: float = 0
 """ 绘制文本输出等待时间 """
 input_position: int = 0
 """ 回溯输入记录用定位 """
+input_cache: list[str] = []
+""" 界面输入框的输入历史（最多保留 21 条，供上下键回溯与日志使用，不随存档） """
 input_cache_draft: str = ""
 """ 玩家正在编辑但尚未发送的输入草稿 """
 input_cache_browsing: bool = False

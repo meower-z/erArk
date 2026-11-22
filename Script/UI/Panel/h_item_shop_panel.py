@@ -13,7 +13,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import see_item_info_panel
-from Script.Modules.domains import achievement, facility, warehouse
+from Script.Modules.domains import achievement, facility, warehouse, modes
 from Script.Modules.domains import inventory, chara_profile
 from Script.Modules.domains import identity
 
@@ -369,7 +369,7 @@ class BuyItemByItemNameDraw:
         line.draw()
         item_config = game_config.config_item[self.text]
         now_price = item_config.price * number
-        if warehouse.amount(4) >= now_price or cache.debug_mode:
+        if warehouse.amount(4) >= now_price or modes.debug():
             inventory.add_item(
                 self.character_data.cid, self.text, number, max=99
             )

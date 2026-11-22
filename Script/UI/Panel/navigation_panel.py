@@ -7,7 +7,7 @@ from Script.Core import get_text, py_cmd, text_handle, value_handle
 from Script.Design import map_handle, attr_text, game_time
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import achievement, diplomacy, location
+from Script.Modules.domains import achievement, diplomacy, location, modes
 from Script.Modules.domains import visitor, warehouse
 
 cache: game_type.Cache = cache_control.cache
@@ -100,7 +100,7 @@ class Base_function_class:
             # 当前燃料
             now_fuel = warehouse.amount(15)
             need_fuel = 1000 * distance
-            if now_fuel < need_fuel and not cache.debug_mode:
+            if now_fuel < need_fuel and not modes.debug():
                 now_draw = draw.WaitDraw()
                 now_draw.text = _(
                     "\n\n移动至{0}需要消耗{1}燃料，当前有{2}单位燃料，燃料不足，无法移动\n"
@@ -165,7 +165,7 @@ class Base_function_class:
                     day=need_time, old_date=game_time.now()
                 )
                 # debug模式下直接抵达
-                if cache.debug_mode:
+                if modes.debug():
                     arrive_time = game_time.now()
                 location.set_move(birthplace_id, arrive_time)
                 warehouse.add(15, -need_fuel)

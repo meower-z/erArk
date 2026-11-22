@@ -10,11 +10,11 @@ from Script.Core import (
 )
 from Script.Design import map_handle
 from Script.Config import game_config
-from Script.Modules.domains import maintenance, identity, scene_state
+from Script.Modules.domains import bookmarks, maintenance, identity, modes
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import action_info, activity, chara_life
 from Script.Modules.domains import entertainment, flags, location, relations
-from Script.Modules.domains import wardrobe
+from Script.Modules.domains import scene_state, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1222,7 +1222,7 @@ def handle_place_in_collection_list(character_id: int) -> int:
     int -- 权重
     """
     now_position = activity.position(character_id)
-    if now_position in cache.collect_position_list:
+    if now_position in bookmarks.places():
         return 1
     return 0
 
@@ -1453,7 +1453,7 @@ def handle_in_dr_office_or_debug(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if handle_in_dr_office(character_id) or cache.debug_mode:
+    if handle_in_dr_office(character_id) or modes.debug():
         return 1
     return 0
 
@@ -2865,7 +2865,7 @@ def handle_in_dr_off_or_server_room_or_debug(character_id: int) -> int:
         return 1
     elif "Dr_Office" in now_scene_data.scene_tag:
         return 1
-    elif cache.debug_mode:
+    elif modes.debug():
         return 1
     return 0
 
