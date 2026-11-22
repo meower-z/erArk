@@ -1,13 +1,16 @@
 # 棘轮检查用的环境装这个文件：pip install -r requirements-lint.txt
 -r requirements-dev.txt
 # 下面钉住游戏、测试与工具脚本导入的第三方包，以及其中几个包依赖的包。
-# mypy 按装上的这些包的真实类型检查用到它们的代码。
+# 除 openai 与 google-genai 外，mypy 按装上的这些包的真实类型检查用到它们的代码。
+# openai 与 google-genai 的类型由 tests/_mypy_stubs 中的存根提供。
 httpx==0.28.1
 numpy==2.5.4
 pillow==12.3.0
 psutil==7.2.2
 ephem==4.2.1
 python-dateutil==2.9.0.post0
+# 调整下面这两个包的版本时，同步更新 tests/_mypy_stubs 中的对应存根。
+# 测试 tests/fast/test_third_party_stubs.py 中的 STUB_VERSIONS 须一并更新。
 google-genai==2.31.0
 openai==3.31.0
 wcwidth==0.9.2
