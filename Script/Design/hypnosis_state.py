@@ -1,10 +1,6 @@
 """清理角色的催眠行为模式与催眠子状态"""
 
-from Script.Core import cache_control, game_type
 from Script.Modules.domains import flags, h_state, hypnosis
-
-cache: game_type.Cache = cache_control.cache
-"""游戏缓存数据"""
 
 
 def clear_hypnosis_behavior_mode(target_character_id: int) -> None:

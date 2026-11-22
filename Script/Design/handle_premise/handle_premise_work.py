@@ -1,6 +1,6 @@
 """工作相关的前提处理函数"""
 
-from Script.Core import cache_control, constant, constant_promise, game_type
+from Script.Core import constant, constant_promise
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import (
     activity,
@@ -12,9 +12,6 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import abilities, work, chara_life, identity
 from Script.Modules.domains import scene_state
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 @add_premise(constant_promise.Premise.HAVE_WORK)

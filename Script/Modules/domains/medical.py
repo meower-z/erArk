@@ -303,16 +303,12 @@ def remap_doctors(old_to_new: Mapping[int, int]) -> None:
                 systems[system] = [old_to_new.get(i, i) for i in ids]
 
 
-class PickledPatient:
-    """版本 9 之前的存档里的病人（Medical_System.medical_constant.MedicalPatient）解开成的属性包"""
-
-
 def adopt_island(loaded_dict: dict[str, Any]) -> None:
     """
     读档时，罗德岛对象带着 OLD_NAMES 里的医疗部属性（游戏写的存档里，只有版本 9 之前的带着它们）就把它们写进
     当前缓冲区的医疗部数据，再从对象上删掉这些属性与 DEAD_FIELDS。对象上没有这些属性时什么也不写
     Keyword arguments:
-    loaded_dict -- 存档缓存的属性表
+    loaded_dict -- 旧存档的属性表
     """
     island = loaded_dict.get("rhodes_island")
     attrs = vars(island) if island is not None else {}

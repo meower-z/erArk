@@ -230,7 +230,7 @@ def new_game_minimal_init() -> None:
     建角色写的 GameState 数据记进调用方用 working.based_on 开的缓冲区。
     """
     log("执行新建游戏最小初始化...")
-    from Script.Core import cache_control, constant as cst, game_type, io_init
+    from Script.Core import constant as cst, game_type, io_init
     from Script.Design import (
         character_handle,
         character,
@@ -326,18 +326,15 @@ def init_game_environment(
 ) -> ModuleType | None:
     """
     修复顺序：
-    1. 先初始化 normal_config / cache
+    1. 先初始化 normal_config
     2. 再 game_config.init() （字体等需要先装）
     3. 再 import 任何会间接触发 UI / main_frame 的模块 (map_config 等)
     4. 载入其他配置 (character 模板、地图等)
     5. 根据参数尝试加载存档 -> 否则新建
     """
     log("开始初始化环境...")
-    from Script.Core import game_type, cache_control
     from Script.Config import normal_config
 
-    # Cache & 基础 config
-    cache_control.cache = game_type.Cache()
     normal_config.init_normal_config()
 
     # 重要：先加载 game_config 再 import 依赖 UI 的东西
@@ -407,9 +404,9 @@ def init_game_environment(
         log("已加载存档，跳过新建流程。")
 
     # 标记基准模式
-    from Script.Core import cache_control as cc2
+    from Script.Core import flow_handle
 
-    setattr(cc2.cache, "benchmark_mode", True)
+    flow_handle.benchmark_mode = True
 
     log("环境初始化完成.")
     return premise_mod

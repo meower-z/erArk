@@ -1,14 +1,7 @@
 """富文本标签的解析，生成富文本绘制面板、绘制列表与逐字样式，以及角色状态颜色的获取"""
 
-from Script.Core import (
-    cache_control,
-    game_type,
-)
 from Script.Config import game_config
 from Script.UI.Moudle import draw, panel
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 def get_rich_text_draw_panel(now_text: str) -> panel.LeftDrawTextListPanel:

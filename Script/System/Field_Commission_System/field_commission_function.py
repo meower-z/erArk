@@ -1,7 +1,7 @@
 """外勤委托：数据刷新、需求与奖励、委托文本、完成的判定与结算、新干员招募、势力委托的查找与临时委托的创建"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import game_type, get_text
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
@@ -10,8 +10,6 @@ from Script.Modules.domains import country, flags, location, recruit, relations
 from Script.Modules.domains import roster, warehouse, identity, modes
 import random
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

@@ -4,7 +4,6 @@ import random
 import datetime
 from types import FunctionType
 from Script.Core import (
-    cache_control,
     game_path_config,
     game_type,
     constant,
@@ -20,8 +19,6 @@ from Script.Modules.domains import entertainment, facility, flags, hypnosis
 from Script.Modules.domains import needs, roster, identity, scene_state
 
 game_path = game_path_config.game_path
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width
@@ -246,9 +243,7 @@ def judge_character_cant_move(character_id: int) -> int:
     if talent[22] == 1 or talent[23] == 1:
         cant_move_flag = True
         needs.set(character_id, desire=0)  # 欲望锁0
-        # character.init_character_behavior_start_time(character_id, cache.game_time)
-        # character_data.behavior.behavior_id = constant.Behavior.WAIT
-        # character_data.state = constant.CharacterStatus.STATUS_WAIT
+        # 临盆与产后角色不在此改写行为或状态，只锁定欲望并在需要时移至住院部
 
         # 检测当前位置是否在医疗部的住院部，如果不在的话则移动至住院部
         now_position = activity.position(character_id)

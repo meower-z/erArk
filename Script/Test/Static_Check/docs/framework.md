@@ -19,7 +19,7 @@ Script/Test/Static_Check/
 
 状态语义按层区分：检查层只读，同一状态可重复计算；日志层刻意保留跨回合、跨进程的去重记忆；修复层会写 cache。
 
-取 cache 的方式按层不同：检查函数在函数体内取全局 `cache_control.cache`（见 [writing-checks.md](writing-checks.md)）；`check_log.py`、`snapshot.py`、`repair.py` 不读全局 cache，一律由调用方显式传入。全局读取只出现在门面的两个入口。
+读取状态的方式统一经领域模块：检查函数在函数体内通过 `Script/Modules/domains/` 下的领域模块只读接口读取当前 `GameState`（见 [writing-checks.md](writing-checks.md)）；`snapshot.py` 与 `repair.py` 同样通过领域模块读写，门面入口用 `identity.table()` 与 `identity.exists(0)` 做就绪守卫。
 
 ## 公开接口
 
@@ -69,4 +69,4 @@ if normal_config.system_setting.base_setting.get(14, 0):
 2. 用完整迁移的真实存档复跑，跑之前先调 `map_config.init_map_data()`，否则迁移会把所有人挪到 0/0 并产生大量误报。四项判据：既有检查的失败集合与修复数量不变；每条新出现的命中逐条对照写这份状态的代码来判定；注册了修复的检查在修复后全部通过；检查前后 cache 的 pickle 哈希一致。
 3. 日志格式固定项不变：头部写实际注册数、不输出空 context 行、版本轮转、检查级去重、50MB 上限。
 4. 开关关闭时，三处挂钩零调用、零写入，本包未被导入。
-5. `rg "Script\.UI" --glob "*.py" .` 零命中；框架层读取 `cache_control.cache` 只出现在门面的两个入口。
+5. `rg "Script\.UI" --glob "*.py" .` 零命中；框架层与检查层全部通过领域模块读取 `GameState`。

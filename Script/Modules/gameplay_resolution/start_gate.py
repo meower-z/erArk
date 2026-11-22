@@ -3,12 +3,12 @@ gameplay_resolution 的开始门
 ============================
 gate 是 StartAction 输入钩子，在 starts 的复查（recheck）之外。行动数据带 behavior_id 的行动都要过门：
 玩家选出的、状态机选出的与计划队列排下的，一样检查。
-- 玩家的行动带 judge（指令的判定名）时先判定：失败时换成失败的行为，只做失败的行为（不带指令的开始代码与 fields；
-  失败的行为以行为id登记了开始代码时做它）。
+- 玩家的行动带 judge（指令的判定名）时先判定：失败时换成失败的行为，只做失败的行为
+  （不带指令的开始代码与 fields；失败的行为以行为id登记了开始代码时做它）。
 - 再按 GATES 的顺序检查。第一道关上的闸把行动换成 1 分钟的发呆（通用种类 Behavior），干员的交互对象改回自己，
-  没过的闸记在意图的 args 的 gate 里。门不写缓存：发呆由 starts.begin 写进去。
-- 行动数据里的 target 是交互对象id。没有这个键时，幼年阶段与处女两道闸看缓存里角色当前的交互对象。
-  premises 是前提id，行动开始时每个前提都要成立。
+  没过的闸记在意图的 args 的 gate 里。门不写游戏状态：发呆由 starts.begin 写进去。
+- 行动数据里的 target 是交互对象id。没有这个键时，幼年阶段与处女两道闸看角色当前的交互对象
+  （activity.target）。premises 是前提id，行动开始时每个前提都要成立。
 - 时停中玩家的行动在内核里是 0 分钟，不由门换：最里层的 actions.time_stop 换，门与复查换上的行动都经过它。
 """
 
@@ -16,16 +16,13 @@ from collections.abc import Callable, Mapping
 from dataclasses import replace
 
 from Script.Config import game_config
-from Script.Core import cache_control, constant, game_type
+from Script.Core import constant
 from Script.Design import child_stage_gate, handle_premise, virgin_break_gate
 from Script.Kernel import core
 from Script.Modules.domains import roster
 from Script.Modules.gameplay_resolution import intent
 from Script.Modules.domains import abilities, activity
 from Script.Modules.domains import identity
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 TARGET = "target"
 """ 行动数据里交互对象id的键 """
@@ -50,7 +47,7 @@ def _target(who: int, data: Data) -> int:
     who -- 行动的角色id
     data -- 行动数据
     Return arguments:
-    int -- 行动数据的 target；没有时为缓存里角色当前的交互对象
+    int -- 行动数据的 target；没有时为角色当前的交互对象（activity.target）
     """
     target = data.get(TARGET)
     if isinstance(target, int):
@@ -172,8 +169,8 @@ def _idle(act: core.Action, who: int, gate_name: str) -> core.Action:
 def _judged(act: core.Action, who: int, data: Data) -> core.Action:
     """
     玩家指令的判定（handle_instruct._judged_behavior_id）：失败时换成失败的行为，
-    分钟数按失败的行为查表，开始时的状态也是失败的行为；指令的开始代码（args 的 start）、fields 与选择的草稿不带过去，
-    失败的行为以行为id登记了开始代码时 args 的 start 换成它
+    分钟数按失败的行为查表，开始时的状态也是失败的行为；指令的开始代码（args 的 start）、fields、effects 与
+    interrupts 不带过去，失败的行为以行为id登记了开始代码时 args 的 start 换成它
     Keyword arguments:
     act -- 玩家的行动
     who -- 行动的角色id
@@ -190,7 +187,7 @@ def _judged(act: core.Action, who: int, data: Data) -> core.Action:
     rest = {key: value for key, value in data.items() if key != JUDGE}
     if judged == behavior_id:
         return replace(act, action_data=rest)
-    for key in ("state", "fields", "draft", "interrupts", "effects"):
+    for key in ("state", "fields", "interrupts", "effects"):
         rest.pop(key, None)
     args = rest.get("args", {})
     if isinstance(args, Mapping):

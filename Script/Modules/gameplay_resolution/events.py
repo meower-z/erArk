@@ -1,30 +1,30 @@
 """
 gameplay_resolution 的事件
 ==========================
-疲劳、跟随与 H 结束是内核事件（core.event）：触发函数读 GameState 与缓存，按名单顺序检查干员，交回第一个成立的角色键；
-结算当场写状态与缓存、画字，接着要做的行动经计划队列（plan_queue.plan_next）排给对应角色，在他下一次选行动时开始，
-要结束谁的行动就经计划队列打断他（plan_queue.interrupt），不在结算里嵌套另一次结算。
+疲劳、跟随与 H 结束是内核事件（core.event）：触发函数读 GameState，按名单顺序检查干员，
+交回第一个成立的角色键；结算当场写游戏状态、画字，接着要做的行动经计划队列（plan_queue.plan_next）
+排给对应角色，在他下一次选行动时开始，要结束谁的行动就经计划队列打断他（plan_queue.interrupt），
+不在结算里嵌套另一次结算。
 排下的打断在这一步的 ApplyEffects 里生效（plan_queue.drain），所以事件交回空的效果即可。
 每个条件都带"还没排上"的检查（plan_queue.plan_has），排上之后不再成立。
 
 内核不保证同时成立的事件的先后，要先等另一个事件的，前提写在触发函数里：
 每个事件等这一分钟的 Tick 与 NewDay（time_hooks.clock_settled）；给玩家排结束的 PlayerSpent、HEnd、GroupExit
-等 ArtsBreak（time_hooks.arts_settled）；结束干员 H 的 HEnd、GroupExit、HLeftBehind 等玩家力竭（PlayerSpent）；
-StopFollowing 等同一干员的 BecomeTired；HLeftBehind 等同一干员力竭的收场（tired_case）。
+等 ArtsBreak（time_hooks.arts_settled）；结束干员 H 的 HEnd、GroupExit、HLeftBehind
+等玩家力竭（PlayerSpent）；StopFollowing 等同一干员的 BecomeTired；
+HLeftBehind 等同一干员力竭的收场（tired_case）。
 """
 
 from collections.abc import Callable, Mapping
 from types import FunctionType
 
-from Script.Core import cache_control, constant, game_type, get_text, num
+from Script.Core import constant, get_text, num
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, plan_queue, time_hooks
 from Script.Modules.domains import activity, flags, modes, needs
 from Script.Modules.domains import player_ability
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

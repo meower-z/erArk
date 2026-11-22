@@ -1,15 +1,12 @@
 """角色移动：主角寻路、通用角色移动控制、撤销移动计划与移动到私密房间的结算"""
 
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import constant, get_text
 from Script.Design import map_handle, update
 from Script.UI.Moudle import draw, view
 from Script.Modules.domains import action_info, activity, flags, inventory, plan
 from types import FunctionType
 from Script.Modules.domains import chara_profile, scene_state
 from Script.Modules.domains import identity
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
@@ -285,7 +282,7 @@ def private_move_outcome(
     character_id: int, move_path: list
 ) -> tuple[bool, bool, str]:
     """
-    判定角色能否移动到私密房间，只读缓存\n
+    判定角色能否移动到私密房间，只读游戏状态\n
     Keyword arguments:\n
     character_id -- 角色id\n
     move_path -- 移动路径\n

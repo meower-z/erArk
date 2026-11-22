@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from types import FunctionType
-from Script.Core import cache_control, constant, game_type, get_text, num
+from Script.Core import constant, game_type, get_text, num
 from Script.Design import game_time, handle_premise, settle_behavior, talk
 from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
@@ -16,8 +16,6 @@ from Script.Modules.domains import growth, h_state, status
 if TYPE_CHECKING:
     from types import ModuleType
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 _: FunctionType = get_text._

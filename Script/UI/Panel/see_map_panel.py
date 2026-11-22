@@ -4,7 +4,6 @@ from types import FunctionType
 from Script.UI.Moudle import draw, panel, view
 from Script.Core import (
     get_text,
-    cache_control,
     game_type,
     flow_handle,
     value_handle,
@@ -19,8 +18,6 @@ from Script.Modules.domains import activity, bookmarks, identity, scene_state
 
 _: FunctionType = get_text._
 """ 翻译api """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"

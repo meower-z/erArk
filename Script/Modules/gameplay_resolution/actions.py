@@ -1,13 +1,13 @@
 """
-gameplay_resolution 的行为收尾与按缓存投影出的 GameState
-======================================================
-游戏数据仍在旧缓存 cache 里。内核的 GameState 给每个角色记下当前的行动：action_id 是行动的种类，
-action_data 是意图（intent.Intent），开始分钟与时长同角色的当前行为（activity.behavior）。
-内核时钟是游戏日历上的分钟数（game_time.minutes）。
+gameplay_resolution 的行为收尾与角色行动投影
+============================================
+游戏数据存在内核的 GameState 里，经 domains 下的领域模块读写。GameState 给每个角色记下当前的行动：
+action_id 是行动的种类，action_data 是意图（intent.Intent），开始分钟与时长同角色的当前行为
+（activity.behavior）。内核时钟是游戏日历上的分钟数（game_time.minutes）。
 一个行为的一生是三步，玩家与干员一样：
 - PickNextAction：只读，交回一个行动（队首、玩家的选择或状态机）。
 - StartAction：开始门（start_gate）、开始前的复查（starts.recheck）、时停（time_stop，最里层），
-  再由 starts.behave 照着意图写缓存并结算。
+  再由 starts.behave 照着意图写游戏状态并结算。
 - 行为的结束（wrap_up，每种行为由 starts.starter 登记为结束函数）：行为用完时间（结束或被打断）后，
   内核在这一分钟的事件之后、任何角色选行动之前运行它一次。把角色结算到此刻（time_hooks.tick_one），
   收掉行为（character_behavior.end_action），再跑选行动之前的检查。
@@ -20,7 +20,7 @@ from dataclasses import replace
 from types import MappingProxyType
 from typing import cast
 
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import constant, get_text
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import time_hooks
@@ -31,8 +31,6 @@ from Script.Modules.domains import activity
 PLAYER = "0"
 """ 玩家在 GameState.characters 里的键 """
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _ = get_text._
 """ 翻译api """
 
@@ -159,7 +157,7 @@ def _intent_of(behavior: activity.Behavior) -> intent.Intent:
 
 def state_from_cache(clock: int | None = None) -> core.GameState:
     """
-    由在编名单与角色的当前行为在 clock 这一分钟投影出新的 GameState（新游戏、新周目、没有文件 "2" 的旧存档）
+    由在编名单与角色的当前行为在 clock 这一分钟投影出新的 GameState（新游戏、新周目、没有内核状态的旧存档）
     名单上每个角色（玩家与 roster.active() 里的干员）的行动取 activity.behavior 的开始时间与分钟数，
     开始时间没设过时从 clock 开始。干员的行动是 Behavior，到时由 wrap_up 收尾；
     玩家的是同样起止的 kernel.Idle，到时不收尾，直接选下一个行动。
@@ -231,7 +229,7 @@ def drifted() -> list[int]:
 
 def project(new: core.GameState) -> core.GameState:
     """
-    Reset 步骤：new 没有角色时由缓存在 new 的时钟投影出角色（state_from_cache），全局数据以 new 的为准，
+    Reset 步骤：new 没有角色时由领域数据在 new 的时钟投影出角色（state_from_cache），全局数据以 new 的为准，
     new 没有的 ticked 与 settled_day 取投影的。new 有角色（存档里的 GameState）时照原样，
     只换掉角色数据里的 open：open 不为真的角色（行为已收尾或没开始过）换成同样起止的 kernel.Idle，
     open 为真的保留行为，到时收尾；open 一律去掉

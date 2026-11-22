@@ -4,7 +4,7 @@
 
 ```python
 @register_check("GROUPSEX-01", "群交参与人数一致性")
-def check_group_sex_member_count() -> List[CheckFailure]:
+def check_group_sex_member_count() -> list[CheckFailure]:
     """
     参数:
         无
@@ -13,15 +13,16 @@ def check_group_sex_member_count() -> List[CheckFailure]:
     功能:
         校验群交场景中登记的参与人数与实际参与角色数量一致
     """
-    cache = cache_control.cache
-    failures = []
+    failures: list[CheckFailure] = []
+    if not modes.group_sex():
+        return failures
     return failures
 ```
 
 规则：
 
-1. 检查函数无参、只读不写。用到 `cache` 的检查函数，函数体第一句取 `cache = cache_control.cache`；不读 cache 的函数不取。不给检查函数加 cache 形参：进程内只有一个全局 cache 引用，形参提供不了真正的替换能力。
-2. 禁止模块级 `cache = cache_control.cache` 别名。全局 cache 在 `game.py` 启动时才赋值，模块级别名在导入时固定，一旦与全局引用分离就永久持有旧对象。
+1. 检查函数无参、只读不写，在函数体内通过 `Script/Modules/domains/` 下各领域模块的只读接口读取当前 `GameState`（例如 `identity.table()`、`roster.active()`、`activity.position(cid)`、`modes.group_sex()`）。
+2. 不在模块导入期缓存运行期 `GameState` 数据，每次检查都在函数体内现读当前状态。
 3. `make_failure` 的前两个参数与 `@register_check(check_id, check_name)` 逐字一致，以装饰器为准。
 4. `check_id` 全局唯一。另一个函数注册已有 id 时，该模块导入时抛 `ValueError`，该模块剩余检查不会注册；其他模块不受影响。同一函数（`__module__` 与 `__qualname__` 都相同）再次注册，例如重新载入该模块，替换原条目。
 5. 检查不得修改状态，也不得调用会写状态的前提函数（`Script/Design/handle_premise`）。已知的写路径包括指令过滤缺键补值、助理跟随 `setdefault`。

@@ -10,7 +10,7 @@ import json
 import importlib
 import traceback
 from collections.abc import Callable
-from Script.Core import cache_control, game_type
+from Script.Core import game_type
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -367,7 +367,6 @@ class ModManager:
             "__name__": f"mod_{mod_info.mod_id}",
             "__file__": mod_info.mod_path,
             # 提供常用的游戏模块引用
-            "cache": cache_control.cache,
             "game_type": game_type,
             "random": random,  # 新增：提供random模块
             # 提供mod专用的工具函数

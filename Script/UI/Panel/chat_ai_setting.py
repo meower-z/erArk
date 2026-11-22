@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, flow_handle
+from Script.Core import get_text, flow_handle
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
 from Script.Modules.save_load import settings
@@ -16,8 +16,6 @@ import os
 import csv
 from typing import Any
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

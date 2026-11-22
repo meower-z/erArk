@@ -88,7 +88,7 @@ description: 为 erArk 新增一个玩家指令及其行为、前提、结算、
 ### 第九步：构建与验证
 
 1. `python buildconfig.py` **必跑**（漏跑启动 KeyError）；新翻译词条再跑 `buildpo.py` + `buildmo.py`。
-2. 单元测试脚本要点：**先** `cache_control.cache = game_type.Cache()` **再** import 其他模块；`normal_config.init_normal_config()` + `game_config.init()`；角色 fixture 用 `attr_calculation.get_cloth_wear_zero` 等初始化旧对象容器，内核领域（`abilities`/`dirty`/`h_state`）在 `kernel_data.writing()` 中直接读写。
+2. 单元测试脚本要点：按 `normal_config.init_normal_config()` → `game_config.init()` 顺序初始化后再导入业务模块，并经 `kernel_state.reset_clock(...)` 设好内核时钟；角色 fixture 经 `tests/chara_data.py` 与各领域模块在 `kernel_data.writing()` 中直接读写。
 3. 注册断言：`constant.handle_instruct_data` / `instruct_premise_data` / `handle_premise_data` / `game_config.config_behavior` / `config_behavior_effect_data` 包含新增项。
 4. 游戏内测试可开 debug 模式（config.ini `debug=1`，跳过全部前提）。
 

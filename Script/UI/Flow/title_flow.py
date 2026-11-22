@@ -10,20 +10,11 @@ from Script.UI.Panel import (
     mod_panel,
 )  # 新增导入
 from Script.Design import handle_panel
-from Script.Core import (
-    constant,
-    get_text,
-    flow_handle,
-    cache_control,
-    game_type,
-    py_cmd,
-)
+from Script.Core import constant, get_text, flow_handle, py_cmd
 
 config_normal = normal_config.config_normal
 _: FunctionType = get_text._
 """ 翻译api """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 @handle_panel.add_panel(constant.Panel.TITLE)

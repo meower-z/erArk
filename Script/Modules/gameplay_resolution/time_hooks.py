@@ -23,14 +23,10 @@ from dataclasses import replace
 from types import MappingProxyType
 from typing import cast
 
-from Script.Core import cache_control, game_type
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.domains import activity, flags, modes, needs
 from Script.Modules.domains import identity
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 TICK_MINUTES = 5
 """ 两次 Tick 之间的分钟数 """
@@ -90,7 +86,7 @@ def _settle(character_id: int, since: int, until: int | None = None) -> bool:
     since -- 从这一分钟算起
     until -- 结算到这一分钟；None 时到此刻
     Return arguments:
-    bool -- 结算了时为真；角色不在缓存里或已死亡时为假
+    bool -- 结算了时为真；角色不在身份表里或已死亡时为假
     """
     character_data = identity.get(character_id)
     if character_data is None or activity.dead(character_data.cid):
@@ -116,7 +112,7 @@ def _wake_the_woken() -> None:
 def tick_one(who: int) -> None:
     """
     把一个角色结算到此刻（他的行为结束时调用；下一次 Tick 只从 ticked 算起），被吵醒的角色随即醒来。
-    时停中玩家此刻开始的行动在内核里是 0 分钟，从行动开始按缓存里的名义分钟数结算
+    时停中玩家此刻开始的行动在内核里是 0 分钟，从行动开始按 activity.behavior 的名义分钟数结算
     Keyword arguments:
     who -- 角色id
     """

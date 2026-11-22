@@ -3,7 +3,7 @@ save_load 的自动存档
 ====================
 玩家的睡觉结算完时经 update_save 记下"要自动存档"；PickNextAction 的输入钩子排在最外层，
 到玩家下一次选行动时（睡觉这一行动已经结束）存档，再原样放行。
-存档里因此是玩家选行动那一刻的缓存与 GameState，读档后从玩家的选择接着跑。
+存档里因此是玩家选行动那一刻的 GameState，读档后从玩家的选择接着跑。
 """
 
 from Script.Kernel import core

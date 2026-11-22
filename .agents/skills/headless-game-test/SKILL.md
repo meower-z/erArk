@@ -153,11 +153,11 @@ character.input_name_func = lambda ask_text: (asks.append(ask_text), next(names)
 born_event_panel.achievement_panel.achievement_flow = lambda *a, **k: None
 
 # ⑤ 角色上线链 get_new_character 需要娱乐安排等完整 fixture → 只做登记的 stub
-pregnancy_handle.character_handle.get_new_character = lambda cid, visitor_flag=False: cache.npc_id_got.add(cid)
+pregnancy_handle.character_handle.get_new_character = lambda cid, visitor_flag=False: roster.add(cid)
 
 # ⑥ 事件里的"随机选一名医生/干员"用 random.choice(列表)，列表空会 IndexError：
-#    cache.npc_id_got 要非空，并给一个角色 profession = 3（医疗）
-cache.npc_id_got = {101, 102}; kernel_data.put(identity.update, 101, profession=3)
+#    roster.active() 要非空，并给一个角色 profession = 3（医疗）
+kernel_data.put(roster.set_active, {101, 102}); kernel_data.put(identity.update, 101, profession=3)
 
 # ⑦ 想数"创建了几个角色"，包一层真函数而不是替换掉它：
 born_calls = []; _real = character_handle.born_new_character
@@ -208,9 +208,7 @@ rm -f data/Character_Talk.json
 ```python
 import auto_build_config                       # 增量构建数据（数据已构建时约0.4s）
 from Script.Config import normal_config
-from Script.Core import game_type, cache_control
-cache_control.cache = game_type.Cache()        # 必须在 game_config.init() 之前
-normal_config.init_normal_config()
+normal_config.init_normal_config()             # 必须在 game_config.init() 之前
 from Script.Config import game_config, character_config
 game_config.init()
 character_config.init_character_tem_data()
@@ -223,8 +221,9 @@ from Script.UI.Moudle import draw
 from Script.Modules.save_load import kernel_state
 kernel_state.reset_clock(kernel_state.first_clock())
 ```
+```
 
-顺序不能乱：`cache` 先建、`normal_config` 先于 `game_config`、`Script.Settle`/`Script.StateMachine` 必须 import（装饰器注册）。Mod 系统可跳过（测试不需要）。
+顺序不能乱：`normal_config` 先于 `game_config`、`Script.Settle`/`Script.StateMachine` 必须 import（装饰器注册），随后初始化内核时钟。Mod 系统可跳过（测试不需要）。
 
 ### 第二步：屏蔽 UI（防止任何绘制/等待阻塞）
 
@@ -252,7 +251,6 @@ draw.WaitDraw.draw = record_draw
 
 ```python
 save_handle.input_load_save("5")     # 存档目录 save/5/，纯读入内存
-cache = cache_control.cache
 pl = identity.of(0)
 ```
 

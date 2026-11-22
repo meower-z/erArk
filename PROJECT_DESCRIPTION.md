@@ -102,7 +102,7 @@ black .
   - `auto_build_config`：若 `data/Character_Talk.json`、`data/Talk_Common.json` 已存在，则跳过口上数据重建；不重写 `Script/Config/config_def.py`（代码中有“玩家版本不需要写入 config_def”注释）。
   - `buildconfig`：全量重建并重写 `Script/Config/config_def.py`。
 - `buildata.py` **不是**数据构建脚本，而是开发者工具：生成前提/结算样板代码，并通过其 `mode` 变量把“CSV”转换为“前提/结算 Python 定义”。
-- `init_data.py`：模拟游戏启动的缓存预热（Cache、normal_config、game_config、map_config），CI 打包前使用。
+- `init_data.py`：模拟游戏启动的配置预热（`normal_config`、`game_config`、`map_config`），CI 打包前使用。
 - 数据源修改后必须重建；未重建最常见的错误是 KeyError/属性缺失/旧枚举。
 
 ---
@@ -154,8 +154,7 @@ Script/
 │   ├── map_config.py       # 地图 JSON -> constant.scene_data/constant.map_data
 │   └── config_def.py       # 【自动生成】每张 CSV 一个带中文注释的类
 ├── Core/                   # 引擎层
-│   ├── cache_control.py    # 全局 cache 句柄
-│   ├── game_type.py        # Cache/Character/Behavior 等全部运行时数据类型
+│   ├── game_type.py        # 角色模板/地图/行为/结算变化/设置等运行时数据类型
 │   ├── constant/           # 常量枚举 + 注册表（详见 5.2）
 │   ├── constant_effect.py  # BehaviorEffect 结算 ID 常量
 │   ├── constant_promise.py # Premise 前提 ID 常量
@@ -376,43 +375,41 @@ Script/
 ## 8. 启动流程
 
 `game.py` 的启动顺序：
-
 1. 导入 `auto_build_config`（自动增量构建数据）
-2. `cache_control.cache = game_type.Cache()` 创建全局缓存
-3. `normal_config.init_normal_config()` 读配置
-4. `get_text._` 翻译函数可用
-5. `game_config.init()` 加载全部游戏配置
-6. `init_mod_system()` 加载 Mod（失败仅告警不中断）
-7. `character_config.init_character_tem_data()` 加载角色模板
-8. `map_config.init_map_data()` 加载地图
-9. `kernel_state.reset_clock(kernel_state.first_clock())` 把内核时钟拨到 config.ini 的开局时刻
-10. 若 `perf_monitor=1`：启用 `perf_hook` + `profiling.ui_perf_patch`
-11. `game_init.run(start_flow.start_frame)` 启动游戏
-12. `start_flow.start_frame()` 进入主循环，每轮执行 `constant.panel_data[view.now_panel_id]()`
-13. 异常兜底：写入 `error.log`，自动保存 99 号档，给玩家“回到标题/退出”选项
+2. `normal_config.init_normal_config()` 读配置
+3. `get_text._` 翻译函数可用
+4. `game_config.init()` 加载全部游戏配置
+5. `init_mod_system()` 加载 Mod（失败仅告警不中断）
+6. `character_config.init_character_tem_data()` 加载角色模板
+7. `map_config.init_map_data()` 加载地图
+8. `kernel_state.reset_clock(kernel_state.first_clock())` 把内核时钟拨到 config.ini 的开局时刻
+9. 若 `perf_monitor=1`：启用 `perf_hook` + `profiling.ui_perf_patch`
+10. `game_init.run(start_flow.start_frame)` 启动游戏
+11. `start_flow.start_frame()` 进入主循环，每轮执行 `constant.panel_data[view.now_panel_id]()`
+12. 异常兜底：写入 `error.log`，自动保存 99 号档，给玩家“回到标题/退出”选项
 
 ---
 
 ## 9. 运行时核心数据结构
 
-`Script/Core/game_type.py` 定义全部运行时对象（行数约 1942）。
+`Script/Core/game_type.py` 定义运行期使用的各类结构体与容器（约 1599 行）。
 
-### 9.1 Cache（无字段）
+### 9.1 游戏状态存放位置（GameState 与核外状态）
 
-全局唯一 `cache_control.cache`，`Cache.__init__` 不声明任何字段，运行期没有代码向其写入属性。旧存档反序列化时先还原到该类实例，读档过程由 `unsaved.restore`、各领域导入步骤与 `save_handle.install_save` 清走旧字段。各类数据的存放位置如下：
+游戏运行期的全部存档状态存放在内核的 `GameState`（`Script/Kernel/core.py`）里，经 `Script/Modules/domains/` 下的领域模块读写；读取旧存档时，旧文件 `"1"` 的对象经 `Script/Modules/save_load/legacy_pickle.py` 解为 `LegacyObject` 属性袋，再由 `save_handle.install_save` 与各领域导入函数迁入 `GameState`。各类数据的存放位置如下：
 
 - **角色世界**：角色身份表在 GameState 键 `identity.characters`，由 `Modules/domains/identity.py` 读写
 - **地图**：收藏地点在 GameState 键 `map.bookmarks`，由 `Modules/domains/bookmarks.py` 读写。静态地图表与场景表在 `constant.map_data`、`constant.scene_data`。门锁状态在 GameState 全局键 `scene.closed`，由 `Modules/domains/scene_state.py` 读写。场景内角色由 `scene_state.occupants` 按位置与在编名册实时算出
-- **不在缓存里**：界面临时状态（`now_panel_id`、`input_cache`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`。全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，文本生成 AI 设置在 `normal_config.ai_setting`，两者都存在 settings.json。在编/禁用/已用姓名名册（`roster.active`、`roster.forbidden`、`roster.names`，由 `Modules/domains/roster.py` 读写）、局内生成的角色模板（`roster.npc_templates`，由 `Modules/domains/npc_template.py` 读写，数据文件里的静态模板留在 `character_config.character_tem_list`）、本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`、`mode.debug`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件、指令记录与玩家最近输入（`events.triggered`、`events.triggered_today`、`log.instructions`、`log.inputs`，其中 `log.inputs` 供前一指令前提等玩法判定读取）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写。角色的十项活动（状态、之前的行为、当前行为、二段行为、必须结算与必须显示的二段行为id列表、事件、位置、交互对象、是否死亡）在 GameState 的角色键 `activity.*` 里，用 `Modules/domains/activity.py` 读写
+- **全局与角色域状态、界面与设置**：界面临时状态（`now_panel_id`、`input_cache`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`。全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，文本生成 AI 设置在 `normal_config.ai_setting`，两者都存在 `settings.json`。在编/禁用/已用姓名名册（`roster.active`、`roster.forbidden`、`roster.names`，由 `Modules/domains/roster.py` 读写）、局内生成的角色模板（`roster.npc_templates`，由 `Modules/domains/npc_template.py` 读写，数据文件里的静态模板留在 `character_config.character_tem_list`）、本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`、`mode.debug`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件、指令记录与玩家最近输入（`events.triggered`、`events.triggered_today`、`log.instructions`、`log.inputs`，其中 `log.inputs` 供前一指令前提等玩法判定读取）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写。角色的十项活动（状态、之前的行为、当前行为、二段行为、必须结算与必须显示的二段行为id列表、事件、位置、交互对象、是否死亡）在 GameState 的角色键 `activity.*` 里，用 `Modules/domains/activity.py` 读写
 
-### 9.2 Character
+### 9.2 角色身份（`identity.Identity`）与角色域键
 
-字段：
+角色表存放在 `GameState` 全局键 `identity.characters` 中，经 `Script/Modules/domains/identity.py` 读写。单条记录 `identity.of(cid)` 是只读的 `identity.Identity`：
 
 - 基本：`cid`, `name`, `sex`, `adv`, `profession`, `race`, `birthday`
 - 其他：`text_color`, `talk_size`, `token_text`
 
-其余角色数据不在 `Character` 上，存在 GameState 的角色键里：
+其余角色数据存在 GameState 的角色键里：
 
 - 生理需求与状态：体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒，以及疲劳、饥饿、尿意、乳汁在 `body.needs`（用 `needs.of(cid)` 读）；状态值在 `body.status`（用 `status.of(cid)` 读）
 - 妊娠与养成：妊娠状态与乳汁上限在 `body.pregnancy`（`Modules/domains/pregnancy.py`）；养成状态在 `growth.child`（`Modules/domains/growth.py`）
@@ -430,7 +427,7 @@ Script/
 - `NpcTem`：角色模板（能力/经验/素质/服装/基础属性）
 - `Map` / `MapDraw` / `MapDrawLine` / `MapDrawText`：AA 地图与绘制
 - `Scene`：场景路径、名字、室内外、家具、门、面积、标签、角色列表、图片
-- `Rhodes_Island`：空类，用于反序列化旧存档，运行期 `Cache` 不持有其实例（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`。各岗位的干员名册与监狱长在全局键 `base.work` 与 `base.warden` 里，用 `work.roster(岗位id)` 与 `work.warden()` 读。生产线、工人名单与食堂货架在全局键 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写。外勤委托与载具表在全局键 `base.commission` 与 `base.vehicles` 里，用 `Modules/domains/commission.py` 读写。访客、上次随机来访的时刻、邀请与移动标记在全局键 `base.visitor` 里，用 `Modules/domains/visitor.py` 读写。访客上限不存下，由 `visitor.capacity()` 按已开放的客房算出。罗德岛所在的国家与移动在全局键 `base.location` 里，用 `Modules/domains/location.py` 读写。招募线与待确认招募名单、待处理的公务量、公务事件队列与履历、各国外交官、各层宿舍管理员、图书借阅表与推荐阅读的书籍类型在全局键 `base.recruit_lines`、`base.recruited`、`base.office_work`、`base.official_queue`、`base.official_history`、`base.diplomats`、`base.dormitory_managers`、`base.book_holders` 与 `base.book_recommend` 里，分别用 `Modules/domains/` 下的 `recruit.py`、`official.py`、`diplomacy.py`、`dormitory.py` 与 `library.py` 读写。派对排期与旅馆房间档次在全局键 `base.party_days` 与 `base.hotel_room` 里，用 `Modules/domains/entertainment.py` 读写。基地的四项计数在 `base.tallies` 里，冰箱的两个表在 `base.fridge` 里，分别用 `Modules/domains/tallies.py` 与 `Modules/domains/fridge.py` 读写。床位上限是 `base.medical` 里的 `bed_limit`，用 `Modules/domains/medical.py` 读写。关押区的囚犯名册与监禁调教设置在全局键 `base.prisoners` 与 `base.prison_settings` 里，由 `Modules/domains/prison.py` 读写。教育区的全局课表、临时实操课与日程模板在全局键 `base.class_schedule`、`base.temp_sex_class` 与 `base.child_schedule_template` 里，由 `Modules/domains/education.py` 读写。设施损坏、检修地点、铁匠的维修记录、装备维护设置与手动选择的装备维护对象在全局键 `base.facility_damage`、`base.maintenance_place`、`base.equipment_repair`、`base.equipment_setting` 与 `base.equipment_operators` 里，用 `Modules/domains/maintenance.py` 读写。体检设置、今日与进行中的体检记录、三份体检名单与体检日在七个以 `base.exam_` 开头的全局键里，用 `Modules/domains/physical_exam.py` 读写。干员人数上限与仓库容量不存，用 `facility.people_max()` 与 `warehouse.capacity()` 读）
+- 基地状态（旧存档中的 `Rhodes_Island` 对象经 `legacy_pickle.LegacyObject` 读入）：设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里，用 `Modules/domains/facility.py` 读写；各岗位干员名册与监狱长在 `base.work` 与 `base.warden` 里，用 `Modules/domains/work.py` 读写；生产线、工人名单与食堂货架在 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写；外勤委托与载具表在 `base.commission` 与 `base.vehicles` 里，用 `Modules/domains/commission.py` 读写；访客状态在 `base.visitor` 里，用 `Modules/domains/visitor.py` 读写（访客上限由 `visitor.capacity()` 按已开放客房算出）；罗德岛所在国家与移动在 `base.location` 里，用 `Modules/domains/location.py` 读写；招募、公务、外交、宿舍管理员与图书馆数据在 `base.recruit_lines`、`base.recruited`、`base.office_work`、`base.official_queue`、`base.official_history`、`base.diplomats`、`base.dormitory_managers`、`base.book_holders` 与 `base.book_recommend` 里，由 `recruit.py`、`official.py`、`diplomacy.py`、`dormitory.py` 与 `library.py` 读写；派对排期、旅馆房间档次、基地计数与冰箱在 `base.party_days`、`base.hotel_room`、`base.tallies` 与 `base.fridge` 里，由 `entertainment.py`、`tallies.py` 与 `fridge.py` 读写；医疗部数据在 `base.medical` 里，由 `medical.py` 读写；关押区囚犯名册与监禁调教设置在 `base.prisoners` 与 `base.prison_settings` 里，由 `prison.py` 读写；教育区全局课表、临时实操课与日程模板在 `base.class_schedule`、`base.temp_sex_class` 与 `base.child_schedule_template` 里，由 `education.py` 读写；设施损坏、检修与装备维护在 `base.facility_damage`、`base.maintenance_place`、`base.equipment_repair`、`base.equipment_setting` 与 `base.equipment_operators` 里，由 `maintenance.py` 读写；体检数据在七个 `base.exam_*` 全局键里，由 `physical_exam.py` 读写；干员人数上限与仓库容量按需由 `facility.people_max()` 与 `warehouse.capacity()` 算出
 - `Country`：势力外交数据
 - `CharacterStatusChange` / `TargetChange`：结算数值变更累积器
 - `DIRTY`, `PREGNANCY`, `RELATIONSHIP`, `HYPNOSIS`, `CLOTH`, `BODY_H_STATE`, `FIRST_RECORD`, `ACTION_INFO`, `AUTHOR_FLAG` 等：角色各领域状态容器
@@ -762,13 +759,13 @@ Script/
 
 ## 20. 存档系统
 
-- 核心：`Script/Core/save_handle.py`
-- 存储：`save/{save_id}/0`（头部信息，pickle）+ `save/{save_id}/1`（完整游戏数据，pickle）
-- 头部信息含 `game_verson`；读取时执行大量跨版本兼容更新（`input_load_save`, `update_dict_with_default`, `recursive_update`, `update_map`, `update_settings` 等）
-- 自动存档：玩家睡觉结算完毕后 `sleep_settle.update_save()` 写入 `auto` 档；输入 `999` 退出游戏时也会保存 `auto` 档；运行出错时自动保存 99 号档
+- 核心：`Script/Core/save_handle.py` 与 `Script/Modules/save_load/`（`index.py`、`kernel_state.py`、`legacy_pickle.py`、`upgrade.py`、`reset.py`、`settings.py`、`autosave.py`）
+- 存储：每个存档槽位是一个单文件 `save/{save_id}/save.json`（JSON 格式，当前版本 `upgrade.CURRENT = 28`，内含 `version`、`clock`、`characters`、`data` 与存档头 `head`，其中 `Fraction` 编码为 `{"$frac": "n/d"}`）。写盘采用原子替换：先写 `save.json.tmp`、`flush` + `os.fsync`，再经 `os.replace` 替换 `save.json`，随后清理槽位内残留的旧文件 `"0"`、`"1"`、`"2"`
+- 旧存档兼容：版本 0–27 的旧槽位（文件 `"0"`、`"1"`，版本 1 起另含 `"2"`）以只读方式兼容，经受限反序列化器 `legacy_pickle.LegacyUnpickler` 读取，不导入或执行文件命名的任意代码；损坏、版本高于当前版本或格式无效的存档抛出 `index.SaveRefused` 并拒绝读档
+- 自动存档：玩家睡觉结算完毕后由 `autosave` 标记，在玩家下一次选行动时经 `sleep_settle.update_save()` 写入 `auto` 档；输入 `999` 退出游戏时也会保存 `auto` 档；运行出错时自动保存 99 号档
 - 存档配置：`max_save=100`, `save_page=10`
 - 存档面板：`UI/Panel/see_save_info_panel.py`
-- 跨版本兼容关键点：旧整数行为 ID -> 字符串常量、新增角色补全、口上版本、角色收藏品扩展、设施/资源检测
+- 全局设置：系统设置与文本生成 AI 设置存在游戏根目录 `settings.json`，不随存档写入
 
 多周目：
 - `New_Round_Inherit.csv` 定义继承项；`UI/Flow/creator_character_flow.py` 处理角色创建与多周目开局
@@ -785,7 +782,7 @@ Script/
   - `dependencies`, `incompatible`, `load_priority`
   - `scripts[].functions[]`：`type=replace` 函数替换（保留原函数 `call_original`）或 `type=new` 注册新函数
   - `assets.data[]`：CSV 覆盖（`type=csv`）；`assets.image[]`：图片覆盖
-- 脚本环境自动注入：`cache`, `game_config`, `game_type`, `_`, `get_mod_asset`, `call_original`
+- 脚本环境自动注入：`game_type`, `random`, `game_config`, `normal_config`, `constant`, `_`, `get_mod_asset`, `get_original_function`, `call_original`
 - 示例 Mod：`mod/semen_boost/`（替换 `ejaculation_panel.common_ejaculation` 与 `handle_premise.handle_pl_semen_le_2` + 覆盖 `Semen_Shoot_Amount.csv`）
 - 游戏内面板：`UI/Panel/mod_panel.py`
 

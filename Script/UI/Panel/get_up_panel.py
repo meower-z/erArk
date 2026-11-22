@@ -4,14 +4,13 @@ from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.UI.Panel import see_character_info_panel
 from Script.Design import game_time
-from Script.Core import get_text, cache_control, game_type, flow_handle
+from Script.Core import get_text, flow_handle
 from Script.Config import normal_config
 from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
 
-cache: game_type.Cache = cache_control.cache
 line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"

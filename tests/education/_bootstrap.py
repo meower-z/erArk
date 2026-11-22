@@ -118,6 +118,7 @@ from Script.Core import (
     constant_effect,
     constant_promise,
     flow_handle,
+    game_type,
     get_text,
     save_handle,
 )  # noqa: F401,E402

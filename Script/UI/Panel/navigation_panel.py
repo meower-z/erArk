@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from Script.UI.Moudle import draw, panel, view
-from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import constant, flow_handle, game_type
 from Script.Core import get_text, py_cmd, text_handle, value_handle
 from Script.Design import map_handle, attr_text, game_time
 from Script.Config import game_config, normal_config
@@ -10,8 +10,6 @@ from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import achievement, diplomacy, location, modes
 from Script.Modules.domains import visitor, warehouse
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

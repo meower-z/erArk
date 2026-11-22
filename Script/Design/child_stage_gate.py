@@ -6,13 +6,10 @@
 
 from collections.abc import Mapping
 
-from Script.Core import cache_control, constant, game_type
+from Script.Core import constant
 from Script.Config import game_config
 from Script.Modules.domains import abilities, activity
 from Script.Modules.domains import identity
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 CHILD_STAGE_TALENTS = (101, 102)
 """ 幼年阶段的年龄素质：101 婴儿、102 幼女 """

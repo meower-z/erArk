@@ -11,14 +11,7 @@ from Script.UI.Panel import (
     talent_up_panel,
     character_info_head,
 )
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    py_cmd,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, game_type, py_cmd, flow_handle, constant
 from Script.Config import game_config, normal_config
 from Script.Design import (
     attr_calculation,
@@ -30,8 +23,6 @@ from Script.Modules.domains import abilities, facility, identity, modes
 
 panel_info_data: dict[str, object] = {}
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

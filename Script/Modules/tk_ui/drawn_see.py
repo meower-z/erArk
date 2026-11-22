@@ -4,8 +4,8 @@ H 服装面板绘制时判定的内衣可见性
 场景面板在写缓冲区之外绘制，H 服装面板绘制时不写 GameState，只用 remember
 暂存交互对象与本次判定的内衣可见性。keep 在当前写缓冲区里把暂存值写入该角色的
 cloth_see 并清空记录；交互对象已换或双方都不在 H 中时，只清空记录。
-选择草稿开启时（player_pick.drafting）先调 keep，使草稿后续写入（行动开始时重放）
-建立在它之上；点服装按钮在草稿末尾重绘后再调一次 keep。
+进入选择草稿（player_pick.drafting）时先调 keep，使后续写入（行动开始时重放）
+建立在它之上；点服装按钮在草稿块末尾重绘后再调一次 keep。
 之后第一个行动开始或结束时，kernel.StartAction 输入钩子在开始函数前调用 keep，
 kernel.EndAction 输入钩子在结束结算前调用 keep。
 kernel.Reset 换入整个 GameState 时丢弃记录。
@@ -13,12 +13,8 @@ kernel.Reset 换入整个 GameState 时丢弃记录。
 
 from collections.abc import Mapping
 
-from Script.Core import cache_control, game_type
 from Script.Kernel import core
 from Script.Modules.domains import activity, flags, wardrobe
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 _drawn: tuple[int, dict[int, bool]] | None = None
 """ 上次绘制记下的 (交互对象 id, {部位: 是否可见})，无记录时为 None """

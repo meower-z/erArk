@@ -10,20 +10,12 @@ import psutil
 import signal
 from types import FunctionType
 from typing import Callable, Literal, overload
-from Script.Core import (
-    text_handle,
-    io_init,
-    get_text,
-    game_type,
-    cache_control,
-    constant,
-)
+from Script.Core import text_handle, io_init, get_text, constant
 from Script.Modules.tk_ui import orders
 from Script.UI.Moudle import view
 
-# 全局缓存
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
+benchmark_mode = False
+""" 性能分析脚本置为 True 时，等待暂停立即返回 """
 
 # 翻译函数
 _: FunctionType = get_text._
@@ -446,7 +438,7 @@ def askfor_wait() -> None:
     功能描述：等待用户任意输入后继续
     """
     # 基准模式下直接跳过等待，避免自动化流程阻塞
-    if getattr(cache, "benchmark_mode", False):
+    if benchmark_mode:
         return
 
     view.wframe_mouse.w_frame_up = 0

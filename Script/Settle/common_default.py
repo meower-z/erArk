@@ -5,7 +5,7 @@ from types import FunctionType
 from Script.Design import attr_calculation, character_handle, game_time
 from Script.Design import handle_ability, handle_premise, map_handle
 from Script.System.First_Record_System import first_record_handle
-from Script.Core import cache_control, constant, game_type, get_text, num
+from Script.Core import constant, game_type, get_text, num
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel, system_setting
@@ -28,8 +28,6 @@ _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 

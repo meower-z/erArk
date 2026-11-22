@@ -1,7 +1,7 @@
 """管理罗德岛的基建界面面板与干员工作岗位的调整"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, flow_handle
+from Script.Core import get_text, flow_handle
 from Script.Core import constant, num
 from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
@@ -13,8 +13,6 @@ from Script.Modules.domains import hypnosis, maintenance, needs, prison, recruit
 from Script.Modules.domains import relations, roster, visitor, warehouse, work
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

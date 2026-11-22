@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from types import FunctionType
 from Script.UI.Moudle import draw
-from Script.Core import cache_control, game_type, get_text, num
+from Script.Core import game_type, get_text, num
 from Script.Config import game_config, normal_config
 from Script.Design import attr_text, game_time
 from Script.UI.Panel import character_info_head, hypnosis_panel
@@ -15,8 +15,6 @@ from Script.Modules.domains import playthrough, identity
 if TYPE_CHECKING:
     import datetime
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

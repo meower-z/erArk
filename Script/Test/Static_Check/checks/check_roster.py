@@ -18,17 +18,13 @@ import math
 import os
 
 from Script.Config import game_config
-from Script.Core import cache_control, constant
+from Script.Core import constant
 from Script.Modules.domains import abilities, activity, chara_life, commission
 from Script.Modules.domains import diplomacy, facility, flags, location, modes
 from Script.Modules.domains import playthrough, prison, recruit, relations
 from Script.Modules.domains import roster, scene_state, visitor, work, identity
 from ..check_registry import CheckFailure, register_check, make_failure
-from typing import TYPE_CHECKING
 from Script.Design import game_time
-
-if TYPE_CHECKING:
-    from Script.Core import game_type
 
 # ------------------------------- 共用小工具 -------------------------------
 
@@ -44,9 +40,8 @@ def _spath(pos: object) -> str:
     return ""
 
 
-def _prison_dorms(cache: game_type.Cache) -> set[str]:
+def _prison_dorms() -> set[str]:
     """
-    参数: cache -- 全局缓存
     返回值: Set[str] -- 全部带Prison标签的场景路径集合(关押/牢1..牢8)
     功能: 按场景标签动态推导合法牢房集合，避免子串匹配或写死路径
     """
@@ -57,9 +52,8 @@ def _prison_dorms(cache: game_type.Cache) -> set[str]:
     }
 
 
-def _guest_rooms(cache: game_type.Cache) -> set[str]:
+def _guest_rooms() -> set[str]:
     """
-    参数: cache -- 全局缓存
     返回值: Set[str] -- 全部带Guest_Room标签的场景路径集合(访客/客房N)
     功能: 按场景标签动态推导合法客房集合
     """
@@ -102,9 +96,8 @@ def _invite_target() -> int:
     return target if type(target) is int else 0
 
 
-def _sev(cache: game_type.Cache, declared_warning: bool) -> str:
+def _sev(declared_warning: bool) -> str:
     """
-    参数: cache -- 全局缓存; declared_warning -- 该检查项在不变式文档中声明的severity是否为warning
     返回值: str -- 需拼在失败信息最前面的前缀，declared_warning为True或modes.debug()为True时为"[warning] "，否则空串
     功能: 统一处理"[warning]"消息前缀规则，同时实现"debug模式下全部条目整体降级为提示"的全局约定，
     因为debug面板可以绕开配套流程直改facility_open/be_bagged/imprisonment等flag
@@ -122,9 +115,8 @@ def check_roster_id_self_consistency() -> list[CheckFailure]:
     返回值: List[CheckFailure]: 失败记录列表
     功能: 校验cache.npc_id_got中每个id都存在角色对象，且角色自身cid与名册键一致，这是后续全部名册检查的地基
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     for cid in roster.active():
         if cid not in cd:
@@ -160,8 +152,7 @@ def check_player_id_not_lingering_in_roster() -> list[CheckFailure]:
     cache没有暴露"该discard调用是否已跑过"的持久标记，这里用game_round<=1作为"很可能是开局首回合、面板尚未打开过"
     的保守豁免，避免每局开头都刷一条假警报；游戏时间推进后(game_round>1)仍命中才报出
     """
-    cache = cache_control.cache
-    warn = _sev(cache, True)
+    warn = _sev(True)
     failures: list[CheckFailure] = []
     if not roster.has(0):
         return failures
@@ -187,9 +178,8 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
     功能: 校验在编NPC恰好出现在其position对应的那一个场景里，离线角色从所有场景消失，场景里不得有幽灵id。
     用os.sep拼路径，不加position != ["0","0"]的排除 —— 在线角色停在"罗德岛出口"(0/0)是合法状态
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     membership = _scene_membership()
     for path in constant.scene_data:
@@ -285,9 +275,8 @@ def check_offline_source_flag_matches_real_offline_state() -> (
     功能: 装袋/外勤/越狱三条路径都是"置来源flag→handle_chara_off_line"的原子写法。
     任一来源flag为真而角色仍在编、仍在某场景、或position未归零，即为半离线的幽灵。
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     membership = _scene_membership()
     off = ("field_commission", "escaping", "be_bagged")
@@ -329,9 +318,8 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
     功能: 带imprisonment的角色当且仅当是在册囚犯或逃跑中的前囚犯(escape_success故意保留imprisonment)；
     囚犯与逃犯两个集合互斥
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     imp = {cid for cid in cd if cid != 0 and flags.get(cid, "imprisonment")}
     esc = {cid for cid in cd if cid != 0 and flags.get(cid, "escaping")}
@@ -388,9 +376,8 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
     功能: 校验base.prisoners每条记录形状为[入狱时间, 逃脱概率]，概率夹在0..100之间且非bool污染，
     本人在编且sp_flag.imprisonment为True、escaping为False
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     for cid, rec in prison.prisoners().items():
         if cid == 0 or cid not in cd:
@@ -455,11 +442,10 @@ def check_prisoner_dormitory_uniqueness() -> list[CheckFailure]:
     功能: 每名囚犯的dormitory都必须在PRISON_DORMS(全部Prison标签场景，即牢1..牢8)集合内，且互不重复。
     唯一性是真实捕获点：指令前提SCENE_ONLY_ONE只看当前在场者，正在调教室的囚犯会让其牢房"看起来是空的"
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
-    prison_dorms = _prison_dorms(cache)
+    prison_dorms = _prison_dorms()
     dorm_to_cids: dict[str, list[int]] = {}
     prisoners = prison.prisoner_ids()
     for cid in prisoners:
@@ -502,9 +488,8 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
     用position[0] == "关押"比对目录首段，不拼分隔符。囚犯与被装袋互斥 —— 装袋前提含T_IMPRISONMENT_0，
     且chara_become_prisoner首行清be_bagged
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     for cid in prison.prisoner_ids():
         if cid not in cd:
@@ -543,9 +528,8 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
     功能: escape_success依次置escaping→pop囚犯名册→handle_chara_off_line→创建追捕委托，
     并保留imprisonment。任一环缺失即为半态。position == ["0","0"]在此是离线的结果而非判据
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     membership = _scene_membership()
     for cid, c in cd.items():
@@ -588,9 +572,8 @@ def check_escapee_has_executable_capture_commission() -> list[CheckFailure]:
     牢房全满时抓捕结算会静默跳过归案，委托却照样标完成并出表，逃犯从此永久滞留escaping。
     依赖game_config.config_commission，若该配置为空(独立环境/测试未加载配置)则无法判定，直接跳过本条
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, True)
+    warn = _sev(True)
     failures: list[CheckFailure] = []
     if not game_config.config_commission:
         return failures
@@ -627,9 +610,8 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
     功能: 在编干员里最多只能有一名工作类型191的监狱长，监狱长(work.warden)非零时必须指向存在的角色，
     不能与那名在编191冲突。"wid非零而没有任何在编191"是可达残留，已拆到ROSTER-12作warning，不进本条
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     wid = work.warden()
     if type(wid) is not int:
@@ -694,9 +676,8 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
     功能: 期望状态：监狱长(work.warden)非零时该人在编、宿舍是关押区休息室、不是囚犯/访客、不在外勤。
     三项都可被合法操作打破(装袋前提未排除监狱长，玩家可把监狱长本人装袋后投入监牢)，故只作提示
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, True)
+    warn = _sev(True)
     failures: list[CheckFailure] = []
     wid = work.warden()
     if not wid or wid not in cd:
@@ -748,9 +729,8 @@ def check_confinement_training_setting_keys_and_range() -> list[CheckFailure]:
     结算路径对[4]/[13]直取(缺键KeyError)。type(v) is int而非isinstance，避免bool污染被当作合法整数放过。
     依赖game_config.config_confinement_training_setting，若为空(独立环境未加载配置)则循环自然不产生任何失败，等价于跳过本条
     """
-    cache = cache_control.cache
     settings = prison.settings()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     for cid in game_config.config_confinement_training_setting:
         option = game_config.config_confinement_training_setting_option.get(
@@ -797,9 +777,8 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
     功能: base.visitor的访客名册与sp_flag.vistor == 1的角色是同一批人，且当前访客都在在编名册(roster.active())里。
     不写成vistor != 0，因为前访客恒为2，是合法状态，不应被本条判为不一致
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     vis_flag = {cid for cid in cd if cid != 0 and flags.get(cid, "vistor") == 1}
     vis_reg = set(visitor.visitors())
@@ -849,11 +828,10 @@ def check_visitor_room_uniqueness() -> list[CheckFailure]:
     比"客房" in d的子串判定更强。注意：Linux上分配器room_full_path.split("\\")[-1]与配置房间名比对会失配，
     dormitory可能长期停在模板初值，本条在本机命中即为跨平台缺陷的真实证据，不应回头放宽检查
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
-    guest_rooms = _guest_rooms(cache)
+    guest_rooms = _guest_rooms()
     room_to_cids: dict[str, list[int]] = {}
     for cid in visitor.visitors():
         if cid not in cd:
@@ -903,8 +881,7 @@ def check_visitor_count_within_capacity() -> list[CheckFailure]:
     返回值: List[CheckFailure]: 失败记录列表
     功能: 访客数不超过visitor.capacity()按已开放客房数算出的访客上限。级别为warning
     """
-    cache = cache_control.cache
-    warn = _sev(cache, True)
+    warn = _sev(True)
     failures: list[CheckFailure] = []
     visitors = visitor.visitors()
     if len(visitors) > visitor.capacity():
@@ -931,8 +908,7 @@ def check_no_severely_overdue_visitors() -> list[CheckFailure]:
     功能: base.visitor里没有离开时刻已过去一整天或更久的访客。访客到期由跨日结算处理一次，
     "D日到期、D+1日00:00才结算"是正常窗口，阈值因此放到一整天，否则会周期性误报
     """
-    cache = cache_control.cache
-    warn = _sev(cache, True)
+    warn = _sev(True)
     failures: list[CheckFailure] = []
     for cid, end in visitor.visitors().items():
         delta = game_time.now() - end
@@ -959,9 +935,8 @@ def check_invite_visitor_shape_integrity() -> list[CheckFailure]:
     不加进度上界，因为客房满时settle_visitor_arrivals返回失败且不清零，进度停在>=100甚至继续增长是合法状态。
     本条的类型守卫由_invite_target复现，供ROSTER-19/21/27复用，各条各自调用_invite_target，不依赖调用顺序
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     raw = visitor.invite()
     problems = []
@@ -1004,9 +979,8 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
     会对一个已在编角色再跑一次get_new_character。用vistor != 1而非== 0 —— find_recruitable_npc只跳过vistor==1，
     前访客(vistor==2)是合法邀请目标。position == ["0","0"]在此是未入编角色的必要属性，不是离线判据
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     t = _invite_target()
     if not t:
@@ -1065,9 +1039,8 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
     里面不该有0、不存在的id，也不该有已在编或身份冲突的人。
     同样用vistor != 1(两个写入点都取自find_recruitable_npc，vistor == 2可合法入池)
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     for cid in recruit.pending():
         if cid == 0 or cid not in cd:
@@ -1122,9 +1095,8 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
     功能: 当前访客不能同时是待确认招募、邀请目标、囚犯、逃犯或外勤队员 —— 这些身份的在线规则互相冲突。
     C集合的构造自带形状守卫，不依赖ROSTER-25先跑通过
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     V = set(visitor.visitors())
     P = recruit.pending()
@@ -1168,8 +1140,7 @@ def check_recruit_line_shape_and_progress_range() -> list[CheckFailure]:
     进度上界<100由增量写入与结算相邻两行保证，不存在"已加未结"窗口。
     策略id子句依赖game_config.config_recruitment_strategy，若为空(独立环境未加载配置)则降级跳过该子句
     """
-    cache = cache_control.cache
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     strategy_ids = set(game_config.config_recruitment_strategy)
     for lid, rec in recruit.lines().items():
@@ -1221,9 +1192,8 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
     同一人不能同时主理两条线。不含cid in npc_id_got —— 派遣外勤不改work_type，把主专员派出去是常规操作，
     加在线子句必然长期误报
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     mains = [rec["main"] for rec in recruit.lines().values() if rec["main"]]
     dup = {cid for cid in mains if mains.count(cid) > 1}
@@ -1273,9 +1243,8 @@ def check_hr_operator_list_integrity() -> list[CheckFailure]:
     工作类型仍为71、所有在编的71号岗位都已收录。不做集合相等 —— 名册只在刷新时按npc_id_got重建，下线（移出npc_id_got）的
     成员留在名册里直到下一次刷新，只保留"在编71 ⊆ 列表"这一个方向
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     hr = work.roster(work.HR_WORK)
     dup = {cid for cid in hr if hr.count(cid) > 1}
@@ -1333,8 +1302,7 @@ def check_ongoing_commission_shape_and_member_uniqueness() -> (
     返回值: List[CheckFailure]: 失败记录列表
     功能: base.commission里进行中委托的id不为0，同一人不在一个委托的队伍里重复出现，也不同时在两个委托的队伍里
     """
-    cache = cache_control.cache
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     seen: dict[int, int] = {}
     for mid, r in commission.ongoing().items():
@@ -1372,9 +1340,8 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
     任一单向残留都要报出来。真实可达捕获点：本地外交官被派出外勤后基地返回该国时会对他调handle_chara_on_line，
     整体重建sp_flag把field_commission抹成0并塞回名册，而委托记录里还挂着他
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     membership_scene = _scene_membership()
     membership: dict[int, int] = {}
@@ -1437,9 +1404,8 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
     功能: 派遣候选表显式排除访客、助理、监狱长以及2类(临盆/产后/监禁)、7类(离线)异常；待确认招募与
     邀请目标本就不在在编名册内。这些身份同时成立意味着有别的流程绕过了派遣面板
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     C: set[int] = set()
     commission_of: dict[int, int] = {}
@@ -1515,8 +1481,7 @@ def check_vehicle_busy_count_conservation() -> list[CheckFailure]:
     功能: base.vehicles[vid] = (拥有数, 外勤中数)，外勤中数等于所有进行中委托里这种载具的出现次数且在0与拥有数之间，
     委托里出现的载具都在载具表里。完成结算先调settle_vehicle再删委托，计数错误会直接表现为"有车却派不出去"或负库存
     """
-    cache = cache_control.cache
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     used: collections.Counter[int] = collections.Counter()
     ongoing = commission.ongoing()
@@ -1577,8 +1542,7 @@ def check_ongoing_commission_id_valid_and_not_overdue() -> list[CheckFailure]:
     满足end_time > game_time(> 而非 >=，恰好到点的委托按完成条件本应已结算)。逾期判定排除debug模式与时停模式。
     id有效性依赖game_config.config_commission，若为空(独立环境未加载配置)则降级跳过该子句，仅保留结构与逾期判定
     """
-    cache = cache_control.cache
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     config_loaded = bool(game_config.config_commission)
     for mid, r in commission.ongoing().items():
@@ -1617,9 +1581,8 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
     外派到非当前所在国的外交官处于离线态，罗德岛抵达该国时会让他上线。本条大概率会报出真实缺陷：
     handle_chara_on_line整体重建sp_flag会把in_diplomatic_visit抹成0
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     current_country = location.country()
     posts = diplomacy.table()
@@ -1690,9 +1653,8 @@ def check_assistant_identity_exclusion() -> list[CheckFailure]:
     功能: 助理候选排除访客、监狱长以及2/7类异常。各写入点都做了过滤，且统一离线流程会调
     handle_assistant_reset把离线角色从助理位清掉 —— 命中即为某个任命流程漏清身份的真实问题
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     player = cd.get(0)
     if player is None:
@@ -1760,9 +1722,8 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
     功能: 玩家的sp_flag.bagging_chara_id与被搬运者的sp_flag.be_bagged必须互指；被装袋者必须离线，
     且不能同时是囚犯、访客、外勤或逃跑者。这对flag分居玩家与目标两个对象，是本域内最容易单边脱钩的一对
     """
-    cache = cache_control.cache
     cd = identity.table()
-    warn = _sev(cache, False)
+    warn = _sev(False)
     failures: list[CheckFailure] = []
     player = cd.get(0)
     if player is None:

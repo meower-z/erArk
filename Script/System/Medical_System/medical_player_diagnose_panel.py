@@ -7,13 +7,7 @@ from typing import Any, Mapping
 from types import FunctionType
 
 from Script.Config import game_config, normal_config
-from Script.Core import (
-    cache_control,
-    constant,
-    game_type,
-    get_text,
-    flow_handle,
-)
+from Script.Core import constant, get_text, flow_handle
 from Script.Design import attr_calculation, basement
 from Script.System.Medical_System import (
     medical_constant,
@@ -25,8 +19,6 @@ from Script.UI.Moudle import draw, view
 from Script.Modules.domains import abilities, activity, medical_patient
 from Script.Modules.domains import warehouse, identity
 
-cache: game_type.Cache = cache_control.cache
-""" 全局缓存对象 """
 _: FunctionType = get_text._
 """ 翻译函数 """
 window_width: int = normal_config.config_normal.text_width

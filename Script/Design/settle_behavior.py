@@ -7,7 +7,7 @@ import random
 from functools import wraps
 from types import FunctionType
 from typing import TYPE_CHECKING, Callable, ParamSpec, Protocol, TypeVar
-from Script.Core import cache_control, constant, constant_effect, game_type
+from Script.Core import constant, constant_effect, game_type
 from Script.Core import get_text, num, rich_text, text_handle
 from Script.Design import attr_calculation, attr_text, game_time
 from Script.Design import handle_premise, second_behavior, talk
@@ -23,8 +23,6 @@ from Script.Modules.domains import identity
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 _: FunctionType = get_text._

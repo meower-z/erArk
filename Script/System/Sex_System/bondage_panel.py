@@ -2,21 +2,13 @@
 
 from types import FunctionType
 from Script.UI.Moudle import draw, view
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
 from Script.Modules.domains import abilities, activity, h_state
 
 panel_info_data: dict[str, object] = {}
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

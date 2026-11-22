@@ -2,7 +2,7 @@
 
 import os
 from types import FunctionType
-from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import constant, flow_handle, game_type
 from Script.Core import get_text
 from Script.Design import (
     attr_calculation,
@@ -20,8 +20,6 @@ from Script.Modules.domains import abilities, activity, chara_life, facility
 from Script.Modules.domains import flags, location, relations, roster, visitor
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

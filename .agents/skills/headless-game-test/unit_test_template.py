@@ -56,9 +56,7 @@ def check(name: str, cond: object, extra: object = "") -> None:
 # ==== 1. 初始化链（照抄 game.py 顺序，顺序不能乱） ====
 import auto_build_config  # noqa: F401,E402  增量构建游戏数据
 from Script.Config import normal_config  # noqa: E402
-from Script.Core import game_type, cache_control  # noqa: E402
 
-cache_control.cache = game_type.Cache()  # 必须在 game_config.init() 之前
 # 断言不受本机 config.local.ini 影响
 os.environ[normal_config.DEFAULTS_ONLY_ENV] = "1"
 normal_config.init_normal_config()
@@ -85,6 +83,7 @@ from Script.Core import (
     constant,
     constant_effect,
     flow_handle,
+    game_type,
     save_handle,
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
@@ -95,7 +94,6 @@ from Script.Modules.domains import abilities, status
 from tests import chara_data, kernel_data
 
 kernel_state.reset_clock(kernel_state.first_clock())
-cache = cache_control.cache
 
 # ==== 2. 全局前置（不做这两件事会在结算里 KeyError） ====
 # 数值结算会读全局设置 normal_config.system_setting 的各项，System_Setting() 默认是空壳

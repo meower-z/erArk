@@ -1,6 +1,6 @@
 """日常游戏流程：把各功能面板按面板id注册到面板调度中"""
 
-from Script.Core import constant, cache_control, game_type
+from Script.Core import constant
 from Script.Design import handle_panel
 from Script.UI.Panel import (
     all_npc_position_panel,
@@ -50,8 +50,6 @@ from Script.UI.Panel import diary_panel, play_gomoku_panel
 from Script.Config import normal_config
 from Script.Modules.domains import activity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 

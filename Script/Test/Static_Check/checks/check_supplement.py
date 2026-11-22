@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-from Script.Core import cache_control, constant
+from Script.Core import constant
 from Script.Config import game_config
 from Script.Design import map_handle
 from Script.Modules.domains import (
@@ -167,8 +167,7 @@ def check_time_stop_unconscious_survives_off_list() -> list[CheckFailure]:
         不得按在编名单过滤，因为时停开关只扫描当时的在编名单与玩家，时停中离队的角色可能漏清。
         级别为warning，新周目沿用身份表也可能带入残留状态
     """
-    cache = cache_control.cache
-    if cache is None or modes.time_stop():
+    if modes.time_stop():
         return []
     character_data = identity.table()
     npc_id_got: set[int] = roster.active()

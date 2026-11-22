@@ -3,13 +3,7 @@
 from types import FunctionType
 from Script.System.Sex_System.hidden_sex_panel import _settle_instruct
 from Script.UI.Moudle import draw, view
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.Config import normal_config
 from Script.Design import handle_premise, map_handle
 from Script.Modules.domains import achievement, activity, flags, modes
@@ -17,8 +11,6 @@ from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -151,7 +143,7 @@ class Select_Exhibitionism_Sex_Mode_Panel:
         target_character_id = activity.target(0)
 
         # 从被发现面板跳转过来（结算途中）时当场判定邀请；玩家选择时只定下行动，邀请在行动开始时判定，
-        #    没过的换成邀请露出失败（它的开始代码提示失败），这里写下的模式随草稿一起作废
+        #    没过的换成邀请露出失败（它的开始代码提示失败），这里写下的模式随选择写入一起丢弃
         if (
             self.sex_be_discovered_flag
             and not instuct_judege.calculation_instuct_judege(

@@ -1,18 +1,12 @@
 """选择并绘制断面图"""
 
 from Script.UI.Moudle import draw
-from Script.Core import (
-    cache_control,
-    game_path_config,
-    game_type,
-)
+from Script.Core import game_path_config
 from Script.Config import normal_config
 from Script.Design import handle_premise
 from Script.Modules.domains import activity
 
 game_path = game_path_config.game_path
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 width = normal_config.config_normal.text_width

@@ -2,7 +2,7 @@
 
 import random
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, constant
+from Script.Core import game_type, get_text, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
@@ -12,8 +12,6 @@ from Script.Modules.domains import economy, facility, official, power, warehouse
 from Script.Modules.domains import fridge, recruit, roster, tallies, work
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏内缓存数据 """
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 width = normal_config.config_normal.text_width

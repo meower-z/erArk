@@ -14,8 +14,6 @@ from Script.Core import (
     text_handle,
     get_text,
     value_handle,
-    game_type,
-    cache_control,
 )
 from Script.Config import normal_config
 
@@ -26,8 +24,6 @@ if TYPE_CHECKING:
 
 _: FunctionType = get_text._
 """ 翻译api """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 class SingleColumnButton:

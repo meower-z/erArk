@@ -46,7 +46,7 @@ class EventPurityTest(SlowTestCase):
         original = core._fire_event
 
         def stable(fp: tuple) -> tuple:
-            return (fp[0], fp[1], fp[3], fp[4])
+            return (fp[0], fp[2], fp[3])
 
         def check_conditions() -> bool:
             game_state = core._context.state

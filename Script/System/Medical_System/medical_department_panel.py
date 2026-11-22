@@ -8,21 +8,13 @@ from __future__ import annotations
 
 from typing import Any, cast
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 from Script.UI.Moudle import draw, view
 from Script.System.Medical_System import medical_constant, medical_service
 from Script.Modules.domains import abilities, facility, medical, identity
 
-cache: game_type.Cache = cache_control.cache
-""" 全局缓存对象 """
 _: FunctionType = get_text._
 """ 翻译函数 """
 window_width: int = normal_config.config_normal.text_width

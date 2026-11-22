@@ -4,11 +4,12 @@ gameplay_resolution 的工作集：旧的命令式代码经它读写 GameState �
 领域模块用 register 登记自己的键。代码用 get 读，用 put（整值替换）或 change（交给规则的一次操作）写。
 写入记在当前的缓冲区里。同一缓冲区里之后的 get 读得到这些写入，GameState 本身不变。缓冲区有三种：
 - 一步结算中（core.in_settlement）是这一步的缓冲区，kernel.ApplyEffects 的输入钩子 flush 把它换成效果。
-- 玩家选择的草稿里（player_pick.drafting）是选择的缓冲区。close_pick 交回的写入（含 forget）随定下的行动走，
+- 玩家选择块里（player_pick.drafting）是选择的缓冲区。close_pick 交回的写入（含 forget）随定下的行动走，
   行动开始时 replay 把它们放进那一步的缓冲区。
 - based_on(game) 里是以 game 为底的缓冲区（Reset 的每一步）。调用方把它的 effects() 套到结果上。
 在别处写入报 RuntimeError，干员选行动时也一样。
-角色在 GameState.characters 里时，这个角色的键存在角色数据里。不在时，键存在全局键 roster.offstage 里这个角色的一项下。
+角色在 GameState.characters 里时，这个角色的键存在角色数据里；
+不在时，键存在全局键 roster.offstage 里这个角色的一项下。
 角色加入或离开花名册时，flush 把这个角色的数据搬过去。
 缓冲区换成效果时比较 roster.offstage 的角色顺序，并只对本缓冲区停放、搬动或遗忘的角色用 same 比较新旧值。
 两者只差键的顺序或值的类型时，也写入新值。
@@ -333,7 +334,7 @@ def change(who: str | None, key: str, op: str, operand: core.JSON) -> None:
 
 def forget(cid: int) -> None:
     """
-    角色从缓存里删掉时调用：在当前缓冲区记下这个角色，换成效果时丢掉这个角色停放在 roster.offstage 里的数据。
+    角色从身份表移除时调用：在当前缓冲区记下这个角色，换成效果时丢掉这个角色停放在 roster.offstage 里的数据。
     在玩家选择里调用时，记下的角色随定下的行动走，行动开始时由 replay 放进那一步的缓冲区
     Keyword arguments:
     cid -- 角色id
@@ -356,6 +357,11 @@ def based_on(game: core.GameState) -> Iterator[_Buffer]:
         yield buffer
     finally:
         _stack.remove(buffer)
+
+
+def picking() -> bool:
+    """存在打开的玩家选择缓冲区时为 True"""
+    return any(buffer.pick for buffer in _stack)
 
 
 def open_pick() -> _Buffer:
@@ -451,8 +457,8 @@ def drop_on_reset(game: core.GameState) -> core.GameState:
 
 def reconcile(game: core.GameState) -> core.GameState:
     """
-    Reset 步骤用：roster.offstage 里花名册上的角色的数据搬进角色数据，缓存里还有的其余角色留在 roster.offstage，
-    缓存里已没有的角色的数据丢掉。同一个键两处都有时报 RuntimeError
+    Reset 步骤用：roster.offstage 里在花名册上的角色的数据搬进角色数据，身份表里还有的其余角色留在
+    roster.offstage，身份表里没有的角色的数据丢掉。同一个键两处都有时报 RuntimeError
     Keyword arguments:
     game -- 换入的状态
     Return arguments:

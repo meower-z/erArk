@@ -57,7 +57,7 @@ UI_FIELDS = (
     "cmd_data",
     "is_collection",
 )
-""" 旧版本存在缓存对象上的界面临时状态、玩家的面板选择与不再使用的字段：Cache 没有它们 """
+""" 旧存档缓存对象上的界面临时状态、面板选择与读档时忽略的属性名 """
 ISLAND_UI_FIELDS = (
     "makefood_data",
     "makefood_filter_type",
@@ -70,7 +70,7 @@ ISLAND_UI_FIELDS = (
     "now_show_book_cid_of_type",
     "reader_now",
 )
-""" 旧版本存在罗德岛对象上的界面临时状态与玩家的面板选择：Rhodes_Island 没有它们 """
+""" 旧存档罗德岛对象上的界面临时状态与面板选择属性名 """
 PICKLED_NEEDS = {
     "hit_point": "hit",
     "hit_point_max": "hit_max",

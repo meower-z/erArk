@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from typing import TypeGuard
 
-from Script.Core import cache_control, constant
+from Script.Core import constant
 from Script.Design import map_handle
 from Script.Modules.domains import action_info, activity, education, flags
 from Script.Modules.domains import growth, roster, visitor, work, modes
@@ -82,10 +82,8 @@ def _valid_scene_path_or_empty(
     )
 
 
-def _live_ids(cache: game_type.Cache) -> set:
+def _live_ids() -> set:
     """
-    参数:
-        cache: 全局状态缓存对象
     返回值:
         set: 在图角色id集合，等于 roster.active() 并入玩家id 0
     功能:
@@ -450,11 +448,10 @@ def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
         校验 LIVE 域内角色的 dormitory（场景路径字符串）只允许是 constant.scene_data 的键，或未分配哨兵 ""/"无"。
         两个哨兵都必须放行：宿舍管理允许在线角色暂时落在""空白位，初始化与访客分房合法使用"无"
     """
-    cache = cache_control.cache
     failures = []
     character_data = identity.table()
     scene_data = constant.scene_data
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         c = character_data.get(cid)
         if c is None:
             continue
@@ -520,14 +517,13 @@ def check_h_state_target_same_scene() -> list[CheckFailure]:
         "所有角色的持久目标都必须同场"——引擎明确容忍普通目标离场，从不重置交互对象。
         级别为warning：H结束到NPC AI清理is_h之间存在一拍误报窗口
     """
-    cache = cache_control.cache
     failures = []
     character_data = identity.table()
     pl = character_data.get(0)
     bagging_id = (
         flags.get(pl.cid, "bagging_chara_id") if pl is not None else None
     )
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         c = character_data.get(cid)
         if c is None:
             continue
@@ -1009,10 +1005,9 @@ def check_permanent_dormitory_not_equal_to_dormitory() -> list[CheckFailure]:
         离开特殊房间时，restore_character_dormitory 清空登记宿舍。登记宿舍等于当前宿舍，说明离开时没有清空。
         级别为warning
     """
-    cache = cache_control.cache
     failures = []
     character_data = identity.table()
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         c = character_data.get(cid)
         if c is None:
             continue
@@ -1045,13 +1040,12 @@ def check_permanent_dormitory_is_valid_normal_room() -> list[CheckFailure]:
         register_permanent_dormitory() 写入的登记宿舍是角色当时住的开放普通宿舍。
         写入之后那间宿舍关闭时，这条也会报（占用表只统计当前开放的房间），这是可接受的噪声。级别为warning
     """
-    cache = cache_control.cache
     failures = []
     character_data = identity.table()
     from Script.System.Dormitory_System import common as dormitory_common
 
     normal_rooms = set(dormitory_common.get_open_dormitory_room_occupancy())
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         c = character_data.get(cid)
         if c is None:
             continue

@@ -2,11 +2,7 @@
 
 from __future__ import annotations
 
-from Script.Core import (
-    flow_handle,
-    cache_control,
-    game_type,
-)
+from Script.Core import flow_handle
 from Script.Config import normal_config
 from typing import TYPE_CHECKING
 from Script.UI.Moudle import view
@@ -19,8 +15,6 @@ clear_default_flow = flow_handle.clear_default_flow
 # 绑定或重新绑定一个命令
 bind_cmd = flow_handle.bind_cmd
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 last_char: str
 """ 最近打印的命令文字的末字符，由 pcmd 与 pimagecmd 写入 """
 

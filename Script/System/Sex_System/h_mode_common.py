@@ -1,12 +1,10 @@
 """获取角色当前H模式的描述文本"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import get_text
 from Script.Design import handle_premise
 from Script.Modules.domains import flags
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

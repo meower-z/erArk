@@ -82,7 +82,6 @@ sys.path.insert(0, os.getcwd())  # 当前目录即被测 checkout 的根目录
 from tests.world import FullWorld
 
 world = FullWorld.load()
-cache = world.cache
 # 推进中要玩家选择时，按 world.player.press("按钮文字的一部分") 事先安排；没安排就抛 UnplannedInput（退出码 2），
 # 并列出屏幕上的按钮
 

@@ -8,7 +8,6 @@ from types import FunctionType
 from Script.Core import (
     constant,
     constant_promise,
-    cache_control,
     game_type,
     get_text,
     flow_handle,
@@ -39,8 +38,6 @@ from Script.Modules.domains import h_state, needs, player_collection, roster
 from Script.Modules.domains import relations, scene_state
 from Script.Modules.domains import identity, modes
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 width: int = normal_config.config_normal.text_width
@@ -53,7 +50,7 @@ InstructReturn = TypeVar("InstructReturn")
 
 def handle_instruct(instruct: str) -> None:
     """
-    处理执行指令：在玩家选择的草稿里运行（player_pick.drafting），指令写的值随它定下的行动走，
+    处理执行指令：在玩家选择草稿（player_pick.drafting）里运行，指令写的值随它定下的行动走，
     没有定下行动而改了游戏状态时随一个 0 分钟的 Edit 走
     Keyword arguments:
     instruct -- 指令id（字符串）

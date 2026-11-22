@@ -1,6 +1,5 @@
 """事件描述文本的绘制面板"""
 
-from Script.Core import cache_control, game_type
 from Script.Design import talk
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
@@ -9,8 +8,6 @@ from Script.Modules.domains import identity
 
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"

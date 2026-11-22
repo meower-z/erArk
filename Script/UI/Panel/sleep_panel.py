@@ -5,13 +5,7 @@ from fractions import Fraction
 from types import FunctionType
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import diary_panel
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.Config import normal_config
 from Script.Design import (
     map_handle,
@@ -29,8 +23,6 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

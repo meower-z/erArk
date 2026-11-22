@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from Script.Core import game_type
     from Script.UI.Panel import see_character_info_panel
 
 
@@ -106,9 +105,7 @@ def ensure_environment(args: argparse.Namespace) -> None:
     init_game_environment(env_args)
 
 
-def resolve_character_id(
-    cache: game_type.Cache, character_id: int, character_name: str
-) -> int:
+def resolve_character_id(character_id: int, character_name: str) -> int:
     """根据参数确定目标角色 id"""
     from Script.Modules.domains import identity
 
@@ -177,17 +174,13 @@ def main() -> None:
     ensure_environment(args)
 
     from Script.Config import normal_config
-    from Script.Core import cache_control
     from Script.UI.Panel import see_character_info_panel
 
-    cache = cache_control.cache
     if args.panel_width <= 0:
         args.panel_width = normal_config.config_normal.text_width
     center_status = bool(args.center_status)
 
-    character_id = resolve_character_id(
-        cache, args.character_id, args.character_name
-    )
+    character_id = resolve_character_id(args.character_id, args.character_name)
     from Script.Modules.domains import identity
 
     character_data = identity.of(character_id)

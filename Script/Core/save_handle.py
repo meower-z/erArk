@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import os
-import pickle
 import shutil
 import datetime
-import uuid
 from types import FunctionType
 from Script.Core import (
-    cache_control,
     constant,
     game_path_config,
     game_type,
@@ -38,29 +35,36 @@ from Script.Modules.domains import tallies, visitor, wardrobe, warehouse
 from Script.Modules.domains import chara_life, chara_profile, identity
 from Script.Modules.domains import npc_template, relations, scene_state
 from Script.Modules.domains import bookmarks
-from Script.Modules.save_load import index, unsaved, upgrade
+from Script.Modules.save_load import index, legacy_pickle, upgrade
 
 if TYPE_CHECKING:
     from typing import Any
 
 game_path = game_path_config.game_path
-cache: game_type.Cache = cache_control.cache
 _: FunctionType = get_text._
-STALE_UI_FIELDS = (
-    "current_draw_elements",
-    "current_return_list",
-    "current_input_request",
-    "current_interaction_type",
-    "pending_event_text",
+UNSAVED_CACHE = frozenset(
+    {
+        "map_data",
+        "recipe_data",
+        "sun_phase",
+        "moon_phase",
+        "old_character_id",
+        "over_behavior_character",
+    }
 )
-""" 读档时丢掉的界面字段名，game_type.Cache 没有这些字段 """
-CLOCK_FIELDS = (
-    "game_time",
-    "pre_game_time",
-    "game_update_flow_running",
-    "font_size",
+""" 旧存档文件 "1" 里可能带着、读档导入前直接丢掉的顶层字段（由数据文件重建） """
+UNSAVED_ISLAND = frozenset(
+    {
+        "warehouse_capacity",
+        "people_max",
+        "visitor_max",
+        "medical_bed_limit",
+        "life_zone_max",
+        "research_zone_max",
+        "soldier_max",
+    }
 )
-""" 读档时丢掉的旧存档字段：游戏时钟（在内核里）、旧主循环的嵌套深度、字号（在 config.ini 里） """
+""" 旧存档罗德岛对象上可能带着、读档导入前直接丢掉的字段（由数据文件与设施等级重算） """
 
 
 def get_save_dir_path(save_id: str) -> str:
@@ -83,55 +87,21 @@ def judge_save_file_exist(save_id: str) -> bool:
 
 def establish_save(save_id: str) -> None:
     """
-    把游戏存进 save_id 号存档：缓存写进文件 "1"，存档头写进文件 "0"，内核状态写进文件 "2"
+    把当前游戏状态作为 save.json 保存到存档位 save_id（kernel_state.write）
     全局设置不随存档，有改动时另写进游戏目录下的 settings.json
     Keyword arguments:
     save_id -- 存档id
-    Return arguments:
-    无
     """
-    from Script.Modules.save_load import settings
+    from Script.Modules.save_load import kernel_state, settings
 
-    establish_save_linux(save_id)
-    settings.save()
-
-
-def establish_save_linux(save_id: str) -> None:
-    """
-    针对linux的并行自动存档函数
-    笔记:得益于unix的fork机制,子进程直接复制了一份内存,效率高,且不用创建传参管道,数据进程安全,不受玩家操作影响
-    Keyword argumentsL
-    save_id -- 当前存档id
-    """
-    from Script.Modules.save_load import kernel_state
-
-    token = uuid.uuid4().hex
-    save_verson = {
+    head: dict[str, str] = {
         "game_verson": normal_config.config_normal.verson,
-        "game_time": game_time.now(),
+        "game_time": game_time.now().isoformat(),
         "character_name": identity.of(0).name,
-        "save_time": datetime.datetime.now(),
-        kernel_state.TOKEN: token,
+        "save_time": datetime.datetime.now().isoformat(),
     }
-    write_save_data(save_id, index.CACHE_FILE, cache)
-    index.write_head(save_id, save_verson)
-    kernel_state.write(save_id, token)
-
-
-def write_save_data(save_id: str, data_id: str, write_data: object) -> None:
-    """
-    将存档数据写入文件
-    Keyword arguments:
-    save_id -- 存档id
-    data_id -- 要写入的数据在存档下的文件id
-    write_data -- 要写入的数据
-    """
-    save_path = get_save_dir_path(save_id)
-    file_path = os.path.join(save_path, data_id)
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    with open(file_path, "wb+") as f:
-        unsaved.dump(write_data, f)
+    kernel_state.write(save_id, head)
+    settings.save()
 
 
 _ENTERTAINMENT_CID_MIGRATE = {175: 152, 176: 153, 177: 154, 178: 155}
@@ -235,12 +205,13 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
     """
     去掉存档里书籍配置中没有的书与书籍类型的引用，再跑一次不改任何东西
     Keyword arguments:
-    loaded_dict -- 读入的存档字典（Cache 的 __dict__，已按默认值补齐字段）
+    loaded_dict -- 读档载入的旧存档属性表（character_data 已按身份表补齐）
     Return arguments:
     int -- 改动的处数
     功能描述:
         图书馆（library）：借阅表去掉这些书（谁借着都一样），阅读推荐去掉这些类型；
-        每个角色：借书集合去掉这些书，借书卡上这些书没还的记录记为此刻（读档时是存档时刻）还了，正在读的书是这些书时书号与书名归零。
+        每个角色：借书集合去掉这些书，借书卡上这些书没还的记录记为此刻（读档时是存档时刻）还了，
+        正在读的书是这些书时书号与书名归零。
         阅读进度不动：成就按读完的书数统计
     """
     holders = library.holders()
@@ -288,9 +259,10 @@ def _normalize_save_path(path_text: Any) -> Any:
 def _normalize_life(loaded_dict: dict[str, Any]) -> None:
     """
     读档时整理角色键里的场景路径与娱乐编号。在角色数据搬进 GameState 之后调用
-    chara_life.PATHS 里的场景路径换成本系统的路径分隔符。当天三个娱乐时段的编号经 _migrate_entertainment_cid 换算
+    chara_life.PATHS 里的场景路径换成本系统的路径分隔符。
+    当天三个娱乐时段的编号经 _migrate_entertainment_cid 换算
     Keyword arguments:
-    loaded_dict -- 存档缓存的属性表
+    loaded_dict -- 旧存档的属性表
     """
     for cid in loaded_dict["character_data"]:
         for key in chara_life.PATHS:
@@ -316,9 +288,7 @@ def _normalize_save_path_keys(path_dict: Any) -> Any:
     }
 
 
-def _migrate_first_record_flat_fields(
-    cid: int, character: game_type.Character
-) -> None:
+def _migrate_first_record_flat_fields(cid: int, character: object) -> None:
     """
     将旧存档FIRST_RECORD中的平铺处女字段迁移进first_part_sex_dict
     Keyword arguments:
@@ -415,7 +385,7 @@ def _migrate_first_record_flat_fields(
 
 
 def _clear_soft_egg_race_pregnancy(
-    cid: int, character: game_type.Character, soft_egg_enabled: bool = True
+    cid: int, character: object, soft_egg_enabled: bool = True
 ) -> None:
     """
     清除旧存档里无壳卵生种族角色正在进行的胎生孕程
@@ -458,27 +428,27 @@ def _clear_soft_egg_race_pregnancy(
         )
 
 
-def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
+def _normalize_loaded_save_paths(loaded_dict: dict[str, Any]) -> None:
     """
-    归一化反序列化存档中已知的结构性路径字段
+    归一化反序列化旧存档中已知的结构性路径字段
     Keyword arguments:
-    loaded_cache -- 从存档反序列化得到的游戏缓存
+    loaded_dict -- 旧存档的属性表
     Return arguments:
     None
     """
-    scene_data = vars(loaded_cache).get("scene_data")
+    scene_data = loaded_dict.get("scene_data")
     if isinstance(scene_data, dict):
-        vars(loaded_cache)["scene_data"] = _normalize_save_path_keys(scene_data)
+        loaded_dict["scene_data"] = _normalize_save_path_keys(scene_data)
 
-    # 无壳卵生开关：本函数早于 playthrough.adopt_old_save 执行，且此时全局cache尚未被替换，只能从存档自身读：
-    # 版本 12 之前的存档在缓存上，版本 12 起在换入的 GameState 里，更旧的存档在设置对象里
+    # 无壳卵生开关：本函数早于 playthrough.adopt_old_save 执行，从存档自身读：
+    # 版本 12 之前的旧存档在文件 "1" 的属性表里，版本 12 起在换入的 GameState 里，更旧的存档在设置对象里
     # 旧存档没有该设置项，.get兜底为开启，正是旧存档迁移应有的行为
-    loaded_birth_setting = getattr(
-        loaded_cache, "birth_type_setting", None
+    loaded_birth_setting = loaded_dict.get(
+        "birth_type_setting"
     ) or playthrough.settings(playthrough.BIRTH_TYPE)
     if not loaded_birth_setting:
         loaded_birth_setting = getattr(
-            getattr(loaded_cache, "all_system_setting", None),
+            loaded_dict.get("all_system_setting"),
             "birth_type_setting",
             None,
         )
@@ -488,7 +458,7 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
             loaded_birth_setting.get(pregnancy_constant.BIRTH_TYPE_EGG_SOFT, 1)
         )
 
-    character_data = getattr(loaded_cache, "character_data", None)
+    character_data = loaded_dict.get("character_data")
     if isinstance(character_data, dict):
         for cid, character in character_data.items():
             # 这里早于 old_chara_to_new 的迁移运行。旧存档的角色对象上可能有 pre_dormitory。
@@ -581,62 +551,38 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
             _migrate_first_record_flat_fields(cid, character)
 
 
-def _load_save_datetime(*args: Any) -> datetime.datetime:
+def load_save(save_id: str) -> dict[str, Any]:
     """
-    读存档时还原存档里的普通 datetime：旧版本存的游戏时间都是普通 datetime，按游戏日历规整成
-    GameTime（不在游戏日历上的时间按下一个季月的1日0时算）
-    公元1年的缺省占位时间规整后仍在公元1年，各处按 year <= 1 判断未设置
-    Keyword arguments:
-    args -- pickle 记录的 datetime 构造参数
-    Return arguments:
-    GameTime -- 规整后的游戏时间
-    """
-    from Script.Design import game_time
-
-    return game_time.to_game_time(datetime.datetime(*args))
-
-
-class SaveUnpickler(pickle.Unpickler):
-    """读存档用的 Unpickler：把存档里的普通 datetime 换成游戏时间 GameTime，兼容旧存档"""
-
-    def find_class(self, module: str, name: str) -> Any:
-        """
-        按模块名与类名取类，普通 datetime 换成 _load_save_datetime；旧存档里 game_type 的鼠标状态类已搬到 view；
-        旧存档里医疗系统的病人类解开成 medical.PickledPatient
-        Keyword arguments:
-        module -- 模块名
-        name -- 类名
-        Return arguments:
-        任意 -- 类或构造函数
-        """
-        if module == "datetime" and name == "datetime":
-            return _load_save_datetime
-        if (module, name) == ("Script.Core.game_type", "WFrameMouse"):
-            return view.WFrameMouse
-        if name == "MedicalPatient" and module.endswith(".medical_constant"):
-            return medical.PickledPatient
-        return super().find_class(module, name)
-
-
-def load_save(save_id: str) -> game_type.Cache:
-    """
-    按存档id读取存档数据
+    读取读档导入用的旧存档属性表。save.json 槽位返回空字典，旧槽位经 legacy_pickle 解开文件 "1"。
+    结果必含 rhodes_island 对象，并丢掉 UNSAVED_CACHE 与 UNSAVED_ISLAND 中的字段。
+    npc_tem_data 里存为 None 的项按配置模板补回，配置里没有该键时删去
     Keyword arguments:
     save_id -- 存档id
     Return arguments:
-    game_type.Cache -- 游戏缓存数据
+    dict -- 属性名到值
     """
-    save_path = get_save_dir_path(save_id)
-    file_path = os.path.join(save_path, "1")
-    with open(file_path, "rb") as f:
-        loaded_cache = SaveUnpickler(f).load()
-    unsaved.restore(loaded_cache)
-    return loaded_cache
+    loaded: dict[str, Any] = {}
+    if not index.is_json(save_id):
+        loaded = legacy_pickle.cache(index.file(save_id, index.CACHE_FILE))
+    island = loaded.setdefault("rhodes_island", legacy_pickle.LegacyObject())
+    for name in UNSAVED_CACHE & loaded.keys():
+        del loaded[name]
+    for name in UNSAVED_ISLAND & vars(island).keys():
+        del vars(island)[name]
+    templates = loaded.get("npc_tem_data")
+    if isinstance(templates, dict):
+        config = character_config.character_tem_list
+        for key in [k for k, v in templates.items() if v is None]:
+            if key in config:
+                templates[key] = config[key]
+            else:
+                del templates[key]
+    return loaded
 
 
 def input_load_save(save_id: str) -> None:
     """
-    读档：游戏缓存与内核的 GameState 都换成存档里的（kernel_state.load，读档的步骤见 save_load.reset）；
+    读档：内核的 GameState 换成存档里的（kernel_state.load，读档的步骤见 save_load.reset）；
     玩家选行动时调用则中止这次选择
     Keyword arguments:
     save_id -- 存档id
@@ -648,26 +594,24 @@ def input_load_save(save_id: str) -> None:
 
 def install_save(save_id: str, version: int) -> None:
     """
-    读档的 Reset 步骤：解开文件 "1" 后调 npc_template.lift，版本 0 补默认值，24 个 adopt（含 bookmarks，19 计数）搬
-    罗德岛属性与收藏地点。ID 迁移后 flags、action_info、player_ability、player_collection 搬四项。修编号后 abilities
-    （计数）与 inventory、wardrobe、body_manage、status 搬入。替换先调 chara_key.lift，重建前搬 relations、chara_life、
-    chara_profile。重建后 adopt_pickled、npc_template（存局内模板并删 6/7 号素质，计数）、activity（计数）、pregnancy、
-    growth 搬入。h_meters 等六模块与周目等七模块（含 modes 搬 debug_mode、history 搬 input_cache）计数，最后收尾会话。
+    读档的 Reset 步骤：由 load_save 读出旧存档属性表后调 npc_template.lift 与 identity.adopt_old_save，
+    版本 0 补默认值，24 个 adopt（含 bookmarks，19 计数）搬罗德岛属性与收藏地点。
+    ID 迁移后 flags、action_info、player_ability、player_collection 搬四项。修编号后 abilities（计数）与
+    inventory、wardrobe、body_manage、status 搬入。替换后搬 relations、chara_life、chara_profile，
+    逐角色更新配置与服装后再搬 adopt_v0、adopt_pickled、npc_template（存局内模板并删 6/7 号素质，计数）、
+    activity（计数）、pregnancy、growth。
+    h_meters 等六模块与周目等七模块（含 modes、history）计数，最后收尾会话。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
     """
     from Script.System.Medical_System import medical_service
 
-    # 创建一个新的类实例，这个实例会包含所有的默认键值
-    new_cache = game_type.Cache()
     update_count = 0
 
-    # 从存档中加载字典
-    loaded_cache = load_save(save_id)
-    loaded_dict = npc_template.lift(loaded_cache.__dict__)
+    loaded_dict = npc_template.lift(load_save(save_id))
     identity.adopt_old_save(loaded_dict)
-    _normalize_loaded_save_paths(loaded_cache)
+    _normalize_loaded_save_paths(loaded_dict)
     if version == 0:
         upgrade.fill_v0_defaults(loaded_dict)
     upgrade.adopt_power(loaded_dict)
@@ -710,10 +654,6 @@ def install_save(save_id: str, version: int) -> None:
     for chara_domain in (flags, action_info, player_ability, player_collection):
         chara_domain.adopt_old_save(loaded_dict)
 
-    # 缓存文件不写的字段先取新缓存的值，不算作跨版本更新
-    unsaved.fill_defaults(loaded_dict, new_cache)
-    # 递归地更新 loaded_dict
-    update_count += update_dict_with_default(loaded_dict, new_cache.__dict__)
     # 更新角色预设
     update_count += old_chara_to_new.update_tem_character(loaded_dict)
     # 修正编号错误的角色数据
@@ -755,14 +695,7 @@ def install_save(save_id: str, version: int) -> None:
             now_draw.draw()
             update_count += migration_count
 
-    # 丢掉 STALE_UI_FIELDS 里的字段和以 web_ 开头的字段：Cache 没有它们，留下会被 cache.__dict__.update 写进缓存
-    for field_name in list(loaded_dict):
-        if field_name.startswith("web_") or field_name in STALE_UI_FIELDS:
-            del loaded_dict[field_name]
     preferences = upgrade.drop_ui_fields(loaded_dict)
-    # 游戏时钟在内核里（存档的文件 "2"；旧存档按存档头的游戏时间投影），不随缓存载入
-    for field_name in CLOCK_FIELDS:
-        loaded_dict.pop(field_name, None)
 
     # 把版本 21 之前存档的角色对象上的社会关系、住处、工作、娱乐与称呼等属性搬进角色键
     for domain in (relations, chara_life, chara_profile):
@@ -918,24 +851,19 @@ def install_save(save_id: str, version: int) -> None:
     finish_draw.text = draw_text
     finish_draw.draw()
 
-    # 读档导入完成后移除临时的 character_data，角色对象不进缓存
-    del loaded_dict["character_data"]
-    loaded_dict.pop("rhodes_island")
-    cache.__dict__.update(loaded_dict)
-
     # 鼠标状态是界面的临时状态，读档后从头开始：读档前留下的 w_frame_up 为0时，
     # 之后第一次左键会被 mouse_left_check 误判为“推进等待”，
     # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此收不到输入，游戏静默卡死
     view.wframe_mouse = view.WFrameMouse()
 
-    # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（这些结算读写游戏缓存，须在覆盖缓存之后）
+    # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（须在读档导入完成后调用）
     old_chara_to_new.end_young_child_session(young_child_session)
 
 
 def exact_stats() -> None:
     """
-    读档的 Reset 步骤：装好的缓存里随时间结算的数值是 float 时换成精确值（num.exact），int 与 Fraction 不动。
-    body.needs、body.status、h.meters、body.dirty 与 player.ability 在读档导入时已全部换成精确值。
+    读档的 Reset 步骤：空操作占位。
+    body.needs、body.status、h.meters、body.dirty 与 player.ability 在读档导入时即换成精确值（num.exact）
     """
     return
 
@@ -943,7 +871,7 @@ def exact_stats() -> None:
 def repair_installed() -> None:
     """
     读档的 Reset 步骤，在角色投影之后：游戏状态自检（系统设置14号，默认关闭）对载入后的存档做保守修复，
-    包在开关关闭时不会被导入；修复改游戏缓存，生理需求经这一步的缓冲区读写 GameState 的 body.needs
+    包在开关关闭时不会被导入；修复经这一步的缓冲区读写 GameState
     """
     if normal_config.system_setting.base_setting.get(14, 0):
         from Script.Test import Static_Check as static_check_system
@@ -969,10 +897,6 @@ def update_dict_with_default(
         if key not in loaded_dict:
             loaded_dict[key] = value
             update_count += 1
-        elif isinstance(value, game_type.Cache):
-            update_count += update_dict_with_default(
-                loaded_dict[key].__dict__, value.__dict__
-            )
         elif hasattr(value, "__dict__"):  # 检查 value 是否是一个类的实例
             update_count += update_dict_with_default(
                 loaded_dict[key].__dict__, value.__dict__
@@ -997,13 +921,14 @@ def update_dict_with_default(
 def update_map(loaded_dict: dict[str, Any]) -> int:
     """
     读档时校验地图变动并迁回停留在无效场景中的角色。
-    若 loaded_dict 含有旧存档的 scene_data，则将其与 constant.scene_data 对比，统计新增场景及 scene_tag、scene_img、
-    room_area 差异。
-    存在差异时，若旧表含「贸易\\人气快餐开封菜」则把该处角色迁至「约翰老妈汉堡店」，累加已不存在的场景数并提示地图已更新。
+    若 loaded_dict 含有旧存档的 scene_data，则将其与 constant.scene_data 对比，统计新增场景及 scene_tag、
+    scene_img、room_area 差异。
+    存在差异时，若旧表含「贸易\\人气快餐开封菜」则把该处角色迁至「约翰老妈汉堡店」，
+    累加已不存在的场景数并提示地图已更新。
     随后逐一检查 loaded_dict["character_data"] 中全部角色的 activity.position，将不在 constant.scene_data
     中的角色迁回同区块入口或 ["0", "0"]
     Keyword arguments:
-    loaded_dict -- 读档阶段加载的缓存字段字典
+    loaded_dict -- 读档阶段加载的旧存档属性表
     Return arguments:
     int -- 统计到的场景差异项数与被迁回角色数之和
     """
@@ -1070,7 +995,7 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
     """
     读档时按需收下存档里的 AI 设置，并补全全局口上选择、AI 设置与本存档的体检、监禁调教设置
     Keyword arguments:
-    loaded_dict -- 存档缓存的属性字典
+    loaded_dict -- 旧存档的属性字典
     Return arguments:
     int -- 补全的口上选择、体检与监禁调教设置项总数（不含全局 AI 设置）
     """
@@ -1092,7 +1017,7 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
         now_draw.style = "gold_enrod"
         now_draw.text = draw_text
         now_draw.draw()
-    # 弹出 ai_setting 防写回缓存，交给 adopt_ai 准备并待 Reset 生效。补全项不计入存档更新数。
+    # 弹出 ai_setting 交给 adopt_ai 准备并待 Reset 生效，补全项不计入存档更新数
     from Script.Modules.save_load import settings
 
     if settings.adopt_ai(loaded_dict.pop("ai_setting", None)):

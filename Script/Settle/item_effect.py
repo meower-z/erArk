@@ -10,7 +10,7 @@ from Script.Design import (
     attr_calculation,
     handle_premise,
 )
-from Script.Core import cache_control, constant_effect, game_type, get_text, num
+from Script.Core import constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
 from Script.Modules.domains import (
@@ -27,8 +27,6 @@ from Script.Modules.domains import identity
 _: FunctionType = get_text._
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 width = normal_config.config_normal.text_width
 
 

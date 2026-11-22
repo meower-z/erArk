@@ -42,7 +42,7 @@ pip install -r requirements.txt
 
 ### Script 目录结构
 - **`Script/Config`** - 配置加载（`game_config.py`、`map_config.py`、`character_config.py`、`normal_config.py`）以及自动生成的 `config_def.py`
-- **`Script/Core`** - 引擎层：缓存（`cache_control.py`）、存档（`save_handle.py`）、IO（`io_init.py`）、流程处理（`flow_handle.py`）、mod 管理器（`mod_manager.py`）、游戏数据类型（`game_type.py`）
+- **`Script/Core`** - 引擎层：存档（`save_handle.py`）、IO（`io_init.py`）、流程处理（`flow_handle.py`）、mod 管理器（`mod_manager.py`）、游戏数据类型（`game_type.py`）
 - **`Script/Design`** - 主要游戏逻辑：行为循环、NPC AI、地图/导航、口上、结算分发（`settle_behavior.py`）等
   - **`Script/Design/handle_premise/`** - 前提（条件判定）系统是一个包，按主题拆分为约 20 个模块（`handle_premise_H.py`、`handle_premise_place.py`、`handle_premise_ability.py`、`handle_premise_talent.py` 等），主入口在 `__init__.py`
 - **`Script/Settle`** - 结算模块：`default.py`、`common_default.py`（通用结算）、`Second_effect.py`（二段效果）、`default_cloth.py`、`item_effect.py`、`realtime_settle.py`、`past_day_settle.py`、`sleep_settle.py`
@@ -77,7 +77,7 @@ pip install -r requirements.txt
 
 #### 存档系统
 - **存档管理**：`Script/Core/save_handle.py`
-- **缓存控制**：`Script/Core/cache_control.py` 管理游戏状态
+- **内核存档模块**：`Script/Modules/save_load/`（`index.py`、`kernel_state.py`、`legacy_pickle.py`、`upgrade.py`、`reset.py`、`settings.py`、`autosave.py`）管理单文件 `save.json` 存档、只读旧存档读取与 `GameState` 换态
 
 #### Mod 系统
 - **管理器**：`Script/Core/mod_manager.py`（`ModInfo` / `ModManager`）；`game.py` 启动时调用 `init_mod_system()`（失败仅告警，不会中断游戏）

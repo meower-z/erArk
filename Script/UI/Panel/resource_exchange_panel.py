@@ -1,13 +1,7 @@
 """资源交易面板，以及交易价格、供需波动与自动交易的计算"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.Design import attr_calculation
 from Script.Modules.domains import abilities, economy, location
 from Script.UI.Moudle import draw, view
@@ -16,8 +10,6 @@ from Script.Modules.domains import warehouse
 import random
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

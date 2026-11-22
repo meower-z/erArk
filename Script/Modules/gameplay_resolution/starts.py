@@ -1,12 +1,14 @@
 """
 gameplay_resolution 的行动开始（StartAction）
-============================================
+=============================================
 每种行动 gameplay_resolution.<kind> 由 starter(kind) 登记一个开始函数与结束函数（actions.wrap_up），
 内核按 action_id 分派到它们。开始函数统一经 behave 跑：
-0. 选择时的草稿（Intent.draft）写进缓存，选择时排下的打断（Intent.interrupts）重新排上。
+0. 选择时的写入（Intent.effects）经 working.replay 放进这一步的缓冲区，
+   选择时排下的打断（Intent.interrupts）重新排上。
 1. begin：来自队列的弹出队首；写 Behavior（此刻开始、时长）、状态、交互对象与 fields；移动；绘制 say。
 2. 本种类自己的开始代码 extra(who, intent)，没有时跳过。
-3. character_behavior.settle_start：结算状态与事件（judge_character_status），玩家另有记录、前置结算与睡觉刷新。
+3. character_behavior.settle_start：结算状态与事件（judge_character_status），
+   玩家另有记录、前置结算与睡觉刷新。
 内核在调用开始函数之前就定下了行动的时长。要换成别的行动的
 （例如选好的食物或病人已被同一分钟里更早的开始拿走，退回 1 分钟的等待），
 用 check(kind) 登记一个复查：它在开始门之后、内核定下行动之前运行，交回的行动换掉原来的。
@@ -16,21 +18,17 @@ gameplay_resolution 的行动开始（StartAction）
 from collections.abc import Callable, Mapping
 from typing import cast
 
-from Script.Core import cache_control, constant, game_type
+from Script.Core import constant
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.domains import action_info, activity, chara_key, flags
 from Script.Modules.gameplay_resolution import (
     actions,
-    draft,
     intent,
     plan_queue,
     working,
 )
 from Script.UI.Moudle import draw, view
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 type Extra = Callable[[int, intent.Intent], None]
 """ 一种行动自己的开始代码：角色id、意图 """
@@ -104,11 +102,11 @@ def recheck(act: core.Action) -> tuple[core.Action]:
 
 def plain(value: core.JSON) -> object:
     """
-    冻结的 JSON 值换回缓存里用的值：元组换成列表，映射换成 dict
+    冻结的 JSON 值换回可变 Python 值：元组换成列表，映射换成 dict
     Keyword arguments:
     value -- 行动数据里的值
     Return arguments:
-    object -- 写进缓存的值
+    object -- 换回后的值
     """
     if isinstance(value, Mapping):
         return {key: plain(item) for key, item in value.items()}
@@ -151,9 +149,10 @@ def write_field(who: int, path: str, value: core.JSON) -> None:
 
 def begin(who: int, act: core.Action, chosen: intent.Intent) -> None:
     """
-    行动开始时照着意图写缓存：来自队列的弹出队首；换上新的 Behavior（此刻开始，时长同内核；
-    时停中玩家的 0 分钟行动用名义分钟数；保留移动的来源与最终目标）、状态与交互对象（意图没写交互对象时不改）；
-    写 fields；移动；绘制 say（参数 say_wait 为真时等玩家确认，say_style 为样式）。玩家的面板回到场景主面板
+    行动开始时照着意图写游戏状态：来自队列的弹出队首；换上新的 Behavior（此刻开始，时长同内核；
+    时停中玩家的 0 分钟行动用名义分钟数；保留移动的来源与最终目标）、状态与交互对象
+    （意图没写交互对象时不改）；写 fields；移动；绘制 say（参数 say_wait 为真时等玩家确认，
+    say_style 为样式）。玩家的面板回到场景主面板
     Keyword arguments:
     who -- 角色id
     act -- 开始的行动
@@ -208,7 +207,7 @@ def begin(who: int, act: core.Action, chosen: intent.Intent) -> None:
 
 def behave(act: core.Action, extra: Extra | None = None) -> core.Effects:
     """
-    一个行动的开始：写入选择时的草稿并排上打断，begin，本种类的开始代码，结算
+    一个行动的开始：重放选择时的写入并排上打断，begin，本种类的开始代码，结算
     Keyword arguments:
     act -- 开始的行动，action_data 是 Intent
     extra -- 本种类自己的开始代码，没有时为 None
@@ -223,8 +222,6 @@ def behave(act: core.Action, extra: Extra | None = None) -> core.Effects:
         raise TypeError(f"{act.action_id} 的行动数据不是 Intent")
     chosen = cast(intent.Intent, dict(act.action_data))
     working.replay(chosen.get("effects", ()))
-    if "draft" in chosen:
-        draft.apply(cast(list[draft.Change], chosen["draft"]))
     for interrupted in chosen.get("interrupts", ()):
         plan_queue.interrupt(int(interrupted))
     begin(who, act, chosen)
