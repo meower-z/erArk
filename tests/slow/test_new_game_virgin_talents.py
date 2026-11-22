@@ -11,6 +11,7 @@ import shutil
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca
+from tests.kernel_project import identity
 
 SAVE_ID = "test_new_game_virgin_talents"
 """ 本测试写入 save/ 的存档id，测试结束时删掉 """
@@ -43,7 +44,7 @@ class NewGameVirginTalentsTest(SlowTestCase):
                 chara.adv,
                 [t for t in VIRGIN_TALENTS if ca.talent(chara).get(t) != 1],
             )
-            for cid, chara in self.cache.character_data.items()
+            for cid, chara in identity.table().items()
             if cid != 0
             and any(ca.talent(chara).get(t) != 1 for t in VIRGIN_TALENTS)
         )
@@ -57,7 +58,7 @@ class NewGameVirginTalentsTest(SlowTestCase):
 
         before = {
             cid: dict(ca.talent(chara))
-            for cid, chara in self.cache.character_data.items()
+            for cid, chara in identity.table().items()
         }
         save_handle.establish_save(SAVE_ID)
         self.assertTrue(
@@ -66,12 +67,12 @@ class NewGameVirginTalentsTest(SlowTestCase):
         save_handle.input_load_save(SAVE_ID)
         after = {
             cid: dict(ca.talent(chara))
-            for cid, chara in self.cache.character_data.items()
+            for cid, chara in identity.table().items()
         }
         self.assertEqual(sorted(after), sorted(before), "读档后的角色id")
         changed = sorted(
             (
-                self.cache.character_data[cid].adv,
+                identity.of(cid).adv,
                 [
                     (t, before[cid].get(t), value)
                     for t, value in sorted(after[cid].items())

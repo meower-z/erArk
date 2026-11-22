@@ -26,16 +26,15 @@
 """
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import get_text
 from Script.Config import game_config
 from Script.Modules.domains import education, growth, chara_life, relations
 from Script.System.Education_System import (
     education_constant,
     schedule_handle,
 )
+from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -147,7 +146,7 @@ def delete_template(template_id: int) -> bool:
         return False
     if education.template(template_id) is None:
         return False
-    for cid in cache.character_data:
+    for cid in identity.table():
         with growth.editing(cid, create=False) as growth_data:
             if (
                 growth_data is None
@@ -181,7 +180,7 @@ def batch_apply_template(character_id_list: list[int], template_id: int) -> int:
     """
     count = 0
     for character_id in character_id_list:
-        if character_id not in cache.character_data:
+        if not identity.exists(character_id):
             continue
         apply_template(character_id, template_id)
         count += 1
@@ -395,7 +394,7 @@ def get_template_use_count(template_id: int) -> int:
           此前漏数；与 delete_template 解开引用的范围一致
     """
     count = 0
-    for cid in cache.character_data:
+    for cid in identity.table():
         cg = growth.of(cid)
         if cg is not None and cg.schedule_template_id == template_id:
             count += 1

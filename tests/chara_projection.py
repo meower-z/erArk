@@ -11,6 +11,7 @@ history.first_record_history 按旧 Character 属性名展开进快照，使快�
 from __future__ import annotations
 
 from collections.abc import Mapping
+from tests.kernel_project import identity
 
 
 def project(state: dict[str, object]) -> None:
@@ -19,13 +20,12 @@ def project(state: dict[str, object]) -> None:
     Keyword arguments:
     state -- 快照字典，原地补上
     """
-    from Script.Core import cache_control
     from Script.Modules.domains import action_info, dirty, first_record, flags
     from Script.Modules.domains import h_meters, h_state, hypnosis
     from Script.Modules.domains import player_ability, player_collection
     from tests.snapshot import flatten
 
-    for cid in sorted(cache_control.cache.character_data):
+    for cid in sorted(identity.table()):
         prefix = f"chara.{cid}"
         flatten(f"{prefix}.sp_flag", flags.snapshot(cid), state)
         flatten(f"{prefix}.action_info", action_info.snapshot(cid), state)
@@ -47,3 +47,26 @@ def project(state: dict[str, object]) -> None:
             first_record.history(cid),
             state,
         )
+
+
+def pickled_characters() -> dict[int, object]:
+    """
+    按身份表顺序把每个角色转为版本 24 之前存档文件 "1" 里 character_data 的旧角色对象，
+    写入十项身份属性并将生日转为当日零点的 datetime
+    Return arguments:
+    dict[int, object] -- 角色id到旧角色对象的映射
+    """
+    import dataclasses
+    import datetime
+
+    from Script.Core import game_type
+
+    out: dict[int, object] = {}
+    for one in identity.table().values():
+        chara = game_type.Character()
+        attrs = vars(chara)
+        attrs.update(dataclasses.asdict(one))
+        day = one.birthday
+        attrs["birthday"] = datetime.datetime(day.year, day.month, day.day)
+        out[one.cid] = chara
+    return out

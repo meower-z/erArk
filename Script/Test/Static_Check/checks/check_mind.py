@@ -9,7 +9,7 @@
 1. `cache.debug_mode` 下debug面板可越过前提直接改素质、催眠深度/子项、角色扮演列表、熟睡值等，
    凡这些字段参与、且检查内容为"值来自合法结算路径"的不变式，都在检查体前加debug豁免；
    纯粹的存档结构/schema式检查（如MIND-22/28/29）不受debug模式影响，不加豁免。
-2. `roster.active()` 不保证是 `cache.character_data` 的子集，一律用 `_iter_npcs()` 做存在性保护。
+2. `roster.active()` 不保证是 `identity.table()` 的子集，一律用 `_iter_npcs()` 做存在性保护。
 3. 场景key统一用 `map_handle.get_map_system_path_str_for_list`（`os.sep.join`），不是 "|".join。
 4. `game_config.config_roleplay` 在独立脚本环境下可能未加载，相关检查（MIND-16）遇缺表时降级为跳过。
 5. 全部字段访问一律使用 getattr/dict.get 加默认值防御，绝不能因为老存档缺字段或类型不符而让检查器自身抛异常。
@@ -29,10 +29,10 @@ from Script.Modules.domains import player_ability, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from Script.Core import game_type
 
 
 def _name(chara: object) -> str:
@@ -44,52 +44,37 @@ def _name(chara: object) -> str:
     return str(getattr(chara, "name", "?"))
 
 
-def _pl() -> game_type.Character | None:
+def _pl() -> identity.Identity | None:
     """
     参数: 无
     返回值: 玩家角色对象，cache未初始化或0号角色不存在时返回None
     功能: 统一获取玩家角色对象
     """
-    cache = cache_control.cache
-    if cache is None or not isinstance(
-        getattr(cache, "character_data", None), dict
-    ):
-        return None
-    return cache.character_data.get(0)
+    return identity.get(0)
 
 
-def _iter_npcs() -> Iterator[tuple[int, game_type.Character]]:
+def _iter_npcs() -> Iterator[tuple[int, identity.Identity]]:
     """
     参数: 无
-    返回值: 迭代器，依次产出(角色id, 角色对象)
-    功能: 遍历cache.npc_id_got中已登场且确实存在于character_data中的NPC；
-        npc_id_got未必是character_data的子集，必须加存在性保护
+    返回值: 迭代器，依次产出(角色id, identity.Identity)
+    功能: 遍历在编名单（roster.active()）中存在于身份表（identity.characters）的非玩家角色，
+        防止在编名单含悬空id时报错
     """
-    cache = cache_control.cache
-    if cache is None or not isinstance(
-        getattr(cache, "character_data", None), dict
-    ):
-        return
     for cid in roster.active():
-        if cid and cid in cache.character_data:
-            yield cid, cache.character_data[cid]
+        if cid and identity.exists(cid):
+            yield cid, identity.of(cid)
 
 
-def _iter_all() -> Iterator[tuple[int, game_type.Character]]:
+def _iter_all() -> Iterator[tuple[int, identity.Identity]]:
     """
     参数: 无
-    返回值: 迭代器，依次产出(角色id, 角色对象)
-    功能: 遍历cache.character_data全体（含未登场的访客/静态npc模板实例）
+    返回值: 迭代器，依次产出(角色id, identity.Identity)
+    功能: 遍历身份表（identity.table()）中的全部角色（含未在编角色）
     """
-    cache = cache_control.cache
-    if cache is None or not isinstance(
-        getattr(cache, "character_data", None), dict
-    ):
-        return
-    yield from cache.character_data.items()
+    yield from identity.table().items()
 
 
-def _iter_pl_and_npcs() -> Iterator[tuple[int, game_type.Character]]:
+def _iter_pl_and_npcs() -> Iterator[tuple[int, identity.Identity]]:
     """
     参数: 无
     返回值: 迭代器，依次产出(角色id, 角色对象)，玩家(若存在)排在最前
@@ -101,7 +86,7 @@ def _iter_pl_and_npcs() -> Iterator[tuple[int, game_type.Character]]:
     yield from _iter_npcs()
 
 
-def _talent_get(chara: game_type.Character, talent_id: int) -> int:
+def _talent_get(chara: identity.Identity, talent_id: int) -> int:
     """
     参数:
         chara: 角色对象
@@ -127,7 +112,7 @@ def _u(chara: object) -> int:
     return flags.get(cid, "unconscious_h") if isinstance(cid, int) else -1
 
 
-def _behavior_id(chara: game_type.Character) -> str:
+def _behavior_id(chara: identity.Identity) -> str:
     """
     参数: chara 角色对象
     返回值: str 当前行为id，结构缺失时返回"?"
@@ -398,17 +383,13 @@ def check_carry_target_valid_and_colocated() -> list[CheckFailure]:
         地点不同步或cid无效即"凭空跟随"的幽灵角色。有意不检查"被搬运者仍处于异常6"——
         被搬运的睡眠干员自然睡醒后异常6即为"正常"，而搬运不会自动停止，纳入会误报
     """
-    cache = cache_control.cache
     pl = _pl()
     if pl is None:
         return []
     cid = action_info.get(pl.cid, "carry_chara_id")
     if cid == 0:
         return []
-    character_data = getattr(cache, "character_data", {})
-    target = (
-        character_data.get(cid) if isinstance(character_data, dict) else None
-    )
+    target = identity.get(cid)
     target_pos = activity.position(target.cid) if target is not None else "?"
     pl_pos = activity.position(pl.cid)
     if target is not None and not activity.dead(target.cid):

@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import activity, flags
+from Script.Modules.domains import activity, flags, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -518,7 +518,7 @@ def handlefind_t_food_weird_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "find_food_weird") == 0:
         return 1
     else:
@@ -534,7 +534,7 @@ def handlefind_t_food_weird_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "find_food_weird") == 1:
         return 1
     else:

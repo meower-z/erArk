@@ -110,13 +110,15 @@ def resolve_character_id(
     cache: game_type.Cache, character_id: int, character_name: str
 ) -> int:
     """根据参数确定目标角色 id"""
+    from Script.Modules.domains import identity
+
     if character_name:
-        for cid, char_data in cache.character_data.items():
+        for cid, char_data in identity.table().items():
             if getattr(char_data, "name", "") == character_name:
                 return cid
         raise SystemExit(f"未找到名称为 {character_name} 的角色")
     if character_id >= 0:
-        if character_id in cache.character_data:
+        if identity.exists(character_id):
             return character_id
         raise SystemExit(f"未找到 id 为 {character_id} 的角色")
     return 0
@@ -186,7 +188,9 @@ def main() -> None:
     character_id = resolve_character_id(
         cache, args.character_id, args.character_name
     )
-    character_data = cache.character_data[character_id]
+    from Script.Modules.domains import identity
+
+    character_data = identity.of(character_id)
     character_name = getattr(character_data, "name", str(character_id))
 
     log(f"目标角色: id={character_id} name={character_name}")

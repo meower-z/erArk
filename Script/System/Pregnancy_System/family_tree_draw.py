@@ -4,6 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -19,8 +20,8 @@ def get_chara_name(character_id: int) -> str:
     Return arguments:
     str -- 角色名
     """
-    if character_id in cache.character_data:
-        return cache.character_data[character_id].name
+    if identity.exists(character_id):
+        return identity.of(character_id).name
     return _("（不在册）")
 
 
@@ -33,14 +34,14 @@ def get_valid_parent(character_id: int, parent_type: str) -> int:
     Return arguments:
     int -- 父/母id，无效时返回-1
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return -1
     parent_id = (
         relations.father_id(character_id)
         if parent_type == "father"
         else relations.mother_id(character_id)
     )
-    if parent_id == -1 or parent_id not in cache.character_data:
+    if parent_id == -1 or not identity.exists(parent_id):
         return -1
     return parent_id
 
@@ -67,7 +68,7 @@ def chara_has_children(character_id: int) -> bool:
     Return arguments:
     bool -- 是否有孩子
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     return len(get_valid_children(character_id)) > 0
 
@@ -80,11 +81,11 @@ def get_valid_children(character_id: int) -> list:
     Return arguments:
     list -- 孩子id列表
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return []
     result = []
     for child_id in relations.child_id_list(character_id):
-        if child_id in cache.character_data and child_id not in result:
+        if identity.exists(child_id) and child_id not in result:
             result.append(child_id)
     return result
 
@@ -102,11 +103,7 @@ def _get_other_parent(child_id: int, parent_id: int) -> int:
     other_id = (
         relations.mother_id(child_id) if father_id == parent_id else father_id
     )
-    if (
-        other_id == parent_id
-        or other_id == -1
-        or other_id not in cache.character_data
-    ):
+    if other_id == parent_id or other_id == -1 or not identity.exists(other_id):
         return -1
     return other_id
 
@@ -634,7 +631,7 @@ def build_family_tree_chart(
              "rows": [{"type": "names"|"link", "cells": [{"col": 列位, "token": token}]}]}
     """
     empty_chart = {"width": 0, "total_page": 1, "now_page": 0, "rows": []}
-    if center_id not in cache.character_data:
+    if not identity.exists(center_id):
         return empty_chart
     blocks = _build_family_blocks(center_id)
     for block in blocks:

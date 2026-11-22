@@ -10,7 +10,6 @@
 
 from unittest import mock
 
-from Script.Core import cache_control
 from Script.Design import character_behavior, update
 from Script.Kernel import core
 from Script.Modules import load_order
@@ -18,6 +17,7 @@ from Script.Modules.gameplay_resolution import time_hooks
 from Script.Modules.tk_ui import player_pick
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import identity
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update """
@@ -59,7 +59,7 @@ class EditNoWrapUpTest(FastTestCase):
     def edit(self) -> None:
         """草稿里把玩家的名字改成「草稿」，不定下行动"""
         with player_pick.drafting("test"):
-            cache_control.cache.character_data[0].name = "草稿"
+            identity.update(0, name="草稿")
 
     def wait(self) -> None:
         """等待 5 分钟"""
@@ -80,4 +80,4 @@ class EditNoWrapUpTest(FastTestCase):
                 ("pick", first + 5),
             ],
         )
-        self.assertEqual(cache_control.cache.character_data[0].name, "草稿")
+        self.assertEqual(identity.of(0).name, "草稿")

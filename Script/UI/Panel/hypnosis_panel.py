@@ -15,6 +15,7 @@ from Script.Modules.domains import (
     hypnosis,
     player_ability,
 )
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -136,7 +137,7 @@ def evaluate_hypnosis_completion(character_id: int) -> int:
     Return arguments:\n
     int -- 1完成，0未完成\n
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 进行素质获得检测
     handle_talent.npc_gain_hypnosis_talent(character_id)
     # 计算催眠完成度
@@ -238,9 +239,9 @@ class Chose_Hypnosis_Type_Panel:
         while 1:
             return_list = []
             title_draw.draw()
-            target_character_data: game_type.Character = cache.character_data[
+            target_character_data: identity.Identity = identity.of(
                 activity.target(0)
-            ]
+            )
 
             info_draw = draw.NormalDraw()
             info_text = ""
@@ -329,11 +330,9 @@ class Chose_Hypnosis_Type_Panel:
 
     def change_hypnosis_type(self, hypnosis_type_cid: int) -> None:
         """改变当前的催眠类型"""
-        pl_character_data: game_type.Character = cache.character_data[0]
+        pl_character_data: identity.Identity = identity.of(0)
         player_ability.set(0, hypnosis_type=hypnosis_type_cid)
-        target_data: game_type.Character = cache.character_data[
-            activity.target(0)
-        ]
+        target_data: identity.Identity = identity.of(activity.target(0))
         line_draw = draw.LineDraw("-", self.width)
         line_draw.draw()
 
@@ -385,9 +384,7 @@ class Chose_Hypnosis_Type_Panel:
         Keyword arguments:
         body_or_mind_flag -- 0为身体控制，1为心灵控制
         """
-        target_data: game_type.Character = cache.character_data[
-            activity.target(0)
-        ]
+        target_data: identity.Identity = identity.of(activity.target(0))
         range_list = []
         type_text = _("身体") if body_or_mind_flag == 0 else _("心灵")
         for behavbior_cid in game_config.config_behavior:
@@ -954,9 +951,7 @@ class Chose_Roleplay_Type_Panel:
         功能：
             将self.selected_roleplay_cache赋值到target_data.hypnosis.roleplay，并输出提示信息
         """
-        target_data: game_type.Character = cache.character_data[
-            activity.target(0)
-        ]
+        target_data: identity.Identity = identity.of(activity.target(0))
         tid = activity.target(0)
         # 提交非空的角色扮演选择时先退出目标当前的催眠行为模式，保证模式互斥
         if self.selected_roleplay_cache:

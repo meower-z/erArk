@@ -10,13 +10,14 @@
 import datetime
 from fractions import Fraction
 
-from Script.Core import constant, game_type
+from Script.Core import constant
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.domains import activity, needs
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import identity
 
 
 class ExactRatesTest(FastTestCase):
@@ -31,7 +32,7 @@ class ExactRatesTest(FastTestCase):
 
     def run_behavior(
         self, behavior_id: str, minutes: int, step: int
-    ) -> game_type.Character:
+    ) -> identity.Identity:
         """
         干员从开局时刻起做 minutes 分钟的 behavior_id，每 step 分钟结算一次
         Keyword arguments:

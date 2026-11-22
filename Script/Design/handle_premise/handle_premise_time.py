@@ -6,7 +6,7 @@ from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design import game_time
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import action_info, activity, chara_life, needs
-from Script.Modules.domains import physical_exam
+from Script.Modules.domains import physical_exam, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -418,7 +418,7 @@ def handle_to_work_time_or_work_time(character_id: int) -> int:
     return 0
 
 
-def _judge_free_daytime(character_data: game_type.Character) -> bool:
+def _judge_free_daytime(character_data: identity.Identity) -> bool:
     """
     判断一个角色的白天（9~12、14~18）是否也算娱乐时间
     Keyword arguments:
@@ -453,7 +453,7 @@ def handle_all_entertainment_time(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     # 白天也算娱乐时间的人：工作时间+下班
     if _judge_free_daytime(character_data):
@@ -479,7 +479,7 @@ def handle_not_all_entertainment_time(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
 
     # 白天也算娱乐时间的人：工作时间+下班
     if _judge_free_daytime(character_data):

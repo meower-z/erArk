@@ -54,7 +54,7 @@ import re
 import sys
 from typing import TYPE_CHECKING
 import uuid
-from tests.kernel_project import activity
+from tests.kernel_project import activity, identity
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -173,7 +173,7 @@ def _leaf(value: object) -> object | None:
         return f"{value.numerator}/{value.denominator}"
     if isinstance(value, SCALAR_TYPES):
         return value
-    if isinstance(value, datetime.datetime):
+    if isinstance(value, datetime.date):
         return value.strftime("%Y-%m-%d %H:%M")
     if isinstance(value, uuid.UUID):
         return str(value)
@@ -370,8 +370,8 @@ def capture(
     from tests.kernel_data import project_state
 
     state: dict[str, object] = {"clock": f"{game_time.now():%Y-%m-%d %H:%M}"}
-    for cid in sorted(cache.character_data):
-        character = cache.character_data[cid]
+    for cid, one in sorted(identity.table().items()):
+        character = {name: getattr(one, name) for name in one.__match_args__}
         pickled = (
             pickle.dumps(character, protocol=4) if memo is not None else None
         )

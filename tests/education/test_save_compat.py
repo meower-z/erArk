@@ -24,6 +24,20 @@ from Script.Design import game_time
 from Script.Modules.domains import activity, official
 from tests import kernel_data
 from Script.Modules.domains import chara_life
+from Script.Modules.domains import identity
+
+
+def records() -> dict[int, game_type.Character]:
+    """按身份表顺序为每个角色构造空的旧角色对象，模拟读档时的 character_data"""
+    return {cid: game_type.Character() for cid in identity.ids()}
+
+
+def normalize() -> None:
+    """构造带 records() 的存档缓存并运行 save_handle._normalize_loaded_save_paths"""
+    loaded = game_type.Cache()
+    vars(loaded)["character_data"] = records()
+    save_handle._normalize_loaded_save_paths(loaded)
+
 
 section("CHILD_GROWTH 字段级回填")
 mother = make_character(102, "母亲", 0)
@@ -51,12 +65,13 @@ for name in (
     delattr(legacy_ga, name)
     delattr(legacy_gb, name)
 setattr(legacy_ga, "last_report_card", {"year": 2026, "month": 6, "grade": 1})
-vars(student_a)["child_growth"] = legacy_ga
-vars(student_b)["child_growth"] = legacy_gb
+legacy_characters = records()
+vars(legacy_characters[201])["child_growth"] = legacy_ga
+vars(legacy_characters[202])["child_growth"] = legacy_gb
 legacy_preg_b = game_type.PREGNANCY()
 del legacy_preg_b.prenatal_point
-vars(student_b)["pregnancy"] = legacy_preg_b
-legacy_loaded = {"character_data": cache.character_data}
+vars(legacy_characters[202])["pregnancy"] = legacy_preg_b
+legacy_loaded = {"character_data": legacy_characters}
 growth.adopt_old_save(legacy_loaded, 14)
 pregnancy.adopt_old_save(legacy_loaded, 14)
 ga = growth.of(201)
@@ -127,8 +142,8 @@ check(
 ga_live = child_growth(201)
 ga_live.schedule_override = {1: 176, 2: 152}
 chara_life.entertainment_type.set(student_a.cid, [175, 58, 178])
-save_handle._normalize_loaded_save_paths(cache)
-kernel_data.put(save_handle._normalize_life, vars(cache))
+normalize()
+kernel_data.put(save_handle._normalize_life, {"character_data": records()})
 check(
     "角色侧：单孩覆盖与当天娱乐槽位换成表里有的新编号",
     ga_live.schedule_override == {1: 176, 2: 152}
@@ -147,7 +162,7 @@ ga_live.event_history = {
     "萝莉20": dict(_record),
     "萝莉2": dict(_record),
 }
-save_handle._normalize_loaded_save_paths(cache)
+normalize()
 _expect_history = {"期末17": _record, "期末18": _record, "萝莉2": _record}
 check(
     "孩子的履历：萝莉 1 / 20 改成期末 17 / 18、记录原样保留，其余 uid 不动",
@@ -159,7 +174,7 @@ check(
     official_event_handle.judge_event_done("期末17", 201)
     and not official_event_handle.judge_event_done("期末19", 201),
 )
-save_handle._normalize_loaded_save_paths(cache)
+normalize()
 check(
     "再读一次档是幂等的",
     ga_live.event_history == _expect_history,
@@ -202,7 +217,7 @@ def find_old_report_uid_left(label: str) -> list:
     for key in official.history():
         if isinstance(key, str) and key.partition("@")[0] in OLD_REPORT_UID_SET:
             result.append((label, "rhodes", key))
-    for cid in cache.character_data:
+    for cid in identity.table():
         growth_data = growth.of(cid)
         if growth_data is None:
             continue
@@ -224,7 +239,7 @@ check(
     == {"萝莉26", "萝莉1@305"},
     find_old_report_uid_left("本地"),
 )
-save_handle._normalize_loaded_save_paths(cache)
+normalize()
 save_handle._migrate_official_event_history(_old_history)
 kernel_data.put(official.set_history, _old_history)
 check(
@@ -269,7 +284,7 @@ for save_id in candidate_list:
     # Plan 32 L22（实施复审补）：读档时挪了桶的旧 uid 已改名，罗德岛全局履历与孩子的履历里都查不到
     if _old_report_uid_gone:
         l22_left.extend(find_old_report_uid_left(save_id))
-    for cid, character_data in cache.character_data.items():
+    for cid, character_data in identity.table().items():
         if hasattr(character_data, "child_growth"):
             problem.append((save_id, cid, "legacy child_growth attr"))
             break

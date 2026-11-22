@@ -17,6 +17,7 @@ from Script.Core import cache_control, game_type, get_text, flow_handle
 from Script.Config import normal_config
 from Script.System.Education_System import education_constant
 from Script.UI.Moudle import draw, panel
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -44,13 +45,13 @@ def draw_select_student_line(
     功能: 两个面板共用，只画不取输入；按钮返回值是不翻译的哨兵 SELECT_STUDENT_RETURN
     """
     half_width = int(width / 2)
-    selected_flag = now_student != -1 and now_student in cache.character_data
+    selected_flag = now_student != -1 and identity.exists(now_student)
     if selected_flag:
         # 已选人：左半写「当前学生：X」，右半居中一个 [选择学生] 用来换人
         now_draw = draw.LeftDraw()
         now_draw.width = half_width
         now_draw.text = _("  当前学生：{0}").format(
-            cache.character_data[now_student].name
+            identity.of(now_student).name
         )
         now_draw.draw()
         button_draw = draw.CenterButton(
@@ -122,12 +123,10 @@ def select_student(
         name_to_id = {}
         final_list = []
         for character_id in candidate_list:
-            if character_id not in cache.character_data:
+            if not identity.exists(character_id):
                 continue
             final_list.append([character_id, on_select, [now_student]])
-            name_to_id.setdefault(
-                cache.character_data[character_id].name, character_id
-            )
+            name_to_id.setdefault(identity.of(character_id).name, character_id)
         now_draw_panel.text_list = final_list
         return_list, other_return_list, select_state = (
             common_select_NPC.common_select_npc_button_list_func(

@@ -11,6 +11,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
 from Script.Modules.domains import abilities
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -145,7 +146,7 @@ def common_select_npc_button_list_func(
     for item in original_text_list:
         npc_id = item[0]
         if npc_id != 0:  # 跳过玩家
-            character_data = cache.character_data[npc_id]
+            character_data = identity.of(npc_id)
             if select_state["type"] > 0:
                 # 收藏筛选
                 if select_state[
@@ -367,9 +368,7 @@ class CommonSelectNPCButtonList:
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
 
-        character_data: game_type.Character = cache.character_data[
-            self.chara_id
-        ]
+        character_data: identity.Identity = identity.of(self.chara_id)
         button_text = (
             f"[{str(character_data.adv).rjust(4,'0')}]：{character_data.name}"
         )

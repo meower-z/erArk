@@ -22,7 +22,7 @@ from Script.Core import cache_control
 from Script.Modules.domains import abilities, activity, chara_life, commission
 from Script.Modules.domains import diplomacy, facility, flags, location, modes
 from Script.Modules.domains import playthrough, prison, recruit, relations
-from Script.Modules.domains import roster, visitor, work
+from Script.Modules.domains import roster, visitor, work, identity
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -127,7 +127,7 @@ def check_roster_id_self_consistency() -> list[CheckFailure]:
     功能: 校验cache.npc_id_got中每个id都存在角色对象，且角色自身cid与名册键一致，这是后续全部名册检查的地基
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     for cid in roster.active():
@@ -192,7 +192,7 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
     用os.sep拼路径，不加position != ["0","0"]的排除 —— 在线角色停在"罗德岛出口"(0/0)是合法状态
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     membership = _scene_membership(cache)
@@ -290,7 +290,7 @@ def check_offline_source_flag_matches_real_offline_state() -> (
     任一来源flag为真而角色仍在编、仍在某场景、或position未归零，即为半离线的幽灵。
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     membership = _scene_membership(cache)
@@ -334,7 +334,7 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
     囚犯与逃犯两个集合互斥
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     imp = {cid for cid in cd if cid != 0 and flags.get(cid, "imprisonment")}
@@ -393,7 +393,7 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
     本人在编且sp_flag.imprisonment为True、escaping为False
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     for cid, rec in prison.prisoners().items():
@@ -460,7 +460,7 @@ def check_prisoner_dormitory_uniqueness() -> list[CheckFailure]:
     唯一性是真实捕获点：指令前提SCENE_ONLY_ONE只看当前在场者，正在调教室的囚犯会让其牢房"看起来是空的"
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     prison_dorms = _prison_dorms(cache)
@@ -507,7 +507,7 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
     且chara_become_prisoner首行清be_bagged
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     for cid in prison.prisoner_ids():
@@ -548,7 +548,7 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
     并保留imprisonment。任一环缺失即为半态。position == ["0","0"]在此是离线的结果而非判据
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     membership = _scene_membership(cache)
@@ -593,7 +593,7 @@ def check_escapee_has_executable_capture_commission() -> list[CheckFailure]:
     依赖game_config.config_commission，若该配置为空(独立环境/测试未加载配置)则无法判定，直接跳过本条
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, True)
     failures: list[CheckFailure] = []
     if not game_config.config_commission:
@@ -632,7 +632,7 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
     不能与那名在编191冲突。"wid非零而没有任何在编191"是可达残留，已拆到ROSTER-12作warning，不进本条
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     wid = work.warden()
@@ -699,7 +699,7 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
     三项都可被合法操作打破(装袋前提未排除监狱长，玩家可把监狱长本人装袋后投入监牢)，故只作提示
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, True)
     failures: list[CheckFailure] = []
     wid = work.warden()
@@ -802,7 +802,7 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
     不写成vistor != 0，因为前访客恒为2，是合法状态，不应被本条判为不一致
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     vis_flag = {cid for cid in cd if cid != 0 and flags.get(cid, "vistor") == 1}
@@ -854,7 +854,7 @@ def check_visitor_room_uniqueness() -> list[CheckFailure]:
     dormitory可能长期停在模板初值，本条在本机命中即为跨平台缺陷的真实证据，不应回头放宽检查
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     guest_rooms = _guest_rooms(cache)
@@ -964,7 +964,7 @@ def check_invite_visitor_shape_integrity() -> list[CheckFailure]:
     本条的类型守卫由_invite_target复现，供ROSTER-19/21/27复用，各条各自调用_invite_target，不依赖调用顺序
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     raw = visitor.invite()
@@ -1009,7 +1009,7 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
     前访客(vistor==2)是合法邀请目标。position == ["0","0"]在此是未入编角色的必要属性，不是离线判据
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     t = _invite_target()
@@ -1070,7 +1070,7 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
     同样用vistor != 1(两个写入点都取自find_recruitable_npc，vistor == 2可合法入池)
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     for cid in recruit.pending():
@@ -1127,7 +1127,7 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
     C集合的构造自带形状守卫，不依赖ROSTER-25先跑通过
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     V = set(visitor.visitors())
@@ -1226,7 +1226,7 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
     加在线子句必然长期误报
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     mains = [rec["main"] for rec in recruit.lines().values() if rec["main"]]
@@ -1278,7 +1278,7 @@ def check_hr_operator_list_integrity() -> list[CheckFailure]:
     成员留在名册里直到下一次刷新，只保留"在编71 ⊆ 列表"这一个方向
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     hr = work.roster(work.HR_WORK)
@@ -1377,7 +1377,7 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
     整体重建sp_flag把field_commission抹成0并塞回名册，而委托记录里还挂着他
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     membership_scene = _scene_membership(cache)
@@ -1442,7 +1442,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
     邀请目标本就不在在编名册内。这些身份同时成立意味着有别的流程绕过了派遣面板
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     C: set[int] = set()
@@ -1622,7 +1622,7 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
     handle_chara_on_line整体重建sp_flag会把in_diplomatic_visit抹成0
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     current_country = location.country()
@@ -1695,7 +1695,7 @@ def check_assistant_identity_exclusion() -> list[CheckFailure]:
     handle_assistant_reset把离线角色从助理位清掉 —— 命中即为某个任命流程漏清身份的真实问题
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     player = cd.get(0)
@@ -1765,7 +1765,7 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
     且不能同时是囚犯、访客、外勤或逃跑者。这对flag分居玩家与目标两个对象，是本域内最容易单边脱钩的一对
     """
     cache = cache_control.cache
-    cd = cache.character_data
+    cd = identity.table()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     player = cd.get(0)

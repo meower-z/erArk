@@ -18,7 +18,9 @@ from unittest import mock
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import edits, working
 from Script.Modules.tk_ui import player_pick
-from tests.fast.kernel_toys import KernelTestCase, Toy, flag, game
+from Script.Modules.domains import identity
+from tests.fast import kernel_toys
+from tests.fast.kernel_toys import KernelTestCase, Toy, flag
 
 
 def _add(old: core.JSON, op: str, operand: core.JSON) -> core.JSON:
@@ -26,18 +28,43 @@ def _add(old: core.JSON, op: str, operand: core.JSON) -> core.JSON:
     return old + operand
 
 
+def game(
+    clock: int,
+    ends: Mapping[str, int],
+    data: Mapping[str, Mapping[str, core.JSON]] | None = None,
+) -> core.GameState:
+    """
+    构造玩具世界的 GameState，并在角色身份表里预置角色 1、2、3
+    Keyword arguments:
+    clock -- 时钟
+    ends -- 角色键到其 Idle 结束分钟的映射
+    data -- 角色键到其数据的映射
+    Return arguments:
+    core.GameState -- 新的 GameState
+    """
+    start = kernel_toys.game(clock, ends, data)
+    record: core.JSON = {
+        "name": "",
+        "sex": 0,
+        "talk_size": 0,
+        "text_color": "",
+        "birthday": (1, 1, 1),
+        "adv": 0,
+        "profession": 0,
+        "race": 0,
+        "token_text": "",
+    }
+    table: core.JSON = {who: record for who in ("1", "2", "3")}
+    return core.with_value(start, None, identity.KEY, table)
+
+
 class WorkingTest(KernelTestCase):
     """working 的读写与搬动"""
 
     def setUp(self) -> None:
-        """每个测试登记自己的键：plain 只能 put，count 由规则拥有。缓存里有角色 1、2、3"""
+        """为当前测试登记 plain（只能 put）与 count（由规则拥有）两个键，并挂载记录应用效果的 spy 钩子"""
         super().setUp()
         self.enterContext(mock.patch.dict(working._keys))
-        self.enterContext(
-            mock.patch.dict(
-                self.cache.character_data, {1: None, 2: None, 3: None}
-            )
-        )
         self.toy = Toy()
         self.plain = self.toy.name("plain")
         self.count = self.toy.name("count")

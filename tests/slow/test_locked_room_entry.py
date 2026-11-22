@@ -11,6 +11,7 @@
 from tests.slow.base import SlowTestCase
 from tests import kernel_data
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 ROOM = ["中枢", "会议室"]
 DR_ROOM = ["中枢", "博士房间"]
@@ -29,7 +30,7 @@ class LockedRoomEntryTest(SlowTestCase):
         self.instruct(constant.Instruct.DOOR_LOCK_INNER)
         room = self.world.scene(ROOM)
         self.assertEqual(room.close_flag, 1)
-        operator = self.cache.character_data[self.npc("杜宾")]
+        operator = identity.of(self.npc("杜宾"))
         self.world.player.press("召集到自己当前位置", "杜宾", "返回")
         self.instruct(constant.Instruct.ALL_NPC_POSITION)
         self.show_panel()

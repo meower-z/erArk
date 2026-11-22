@@ -39,6 +39,7 @@ from Script.Modules.domains import (
 from Script.Modules.domains import abilities, chara_life, dirty, h_state, roster
 from Script.Modules.domains import flags, needs, pregnancy, relations, warehouse
 from Script.Modules.domains import facility, h_meters, hypnosis, recruit, status
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -312,8 +313,8 @@ class TALK_QUICK_TEST:
             change_value_panel.set(_("请输入角色id"), 100)
             chara_adv_id = int(change_value_panel.draw())
             target_chara_id = 0
-            for tem_chara_id in cache.character_data:
-                tem_character_data = cache.character_data[tem_chara_id]
+            for tem_chara_id in identity.table():
+                tem_character_data = identity.of(tem_chara_id)
                 if tem_character_data.adv == chara_adv_id:
                     target_chara_id = tem_chara_id
                     break
@@ -442,7 +443,7 @@ class TALK_QUICK_TEST:
         """
         from Script.Design import talk
 
-        target_character_data = cache.character_data[target_chara_id]
+        target_character_data = identity.of(target_chara_id)
         # 在chara_adv_id前面补零为4位数
         full_adv_id = str(target_character_data.adv).rjust(4, "0")
         chara_name = target_character_data.name
@@ -911,9 +912,7 @@ class Debug_Panel:
                 npc_count = 0
 
                 for NPC_id in id_list:
-                    target_data: game_type.Character = cache.character_data[
-                        NPC_id
-                    ]
+                    target_data: identity.Identity = identity.of(NPC_id)
                     button_text = f"[{str(target_data.adv).rjust(4,'0')}]：{target_data.name}"
                     draw_style = "standard"
                     # 如果有口上颜色的话，则显示颜色
@@ -980,9 +979,9 @@ class Debug_Panel:
             # 本页依次绘制的单个绘制对象
             draw_items: list[draw.Drawable] = []
 
-            target_data: game_type.Character = cache.character_data[
+            target_data: identity.Identity = identity.of(
                 self.target_character_id
-            ]
+            )
             info_text = (
                 f"[{str(target_data.adv).rjust(4,'0')}]：{target_data.name}\n\n"
             )
@@ -1098,14 +1097,14 @@ class Debug_Panel:
                 elif key_index == 1:
                     info_text = "[001]:已拥有的干员id列表：\n"
                     for chara_id in roster.active():
-                        name = cache.character_data[chara_id].name
+                        name = identity.of(chara_id).name
                         info_text += f"{chara_id}:{name} "
                     info_text += "\n\n全干员id列表：\n"
                     for adv_id in npc_template.ids():
                         chara_id = adv_id
-                        if chara_id not in cache.character_data:
+                        if not identity.exists(chara_id):
                             continue
-                        name = cache.character_data[chara_id].name
+                        name = identity.of(chara_id).name
                         info_text += f"{chara_id}:{name} "
                     info_draw.text = info_text
                     info_draw.draw()
@@ -1340,7 +1339,7 @@ class Debug_Panel:
                 elif key_index == 11:
                     roster.discard(0)
                     for chara_id in roster.active():
-                        character_data = cache.character_data[chara_id]
+                        character_data = identity.of(chara_id)
                         flags.reset(character_data.cid)
                 # 重置全角色服装
                 elif key_index == 12:
@@ -1351,7 +1350,7 @@ class Debug_Panel:
                 elif key_index == 13:
                     roster.discard(0)
                     for chara_id in roster.active():
-                        character_data = cache.character_data[chara_id]
+                        character_data = identity.of(chara_id)
                         # 将字符串中的"01区"替换为"1区"
                         chara_life.dormitory.set(
                             character_data.cid,
@@ -1423,9 +1422,9 @@ class Debug_Panel:
             line = draw.LineDraw("-", self.width)
             line.draw()
 
-            target_data: game_type.Character = cache.character_data[
+            target_data: identity.Identity = identity.of(
                 self.target_character_id
-            ]
+            )
             talent = abilities.talent(target_data.cid)
             juel = abilities.juel(target_data.cid)
             experience = abilities.experience(target_data.cid)
@@ -2585,7 +2584,7 @@ class ChangeWorkButtonList:
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
 
-        target_data: game_type.Character = cache.character_data[NPC_id]
+        target_data: identity.Identity = identity.of(NPC_id)
         button_text = f"[{target_data.adv}：{target_data.name}]"
         self.button_return = str(NPC_id)
 
@@ -2612,7 +2611,7 @@ class ChangeWorkButtonList:
             info_draw.width = window_width
             return_list = []
 
-            target_data: game_type.Character = cache.character_data[self.NPC_id]
+            target_data: identity.Identity = identity.of(self.NPC_id)
             info_text = f"{target_data.name}的当前工作为："
             if chara_life.work_type(target_data.cid) == 61:
                 info_text += "坐诊(玩家属性)"
@@ -2660,6 +2659,6 @@ class ChangeWorkButtonList:
 
     def select_new_work(self, work_id: int) -> None:
         """赋予新的工作id"""
-        target_data: game_type.Character = cache.character_data[self.NPC_id]
+        target_data: identity.Identity = identity.of(self.NPC_id)
         chara_life.work_type.set(target_data.cid, work_id)
         basement.update_work_people()

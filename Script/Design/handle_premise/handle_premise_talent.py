@@ -4,6 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import abilities, activity
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -20,7 +21,7 @@ def handle_t_love_sense_taste_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[31] == 0:
         return 1
     return 0
@@ -35,7 +36,7 @@ def handle_self_sexual_ignorance_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[222] == 0:
         return 1
     return 0
@@ -50,7 +51,7 @@ def handle_self_sexual_ignorance_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[222] == 1:
         return 1
     return 0
@@ -65,7 +66,7 @@ def handle_t_love_sense_taste_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[31] == 1:
         return 1
     return 0
@@ -80,7 +81,7 @@ def handle_t_sadism_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[229] == 0:
         return 1
     return 0
@@ -95,7 +96,7 @@ def handle_t_sadism_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[229] == 1:
         return 1
     return 0
@@ -110,7 +111,7 @@ def handle_t_masochism_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[230] == 0:
         return 1
     return 0
@@ -125,7 +126,7 @@ def handle_t_masochism_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[230] == 1:
         return 1
     return 0
@@ -140,7 +141,7 @@ def handle_t_oestrus_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[62] == 0:
         return 1
     return 0
@@ -155,7 +156,7 @@ def handle_t_oestrus_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[62] == 1:
         return 1
     return 0
@@ -354,9 +355,7 @@ def handle_target_buttock_is_small(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[126]
 
 
@@ -369,9 +368,7 @@ def handle_target_buttock_is_normal(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[127]
 
 
@@ -384,9 +381,7 @@ def handle_target_buttock_is_big(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[128]
 
 
@@ -399,9 +394,7 @@ def handle_target_have_no_eras(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[111]
 
 
@@ -414,9 +407,7 @@ def handle_target_have_eras(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[111]
 
 
@@ -429,9 +420,7 @@ def handle_target_have_no_horn(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[112]
 
 
@@ -444,9 +433,7 @@ def handle_target_have_horn(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[112]
 
 
@@ -459,9 +446,7 @@ def handle_target_have_no_tail(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[113]
 
 
@@ -474,9 +459,7 @@ def handle_target_have_tail(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[113]
 
 
@@ -489,9 +472,7 @@ def handle_target_have_no_ring(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[114]
 
 
@@ -504,9 +485,7 @@ def handle_target_have_ring(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[114]
 
 
@@ -519,9 +498,7 @@ def handle_target_have_no_wing(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[115]
 
 
@@ -534,9 +511,7 @@ def handle_target_have_wing(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[115]
 
 
@@ -549,9 +524,7 @@ def handle_target_have_no_tentacle(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[116]
 
 
@@ -564,9 +537,7 @@ def handle_target_have_tentacle(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[116]
 
 
@@ -579,9 +550,7 @@ def handle_target_have_no_car(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[117]
 
 
@@ -594,9 +563,7 @@ def handle_target_have_car(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[117]
 
 
@@ -609,9 +576,7 @@ def handle_target_not_patient(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[150]
 
 
@@ -624,9 +589,7 @@ def handle_target_is_patient(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[150]
 
 
@@ -639,9 +602,7 @@ def handle_target_have_no_crystal(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[162]
 
 
@@ -654,9 +615,7 @@ def handle_target_have_crystal(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[162]
 
 
@@ -669,9 +628,7 @@ def handle_target_have_no_diligent(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[271]
 
 
@@ -684,9 +641,7 @@ def handle_target_have_diligent(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[271]
 
 
@@ -699,9 +654,7 @@ def handle_target_have_no_lazy(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[272]
 
 
@@ -714,9 +667,7 @@ def handle_target_have_lazy(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[272]
 
 
@@ -729,9 +680,7 @@ def handle_target_have_no_fragile(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[273]
 
 
@@ -744,9 +693,7 @@ def handle_target_have_fragile(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[273]
 
 
@@ -759,9 +706,7 @@ def handle_target_have_no_forceful(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[274]
 
 
@@ -774,9 +719,7 @@ def handle_target_have_forceful(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[274]
 
 
@@ -789,9 +732,7 @@ def handle_target_have_no_enthusiactic(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[275]
 
 
@@ -804,9 +745,7 @@ def handle_target_have_enthusiactic(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[275]
 
 
@@ -819,9 +758,7 @@ def handle_target_have_no_alone(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[276]
 
 
@@ -834,9 +771,7 @@ def handle_target_have_alone(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[276]
 
 
@@ -849,9 +784,7 @@ def handle_target_have_no_shame(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[277]
 
 
@@ -864,9 +797,7 @@ def handle_target_have_shame(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[277]
 
 
@@ -879,9 +810,7 @@ def handle_target_have_no_open(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return not abilities.talent(target_data.cid)[278]
 
 
@@ -894,9 +823,7 @@ def handle_target_have_open(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return abilities.talent(target_data.cid)[278]
 
 

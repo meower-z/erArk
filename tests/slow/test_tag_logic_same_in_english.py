@@ -31,6 +31,7 @@ from tests.chara_activity import aim, behave
 from tests.slow import remove_parent_guard
 from tests.slow.base import SlowTestCase
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 CHINESE = "zh_CN"
 """ 基准语言 """
@@ -101,8 +102,8 @@ class LanguageRun:
         self.constant: Any = game("Script.Core.constant")
         self.config: Any = game("Script.Config.game_config")
         self.new_game()
-        self.player: Any = self.cache.character_data[0]
-        self.amiya: Any = self.cache.character_data[AMIYA_ID]
+        self.player: Any = identity.of(0)
+        self.amiya: Any = identity.of(AMIYA_ID)
         self.summon_mode_chosen = False
 
     def press(self, *msgid_list: str) -> None:
@@ -145,7 +146,7 @@ class LanguageRun:
         """
         from Script.Modules.domains import relations
 
-        chara = self.cache.character_data[chara_id]
+        chara = identity.of(chara_id)
         # 面板记住上次选的召集方式，只在第一次按
         mode = () if self.summon_mode_chosen else ("召集到自己当前位置",)
         self.summon_mode_chosen = True

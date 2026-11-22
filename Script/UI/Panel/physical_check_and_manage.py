@@ -20,6 +20,7 @@ from Script.Modules.domains import pregnancy, relations, roster
 import random
 
 from Script.UI.Panel import achievement_panel
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -68,7 +69,7 @@ def settle_health_check() -> None:
                 )
             # 遍历要体检的干员，一半的几率上午体检，一半的几率下午体检
             for chara_id in final_physical_examination_chara_id_list:
-                now_character_data = cache.character_data[chara_id]
+                now_character_data = identity.of(chara_id)
                 if random.randint(0, 1) == 0:
                     action_info.set(
                         now_character_data.cid, "health_check_today", 1
@@ -110,7 +111,7 @@ class Physical_Check_And_Manage_Panel:
         """ 当前绘制的页面 """
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的文本列表 """
-        self.pl_character_data = cache.character_data[0]
+        self.pl_character_data = identity.of(0)
         """ 玩家的角色数据 """
         self.done_check_behavior_id_set: set[str] = physical_exam.checks(
             physical_exam.IN_PROGRESS
@@ -123,11 +124,9 @@ class Physical_Check_And_Manage_Panel:
         title_text = _("身体检查与管理")
         title_draw = draw.TitleLineDraw(title_text, self.width)
         while 1:
-            self.pl_character_data = cache.character_data[
-                0
-            ]  # 更新玩家的角色数据
+            self.pl_character_data = identity.of(0)  # 更新玩家的角色数据
             target_character_id = activity.target(self.pl_character_data.cid)
-            target_character_data = cache.character_data[target_character_id]
+            target_character_data = identity.of(target_character_id)
             return_list = []
             title_draw.draw()
             cinfo_draw = draw.NormalDraw()
@@ -261,7 +260,7 @@ class Physical_Check_And_Manage_Panel:
     def check_target_physical(self, target_character_id: int) -> None:
         """查看目标角色的身体情况"""
         talent = abilities.talent(target_character_id)
-        target_character_data = cache.character_data[target_character_id]
+        target_character_data = identity.of(target_character_id)
 
         # 指令与前置指令的对应表
         cmd_able_dict = {
@@ -450,7 +449,7 @@ class Physical_Check_And_Manage_Panel:
 
     def manage_target_physical(self, target_character_id: int) -> None:
         """对目标角色进行身体管理"""
-        target_character_data = cache.character_data[target_character_id]
+        target_character_data = identity.of(target_character_id)
 
         # 判断是否要重置身体管理数据
         if not len(body_manage.of(target_character_id)):
@@ -569,7 +568,7 @@ class Physical_Check_And_Manage_Panel:
             manage_cid
         ]
         body_manage_second_behavior_id = body_manage_data.second_behavior_id
-        target_character_data = cache.character_data[target_character_id]
+        target_character_data = identity.of(target_character_id)
         judge_result = False
         require_text = ""
 
@@ -835,7 +834,7 @@ class Physical_Check_And_Manage_Panel:
             manage_cid
         ]
         body_manage_second_behavior_id = body_manage_data.second_behavior_id
-        target_character_data = cache.character_data[target_character_id]
+        target_character_data = identity.of(target_character_id)
 
         info_text = "\n"
 
@@ -952,7 +951,7 @@ class Physical_Check_And_Manage_Panel:
 
     def cancle_physical_manage(self, target_character_id: int) -> None:
         """取消目标角色的身体管理"""
-        target_character_data = cache.character_data[target_character_id]
+        target_character_data = identity.of(target_character_id)
         # 取消所有的身体管理
         body_manage.replace(
             target_character_id, attr_calculation.get_body_manage_zero()
@@ -1125,7 +1124,7 @@ class Physical_Check_And_Manage_Panel:
         target_character_id = activity.target(self.pl_character_data.cid)
         target_character_id_abi = abilities.ability(target_character_id)
         target_character_id_exp = abilities.experience(target_character_id)
-        target_character_data = cache.character_data[target_character_id]
+        target_character_data = identity.of(target_character_id)
         all_part_sex_exp = 0
         for exp_id in {61, 62, 63, 64}:
             all_part_sex_exp += target_character_id_exp[exp_id]
@@ -1206,9 +1205,7 @@ class Physical_Check_And_Manage_Panel:
         if len(child_id_list) > 0:
             report_text += _(" 已经生育了{0}个孩子，分别是：{1}").format(
                 len(child_id_list),
-                "、".join(
-                    [cache.character_data[cid].name for cid in child_id_list]
-                ),
+                "、".join([identity.of(cid).name for cid in child_id_list]),
             )
         report_text += "\n"
         # 催眠
@@ -1283,7 +1280,7 @@ class Physical_Check_And_Manage_Panel:
             now_text += _(
                 "于{kiss_time}在{kiss_palce}，向{character_name}博士"
             ).format(
-                character_name=cache.character_data[kiss_id].name,
+                character_name=identity.of(kiss_id).name,
                 kiss_time=game_time.get_month_text(kiss_time)
                 + _("月")
                 + str(kiss_time.day)
@@ -1307,7 +1304,7 @@ class Physical_Check_And_Manage_Panel:
                 now_text += _(
                     "于{time}在{palce}，被{character_name}博士以{posture}夺走了处女"
                 ).format(
-                    character_name=cache.character_data[record["id"]].name,
+                    character_name=identity.of(record["id"]).name,
                     time=game_time.get_date_until_day(record["time"])[3:],
                     palce=attr_text.get_scene_path_text(record["place"]),
                     posture=record["posture"],
@@ -1324,7 +1321,7 @@ class Physical_Check_And_Manage_Panel:
                 now_text += _(
                     "于{time}在{palce}，被{character_name}博士以{posture}夺走了A处女"
                 ).format(
-                    character_name=cache.character_data[record["id"]].name,
+                    character_name=identity.of(record["id"]).name,
                     time=game_time.get_date_until_day(record["time"])[3:],
                     palce=attr_text.get_scene_path_text(record["place"]),
                     posture=record["posture"],

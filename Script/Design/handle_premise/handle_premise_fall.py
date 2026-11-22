@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities, activity, roster
+from Script.Modules.domains import abilities, activity, roster, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -241,7 +241,7 @@ def handle_target_love_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[201]:
         return 1
     return 0
@@ -256,7 +256,7 @@ def handle_target_love_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[202]:
         return 1
     return 0
@@ -271,7 +271,7 @@ def handle_target_love_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[203]:
         return 1
     return 0
@@ -310,7 +310,7 @@ def handle_target_love_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for i in {201, 202, 203, 204}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -326,7 +326,7 @@ def handle_target_love_ge_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for i in {202, 203, 204}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -342,7 +342,7 @@ def handle_target_love_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for i in {203, 204}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -358,7 +358,7 @@ def handle_target_love_le_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for i in {201, 202}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -406,7 +406,7 @@ def handle_target_obey_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[211]:
         return 1
     return 0
@@ -421,7 +421,7 @@ def handle_target_obey_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[212]:
         return 1
     return 0
@@ -436,7 +436,7 @@ def handle_target_obey_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[213]:
         return 1
     return 0
@@ -475,7 +475,7 @@ def handle_target_obey_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for i in {211, 212, 213, 214}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -491,7 +491,7 @@ def handle_target_obey_ge_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for i in {212, 213, 214}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -507,7 +507,7 @@ def handle_target_obey_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for i in {213, 214}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -523,7 +523,7 @@ def handle_target_obey_le_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for i in {211, 212}:
         if abilities.talent(target_data.cid)[i]:
             return 1

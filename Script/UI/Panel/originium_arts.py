@@ -15,7 +15,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, dirty, hypnosis, player_ability
 from Script.Modules.domains import player_collection, roster, status, warehouse
-from Script.Modules.domains import relations
+from Script.Modules.domains import relations, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -42,7 +42,7 @@ class Originium_Arts_Panel:
         """ 绘制的最大宽度 """
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的文本列表 """
-        self.pl_character_data = cache.character_data[0]
+        self.pl_character_data = identity.of(0)
         """ 玩家的属性 """
 
     def draw(self) -> None:
@@ -378,7 +378,7 @@ class Originium_Arts_Panel:
                     # 好感度与信赖度
                     now_favorability_count, now_trust_count = 0, 0
                     for chara_id in roster.active():
-                        character_data = cache.character_data[chara_id]
+                        character_data = identity.of(chara_id)
                         if (
                             relations.favorability(character_data.cid)[0]
                             > now_favorability_count
@@ -418,7 +418,7 @@ class Originium_Arts_Panel:
                         now_fall_count += handle_premise.handle_self_fall(
                             chara_id
                         )
-                        character_data = cache.character_data[chara_id]
+                        character_data = identity.of(chara_id)
                         now_favorability_count += int(
                             relations.favorability(character_data.cid)[0]
                         )
@@ -444,7 +444,7 @@ class Originium_Arts_Panel:
                     # 总好感度与总陷落角色
                     now_favorability_count, now_fall_count = 0, 0
                     for chara_id in roster.active():
-                        character_data = cache.character_data[chara_id]
+                        character_data = identity.of(chara_id)
                         now_favorability_count += int(
                             relations.favorability(character_data.cid)[0]
                         )
@@ -490,7 +490,7 @@ class Originium_Arts_Panel:
                     # 计算体内被射精总量和总绝顶经验
                     now_semen_count, now_exp_count = 0, 0
                     for chara_id in roster.active():
-                        character_data = cache.character_data[chara_id]
+                        character_data = identity.of(chara_id)
                         body_semen = dirty.view(chara_id).body_semen
                         for part_id in [2, 6, 7, 8, 9, 15]:
                             now_semen_count += body_semen[part_id][3]
@@ -715,7 +715,7 @@ class Down_Negative_Talent_Panel:
 
             # 遍历备选人物名字并输出按钮
             for chara_id in roster.active():
-                character_data = cache.character_data[chara_id]
+                character_data = identity.of(chara_id)
 
                 for ability_id in self.ability_id_list:
                     if abilities.ability(chara_id)[ability_id]:
@@ -753,7 +753,7 @@ class Down_Negative_Talent_Panel:
     def choice_down_which(self, chara_id: int) -> None:
         """选择降低哪一个"""
         ability = abilities.ability(chara_id)
-        character_data = cache.character_data[chara_id]
+        character_data = identity.of(chara_id)
         self.chara_id = chara_id
         name = character_data.name
 
@@ -801,7 +801,7 @@ class Down_Negative_Talent_Panel:
     def settle_down(self, ability_id: int) -> None:
         """结算刻印降低"""
         info_draw = draw.NormalDraw()
-        character_data = cache.character_data[self.chara_id]
+        character_data = identity.of(self.chara_id)
         ability = abilities.ability(character_data.cid)
 
         # 计算当前该角色的胖次数量，大于五则成功，不足则弹出失败提示
@@ -847,7 +847,7 @@ class Down_Negative_Talent_Panel:
                 "  {0}感觉心里轻松了很多，对{1}的印象有些改观了，{2}下降到了{3}级\n"
             ).format(
                 character_data.name,
-                cache.character_data[0].name,
+                identity.of(0).name,
                 game_config.config_ability[ability_id].name,
                 ability[ability_id],
             )

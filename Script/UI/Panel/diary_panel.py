@@ -13,6 +13,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import normal_config
 import os
 from Script.Modules.domains import history
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -128,7 +129,7 @@ class Diary_Panel:
         diary_files_path = os.path.join("save", "diary")
         if not os.path.exists(diary_files_path):
             os.makedirs(diary_files_path)
-        pl_name = cache.character_data[0].name
+        pl_name = identity.of(0).name
         time = f"_{game_time.now().year}_{game_time.now().month}_{game_time.now().day}"
         diray_file_name = pl_name + time + ".txt"
         diray_file_path = os.path.join(diary_files_path, diray_file_name)

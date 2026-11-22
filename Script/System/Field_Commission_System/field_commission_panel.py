@@ -17,6 +17,7 @@ from Script.System.Field_Commission_System.field_commission_function import (
 )
 from Script.Modules.domains import abilities, commission, facility, flags
 from Script.Modules.domains import location, roster, chara_life, chara_profile
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -196,10 +197,7 @@ class Field_Commission_Panel:
                     ):
                         chara_adv = int(commision_data.demand.split("_")[1])
                         for character_id in roster.active():
-                            if (
-                                cache.character_data[character_id].adv
-                                == chara_adv
-                            ):
+                            if identity.of(character_id).adv == chara_adv:
                                 break
                         else:
                             continue
@@ -443,7 +441,7 @@ class CommissionDraw:
             if not self.send_npc_list:
                 info_draw_2_text += _(" 无")
             for chara_id in self.send_npc_list:
-                chara_data = cache.character_data[chara_id]
+                chara_data = identity.of(chara_id)
                 chara_name = chara_data.name
                 info_draw_2_text += f"  {chara_name}"
 
@@ -622,7 +620,7 @@ class CommissionDraw:
         for npc_id in roster.active():
             if npc_id == 0:
                 continue
-            if cache.character_data[npc_id].adv in required_chars_adv:
+            if identity.of(npc_id).adv in required_chars_adv:
                 if npc_id not in self.send_npc_list:
                     # 检查是否满足最基本的出勤前提，满足才自动勾选
                     if (
@@ -729,14 +727,14 @@ class CommissionDraw:
             info_text = _("（无意识/重伤/特殊职位等无法出勤）\n")
             info_text += _("队长：")
             if self.lead_chara_id != 0:
-                info_text += cache.character_data[self.lead_chara_id].name
+                info_text += identity.of(self.lead_chara_id).name
             else:
                 info_text += _("无")
             info_text += _("。队员：")
             for npc_id in self.send_npc_list:
                 if npc_id == self.lead_chara_id:
                     continue
-                info_text += cache.character_data[npc_id].name + " "
+                info_text += identity.of(npc_id).name + " "
 
             info_draw = draw.NormalDraw()
             info_draw.text = info_text + "\n\n"
@@ -1022,7 +1020,7 @@ class CommissionDraw:
 
             # --- 7. 遍历渲染当前页干员 ---
             for npc_id in current_page_charas:
-                character_data = cache.character_data[npc_id]
+                character_data = identity.of(npc_id)
                 name = character_data.name
                 id_str = str(character_data.adv).rjust(4, "0")
 
@@ -1328,7 +1326,7 @@ class CommissionDraw:
         draw_text = ""
         draw_text += _("\n\n已派遣 ")
         for character_id in self.send_npc_list:
-            character_data = cache.character_data[character_id]
+            character_data = identity.of(character_id)
             character_name = character_data.name
             draw_text += f"{character_name} "
         draw_text += _("执行委托：")

@@ -13,6 +13,7 @@ from Script.Core import (
 from Script.Config import normal_config
 from Script.Design import handle_premise, map_handle
 from Script.Modules.domains import achievement, activity, flags
+from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 
@@ -57,9 +58,7 @@ def update_exhibiionism_sex_mode() -> None:
         0, remove_own_character=True
     )
     for chara_id in now_scene_character_list:
-        target_character_data: game_type.Character = cache.character_data[
-            chara_id
-        ]
+        target_character_data: identity.Identity = identity.of(chara_id)
         if flags.get(target_character_data.cid, "exhibitionism_sex_mode") != 0:
             flags.set(
                 target_character_data.cid, exhibitionism_sex_mode=new_mode

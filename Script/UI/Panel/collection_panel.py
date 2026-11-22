@@ -11,6 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import player_collection, roster, warehouse
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -52,7 +53,7 @@ def collapse_collection() -> None:
                 pan_name = game_config.config_clothing_tem[pan_id].name
                 npc_panties.setdefault(npc_id, []).append(pan_name)
                 now_draw_text += _("增加了藏品：{0}的{1}\n").format(
-                    cache.character_data[npc_id].name, pan_name
+                    identity.of(npc_id).name, pan_name
                 )
                 now_draw.draw()
         player_collection.update(npc_panties=npc_panties, npc_panties_tem={})
@@ -71,7 +72,7 @@ def collapse_collection() -> None:
                 socks_name = game_config.config_clothing_tem[socks_id].name
                 npc_socks.setdefault(npc_id, []).append(socks_name)
                 now_draw_text += _("增加了藏品：{0}的{1}\n").format(
-                    cache.character_data[npc_id].name, socks_name
+                    identity.of(npc_id).name, socks_name
                 )
                 now_draw.draw()
         player_collection.update(npc_socks=npc_socks, npc_socks_tem={})
@@ -407,9 +408,8 @@ class Token_Draw:
         """ 按钮编号 """
 
         token_draw = draw.NormalDraw()
-        npc_name = cache.character_data[self.character_id].name
-        npc_token = cache.character_data[self.character_id].token_text
-        token_text = f"\n  {npc_name}：{npc_token}"
+        one = identity.of(self.character_id)
+        token_text = f"\n  {one.name}：{one.token_text}"
         token_draw.text = token_text
         self.draw_text = ""
         self.now_draw = token_draw
@@ -450,7 +450,7 @@ class Pan_Draw:
         self.button_id: int = button_id
         """ 按钮编号 """
 
-        npc_name = cache.character_data[self.character_id].name
+        npc_name = identity.of(self.character_id).name
 
         pan_text = f"\n  {npc_name}："
         # 处子血胖次
@@ -514,7 +514,7 @@ class Socks_Draw:
         self.button_id: int = button_id
         """ 按钮编号 """
 
-        npc_name = cache.character_data[self.character_id].name
+        npc_name = identity.of(self.character_id).name
 
         socks_text = f"\n  {npc_name}："
         # 常规袜子

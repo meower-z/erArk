@@ -10,6 +10,7 @@ from Script.Modules.domains import flags, maintenance, physical_exam, production
 from Script.Modules.domains import abilities, chara_life, diplomacy, inventory
 from Script.Modules.domains import economy, facility, official, power, warehouse
 from Script.Modules.domains import fridge, recruit, roster, tallies, work
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -303,7 +304,7 @@ def update_work_people() -> None:
     recruit_lines = recruit.lines()
     for line in recruit_lines.values():
         main_id = line["main"]
-        if main_id and main_id in cache.character_data:
+        if main_id and identity.exists(main_id):
             if chara_life.work_type(main_id) != 71:
                 line["main"] = 0
     recruit.put_lines(recruit_lines)
@@ -314,7 +315,7 @@ def update_work_people() -> None:
     # 遍历在编干员，把每人加进所在岗位的名单（无岗位的进岗位 0）
     roster.discard(0)
     for chara_id in roster.active():
-        character_data = cache.character_data[chara_id]
+        character_data = identity.of(chara_id)
         work_type = chara_life.work_type(chara_id)
 
         rosters.setdefault(work_type, []).append(chara_id)
@@ -411,8 +412,7 @@ def settle_milk() -> None:
     fridge.clear(fridge.MILK)
 
     # 结算所有角色携带的母乳
-    chara_id_list = list(cache.character_data.keys())
-    chara_id_list.append(0)
+    chara_id_list = [*identity.ids(), 0]
     for character_id in chara_id_list:
 
         # 遍历角色背包

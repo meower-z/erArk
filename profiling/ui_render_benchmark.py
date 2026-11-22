@@ -28,6 +28,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 from Script.Modules.domains import roster
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from typing import TypedDict
@@ -144,13 +145,11 @@ def main() -> None:
 
     ui_perf_patch.apply_flow_draw_patches()
 
-    from Script.Core import cache_control, constant, flow_handle, io_init
+    from Script.Core import constant, flow_handle, io_init
     from Script.Config import normal_config
     from Script.UI.Moudle import view
 
-    cache = cache_control.cache
-
-    if not cache.character_data or 0 not in cache.character_data:
+    if not identity.exists(0):
         log("错误：存档未正确加载（无玩家数据），中止。")
         sys.exit(1)
     log(f"存档已加载：NPC 数量 = {roster.count()}")

@@ -14,6 +14,7 @@ from Script.Design import character_move, map_handle
 from Script.Kernel import core
 from Script.Modules.domains import action_info, flags, chara_key
 from Script.Modules.gameplay_resolution import intent
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -151,7 +152,7 @@ class Plan:
             return flags.get(self.character_id, rest[0])
         if root == "action_info" and len(rest) == 1:
             return action_info.get(self.character_id, rest[0])
-        node: object = cache.character_data[self.character_id]
+        node: object = identity.of(self.character_id)
         for name in (root, *rest):
             node = getattr(node, name)
         return node

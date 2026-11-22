@@ -15,7 +15,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import attr_calculation, game_time
-from Script.Modules.domains import growth
+from Script.Modules.domains import growth, identity
 from Script.System.Education_System import education_constant, semester_handle
 from Script.System.Education_System import growth_handle, student_select
 from Script.System.Education_System import class_ai
@@ -141,7 +141,7 @@ class Growth_Panel:
                 stage_name = education_constant.STAGE_TALENT_NAME[talent_id]
                 break
         # 母亲：血缘关系里的 mother_id，旧档或数据损坏时可能指向不存在的角色
-        mother = cache.character_data.get(relations.mother_id(character_id))
+        mother = identity.get(relations.mother_id(character_id))
         mother_name = mother.name if mother is not None else _("未知")
         text = _("\n  母亲：{0}｜当前阶段：{1}").format(mother_name, stage_name)
         # 下一阶段：阈值与成长天数都由妊娠系统统一计算（含成长加速药），这里只取用不重算

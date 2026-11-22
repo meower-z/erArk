@@ -19,16 +19,13 @@ import importlib
 from collections.abc import Iterator
 from fractions import Fraction
 import os
-from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests import kernel_data
 from tests.chara_activity import aim
 from tests.kernel_project import activity
 from tests.slow.base import SlowTestCase
-
-if TYPE_CHECKING:
-    from Script.Core import game_type
+from tests.kernel_project import identity
 
 EFFECT_MODULES = frozenset(
     {
@@ -54,12 +51,12 @@ H_METERS = ("eja", "semen")
 
 
 def num_fields(
-    character: "game_type.Character",
+    character: "identity.Identity",
 ) -> Iterator[tuple[str, object]]:
     """
     列出一个角色的全部连续数值，含 GameState 里的生理需求（body.needs）、H 数值与污浊
     Keyword arguments:
-    character -- 角色数据（game_type.Character）
+    character -- 角色身份（identity.Identity）
     Return arguments:
     Iterator[tuple[str, object]] -- (数值路径, 值)
     """
@@ -92,11 +89,11 @@ def num_fields(
     )
 
 
-def set_thirds(character: "game_type.Character") -> None:
+def set_thirds(character: "identity.Identity") -> None:
     """
     把一个角色的每个连续数值与生理需求设为一个整数加 1/3（整数取当前值，不小于 1）
     Keyword arguments:
-    character -- 角色数据（game_type.Character）
+    character -- 角色身份（identity.Identity）
     Return arguments:
     无
     """
@@ -218,7 +215,7 @@ class NumNoFloatTest(SlowTestCase):
             while core.state().clock < start + MINUTES:
                 core.step()
                 steps += 1
-                for cid, character in self.cache.character_data.items():
+                for cid, character in identity.table().items():
                     for path, value in num_fields(character):
                         if wrong(value) and (cid, path) not in found:
                             found[cid, path] = (
@@ -240,11 +237,11 @@ class NumNoFloatTest(SlowTestCase):
             "Script.System.Field_Commission_System.field_commission_function"
         )
 
-        player = self.cache.character_data[0]
+        player = identity.of(0)
         operator_id = min(
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
-        operator = self.cache.character_data[operator_id]
+        operator = identity.of(operator_id)
         kernel_data.put(
             activity.set_position, operator_id, list(activity.position(0))
         )
@@ -284,7 +281,7 @@ class NumNoFloatTest(SlowTestCase):
             except Exception as error:
                 raised[name] = f"{type(error).__name__}: {error}"
             for cid in (0, operator_id):
-                fields = num_fields(self.cache.character_data[cid])
+                fields = num_fields(identity.of(cid))
                 for path, value in fields:
                     if wrong(value):
                         found[name, cid, path] = f"{type(value).__name__}"

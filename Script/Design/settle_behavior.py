@@ -18,6 +18,7 @@ from Script.UI.Panel import hypnosis_panel
 from Script.Modules.domains import abilities, action_info, activity
 from Script.Modules.domains import chara_profile, flags, h_meters, hypnosis
 from Script.Modules.domains import modes, needs, relations, roster, status, work
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -63,8 +64,8 @@ def handle_settle_behavior(
     """
     from Script.System.Sex_System import group_sex_panel
 
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    player_character_data: game_type.Character = cache.character_data[0]
+    now_character_data: identity.Identity = identity.of(character_id)
+    player_character_data: identity.Identity = identity.of(0)
     # NPC对玩家交互时，下面会与玩家一侧的记录对象互换，故两种记录类型都可能
     change_data: game_type.CharacterStatusChange | game_type.TargetChange
     target_change: game_type.CharacterStatusChange | game_type.TargetChange
@@ -401,7 +402,7 @@ def handle_settle_behavior(
                     target_change = change_data.target_change[
                         target_character_id
                     ]
-                    target_data = cache.character_data[target_character_id]
+                    target_data = identity.of(target_character_id)
                 else:
                     judge = 1
                 name = f"\n{target_data.name}"
@@ -682,9 +683,9 @@ def handle_instruct_data(
                 minute=activity.behavior(character_id).duration,
                 old_date=activity.behavior(character_id).start_time,
             )
-            target_character_data: game_type.Character = cache.character_data[
+            target_character_data: identity.Identity = identity.of(
                 activity.target(character_id)
-            ]
+            )
             action_info.set(
                 target_character_data.cid,
                 "interacting_character_end_info",
@@ -885,9 +886,7 @@ def change_character_talkcount_for_time(
     character_id -- 角色id
     now_time -- 当前时间
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if not action_info.get(target_data.cid, "talk_time"):
         action_info.set(target_data.cid, "talk_time", now_time)
     if (
@@ -1092,7 +1091,7 @@ def handle_comprehensive_value_effect(
         final_change_data = change_data.target_change.setdefault(
             final_character_id, game_type.TargetChange()
         )
-    final_character_data = cache.character_data[final_character_id]
+    final_character_data = identity.of(final_character_id)
 
     # 进行数值B的判别,A能力,T素质,J宝珠,E经验,S状态,F好感度,X信赖
     type_son_id = 0

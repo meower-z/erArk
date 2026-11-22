@@ -5,7 +5,7 @@
 开新游戏并存档，把存档改写为版本 22，在文件 "1" 的 npc_tem_data 里放入带 6 与 7 号素质的局内生成模板。
 6 与 7 号素质不在 Talent.csv（game_config.config_talent）里。
 读档后验证该角色存在，再按「醒来」开始新周目。
-新周目后该角色仍存在，且 cache.character_data 里每个角色都不带 game_config.config_talent 中没有的素质编号。
+新周目后该角色仍存在，且 identity.table() 里每个角色都不带 game_config.config_talent 中没有的素质编号。
 """
 
 import importlib
@@ -75,7 +75,7 @@ class NewRoundGeneratedTalentsTest(SlowTestCase):
         game_config = game("Script.Config.game_config")
         abilities = game("Script.Modules.domains.abilities")
         new_round = game("Script.UI.Panel.new_round")
-        cache = game("Script.Core.cache_control").cache
+        identity = game("Script.Modules.domains.identity")
         try:
             self.write_version_22()
             save_handle.input_load_save(SAVE_ID)
@@ -83,15 +83,15 @@ class NewRoundGeneratedTalentsTest(SlowTestCase):
             shutil.rmtree(
                 save_handle.get_save_dir_path(SAVE_ID), ignore_errors=True
             )
-        self.assertIn(GENERATED, cache.character_data)
+        self.assertIn(GENERATED, identity.table())
         self.world.player.press("醒来")
         world.act(new_round.New_Round_Handle().start_new_round)
         self.world.player.check_done()
-        self.assertIn(GENERATED, cache.character_data)
+        self.assertIn(GENERATED, identity.table())
         unknown = {
             cid: sorted(
                 set(abilities.talent(cid)) - set(game_config.config_talent)
             )
-            for cid in cache.character_data
+            for cid in identity.table()
         }
         self.assertEqual({cid: ids for cid, ids in unknown.items() if ids}, {})

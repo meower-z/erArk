@@ -26,8 +26,8 @@
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| CORE-01 | 角色索引一致性 | cache.npc_id_got（已拥有的干员id集合）中的每个id都能在cache.character_data（角色对象数据缓存组）中找到对应角色对象， 避免出现"已拥有但无角色数据"的野指针式状态 |
-| CORE-02 | 交互对象有效性 | cache.character_data中每个角色的target_character_id（角色当前交互对象id）指向的角色确实存在于character_data中 |
+| CORE-01 | 角色索引一致性 | 在编名单（roster.active()）中的每个id都存在于角色身份表（identity.characters），避免出现"在编但无角色身份"的野指针状态 |
+| CORE-02 | 交互对象有效性 | 角色身份表（identity.characters）中每个角色的交互对象id（activity.target）指向的角色确实存在于身份表中 |
 
 ## BEHAV：行为与时钟
 
@@ -35,7 +35,7 @@
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| BEHAV-01 | 角色字典键与角色自身cid一致 | cache.character_data的字典键与角色对象自身的cid一致 |
+| BEHAV-01 | 角色字典键与角色自身cid一致 | 角色身份表（identity.table()）的键与对应Identity自身的cid一致 |
 | BEHAV-02 | 全局时钟健全性 | 内核全局数据里的 ticked（分钟）与 settled_day（游戏日）都是整数 |
 | BEHAV-03 | 世界月份只能是四季月 | game_time.now() 的月份属于四季月{3,6,9,12} |
 | BEHAV-04 | 上一循环时间不得晚于当前时间 | ticked 不晚于内核时钟，settled_day 不晚于时钟所在的游戏日 |
@@ -47,13 +47,13 @@
 | BEHAV-11 | 行为起时不得晚于游戏时间 | 每个被调度角色的behavior.start_time不晚于cache.game_time |
 | BEHAV-12 | 不得残留已过期的行为 | 非H、duration>0的被调度角色，其行为结束时间END()不早于cache.game_time |
 | BEHAV-14 | 移动行为必须带着可执行的路径 | behavior_id为move的角色带着可执行的路径快照 |
-| BEHAV-15 | "谁在跟我互动"的记录必须指向真实角色 | 每个角色的action_info.interacting_character_end_info[0]（结算交互行为时写进对方的"发起方id"） 要么是哨兵-1，要么指向character_data中真实存在的角色 |
+| BEHAV-15 | "谁在跟我互动"的记录必须指向真实角色 | 每个角色的action_info.interacting_character_end_info[0]（结算交互行为时写进对方的"发起方id"）要么是哨兵-1，要么指向角色身份表（identity.characters）中存在的角色 |
 | BEHAV-16 | 生效中的身体道具不得已过期 | h_state.body_item中"生效中(item[1]为真)"的道具，其结束时间item[2]要么为None要么晚于 cache.game_time |
 | BEHAV-17 | 二段行为取值与待结算id合法 | second_behavior(二段行为id→0/1触发标记字典)的取值只能是0或1的int，以及 must_settle_second_behavior_id_list/must_show_second_behavior_id_list两个待处理id列表中的每个id都在 game_config.config_behavior_effect_data中——must_settle_check()与must_show_talk_check()都会无保护地 下标该配表，键错即KeyError |
 | BEHAV-18 | 行为历史队列有界且条目可比 | last_behavior_id_list是长度在[1,5]的list，且每个元素要么是0要么是字符串 |
 | BEHAV-19 | 时停中玩家必须处于时停无意识态 | time_stop_mode为真时，0号玩家的sp_flag.unconscious_h必须等于3(时停语义) |
 | BEHAV-20 | 群交模式必须有玩家在H中 | cache.group_sex_mode为真时，0号玩家的sp_flag.is_h必须为真 |
-| BEHAV-21 | 完成集合里只能是存在的角色id | cache.over_behavior_character(结算完成集合)是set，且其中每个元素都是int且指向character_data中 真实存在的角色 |
+| BEHAV-21 | 完成集合里只能是存在的角色id | cache.over_behavior_character(结算完成集合)是set，且其中每个元素都是int且指向角色身份表（identity.characters）中存在的角色 |
 | BEHAV-22 | 行为起时落在四季月上 | 每个被调度角色(排除哨兵值)的behavior.start_time月份属于四季月{3,6,9,12} |
 
 ## BODY：服装与身体
@@ -82,7 +82,7 @@
 | BODY-20 | 阴茎污浊字典键值 | penis_dirty_dict的键仅为"semen"/"blood"，值严格为bool；默认空dict合法 |
 | BODY-21 | 生理周期日为配置内合法值 | reproduction_period是int且存在于config_reproduction_period（该值被直接当配置下标，越界即KeyError） |
 | BODY-22 | 受精/妊娠/临盆三阶段互斥 | 素质20受精/21妊娠/22临盆至多持有一个（单向迁移，每次先清旧再置新，同持两个即状态机破裂） |
-| BODY-23 | 产后/育儿互斥且须有可追溯的孩子 | 素质23产后与24育儿互斥；两者任一成立时child_id_list须为非空list且末位id存在于character_data （推进函数无保护读取child_id_list[-1]并索引character_data，… |
+| BODY-23 | 产后/育儿互斥且须有可追溯的孩子 | 素质23产后与24育儿互斥。两者任一成立时child_id_list须为非空list且末位id存在于角色身份表（identity.characters），推进函数直接读取child_id_list[-1]并调用identity.of |
 | BODY-24 | 怀孕中须有有效受精时间 | 处于素质20/21/22任一阶段的角色，其fertilization_time是有效datetime（非默认值年份1）且不晚于当前游戏时间 （阶段推进全靠该时间差，默认值或未来值会让角色瞬间跳到临盆或永远卡住） |
 | BODY-25 | 孕肚素质与妊娠/临盆绑定 | 素质26孕肚成立当且仅当角色处于21妊娠或22临盆（进入妊娠时授予、分娩时移除） |
 | BODY-26 | 乳汁量有界且上限为正 | body.needs的milk与乳汁上限（body.pregnancy，pregnancy.milk_max）为有限数值、乳汁上限>0（被当分母，<=0会ZeroDivisionError）、0<=milk<=乳汁上限 |
@@ -159,7 +159,7 @@ H 状态、群交模式、逆推、隐奸。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| ISLAND-01 | 干员名单引用完整性 | cache.npc_id_got中的每个id都存在于cache.character_data，且0号玩家角色存在 |
+| ISLAND-01 | 干员名单引用完整性 | 在编名单（roster.active()）中的每个id都存在于角色身份表（identity.characters），且0号玩家角色存在 |
 | ISLAND-02 | 设施等级键完整且落在配置区间 | 当前配置的每个设施都在facility_level中有等级记录，且等级是int、落在该设施效果表的合法下标区间 |
 | ISLAND-03 | 非控制中枢设施等级不超过中枢等级+1 | 除控制中枢(cid 0)自身外，任一设施等级不得高于控制中枢等级+1 |
 | ISLAND-04 | 设施开放表键完整、值为0/1语义 | 当前配置的每个可开放设施都在facility_open中有开放记录，值必须是True/False或语义等价的1/0 |
@@ -246,7 +246,7 @@ H 状态、群交模式、逆推、隐奸。
 | NUM-12 | 状态值字典键集覆盖配表且键为纯int | config_character_state的每个id都在角色的状态值（status.of(cid)）中存在（配表⊆角色），键类型均为精确int |
 | NUM-13 | 状态值为非负的整数或分数 | 角色的状态值（status.of(cid)）都是非负的int或Fraction |
 | NUM-14 | 状态值不超过99999 | 角色的状态值都不超过99999 |
-| NUM-15 | 好感键有效且必含玩家 | 本域唯一方向为"角色⊆全局"的键集检查：校验chara.favorability的每个目标id都必须是cache.character_data 中现存角色，且必须含键0（玩家）——能力升级需求F<n>与事件通道均裸取/裸写favorability[0] |
+| NUM-15 | 好感键有效且必含玩家 | 本域唯一方向为"角色⊆全局"的键集检查：校验角色键social.favorability的每个目标id都必须是角色身份表（identity.characters）中现存角色，且必须含键0（玩家），能力升级需求F<n>与事件通道均直接读写favorability[0] |
 | NUM-16 | 好感值为整数 | 只检查chara.favorability值的类型为int，不设上下界 |
 | NUM-17 | 信赖与催眠程度为有限实数 | chara.trust与chara.hypnosis.hypnosis_degree都是类型合法(int/float)且有限(非NaN/inf)的实数 |
 | NUM-18 | 体力/气力上限为正整数 | body.needs的hit_max/mana_max均为正整数 |
@@ -299,10 +299,10 @@ H 状态、群交模式、逆推、隐奸。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| PLACE-01 | 角色字典键与cid一致 | cache.character_data的每个字典键都等于该角色对象自身的cid字段，防止场景名册、交互目标、 助理引用等按字典键索引却指向身份不一致的对象 |
+| PLACE-01 | 角色字典键与cid一致 | 角色身份表（identity.table()）的每个键都等于对应Identity自身的cid字段，防止场景名册、交互目标、助理引用等按id索引却指向身份不一致的记录 |
 | PLACE-02 | 场景/地图自描述键一致 | cache.scene_data[k].scene_path == k 且 cache.map_data[k].map_path == k |
-| PLACE-03 | 场景名册id必须存在 | 任一Scene.character_list中的id都必须是cache.character_data的键；名册全部写入点都只写已存在角色id， 无合法悬空来源 |
-| PLACE-04 | 角色位置必须是现有场景 | cache.character_data中每个角色（全域，不限LIVE）的position拼成的路径必须是scene_data的键 |
+| PLACE-03 | 场景名册id必须存在 | 任一Scene.character_list中的id都必须存在于角色身份表（identity.characters），名册写入点只写已存在角色id，无合法悬空来源 |
+| PLACE-04 | 角色位置必须是现有场景 | 角色身份表（identity.characters）中每个角色（全域，不限LIVE）的position拼成的路径必须是scene_data的键 |
 | PLACE-05 | 角色→场景方向一致 | 每个在图角色（LIVE域）必须出现在自己position所指场景的character_list里 |
 | PLACE-06 | 场景→角色方向一致 | 场景名册里的每个角色，其position必须正好指回该场景，抓"旧场景没删干净"的残影，与PLACE-05互补 |
 | PLACE-07 | 角色不得同时出现在多个场景 | 同一角色id在所有Scene.character_list中最多出现一次 |
@@ -314,10 +314,10 @@ H 状态、群交模式、逆推、隐奸。
 | PLACE-13 | 移动历史长度与内容合法 | action_info.past_move_position_list最多10条，每条都必须是合法场景路径 |
 | PLACE-14 | 收藏地点必须是合法场景 | cache.collect_position_list每一项都是场景路径列表，必须存在于cache.scene_data； 否则地图收藏面板点一下就会跳进不存在的场景 |
 | PLACE-15 | 宿舍字段必须是合法场景或哨兵值 | LIVE域内角色的dormitory（场景路径字符串）只允许是cache.scene_data的键，或未分配哨兵""/"无" |
-| PLACE-16 | 交互对象id必须存在 | 每个角色的target_character_id必须是cache.character_data的键 |
+| PLACE-16 | 交互对象id必须存在 | 每个角色的交互对象id（activity.target）必须存在于角色身份表（identity.characters） |
 | PLACE-17 | H状态角色的交互对象必须同场 | LIVE域内处于sp_flag.is_h的角色，其交互对象必须存在且与自己position相同 |
 | PLACE-18 | 助理字段只属于玩家 | 只有id 0可以有非零assistant_character_id；NPC上非零都是脏数据（面板与前提只读玩家那一份， NPC上的值永远失效却会随存档迁移传播） |
-| PLACE-19 | 当前助理必须有效且在线 | pl.assistant_character_id非0时，该id必须存在于character_data、在npc_id_got中、未死亡、 且不带任何离线标记 |
+| PLACE-19 | 当前助理必须有效且在线 | 玩家助理id（relations.assistant_character_id(0)）非0时，该id必须存在于角色身份表（identity.characters）、在编名单（roster.active()）中、未死亡且不带任何离线标记 |
 | PLACE-20 | 助理服务值域合法 | assistant_services中每个已知服务键的值不得超过CSV给出的选项下标上界，且不得为负 |
 | PLACE-21 | 助理服务键集完整 | 每个角色的assistant_services应恰好包含服务键2..10 |
 | PLACE-22 | 同居服务与宿舍一致 | 当前助理开启服务7（同居）时，其宿舍应为"中枢/博士房间" |
@@ -388,7 +388,7 @@ H 状态、群交模式、逆推、隐奸。
 |---|---|---|
 | SUPP-01 | 供电策略合法性 | GameState全局键base.power_strategy的键值域：键必须是当前配置中type==-1的大区块设施cid，值必须是game_config.config_supply_strategy的合法键 |
 | SUPP-03 | 设施开放派生单调覆盖 | 对当前config_facility_open中每个待开放项，只要其zone_cid已被全设施 当前等级效果cid覆盖（相等，或同十位且个位数达标），对应facility_open[open_cid]就应为真 |
-| SUPP-04 | 时停无意识值跨名单残留 | 非时停时，character_data中任何角色都不应残留专属时停无意识值 unconscious_h==3 |
+| SUPP-04 | 时停无意识值跨名单残留 | 非时停时，角色身份表（identity.characters）中任何角色都不应残留专属时停无意识值unconscious_h==3 |
 | SUPP-05 | 愤怒值下界 | 每个角色的body.needs的angry类型为int且不小于0 |
 | SUPP-07 | 仓储扩展模块使用数非负 | （只取独立于NUM-26的后半式） |
-| SUPP-08 | 办公室场景引用合法 | character_data中每个角色的officeroom（列表字段）只允许是空列表或 cache.scene_data的合法键 |
+| SUPP-08 | 办公室场景引用合法 | 角色身份表（identity.characters）中每个角色的officeroom（列表字段）只允许是空列表或cache.scene_data的合法键 |

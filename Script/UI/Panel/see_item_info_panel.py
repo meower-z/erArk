@@ -23,6 +23,7 @@ from Script.Modules.domains import (
     player_ability,
 )
 from Script.Modules.domains import warehouse
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -44,7 +45,7 @@ def use_drug(item_id: int) -> None:
     """
     from Script.System.Sex_System import drunk_sex_common
 
-    pl_character_data = cache.character_data[0]
+    pl_character_data = identity.of(0)
     # 根据道具id获取道具效果
     item_data = game_config.config_item[item_id]
     effect_add = item_data.effect
@@ -154,7 +155,7 @@ def auto_use_sanity_drug() -> None:
     """
     自动使用理智药剂，优先使用最低级的理智药剂
     """
-    pl_character_data = cache.character_data[0]
+    pl_character_data = identity.of(0)
     # 遍历理智药剂id
     use_flag = False
     for item_id in range(4):
@@ -189,7 +190,7 @@ class SeeCharacterItemBagPanel:
         """ 最大绘制宽度 """
         self.return_list: list[str] = []
         """ 当前面板监听的按钮列表 """
-        self.character_data = cache.character_data[character_id]
+        self.character_data = identity.of(character_id)
 
         # 按类别统计全部道具
         self.item_list_all = []
@@ -409,7 +410,7 @@ class ItemNameDraw:
         """使用消耗品"""
         from Script.Design import character
 
-        pl_character_data = cache.character_data[0]
+        pl_character_data = identity.of(0)
         item_data = game_config.config_item[self.item_id]
         item_tag = item_data.tag
 
@@ -432,11 +433,12 @@ class ItemNameDraw:
         # 消耗品效果
         # 改名卡
         if self.item_id == 161:
-            pl_character_data.name = character.input_name_func(
+            new_name = character.input_name_func(
                 _(
                     "你能回忆起自己的名字吗？（默认称呼为博士，此处仅输入姓名即可）"
                 )
             )
+            identity.update(0, name=new_name)
         # 绘制使用道具信息
         now_draw.width = window_width
         now_draw.draw()
@@ -466,7 +468,7 @@ class ItemInfoDraw:
         item_draw = draw.NormalDraw()
         item_draw.text = f"{item_config.name}: {item_config.info}"
         if item_config.tag == "npc_use" and target_character_id != 0:
-            target_character_data = cache.character_data[target_character_id]
+            target_character_data = identity.of(target_character_id)
             item_draw.text += "\n" + _(
                 "○对{0}使用\n".format(target_character_data.name)
             )

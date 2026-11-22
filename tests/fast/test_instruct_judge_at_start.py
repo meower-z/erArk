@@ -35,6 +35,7 @@ from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from Script.Modules.domains import action_info, flags
 from Script.Modules.domains import relations
+from Script.Modules.domains import identity
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
@@ -243,7 +244,7 @@ class InstructJudgeAtStartTest(FastTestCase):
             "（开始的行为，拒绝的人数，剩下的理智）",
         )
         self.assertNotIn("effects", data, "失败的行为不带选择时的写入")
-        name = self.cache.character_data[refused[0]].name
+        name = identity.of(refused[0]).name
         self.assertTrue(
             any(f"{name}拒绝了群交" in t for t in self.world.wait_texts),
             "提示了拒绝的人",

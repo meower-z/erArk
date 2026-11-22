@@ -7,7 +7,7 @@
 
 全流水线实现总则：
 1. 禁止调用 Script/Design/handle_premise 中的正式前提函数。这些函数可能升级旧档结构、补写指令过滤键，
-   或通过 setdefault 修改存档。本模块直读 cache/character_data 的字段，经领域模块的读函数读 GameState 里的数据。
+   或通过 setdefault 修改存档。本模块直读 cache 的字段，经领域模块的读函数读 GameState 里的数据。
    地图路径与睡眠等级用已确认无副作用的派生函数算出。
 2. 每回合执行，角色检查保持单层 O(N) 遍历；配置表和场景路径等共享查表放在循环外。
 3. 每条检查的文档字符串都说明健康存档为何恒不命中；无法给出该理由的候选不进入本模块。
@@ -37,6 +37,7 @@ from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
 from Script.Modules.domains import relations
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -64,17 +65,16 @@ _BATH_BEHAVIOR_TAGS = {
 }
 
 
-def _character_data(cache: game_type.Cache) -> dict | None:
+def _character_data(cache: game_type.Cache) -> identity.Table | None:
     """
     参数: cache 全局缓存对象
-    返回值: Optional[dict] 角色字典；结构异常时返回 None
-    功能: 防御式读取 character_data，避免各检查重复裸访问。
+    返回值: identity.Table | None 角色身份表只读视图，cache 为 None 时返回 None
+    功能: 统一读取角色身份表（identity.table()），在 cache 未初始化时返回 None。
     """
-    data = getattr(cache, "character_data", None) if cache is not None else None
-    return data if isinstance(data, dict) else None
+    return identity.table() if cache is not None else None
 
 
-def _pl(cache: game_type.Cache) -> game_type.Character | None:
+def _pl(cache: game_type.Cache) -> identity.Identity | None:
     """
     参数: cache 全局缓存对象
     返回值: 玩家角色对象；角色字典未初始化或缺少 cid=0 时返回 None
@@ -238,7 +238,7 @@ def check_observable_01() -> list[CheckFailure]:
         return []
     details = [
         (
-            f"cid={cid}({_name(cache.character_data[cid])}) "
+            f"cid={cid}({_name(identity.of(cid))}) "
             f"target={activity.target(cid)}"
         )
         for cid in bad
@@ -500,8 +500,8 @@ def check_observable_07() -> list[CheckFailure]:
             "群交现场已开启调教助手设置但没有监狱长(work.warden()=0)，结算会把玩家当助手"
         )
         bad_ids.append(0)
-    data = _character_data(cache) or {}
-    for cid, chara in data.items():
+    data = _character_data(cache)
+    for cid, chara in data.items() if data is not None else ():
         if getattr(_hs(chara), "sex_assist", False) is True and (
             warden == 0 or cid != warden
         ):
@@ -580,8 +580,8 @@ def check_observable_09() -> list[CheckFailure]:
         return []
     details = [
         (
-            f"cid={cid}({_name(cache.character_data[cid])}) "
-            f"insert_position={getattr(_hs(cache.character_data[cid]), 'insert_position', None)}"
+            f"cid={cid}({_name(identity.of(cid))}) "
+            f"insert_position={getattr(_hs(identity.of(cid)), 'insert_position', None)}"
         )
         for cid in bad
     ]

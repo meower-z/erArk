@@ -12,6 +12,7 @@
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
+from tests.kernel_project import identity
 
 BABY = 101
 """ 婴儿素质：差分文本表里没有她的行 """
@@ -50,7 +51,7 @@ class ChildStageDirtTextTest(SlowTestCase):
         self.target_id = min(
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
-        self.target = self.cache.character_data[self.target_id]
+        self.target = identity.of(self.target_id)
         for clothing_type in wardrobe.of(self.target.cid).cloth_wear:
             kernel_data.put(
                 wardrobe.set_part,

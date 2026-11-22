@@ -21,6 +21,7 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import first_record, flags, h_meters, h_state
 from Script.Modules.domains import modes, pregnancy, tallies, wardrobe
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -39,7 +40,7 @@ def show_endure_ejaculation_panel() -> bool:
     return
     bool -- 是否忍住 True为忍住 False为射出
     """
-    character_data: game_type.Character = cache.character_data[0]
+    character_data: identity.Identity = identity.of(0)
     now_lv = abilities.ability(0)[30]
     now_count = h_state.get(0, "endure_not_shot_count")
     line = draw.LineDraw("-", window_width)
@@ -178,9 +179,7 @@ def common_ejaculation() -> tuple[str, int]:
 
         # 如果有交互对象，则根据交互对象的榨精能力等级来调整射精量
         if activity.target(0) > 0:
-            target_data: game_type.Character = cache.character_data[
-                activity.target(0)
-            ]
+            target_data: identity.Identity = identity.of(activity.target(0))
             squeeze_adjust = handle_ability.get_ability_adjust(
                 abilities.ability(target_data.cid)[77]
             )
@@ -467,11 +466,11 @@ def ejaculation_flow(
     soft_egg_id -- 射在体外无壳卵上时的卵编号（-1为不射在卵上）；
     非避孕套时精液全部加到卵上，不更新任何部位污浊/精液流动/受精概率与射精部位记录
     """
-    character_data: game_type.Character = cache.character_data[0]
+    character_data: identity.Identity = identity.of(0)
     # 如果没有赋值目标角色id，则默认为当前目标角色
     if target_character_id == 0:
         target_character_id = activity.target(0)
-    target_data: game_type.Character = cache.character_data[target_character_id]
+    target_data: identity.Identity = identity.of(target_character_id)
 
     semen_text, semen_count = common_ejaculation()
 
@@ -602,9 +601,7 @@ class Ejaculation_Panel:
 
     def draw(self) -> None:
         """绘制对象"""
-        target_data: game_type.Character = cache.character_data[
-            activity.target(0)
-        ]
+        target_data: identity.Identity = identity.of(activity.target(0))
         # 当前地点有体外无壳卵时，无论是否开启自动射精都必须手动选择（可选择射在卵上）
         from Script.System.Pregnancy_System import soft_egg_handle
 
@@ -714,9 +711,7 @@ class Ejaculation_Panel:
                 # 不显示自己
                 if chara_id == 0:
                     continue
-                now_character_data: game_type.Character = cache.character_data[
-                    chara_id
-                ]
+                now_character_data: identity.Identity = identity.of(chara_id)
                 chara_name = now_character_data.name
                 chara_adv = now_character_data.adv
                 draw_text = f"[{chara_adv}]{chara_name}"
@@ -750,9 +745,7 @@ class Ejaculation_Panel:
         title_draw = draw.TitleLineDraw(title_name, self.width)
         while 1:
 
-            target_data: game_type.Character = cache.character_data[
-                activity.target(0)
-            ]
+            target_data: identity.Identity = identity.of(activity.target(0))
 
             return_list = []
             title_draw.draw()

@@ -23,7 +23,7 @@ from Script.Modules.domains import flags, modes, needs, power, wardrobe, work
 from . import check_log
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import chara_life
+from Script.Modules.domains import chara_life, identity
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -122,7 +122,7 @@ def repair_fatigue_family_range(cache: game_type.Cache) -> list[dict]:
         "needs.drunk": 100,
     }
     records = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         values = {f"needs.{k}": v for k, v in needs.of(cid).items()}
         for field, upper in bounds.items():
             v = values[field]
@@ -150,7 +150,7 @@ def repair_angry_point_lower_bound(cache: game_type.Cache) -> list[dict]:
         与SUPP-05同语义：body.needs的angry必须是>=0的int。非int置0，负值拉回0，经needs.set写回
     """
     records = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         v = needs.of(cid)["angry"]
         if type(v) is int and v >= 0:
             continue
@@ -205,7 +205,7 @@ def repair_cloth_id_validity(cache: game_type.Cache) -> list[dict]:
     if not tem:
         return []
     records = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         for attr_name, d in _iter_cloth_containers(cid):
             for t, lst in list(d.items()):
                 if not isinstance(lst, list):
@@ -259,7 +259,7 @@ def repair_cloth_slot_duplicates(cache: game_type.Cache) -> list[dict]:
         与BODY-03同语义：同一容器同一槽位列表内重复的服装id只保留首个，其余移除（保持原有顺序）
     """
     records = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         for attr_name, d in _iter_cloth_containers(cid):
             for t, lst in d.items():
                 if not isinstance(lst, list) or len(lst) == len(set(lst)):
@@ -292,7 +292,7 @@ def repair_clothing_tem_list(cache: game_type.Cache) -> list[dict]:
     if not tem:
         return []
     records = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         cloth = wardrobe.of(cid)
         lst = cloth.clothing_tem
         bad = [x for x in lst if type(x) is not int or x not in tem]
@@ -358,7 +358,7 @@ def repair_main_power_operator_slots(cache: game_type.Cache) -> list[dict]:
         与ISLAND-28同语义。base.power 的 main_operators 里指向不存在角色或 work_type!=11 角色的槽位置 0（空槽）。
         同一 cid 占多槽时保留第一个，其余置 0。槽位有变化时整值写回 base.power
     """
-    cd = cache.character_data
+    cd = identity.table()
     slots = list(power.plant()["main_operators"])
     if len(slots) != 4:
         return []
@@ -400,7 +400,7 @@ def repair_permanent_dormitory_equal_to_dormitory(
         只修这一种失败模式。登记宿舍不是开放的普通宿舍（PLACE-29）时本函数不修，因为推不出角色原来住的普通宿舍
     """
     records = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         v = chara_life.permanent_dormitory(cid)
         if v != "" and v == chara_life.dormitory(cid):
             chara_life.permanent_dormitory.set(cid, "")
@@ -427,7 +427,7 @@ def repair_warden_reference(cache: game_type.Cache) -> list[dict]:
         与ISLAND-29（引用子句，兼ROSTER-12）同语义：监狱长（work.warden）非0但指向的角色不存在或work_type!=191时，
         若恰有一名角色work_type==191则改指该角色，否则置0（无监狱长）。囚犯表子句语义不在本修复范围
     """
-    cd = cache.character_data
+    cd = identity.table()
     warden_id = work.warden()
     if warden_id == 0 or (
         warden_id in cd and chara_life.work_type(warden_id) == 191
@@ -457,7 +457,7 @@ def repair_masturebate_stale_group_flag(cache: game_type.Cache) -> list[dict]:
     if modes.group_sex():
         return []
     records = []
-    for cid, chara in cache.character_data.items():
+    for cid, chara in identity.table().items():
         old_v = flags.get(cid, "masturebate")
         if old_v != 3 or flags.get(cid, "is_h"):
             continue
@@ -498,7 +498,7 @@ def repair_overcrowded_dormitory_room(cache: game_type.Cache) -> list[dict]:
 
     room_residents: dict[str, list[int]] = {}
     for cid in sorted(dormitory_common.get_dormitory_resident_id_set()):
-        chara = cache.character_data.get(cid)
+        chara = identity.get(cid)
         if chara is None:
             continue
         room_residents.setdefault(chara_life.dormitory(cid), []).append(cid)
@@ -524,7 +524,7 @@ def repair_overcrowded_dormitory_room(cache: game_type.Cache) -> list[dict]:
             new_room = dormitory_common.pick_dormitory_room(room_occupancy)
             if new_room == room_path:
                 continue
-            chara = cache.character_data[cid]
+            chara = identity.of(cid)
             old_room = chara_life.dormitory(chara.cid)
             chara_life.dormitory.set(chara.cid, new_room)
             records.append(

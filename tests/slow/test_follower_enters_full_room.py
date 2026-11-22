@@ -11,6 +11,7 @@ from tests import kernel_data
 from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 DR_OFFICE = ["中枢", "博士办公室"]
 CORRIDOR = ["中枢", "走廊"]
@@ -29,7 +30,7 @@ class FollowerEntersFullRoomTest(SlowTestCase):
         self.walk(CORRIDOR)
         recruits = sorted(
             cid
-            for cid in self.cache.character_data
+            for cid in identity.table()
             if cid and cid not in kernel_data.domain("roster").active()
         )[:RECRUITS]
         with kernel_data.writing():

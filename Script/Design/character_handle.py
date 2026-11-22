@@ -1,5 +1,6 @@
 """角色数据的生成与初始化：NPC列表、角色模板、新生孩子、初始位置、娱乐、开放设施与工作，以及获得新角色与增加好感"""
 
+import datetime
 import random
 from types import FunctionType
 from Script.Core import (
@@ -21,6 +22,7 @@ from Script.Modules.domains import abilities, activity, facility, flags, needs
 from Script.Modules.domains import player_collection, playthrough, roster
 from Script.Modules.domains import tallies, visitor, wardrobe, chara_key
 from Script.Modules.domains import chara_life, npc_template, relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -42,53 +44,41 @@ def init_character(
     character_tem: game_type.NpcTem,
     collect_reset: bool = True,
     register_roster: bool = True,
-) -> game_type.Character:
+) -> identity.Identity:
     """
-    按id生成角色属性
+    按模板初始化角色数据并写入角色身份表
     Keyword arguments:
     character_id -- 角色id
     character_tem -- 角色生成模板数据
-    skip_collect_reset -- 是否进行藏品重置
+    collect_reset -- 为真且玩家存在时初始化藏品条目
     register_roster -- 是否写入在编名册与已用姓名（读档补模板角色时为 False）
-    returns:
-    game_type.Character -- 角色数据
+    Return arguments:
+    identity.Identity -- 写入后的角色身份
     """
     # print("进入init_character")
     # print("生成阶段，character_id :",character_id)
     # print("character_id=",character_id)
-    now_character = game_type.Character()
-    now_character.cid = character_id
     chara_key.reset(character_id)
-    now_character.name = character_tem.Name
     # 检测基础干员并加入已有干员列表
     if register_roster:
         if character_tem.AdvNpc in constant.first_NPC_adv_set:
             roster.add(character_id)
-        roster.add_name(now_character.name)  # 加入到已有干员姓名中
-    now_character.sex = character_tem.Sex
-    now_character.profession = character_tem.Profession
-    now_character.race = character_tem.Race
-    relations.nation.set(now_character.cid, character_tem.Nation)
-    relations.birthplace.set(now_character.cid, character_tem.Birthplace)
+        roster.add_name(character_tem.Name)  # 加入到已有干员姓名中
+    relations.nation.set(character_id, character_tem.Nation)
+    relations.birthplace.set(character_id, character_tem.Birthplace)
     # 如果有母亲的话则加上亲子关系
     if character_tem.Mother_id:
-        relations.father_id.set(now_character.cid, 0)
-        relations.mother_id.set(now_character.cid, character_tem.Mother_id)
-    now_character.adv = character_tem.AdvNpc
-    activity.set_target(now_character.cid, character_id)
-    relations.favorability.set(now_character.cid, {0: 0})
-    relations.trust.set(now_character.cid, 0)
+        relations.father_id.set(character_id, 0)
+        relations.mother_id.set(character_id, character_tem.Mother_id)
+    activity.set_target(character_id, character_id)
+    relations.favorability.set(character_id, {0: 0})
+    relations.trust.set(character_id, 0)
     abilities.ability(character_id).replace(character_tem.Ability)
     abilities.experience(character_id).replace(character_tem.Experience)
     abilities.talent(character_id).replace(character_tem.Talent)
     abilities.juel(character_id).replace({})
-    needs.set(
-        now_character.cid, hit_max=character_tem.Hp, mana_max=character_tem.Mp
-    )
-    chara_life.dormitory.set(now_character.cid, character_tem.Dormitory)
-    now_character.token_text = character_tem.Token
-    # if character_tem.Chest:
-    #     now_character.chest_tem = character_tem.Chest
+    needs.set(character_id, hit_max=character_tem.Hp, mana_max=character_tem.Mp)
+    chara_life.dormitory.set(character_id, character_tem.Dormitory)
     # 生成衣服
     cloth = attr_calculation.get_cloth_zero()
     cloth.cloth_wear = attr_calculation.get_cloth_wear_zero()
@@ -96,21 +86,44 @@ def init_character(
         type = game_config.config_clothing_tem[cloth_id].clothing_type
         cloth.clothing_tem.append(cloth_id)
         cloth.cloth_wear[type].append(cloth_id)
-    wardrobe.put(now_character.cid, cloth)
+    wardrobe.put(character_id, cloth)
     # 生成藏品
-    if collect_reset and 0 in cache.character_data:
+    if collect_reset and identity.exists(0):
         player_collection.set_npc_entries(character_id)
-    # 文本颜色
-    if character_tem.TextColor:
-        now_character.text_color = character_tem.TextColor
-    # 赋予口上大小
-    now_character.talk_size = character_tem.Talk_Size
     # 口上版本
     normal_config.system_setting.character_text_version[character_id] = 1
     # 最后集成
-    cache.character_data[character_id] = now_character
+    identity.put(template_identity(character_id, character_tem))
     character.init_attr(character_id)
-    return cache.character_data[character_id]
+    return identity.of(character_id)
+
+
+def template_identity(
+    character_id: int,
+    character_tem: game_type.NpcTem,
+    birthday: datetime.date = datetime.date(1, 1, 1),
+) -> identity.Identity:
+    """
+    按角色模板构造只读的角色身份记录
+    Keyword arguments:
+    character_id -- 角色id
+    character_tem -- 角色生成模板数据
+    birthday -- 角色生日，默认 0001-01-01
+    Return arguments:
+    identity.Identity -- 构造出的角色身份记录
+    """
+    return identity.Identity(
+        character_id,
+        name=character_tem.Name,
+        sex=character_tem.Sex,
+        talk_size=character_tem.Talk_Size,
+        text_color=character_tem.TextColor or "",
+        birthday=birthday,
+        adv=character_tem.AdvNpc,
+        profession=character_tem.Profession,
+        race=character_tem.Race,
+        token_text=character_tem.Token,
+    )
 
 
 def first_NPC_work() -> None:
@@ -118,7 +131,7 @@ def first_NPC_work() -> None:
     初始角色的工作安排
     """
     for character_id in roster.active():
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         # 按干员编号认人：角色名随语言翻译
         if character_data.adv in {7}:  # 可露希尔
             chara_life.work_type.set(character_id, 21)
@@ -153,7 +166,7 @@ def born_new_character(mother_id: int, child_name: str) -> int:
     Returns:
         int: 新角色的id（等于adv）
     """
-    mom_character_data: game_type.Character = cache.character_data[mother_id]
+    mom_character_data: identity.Identity = identity.of(mother_id)
     now_tem = create_empty_character_tem()
     now_tem.Name = child_name
     now_tem.Profession = random.randint(0, 8)
@@ -235,7 +248,6 @@ def init_character_entertainment() -> None:
 
 def init_character_facility_open() -> None:
     """初始化角色开放设施"""
-    cache = cache_control.cache
     for open_cid in game_config.config_facility_open:
         if game_config.config_facility_open[open_cid].NPC_id == 0:
             continue
@@ -245,7 +257,7 @@ def init_character_facility_open() -> None:
                 continue
             if (
                 game_config.config_facility_open[open_cid].NPC_id
-                == cache.character_data[character_id].adv
+                == identity.of(character_id).adv
             ):
                 facility.set_open(open_cid, True)
                 break
@@ -269,7 +281,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
         now_time=game_time.now(),
     )
 
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # 清零全特殊状态flag
     flags.reset(character_id)
 
@@ -405,9 +417,8 @@ def handle_character_setting() -> None:
     """
     处理角色的初始世界设置
     """
-    cache = cache_control.cache
     # 遍历所有角色
-    for character_id in cache.character_data:
+    for character_id in identity.table():
         if character_id == 0:
             continue
         # 淫乱化

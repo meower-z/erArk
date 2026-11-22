@@ -38,6 +38,7 @@ from Script.Modules.domains import history, modes, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -50,16 +51,16 @@ def _live_ids(cache: game_type.Cache) -> set:
     返回值:
         set -- 只遍历确实存在的角色id集合
     功能:
-        计算0号玩家与cache.npc_id_got的并集，再与cache.character_data的键取交集，避免一个悬空id
-        让整条检查降级成"检查器自身异常"；npc_id_got⊆character_data的存在性本身已由仓库现有的CORE-01覆盖，
+        计算0号玩家与在编名单（roster.active()）的并集，再与角色身份表（identity.table()）的键取交集，
+        避免一个悬空id让整条检查降级成"检查器自身异常"。在编名单成员是否都在身份表里由CORE-01覆盖，
         本域不重复报警
     """
     npc_id_got = roster.active()
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     return ({0} | set(npc_id_got)) & set(character_data)
 
 
-def _end(chara: game_type.Character) -> datetime.datetime:
+def _end(chara: identity.Identity) -> datetime.datetime:
     """
     参数:
         chara -- 角色对象
@@ -76,7 +77,7 @@ def _end(chara: game_type.Character) -> datetime.datetime:
     )
 
 
-def _behavior_type_ok(chara: game_type.Character) -> bool:
+def _behavior_type_ok(chara: identity.Identity) -> bool:
     """
     参数:
         chara -- 角色对象
@@ -108,12 +109,11 @@ def check_character_dict_key_matches_cid() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验cache.character_data的字典键与角色对象自身的cid一致。调度器按0与npc_id_got的id直接索引
-        character_data，字典键与角色对象自身cid分裂会让一切按id定位的结算写错角色；旧存档载入流程专门跑
-        fix_wrong_character修正这类编号错误，说明这是真实发生过的缺陷
+        校验身份表（identity.table()）的键与对应 Identity 的 cid 一致。
+        调度器按 0 与在编名单里的 id 查找角色身份，键与 cid 不一致会让按 id 定位的结算写错角色
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     npc_id_got = roster.active()
     failures = []
     for cid in _live_ids(cache):
@@ -262,7 +262,7 @@ def check_behavior_core_field_types() -> list[CheckFailure]:
         BEHAV-10/11/12/22对同一角色跳过判定，避免时间比较抛异常被框架记成"检查器自身异常"而丢掉本该有的诊断
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -302,7 +302,7 @@ def check_behavior_id_registered() -> list[CheckFailure]:
     config_behavior = getattr(game_config, "config_behavior", None)
     if not config_behavior:
         return []
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -338,7 +338,7 @@ def check_behavior_duration_non_negative_int() -> list[CheckFailure]:
         睡眠时长由运行时算出；0是合法值(Behavior()默认、H中add_time==0的分支)
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -375,7 +375,7 @@ def check_behavior_start_time_not_sentinel() -> list[CheckFailure]:
         字段类型损坏(BEHAV-07已报告)的角色本条跳过判定，避免时间比较异常
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     sentinel = datetime.datetime(1, 1, 1)
     over_behavior_character = (
         getattr(cache, "over_behavior_character", None) or set()
@@ -420,7 +420,7 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
     cache = cache_control.cache
     if modes.time_stop():
         return []
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     game_t = game_time.now()
     over_behavior_character = (
         getattr(cache, "over_behavior_character", None) or set()
@@ -472,7 +472,7 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
     cache = cache_control.cache
     if modes.time_stop():
         return []
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     game_t = game_time.now()
     group_sex_mode = modes.group_sex()
     failures = []
@@ -534,7 +534,7 @@ def check_move_behavior_has_executable_path() -> list[CheckFailure]:
         duration>0对H角色豁免：寻路失败时非H角色会被重置后重跑，H角色可能被H捷径保留
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -608,11 +608,11 @@ def check_interacting_character_end_info_valid() -> list[CheckFailure]:
         List[CheckFailure] -- 失败记录列表
     功能:
         校验每个角色的action_info.interacting_character_end_info[0]（结算交互行为时写进对方的"发起方id"）
-        要么是哨兵-1，要么指向character_data中真实存在的角色。旧存档id重映射会让这个字段失效，报出的悬空id
-        就是迁移缺陷信号，属于期望捕获，不加豁免。与CORE-02不重复：CORE-02查的是target_character_id
+        要么是哨兵-1，要么指向身份表（identity.characters）中存在的角色。旧存档id重映射可能让这个字段失效，
+        报出的悬空id是迁移缺陷信号，不加豁免。与CORE-02不重复：CORE-02查的是activity.target
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -656,7 +656,7 @@ def check_active_body_item_not_expired() -> list[CheckFailure]:
         相等返回2(真)，即item[2]<=game_time才算过期
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     time_stop = modes.time_stop()
     game_t = game_time.now()
     failures = []
@@ -714,7 +714,7 @@ def check_second_behavior_values_and_pending_ids() -> list[CheckFailure]:
         旧存档可能带int键。配表未加载时，待结算id合法性部分降级为跳过
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     config_effect = getattr(game_config, "config_behavior_effect_data", None)
     failures = []
     for cid in _live_ids(cache):
@@ -780,7 +780,7 @@ def check_last_behavior_id_list_bounded() -> list[CheckFailure]:
         不并入全局键 log.instructions 的 recent(它没有任何读档裁剪路径)
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -825,7 +825,7 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
     cache = cache_control.cache
     if not modes.time_stop():
         return []
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     player = character_data.get(0)
     if player is None:
         return []
@@ -871,7 +871,7 @@ def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
     cache = cache_control.cache
     if not modes.group_sex():
         return []
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     player = character_data.get(0)
     if player is None:
         return []
@@ -904,14 +904,13 @@ def check_over_behavior_character_ids_exist() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验cache.over_behavior_character(结算完成集合)是set，且其中每个元素都是int且指向character_data中
-        真实存在的角色。集合的五个写入点传入的都是循环变量character_id，来源只有字面量0与npc_id_got，
-        出现不存在的角色id是野指针信号。成员域只能放宽到"存在的角色"，绝不收紧回active_ids：
-        日界访客离开/新周目重建等多条合法路径会让覆盖/子集关系合法失效
+        校验cache.over_behavior_character(结算完成集合)是set，且其中每个元素都是int且指向身份表
+        （identity.characters）中存在的角色。集合元素来自玩家0与在编名单，出现不存在的角色id是野指针信号。
+        成员域放宽到身份表里的存在角色而不收紧回在编名单，因为访客离开或新周目重建会让子集关系合法失效
     """
     cache = cache_control.cache
     over_set = getattr(cache, "over_behavior_character", None)
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     if not isinstance(over_set, set):
         return [
             make_failure(
@@ -954,7 +953,7 @@ def check_behavior_start_time_seasonal_month() -> list[CheckFailure]:
         带进历史月份的通道，读档后、任何一次结算之前的窗口内触发属于迁移问题而非运行期缺陷
     """
     cache = cache_control.cache
-    character_data = getattr(cache, "character_data", None) or {}
+    character_data = identity.table()
     sentinel = datetime.datetime(1, 1, 1)
     failures = []
     for cid in _live_ids(cache):

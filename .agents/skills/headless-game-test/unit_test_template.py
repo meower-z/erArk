@@ -89,7 +89,7 @@ from Script.Core import (
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
 
-from Script.Modules.domains import activity, relations
+from Script.Modules.domains import activity, identity, relations
 from Script.Modules.save_load import kernel_state
 from Script.Modules.domains import abilities, status
 from tests import chara_data, kernel_data
@@ -143,33 +143,30 @@ print("初始化完成，游戏时间 =", game_time.now())
 # ==== 4. 角色 fixture ====
 def new_chara(
     cid: int, name: str = "测试干员", adv: int = 0, race: int = 0
-) -> game_type.Character:
+) -> identity.Identity:
     """
-    构造一个能跑通结算/前提/口上的最小角色对象
+    构造一个能跑通结算/前提/口上的最小角色
     Keyword arguments:
     cid -- 角色id（0 为玩家）
     name -- 角色名
     adv -- 剧情npc编号，影响可穿服装的筛选
     race -- 种族id（生育方式等按 game_config.config_race[race] 判定，测卵生/多胎时显式传入）
     Return arguments:
-    game_type.Character -- 已注册进 cache.character_data 的角色对象
+    identity.Identity -- 已写入角色身份表（identity.characters）的角色身份
     功能描述:
-        game_type.Character() 的多数容器字段初值是空 dict，代码里普遍用 xxx[key] 直接下标访问，
-        不预填就会 KeyError。下面这份是实测跑通「结算器 + 前提 + talk.handle_talk」全链路的最小集合。
+        角色在 GameState 里的多项字典默认是空的，代码里普遍直接用下标访问，不预填会报 KeyError。
+        这里填入跑通「结算器 + 前提 + talk.handle_talk」全链路所需的最小数据集合。
         置零函数的命名不规律，容易记错（见 SKILL.md「fixture 字段与置零函数对照表」）。
     """
     talent = abilities.talent(cid)
-    cd = game_type.Character()
-    cd.cid = cid
-    cd.name = name
-    cd.adv = adv
-    cd.sex = 1
     kernel_data.put(
-        relations.favorability.set, cd.cid, {0: 0}
+        relations.favorability.set, cid, {0: 0}
     )  # 一些前提直接读 favorability[0]，表里要有键 0
-    kernel_data.put(activity.set_position, cd.cid, list(SCENE))
-    cd.race = race
-    cache.character_data[cid] = cd
+    kernel_data.put(activity.set_position, cid, list(SCENE))
+    kernel_data.put(
+        identity.put,
+        identity.Identity(cid, name=name, sex=1, adv=adv, race=race),
+    )
     # 能力、经验、宝珠与素质表在 GameState 里，一步之外的写入要放在 kernel_data.writing 里
     with kernel_data.writing():
         talent.replace(attr_calculation.get_talent_zero({}))
@@ -181,7 +178,7 @@ def new_chara(
         talent[121] = 1
     # 服装（含两个衣柜）、状态值与身体管理存在内核状态里，由 chara_data.seed 置零
     chara_data.seed(cid, {})
-    return cd
+    return identity.of(cid)
 
 
 pl = new_chara(0, "博士")

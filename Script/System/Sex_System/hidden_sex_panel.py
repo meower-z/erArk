@@ -16,7 +16,7 @@ from Script.UI.Panel import dirty_panel
 
 import random
 from Script.Modules.domains import abilities, achievement, activity, flags
-from Script.Modules.domains import h_state
+from Script.Modules.domains import h_state, identity
 
 panel_info_data: dict[str, object] = {}
 
@@ -374,7 +374,7 @@ class See_Hidden_Sex_InfoPanel:
 
         # 携带模式文本
         if flags.get(0, "hidden_sex_mode") == 5:
-            carry_target_data = cache.character_data[activity.target(0)]
+            carry_target_data = identity.of(activity.target(0))
             all_text += _(" 正把{0}藏在衣服下抱着行动").format(
                 carry_target_data.name
             )
@@ -382,7 +382,7 @@ class See_Hidden_Sex_InfoPanel:
         # 阴茎文本
         insert_chara_id = dirty_panel.get_inserted_character_id()
         if insert_chara_id != 0:
-            insert_character_data = cache.character_data[insert_chara_id]
+            insert_character_data = identity.of(insert_chara_id)
             chara_name = insert_character_data.name
             insert_text = " "
             # 显示阴茎位置的文本
@@ -537,7 +537,7 @@ class Select_Hidden_Sex_Mode_Panel:
         """选择隐奸模式"""
         from Script.Design import instuct_judege
 
-        character_data: game_type.Character = cache.character_data[0]
+        character_data: identity.Identity = identity.of(0)
         target_character_id = activity.target(0)
 
         # 携带模式需要先选择插入的部位，取消则返回模式选择

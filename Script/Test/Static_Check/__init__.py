@@ -17,6 +17,7 @@ from Script.Core import cache_control
 from . import check_log
 from .check_log import LOG_PATH  # noqa: F401  供游戏侧提示文案引用
 from .check_registry import CheckFailure, get_all_checks
+from Script.Modules.domains import identity
 
 __all__ = ["run_turn_check", "run_load_repair", "run_all_checks", "LOG_PATH"]
 
@@ -67,9 +68,9 @@ def run_turn_check() -> bool:
     """
     try:
         cache = cache_control.cache
-        if not cache.character_data:
+        if not identity.table():
             return False
-        if 0 not in cache.character_data:
+        if not identity.exists(0):
             return False
         failures = run_all_checks()
         if failures:
@@ -93,9 +94,9 @@ def run_load_repair() -> list[dict]:
     """
     try:
         cache = cache_control.cache
-        if not cache.character_data:
+        if not identity.table():
             return []
-        if 0 not in cache.character_data:
+        if not identity.exists(0):
             return []
         from . import repair
 

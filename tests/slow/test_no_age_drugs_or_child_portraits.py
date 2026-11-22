@@ -15,6 +15,7 @@ import re
 from tests import chara_abilities as ca, kernel_data
 from tests.slow.base import SlowTestCase
 from tests.world import ROOT
+from tests.kernel_project import identity
 
 AGE_DRUG_IDS = (31, 32)
 """ 外表年龄增长药与减少药的道具id """
@@ -56,7 +57,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
                 ca.talent(chara).get(talent_id, 0)
                 for talent_id in AGE_TALENT_IDS
             ]
-            for cid, chara in self.cache.character_data.items()
+            for cid, chara in identity.table().items()
             if cid
         }
         self.assertTrue(
@@ -78,7 +79,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
                 ca.talent(chara).get(talent_id, 0)
                 for talent_id in AGE_TALENT_IDS
             ]
-            for cid, chara in self.cache.character_data.items()
+            for cid, chara in identity.table().items()
             if cid
         }
         self.assertEqual(after, before)
@@ -108,7 +109,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
 
         picked = {}
         """ 角色名 -> 立绘查找结果 """
-        for cid, chara in self.cache.character_data.items():
+        for cid, chara in identity.table().items():
             if cid == 0:
                 continue
             ca.talent(chara)[102] = 1
@@ -128,12 +129,10 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
 
         mother_id = next(
             cid
-            for cid, chara in self.cache.character_data.items()
+            for cid, chara in identity.table().items()
             if chara.name == MOTHER_NAME
         )
-        daughter = self.world.chara(
-            max(self.cache.character_data) + 1, "测试女儿"
-        )
+        daughter = self.world.chara(max(identity.table()) + 1, "测试女儿")
         kernel_data.put(relations.father_id.set, daughter.cid, 0)
         kernel_data.put(relations.mother_id.set, daughter.cid, mother_id)
         self.assertIsNone(
@@ -151,10 +150,10 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
         mother_id = next(
             (
                 cid
-                for cid in sorted(self.cache.character_data)
+                for cid in sorted(identity.table())
                 if cid
                 and character_image.find_daughter_race_image_name(
-                    self.cache.character_data[cid]
+                    identity.of(cid)
                 )
                 == ""
             ),
@@ -163,9 +162,9 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
         self.assertIsNotNone(mother_id, "没有种族缺女儿图的角色，用例不成立")
         assert mother_id is not None
         daughter = self.world.chara(
-            max(self.cache.character_data) + 1,
+            max(identity.table()) + 1,
             "测试女儿",
-            race=self.cache.character_data[mother_id].race,
+            race=identity.of(mother_id).race,
         )
         kernel_data.put(relations.father_id.set, daughter.cid, 0)
         kernel_data.put(relations.mother_id.set, daughter.cid, mother_id)

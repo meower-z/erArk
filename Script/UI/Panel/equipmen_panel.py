@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_ability, handle_premise, basement
-from Script.Modules.domains import abilities, achievement, commission
+from Script.Modules.domains import abilities, achievement, commission, identity
 from Script.Modules.domains import maintenance, physical_exam, roster, wardrobe
 import random
 from Script.UI.Panel import achievement_panel
@@ -63,7 +63,7 @@ def show_damaged_equipment() -> None:
         )
         damaged_count = 0
         for npc_id in roster.active():
-            npc_data = cache.character_data[npc_id]
+            npc_data = identity.of(npc_id)
             condition_val = wardrobe.of(npc_id).equipment_condition
             if condition_val < 0:
                 condition_name = get_equipment_condition_name(condition_val)
@@ -99,7 +99,7 @@ def show_maintained_equipment() -> None:
         )
         maintained_count = 0
         for npc_id in roster.active():
-            npc_data = cache.character_data[npc_id]
+            npc_data = identity.of(npc_id)
             condition_val = wardrobe.of(npc_id).equipment_condition
             if condition_val > 0:
                 condition_name = get_equipment_condition_name(condition_val)
@@ -142,7 +142,7 @@ def settle_equipment_damage_in_commission(commision_id: int) -> str:
     ]
     # 遍历派遣人员列表
     for send_npc_id in send_npc_list:
-        send_npc_data = cache.character_data[send_npc_id]
+        send_npc_data = identity.of(send_npc_id)
         # 获取装备损坏概率，为0~1的随机小数
         random_damage_rate = random.random()
         # 根据装备损坏概率获取损坏等级
@@ -190,7 +190,7 @@ def smith_maintain_equipment_once(
     repairing = maintenance.repairs()
     if smith_chara_id in repairing:
         target_id = repairing[smith_chara_id]
-        npc_data = cache.character_data[target_id]
+        npc_data = identity.of(target_id)
         # 如果该角色装备未损坏或在保养中，则跳过维修
         if wardrobe.of(npc_data.cid).equipment_condition >= 0:
             # 保养
@@ -248,7 +248,7 @@ def repair_equipment(
     str 操作结果描述
     """
     # 获取铁匠角色数据和维修能力
-    smith_chara_data = cache.character_data[smith_chara_id]
+    smith_chara_data = identity.of(smith_chara_id)
     ability_lv = abilities.ability(smith_chara_id)[48]
     maintain_value = handle_ability.get_ability_adjust(ability_lv) / 2
     # 根据随机数变成0.8~1.2倍
@@ -268,7 +268,7 @@ def repair_equipment(
         for npc_id in roster.active():
             if npc_id == 0:
                 continue
-            npc_data = cache.character_data[npc_id]
+            npc_data = identity.of(npc_id)
             cond = wardrobe.of(npc_data.cid).equipment_condition
             if cond < 0:
                 repair_list.append((npc_id, cond))
@@ -283,7 +283,7 @@ def repair_equipment(
             target_chara_id, cond = repair_list[0]
     # 如果有需要维修的角色，则进行维修，最大为0
     if target_chara_id > 0:
-        npc_data = cache.character_data[target_chara_id]
+        npc_data = identity.of(target_chara_id)
         # 如果工作是铁匠，则记录维修角色
         if handle_premise.handle_work_is_blacksmith(smith_chara_id):
             maintenance.set_repair(smith_chara_id, target_chara_id)
@@ -321,7 +321,7 @@ def maintain_equipment(
     str 操作结果描述
     """
     # 获取铁匠角色数据和维修能力
-    smith_chara_data = cache.character_data[smith_chara_id]
+    smith_chara_data = identity.of(smith_chara_id)
     ability_lv = abilities.ability(smith_chara_id)[48]
     maintain_value = handle_ability.get_ability_adjust(ability_lv) / 4
     # 根据随机数变成0.8~1.2倍
@@ -352,7 +352,7 @@ def maintain_equipment(
             ]
         maintain_list = []
         for npc_id in candidate_ids:
-            npc_data = cache.character_data[npc_id]
+            npc_data = identity.of(npc_id)
             cond = wardrobe.of(npc_data.cid).equipment_condition
             if cond < maintain_enable:
                 maintain_list.append((npc_id, cond))
@@ -362,7 +362,7 @@ def maintain_equipment(
             target_chara_id, cond = maintain_list[0]
     # 如果有需要保养的角色，则进行保养，最大为0
     if target_chara_id > 0:
-        npc_data = cache.character_data[target_chara_id]
+        npc_data = identity.of(target_chara_id)
         # 如果工作是铁匠，则记录维修角色
         if handle_premise.handle_work_is_blacksmith(smith_chara_id):
             maintenance.set_repair(smith_chara_id, target_chara_id)

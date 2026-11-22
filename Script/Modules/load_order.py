@@ -8,8 +8,8 @@ domains 的 medical、power、needs、pregnancy、abilities、facility、economy
 commission、location、visitor、recruit、official、diplomacy、dormitory、library、playthrough、country、modes、
 achievement、history、plan、entertainment、tallies、fridge、prison、education、maintenance、physical_exam、flags、
 action_info、player_ability、player_collection、roster、npc_template、growth、status、inventory、wardrobe、
-body_manage、h_meters、h_state、dirty、hypnosis、first_record、relations、chara_life、chara_profile 与
-activity 排在最内，不挂钩子。
+body_manage、h_meters、h_state、dirty、hypnosis、first_record、relations、chara_life、chara_profile、activity 与
+identity 排在最内，不挂钩子。
 它们登记 working 的键：medical、power、facility、official、modes、history、plan、education 与 roster 各三个，
 needs、work、warehouse、commission、recruit、library、playthrough、entertainment、prison、inventory、
 h_meters 与 first_record 各两个，abilities 与 chara_profile 各四个，economy 与 physical_exam 各七个，
@@ -37,7 +37,13 @@ from Script.Modules.domains import body_manage, chara_life, chara_profile
 from Script.Modules.domains import commission, country, diplomacy, dirty
 from Script.Modules.domains import dormitory, economy, education, entertainment
 from Script.Modules.domains import facility, first_record, flags, fridge, growth
-from Script.Modules.domains import h_meters, h_state, history, hypnosis
+from Script.Modules.domains import (
+    h_meters,
+    h_state,
+    history,
+    hypnosis,
+    identity,
+)
 from Script.Modules.domains import inventory, kitchen, library, location
 from Script.Modules.domains import maintenance, medical, modes, needs, official
 from Script.Modules.domains import physical_exam, plan, player_ability
@@ -115,6 +121,7 @@ LOAD_ORDER: tuple[ModuleType, ...] = (
     chara_life,
     chara_profile,
     activity,
+    identity,
     actions,
     starts,
     npc_starters,

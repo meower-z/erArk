@@ -27,6 +27,7 @@ from Script.Core import cache_control, game_type
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.domains import activity, flags, modes, needs
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -91,7 +92,7 @@ def _settle(character_id: int, since: int, until: int | None = None) -> bool:
     Return arguments:
     bool -- 结算了时为真；角色不在缓存里或已死亡时为假
     """
-    character_data = cache.character_data.get(character_id)
+    character_data = identity.get(character_id)
     if character_data is None or activity.dead(character_data.cid):
         return False
     from Script.Settle import realtime_settle
@@ -120,7 +121,7 @@ def tick_one(who: int) -> None:
     who -- 角色id
     """
     game = core.state()
-    character_data = cache.character_data.get(who)
+    character_data = identity.get(who)
     if (
         who == 0
         and modes.time_stop()
@@ -293,7 +294,7 @@ def _orphan_class_due(game: core.GameState) -> bool | None:
     Return arguments:
     bool | None -- 该下课时为 True，否则为 None
     """
-    player = cache.character_data.get(0)
+    player = identity.get(0)
     if (
         clock_settled(game)
         and modes.sex_class(game)

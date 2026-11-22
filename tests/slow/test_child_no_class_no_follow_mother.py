@@ -19,6 +19,7 @@ from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data, world
 from tests.chara_activity import aim, behave
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 BABY = 101
 """ 婴儿素质 """
@@ -51,7 +52,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         self.mother_id, self.other_id = sorted(
             cid for cid in roster.active() if cid
         )[:2]
-        self.mother = self.cache.character_data[self.mother_id]
+        self.mother = identity.of(self.mother_id)
 
     def scene_list_with(self, character_id: int) -> list:
         """

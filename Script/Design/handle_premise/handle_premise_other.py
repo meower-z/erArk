@@ -14,6 +14,7 @@ from Script.Modules.domains import chara_profile, facility, flags, growth
 from Script.Modules.domains import history, modes, needs, physical_exam
 from Script.Modules.domains import player_ability, player_collection, pregnancy
 from Script.Modules.domains import npc_template, relations, status, visitor
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -554,7 +555,7 @@ def handle_is_man(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     if not character_data.sex:
         return 1
     return 0
@@ -569,7 +570,7 @@ def handle_is_woman(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     if character_data.sex == 1:
         return 1
     return 0
@@ -732,7 +733,7 @@ def handle_t_bad_or_angry_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     value = needs.of(target_data.cid)["angry"]
     if value > 30:
         return 1
@@ -749,7 +750,7 @@ def handle_target_angry_with_player(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "angry_with_player"):
         return 1
     else:
@@ -765,7 +766,7 @@ def handle_target_not_angry_with_player(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "angry_with_player"):
         return 0
     else:
@@ -837,7 +838,7 @@ def handle_t_kiss_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.experience(target_data.cid)[40] == 0:
         return 1
     return 0
@@ -852,7 +853,7 @@ def handle_t_kiss_ge_10(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.experience(target_data.cid)[40] >= 10:
         return 1
     return 0
@@ -881,7 +882,7 @@ def handle_is_medical(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     return character_data.profession == 3
 
 
@@ -894,9 +895,7 @@ def handle_t_is_medical(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     return target_data.profession == 3
 
 
@@ -911,7 +910,7 @@ def handle_flag_baby_exist(character_id: int) -> int:
     """
     for adv_id in npc_template.ids():
         chara_id = adv_id
-        if chara_id in cache.character_data:
+        if identity.exists(chara_id):
             if abilities.talent(chara_id)[101]:
                 return 1
 
@@ -1122,7 +1121,7 @@ def handle_t_fertilization_or_pregnancy(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     talent = abilities.talent(target_data.cid)
     if talent[20] or talent[21] or talent[22] or talent[23]:
         return 1
@@ -1849,7 +1848,7 @@ def handle_favorability_le_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
 
     level = 3
     if character_id == 0:
@@ -1875,7 +1874,7 @@ def handle_favorability_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
 
     level = 0
     if character_id == 0:
@@ -1901,7 +1900,7 @@ def handle_target_trust_ge_200(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
 
     return relations.trust(target_data.cid) >= 200
 
@@ -1932,7 +1931,7 @@ def handle_is_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(0)]
+    target_data = identity.of(activity.target(0))
     if flags.get(0, "is_h") or flags.get(target_data.cid, "is_h"):
         return 1
     return 0
@@ -1947,7 +1946,7 @@ def handle_not_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(0)]
+    target_data = identity.of(activity.target(0))
     if flags.get(0, "is_h") or flags.get(target_data.cid, "is_h"):
         return 0
     return 1
@@ -2607,7 +2606,7 @@ def handle_t_lubrication_l_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if status.of(target_data.cid)[8] < 1:
         return 1
     return 0
@@ -2622,7 +2621,7 @@ def handle_t_lubrication_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if status.of(target_data.cid)[8] >= 3:
         return 1
     return 0
@@ -2637,7 +2636,7 @@ def handle_t_lubrication_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if status.of(target_data.cid)[8] >= 1:
         return 1
     return 0
@@ -2652,7 +2651,7 @@ def handle_t_lubrication_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if status.of(target_data.cid)[8] >= 5:
         return 1
     return 0
@@ -2667,7 +2666,7 @@ def handle_t_lubrication_ge_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if status.of(target_data.cid)[8] >= 7:
         return 1
     return 0
@@ -2682,7 +2681,7 @@ def handle_t_lubrication_l_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if status.of(target_data.cid)[8] < 3:
         return 1
     return 0
@@ -2697,7 +2696,7 @@ def handle_t_lubrication_l_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if status.of(target_data.cid)[8] < 7:
         return 1
     return 0
@@ -2712,7 +2711,7 @@ def handle_t_lactation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[27] == 1:
         return 1
     return 0
@@ -2727,7 +2726,7 @@ def handle_t_lactation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[27] == 0:
         return 1
     return 0
@@ -2798,7 +2797,7 @@ def handle_t_fertilization_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[20] == 0:
         return 1
     return 0
@@ -2813,7 +2812,7 @@ def handle_t_fertilization_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[20] == 1:
         return 1
     return 0
@@ -2828,7 +2827,7 @@ def handle_t_pregnancy_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[21] == 0:
         return 1
     return 0
@@ -2843,7 +2842,7 @@ def handle_t_pregnancy_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[21] == 1:
         return 1
     return 0
@@ -2886,7 +2885,7 @@ def handle_t_parturient_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[22] == 1:
         return 1
     return 0
@@ -2901,7 +2900,7 @@ def handle_t_parturient_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[22] == 0:
         return 1
     return 0
@@ -2944,7 +2943,7 @@ def handle_t_postpartum_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[23] == 0:
         return 1
     return 0
@@ -2959,7 +2958,7 @@ def handle_t_postpartum_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[23] == 1:
         return 1
     return 0
@@ -3032,7 +3031,7 @@ def handle_t_rearing_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[24] == 0:
         return 1
     return 0
@@ -3047,7 +3046,7 @@ def handle_t_rearing_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[24] == 1:
         return 1
     return 0
@@ -3092,7 +3091,7 @@ def handle_t_inflation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     talent = abilities.talent(target_data.cid)
     if talent[26] == 0 and talent[25] == 0:
         return 1
@@ -3108,7 +3107,7 @@ def handle_t_inflation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     talent = abilities.talent(target_data.cid)
     if talent[26] == 1 or talent[25] == 1:
         return 1
@@ -3152,7 +3151,7 @@ def handle_t_fake_inflation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[25] == 0:
         return 1
     return 0
@@ -3167,7 +3166,7 @@ def handle_t_fake_inflation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[25] == 1:
         return 1
     return 0
@@ -3210,7 +3209,7 @@ def handle_t_growth_stop_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[28] == 0:
         return 1
     return 0
@@ -3225,7 +3224,7 @@ def handle_t_growth_stop_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[28] == 1:
         return 1
     return 0
@@ -3268,7 +3267,7 @@ def handle_t_cumflation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[32] == 0:
         return 1
     return 0
@@ -3283,7 +3282,7 @@ def handle_t_cumflation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[32] == 1:
         return 1
     return 0
@@ -3382,7 +3381,7 @@ def handle_t_action_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if (
         activity.behavior(target_data.cid).behavior_id
         == constant.Behavior.SLEEP
@@ -3400,7 +3399,7 @@ def handle_t_action_not_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if (
         activity.behavior(target_data.cid).behavior_id
         == constant.Behavior.SLEEP
@@ -3618,7 +3617,7 @@ def handle_t_baby_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[101] == 1:
         return 1
     return 0
@@ -3633,7 +3632,7 @@ def handle_t_baby_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     if abilities.talent(target_data.cid)[101] == 0:
         return 1
     return 0

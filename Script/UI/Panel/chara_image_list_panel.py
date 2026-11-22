@@ -11,6 +11,7 @@ from Script.Core import (
 from Script.Design import handle_premise, cross_section_image, character_image
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import activity
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -141,9 +142,7 @@ class CharacterImageButton:
 
     def draw(self) -> None:
         """绘制图片对象"""
-        character_data: game_type.Character = cache.character_data[
-            self.character_id
-        ]
+        character_data: identity.Identity = identity.of(self.character_id)
         # print(f"debug {character_data.name} = {character_data.relationship.father_id}")
         image_name = character_image.find_character_image_name(
             self.character_id

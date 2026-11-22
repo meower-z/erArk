@@ -139,7 +139,7 @@ class GrowthStateTest(FastTestCase):
         legacy_g.event_history = {
             "萝莉1": {"time": game_time.now(), "choice": 1}
         }
-        npc = self.cache.character_data[1]
+        npc = game_type.Character()
         vars(npc)["child_growth"] = legacy_g
         growth.adopt_old_save({"character_data": {1: npc}}, 15)
         self.assertFalse(hasattr(npc, "child_growth"))

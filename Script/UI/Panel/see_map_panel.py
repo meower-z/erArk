@@ -15,7 +15,7 @@ from Script.Core import (
 from Script.Design import map_handle, attr_text, character_move, handle_premise
 from Script.Config import game_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import activity
+from Script.Modules.domains import activity, identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -736,7 +736,7 @@ class SocialSceneNameDraw:
         """ 按钮返回值 """
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的对象列表 """
-        character_data: game_type.Character = cache.character_data[text]
+        character_data: identity.Identity = identity.of(text)
         self.scene_path: list[str] = activity.position(text)
         """ 角色所在场景 """
         path_text = attr_text.get_scene_path_text(self.scene_path)

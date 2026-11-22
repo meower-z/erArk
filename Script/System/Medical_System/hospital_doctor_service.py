@@ -16,7 +16,7 @@ from Script.Core import game_type
 from Script.Design import handle_ability
 from Script.System.Medical_System import medical_constant, medical_core
 from Script.Design import game_time
-from Script.Modules.domains import medical, medical_patient, warehouse
+from Script.Modules.domains import medical, medical_patient, warehouse, identity
 from Script.Modules.domains import chara_life
 
 
@@ -47,7 +47,7 @@ class SurgeryPrecheckResult:
 
 
 def _acquire_hospital_patient_for_doctor(
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
     rhodes_island: game_type.Rhodes_Island | None,
     *,
     require_surgery: bool = False,
@@ -55,7 +55,7 @@ def _acquire_hospital_patient_for_doctor(
     """选择并返回一个符合条件的住院病人。
 
     参数:
-        doctor_character (Optional[game_type.Character]): 申请病人的医生角色，若为空直接失败。
+        doctor_character (Optional[identity.Identity]): 申请病人的医生角色，若为空直接失败。
         rhodes_island (Optional[game_type.Rhodes_Island]): 医疗部归属的罗德岛基座。
         require_surgery (bool): 是否仅筛选需要手术的病人。
     返回:
@@ -126,7 +126,7 @@ def _acquire_hospital_patient_for_doctor(
 
 def evaluate_surgery_preconditions(
     patient: medical_patient.MedicalPatient | None,
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
     rhodes_island: game_type.Rhodes_Island | None,
 ) -> SurgeryPrecheckResult:
     """判断指定医生是否可以为病人执行手术并给出资源需求。"""
@@ -274,14 +274,14 @@ def consume_surgery_resources(
 
 
 def get_surgery_candidate_patient_ids(
-    doctor_character: game_type.Character,
+    doctor_character: identity.Identity,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> list[medical_patient.MedicalPatient]:
     """
     返回指定医生角色所有可以进行手术的住院病人ID列表。
 
     参数:
-        doctor_character: game_type.Character: 指定医生角色对象。
+        doctor_character (identity.Identity): 指定医生角色对象。
         target_base (Optional[game_type.Rhodes_Island]): 指定基地实例，默认读取全局缓存。
     返回:
         List[medical_patient.MedicalPatient]: 符合条件的住院病人列表。
@@ -325,14 +325,14 @@ def get_surgery_candidate_patient_ids(
 
 
 def conduct_ward_round(
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
     """执行住院部查房流程。
 
     参数:
-        doctor_character (Optional[game_type.Character]): 前来查房的医生角色。
+        doctor_character (Optional[identity.Identity]): 前来查房的医生角色。
         target_base (Optional[game_type.Rhodes_Island]): 指定查房所在的基地实例。
     返回:
         Dict[str, object]: 查房结果，包含是否处理成功及对应病人信息。
@@ -378,7 +378,7 @@ def conduct_ward_round(
 
 def attempt_surgery(
     patient_id: int,
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> bool:
@@ -386,7 +386,7 @@ def attempt_surgery(
 
     参数:
         patient_id (int): 住院病人的唯一编号。
-        doctor_character (game_type.Character): 尝试手术的医生角色。
+        doctor_character (Optional[identity.Identity]): 尝试手术的医生角色。
         target_base (Optional[game_type.Rhodes_Island]): 指定基地上下文，默认读取全局缓存。
     返回:
         bool: 手术是否顺利完成。
@@ -415,14 +415,14 @@ def attempt_surgery(
 def _attempt_surgery_on_patient(
     rhodes_island: game_type.Rhodes_Island,
     patient: medical_patient.MedicalPatient,
-    doctor: game_type.Character,
+    doctor: identity.Identity,
 ) -> bool:
     """结算住院病人的手术结果并更新病人状态。
 
     参数:
         rhodes_island (game_type.Rhodes_Island): 执行手术的罗德岛基地实例。
         patient (medical_patient.MedicalPatient): 正在接受手术的住院病人对象。
-        doctor (game_type.Character): 执刀的医生角色数据。
+        doctor (identity.Identity): 执刀的医生角色数据。
     返回:
         bool: 手术是否完成结算。
     """
@@ -535,7 +535,7 @@ def _attempt_surgery_on_patient(
 def _record_surgery_attempt(
     rhodes_island: game_type.Rhodes_Island,
     patient: medical_patient.MedicalPatient,
-    doctor: game_type.Character,
+    doctor: identity.Identity,
     *,
     status: str,
     extra: dict[str, object] | None = None,
@@ -545,7 +545,7 @@ def _record_surgery_attempt(
     参数:
         rhodes_island (game_type.Rhodes_Island): 发生手术的基地实例。
         patient (medical_patient.MedicalPatient): 进行手术的住院病人。
-        doctor (game_type.Character): 执刀医生角色对象。
+        doctor (identity.Identity): 执刀医生角色对象。
         status (str): 手术结果标签，例如 success、resource_shortage。
         extra (Optional[Dict[str, object]]): 额外写入的补充字段。
     返回:

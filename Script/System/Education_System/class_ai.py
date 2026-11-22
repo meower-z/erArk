@@ -56,7 +56,7 @@ from Script.Modules.domains import (
     needs,
     roster,
 )
-from Script.Modules.domains import status, chara_life, relations
+from Script.Modules.domains import status, chara_life, relations, identity
 from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 
 if TYPE_CHECKING:
@@ -114,7 +114,7 @@ def judge_teacher_available(teacher_id: int, classroom: str = "") -> bool:
     """
     from Script.Design import handle_premise
 
-    if teacher_id == -1 or teacher_id not in cache.character_data:
+    if teacher_id == -1 or not identity.exists(teacher_id):
         return False
     if activity.dead(teacher_id):
         return False
@@ -623,7 +623,7 @@ def judge_skip_class_today(
              离线（外勤）的人不在 npc_id_got 里，跨天也不清。认日期就不会把翘课带进另一天。
           flag 的全部读取点都走这里；只读 child_growth，不惰性创建养成数据，前提路径上可以调用
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     growth_data = growth.of(character_id)
     if growth_data is None or not growth_data.skip_class_flag:
@@ -650,7 +650,7 @@ def judge_student_pullable(student_id: int) -> bool:
              当场爆睡（疲劳满、安眠药、烂醉 → 状态机 44）只改行为、不置标记，只判标记会把她拉起来听课
           今天翘没翘课走 judge_skip_class_today（Plan 31 §3.6）：flag 认日期，前一天挂上、跨天没清掉的不挡
     """
-    if student_id not in cache.character_data:
+    if not identity.exists(student_id):
         return False
     if chara_life.work_type(student_id) != STUDENT_WORK_TYPE or activity.dead(
         student_id
@@ -758,7 +758,7 @@ def get_student_leave_time(character_id: int) -> datetime.datetime | None:
     from Script.Design import handle_premise
     from Script.System.Education_System import sex_class_handle
 
-    if character_id == 0 or character_id not in cache.character_data:
+    if character_id == 0 or not identity.exists(character_id):
         return None
     if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return None
@@ -872,7 +872,7 @@ def judge_mother_available(character_id: int) -> int:
     """
     mother_id = relations.mother_id(character_id)
     # 没有母亲，或母亲已不在角色表里（旧档 / 数据损坏）
-    if mother_id == -1 or mother_id not in cache.character_data:
+    if mother_id == -1 or not identity.exists(mother_id):
         return -1
     if activity.dead(mother_id):
         return -1

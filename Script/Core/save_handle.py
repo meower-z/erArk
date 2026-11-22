@@ -34,8 +34,8 @@ from Script.Modules.domains import physical_exam, plan, player_ability
 from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import prison, production, recruit, roster, status
 from Script.Modules.domains import tallies, visitor, wardrobe, warehouse
-from Script.Modules.domains import chara_life, chara_profile, relations
-from Script.Modules.domains import npc_template
+from Script.Modules.domains import chara_life, chara_profile, identity
+from Script.Modules.domains import npc_template, relations
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -107,7 +107,7 @@ def establish_save_linux(save_id: str) -> None:
     save_verson = {
         "game_verson": normal_config.config_normal.verson,
         "game_time": game_time.now(),
-        "character_name": cache.character_data[0].name,
+        "character_name": identity.of(0).name,
         "save_time": datetime.datetime.now(),
         kernel_state.TOKEN: token,
     }
@@ -249,7 +249,7 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
         library.put_holders(books)
         library.set_recommended(types)
     now_time = game_time.now()
-    for cid, character in loaded_dict["character_data"].items():
+    for cid in loaded_dict["character_data"]:
         with chara_life.borrow_book_id_set.editing(cid) as borrowed:
             unknown = borrowed - game_config.config_book.keys()
             borrowed.difference_update(unknown)
@@ -262,9 +262,9 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
                 ):
                     record["return_time"] = now_time
                     count += 1
-        behavior = activity.behavior(character.cid)
+        behavior = activity.behavior(cid)
         if behavior.book_id and behavior.book_id not in game_config.config_book:
-            activity.update_behavior(character.cid, book_id=0, book_name="")
+            activity.update_behavior(cid, book_id=0, book_name="")
             count += 1
     return count
 
@@ -314,10 +314,13 @@ def _normalize_save_path_keys(path_dict: Any) -> Any:
     }
 
 
-def _migrate_first_record_flat_fields(character: game_type.Character) -> None:
+def _migrate_first_record_flat_fields(
+    cid: int, character: game_type.Character
+) -> None:
     """
     将旧存档FIRST_RECORD中的平铺处女字段迁移进first_part_sex_dict
     Keyword arguments:
+    cid -- 角色id
     character -- 反序列化得到的角色对象（旧档判据：first_record无first_part_sex_dict属性，二次载入幂等）
     Return arguments:
     None
@@ -337,10 +340,7 @@ def _migrate_first_record_flat_fields(character: game_type.Character) -> None:
     first_record.first_h_mode_dict = {}
     first_record.first_special_record_dict = {}
     # 仅NPC：V处女平铺字段转入键6，随后重置回默认值（字段保留给玩家童贞用，不delattr）
-    if (
-        getattr(character, "cid", 0) != 0
-        and getattr(first_record, "first_sex_id", -1) != -1
-    ):
+    if cid != 0 and getattr(first_record, "first_sex_id", -1) != -1:
         first_record.first_part_sex_dict[6] = {
             "id": first_record.first_sex_id,
             "time": first_record.first_sex_time,
@@ -390,7 +390,7 @@ def _migrate_first_record_flat_fields(character: game_type.Character) -> None:
             "posture": "",
             "item": -1,
         }
-    # 清理已从类中删除的平铺字段，避免被recursive_update当孤儿属性带进新对象
+    # 清理已转入 first_part_sex_dict 的旧平铺字段
     for old_attr in (
         "first_a_sex_id",
         "first_a_sex_time",
@@ -413,27 +413,29 @@ def _migrate_first_record_flat_fields(character: game_type.Character) -> None:
 
 
 def _clear_soft_egg_race_pregnancy(
-    character: game_type.Character, soft_egg_enabled: bool = True
+    cid: int, character: game_type.Character, soft_egg_enabled: bool = True
 ) -> None:
     """
-    清除无壳卵生种族角色正在进行的胎生孕程（旧存档兼容，方案 plan_19 §11-6 确认口径）
-    \n无壳卵生（birth_type=12）实装前被归一化为单胎胎生，旧存档中该种族角色可能持有受精/妊娠/临盆素质；
-    \n读档时一次性清除 20受精/21妊娠/22临盆/26孕肚/35无意识妊娠 及本次胎数/同卵双胞胎/妊娠加速累计，
-    \n23产后/24育儿/27泌乳与已出生的孩子不受影响；非无壳卵生或未在孕程中的角色不做任何改动
-    \n※本函数每次读档都会执行：无壳卵生开关关闭时该种族按单胎胎生运行，其孕程是正常妊娠，必须整体跳过，
-    \n否则玩家每读一次档就会被清空一次孕程（plan_21）。版本 16 之前的素质表在角色对象上，之后的经 abilities.talent 读写
+    清除旧存档里无壳卵生种族角色正在进行的胎生孕程
+    无壳卵生（birth_type=12）实装前的旧存档里，该种族角色可能持有受精、妊娠或临盆素质。
+    读档时清除素质 20（受精）、21（妊娠）、22（临盆）、26（孕肚）、35（无意识妊娠），
+    并把本次胎数、同卵双胞胎与妊娠加速累计归零，不影响 23（产后）、24（育儿）、27（泌乳）与已出生孩子。
+    非无壳卵生或未在孕程中的角色不做改动。
+    无壳卵生开关关闭时该种族按单胎胎生运行，本函数直接跳过，避免读档时误清正常孕程。
+    版本 16 之前的素质表在角色对象上，版本 16 起经 abilities.talent 读写。
     Keyword arguments:
-    character -- 角色数据
-    soft_egg_enabled -- 无壳卵生开关是否开启（关闭时不做任何处理）
+    cid -- 角色id
+    character -- 存档里的角色对象
+    soft_egg_enabled -- 无壳卵生开关是否开启，关闭时跳过
     Return arguments:
     无
     """
     if not soft_egg_enabled:
         return
-    talent = getattr(character, "talent", abilities.talent(character.cid))
+    talent = getattr(character, "talent", abilities.talent(cid))
     if not isinstance(talent, dict | abilities.Table):
         return
-    race_config = game_config.config_race.get(getattr(character, "race", -1))
+    race_config = game_config.config_race.get(identity.of(cid).race)
     if race_config is None or getattr(race_config, "birth_type", 1) != 12:
         return
     if not any(talent.get(talent_id, 0) for talent_id in (20, 21, 22)):
@@ -445,9 +447,9 @@ def _clear_soft_egg_race_pregnancy(
         pregnancy_data.fetus_count = 0
         pregnancy_data.identical_twins = False
         pregnancy_data.acceleration_days = 0.0
-    elif hasattr(character, "cid"):
+    else:
         pregnancy.update(
-            character.cid,
+            cid,
             fetus_count=0,
             identical_twins=False,
             acceleration_days=0.0,
@@ -489,7 +491,7 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
 
     character_data = getattr(loaded_cache, "character_data", None)
     if isinstance(character_data, dict):
-        for character in character_data.values():
+        for cid, character in character_data.items():
             # 这里早于 old_chara_to_new 的迁移运行。旧存档的角色对象上可能有 pre_dormitory。
             # chara_life.PATHS 里的场景路径由 _normalize_life 整理
             if not hasattr(character, "permanent_dormitory") and hasattr(
@@ -546,13 +548,11 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
             growth_data = vars(character).get("child_growth")
             if growth_data is not None and hasattr(growth_data, "__dict__"):
                 growth.normalize_legacy(growth_data)
-            elif hasattr(character, "cid") and growth.has(character.cid):
-                with growth.editing(
-                    character.cid, create=False
-                ) as kernel_growth:
+            elif growth.has(cid):
+                with growth.editing(cid, create=False) as kernel_growth:
                     if kernel_growth is not None:
                         growth.normalize_legacy(kernel_growth)
-            _clear_soft_egg_race_pregnancy(character, soft_egg_enabled)
+            _clear_soft_egg_race_pregnancy(cid, character, soft_egg_enabled)
             if pl_collection is not None and not hasattr(
                 pl_collection, "held_eggs"
             ):
@@ -579,7 +579,7 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
                     1, 1, 1
                 )
             # 性行为履历旧存档兼容：平铺处女字段合并进first_part_sex_dict
-            _migrate_first_record_flat_fields(character)
+            _migrate_first_record_flat_fields(cid, character)
 
 
 def _load_save_datetime(*args: Any) -> datetime.datetime:
@@ -632,7 +632,6 @@ def load_save(save_id: str) -> game_type.Cache:
     with open(file_path, "rb") as f:
         loaded_cache = SaveUnpickler(f).load()
     unsaved.restore(loaded_cache)
-    _normalize_loaded_save_paths(loaded_cache)
     return loaded_cache
 
 
@@ -669,7 +668,10 @@ def install_save(save_id: str, version: int) -> None:
     update_count = 0
 
     # 从存档中加载字典
-    loaded_dict = npc_template.lift(load_save(save_id).__dict__)
+    loaded_cache = load_save(save_id)
+    loaded_dict = npc_template.lift(loaded_cache.__dict__)
+    identity.adopt_old_save(loaded_dict)
+    _normalize_loaded_save_paths(loaded_cache)
     if version == 0:
         upgrade.fill_v0_defaults(loaded_dict)
     upgrade.adopt_power(loaded_dict)
@@ -774,86 +776,56 @@ def install_save(save_id: str, version: int) -> None:
     # 遍历更新全角色属性
     cloth_update_count = 0
     color_update_count = 0
-    for key, value in loaded_dict["character_data"].items():
-        new_character_data = game_type.Character()
-        recursive_update(new_character_data, value)
+    for key in loaded_dict["character_data"]:
+        one = identity.of(key)
         # 角色素质、经验、宝珠、能力、设置的更新
-        update_count += old_chara_to_new.update_character_config_data(
-            new_character_data, key
-        )
+        update_count += old_chara_to_new.update_character_config_data(one, key)
         # 当前角色模板数据（使用Dict方式访问，兼容新旧存档）
-        tem_character = loaded_dict["npc_tem_data"].get(new_character_data.cid)
+        tem_character = loaded_dict["npc_tem_data"].get(key)
         if tem_character is None:
             # 如果找不到，尝试用adv
-            tem_character = loaded_dict["npc_tem_data"].get(
-                new_character_data.adv, None
-            )
+            tem_character = loaded_dict["npc_tem_data"].get(one.adv, None)
         if tem_character is None:
             # 处理找不到模板的情况（玩家跳过，NPC创建空白模板）
-            if new_character_data.cid != 0:
-                tem_character = character_handle.create_empty_character_tem()
-                tem_character.Name = new_character_data.name
-                tem_character.AdvNpc = new_character_data.adv
-                loaded_dict["npc_tem_data"][
-                    new_character_data.cid
-                ] = tem_character
-            else:
-                # 玩家没有模板，跳过模板相关更新
-                loaded_dict["character_data"][key] = new_character_data
+            if key == 0:
                 continue
+            tem_character = character_handle.create_empty_character_tem()
+            tem_character.Name = one.name
+            tem_character.AdvNpc = one.adv
+            loaded_dict["npc_tem_data"][key] = tem_character
         # 更新角色服装
         cloth_update_count += old_chara_to_new.update_chara_cloth(
-            new_character_data, tem_character
+            one, tem_character
         )
         # 更新角色口上颜色
-        if (
-            new_character_data.cid != 0
-            and tem_character.TextColor != new_character_data.text_color
-        ):
-            new_character_data.text_color = tem_character.TextColor
-            text_color_list = (
-                new_character_data.adv,
-                new_character_data.name,
-                tem_character.TextColor,
-            )
+        if key != 0 and tem_character.TextColor != one.text_color:
+            identity.update(key, text_color=tem_character.TextColor)
+            text_color_list = (one.adv, one.name, tem_character.TextColor)
             character_config.add_text_color_data_to_config_data(text_color_list)
             update_count += 1
             color_update_count += 1
         # 更新角色的口上大小
-        if (
-            new_character_data.cid != 0
-            and tem_character.Talk_Size != new_character_data.talk_size
-        ):
-            new_character_data.talk_size = tem_character.Talk_Size
+        if key != 0 and tem_character.Talk_Size != one.talk_size:
+            identity.update(key, talk_size=tem_character.Talk_Size)
             update_count += 1
         # 更新角色势力与出身地
-        if (
-            new_character_data.cid != 0
-            and tem_character.Nation != relations.nation(key)
-        ):
+        if key != 0 and tem_character.Nation != relations.nation(key):
             relations.nation.set(key, tem_character.Nation)
             update_count += 1
-        if (
-            new_character_data.cid != 0
-            and tem_character.Birthplace != relations.birthplace(key)
-        ):
+        if key != 0 and tem_character.Birthplace != relations.birthplace(key):
             relations.birthplace.set(key, tem_character.Birthplace)
             update_count += 1
         # 更新到玩家收藏品列表
-        if new_character_data.cid != 0 and player_collection.ensure_npc(
-            new_character_data.cid
-        ):
+        if key != 0 and player_collection.ensure_npc(key):
             update_count += 1
         # 被监禁的角色检查是否在囚犯列表中，需要排除正在逃跑的人
         if (
-            flags.get(new_character_data.cid, "imprisonment")
-            and not flags.get(new_character_data.cid, "escaping")
-            and not prison.is_prisoner(new_character_data.cid)
+            flags.get(key, "imprisonment")
+            and not flags.get(key, "escaping")
+            and not prison.is_prisoner(key)
         ):
-            prison.imprison(new_character_data.cid, game_time.now(), 0)
+            prison.imprison(key, game_time.now(), 0)
             update_count += 1
-        # 重新指向新的角色数据
-        loaded_dict["character_data"][key] = new_character_data
     if cloth_update_count:
         now_draw = draw.LeftDraw()
         draw_text = _("\n共有{0}个角色的服装数据已重置\n").format(
@@ -913,9 +885,8 @@ def install_save(save_id: str, version: int) -> None:
         if not facility.is_open(all_cid):
             if game_config.config_facility_open[all_cid].NPC_id != 0:
                 for chara_cid in roster.active():
-                    character_data = loaded_dict["character_data"][chara_cid]
                     if (
-                        character_data.adv
+                        identity.of(chara_cid).adv
                         == game_config.config_facility_open[all_cid].NPC_id
                     ):
                         facility.set_open(all_cid)
@@ -953,6 +924,8 @@ def install_save(save_id: str, version: int) -> None:
     finish_draw.text = draw_text
     finish_draw.draw()
 
+    # 读档导入完成后移除临时的 character_data，角色对象不进缓存
+    del loaded_dict["character_data"]
     cache.__dict__.update(loaded_dict)
 
     # 鼠标状态是界面的临时状态，读档后从头开始：读档前留下的 w_frame_up 为0时，
@@ -1024,27 +997,6 @@ def update_dict_with_default(
             loaded_dict[key] = value
             update_count += 1
     return update_count
-
-
-def recursive_update(target: object, source: object) -> None:
-    """
-    递归更新字典
-    Keyword arguments:
-    target -- 要被更新的目标字典
-    source -- 数据来源的源字典
-    """
-    for key, value in source.__dict__.items():
-        if isinstance(value, object) and hasattr(value, "__dict__"):
-            if (
-                key in target.__dict__
-                and isinstance(target.__dict__[key], object)
-                and hasattr(target.__dict__[key], "__dict__")
-            ):
-                recursive_update(target.__dict__[key], value)
-            else:
-                target.__dict__[key] = value
-        else:
-            target.__dict__[key] = value
 
 
 def update_map(loaded_dict: dict[str, Any]) -> int:

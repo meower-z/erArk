@@ -37,6 +37,7 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import h_state, needs, player_collection, roster
 from Script.Modules.domains import relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -662,7 +663,7 @@ def handle_see_attr() -> None:
 @add_instruct(constant.Instruct.CHAT)
 def handle_chat() -> None:
     """处理聊天指令"""
-    target_data: game_type.Character = cache.character_data[activity.target(0)]
+    target_data: identity.Identity = identity.of(activity.target(0))
     if (
         action_info.get(target_data.cid, "talk_count")
         > abilities.ability(0)[40] + 1
@@ -922,7 +923,7 @@ def handle_deepening_hypnosis() -> None:
 @add_instruct(constant.Instruct.HYPNOSIS_ALL)
 def handle_hypnosis_all() -> None:
     """处理集体催眠"""
-    character_data: game_type.Character = cache.character_data[0]
+    character_data: identity.Identity = identity.of(0)
     now_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(0)
     )
@@ -1164,7 +1165,7 @@ def _start_follow(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    target_data: game_type.Character = cache.character_data[chosen["target"]]
+    target_data: identity.Identity = identity.of(chosen["target"])
 
     # 提示信息
     now_draw = draw.NormalDraw()
@@ -1178,7 +1179,7 @@ def _start_follow(who: int, chosen: intent.Intent) -> None:
                 chosen["target"],
                 relations.assistant_character_id(who),
             }:
-                other_character_data = cache.character_data[npc_id]
+                other_character_data = identity.of(npc_id)
                 if flags.get(other_character_data.cid, "is_follow"):
                     flags.set(other_character_data.cid, is_follow=0)
                     now_draw.text += _(
@@ -1231,7 +1232,7 @@ def _set_target_sp_flag(who: int, chosen: intent.Intent) -> None:
 @add_instruct(constant.Instruct.APOLOGIZE)
 def handle_apologize() -> None:
     """处理道歉指令"""
-    target_data: game_type.Character = cache.character_data[activity.target(0)]
+    target_data: identity.Identity = identity.of(activity.target(0))
     value = _calm_value()
     # 判定减掉愤怒值后是否不生气了
     if needs.of(target_data.cid)["angry"] - value <= 30:
@@ -1264,7 +1265,7 @@ def _calm_target(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    target_data = cache.character_data[chosen["target"]]
+    target_data = identity.of(chosen["target"])
     value = chosen["args"]["value"]
     assert isinstance(value, int)
     needs.add(target_data.cid, "angry", -value, min=0)
@@ -1598,7 +1599,7 @@ def _give_token(who: int, chosen: intent.Intent) -> None:
     from Script.Design import handle_talent
 
     target_id = chosen["target"]
-    target_data = cache.character_data[target_id]
+    target_data = identity.of(target_id)
     now_draw = draw.WaitDraw()
     now_draw.width = width
     behavior_id = chosen["behavior_id"]
@@ -1693,7 +1694,7 @@ def _start_do_h(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    target_data = cache.character_data[chosen["target"]]
+    target_data = identity.of(chosen["target"])
     place = str(chosen["args"]["place"])
     if place:
         h_state.set(who, **{place: True})
@@ -1768,7 +1769,7 @@ def handle_switch_to_h_interface() -> None:
 @add_instruct(constant.Instruct.SLEEP_OBSCENITY)
 def handle_sleep_obscenity() -> None:
     """处理睡眠猥亵指令"""
-    target_data = cache.character_data[activity.target(0)]
+    target_data = identity.of(activity.target(0))
     now_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(0)
     )
@@ -1790,7 +1791,7 @@ def handle_stop_sleep_obscenity() -> None:
     """处理停止睡眠猥亵指令"""
     from Script.Settle import default
 
-    target_data = cache.character_data[activity.target(0)]
+    target_data = identity.of(activity.target(0))
     flags.set(target_data.cid, unconscious_h=0)
     now_draw = draw.WaitDraw()
     now_draw.width = width
@@ -2027,9 +2028,7 @@ def _start_ask_group_sex_fail(who: int, chosen: intent.Intent) -> None:
     now_draw.width = width
     now_draw.text = _("\n进入群交模式失败\n")
     for chara_id in action_info.get(who, "ask_group_sex_refuse_chara_id_list"):
-        now_draw.text += _("{0}拒绝了群交\n").format(
-            cache.character_data[chara_id].name
-        )
+        now_draw.text += _("{0}拒绝了群交\n").format(identity.of(chara_id).name)
     now_draw.draw()
     for chara_id in _group_members(who):
         plan_queue.plan_next(

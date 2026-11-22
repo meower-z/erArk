@@ -27,7 +27,7 @@ from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, action_info, activity, dirty
 from Script.Modules.domains import entertainment, facility, flags, h_meters
 from Script.Modules.domains import h_state, modes, needs, player_ability
-from Script.Modules.domains import playthrough, pregnancy, prison
+from Script.Modules.domains import playthrough, pregnancy, prison, identity
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -121,9 +121,9 @@ def character_aotu_change_value(
 
         _drunk_sex_common = _drunk_module
     drunk_sex_common = _drunk_sex_common
-    now_character_data: game_type.Character = cache.character_data[character_id]
+    now_character_data: identity.Identity = identity.of(character_id)
     now_behavior_id = activity.behavior(character_id).behavior_id
-    if activity.target(character_id) not in cache.character_data:
+    if not identity.exists(activity.target(character_id)):
         activity.set_target(character_id, character_id)
     # 获取实际增加时间
     true_add_time = get_true_add_time(character_id, now_time, since)
@@ -234,7 +234,7 @@ def character_aotu_change_value(
 
 
 def settle_sex_class_notify(
-    pl_character_data: game_type.Character,
+    pl_character_data: identity.Identity,
     now_behavior_id: str,
     now_time: datetime.datetime,
     since: datetime.datetime,
@@ -511,7 +511,7 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
     from Script.System.Dormitory_System import dormitory_manager_system
 
     talent = abilities.talent(character_id)
-    now_char = cache.character_data[character_id]
+    now_char = identity.of(character_id)
     # 疲劳值越高，熟睡值增加越快，最高为疲劳值满时的2倍；读疲劳的整数部分，免得熟睡值的分母逐段变大
     tired_adjust = 1 + Fraction(num.whole(needs.of(character_id)["tired"]), 160)
     # 减少疲劳
@@ -753,7 +753,7 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
         # 跳过玩家和非睡眠角色
         if sleeper_id == 0:
             continue
-        sleeper_data: game_type.Character = cache.character_data[sleeper_id]
+        sleeper_data: identity.Identity = identity.of(sleeper_id)
         if activity.behavior(sleeper_id).behavior_id != constant.Behavior.SLEEP:
             continue
         # 等待、休息、睡觉行为，或目标服用安眠药、烂醉爆睡时不受影响

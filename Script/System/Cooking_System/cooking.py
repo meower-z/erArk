@@ -8,7 +8,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
 from Script.Modules.domains import abilities, achievement, economy, flags
-from Script.Modules.domains import inventory, kitchen, roster
+from Script.Modules.domains import inventory, kitchen, roster, identity
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
 from Script.Modules.domains import relations
@@ -61,7 +61,7 @@ def create_recipe(
 @reset.repair
 def _drop_old_format_food() -> None:
     """读档时删掉各角色背包里旧版本的食物：没有母乳量，或精液调味却没有调味量"""
-    for character_id in cache.character_data:
+    for character_id in identity.table():
         food_bag = inventory.foods(character_id)
         for uid, food in list(food_bag.items()):
             if not hasattr(food, "milk_ml") or (
@@ -391,7 +391,7 @@ def player_make_dishes(
     """
     from Script.UI.Panel import ejaculation_panel
 
-    character_data = cache.character_data[0]
+    character_data = identity.of(0)
     made: list[uuid.UUID] = []
     for _i in range(count):
         if not player_can_season(seasoning):

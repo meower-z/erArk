@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from tests.kernel_project import identity
 
 
 def seed(cid: int, outfit: Mapping[int, Sequence[int]]) -> None:
@@ -45,12 +46,11 @@ def project(state: dict[str, object]) -> None:
     Keyword arguments:
     state -- 快照，原地补上
     """
-    from Script.Core import cache_control
     from Script.Modules.domains import body_manage, inventory, status
     from Script.Modules.domains import wardrobe
     from tests.snapshot import flatten
 
-    for cid in cache_control.cache.character_data:
+    for cid in identity.table():
         fields: dict[str, object] = {
             "item": dict(inventory.items(cid)),
             "food_bag": inventory.foods(cid),

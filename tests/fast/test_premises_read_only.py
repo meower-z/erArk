@@ -30,18 +30,16 @@ WHO = (0, NPC)
 
 def pickled(cache: Any, keys: list[str] | None = None) -> dict[str, bytes]:
     """
-    缓存的每个属性的 pickle；character_data 与 scene_data 按条拆开
+    序列化缓存的每个顶层属性，其中 scene_data 按场景键拆开
     Keyword arguments:
     cache -- 游戏缓存
-    keys -- 只取这些属性名，默认全取
+    keys -- 给出时只返回这些键，缺省时全取
     Return arguments:
-    dict -- 属性名 -> pickle
+    dict[str, bytes] -- 属性名到 pickle 字节的映射
     """
-    split = ("character_data", "scene_data")
-    parts = {k: v for k, v in vars(cache).items() if k not in split}
-    for name in split:
-        for key, value in getattr(cache, name).items():
-            parts[f"{name}[{key}]"] = value
+    parts = {k: v for k, v in vars(cache).items() if k != "scene_data"}
+    for key, value in cache.scene_data.items():
+        parts[f"scene_data[{key}]"] = value
     return {
         k: pickle.dumps(v)
         for k, v in parts.items()

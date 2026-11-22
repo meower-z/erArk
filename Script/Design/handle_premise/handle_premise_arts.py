@@ -6,6 +6,7 @@ from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import abilities, activity, flags, hypnosis, modes
 from Script.Modules.domains import player_ability
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -291,9 +292,7 @@ def handle_target_in_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") in [4, 5, 6, 7]:
         return 1
     return 0
@@ -308,9 +307,7 @@ def handle_target_not_in_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data: game_type.Character = cache.character_data[
-        activity.target(character_id)
-    ]
+    target_data: identity.Identity = identity.of(activity.target(character_id))
     if flags.get(target_data.cid, "unconscious_h") in [4, 5, 6, 7]:
         return 0
     return 1
@@ -481,7 +478,7 @@ def handle_hypnosis_increase_body_sensitivity(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     return hypnosis.of(character_data.cid)["increase_body_sensitivity"]
 
 
@@ -538,7 +535,7 @@ def handle_hypnosis_force_ovulation(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     return hypnosis.of(character_data.cid)["force_ovulation"]
 
 
@@ -587,7 +584,7 @@ def handle_hypnosis_blockhead(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     return hypnosis.of(character_data.cid)["blockhead"]
 
 
@@ -636,7 +633,7 @@ def handle_hypnosis_active_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     return hypnosis.of(character_data.cid)["active_h"]
 
 
@@ -685,7 +682,7 @@ def handle_hypnosis_roleplay(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     return len(hypnosis.of(character_data.cid)["roleplay"])
 
 
@@ -734,7 +731,7 @@ def handle_target_hypnosis_roleplay_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -754,7 +751,7 @@ def handle_target_hypnosis_roleplay_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -774,7 +771,7 @@ def handle_target_hypnosis_roleplay_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -794,7 +791,7 @@ def handle_target_hypnosis_roleplay_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -814,7 +811,7 @@ def handle_target_hypnosis_roleplay_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -834,7 +831,7 @@ def handle_target_hypnosis_roleplay_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    target_data = cache.character_data[activity.target(character_id)]
+    target_data = identity.of(activity.target(character_id))
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -854,7 +851,7 @@ def handle_hypnosis_pain_as_pleasure(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     return hypnosis.of(character_data.cid)["pain_as_pleasure"]
 
 

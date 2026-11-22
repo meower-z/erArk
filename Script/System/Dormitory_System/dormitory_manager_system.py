@@ -12,6 +12,7 @@ from Script.Design import handle_state_machine, map_handle, handle_premise
 from Script.Modules.domains import abilities, activity, dormitory, inventory
 from Script.System.Dormitory_System import common
 from Script.Modules.domains import chara_life
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from Script.Modules.npc_action_choice import choice
@@ -29,7 +30,7 @@ def get_dormitory_layer_by_character(character_id: int) -> int:
     输出类型: int
     功能: 从角色 dormitory 对应场景名中解析层号，失败时返回0
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return 0
     dormitory_path = chara_life.dormitory(character_id)
     dormitory_layer = common.get_layer_by_dormitory_path(dormitory_path)
@@ -48,7 +49,7 @@ def get_dormitory_manager_knowledge(character_id: int) -> int:
         return 0
 
     manager_id = dormitory.managers().get(layer, 0)
-    if not manager_id or manager_id not in cache.character_data:
+    if not manager_id or not identity.exists(manager_id):
         return 0
 
     return int(abilities.ability(manager_id).get(45, 0))

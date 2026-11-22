@@ -19,6 +19,7 @@ from Script.Modules.domains import (
     roster,
     visitor,
 )
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -190,7 +191,7 @@ class All_Npc_Position_Panel:
             final_list = []
             for npc_id in npc_id_got_list:
                 if npc_id != 0:
-                    character_data = cache.character_data[npc_id]
+                    character_data = identity.of(npc_id)
                     if self.select_type > 0:
                         # 收藏筛选
                         if (
@@ -261,7 +262,7 @@ class All_Npc_Position_Panel:
         """一键全跟随"""
         for npc_id in roster.active():
             if npc_id != 0:
-                character_data = cache.character_data[npc_id]
+                character_data = identity.of(npc_id)
                 flags.set(character_data.cid, is_follow=1)
 
     def move_type_change(self, new_type: int) -> None:
@@ -317,9 +318,7 @@ class MoveSonPanel:
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
 
-        character_data: game_type.Character = cache.character_data[
-            self.chara_id
-        ]
+        character_data: identity.Identity = identity.of(self.chara_id)
 
         # 角色属性与信息
         name = character_data.name
@@ -393,7 +392,7 @@ class MoveSonPanel:
 
         line = draw.LineDraw("-", window_width)
         line.draw()
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data: identity.Identity = identity.of(character_id)
         now_draw = draw.NormalDraw()
         # 召集干员的情况
         if self.move_type != 2:

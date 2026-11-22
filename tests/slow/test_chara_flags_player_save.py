@@ -21,8 +21,9 @@ from fractions import Fraction
 from typing import Any
 from unittest import mock
 
-from tests import kernel_data as kd
+from tests import chara_projection, kernel_data as kd
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 SLOT = "v17"
 SEED = 20261121
@@ -139,7 +140,7 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
         self.assertEqual(flags.get(npc_id, "is_follow"), 1)
         self.assertEqual(action_info.get(npc_id, "talk_count"), 4)
         self.assertTrue(player_collection.get("token_list")[npc_id])
-        for cid, ch in self.cache.character_data.items():
+        for cid, ch in identity.table().items():
             for attr in (
                 "sp_flag",
                 "action_info",
@@ -198,6 +199,7 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
 
         # 改写文件 "1"：给玩家和一名干员挂上旧属性
         loaded = save_handle.load_save("v16_old")
+        vars(loaded)["character_data"] = chara_projection.pickled_characters()
         sp = game_type.SPECIAL_FLAG()
         sp.vistor = 2
         vars(loaded.character_data[npc_id])["sp_flag"] = sp
@@ -222,7 +224,7 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
         self.assertEqual(player_ability.get(0, "jj_size"), 3)
         self.assertEqual(player_collection.get("used_condoms"), [7, 9])
         for cid in (0, npc_id):
-            ch = self.cache.character_data[cid]
+            ch = identity.of(cid)
             for attr in (
                 "sp_flag",
                 "action_info",

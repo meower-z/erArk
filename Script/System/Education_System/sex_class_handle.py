@@ -23,7 +23,7 @@ from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
 from Script.Modules.domains import abilities, activity, chara_life, education
 from Script.Modules.domains import flags, growth, modes, needs, relations
-from Script.Modules.domains import roster
+from Script.Modules.domains import roster, identity
 from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 
 cache: game_type.Cache = cache_control.cache
@@ -315,7 +315,7 @@ def judge_has_sex_skill_course(character_id: int) -> bool:
     """
     from Script.System.Education_System import schedule_handle
 
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     growth_data = growth.of(character_id)
     if growth_data is None:
@@ -390,7 +390,7 @@ def judge_can_join_sex_class(
     """
     from Script.Design import instuct_judege
 
-    if character_id == 0 or character_id not in cache.character_data:
+    if character_id == 0 or not identity.exists(character_id):
         return False
     if activity.dead(character_id):
         return False
@@ -496,9 +496,9 @@ def get_class_member_list() -> list[int]:
         return []
     result = []
     for character_id in cache.scene_data[scene_path_str].character_list:
-        if not character_id or character_id not in cache.character_data:
+        if not character_id or not identity.exists(character_id):
             continue
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data: identity.Identity = identity.of(character_id)
         if not flags.get(character_data.cid, "is_h"):
             continue
         # 身份：学生岗，或玩家的女儿
@@ -672,7 +672,7 @@ def get_subject_bonus(student_id: int) -> float:
     ability_id = get_now_class_ability()
     if ability_id == -1:
         return 1.0
-    if student_id not in cache.character_data:
+    if not identity.exists(student_id):
         return 1.0
     teacher_level = abilities.ability(0).get(ability_id, 0)
     student_level = abilities.ability(student_id).get(ability_id, 0)
@@ -982,7 +982,7 @@ def settle_orphan_class() -> bool:
     """
     if not modes.sex_class():
         return False
-    if 0 not in cache.character_data or flags.get(0, "is_h"):
+    if not identity.exists(0) or flags.get(0, "is_h"):
         return False
     modes.set_sex_class(False)
     end_sex_class()
@@ -1086,7 +1086,7 @@ def settle_attend(
     """
     # 只给「女儿 ∪ 学生岗」记：凭 H 模式实行值到场的成年非学生干员不是学生，
     #    给她们惰性创建养成数据只会让全岛的存档一起变大（与 semester_handle 的约定一致）
-    if student_id not in cache.character_data:
+    if not identity.exists(student_id):
         return
     if (
         relations.father_id(student_id) != 0
@@ -1154,7 +1154,7 @@ def judge_hp_low_only_watch(character_id: int) -> bool:
     Return arguments:
     bool -- 是否只能旁观
     """
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return False
     if not needs.of(character_id)["hit_max"]:
         return False

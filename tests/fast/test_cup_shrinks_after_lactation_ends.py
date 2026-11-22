@@ -19,7 +19,7 @@ from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
 
 if TYPE_CHECKING:
-    from Script.Core import game_type
+    from Script.Modules.domains import identity
 
 CUPS = [121, 122, 123, 124, 125]
 """ 罩杯素质：绝壁、贫乳、普乳、巨乳、爆乳 """
@@ -42,14 +42,14 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         self.world.chara(0, "博士")
         self.enterContext(working.based_on(core.state()))
 
-    def make(self, cid: int, cup: int) -> "game_type.Character":
+    def make(self, cid: int, cup: int) -> "identity.Identity":
         """
         造一个指定罩杯、没有泌乳的干员
         Keyword arguments:
         cid -- 角色id
         cup -- 罩杯素质id
         Return arguments:
-        game_type.Character -- 角色对象
+        identity.Identity -- 角色身份
         """
         cd = self.world.chara(cid, f"干员{cid}")
         for talent_id in CUPS:
@@ -58,14 +58,14 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         kernel_data.set_milk_max(cd.cid, 190)
         return cd
 
-    def engorge(self, cid: int, cup: int) -> "game_type.Character":
+    def engorge(self, cid: int, cup: int) -> "identity.Identity":
         """
         造一个指定罩杯的干员，用泌乳药并把奶量加满，跑一次结算使她涨奶
         Keyword arguments:
         cid -- 角色id
         cup -- 罩杯素质id
         Return arguments:
-        game_type.Character -- 角色对象
+        identity.Identity -- 角色身份
         """
         cd = self.make(cid, cup)
         gift_panel.handle_drug_use_effect(cid, LACTATION_DRUG)

@@ -16,6 +16,7 @@ from Script.Modules.save_load import reset
 import random
 from typing import TYPE_CHECKING
 from Script.Modules.domains import abilities, npc_template, relations
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -38,7 +39,7 @@ window_width: int = normal_config.config_normal.text_width
 def repair_recruit_lines() -> None:
     """旧存档修补：待确认招募里不存在的角色id去掉，停止招募（策略 11）的线进度归 0"""
     recruit.set_pending(
-        cid for cid in recruit.pending() if cid and cid in cache.character_data
+        cid for cid in recruit.pending() if cid and identity.exists(cid)
     )
     lines = recruit.lines()
     for line in lines.values():
@@ -92,7 +93,7 @@ def recruit_new_chara() -> bool:
         recruit.set_pending(pending)
         # 招募该干员
         character_handle.get_new_character(new_chara_id)
-        character_data = cache.character_data[new_chara_id]
+        character_data = identity.of(new_chara_id)
         now_draw.text += _("\n\n   ※ 成功招募了{0} ※\n\n").format(
             character_data.name
         )
@@ -136,7 +137,7 @@ def find_recruitable_npc() -> list[int]:
         if tem_data.Mother_id != 0 or tem_data.AdvNpc > 9000:
             continue
         # 跳过不存在的
-        if chara_id not in cache.character_data:
+        if not identity.exists(chara_id):
             continue
         # 跳过访客
         if flags.get(chara_id, "vistor") == 1:
@@ -148,7 +149,7 @@ def find_recruitable_npc() -> list[int]:
         if chara_id in diplomat_id_set:
             continue
         # 跳过特殊NPC
-        if cache.character_data[chara_id].adv in constant.ban_NPC_adv_set:
+        if identity.of(chara_id).adv in constant.ban_NPC_adv_set:
             continue
         # 如果设置了禁止，则跳过禁止干员
         if normal_config.system_setting.base_setting[7]:
@@ -184,7 +185,7 @@ def update_recruit() -> None:
             wait_id_list = []
             # 主招募专员
             line_main_chara_id = line["main"]
-            line_main_chara_data = cache.character_data[line_main_chara_id]
+            line_main_chara_data = identity.of(line_main_chara_id)
             for chara_id in recruitable_npc_id_list:
                 if (
                     chara_id == 0
@@ -195,7 +196,7 @@ def update_recruit() -> None:
 
                 # 本地招募
                 if recruitment_strategy == 0:
-                    character_data = cache.character_data[chara_id]
+                    character_data = identity.of(chara_id)
                     # 筛选出出生地是当前罗德岛所在地的角色
                     if (
                         relations.birthplace(character_data.cid)
@@ -208,7 +209,7 @@ def update_recruit() -> None:
                     wait_id_list.append(chara_id)
                 # 同势力干员
                 elif recruitment_strategy == 2:
-                    character_data = cache.character_data[chara_id]
+                    character_data = identity.of(chara_id)
                     # 筛选出势力相同的角色
                     if relations.nation(character_data.cid) != relations.nation(
                         line_main_chara_id
@@ -217,7 +218,7 @@ def update_recruit() -> None:
                     wait_id_list.append(chara_id)
                 # 同出身地干员
                 elif recruitment_strategy == 3:
-                    character_data = cache.character_data[chara_id]
+                    character_data = identity.of(chara_id)
                     # 筛选出出身地相同的角色
                     if relations.birthplace(
                         character_data.cid
@@ -226,7 +227,7 @@ def update_recruit() -> None:
                     wait_id_list.append(chara_id)
                 # 同职业干员
                 elif recruitment_strategy == 4:
-                    character_data = cache.character_data[chara_id]
+                    character_data = identity.of(chara_id)
                     # 筛选出职业相同的角色
                     if (
                         character_data.profession
@@ -236,7 +237,7 @@ def update_recruit() -> None:
                     wait_id_list.append(chara_id)
                 # 同种族干员
                 elif recruitment_strategy == 5:
-                    character_data = cache.character_data[chara_id]
+                    character_data = identity.of(chara_id)
                     # 筛选出种族相同的角色
                     if character_data.race != line_main_chara_data.race:
                         continue
@@ -323,8 +324,8 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
     # 招募效率(使用主/副招聘专员机制)
     line_main_id = lines[line_id]["main"]
     main_name = (
-        cache.character_data[line_main_id].name
-        if line_main_id in cache.character_data
+        identity.of(line_main_id).name
+        if identity.exists(line_main_id)
         else _("空缺")
     )
     # 全部主招聘专员
@@ -336,7 +337,7 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
     hr_parts_str = "["
     # 遍历所有招聘专员
     for chara_id in work.roster(work.HR_WORK):
-        if chara_id not in cache.character_data:
+        if not identity.exists(chara_id):
             continue
         # 跳过玩家
         if chara_id == 0:
@@ -439,11 +440,9 @@ class Recruit_Panel:
                 now_text += _("  当前已招募待确认的干员有：")
                 for chara_id in recruit.pending():
                     # 不存在的角色id由读档修补 repair_recruit_lines 去掉
-                    if chara_id == 0 or chara_id not in cache.character_data:
+                    if chara_id == 0 or not identity.exists(chara_id):
                         continue
-                    character_data: game_type.Character = cache.character_data[
-                        chara_id
-                    ]
+                    character_data: identity.Identity = identity.of(chara_id)
                     now_text += f" [{str(character_data.adv).rjust(4,'0')}]{character_data.name}"
                 now_text += "\n"
 
@@ -492,7 +491,7 @@ class Recruit_Panel:
                 for chara_id in recruitable_npc_id_list:
                     if recruitment_strategy_id == 11:
                         break
-                    chara_data = cache.character_data[chara_id]
+                    chara_data = identity.of(chara_id)
                     talent = abilities.talent(chara_id)
                     if recruitment_strategy_id == 0:
                         if (
@@ -516,16 +515,14 @@ class Recruit_Panel:
                         if (
                             line_main_chara_id
                             and chara_data.profession
-                            == cache.character_data[
-                                line_main_chara_id
-                            ].profession
+                            == identity.of(line_main_chara_id).profession
                         ):
                             line_wait_id_list.append(chara_id)
                     elif recruitment_strategy_id == 5:
                         if (
                             line_main_chara_id
                             and chara_data.race
-                            == cache.character_data[line_main_chara_id].race
+                            == identity.of(line_main_chara_id).race
                         ):
                             line_wait_id_list.append(chara_id)
                     elif recruitment_strategy_id == 6:
@@ -578,10 +575,7 @@ class Recruit_Panel:
                 # 如果点击详情，则展开所有名字
                 if self.show_detail_line == recruit_line_id and rem_count > 0:
                     detail_names = "      " + "、".join(
-                        [
-                            cache.character_data[cid].name
-                            for cid in line_wait_id_list
-                        ]
+                        [identity.of(cid).name for cid in line_wait_id_list]
                     )
                     detail_draw = draw.NormalDraw()
                     detail_draw.text = detail_names + "\n"
@@ -702,9 +696,7 @@ class Recruit_Panel:
                     button_draw_text += _("（{0}）").format(add_text)
                 # 对于同主招聘专员的策略，进行补充说明
                 elif cid in (2, 3, 4, 5, 6, 7, 8) and line_main_chara_id != 0:
-                    line_main_chara_data = cache.character_data[
-                        line_main_chara_id
-                    ]
+                    line_main_chara_data = identity.of(line_main_chara_id)
                     add_text = ""
                     if cid == 2:
                         nation_id = relations.nation(line_main_chara_id)
@@ -802,7 +794,7 @@ class Recruit_Panel:
                     + fmt("-", 6)
                 )
 
-            chara = cache.character_data[chara_id]
+            chara = identity.of(chara_id)
             base_effect = 2 * handle_ability.get_ability_adjust(
                 abilities.ability(chara_id).get(40, 0)
             )

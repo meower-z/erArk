@@ -8,6 +8,7 @@ from Script.Core import cache_control, game_type, get_text, era_image
 from Script.Config import game_config
 from Script.Design import handle_premise
 from Script.Modules.domains import relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache  # 游戏缓存数据
 _: FunctionType = get_text._  # 翻译api
@@ -24,7 +25,7 @@ def find_character_image_name(character_id: int) -> str:
       根据角色当前状态构造所有可能差分组合，并按差分优先度依次尝试匹配完全符合的图片名，
       若无符合项则返回原始立绘。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 判断是否为女儿（特殊角色）
     if relations.father_id(character_id) == 0:
         # 没有同名立绘与种族女儿图时的立绘名，图片索引里没有它，女儿不显示立绘
@@ -109,11 +110,11 @@ def find_character_image_name(character_id: int) -> str:
     return base_name
 
 
-def find_daughter_race_image_name(character_data: game_type.Character) -> str:
+def find_daughter_race_image_name(character_data: identity.Identity) -> str:
     """
     查找女儿所属种族的专用立绘名。
     参数:
-      character_data (game_type.Character): 女儿的角色数据。
+      character_data (identity.Identity): 女儿的角色数据。
     返回:
       str: 种族女儿图的底图名（如"女儿_丰蹄"），该种族没有对应图片时返回空字符串。
     功能描述:

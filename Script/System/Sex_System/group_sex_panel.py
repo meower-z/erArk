@@ -14,6 +14,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle, virgin_break_gate
 from Script.Modules.domains import abilities, activity, flags, h_state, modes
 from Script.Modules.domains import roster
+from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 
@@ -367,7 +368,7 @@ class SeeGroupSexInfoPanel:
             state_id = now_template_data[0][body_part][1]
             if state_id != -1:
                 target_chara_id = now_template_data[0][body_part][0]
-                target_chara_name = cache.character_data[target_chara_id].name
+                target_chara_name = identity.of(target_chara_id).name
                 state_name = game_config.config_behavior[state_id].name
                 body_part_name = body_part_name_dict[body_part]
                 all_part_text += _("{0}-{1}-{2} ").format(
@@ -381,9 +382,7 @@ class SeeGroupSexInfoPanel:
             state_name = game_config.config_behavior[state_id].name
             all_target_chara_name = ""
             for target_chara_id in target_chara_id_list:
-                all_target_chara_name += cache.character_data[
-                    target_chara_id
-                ].name
+                all_target_chara_name += identity.of(target_chara_id).name
                 # 除最后一个人名字之外其他都加一个顿号
                 if target_chara_id != target_chara_id_list[-1]:
                     all_target_chara_name += "、"
@@ -397,10 +396,7 @@ class SeeGroupSexInfoPanel:
         # 如果文本不为空，则加入到绘制列表中
         if all_part_text != "":
             all_part_text = (
-                cache.character_data[character_id].name
-                + " "
-                + all_part_text
-                + "\n"
+                identity.of(character_id).name + " " + all_part_text + "\n"
             )
             self.draw_list.append(type_line)
         text_draw.text = all_part_text
@@ -430,7 +426,7 @@ class Edit_Group_Sex_Temple_Panel:
         """ 绘制的最大宽度 """
         self.handle_panel: panel.PageHandlePanel | None = None
         """ 当前名字列表控制面板 """
-        self.pl_character_data = cache.character_data[0]
+        self.pl_character_data = identity.of(0)
         """ 玩家角色数据 """
 
     def draw(self) -> None:
@@ -442,7 +438,7 @@ class Edit_Group_Sex_Temple_Panel:
             return_list = []
 
             # 刷新玩家角色数据
-            self.pl_character_data = cache.character_data[0]
+            self.pl_character_data = identity.of(0)
             now_template_data = h_state.view(0).group_sex_body_template_dict[
                 "A"
             ]
@@ -474,9 +470,7 @@ class Edit_Group_Sex_Temple_Panel:
                 if target_chara_id == -1:
                     target_chara_name = _("未选择角色")
                 else:
-                    target_chara_name = cache.character_data[
-                        target_chara_id
-                    ].name
+                    target_chara_name = identity.of(target_chara_id).name
                 target_chara_button = draw.CenterButton(
                     f"▶{target_chara_name}",
                     body_part_name + target_chara_name,
@@ -518,9 +512,9 @@ class Edit_Group_Sex_Temple_Panel:
                     else:
                         target_chara_name_text = ""
                         for target_chara_id in target_chara_id_list:
-                            target_chara_name_text += cache.character_data[
+                            target_chara_name_text += identity.of(
                                 target_chara_id
-                            ].name
+                            ).name
                             target_chara_name_text += " "
                     target_chara_button = draw.CenterButton(
                         f"▶{target_chara_name_text}",
@@ -717,7 +711,7 @@ class Edit_Group_Sex_Temple_Panel:
             # 生成角色名的按钮，让玩家选择
             chara_count = 0
             for chara_id in all_character_list:
-                character_data = cache.character_data[chara_id]
+                character_data = identity.of(chara_id)
                 button_text = f"[{str(character_data.adv).rjust(4,'0')}]{character_data.name}"
                 # 性技实操课上，体力不足的学生只能站在一边旁观，不进模板（Plan 22 四期 口径65）。
                 # 只在课堂模式下生效：普通群交没有这条限制，把它一并管上会改掉既有玩法
@@ -998,7 +992,7 @@ class Edit_Group_Sex_Temple_Panel:
         from Script.Modules.gameplay_resolution import plan_queue
         from Script.Modules.npc_action_choice import choice
 
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         if not handle_premise.handle_normal_24567(character_id):
             info_draw_text = _("***{0}状态异常，无法召集***\n").format(
                 character_data.name

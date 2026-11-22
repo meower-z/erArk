@@ -22,6 +22,7 @@ from typing import Any
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 SLOT = "h_dirty_hypnosis_v20"
 SEED = 20261121
@@ -160,7 +161,7 @@ class HDirtyHypnosisSaveV20Test(SlowTestCase):
             "first_record",
             "first_record_history",
         ):
-            self.assertFalse(hasattr(self.cache.character_data[npc_id], attr))
+            self.assertFalse(hasattr(identity.of(npc_id), attr))
 
         before_save = self._state_json()
         save_handle.establish_save(SLOT)

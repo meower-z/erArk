@@ -11,6 +11,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import abilities, activity, entertainment, flags
 from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import roster, chara_life
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -29,7 +30,7 @@ def get_race_birth_type(character_id: int) -> int:
     Return arguments:
     int -- 生育方式（1单胎胎生，2多胎胎生，11带壳卵生，12无壳卵生）
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     race_config = game_config.config_race.get(character_data.race)
     if race_config is None:
         return pregnancy_constant.BIRTH_TYPE_SINGLE
@@ -140,7 +141,7 @@ def clear_birth_type_data(birth_type: int) -> str:
     soft_egg_count = 0
     fetus_chara_count = 0
     # 遍历全角色（含未招募干员），按种族原始生育方式判定归属，此时开关已关闭不能用 get_birth_type
-    for character_id in cache.character_data:
+    for character_id in identity.table():
         if character_id == 0:
             continue
         if get_race_birth_type(character_id) != birth_type:
@@ -172,7 +173,7 @@ def clear_birth_type_data(birth_type: int) -> str:
         held_eggs = player_collection.get("held_eggs")
         for held_id in list(held_eggs.keys()):
             mother_id = held_eggs[held_id][0]
-            if mother_id not in cache.character_data:
+            if not identity.exists(mother_id):
                 continue
             if get_race_birth_type(mother_id) != birth_type:
                 continue
@@ -186,7 +187,7 @@ def clear_birth_type_data(birth_type: int) -> str:
         for soft_egg_id in list(soft_eggs.keys()):
             mother_id = soft_eggs[soft_egg_id].get("mother_id", -1)
             if (
-                mother_id in cache.character_data
+                identity.exists(mother_id)
                 and get_race_birth_type(mother_id) != birth_type
             ):
                 continue
@@ -439,7 +440,7 @@ def check_ovulation(character_id: int) -> None:
     Keyword arguments:
     character_id -- 角色id
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     # 仅在本周期排卵日事件待处理时进行结算
     if not pregnancy.of(character_id).ovulation_flag:
         return
@@ -481,7 +482,7 @@ def npc_identify_eggs_settle(
     character_id -- 持卵角色id
     identifier_id -- 执行鉴定的角色id（None或与持卵角色相同时视为本人自行鉴定，否则为保育员代为鉴定）
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     identifiable_ids = list(get_identifiable_eggs(character_id))
     if not identifiable_ids:
         return
@@ -504,9 +505,7 @@ def npc_identify_eggs_settle(
         talk.must_show_talk_check(character_id)
         draw_text = "\n※※※※※※※※※\n"
         if identifier_id is not None and identifier_id != character_id:
-            identifier_data: game_type.Character = cache.character_data[
-                identifier_id
-            ]
+            identifier_data: identity.Identity = identity.of(identifier_id)
             draw_text += _(
                 "\n保育员{0}在育儿室为{1}鉴定了产下的卵，发现其中{2}枚已经受精\n"
             ).format(
@@ -565,7 +564,7 @@ def take_eggs_from_chara(target_character_id: int) -> int:
     Return arguments:
     int -- 拿走的卵数量
     """
-    target_data: game_type.Character = cache.character_data[target_character_id]
+    target_data: identity.Identity = identity.of(target_character_id)
     take_count = 0
     with pregnancy.editing(target_character_id) as preg:
         for egg_id, egg_data in preg.eggs.items():
@@ -596,7 +595,7 @@ def identify_held_eggs_settle() -> None:
         player_collection.put("held_eggs", {})
     for _held_id, (chara_id, egg_id) in held_eggs.items():
         # 原角色或卵已不存在时静默清理索引
-        if chara_id not in cache.character_data:
+        if not identity.exists(chara_id):
             continue
         with pregnancy.editing(chara_id) as preg:
             if egg_id not in preg.eggs:
@@ -613,7 +612,7 @@ def identify_held_eggs_settle() -> None:
                 del preg.eggs[egg_id]
     # 逐角色通知鉴定出的受精卵
     for chara_id, count in fertilized_chara_count.items():
-        character_data = cache.character_data[chara_id]
+        character_data = identity.of(chara_id)
         second_behavior.character_get_second_behavior(
             chara_id, "egg_fertilized"
         )

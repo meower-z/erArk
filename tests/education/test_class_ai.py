@@ -25,7 +25,7 @@ from Script.Modules.domains import (
     hypnosis,
 )
 from Script.Modules.domains import library, modes, physical_exam as px, plan
-from Script.Modules.domains import chara_life, relations
+from Script.Modules.domains import chara_life, relations, identity
 from tests import chara_abilities as ca, kernel_data, world
 from tests.chara_activity import aim, behave, doing, stand, status
 
@@ -1075,7 +1075,7 @@ set_time(period_time(0))
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 for _cid, _name in ((101, "教师"), (201, "学生")):
-    _cd = cache.character_data[_cid]
+    _cd = identity.of(_cid)
     move_to(0, SCENE_EDU_ENTRY)
     move_to(_cid, SCENE_EDU_ENTRY)
     kernel_data.put(flags.set, _cd.cid, is_follow=1)
@@ -2752,7 +2752,7 @@ def setup_h1(third_room: str) -> None:
             constant.CharacterStatus.STATUS_ATTENT_CLASS,
         ),
     ):
-        cd = cache.character_data[cid]
+        cd = identity.of(cid)
         prepare_ai(cid)
         kernel_data.set_needs(cid, hit_max=2000)
         kernel_data.set_needs(cid, mana_max=2000)
@@ -2896,7 +2896,7 @@ check(
     (rounds[0][3], [(one[2], one[3]) for one in teach]),
 )
 for cid in (101, 201):
-    cd = cache.character_data[cid]
+    cd = identity.of(cid)
     kernel_data.set_needs(cd.cid, hit_max=100, hit=100)
     kernel_data.set_needs(cd.cid, mana_max=100, mana=100)
     behave(cd.cid, constant.Behavior.SHARE_BLANKLY, duration=0)
@@ -3669,7 +3669,7 @@ _NOT_HERE = "self_not_attend_sex_class_here"
 """ 本段要验的新前提：自己不是来这里上正在进行的性技实操课的学生（写成字面量，
 改前没有这个常量时本段照样能跑到派发那一步） """
 for _cid in (201, 202):
-    _cd = cache.character_data[_cid]
+    _cd = identity.of(_cid)
     kernel_data.set_needs(_cd.cid, hit_max=100, hit=100)
     kernel_data.set_needs(_cd.cid, mana_max=100, mana=100)
     kernel_data.put(flags.set, _cd.cid, is_h=False)

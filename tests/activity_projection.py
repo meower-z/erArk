@@ -9,6 +9,7 @@ kernel_project.project_rest 调用 project。记下的名字同角色对象上�
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -26,7 +27,7 @@ def project(cache: game_type.Cache, state: dict[str, object]) -> None:
     from Script.Modules.domains import activity
     from tests.snapshot import flatten
 
-    for cid in cache.character_data:
+    for cid in identity.table():
         fields: dict[str, object] = {
             "state": activity.state(cid),
             "last_behavior_id_list": activity.last_behaviors(cid),

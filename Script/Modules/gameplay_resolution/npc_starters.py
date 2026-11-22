@@ -17,6 +17,7 @@ from Script.Modules.domains import maintenance as engineering
 from Script.Modules.gameplay_resolution import intent, starts
 from Script.Modules.domains import medical, medical_patient, physical_exam
 from Script.Modules.domains import inventory, chara_life
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -105,9 +106,7 @@ def identify_eggs_still_there(
     from Script.System.Pregnancy_System import egg_handle
 
     owner_id = int(str(_args(data)["owner_id"]))
-    if owner_id in cache.character_data and egg_handle.get_identifiable_eggs(
-        owner_id
-    ):
+    if identity.exists(owner_id) and egg_handle.get_identifiable_eggs(owner_id):
         return None
     return _wait_one_minute(who)
 
@@ -223,7 +222,7 @@ def _surgery_patient(who: int, patient_id: int) -> object | None:
     from Script.System.Medical_System import medical_service
 
     for patient in medical_service.get_surgery_candidate_patient_ids(
-        doctor_character=cache.character_data[who],
+        doctor_character=identity.of(who),
         target_base=cache.rhodes_island,
     ):
         if patient.patient_id == patient_id:

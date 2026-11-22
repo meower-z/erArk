@@ -17,7 +17,7 @@ from Script.Core import game_type, get_text, value_handle
 from Script.Design import handle_ability
 from Script.Modules.domains import abilities, economy, medical, medical_patient
 from Script.System.Medical_System import medical_constant, medical_core
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import warehouse, identity
 from Script.Modules.domains import chara_life
 
 _: FunctionType = get_text._
@@ -521,7 +521,7 @@ def estimate_patient_diagnose_income(
 
 def advance_diagnose(
     patient_id: int,
-    doctor_character: game_type.Character | None,
+    doctor_character: identity.Identity | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> None:
@@ -529,7 +529,7 @@ def advance_diagnose(
 
     参数:
         patient_id (int): 门诊病人的唯一编号。
-        doctor_character (game_type.Character): 执行诊疗的医生角色。
+        doctor_character (Optional[identity.Identity]): 执行诊疗的医生角色。
         target_base (Optional[game_type.Rhodes_Island]): 指定医疗部所在的基地实例。
     返回:
         None

@@ -20,6 +20,7 @@ from Script.Modules.domains import dirty, facility, flags, h_state, inventory
 from Script.Modules.domains import needs, prison, work
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -160,7 +161,7 @@ def escape_success(character_id: int) -> None:
     from Script.Settle import default
     from Script.System.Field_Commission_System import field_commission_function
 
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # 逃脱成功提示
     escape_text = _("\n囚犯{0}逃脱成功，请尽快派遣外勤干员进行追捕！\n").format(
         character_data.name
@@ -190,7 +191,7 @@ def escape_fail(character_id: int) -> None:
     Keyword arguments:\n
     character_id -- 角色id\n
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # 逃脱失败提示
     escape_text = _("囚犯{0}逃脱失败，监狱长已经加强了对其的监视！\n").format(
         character_data.name
@@ -320,7 +321,7 @@ def start_training_preparation(target_character_id: int) -> None:
     from Script.Settle import default
     from Script.UI.Panel import h_item_shop_panel
 
-    target_character_data = cache.character_data[target_character_id]
+    target_character_data = identity.of(target_character_id)
     warden_id = work.warden()
     # 移动到调教室
     humiliation_room_list = map_handle.get_map_system_path_for_str(
@@ -495,9 +496,7 @@ def get_all_can_use_behavior_id_for_sex_assistant(
                     if behavior_id in prison.assistant_ban_behaviors():
                         continue
                 if activity.target(0) != 0:
-                    target_character_data = cache.character_data[
-                        activity.target(0)
-                    ]
+                    target_character_data = identity.of(activity.target(0))
                     # 如果NPC为处，则跳过破处类
                     if virgin_break_gate.takes_kept_virginity(
                         behavior_tag_list,
@@ -588,7 +587,7 @@ class Confinement_And_Training_Manage_Panel:
         """ 当前绘制的页面 """
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的文本列表 """
-        self.pl_character_data = cache.character_data[0]
+        self.pl_character_data = identity.of(0)
         """ 玩家的角色数据 """
         self.done_training_status_id_set: set[int] = set()
         """ 已经调教过的状态id集合 """
@@ -619,8 +618,8 @@ class Confinement_And_Training_Manage_Panel:
             else:
                 now_text += _("目前的囚犯有：")
                 for chara_id in prisoner_ids:
-                    tem_character_data: game_type.Character = (
-                        cache.character_data[chara_id]
+                    tem_character_data: identity.Identity = identity.of(
+                        chara_id
                     )
                     live_room = chara_life.dormitory(chara_id).split(os.sep)[-1]
                     now_text += _(" [{0}]{1} - {2}  ").format(

@@ -6,6 +6,7 @@ from Script.UI.Moudle import draw, view
 from Script.Modules.domains import action_info, activity, flags, inventory, plan
 from types import FunctionType
 from Script.Modules.domains import chara_profile
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -343,7 +344,7 @@ def settle_private_move(character_id: int, outcome: str) -> None:
     """
     if outcome not in PRIVATE_MOVE_OUTCOMES:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     if outcome == "stop_follow":
         flags.set(character_id, is_follow=0)
     elif outcome == "give_up":

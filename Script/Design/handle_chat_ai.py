@@ -17,7 +17,7 @@ from google.genai import types as genai_types
 import os
 import re
 from typing import Any, Callable, Iterable, TypedDict
-from Script.Modules.domains import abilities, activity, chara_life
+from Script.Modules.domains import abilities, activity, chara_life, identity
 from Script.Modules.domains import chara_profile, flags, hypnosis, needs
 from Script.Modules.domains import relations, wardrobe
 
@@ -205,8 +205,8 @@ def save_ai_talk_record(
         else:
             new_cid = int(last_cid) + 1
     # 开始数据处理
-    character_data = cache.character_data[character_id]
-    target_character_data = cache.character_data[activity.target(character_id)]
+    character_data = identity.of(character_id)
+    target_character_data = identity.of(activity.target(character_id))
     # 处理名字，将角色名替换为{Name}，交互对象名替换为{TargetName}
     Name = character_data.name
     TargetNickName = target_character_data.name
@@ -272,8 +272,8 @@ def build_user_prompt(
         return user_prompt
 
     # 获取角色和场景相关数据
-    character_data = cache.character_data[character_id]
-    target_character_data = cache.character_data[activity.target(character_id)]
+    character_data = identity.of(character_id)
+    target_character_data = identity.of(activity.target(character_id))
     Name = character_data.name
     TargetName = target_character_data.name
     Location = activity.position(character_id)[-1]

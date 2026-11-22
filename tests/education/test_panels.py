@@ -2,7 +2,7 @@
 """面板：页签容器、全局课表、个人课表、日程模板、养成总览、选人按钮（通用 NPC 选择面板）、临时课编辑"""
 
 from _bootstrap import child_growth, growth, roster, DEFAULT_TIME, SCENE_DORM
-from _bootstrap import _, auto_schedule, cache, check, classroom_path
+from _bootstrap import _, auto_schedule, check, classroom_path, identity
 from _bootstrap import clear_schedules, constant, datetime, draw, drawn_text
 from _bootstrap import education, education_constant, finish, flow_handle
 from _bootstrap import game_config, make_character, move_to, activity
@@ -1098,7 +1098,7 @@ check(
 )
 # 教师名很长（异格干员等五六个字的名字）：格子里先截名字、不截标注，整格仍放得进一格（Plan 31 实施复审补）
 _l6_saved_name = teacher_b.name
-teacher_b.name = "名字很长的教师乙"
+kernel_data.put(identity.update, teacher_b.cid, name="名字很长的教师乙")
 _button_log.clear()
 _l6_panel.draw_page([])
 _cell_long = next(
@@ -1116,7 +1116,7 @@ check(
     and "名字很长的教师乙（已离岗）" in _cell_long[2],
     [one for one in _button_log if _name45 in one[0]],
 )
-teacher_b.name = _l6_saved_name
+kernel_data.put(identity.update, teacher_b.cid, name=_l6_saved_name)
 setattr(draw.CenterButton, "draw", _orig_center_draw)
 setattr(draw.LeftButton, "draw", _orig_left_draw)
 chara_life.work_type.set(teacher_b.cid, 151)
@@ -1293,7 +1293,7 @@ section(
 clear_schedules()
 set_time(period_time(0))
 _st_day = game_time.now().weekday()
-_st = cache.character_data[201]
+_st = identity.of(201)
 _st_growth = child_growth(201)
 _st_growth.selected_course = {}
 _st_growth.skip_class_flag = False

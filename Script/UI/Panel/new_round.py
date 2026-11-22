@@ -11,11 +11,11 @@ from Script.Config import normal_config, game_config
 from Script.Design import child_stage_gate, handle_talent, character_handle
 from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
-import copy
 from Script.Modules.domains import abilities, facility, first_record, h_meters
 from Script.Modules.domains import hypnosis, needs, npc_template
 from Script.Modules.domains import player_collection
 from Script.Modules.domains import playthrough, roster, chara_life, relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -119,7 +119,7 @@ class New_Round_Handle:
                 # 如果已经陷落
                 if talent_id:
                     self.all_fall_chara_list.append(chara_id)
-                    now_character_data = cache.character_data[chara_id]
+                    now_character_data = identity.of(chara_id)
                     talent_name = game_config.config_talent[talent_id].name
                     point_add = talent_id % 10  # 取个位数字
                     point_add *= 2
@@ -601,9 +601,7 @@ class New_Round_Handle:
             # 选择送别干员
             info_text = _("\n○送别干员：")
             if self.farewell_npc_id:
-                info_text += (
-                    f"{cache.character_data[self.farewell_npc_id].name}"
-                )
+                info_text += f"{identity.of(self.farewell_npc_id).name}"
             else:
                 info_text += _("未选择")
             info_text += "        "
@@ -817,7 +815,7 @@ class New_Round_Handle:
             info_draw.draw()
             chara_count = 0
             for chara_id in self.all_fall_chara_list:
-                now_character_data = cache.character_data[chara_id]
+                now_character_data = identity.of(chara_id)
                 button_text = (
                     f"[{now_character_data.adv}]{now_character_data.name}"
                 )
@@ -874,7 +872,7 @@ class New_Round_Handle:
             以及选择时陷落干员的 trust 与对博士的 favorability（fallen_social），见 setup
         """
         st, n0 = core.state(), needs.of(0)
-        chars = cache.character_data
+        chars = identity.table()
         return {
             "pl_abi_and_exp_count": self.pl_abi_and_exp_count,
             "pl_originium_arts_count": self.pl_originium_arts_count,
@@ -1020,13 +1018,9 @@ def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
     info_draw_text = "\n\n"
     info_draw_text += _("开始继承玩家数据\n")
 
-    # 记录旧的玩家数据
-    old_pl_character_data = copy.deepcopy(cache.character_data[0])
-    # 构建新的玩家数据
-    cache.character_data[0] = game_type.Character()
+    # 用默认值重建玩家身份，沿用原玩家名字
+    identity.put(identity.Identity(0, name=identity.of(0).name))
     character.init_attr(0)
-    new_pl_character_data = cache.character_data[0]
-    new_pl_character_data.name = old_pl_character_data.name
 
     # 归档旧周目的性行为履历（此时周目数仍是旧周目数）
     carried_fr = cast(Mapping[str, object], inherit.get("first_records", {}))
@@ -1213,9 +1207,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     info_draw_text += _("开始重置游戏数据\n")
 
     # 要保留的数据
-    old_cache = copy.deepcopy(cache_control.cache)
     new_game_round = playthrough.game_round() + 1
-    new_character_data = old_cache.character_data
     new_npc_id_got = roster.active()
     kept = {
         table: playthrough.settings(table)
@@ -1236,7 +1228,6 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     for table, values in kept.items():
         playthrough.set_settings(table, values)
     playthrough.set_game_round(new_game_round)
-    cache.character_data = new_character_data
     roster.set_active(new_npc_id_got)
     creator_character_flow.game_start()
 
@@ -1280,7 +1271,7 @@ class CharacterabiText:
         """ 继承比例 """
         self.type = type
         """ 当前绘制类型 """
-        character_data = cache.character_data[self.character_id]
+        character_data = identity.of(self.character_id)
         """ 角色数据 """
         self.draw_list: list[draw.Drawable] = []
         """ 绘制对象列表 """
@@ -1388,7 +1379,7 @@ class CharacterExperienceText:
         """ 绘制的文本列表 """
         self.return_list: list[str] = []
         """ 当前面板监听的按钮列表 """
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         type_data = _("经验")
         type_line = draw.LittleTitleLineDraw(type_data, width, ":")
         self.draw_list.append(type_line)

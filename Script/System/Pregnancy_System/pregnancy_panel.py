@@ -17,6 +17,7 @@ from Script.Design import handle_premise
 from Script.System.Pregnancy_System import egg_handle, family_tree_draw
 from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
 from Script.Modules.domains import abilities, pregnancy, roster, relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -185,7 +186,7 @@ def get_stage_info_text(character_id: int, now_stage: int) -> str:
         # 逐个列出名下全部婴儿及各自的预计成长日（扣除成长加速药的加速天数，已到期则显示为当天）
         baby_text_list = []
         for child_id in pregnancy_handle.get_baby_id_list(character_id):
-            child_data = cache.character_data[child_id]
+            child_data = identity.of(child_id)
             child_preg = pregnancy.of(child_id)
             acc_day = int(child_preg.growth_acceleration_days)
             grow_time = max(
@@ -366,7 +367,7 @@ class Pregnancy_Overview_Panel:
 
         # 逐行绘制：姓名按钮（点击以其为中心打开谱系图）+阶段名+关键时间
         for character_id, now_stage in chara_stage_list:
-            character_data = cache.character_data[character_id]
+            character_data = identity.of(character_id)
             name_text = f"[{character_data.name}]"
             name_draw = draw.LeftButton(
                 name_text,
@@ -415,7 +416,7 @@ class Pregnancy_Overview_Panel:
         line_feed.draw()
 
         # 中心角色兜底（角色被删除等情况时重置回玩家）
-        if self.tree_center_id not in cache.character_data:
+        if not identity.exists(self.tree_center_id):
             self.tree_center_id = 0
 
         window_width_int = int(self.width)
@@ -557,15 +558,14 @@ class Pregnancy_Overview_Panel:
         return_list = []
 
         # 待确认移除的目标已失效时清掉
-        if (
+        if self.pending_remove_id and not identity.exists(
             self.pending_remove_id
-            and self.pending_remove_id not in cache.character_data
         ):
             self.pending_remove_id = 0
 
         # 二次确认态：只画确认区
         if self.pending_remove_id:
-            character_data = cache.character_data[self.pending_remove_id]
+            character_data = identity.of(self.pending_remove_id)
             confirm_draw = draw.NormalDraw()
             confirm_draw.text = _(
                 "\n　确定要从本存档彻底移除女儿「{0}」（id:{1}）吗？\n　此操作不可撤销。\n"
@@ -615,7 +615,7 @@ class Pregnancy_Overview_Panel:
         line_feed.draw()
 
         for character_id in abnormal_list:
-            character_data = cache.character_data[character_id]
+            character_data = identity.of(character_id)
             remove_draw = draw.LeftButton(
                 _("[去除]"),
                 f"abnormal_remove_{character_id}",
@@ -625,7 +625,7 @@ class Pregnancy_Overview_Panel:
             )
             remove_draw.draw()
             return_list.append(remove_draw.return_text)
-            mother = cache.character_data.get(relations.mother_id(character_id))
+            mother = identity.get(relations.mother_id(character_id))
             mother_name = mother.name if mother is not None else _("未知")
             stage_name = _("成年")
             for talent_id in (101, 102, 103, 104):

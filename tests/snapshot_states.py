@@ -37,6 +37,7 @@ from unittest import mock
 from tests.kernel_data import writing
 from tests import kernel_data
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -166,11 +167,7 @@ def npc_id(world: FullWorld, name: str) -> int:
     """
     from Script.Modules.domains import roster
 
-    found = [
-        cid
-        for cid in roster.active()
-        if world.cache.character_data[cid].name == name
-    ]
+    found = [cid for cid in roster.active() if identity.of(cid).name == name]
     if len(found) != 1:
         raise PlanError(f"本局应有一名「{name}」，找到 {found}")
     return found[0]
@@ -262,7 +259,7 @@ def fertilize(world: FullWorld, mother_id: int) -> None:
     from Script.System.Pregnancy_System import pregnancy_handle
     from Script.UI.Panel import ejaculation_panel
 
-    mother = world.cache.character_data[mother_id]
+    mother = identity.of(mother_id)
     with writing():
         # 部位 7 为子宫，类型 0 为身体
         ejaculation_panel.update_semen_dirty(mother_id, 7, 0, 1000)
@@ -285,7 +282,7 @@ def give_birth(world: FullWorld, mother_id: int, name: str) -> list:
     )
     from Script.Modules.domains import relations
 
-    mother = world.cache.character_data[mother_id]
+    mother = identity.of(mother_id)
     with days_passed(pregnancy_constant.PREGNANCY_DAY):
         pregnancy_handle.check_pregnancy(mother_id)
     with days_passed(pregnancy_constant.PARTURIENT_DAY):

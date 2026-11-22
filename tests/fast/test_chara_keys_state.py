@@ -27,7 +27,12 @@ from Script.Config import game_config
 from Script.Core import game_type, old_chara_to_new, save_handle
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import chara_key, chara_life, chara_profile
+from Script.Modules.domains import (
+    chara_key,
+    chara_life,
+    chara_profile,
+    identity,
+)
 from Script.Modules.domains import relations
 from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions, working
@@ -171,9 +176,7 @@ class CharaKeysStateTest(FastTestCase):
 
     def test_config_fill_writes_under_given_id(self) -> None:
         """补全设置与助理服务时写在给出的角色id下，不用对象上的 cid"""
-        character = game_type.Character()
-        character.cid = 7
-        old_chara_to_new.update_character_config_data(character, 6)
+        old_chara_to_new.update_character_config_data(identity.Identity(7), 6)
         self.assertEqual(
             set(chara_profile.chara_setting(6)),
             set(game_config.config_chara_setting),
@@ -260,6 +263,7 @@ class CharaKeysStateTest(FastTestCase):
             },
             "npc_tem_data": {1: object()},
         }
+        identity.adopt_old_save(loaded)
         with mock.patch.object(
             old_chara_to_new.character_handle, "init_character", rebuild
         ):
@@ -283,6 +287,7 @@ class CharaKeysStateTest(FastTestCase):
             "character_data": {5: oldest, 6: current},
             "npc_tem_data": {},
         }
+        identity.adopt_old_save(loaded)
         with (
             mock.patch.dict(
                 old_chara_to_new.character_config.character_tem_list, clear=True

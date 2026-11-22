@@ -19,6 +19,7 @@ from Script.UI.Moudle import panel, draw, view
 from Script.Config import normal_config, game_config
 from Script.Modules.domains.playthrough import FIRST_BONUS, WORLD
 from Script.Modules.domains import chara_key, chara_profile, relations
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -38,15 +39,13 @@ def creator_character_panel() -> None:
     """创建角色面板。建角色写的 GameState 数据记在以当前状态为底的缓冲区里，换成效果后交给 kernel_state.new_game"""
     from Script.System.Medical_System import medical_service
 
-    # 清掉同一进程里上一局留在 cache.character_data 中的角色，避免它们混入新游戏。
-    # 局内生成的角色模板存在内核状态里。紧接着的 kernel_state.reset_clock 会把内核换成空状态，因此无需另清模板。
-    cache.character_data.clear()
     # 时钟回到开局：建角色时读到的游戏时间都是开局时刻
     clock = kernel_state.first_clock()
     kernel_state.reset_clock(clock)
     with working.based_on(core.state()) as buffer:
+        identity.replace_all(())
         roster.clear_active()
-        cache.character_data[0] = game_type.Character()
+        identity.put(identity.Identity(0))
         character_handle.init_character_list()
         while 1:
             confirm_game_info_panel()
@@ -61,7 +60,7 @@ def creator_character_panel() -> None:
                 if confirm_character_attr_panel():
                     game_start()
                     break
-            cache.character_data[0] = game_type.Character()
+            identity.put(identity.Identity(0))
             abilities.clear(0)
             chara_key.reset(0)
         view.now_panel_id = constant.Panel.IN_SCENE
@@ -180,9 +179,11 @@ def input_name_panel() -> bool:
     Return arguments:
     bool -- 完成角色创建校验
     """
-    character_data = cache.character_data[0]
-    character_data.name = character.input_name_func(
-        _("你能回忆起自己的名字吗？（默认称呼为博士，此处仅输入姓名即可）")
+    identity.update(
+        0,
+        name=character.input_name_func(
+            _("你能回忆起自己的名字吗？（默认称呼为博士，此处仅输入姓名即可）")
+        ),
     )
     chara_profile.nick_name.set(0, _("博士"))
     return True
@@ -272,7 +273,7 @@ class Character_JJ:
 
     def draw(self) -> None:
         """绘制面板"""
-        if cache.character_data[0].sex == 0:
+        if identity.of(0).sex == 0:
             for label in self.draw_list:
                 if isinstance(label, list):
                     for value in label:
@@ -326,7 +327,7 @@ class Character_Debug:
 
     def draw(self) -> None:
         """绘制面板"""
-        if cache.character_data[0].sex == 0:
+        if identity.of(0).sex == 0:
             for label in self.draw_list:
                 if isinstance(label, list):
                     for value in label:
@@ -393,7 +394,7 @@ class Character_FirstNPC:
 
         # 去掉特殊干员
         for chara_id in self.id_list.copy():
-            if cache.character_data[chara_id].adv in constant.ban_NPC_adv_set:
+            if identity.of(chara_id).adv in constant.ban_NPC_adv_set:
                 self.id_list.remove(chara_id)
                 self.special_chara_list.append(chara_id)
 
@@ -408,12 +409,12 @@ class Character_FirstNPC:
         info_draw.text += _("\n   基础:")
         npc_id_got_list = list(roster.active_sorted())
         for character_id in npc_id_got_list:
-            npc_character_data = cache.character_data[character_id]
+            npc_character_data = identity.of(character_id)
             if npc_character_data.adv in constant.first_NPC_adv_set:
                 info_draw.text += f" ●{npc_character_data.name}"
         info_draw.text += _("\n   自选:")
         for character_id in roster.active():
-            npc_character_data = cache.character_data[character_id]
+            npc_character_data = identity.of(character_id)
             if npc_character_data.adv not in constant.first_NPC_adv_set:
                 info_draw.text += f" ●{npc_character_data.name}"
 
@@ -523,7 +524,7 @@ class Character_FirstNPC:
             now_npc_draw.text += _(" 有口上的角色会注明文本文件的大小\n")
             now_npc_draw.text += _("\n 当前已选干员：")
             for character_id in roster.active():
-                npc_character_data = cache.character_data[character_id]
+                npc_character_data = identity.of(character_id)
                 if npc_character_data.adv not in constant.first_NPC_adv_set:
                     now_npc_draw.text += f" ●{npc_character_data.name}"
             now_npc_draw.text += _("\n 当前剩余可选干员数量 = {0}\n").format(
@@ -740,7 +741,7 @@ class Character_FirstNPC:
             if self.show_special_chara_handle_panel:
                 chara_count = 0
                 for character_id in self.special_chara_list:
-                    npc_character_data = cache.character_data[character_id]
+                    npc_character_data = identity.of(character_id)
                     # 跳过没有口上的
                     if not npc_character_data.talk_size:
                         continue
@@ -791,7 +792,7 @@ class Character_FirstNPC:
         """完善各种过滤器"""
 
         for NPC_id in self.id_list:
-            target_data: game_type.Character = cache.character_data[NPC_id]
+            target_data: identity.Identity = identity.of(NPC_id)
 
             # 口上过滤
             if target_data.talk_size:
@@ -862,8 +863,8 @@ class Character_FirstNPC:
             user_input = flow_handle.askfor_str(_("请输入要筛选的名字："))
             # 遍历所有 NPC 的姓名，找到包含用户输入的文字的 NPC
             npc_name_filter_id = []
-            for character_id in cache.character_data:
-                npc_character_data = cache.character_data[character_id]
+            for character_id in identity.table():
+                npc_character_data = identity.of(character_id)
                 if (
                     npc_character_data.adv not in constant.first_NPC_adv_set
                     and str(user_input) in npc_character_data.name
@@ -933,8 +934,7 @@ class Character_FirstNPC:
         now_select_npc_ld_list = [
             character_id
             for character_id in roster.active()
-            if cache.character_data[character_id].adv
-            not in constant.first_NPC_adv_set
+            if identity.of(character_id).adv not in constant.first_NPC_adv_set
         ]
         # 从列表中移除
         for character_id in now_select_npc_ld_list:
@@ -948,7 +948,7 @@ class Character_FirstNPC:
         # 去掉特殊干员
         self.special_chara_list = []
         for chara_id in self.id_list.copy():
-            if cache.character_data[chara_id].adv in constant.ban_NPC_adv_set:
+            if identity.of(chara_id).adv in constant.ban_NPC_adv_set:
                 self.id_list.remove(chara_id)
                 self.special_chara_list.append(chara_id)
         self.prepare_filter()
@@ -1027,7 +1027,7 @@ class SelectFirstNPCButton:
         self.button_return: str = str(NPC_id)
         """ 按钮返回值 """
 
-        target_data: game_type.Character = cache.character_data[NPC_id]
+        target_data: identity.Identity = identity.of(NPC_id)
         button_text = (
             f"[{str(target_data.adv).rjust(4,'0')}]：{target_data.name}"
         )
@@ -1175,9 +1175,9 @@ class Character_Bonus:
                     ].name
                     button_text += _("(已选{0})").format(ability_name)
                 elif cid == 22:
-                    target_data: game_type.Character = cache.character_data[
+                    target_data: identity.Identity = identity.of(
                         relations.assistant_character_id(0)
-                    ]
+                    )
                     button_text += _("(已选{0})").format(target_data.name)
             # 文本3
             button_text += f"{first_bonus_data.introduce}"
@@ -1283,9 +1283,9 @@ class Character_Bonus:
 
                 # 旧助理的好感信赖清零
                 if relations.assistant_character_id(0):
-                    target_data: game_type.Character = cache.character_data[
+                    target_data: identity.Identity = identity.of(
                         relations.assistant_character_id(0)
-                    ]
+                    )
                     relations.favorability.set_item(target_data.cid, 0, 0)
                     relations.trust.set(target_data.cid, 0)
                     playthrough.set_setting(FIRST_BONUS, first_bonus_id, False)
@@ -1296,10 +1296,8 @@ class Character_Bonus:
 
                     # 在这里处理好感和信赖的增加
                     if relations.assistant_character_id(0):
-                        new_assistant_data: game_type.Character = (
-                            cache.character_data[
-                                relations.assistant_character_id(0)
-                            ]
+                        new_assistant_data: identity.Identity = identity.of(
+                            relations.assistant_character_id(0)
                         )
                         relations.favorability.set_item(
                             new_assistant_data.cid, 0, 1000

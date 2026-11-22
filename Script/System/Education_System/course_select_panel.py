@@ -13,7 +13,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import growth
+from Script.Modules.domains import growth, identity
 from Script.System.Education_System import education_constant, schedule_handle
 from Script.System.Education_System import growth_handle
 from Script.System.Education_System import schedule_template_handle
@@ -259,7 +259,7 @@ class Course_Select_Panel:
         info_draw = draw.NormalDraw()
         info_draw.width = self.width
         info_draw.style = "gold_enrod"
-        name = cache.character_data[character_id].name
+        name = identity.of(character_id).name
         if filled_count:
             info_draw.text = _("\n已为{0}选上 {1} 节课").format(
                 name, filled_count
@@ -306,7 +306,7 @@ class Course_Select_Panel:
             return_list: list[str] = []
             slot_by_return: dict[str, int] = {}
             draw.TitleLineDraw(
-                _("{0}的日程").format(cache.character_data[character_id].name),
+                _("{0}的日程").format(identity.of(character_id).name),
                 self.width,
             ).draw()
             # 当前套用的模板
@@ -402,7 +402,7 @@ class Course_Select_Panel:
             if other_id == character_id:
                 continue
             now_draw = draw.LeftButton(
-                _("[{0}]").format(cache.character_data[other_id].name),
+                _("[{0}]").format(identity.of(other_id).name),
                 f"COPY_{other_id}",
                 int(self.width / 6),
             )
@@ -474,7 +474,7 @@ class Course_Select_Panel:
         info_draw = draw.NormalDraw()
         info_draw.width = self.width
         info_draw.text = _("  {0}｜{1} 第{2}节 {3}\n\n").format(
-            cache.character_data[character_id].name,
+            identity.of(character_id).name,
             education_constant.WEEK_NAME[week_day],
             period + 1,
             get_period_time_text(period),
@@ -509,9 +509,9 @@ class Course_Select_Panel:
             class_count += 1
             teacher_name = _("无教师（自习）")
             absent_mark = ""
-            if cell[1] in cache.character_data:
+            if identity.exists(cell[1]):
                 absent_mark = get_teacher_absent_mark(cell[1])
-                teacher_name = cache.character_data[cell[1]].name + absent_mark
+                teacher_name = identity.of(cell[1]).name + absent_mark
             course_type = schedule_handle.get_course_type_by_classroom(
                 classroom
             )

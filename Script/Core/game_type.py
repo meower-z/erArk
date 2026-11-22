@@ -1529,46 +1529,7 @@ class Ai_Setting:
 
 
 class Character:
-    """角色数据结构体"""
-
-    def __init__(self) -> None:
-        """初始化角色数据对象"""
-        self.cid: int = 0
-        """ 角色id """
-        self.name: str = ""
-        """ 角色名字 """
-        self.sex: int = 0
-        """ 角色性别 """
-        # self.age: int = 18
-        # """ 角色年龄 """
-        self.talk_size: int = 0
-        """ 角色口上大小，单位kb """
-        self.text_color: str = ""
-        """ 角色对话文本颜色 """
-        # self.height: Height = Height()
-        # """ 角色的身高数据 """
-        # self.measurements: Measurements = Measurements()
-        # """ 角色的三围数据 """
-        # self.gold: int = 0
-        # """ 角色所持金钱数据 """
-        self.birthday: datetime.datetime = datetime.datetime(1, 1, 1)
-        """ 角色生日数据 """
-        # self.chest_tem: int = 0
-        # """ 角色罩杯模板 """
-        # self.social_contact: Dict[int, Set] = {}
-        # """ 角色社交关系数据 关系类型:角色id集合 """
-        # self.social_contact_data: Dict[int, int] = {}
-        # """ 角色社交关系数据 角色id:关系类型 """
-        self.adv: int = 0
-        """ 剧情npc校验 """
-        # self.no_wear: bool = False
-        # """ 是否不想穿衣服 """
-        self.profession: int = 0
-        """ 角色职业 """
-        self.race: int = 0
-        """ 角色种族 """
-        self.token_text: str = ""
-        """ 角色信物文本 """
+    """旧存档里的角色对象，供版本 24 之前的存档反序列化与读档时临时占位，各领域随后将其属性导入 GameState"""
 
 
 class Cache:
@@ -1591,8 +1552,6 @@ class Cache:
 
     def __init__(self) -> None:
         """初始化游戏缓存数据对象"""
-        self.character_data: dict[int, Character] = {}
-        """ 角色对象数据缓存组 """
         self.input_cache: list[str] = []
         """ 玩家指令输入记录（最大20）"""
         self.collect_position_list: list = []

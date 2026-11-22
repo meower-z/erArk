@@ -18,7 +18,7 @@ from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
 from typing import TYPE_CHECKING
 from Script.Modules.domains import activity, chara_life, education, facility
-from Script.Modules.domains import flags, growth, roster
+from Script.Modules.domains import flags, growth, roster, identity
 
 if TYPE_CHECKING:
     import datetime
@@ -625,7 +625,7 @@ def get_teacher_candidate_list() -> list[int]:
     """
     result = []
     for character_id in roster.active():
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data: identity.Identity = identity.of(character_id)
         if (
             chara_life.work_type(character_id)
             != education_constant.TEACHER_WORK_TYPE

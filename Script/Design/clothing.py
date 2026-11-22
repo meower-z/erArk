@@ -12,6 +12,7 @@ from Script.Design import attr_calculation, handle_premise, map_handle
 from Script.Modules.domains import abilities, activity, dirty, prison, wardrobe
 from Script.Modules.domains import npc_template
 from Script.UI.Moudle import draw
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -282,7 +283,7 @@ def get_underwear(
     无
     """
     talent = abilities.talent(character_id)
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     # 60,幼女,61,萝莉,62,少女,63,成年,64,长生者
 
     # 遍历全衣服，以下分别是正常/童装/情趣的胸衣和内裤
@@ -370,7 +371,7 @@ def get_socks(character_id: int) -> None:
     Return arguments:
     无
     """
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
 
     # 遍历全衣服
     socks_list = []
@@ -426,7 +427,7 @@ def pl_get_chara_pan(character_id: int) -> None:
     无
     """
     if character_id > 0:
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         # 如果角色穿了内裤
         if len(wardrobe.of(character_id).cloth_wear[9]):
             TagetPanId = wardrobe.of(character_id).cloth_wear[9][-1]
@@ -470,7 +471,7 @@ def pl_get_chara_socks(character_id: int) -> None:
     无
     """
     if character_id > 0:
-        character_data = cache.character_data[character_id]
+        character_data = identity.of(character_id)
         # 如果角色穿了袜子
         if len(wardrobe.of(character_id).cloth_wear[10]):
             TagetSocId = wardrobe.of(character_id).cloth_wear[10][-1]
@@ -641,10 +642,8 @@ def chara_special_wear_cloth(character_id: int) -> list[int]:
     talent = abilities.talent(character_id)
     return_list = []
     if character_id:
-        character_data = cache.character_data[character_id]
-
         # 阿米娅必须戴抑制戒指
-        if character_data.adv == 1:
+        if identity.of(character_id).adv == 1:
             if 701 not in wardrobe.of(character_id).cloth_wear[7]:
                 wardrobe.append(character_id, "cloth_wear", 7, 701)
             return_list.append(701)

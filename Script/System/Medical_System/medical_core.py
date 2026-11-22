@@ -23,6 +23,7 @@ from Script.Modules.domains import (
 )
 from Script.System.Medical_System import medical_constant
 from Script.Modules.domains import abilities, country
+from Script.Modules.domains import identity
 
 
 def edits[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
@@ -284,15 +285,9 @@ def _calculate_doctor_power(doctor_ids: list[int] | None) -> float:
     # 没有医生编号时直接返回零。
     if not doctor_ids:
         return 0.0
-    # 从全局缓存中检索角色数据以累加能力值。
-    cache_obj = getattr(cache_control, "cache", None)
-    character_table = (
-        getattr(cache_obj, "character_data", {}) if cache_obj else {}
-    )
     total_power = 0.0
     for doctor_id in doctor_ids:
-        character = character_table.get(doctor_id)
-        if character is None:
+        if not identity.exists(doctor_id):
             continue
         total_power += float(medical_level(doctor_id) or 0)
     return total_power

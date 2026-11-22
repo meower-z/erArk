@@ -18,6 +18,7 @@ from tests import kernel_data, world
 from tests.chara_activity import aim, behave, doing, scene_of, stand, status
 from Script.Modules.domains import action_info, activity, chara_life, flags
 from Script.Modules.domains import relations
+from Script.Modules.domains import identity
 
 E = education_constant
 
@@ -67,7 +68,7 @@ daughter_list = [
 ]
 if not daughter_list:
     mother_id = next(
-        cid for cid in sorted(roster.active()) if cid in cache.character_data
+        cid for cid in sorted(roster.active()) if identity.exists(cid)
     )
     for index in range(3):
         cd = make_character(
@@ -125,7 +126,7 @@ def clear_need(cid: int) -> None:
 teacher_list = schedule_handle.get_teacher_candidate_list()
 if len(teacher_list) < 2:
     for cid in sorted(roster.active()):
-        cd = cache.character_data[cid]
+        cd = identity.of(cid)
         if (
             cid in all_daughter_list
             or activity.dead(cd.cid)
@@ -151,7 +152,7 @@ if day.month != now.month:
 set_time(day)
 # 女儿与教师都从空闲、没有生理需求开始：存档里带进来的半截行为（睡觉、吃饭、H）和饥饿会让开头几十分钟的取样全是噪声
 for cid in daughter_list + teacher_list:
-    cd = cache.character_data[cid]
+    cd = identity.of(cid)
     kernel_data.put(flags.set, cd.cid, is_h=False)
     kernel_data.put(flags.set, cd.cid, imprisonment=False)
     clear_need(cid)
@@ -215,7 +216,7 @@ for index, minute in enumerate((40, 45, 45, 45, 45, 45)):
     round_log.append((pl_round, npc_pass, len(stuck)))
     in_class = 0
     for cid in daughter_list:
-        cd = cache.character_data[cid]
+        cd = identity.of(cid)
         tip = character_info_head.get_now_class_tip(cid)
         if (
             doing(cd.cid)
@@ -236,7 +237,7 @@ for index, minute in enumerate((40, 45, 45, 45, 45, 45)):
         if teaching is None:
             continue
         teaching_count += 1
-        cd = cache.character_data[cid]
+        cd = identity.of(cid)
         if doing(cd.cid) == constant.Behavior.TEACH and class_ai.judge_in_scene(
             cid, teaching["classroom"]
         ):
@@ -251,8 +252,7 @@ for index, minute in enumerate((40, 45, 45, 45, 45, 45)):
     stuck_text = ""
     if stuck:
         stuck_text = " 未收敛：" + "、".join(
-            f"{cid}{cache.character_data[cid].name}({doing(cid)})"
-            for cid in stuck[:6]
+            f"{cid}{identity.of(cid).name}({doing(cid)})" for cid in stuck[:6]
         )
     print(
         f"  第 {index + 1} 轮 {game_time.now()}: 内核 {npc_pass} 步 / 未收敛 {len(stuck)} / "
@@ -332,7 +332,7 @@ print(
     f"{[(r[0], r[1], len(r[2])) for r in pre_round_log]}"
 )
 for cid in must_list:
-    cd = cache.character_data[cid]
+    cd = identity.of(cid)
     print(
         f"    {cid}{cd.name} 在 {scene_of(cd.cid)} 做 "
         f"{doing(cd.cid)}（{activity.behavior(cd.cid).start_time} +{activity.behavior(cd.cid).duration}）"

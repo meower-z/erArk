@@ -18,6 +18,7 @@ from Script.UI.Panel import manage_basement_panel, recruit_panel
 import random
 from Script.Modules.domains import abilities, activity, chara_life, facility
 from Script.Modules.domains import flags, location, relations, roster, visitor
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -101,7 +102,7 @@ def visitor_to_operator(character_id: int) -> None:
     """
     from Script.System.Dormitory_System import common as dormitory_common
 
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
 
     # flag置为已访问
     flags.set(character_id, vistor=2)
@@ -164,7 +165,7 @@ def settle_visitor_arrivals(visitor_id: int = 0) -> int:
         character_handle.get_new_character(visitor_id, True)
         # 输出提示信息
         now_draw.text = _("\n ○【{0}】作为临时访客抵达了罗德岛\n").format(
-            cache.character_data[visitor_id].name
+            identity.of(visitor_id).name
         )
         now_draw.draw()
         # 结算访客成就
@@ -237,7 +238,7 @@ def judge_visitor_if_leave(visitor_id: int) -> None:
     now_draw.width = window_width
     now_draw.style = "gold_enrod"
     # 获得访客角色数据
-    character_data: game_type.Character = cache.character_data[visitor_id]
+    character_data: identity.Identity = identity.of(visitor_id)
     # 计算访客留下概率
     _tem_1, _tem_2, stay_posibility = instuct_judege.calculation_instuct_judege(
         0, visitor_id, _("访客留下")
@@ -333,9 +334,7 @@ class Invite_Visitor_Panel:
             else:
                 now_text += _(" 目前的访客有：")
                 for chara_id, leave_time in visitor.visitors().items():
-                    character_data: game_type.Character = cache.character_data[
-                        chara_id
-                    ]
+                    character_data: identity.Identity = identity.of(chara_id)
                     live_room = chara_life.dormitory(character_data.cid).split(
                         os.sep
                     )[-1]
@@ -361,7 +360,7 @@ class Invite_Visitor_Panel:
                 now_text += _(" 无")
             else:
                 chara_id, progress = visitor.invite()
-                character_data = cache.character_data[chara_id]
+                character_data = identity.of(chara_id)
                 now_text += f" [{chara_id}]{character_data.name}"
 
                 # 邀请进度
@@ -377,10 +376,10 @@ class Invite_Visitor_Panel:
                     if i != 0 and not visitor.is_visitor(i)
                 ]
                 for chara_id in id_list:
-                    character_data = cache.character_data[chara_id]
+                    character_data = identity.of(chara_id)
                     # 找到职业是外交官的
                     if chara_life.work_type(character_data.cid) == 131:
-                        character_data = cache.character_data[chara_id]
+                        character_data = identity.of(chara_id)
                         character_effect = (
                             5
                             * handle_ability.get_ability_adjust(
@@ -460,9 +459,7 @@ class Invite_Visitor_Panel:
             if chara_id == 0:
                 now_text += _(" 无\n")
             else:
-                character_data: game_type.Character = cache.character_data[
-                    chara_id
-                ]
+                character_data: identity.Identity = identity.of(chara_id)
                 now_text += f" [{str(character_data.adv).rjust(4,'0')}]{character_data.name}\n"
 
             # 访客区设施信息
@@ -522,7 +519,7 @@ class Invite_Visitor_Panel:
             for chara_id in recruitable_npc_id_list:
                 # 本地
                 if now_level == 2:
-                    character_data = cache.character_data[chara_id]
+                    character_data = identity.of(chara_id)
                     # 出生地是当前所在地的角色
                     if (
                         relations.birthplace(character_data.cid)
@@ -532,7 +529,7 @@ class Invite_Visitor_Panel:
                     target_id_list.append(chara_id)
                 # 临近
                 elif now_level == 3:
-                    character_data = cache.character_data[chara_id]
+                    character_data = identity.of(chara_id)
                     # 出生地在地点列表中的角色
                     if (
                         relations.birthplace(character_data.cid)
@@ -554,7 +551,7 @@ class Invite_Visitor_Panel:
                 chara_id_count = 0
                 for chara_id in target_id_list:
                     chara_id_count += 1
-                    character_data = cache.character_data[chara_id]
+                    character_data = identity.of(chara_id)
                     # 均绘制为可选按钮
                     button_text = f" [{str(character_data.adv).rjust(4,'0')}]{character_data.name}"
                     button_text = attr_calculation.pad_display_width(
@@ -609,9 +606,7 @@ class Invite_Visitor_Panel:
             visitor_count = 0
             for visitor_id in visitor_id_list:
                 visitor_count += 1
-                character_data: game_type.Character = cache.character_data[
-                    visitor_id
-                ]
+                character_data: identity.Identity = identity.of(visitor_id)
                 button_text = f" [{str(character_data.adv).rjust(4,'0')}]{character_data.name}"
                 button_draw = draw.LeftButton(
                     button_text,

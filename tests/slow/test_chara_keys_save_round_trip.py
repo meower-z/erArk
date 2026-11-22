@@ -16,6 +16,7 @@ from typing import Any
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 SAVE_ID = "test_chara_keys_save_round_trip"
 """ 本测试写入 save/ 的存档id，测试结束时删掉 """
@@ -60,14 +61,14 @@ class CharaKeysSaveRoundTripTest(SlowTestCase):
         chara_profile = game("Script.Modules.domains.chara_profile")
         core = game("Script.Kernel.core")
         instruct(self.world, constant.Instruct.WAIT)
-        cid = self.npc(self.world.cache.character_data[1].name)
+        cid = self.npc(identity.of(1).name)
         with kernel_data.writing():
             relations.trust.set(cid, 12.5)
             relations.favorability.set_item(cid, 0, 30)
             chara_life.borrow_book_id_set.set(cid, {5, 2})
             chara_profile.nick_name.set(cid, "甲")
         keys = moved_keys()
-        ids = list(self.world.cache.character_data)
+        ids = list(identity.table())
         saved = {
             (c, key.key): working.get(str(c), key.key)
             for c in ids
@@ -109,9 +110,8 @@ class CharaKeysSaveRoundTripTest(SlowTestCase):
 
         relations = game("Script.Modules.domains.relations")
         new_round = game("Script.UI.Panel.new_round")
-        cache = self.world.cache
         npc_template = game("Script.Modules.domains.npc_template")
-        cid = next(c for c in cache.character_data if npc_template.get(c))
+        cid = next(c for c in identity.table() if npc_template.get(c))
         with kernel_data.writing():
             relations.trust.set(cid, 80)
             relations.favorability.set_item(cid, 0, 70)

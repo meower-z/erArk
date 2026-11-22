@@ -17,6 +17,7 @@ from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 ROOM = ["中枢", "会议室"]
 PRIMARY_HYPNOSIS = 331
@@ -103,9 +104,9 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         """透视与催眠开着时理智耗尽：透视关掉，博士下一个行动是解除催眠，她清醒过来"""
         from Script.Core import constant
 
-        pl = self.cache.character_data[0]
+        pl = identity.of(0)
         ca.talent(0)[PRIMARY_HYPNOSIS] = 1
-        operator = self.cache.character_data[self._hypnotize("杜宾")]
+        operator = identity.of(self._hypnotize("杜宾"))
         kernel_data.put(
             kernel_data.domain("player_ability").set, 0, visual=True
         )
@@ -135,7 +136,7 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
 
         history = importlib.import_module("Script.Modules.domains.history")
         modes = importlib.import_module("Script.Modules.domains.modes")
-        pl = self.cache.character_data[0]
+        pl = identity.of(0)
         ca.talent(0)[PRIMARY_TIME_STOP] = 1
         self.instruct(constant.Instruct.TIME_STOP_ON)
         self.assertTrue(modes.time_stop(), "时停开着")

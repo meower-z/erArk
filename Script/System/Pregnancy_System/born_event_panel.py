@@ -22,6 +22,7 @@ from Script.Modules.domains import (
     relations,
     roster,
 )
+from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 
@@ -110,10 +111,10 @@ class Born_Panel:
         """绘制对象"""
         from Script.Design import second_behavior
 
-        pl_character_data: game_type.Character = cache.character_data[0]
-        mom_character_data: game_type.Character = cache.character_data[
+        pl_character_data: identity.Identity = identity.of(0)
+        mom_character_data: identity.Identity = identity.of(
             self.mother_character_id
-        ]
+        )
         talent = abilities.talent(mom_character_data.cid)
         experience = abilities.experience(mom_character_data.cid)
         ability = abilities.ability(mom_character_data.cid)
@@ -126,9 +127,7 @@ class Born_Panel:
         dr_k_id = 0
         doctor_id = 0
         for character_id in roster.active():
-            character_data: game_type.Character = cache.character_data[
-                character_id
-            ]
+            character_data: identity.Identity = identity.of(character_id)
             if character_data.profession == 3:
                 doctor_id_list.append(character_id)
             if character_data.name == _("凯尔希"):
@@ -141,9 +140,7 @@ class Born_Panel:
         # 如果还是没有的话，则随机选取任何一位干员来接生
         if doctor_id == 0:
             doctor_id = random.choice(list(roster.active()))
-        doctor_character_data: game_type.Character = cache.character_data[
-            doctor_id
-        ]
+        doctor_character_data: identity.Identity = identity.of(doctor_id)
 
         # 最外层的大循环
         while 1:
@@ -295,8 +292,8 @@ class Born_Panel:
                     new_child_id = character_handle.born_new_character(
                         self.mother_character_id, new_name
                     )
-                    child_character_data: game_type.Character = (
-                        cache.character_data[new_child_id]
+                    child_character_data: identity.Identity = identity.of(
+                        new_child_id
                     )
                     pregnancy.update(new_child_id, born_time=game_time.now())
                     child_name_list.append(child_character_data.name)

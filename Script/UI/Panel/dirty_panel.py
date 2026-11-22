@@ -14,7 +14,7 @@ from Script.Modules.domains import (
     h_state,
     needs,
 )
-from Script.Modules.domains import player_ability, pregnancy, status
+from Script.Modules.domains import player_ability, pregnancy, status, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -105,8 +105,8 @@ class SeeCharacterBodyPanel:
         """ 居中绘制状态文本 """
         self.type_number = type_number
         """ 显示的状态类型 """
-        character_data = cache.character_data[0]
-        target_character_data = cache.character_data[activity.target(0)]
+        character_data = identity.of(0)
+        target_character_data = identity.of(activity.target(0))
         # print("game_config.config_character_state_type_data :",game_config.config_character_state_type_data)
 
         type_line = draw.LittleTitleLineDraw(_("身体"), width, ":")

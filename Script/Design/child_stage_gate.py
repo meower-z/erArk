@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from Script.Core import cache_control, constant, game_type
 from Script.Config import game_config
 from Script.Modules.domains import abilities, activity
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -45,9 +46,7 @@ def is_child_stage(character_id: int) -> bool:
     """
     if character_id == 0:
         return False
-    character_data: game_type.Character | None = cache.character_data.get(
-        character_id
-    )
+    character_data: identity.Identity | None = identity.get(character_id)
     if character_data is None:
         return False
     return any(

@@ -14,6 +14,7 @@ from types import ModuleType
 
 from tests import kernel_data
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import identity
 
 
 def game(name: str) -> ModuleType:
@@ -29,7 +30,6 @@ class NewRoundVitalsTest(SlowTestCase):
         from tests import world
 
         new_round = game("Script.UI.Panel.new_round")
-        cache_control = game("Script.Core.cache_control")
         npc_template = game("Script.Modules.domains.npc_template")
         kernel_data.set_needs(0, hit_max=3000, mana_max=2600, sanity_max=300)
         handle = new_round.New_Round_Handle()
@@ -42,8 +42,7 @@ class NewRoundVitalsTest(SlowTestCase):
             {k: player[k] for k in ("hit_max", "mana_max", "sanity_max")},
             {"hit_max": 3000, "mana_max": 2600, "sanity_max": 300},
         )
-        cache = cache_control.cache
-        npcs = [cid for cid in cache.character_data if cid != 0]
+        npcs = [cid for cid in identity.table() if cid != 0]
         self.assertTrue(npcs, "新周目有干员")
         wrong = {}
         for cid in npcs:

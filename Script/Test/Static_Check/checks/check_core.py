@@ -4,10 +4,10 @@
 提供两个最基础的角色索引一致性检查，用于验证静态检查框架自身管线可用，后续领域检查模块可参照本文件的写法接入。
 """
 
-from Script.Core import cache_control
 from Script.Modules.domains import roster
 from ..check_registry import CheckFailure, register_check, make_failure
 from Script.Modules.domains import activity
+from Script.Modules.domains import identity
 
 
 @register_check("CORE-01", "角色索引一致性")
@@ -16,15 +16,14 @@ def check_npc_id_got_consistency() -> list[CheckFailure]:
     参数:
         无
     返回值:
-        List[CheckFailure]: 失败记录列表，cache.npc_id_got中所有id均存在于cache.character_data时返回空列表
+        List[CheckFailure]: 失败记录列表，在编名单（roster.active()）中所有id均存在于身份表时返回空列表
     功能:
-        校验cache.npc_id_got（已拥有的干员id集合）中的每个id都能在cache.character_data（角色对象数据缓存组）中找到对应角色对象，
-        避免出现"已拥有但无角色数据"的野指针式状态
+        校验在编名单（roster.active()）中的每个id都在角色身份表（identity.characters）中存在，
+        避免出现"在编但无角色身份"的野指针状态
     """
-    cache = cache_control.cache
     failures = []
     for character_id in roster.active():
-        if character_id not in cache.character_data:
+        if not identity.exists(character_id):
             failures.append(
                 make_failure(
                     "CORE-01",
@@ -42,20 +41,17 @@ def check_target_character_id_validity() -> list[CheckFailure]:
     参数:
         无
     返回值:
-        List[CheckFailure]: 失败记录列表，全部角色的交互对象均是character_data中现存角色时返回空列表
+        List[CheckFailure]: 失败记录列表，全部角色的交互对象均存在于身份表时返回空列表
     功能:
-        校验cache.character_data中每个角色的交互对象id（activity.target）指向的角色确实存在于character_data中。
-        自指（activity.target(cid) == cid）是"无交互对象"的约定值：角色初始化时写的就是activity.set_target(cid, cid)
-        （Script/Design/character_handle.py:66），上线重置也是指向自身（Script/Settle/default.py:4467）。
-        activity.target(cid) == 0 不是通用的"无交互对象"哨兵——对NPC而言它表示"交互对象是0号玩家"，是有意义的真实目标，
-        Script/Design/settle_behavior.py:118-133专门以该条件识别并互换双方结算数据；因此本条统一按"是否在character_data中"判定，
-        自指与指向玩家都自然通过，不对0值做特殊豁免
+        校验角色身份表（identity.characters）中每个角色的交互对象id（activity.target）都存在于身份表中。
+        自指（activity.target(cid) == cid）是"无交互对象"的约定值，角色初始化与上线重置都指向自身。
+        activity.target(cid) == 0 对NPC而言表示交互对象是0号玩家，settle_behavior据此互换双方结算数据。
+        本条统一按是否在身份表中判定，自指与指向玩家都自然通过，不对0值做特殊豁免
     """
-    cache = cache_control.cache
     failures = []
-    for character_id, character_data in cache.character_data.items():
+    for character_id, character_data in identity.table().items():
         target_id = activity.target(character_data.cid)
-        if target_id not in cache.character_data:
+        if not identity.exists(target_id):
             failures.append(
                 make_failure(
                     "CORE-02",

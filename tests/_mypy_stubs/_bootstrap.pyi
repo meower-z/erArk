@@ -30,6 +30,7 @@ from tests.education._bootstrap import (
 )
 from tests.education._bootstrap import growth_handle as growth_handle
 from tests.education._bootstrap import handle_premise as handle_premise
+from tests.education._bootstrap import identity as identity
 from tests.education._bootstrap import make_character as make_character
 from tests.education._bootstrap import map_handle as map_handle
 from tests.education._bootstrap import move_to as move_to

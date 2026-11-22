@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import datetime
 from types import FunctionType
 from Script.Core import cache_control, constant, game_path_config, game_type
@@ -20,7 +21,7 @@ from Script.Modules.domains import player_collection, playthrough, power
 from Script.Modules.domains import pregnancy, prison, production, recruit
 from Script.Modules.domains import roster, status, visitor, wardrobe, work
 from Script.Modules.domains import chara_key, chara_life, chara_profile
-from Script.Modules.domains import relations
+from Script.Modules.domains import identity, relations
 from Script.Modules.domains.chara_key import CharaKey
 from Script.Modules.save_load import upgrade
 
@@ -129,22 +130,20 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
     old_to_new_id = {0: 0}  # 玩家id保持为0
     old_character_data = loaded_dict["character_data"]
 
-    for old_cid, character in old_character_data.items():
+    for old_cid in old_character_data:
         if old_cid != 0:
-            old_to_new_id[old_cid] = character.adv
+            old_to_new_id[old_cid] = identity.of(old_cid).adv
 
-    # 3. 转换character_data
+    # 3. 转换 character_data，身份表按同样顺序换成新 id
     new_character_data = {}
+    records = []
     for old_cid, character in old_character_data.items():
-        if old_cid == 0:
-            new_character_data[0] = character
-            character.cid = 0
-        else:
-            new_cid = character.adv
-            character.cid = new_cid
-            new_character_data[new_cid] = character
+        new_cid = old_to_new_id[old_cid]
+        new_character_data[new_cid] = character
+        records.append(dataclasses.replace(identity.of(old_cid), cid=new_cid))
         update_count += 1
     loaded_dict["character_data"] = new_character_data
+    identity.replace_all(records)
 
     # 4. 转换npc_id_got
     old_npc_id_got = loaded_dict.get("npc_id_got", set())
@@ -517,7 +516,7 @@ def migrate_character_replacement(
 
     for old_id, new_id in old_to_new_id_map.items():
         # 检查旧角色是否存在于存档中
-        if old_id not in character_data:
+        if not identity.exists(old_id):
             continue
 
         # 检查新角色模板是否存在于当前游戏配置中
@@ -526,7 +525,7 @@ def migrate_character_replacement(
 
         old_character = character_data[old_id]
         new_tem = character_config.character_tem_list[new_id]
-        old_name = old_character.name
+        old_name = identity.of(old_id).name
         new_name = new_tem.Name
 
         # ========== 1. 创建新角色基础数据 ==========
@@ -534,19 +533,13 @@ def migrate_character_replacement(
         # 读档随后的 adopt_old_save 把它们写进 GameState
         new_character: Any = game_type.Character()
 
-        # 从新模板设置基础属性（不迁移的属性）
-        new_character.cid = new_id
-        new_character.name = new_tem.Name
-        new_character.adv = new_tem.AdvNpc
-        new_character.sex = new_tem.Sex
-        new_character.profession = new_tem.Profession
-        new_character.race = new_tem.Race
-        new_character.token_text = new_tem.Token
-        new_character.dormitory = new_tem.Dormitory
-        new_character.text_color = (
-            new_tem.TextColor if new_tem.TextColor else ""
+        # 从新模板写入身份，生日沿用旧角色
+        identity.put(
+            character_handle.template_identity(
+                new_id, new_tem, identity.of(old_id).birthday
+            )
         )
-        new_character.talk_size = new_tem.Talk_Size
+        new_character.dormitory = new_tem.Dormitory
 
         # 从新模板生成衣服
         cloth = attr_calculation.get_cloth_zero()
@@ -635,7 +628,6 @@ def migrate_character_replacement(
         )
 
         # 时间相关
-        new_character.birthday = old_character.birthday
 
         # 复杂对象属性 - 直接复制引用后更新内部ID
         inventory.replace_foods(new_id, inventory.foods(old_id))
@@ -750,7 +742,7 @@ def migrate_character_replacement(
                         ]
         h_state.remap_group_sex_ids(new_id, old_to_new_id_map)
 
-        # ========== 3. 将新角色添加到character_data ==========
+        # ========== 3. 将新角色添加到 character_data ==========
         character_data[new_id] = new_character
 
         # ========== 4. 更新npc_id_got ==========
@@ -939,6 +931,7 @@ def migrate_character_replacement(
     for old_id in old_to_new_id_map.keys():
         if old_id in character_data:
             del character_data[old_id]
+            identity.discard(old_id)
 
     return migrated_count
 
@@ -994,35 +987,34 @@ def update_tem_character(loaded_dict: dict[str, Any]) -> int:
     update_count += update_new_character(loaded_dict)
 
     # 修正角色数据中缺失模板的情况
-    for _key, value in loaded_dict["character_data"].items():
+    for key, value in loaded_dict["character_data"].items():
+        one = identity.of(key)
         # 跳过玩家
-        if value.cid == 0:
+        if key == 0:
             continue
         # 检查角色的adv是否有对应的模板
-        if value.adv not in loaded_dict["npc_tem_data"]:
+        if one.adv not in loaded_dict["npc_tem_data"]:
             # 修正深靛的序号错误
-            if value.name == _("深靛") and value.adv != 469:
-                value.adv = 469
-                value.cid = 469
+            if one.name == _("深靛") and one.adv != 469:
+                identity.update(key, adv=469)
                 update_count += 1
                 continue
             # 修正阿玛雅的序号错误：旧存档里阿玛雅与死芒同为450号，450号中名字是阿玛雅的才是她
-            if value.adv == 450 and value.name == _("阿玛雅"):
-                value.adv = 448
-                value.cid = 448
+            if one.adv == 450 and one.name == _("阿玛雅"):
+                identity.update(key, adv=448)
                 update_count += 1
                 continue
             # 其他情况，创建空白模板
             tem_npc_data = character_handle.create_empty_character_tem()
-            tem_npc_data.Name = value.name
-            tem_npc_data.AdvNpc = value.adv
+            tem_npc_data.Name = one.name
+            tem_npc_data.AdvNpc = one.adv
             # 早于 adopt_old_save：版本 21 对象无 relationship 与 favorability，从角色键 social.mother_id 读母亲id。
             # 有 relationship.mother_id 时从对象读；带 favorability 无 relationship 的旧存档键未导入（默认 -1），保持 0
             if not {"relationship", "favorability"} & vars(value).keys():
-                tem_npc_data.Mother_id = relations.mother_id(value.cid)
+                tem_npc_data.Mother_id = relations.mother_id(key)
             elif hasattr(getattr(value, "relationship", None), "mother_id"):
                 tem_npc_data.Mother_id = value.relationship.mother_id
-            loaded_dict["npc_tem_data"][value.adv] = tem_npc_data
+            loaded_dict["npc_tem_data"][one.adv] = tem_npc_data
             update_count += 1
 
     return update_count
@@ -1039,13 +1031,14 @@ def fix_wrong_character(loaded_dict: dict[str, Any]) -> int:
 
     # 遍历角色属性，修正错误的adv编号
     for key, value in loaded_dict["character_data"].items():
+        one = identity.of(key)
         # 阿玛雅：旧存档里她与死芒同为450号，450号中名字是阿玛雅的才是她
-        if value.adv == 450 and value.name == _("阿玛雅"):
+        if one.adv == 450 and one.name == _("阿玛雅"):
             # 寻找adv为448的角色
-            for key2, value2 in loaded_dict["character_data"].items():
-                if value2.adv == 448:
+            for key2 in loaded_dict["character_data"]:
+                if identity.of(key2).adv == 448:
                     # 将阿玛雅的角色数据复制过去
-                    source_cid = value.cid
+                    source_cid = key
                     # 版本 21 的存档对象上没有旧属性，lift 先把角色键的值写上去，随对象移到新槽位（旧存档不动）。
                     # 原槽位重建会重置其键，读档随后的 adopt_old_save 再把这些值写到新槽位
                     chara_key.lift(loaded_dict)
@@ -1057,36 +1050,39 @@ def fix_wrong_character(loaded_dict: dict[str, Any]) -> int:
                         player_collection,
                     ):
                         domain.copy_to(key, key2)
-                    # 同步目标槽位的cid并将adv改为448
-                    loaded_dict["character_data"][key2].cid = key2
-                    loaded_dict["character_data"][key2].adv = 448
+                    # 目标槽位写入阿玛雅的身份，adv 设为 448
+                    identity.put(dataclasses.replace(one, cid=key2, adv=448))
                     # 将当前角色改为当前模板的角色
                     now_tem_chara = loaded_dict["npc_tem_data"].get(
                         source_cid, None
                     )
                     if now_tem_chara is None:
                         now_tem_chara = loaded_dict["npc_tem_data"].get(
-                            value.adv, None
+                            one.adv, None
                         )
                     if now_tem_chara is not None:
                         # 创建一个新的角色数据
-                        new_character = character_handle.init_character(
+                        character_handle.init_character(
                             source_cid, now_tem_chara, False, False
                         )
                         # 重新赋值角色数据
-                        loaded_dict["character_data"][key] = new_character
+                        loaded_dict["character_data"][
+                            key
+                        ] = game_type.Character()
                     update_count += 1
                     break
 
     return update_count
 
 
-def update_character_config_data(value: game_type.Character, cid: int) -> int:
+def update_character_config_data(value: identity.Identity, cid: int) -> int:
     """
     更新角色属性数据，返回更新的条数
     Keyword arguments:
-    value -- 角色数据
-    cid -- 读写设置与助理服务角色键所用的角色id，即这个角色在 character_data 里的键
+    value -- 角色身份（identity.Identity）
+    cid -- 读写设置与助理服务角色键所用的角色id，即角色在身份表里的键
+    Return arguments:
+    int -- 更新的条数
     """
     update_count = 0
     # 更新角色的各种属性
@@ -1180,7 +1176,7 @@ def update_character_config_data(value: game_type.Character, cid: int) -> int:
 
 
 def update_chara_cloth(
-    value: game_type.Character, tem_character: game_type.NpcTem
+    value: identity.Identity, tem_character: game_type.NpcTem
 ) -> int:
     """
     更新角色服装数据
@@ -1253,13 +1249,11 @@ def update_new_character(loaded_dict: dict[str, Any]) -> int:
     """
     update_count = 0
     # 遍历角色预设，如果该角色在预设中但不在角色属性中，将其添加到需要增加的角色属性中
+    taken_advs = {one.adv for one in identity.table().values()}
     add_new_character_list = [
         now_npc_data
         for now_npc_data in loaded_dict["npc_tem_data"].values()
-        if not any(
-            char_data.adv == now_npc_data.AdvNpc
-            for char_data in loaded_dict["character_data"].values()
-        )
+        if now_npc_data.AdvNpc not in taken_advs
     ]
 
     # 新增该角色，使用adv作为cid
@@ -1268,10 +1262,10 @@ def update_new_character(loaded_dict: dict[str, Any]) -> int:
         if now_npc_data.Name == _("深靛"):
             continue
         new_character_cid = now_npc_data.AdvNpc  # 使用adv作为cid
-        new_character = character_handle.init_character(
+        character_handle.init_character(
             new_character_cid, now_npc_data, False, False
         )
-        loaded_dict["character_data"][new_character_cid] = new_character
+        loaded_dict["character_data"][new_character_cid] = game_type.Character()
         update_count += 1
 
     return update_count
@@ -1317,7 +1311,7 @@ KEEP_PREGNANCY_ATTR_SET = {
 """ 101/102阶段的孩子读档时保留的 PREGNANCY 字段：生殖周期、出生时间、成长加速天数 """
 
 
-def _is_young_child(character: game_type.Character) -> bool:
+def _is_young_child(character: identity.Identity) -> bool:
     """
     判断角色是否处于幼年阶段（与 child_stage_gate 同口径，按存档里的角色数据判断）
     Keyword arguments:
@@ -1331,7 +1325,7 @@ def _is_young_child(character: game_type.Character) -> bool:
     )
 
 
-def _is_player_daughter(character: game_type.Character) -> bool:
+def _is_player_daughter(character: identity.Identity) -> bool:
     """
     判断角色是否为玩家的女儿（与前提 SELF_IS_PLAYER_DAUGHTER 同口径）
     Keyword arguments:
@@ -1343,7 +1337,7 @@ def _is_player_daughter(character: game_type.Character) -> bool:
 
 
 def _migrate_static_talent(
-    character: game_type.Character, world_setting_shrink: bool
+    character: identity.Identity, world_setting_shrink: bool
 ) -> int:
     """
     整理静态干员（非玩家、非女儿的角色）的素质：持有成长阶段素质时把它换成体型素质
@@ -1383,7 +1377,7 @@ def _migrate_static_talent(
     return count
 
 
-def _reset_behavior_to_idle(character: game_type.Character) -> None:
+def _reset_behavior_to_idle(character: identity.Identity) -> None:
     """
     把角色的当前行为换成1分钟的发呆，交互对象换回自己
     Keyword arguments:
@@ -1425,7 +1419,7 @@ def _clear_missing_interest_course(selected_course: dict) -> int:
     return count
 
 
-def _clear_child_activity(character: game_type.Character) -> int:
+def _clear_child_activity(character: identity.Identity) -> int:
     """
     清掉角色身上的见学状态、行为表里已没有的行为、娱乐表里已没有的娱乐；101/102阶段的孩子再清掉课表、日程与上课状态
     Keyword arguments:
@@ -1527,7 +1521,7 @@ def _reset_key[T](key: CharaKey[T], cid: int, default_value: T) -> int:
     return 1
 
 
-def _clear_young_child_h_state(character: game_type.Character) -> int:
+def _clear_young_child_h_state(character: identity.Identity) -> int:
     """
     101/102阶段的孩子：污浊、H状态与身体道具、H相关标记与后续链、泌乳、妊娠与卵，换成新角色的默认值
     Keyword arguments:
@@ -1556,7 +1550,7 @@ def _clear_young_child_h_state(character: game_type.Character) -> int:
 
 
 def _clear_young_child_egg_index(
-    player: game_type.Character, young_child_id_set: set
+    player: identity.Identity, young_child_id_set: set
 ) -> int:
     """
     从玩家收藏品中删掉指向101/102阶段孩子的持有卵索引，以及她们排出的体外无壳卵
@@ -1592,7 +1586,7 @@ def _clear_young_child_egg_index(
 
 
 def _remove_from_group_sex_template(
-    character: game_type.Character, young_child_id_set: set
+    character: identity.Identity, young_child_id_set: set
 ) -> int:
     """从角色的群交部位模板（A、B）里去掉101/102阶段的孩子"""
     return h_state.remove_from_group_sex_template(
@@ -1634,9 +1628,7 @@ def _clear_young_child_reference(
     功能: 只改值与目标不同的项；孩子自己的装袋、监禁、逃跑与外勤标记一并清掉，借的书还回去
     """
     count = 0
-    character_data = loaded_dict["character_data"]
-    for character in character_data.values():
-        cid = character.cid
+    for cid in identity.ids():
         if (
             player_ability.get(cid, "free_in_time_stop_chara_id")
             in young_child_id_set
@@ -1793,7 +1785,7 @@ def _take_young_child_off_line(
     count += roster.drop_active(young_child_id_set)
     count += work.drop(young_child_id_set)
     for character_id in young_child_id_set:
-        character = loaded_dict["character_data"][character_id]
+        character = identity.of(character_id)
         if activity.position(character_id) != ["0", "0"]:
             activity.set_position(character_id, ["0", "0"])
             count += 1
@@ -1845,7 +1837,7 @@ def _take_young_child_off_line(
             if status.of(character.cid).get(state_id, 0):
                 status.set(character.cid, state_id, 0)
                 count += 1
-    for character in loaded_dict["character_data"].values():
+    for character in identity.table().values():
         if (
             activity.target(character.cid) in young_child_id_set
             and activity.target(character.cid) != character.cid
@@ -1878,7 +1870,7 @@ def _take_young_child_off_line(
     return count
 
 
-def _clear_age_drug_item(character: game_type.Character) -> int:
+def _clear_age_drug_item(character: identity.Identity) -> int:
     """
     从角色道具栏中删掉外表年龄药（道具表里没有这两项）
     Keyword arguments:
@@ -1922,7 +1914,7 @@ def _find_young_child_session(
           时停：开着时停，且玩家以孩子为交互对象、搬运她或让她自由活动；
           单人H（含隐奸、露出）：交互对象是孩子且在H、隐奸或露出中的角色，与玩家同场景的群交参与者归群交结束
     """
-    character_data = loaded_dict["character_data"]
+    character_data = identity.table()
     player = character_data.get(0)
     session: YoungChildSession = {
         "group": False,
@@ -2015,7 +2007,7 @@ def end_young_child_session(session: YoungChildSession) -> None:
             0, 1, game_type.CharacterStatusChange(), now_time
         )
     for character_id in sorted(session.get("single_partner_id_set", set())):
-        if character_id not in cache.character_data:
+        if not identity.exists(character_id):
             continue
         default.handle_self_h_state_reset(
             character_id, 1, game_type.CharacterStatusChange(), now_time
@@ -2024,7 +2016,7 @@ def end_young_child_session(session: YoungChildSession) -> None:
             character_id, 1, game_type.CharacterStatusChange(), now_time
         )
     for character_id in sorted(session.get("child_id_set", set())):
-        if character_id not in cache.character_data:
+        if not identity.exists(character_id):
             continue
         default.handle_self_h_state_reset(
             character_id, 1, game_type.CharacterStatusChange(), now_time
@@ -2059,12 +2051,12 @@ def migrate_age_and_body_type(
         else playthrough.setting(playthrough.WORLD, WORLD_SETTING_SHRINK, 0)
     )
     # 先换静态干员的素质：药物缩成101/102的静态干员由此回到成年，不算孩子
-    for character in loaded_dict["character_data"].values():
+    for character in identity.table().values():
         if character.cid != 0 and not _is_player_daughter(character):
             count += _migrate_static_talent(character, world_setting_shrink)
     young_child_id_set = {
         character.cid
-        for character in loaded_dict["character_data"].values()
+        for character in identity.table().values()
         if _is_young_child(character)
     }
     # 在清掉任何H标记、群交模板与交互对象之前记下有孩子参与的会话
@@ -2072,14 +2064,14 @@ def migrate_age_and_body_type(
         session.update(
             _find_young_child_session(loaded_dict, young_child_id_set)
         )
-    for character in loaded_dict["character_data"].values():
+    for character in identity.table().values():
         count += _clear_child_activity(character)
         if character.cid in young_child_id_set:
             count += _clear_young_child_h_state(character)
         count += _clear_age_drug_item(character)
-    if 0 in loaded_dict["character_data"]:
+    if identity.exists(0):
         count += _clear_young_child_egg_index(
-            loaded_dict["character_data"][0], young_child_id_set
+            identity.of(0), young_child_id_set
         )
     count += _take_young_child_off_line(loaded_dict, young_child_id_set)
     count += education.clear_missing_template_slots(

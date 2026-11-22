@@ -10,7 +10,7 @@ from Script.Design import attr_calculation, handle_ability, handle_premise
 from Script.Design import handle_talent, map_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities, action_info, activity
+from Script.Modules.domains import abilities, action_info, activity, identity
 from Script.Modules.domains import entertainment, flags, h_state, needs
 from Script.Modules.domains import player_ability, relations, status
 
@@ -66,8 +66,8 @@ def calculation_instuct_judege(
 
     ability = abilities.ability(target_character_id)
     talent = abilities.talent(target_character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[target_character_id]
+    character_data: identity.Identity = identity.of(character_id)
+    target_data: identity.Identity = identity.of(target_character_id)
 
     # 对玩家为目标的指令是必定成功的
     if target_character_id == 0:
@@ -625,8 +625,8 @@ def calculation_instuct_judege(
 
 
 def _asks_condom(
-    character_data: game_type.Character,
-    target_data: game_type.Character,
+    character_data: identity.Identity,
+    target_data: identity.Identity,
     instruct_name: str,
 ) -> bool:
     """
@@ -662,8 +662,8 @@ def ask_text(
     str -- 要问的话
     """
     talent = abilities.talent(target_character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[target_character_id]
+    character_data: identity.Identity = identity.of(character_id)
+    target_data: identity.Identity = identity.of(target_character_id)
     text = ""
     if instruct_name == _("亲吻") and talent[4]:
         text += _("\n\n 是否要夺走{0}的初吻？").format(target_data.name)

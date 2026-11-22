@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from Script.Modules.domains import abilities, achievement, activity, chara_life
 from Script.Modules.domains import commission, dirty, flags, h_state, inventory
 from Script.Modules.domains import needs, player_collection, playthrough, prison
-from Script.Modules.domains import relations, roster, warehouse
+from Script.Modules.domains import relations, roster, warehouse, identity
 
 if TYPE_CHECKING:
     from typing import Any
@@ -236,7 +236,7 @@ def settle_chara_relationship() -> list[int]:
     lover_count, slave_count = 0, 0  # 爱侣人数与奴隶人数
     daught_lover_flag = 0  # 是否与女儿达成爱侣关系
     daught_slave_flag = 0  # 是否与女儿达成奴隶关系
-    for chara_id in cache.character_data:
+    for chara_id in identity.table():
         # 跳过非角色
         if chara_id == 0:
             continue
@@ -290,7 +290,7 @@ def settle_chara_recruit() -> list[int]:
     """
     # 已招募的角色数量
     recruit_count = 0
-    for chara_id in cache.character_data:
+    for chara_id in identity.table():
         # 跳过非角色
         if chara_id == 0:
             continue
@@ -314,8 +314,8 @@ def settle_chara_visitor() -> list[int]:
     """
     # 访客角色数量
     visitor_count = 0
-    for chara_id in cache.character_data:
-        now_character_data: game_type.Character = cache.character_data[chara_id]
+    for chara_id in identity.table():
+        now_character_data: identity.Identity = identity.of(chara_id)
         # 跳过非角色
         if chara_id == 0:
             continue
@@ -446,7 +446,7 @@ def settle_chara_hypnosis() -> list[int]:
     hypnosis_flag = 0
     # 完全催眠的角色数量
     full_hypnosis_count = 0
-    for chara_id in cache.character_data:
+    for chara_id in identity.table():
         # 跳过非角色
         if chara_id == 0:
             continue

@@ -94,6 +94,11 @@ class _Lazy:
 
 activity: Any = _Lazy("activity")
 """ 角色活动的领域模块（Script.Modules.domains.activity），用到时才导入 """
+if TYPE_CHECKING:
+    from Script.Modules.domains import identity as identity
+else:
+    identity = _Lazy("identity")
+    """ 角色身份的领域模块（Script.Modules.domains.identity），用到时才导入 """
 
 
 def world_settings() -> dict[int, Any]:
@@ -121,7 +126,7 @@ def project_world_misc(state: dict[str, object]) -> None:
     Keyword arguments:
     state -- 快照，原地补上
     """
-    from Script.Core import cache_control, game_type
+    from Script.Core import game_type
     from Script.Modules.domains import (
         achievement,
         country,
@@ -170,7 +175,7 @@ def project_world_misc(state: dict[str, object]) -> None:
     }
     for field, value in fields.items():
         flatten(f"world.{CACHE_AREAS.get(field, field)}.{field}", value, state)
-    for cid in cache_control.cache.character_data:
+    for cid in identity.table():
         flatten(f"chara.{cid}.pregnancy", pregnancy.of(cid), state)
         cg = growth.of(cid)
         if cg is not None:

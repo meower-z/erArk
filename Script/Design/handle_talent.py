@@ -16,6 +16,7 @@ from Script.Modules.domains import (
     hypnosis,
 )
 from Script.Modules.domains import pregnancy
+from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -59,7 +60,7 @@ def gain_talent(
     from Script.Design import second_behavior
 
     talent = abilities.talent(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     gain_talent_flag = False
     # 遍历全素质获得
     for gain_talent_cid in game_config.config_talent_gain:
@@ -233,7 +234,7 @@ def npc_gain_hypnosis_talent(character_id: int) -> None:
     """
     from Script.Design import second_behavior
 
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     hyp_deg = hypnosis.of(character_id)["hypnosis_degree"]
     if hyp_deg < 1:
         return
@@ -275,7 +276,7 @@ def npc_gain_and_lost_cumflation(character_id: int) -> None:
     干员获得和失去精液膨腹素质\n
     """
     talent = abilities.talent(character_id)
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
 
     # 计算腹部精液总量
     abdomen_all_semen: num.Num = 0
@@ -313,7 +314,7 @@ def npc_gain_semen_drinking_climax_talent(character_id: int) -> None:
     干员获得饮精绝顶素质\n
     """
     talent = abilities.talent(character_id)
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     if talent[31]:
         return
     if abilities.experience(character_id)[111] >= 50:
@@ -372,7 +373,7 @@ def body_part_talent_update(
     body_part -- 身体部位
     """
     talent = abilities.talent(character_id)
-    now_character_data = cache.character_data[character_id]
+    now_character_data = identity.of(character_id)
     # 获取当前素质id
     now_talent_id = -1
     for talent_id in talent_ids:
@@ -412,7 +413,7 @@ def settle_favorite_sex_position(character_id: int) -> int:
     功能: 自动结算该角色最喜欢的体位行为
     """
     talent = abilities.talent(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
+    character_data: identity.Identity = identity.of(character_id)
     favorite_position_id = -1
     # 遍历250~261号素质，检查是否有已存在的喜好
     for pos_id in range(250, 262):
@@ -452,7 +453,7 @@ def chara_settle_drink_talent(character_id: int) -> None:
     """
     experience = abilities.experience(character_id)
     talent = abilities.talent(character_id)
-    character_data = cache.character_data[character_id]
+    character_data = identity.of(character_id)
     if (
         handle_premise.handle_self_have_easily_drunk(character_id)
         and experience[94] >= 30

@@ -16,6 +16,7 @@ import random
 from contextlib import suppress
 from typing import TYPE_CHECKING
 from Script.Modules.domains import abilities, activity
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -228,7 +229,7 @@ def modded_common_ejaculation() -> tuple[str, int]:
 
     # 如果有交互对象，则根据交互对象的榨精能力等级来调整射精量
     if activity.target(0) > 0:
-        target_data = cache.character_data[activity.target(0)]
+        target_data = identity.of(activity.target(0))
         squeeze_adjust = handle_ability.get_ability_adjust(
             abilities.ability(target_data.cid)[77]
         )

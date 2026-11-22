@@ -6,7 +6,7 @@ final_invariants_h_group.md（H-xx + HS-xx 不变式清单）。
 
 约定与踩坑说明（写在此处，避免散落在各检查函数注释里重复）：
 1. `cid == 0` 恒为玩家角色(博士)。`NPCS = roster.active() - {0}`，`ALL = roster.active() | {0}`：
-   统一用这两个集合而不是 `cache.character_data.keys()`——只有"已获得"角色会被结算逻辑写入，
+   统一用这两个集合而不是 `identity.table()`——只有"已获得"角色会被结算逻辑写入，
    未获得角色可能带初始化/迁移残留数据。
 2. "同场景" = `activity.position(cid) == activity.position(0)`（位置为List[str]）。
 3. 隐奸模式1/2会主动把玩家is_h置False（hidden_sex_panel.py:439-441），凡以"玩家在H"为前提的
@@ -42,6 +42,7 @@ from Script.Modules.domains import modes, needs, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -63,16 +64,13 @@ except Exception:  # pragma: no cover - 独立运行环境下Config包本身也�
 # ---------------------------------------------------------------------------
 
 
-def _pl(cache: game_type.Cache) -> game_type.Character | None:
+def _pl(cache: game_type.Cache) -> identity.Identity | None:
     """
     参数: cache 全局缓存对象
     返回值: 玩家角色对象(cid=0)，cache未初始化或0号角色不存在时返回None
     功能: 统一获取玩家角色对象
     """
-    cd = getattr(cache, "character_data", None)
-    if not isinstance(cd, dict):
-        return None
-    return cd.get(0)
+    return identity.get(0)
 
 
 def _npcs(cache: game_type.Cache) -> set[int]:
@@ -115,7 +113,7 @@ def _here(cid: int) -> bool:
     return _pos(cid) == _pos(0)
 
 
-def _behavior_id(chara: game_type.Character | None) -> str | None:
+def _behavior_id(chara: identity.Identity | None) -> str | None:
     """
     参数: chara 角色对象，允许为None
     返回值: Optional[str] 角色当前行为的behavior_id，取不到时返回None
@@ -196,7 +194,7 @@ def check_hgroup_01() -> list[CheckFailure]:
     same_scene_h = [
         cid
         for cid in npcs
-        if cid in cache.character_data and _here(cid) and flags.get(cid, "is_h")
+        if identity.exists(cid) and _here(cid) and flags.get(cid, "is_h")
     ]
     msg = (
         f"mode.group_sex=True但玩家(cid=0,{_name(pl)})sp_flag.is_h=False；behavior_id={_behavior_id(pl)} "
@@ -229,7 +227,7 @@ def check_hgroup_02() -> list[CheckFailure]:
     npcs = _npcs(cache)
     in_h = []
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if flags.get(c.cid, "is_h") and _here(c.cid):
@@ -573,14 +571,14 @@ def check_hgroup_08() -> list[CheckFailure]:
                     ids.add(c)
     failures = []
     for c in ids:
-        if c == 0 or c not in npc_id_got or c not in cache.character_data:
+        if c == 0 or c not in npc_id_got or not identity.exists(c):
             failures.append(
                 make_failure(
                     "HGROUP-08",
                     "模板中的角色必须是已获得NPC、在H、且同场景",
                     (
                         f"模板引用角色id={c}不是已获得的非玩家角色(npc_id_got成员={c in npc_id_got}, "
-                        f"character_data成员={c in cache.character_data})；"
+                        f"character_data成员={identity.exists(c)})；"
                         f"完整模板={tpls!r} mode.group_sex={modes.group_sex()} "
                         f"pl.position={activity.position(pl.cid)}"
                     ),
@@ -588,7 +586,7 @@ def check_hgroup_08() -> list[CheckFailure]:
                 )
             )
             continue
-        chara = cache.character_data[c]
+        chara = identity.of(c)
         if not flags.get(chara.cid, "is_h"):
             failures.append(
                 make_failure(
@@ -744,7 +742,7 @@ def check_hgroup_10() -> list[CheckFailure]:
         )
     npcs = _npcs(cache)
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         hs = h_state.view(cid)
@@ -789,7 +787,7 @@ def check_hgroup_11() -> list[CheckFailure]:
     npcs = _npcs(cache)
     failures = []
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         tpls: object = h_state.view(cid).group_sex_body_template_dict
@@ -838,7 +836,7 @@ def check_hgroup_12() -> list[CheckFailure]:
     time_stop = modes.time_stop()
     failures = []
     for cid in all_ids:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if flags.get(c.cid, "masturebate") != 3:
@@ -930,7 +928,7 @@ def check_hgroup_14() -> list[CheckFailure]:
     npcs = _npcs(cache)
     failures = []
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if not flags.get(c.cid, "go_to_join_group_sex"):
@@ -991,7 +989,7 @@ def check_hgroup_15() -> list[CheckFailure]:
     npcs = _npcs(cache)
     hidden = []
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if flags.get(c.cid, "hidden_sex_mode") > 0:
@@ -1100,7 +1098,7 @@ def check_hgroup_16() -> list[CheckFailure]:
     npcs = _npcs(cache)
     failures = []
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if flags.get(c.cid, "hidden_sex_mode") > 0 and not flags.get(
@@ -1160,8 +1158,7 @@ def check_hgroup_17() -> list[CheckFailure]:
         scene_hidden = {
             cid: flags.get(cid, "hidden_sex_mode")
             for cid in npcs
-            if cid in cache.character_data
-            and flags.get(cid, "hidden_sex_mode") > 0
+            if identity.exists(cid) and flags.get(cid, "hidden_sex_mode") > 0
         }
         return [
             make_failure(
@@ -1213,7 +1210,7 @@ def check_hgroup_18() -> list[CheckFailure]:
         )
     npcs = _npcs(cache)
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         v = h_state.get(cid, "hidden_sex_discovery_dregree")
@@ -1256,7 +1253,7 @@ def check_hgroup_19() -> list[CheckFailure]:
     npcs = _npcs(cache)
     ex = []
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if flags.get(c.cid, "exhibitionism_sex_mode") > 0:
@@ -1379,7 +1376,7 @@ def check_hgroup_21() -> list[CheckFailure]:
     all_ids = _all(cache)
     failures = []
     for cid in all_ids:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         hm = flags.get(c.cid, "hidden_sex_mode")
@@ -1430,7 +1427,7 @@ def check_hgroup_22() -> list[CheckFailure]:
     npcs = _npcs(cache)
     failures = []
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if flags.get(c.cid, "is_h") and not _here(c.cid):
@@ -1482,7 +1479,7 @@ def check_hgroup_23() -> list[CheckFailure]:
     same_scene_h = []
     scene_list = []
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if activity.position(c.cid) == activity.position(pl.cid):
@@ -1493,7 +1490,7 @@ def check_hgroup_23() -> list[CheckFailure]:
         return []
     target = activity.target(pl.cid)
     tinfo = "无"
-    if target and target in cache.character_data:
+    if target and identity.exists(target):
         tinfo = f"cid={target} is_h={flags.get(target, "is_h")} position={activity.position(target)}"
     return [
         make_failure(
@@ -1531,7 +1528,7 @@ def check_hgroup_24() -> list[CheckFailure]:
     time_stop = modes.time_stop()
     failures = []
     for cid in all_ids:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if not h_state.get(cid, "npc_active_h"):
@@ -1578,7 +1575,7 @@ def check_hgroup_25() -> list[CheckFailure]:
     all_ids = _all(cache)
     failures = []
     for cid in all_ids:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if hypnosis.get(cid, "blockhead") and hypnosis.get(cid, "active_h"):
@@ -1613,7 +1610,7 @@ def check_hgroup_26() -> list[CheckFailure]:
     all_ids = _all(cache)
     failures = []
     for cid in all_ids:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         v = flags.get(c.cid, "unconscious_h")
@@ -1649,14 +1646,10 @@ def check_hgroup_27() -> list[CheckFailure]:
     cache = cache_control.cache
     all_ids = _all(cache)
     ts = modes.time_stop()
-    pl_behavior_id = (
-        _behavior_id(cache.character_data.get(0))
-        if isinstance(getattr(cache, "character_data", None), dict)
-        else None
-    )
+    pl_behavior_id = _behavior_id(identity.get(0))
     failures = []
     for cid in all_ids:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         v = flags.get(c.cid, "unconscious_h")
@@ -1708,7 +1701,7 @@ def check_hgroup_28() -> list[CheckFailure]:
     all_ids = _all(cache)
     failures = []
     for cid in all_ids:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if not h_state.get(cid, "pretend_sleep"):
@@ -1750,7 +1743,7 @@ def check_hgroup_29() -> list[CheckFailure]:
     all_ids = _all(cache)
     failures = []
     for cid in all_ids:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         mfp = flags.get(c.cid, "npc_masturebate_for_player")
@@ -1781,9 +1774,8 @@ def check_hgroup_30() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验玩家current_sex_position/pre_sex_position只能是-1或1..12，current_womb_sex_position只能
-        是0..2；所有NPC这三个"仅博士有的数据"必须保持默认值-1/-1/0。所有权侧比原描述更强——这些效果
-        函数无视传入的character_id、硬编码cache.character_data[0]，故NPC侧恒为默认值。恒真型哨兵，
-        能抓的只有"某天有人把[0]改成[character_id]"这类回归
+        是0..2。所有NPC这三个仅博士持有的数据必须保持默认值-1/-1/0。相关效果函数无视传入的
+        character_id、硬编码写入角色0的h_state，本条作为回归探针防止误写到其他角色
     """
     cache = cache_control.cache
     pl = _pl(cache)
@@ -1833,7 +1825,7 @@ def check_hgroup_30() -> list[CheckFailure]:
         )
     npcs = _npcs(cache)
     for cid in npcs:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         hs = h_state.view(cid)
@@ -1844,11 +1836,7 @@ def check_hgroup_30() -> list[CheckFailure]:
         )
         if vals != (-1, -1, 0):
             target_id = activity.target(c.cid)
-            t = (
-                cache.character_data.get(target_id)
-                if target_id is not None
-                else None
-            )
+            t = identity.get(target_id) if target_id is not None else None
             insert_pos = (
                 h_state.get(target_id, "insert_position")
                 if t is not None and isinstance(target_id, int)
@@ -1888,7 +1876,7 @@ def check_hgroup_31() -> list[CheckFailure]:
     all_ids = _all(cache)
     failures = []
     for cid in all_ids:
-        c = cache.character_data.get(cid)
+        c = identity.get(cid)
         if c is None:
             continue
         if not (

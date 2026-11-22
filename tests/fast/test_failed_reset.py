@@ -15,6 +15,7 @@ from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions, plan_queue
 from Script.Modules.save_load import kernel_state
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import identity
 
 
 class FailedResetTest(FastTestCase):
@@ -27,7 +28,7 @@ class FailedResetTest(FastTestCase):
 
         def setup(inherit: object) -> None:
             self.cache.old_character_id += 1
-            self.cache.character_data[0].name = "新周目"
+            identity.put(identity.Identity(0, name="新周目"))
 
         panel = SimpleNamespace(setup=setup)
         self.enterContext(
@@ -43,7 +44,7 @@ class FailedResetTest(FastTestCase):
             kernel_state.new_round({})
         self.assertIs(core.state(), before)
         self.assertEqual(self.cache.old_character_id, old_id)
-        self.assertEqual(self.cache.character_data[0].name, "博士")
+        self.assertEqual(identity.of(0).name, "博士")
 
     def test_failed_step(self) -> None:
         """改过缓存之后的投影一步出错"""

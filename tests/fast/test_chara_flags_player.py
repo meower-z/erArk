@@ -28,6 +28,7 @@ from Script.Modules.npc_action_choice import choice
 from Script.Modules.save_load import kernel_state, upgrade
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import identity
 
 
 class CharaFlagsPlayerTest(FastTestCase):
@@ -311,9 +312,8 @@ class CharaFlagsPlayerTest(FastTestCase):
 
     def test_fix_wrong_character_amaya_keeps_cid_and_domains(self) -> None:
         """阿玛雅编号修复后目标槽位 cid 与四域对齐，原槽位按源 cid 重建"""
-        self.op_a.adv = 450
-        self.op_a.name = get_text._("阿玛雅")
-        self.op_b.adv = 448
+        kernel_data.put(identity.update, 1, adv=450, name=get_text._("阿玛雅"))
+        kernel_data.put(identity.update, 2, adv=448)
         kernel_data.put(flags.set, 1, is_h=True)
         kernel_data.put(action_info.set, 1, "talk_count", 7)
         kernel_data.put(flags.set, 2, rest=True)
@@ -324,17 +324,16 @@ class CharaFlagsPlayerTest(FastTestCase):
             _tem: object,
             collect_reset: bool = True,
             register_roster: bool = True,
-        ) -> game_type.Character:
+        ) -> identity.Identity:
             flags.reset(cid)
             action_info.set(cid, "talk_count", 0)
-            rebuilt = game_type.Character()
-            rebuilt.cid = cid
-            rebuilt.adv = 450
-            return rebuilt
+            identity.put(identity.Identity(cid, adv=450))
+            return identity.of(cid)
 
+        moved = game_type.Character()
         characters: dict[int, game_type.Character] = {
-            1: self.op_a,
-            2: self.op_b,
+            1: moved,
+            2: game_type.Character(),
         }
         loaded: dict[str, object] = {
             "character_data": characters,
@@ -347,9 +346,10 @@ class CharaFlagsPlayerTest(FastTestCase):
                 old_chara_to_new.fix_wrong_character, loaded
             )
         self.assertEqual(updated, 1)
-        retained = characters[2]
-        rebuilt = characters[1]
-        self.assertEqual(retained.cid, 2)
+        self.assertIs(characters[2], moved)
+        retained = identity.of(2)
+        rebuilt = identity.of(1)
+        self.assertEqual(retained.name, get_text._("阿玛雅"))
         self.assertEqual(retained.adv, 448)
         self.assertIs(flags.get(retained.cid, "is_h"), True)
         self.assertIs(flags.get(retained.cid, "rest"), False)

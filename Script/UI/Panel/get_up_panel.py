@@ -6,6 +6,7 @@ from Script.UI.Panel import see_character_info_panel
 from Script.Design import game_time
 from Script.Core import get_text, cache_control, game_type, flow_handle
 from Script.Config import normal_config
+from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -38,7 +39,7 @@ class GetUpPanel_1:
         """绘制面板"""
         while 1:
             title_draw = draw.TitleLineDraw(_("主页"), self.width)
-            character_data = cache.character_data[self.character_id]
+            character_data = identity.of(self.character_id)
             title_draw.draw()
             date_draw = draw.NormalDraw()
             date_draw.width = self.width

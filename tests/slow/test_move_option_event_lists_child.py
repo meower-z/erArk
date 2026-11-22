@@ -15,6 +15,7 @@ from tests.world import UnplannedInput
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import behave
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from Script.UI.Panel.draw_event_text_panel import DrawEventTextPanel
@@ -78,7 +79,7 @@ class MoveOptionEventListsChildTest(SlowTestCase):
         offered: list[str] = []
         previous: list[list[str]] = []
         real_handle_event = event.handle_event
-        player = self.cache.character_data[0]
+        player = identity.of(0)
 
         def record_event(
             character_id: int, event_before_instrust_flag: bool = False

@@ -30,6 +30,7 @@ from Script.System.Official_Event_System import official_event_handle
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw
 from Script.Modules.domains import activity
+from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -58,7 +59,7 @@ def get_code_text(raw_text: str, character_id: int, partner_id: int) -> str:
     """
     if not raw_text:
         return ""
-    if character_id not in cache.character_data:
+    if not identity.exists(character_id):
         return raw_text
     with activity.target_as(character_id, partner_id):
         return talk.code_text_to_draw_text(raw_text, character_id)

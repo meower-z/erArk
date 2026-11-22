@@ -25,6 +25,7 @@ from tests.slow.test_tag_logic_same_in_english import (
     LanguageRun,
     game,
 )
+from tests.kernel_project import identity
 
 KOREAN = "ko_KR"
 """ 被测语言 """
@@ -86,8 +87,7 @@ def collect_load(language: str) -> dict[str, list[int]]:
     """
     from Script.Modules.domains import relations
 
-    run = NoBonusRun(language)
-    cache = run.cache
+    NoBonusRun(language)
     save_handle = game("Script.Core.save_handle")
     for chara_id, favorability in FAVORABILITY_DICT.items():
         kernel_data.put(
@@ -102,7 +102,7 @@ def collect_load(language: str) -> dict[str, list[int]]:
         )
     loaded: dict[str, list[int]] = {}
     for chara_id in FAVORABILITY_DICT:
-        character = cache.character_data[chara_id]
+        character = identity.of(chara_id)
         loaded[str(chara_id)] = [
             character.cid,
             character.adv,

@@ -16,9 +16,9 @@ from tests.world import UnplannedInput
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.kernel_project import activity
+from tests.kernel_project import identity
 
 if TYPE_CHECKING:
-    from Script.Core import game_type
     from Script.UI.Panel.draw_event_text_panel import DrawEventTextPanel
 
 PARENT_ID = "110b756a-bd81-4fb8-b86a-4e749a2b34fa"
@@ -40,13 +40,13 @@ TRIES = 20
 class OptionEventListsChildTest(SlowTestCase):
     """玩家与星熊聊天时打开的选项面板"""
 
-    def _prepare_target(self) -> "game_type.Character":
+    def _prepare_target(self) -> "identity.Identity":
         """
         把星熊设为玩家的交互对象，并让父事件的前提成立
         Keyword arguments:
         无
         Return arguments:
-        game_type.Character -- 星熊的角色数据
+        identity.Identity -- 星熊的角色身份
         """
         from Script.Modules.domains import relations
         from Script.Design import handle_premise
@@ -55,10 +55,10 @@ class OptionEventListsChildTest(SlowTestCase):
 
         npc_id = next(
             cid
-            for cid, chara in self.cache.character_data.items()
+            for cid, chara in identity.table().items()
             if chara.adv == ADV_ID
         )
-        npc = self.cache.character_data[npc_id]
+        npc = identity.of(npc_id)
         kernel_data.put(roster.add, npc_id)
         self.world.move(npc_id, activity.position(0))
         ca.talent(npc_id)[FALL_3_TALENT] = 1

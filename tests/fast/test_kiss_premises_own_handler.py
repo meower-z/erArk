@@ -21,6 +21,7 @@ from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
 from tests.chara_activity import aim
 from Script.Modules.domains import activity
+from Script.Modules.domains import identity
 
 Premise = constant_promise.Premise
 
@@ -34,9 +35,9 @@ def self_kiss_experience_0(self_data, target_data, player_data) -> bool:
     """
     Premise.KISS_0 的定义函数
     Keyword arguments:
-    self_data -- 判定角色的数据（game_type.Character）
-    target_data -- 交互对象的数据（game_type.Character）
-    player_data -- 玩家的数据（game_type.Character）
+    self_data -- 判定角色的数据（identity.Identity）
+    target_data -- 交互对象的数据（identity.Identity）
+    player_data -- 玩家的数据（identity.Identity）
     Return arguments:
     bool -- 判定角色的亲吻经验为0时为 True
     """
@@ -47,9 +48,9 @@ def target_kiss_experience_0(self_data, target_data, player_data) -> bool:
     """
     Premise.TARGET_KISS_0 的定义函数
     Keyword arguments:
-    self_data -- 判定角色的数据（game_type.Character）
-    target_data -- 交互对象的数据（game_type.Character）
-    player_data -- 玩家的数据（game_type.Character）
+    self_data -- 判定角色的数据（identity.Identity）
+    target_data -- 交互对象的数据（identity.Identity）
+    player_data -- 玩家的数据（identity.Identity）
     Return arguments:
     bool -- 交互对象的亲吻经验为0时为 True
     """
@@ -60,9 +61,9 @@ def player_no_first_kiss(self_data, target_data, player_data) -> bool:
     """
     Premise.NO_FIRST_KISS 和数据里 kiss_0 的定义函数
     Keyword arguments:
-    self_data -- 判定角色的数据（game_type.Character）
-    target_data -- 交互对象的数据（game_type.Character）
-    player_data -- 玩家的数据（game_type.Character）
+    self_data -- 判定角色的数据（identity.Identity）
+    target_data -- 交互对象的数据（identity.Identity）
+    player_data -- 玩家的数据（identity.Identity）
     Return arguments:
     bool -- 玩家未保有初吻时为 True
     """
@@ -73,9 +74,9 @@ def target_no_first_kiss(self_data, target_data, player_data) -> bool:
     """
     Premise.TARGET_NO_FIRST_KISS 和数据里 t_kiss_0 的定义函数
     Keyword arguments:
-    self_data -- 判定角色的数据（game_type.Character）
-    target_data -- 交互对象的数据（game_type.Character）
-    player_data -- 玩家的数据（game_type.Character）
+    self_data -- 判定角色的数据（identity.Identity）
+    target_data -- 交互对象的数据（identity.Identity）
+    player_data -- 玩家的数据（identity.Identity）
     Return arguments:
     bool -- 交互对象未保有初吻时为 True
     """
@@ -122,10 +123,8 @@ class KissPremisesOwnHandlerTest(FastTestCase):
             for character_id, (name, premise, expect) in itertools.product(
                 (0, 1), CASES
             ):
-                self_data = self.cache.character_data[character_id]
-                target_data = self.cache.character_data[
-                    activity.target(character_id)
-                ]
+                self_data = identity.of(character_id)
+                target_data = identity.of(activity.target(character_id))
                 with self.subTest(
                     player_exp=p_exp,
                     npc_exp=n_exp,
