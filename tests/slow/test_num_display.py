@@ -19,6 +19,8 @@ from unittest import mock
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 WIDTH = 120
 """ 绘制宽度 """
@@ -53,8 +55,12 @@ class NumDisplayTest(SlowTestCase):
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
         self.operator = self.cache.character_data[self.operator_id]
-        self.operator.position = list(self.player.position)
-        self.player.target_character_id = self.operator_id
+        kernel_data.put(
+            activity.set_position,
+            self.operator.cid,
+            list(activity.position(self.player.cid)),
+        )
+        aim(self.player.cid, self.operator_id)
         kernel_data.put(
             kernel_data.domain("player_ability").set,
             self.player.cid,
@@ -186,7 +192,7 @@ class NumDisplayTest(SlowTestCase):
         }
         change.target_change[self.operator_id] = target_change
         normal_config.system_setting.draw_setting[7] = 1
-        now_time = self.player.behavior.start_time
+        now_time = activity.behavior(self.player.cid).start_time
         with mock.patch.object(
             settle_behavior, "handle_instruct_data", return_value=change
         ):

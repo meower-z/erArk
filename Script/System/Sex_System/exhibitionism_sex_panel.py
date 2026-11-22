@@ -12,7 +12,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config
 from Script.Design import handle_premise, map_handle
-from Script.Modules.domains import achievement, flags
+from Script.Modules.domains import achievement, activity, flags
 
 panel_info_data: dict[str, object] = {}
 
@@ -149,8 +149,7 @@ class Select_Exhibitionism_Sex_Mode_Panel:
         """选择露出H模式"""
         from Script.Design import instuct_judege
 
-        character_data: game_type.Character = cache.character_data[0]
-        target_character_id = character_data.target_character_id
+        target_character_id = activity.target(0)
 
         # 从被发现面板跳转过来（结算途中）时当场判定邀请；玩家选择时只定下行动，邀请在行动开始时判定，
         #    没过的换成邀请露出失败（它的开始代码提示失败），这里写下的模式随草稿一起作废

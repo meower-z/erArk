@@ -15,6 +15,8 @@ from unittest import mock
 
 from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 HAIR = "examine_hair"
 """ 检查头发 """
@@ -31,9 +33,8 @@ class PhysicalCheckRecordsPerformedTest(SlowTestCase):
         self.npc_id: int = sorted(
             i for i in kernel_data.domain("roster").active() if i
         )[0]
-        player = self.cache.character_data[0]
-        self.world.move(self.npc_id, player.position)
-        player.target_character_id = self.npc_id
+        self.world.move(self.npc_id, activity.position(0))
+        aim(0, self.npc_id)
 
     def label(self, behavior_id: str) -> str:
         """

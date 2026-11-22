@@ -125,15 +125,17 @@ from Script.Core import (
 from Script.UI.Moudle import draw  # noqa: E402
 from tests import chara_abilities as ca, chara_data, kernel_data, kernel_project
 from tests import world
+from tests.chara_activity import behave
 
 _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
 
 from Script.Modules.save_load import kernel_state
-from Script.Modules.domains import body_manage, education, growth, inventory
-from Script.Modules.domains import modes, official, plan, playthrough, pregnancy
-from Script.Modules.domains import roster, status, wardrobe, warehouse
-from Script.Modules.domains import chara_key, chara_life, relations
+from Script.Modules.domains import activity, body_manage, chara_key, chara_life
+from Script.Modules.domains import education, facility, growth, inventory, modes
+from Script.Modules.domains import official, plan, playthrough, pregnancy
+from Script.Modules.domains import relations, roster, status, wardrobe
+from Script.Modules.domains import warehouse
 from tests.education._growth_ref import child_growth as child_growth
 
 character_handle.init_character_tem()
@@ -156,6 +158,7 @@ kernel_project.auto_commit_outside_step(
         *chara_keys,
         body_manage.KEY,
         *chara_key.BY_KEY,
+        *activity.KEYS,
     }
 )
 ca.auto_commit_outside_step()
@@ -203,7 +206,6 @@ from Script.System.Education_System import (  # noqa: E402
     semester_handle,
     sex_class_handle,
 )
-from Script.Modules.domains import facility
 
 # ==== 4. 环境工具 ====
 DEFAULT_TIME = datetime.datetime(2026, 9, 7, 9, 0)
@@ -249,9 +251,8 @@ def move_to(character_id: int, path: list) -> None:
     Return arguments:
     无
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    _scene_list_remove(scene_str(character_data.position), character_id)
-    character_data.position = list(path)
+    _scene_list_remove(scene_str(activity.position(character_id)), character_id)
+    kernel_data.put(activity.set_position, character_id, list(path))
     _scene_list_add(scene_str(path), character_id)
 
 
@@ -268,7 +269,7 @@ def set_time(now_time: datetime.datetime) -> None:
     now_time = game_time.to_game_time(now_time)
     world.set_clock(now_time)
     for character_data in cache.character_data.values():
-        character_data.behavior.start_time = now_time
+        behave(character_data.cid, start_time=now_time)
 
 
 def make_character(
@@ -302,7 +303,6 @@ def make_character(
     cd.adv = 0
     cd.sex = 1
     cd.race = 0
-    cd.second_behavior = attr_calculation.get_second_behavior_zero({})
     relations.favorability.set(cd.cid, {0: 0})
     relations.assistant_services.set(
         cd.cid, attr_calculation.get_assistant_services_zero()
@@ -311,7 +311,7 @@ def make_character(
     ca.talent(cid)[121] = 1
     chara_life.work_type.set(cd.cid, work_type)
     chara_life.dormitory.set(cd.cid, scene_str(SCENE_DORM))
-    cd.behavior.start_time = game_time.now()
+    behave(cd.cid, start_time=game_time.now())
     if stage:
         ca.talent(cd)[stage] = 1
     if daughter:
@@ -321,7 +321,8 @@ def make_character(
             with relations.child_id_list.editing(mother_id) as children:
                 if cid not in children:
                     children.append(cid)
-    cd.position = list(position if position is not None else SCENE_DORM)
+    where = list(position if position is not None else SCENE_DORM)
+    kernel_data.put(activity.set_position, cd.cid, where)
     cache.character_data[cid] = cd
     chara_data.seed(cid, {})
     if daughter:
@@ -334,7 +335,7 @@ def make_character(
     # 婴儿/幼女不进在编名册，与真实成长阶段边界一致
     if cid and stage not in (101, 102):
         roster.add(cid)
-    _scene_list_add(scene_str(cd.position), cid)
+    _scene_list_add(scene_str(activity.position(cd.cid)), cid)
     return cd
 
 
@@ -347,7 +348,7 @@ def remove_character(cid: int) -> None:
     无
     """
     if cid in cache.character_data:
-        _scene_list_remove(scene_str(cache.character_data[cid].position), cid)
+        _scene_list_remove(scene_str(activity.position(cid)), cid)
         del cache.character_data[cid]
     roster.discard(cid)
 
@@ -419,9 +420,7 @@ def sync(keep_queue: bool = False) -> None:
     global _kernel_left
     core.load(load_order.LOAD_ORDER)
     if core.state() is not _kernel_left:
-        player = cache.character_data[0]
-        player.behavior.start_time = game_time.now()
-        player.behavior.duration = 0
+        behave(0, start_time=game_time.now(), duration=0)
         if not keep_queue:
             kernel_data.set_world(plan.clear_queues)
         core.reset_state(kernel_data.reprojected(core.state()))

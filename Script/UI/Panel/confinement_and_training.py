@@ -15,9 +15,9 @@ from Script.Design import map_handle, virgin_break_gate
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 import random
-from Script.Modules.domains import abilities, body_manage, dirty, facility
-from Script.Modules.domains import flags, h_state, inventory, needs, prison
-from Script.Modules.domains import work, chara_life
+from Script.Modules.domains import abilities, activity, body_manage, chara_life
+from Script.Modules.domains import dirty, facility, flags, h_state, inventory
+from Script.Modules.domains import needs, prison, work
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
 
@@ -213,7 +213,6 @@ def chara_become_prisoner(character_id: int) -> None:
     from Script.Design import clothing, second_behavior
 
     ability = abilities.ability(character_id)
-    character_data = cache.character_data[character_id]
 
     # flag结算
     flags.set(character_id, be_bagged=False)
@@ -231,7 +230,9 @@ def chara_become_prisoner(character_id: int) -> None:
     dormitory_common.register_permanent_dormitory(character_id)
     chara_life.dormitory.set(
         character_id,
-        map_handle.get_map_system_path_str_for_list(character_data.position),
+        map_handle.get_map_system_path_str_for_list(
+            activity.position(character_id)
+        ),
     )
     # 给予屈服2，恐怖1，反发3，但如果有隶属系陷落，则可以减轻该效果
     target_fall = attr_calculation.get_character_fall_level(
@@ -304,7 +305,7 @@ def prepare_training() -> NoReturn:
         constant.Behavior.WAIT,
         10,
         kind="prepare_training",
-        target=cache.character_data[0].target_character_id,
+        target=activity.target(0),
         state=constant.CharacterStatus.STATUS_WAIT,
     )
 
@@ -319,24 +320,22 @@ def start_training_preparation(target_character_id: int) -> None:
     from Script.Settle import default
     from Script.UI.Panel import h_item_shop_panel
 
-    pl_character_data = cache.character_data[0]
     target_character_data = cache.character_data[target_character_id]
     warden_id = work.warden()
-    warden_character_data = cache.character_data[warden_id]
     # 移动到调教室
     humiliation_room_list = map_handle.get_map_system_path_for_str(
         random.choice(constant.place_data["Humiliation_Room"])
     )
     map_handle.character_move_scene(
-        target_character_data.position,
+        activity.position(target_character_id),
         humiliation_room_list,
         target_character_id,
     )
     map_handle.character_move_scene(
-        warden_character_data.position, humiliation_room_list, warden_id
+        activity.position(warden_id), humiliation_room_list, warden_id
     )
     map_handle.character_move_scene(
-        pl_character_data.position, humiliation_room_list, 0
+        activity.position(0), humiliation_room_list, 0
     )
     # 清洗
     if prison.cleaning():
@@ -495,10 +494,9 @@ def get_all_can_use_behavior_id_for_sex_assistant(
                 if select_part != "" or not_selet_part != "":
                     if behavior_id in prison.assistant_ban_behaviors():
                         continue
-                pl_character_data = cache.character_data[0]
-                if pl_character_data.target_character_id != 0:
+                if activity.target(0) != 0:
                     target_character_data = cache.character_data[
-                        pl_character_data.target_character_id
+                        activity.target(0)
                     ]
                     # 如果NPC为处，则跳过破处类
                     if virgin_break_gate.takes_kept_virginity(
@@ -535,8 +533,7 @@ def get_behavior_id_of_sex_assistant() -> str:
     if handle_premise.handle_sex_assistant_3(0) and behaviors:
         return random.choice(behaviors)
     # 获取玩家当前的状态id
-    pl_character_data = cache.character_data[0]
-    behavior_id = pl_character_data.behavior.behavior_id
+    behavior_id = activity.behavior(0).behavior_id
     if behavior_id in game_config.config_behavior:
         state_data = game_config.config_behavior[behavior_id]
         # 遍历部位列表，获取存在与tag中的部位

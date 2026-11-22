@@ -12,9 +12,9 @@ from _bootstrap import remove_character, schedule_handle, section, set_time
 from _bootstrap import sys
 import csv
 from Script.System.Pregnancy_System import pregnancy_constant
-import ast
-from typing import Any
 from Script.System.Official_Event_System import official_event_handle
+from tests.chara_activity import aim
+from tests.education._constant_doc import read_constant_doc
 
 open_all_classroom()
 mother = make_character(102, "母亲", 0)
@@ -28,7 +28,7 @@ student = make_character(
     born_days=300,
     position=classroom_path(_("理论教室一")),
 )
-pl.target_character_id = 201
+aim(pl.cid, 201)
 E = education_constant
 
 EDU_BEHAVIOR = {
@@ -739,47 +739,6 @@ check(
 )
 
 
-def read_constant_doc(file_name: str, class_name: str) -> dict[Any, tuple]:
-    """
-    用 ast 读 Script/Core 下的一个常量文件，取出指定类里后面紧跟着说明字符串的常量
-    Keyword arguments:
-    file_name -- 常量文件名
-    class_name -- 类名
-    Return arguments:
-    dict -- 常量值 -> (常量名, 分类, 描述)。分类是说明里第一个空格之前的部分。描述是这个空格之后的部分，没有空格时为空
-    """
-    with open(
-        os.path.join("Script", "Core", file_name), encoding="utf-8-sig"
-    ) as constant_file:
-        tree = ast.parse(constant_file.read())
-    doc_dict: dict[Any, tuple] = {}
-    for class_node in tree.body:
-        if (
-            not isinstance(class_node, ast.ClassDef)
-            or class_node.name != class_name
-        ):
-            continue
-        body = class_node.body
-        for index in range(len(body) - 1):
-            node, doc_node = body[index], body[index + 1]
-            if not (
-                isinstance(node, ast.Assign)
-                and isinstance(node.targets[0], ast.Name)
-                and isinstance(node.value, ast.Constant)
-                and isinstance(doc_node, ast.Expr)
-                and isinstance(doc_node.value, ast.Constant)
-                and isinstance(doc_node.value.value, str)
-            ):
-                continue
-            doc_part = doc_node.value.value.strip().partition(" ")
-            doc_dict[node.value.value] = (
-                node.targets[0].id,
-                doc_part[0],
-                doc_part[2],
-            )
-    return doc_dict
-
-
 _premise_doc = read_constant_doc("constant_promise.py", "Premise")
 _effect_doc = read_constant_doc("constant_effect.py", "BehaviorEffect")
 check(
@@ -1186,7 +1145,7 @@ make_character(
 _growth_203 = child_growth(203)
 _growth_203.report_card_history = [{"grade": E.REPORT_GRADE_NO_CLASS}]
 _growth_203.report_card_flag = True
-pl.target_character_id = 203
+aim(pl.cid, 203)
 check(
     (
         "L25 检查成绩单新增 2 条成年女儿的档位 3 口上：前提照 1014~1017 的写法（交互对象是女儿、档位 3、成绩单待查看）"
@@ -1233,7 +1192,7 @@ check(
     == ["daily_check_report_card1004", "daily_check_report_card1005"],
     _report_pass_list,
 )
-pl.target_character_id = 201
+aim(pl.cid, 201)
 remove_character(203)
 
 section("Plan 32 §3.15：target 行说明（L27）")

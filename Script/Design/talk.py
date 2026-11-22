@@ -13,8 +13,8 @@ from Script.Design import map_handle, handle_premise, talk_image
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
 from Script.Design import game_time
-from Script.Modules.domains import action_info, flags, inventory, wardrobe
-from Script.Modules.domains import chara_profile
+from Script.Modules.domains import action_info, activity, chara_profile, flags
+from Script.Modules.domains import inventory, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -28,18 +28,16 @@ def handle_talk(character_id: int) -> None:
     Keyword arguments:\n
     character_id -- 角色id\n
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    behavior_id = character_data.behavior.behavior_id
+    behavior_id = activity.behavior(character_id).behavior_id
     # 已计算过的前提字典
     calculated_premise_dict: dict[str, float] = {}
     # 和玩家不在同一位置的NPC不显示文本
-    if (
-        character_id != 0
-        and character_data.position != cache.character_data[0].position
-    ):
+    if character_id != 0 and activity.position(
+        character_id
+    ) != activity.position(0):
         return
     # 智能跟随模式下，博士离开时，跟随的角色不显示送别文本
     if (
@@ -47,7 +45,7 @@ def handle_talk(character_id: int) -> None:
         and flags.get(target_data.cid, "is_follow") == 1
         and behavior_id == constant.Behavior.MOVE
         and handle_premise.handle_move_to_same_target_with_pl(
-            character_data.target_character_id
+            activity.target(character_id)
         )
     ):
         return
@@ -68,7 +66,7 @@ def handle_talk(character_id: int) -> None:
     # 玩家移动到NPC位置时，NPC的打招呼文本
     if character_id == 0 and behavior_id == constant.Behavior.MOVE:
         scene_path_str = map_handle.get_map_system_path_str_for_list(
-            character_data.position
+            activity.position(character_id)
         )
         for chara_id in cache.scene_data[scene_path_str].character_list:
             # 要求对象是NPC，且没有跟随玩家
@@ -95,17 +93,13 @@ def handle_second_talk(
     character_id -- 角色id\n
     behavior_id -- 行为id，默认为0\n
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     # 已计算过的前提字典
     calculated_premise_dict: dict[str, float] = {}
 
     # 自己
     if behavior_id == "share_blankly":
-        for (
-            second_behavior_id,
-            behavior_data,
-        ) in character_data.second_behavior.items():
-            if behavior_data != 0:
+        for second_behavior_id in activity.second_ids(character_id):
+            if activity.second_behavior(character_id, second_behavior_id) != 0:
                 now_talk_data, calculated_premise_dict = handle_talk_sub(
                     character_id, second_behavior_id, calculated_premise_dict
                 )
@@ -162,7 +156,7 @@ def handle_talk_sub(
     """
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     tem_talk_list = []  # 临时口上列表
     if behavior_id in game_config.config_talk_data_by_chara_adv:
@@ -465,7 +459,9 @@ def handle_talk_draw(
         if character_id == 0 and now_behavior_id == constant.Behavior.READ_BOOK:
             from Script.UI.Panel import read_book_panel
 
-            read_book_panel.draw_book_fragment(character_data.behavior.book_id)
+            read_book_panel.draw_book_fragment(
+                activity.behavior(character_id).book_id
+            )
         # 检测是否需要跳过
         not_draw_flag = check_not_draw_talk(
             character_id, now_behavior_id, unusual_talk_flag
@@ -505,7 +501,7 @@ def handle_talk_draw(
                 # 如果还没有则选择交互对象
                 else:
                     target_character_data: game_type.Character = (
-                        cache.character_data[character_data.target_character_id]
+                        cache.character_data[activity.target(character_id)]
                     )
                     tar_text_color = target_character_data.text_color
                     if tar_text_color:
@@ -573,16 +569,15 @@ def must_show_talk_check(character_id: int) -> None:
     Keyword arguments:
     character_id -- 角色id
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     # 已计算过的前提字典
     calculated_premise_dict: dict[str, float] = {}
-    # 遍历所有必须显示的二段行为
-    for behavior_id in character_data.must_show_second_behavior_id_list:
+    # 结算效果可能追加必须显示的id。读出的列表是副本，所以每轮重读列表、按下标取
+    index = 0
+    while index < len(activity.must_show(character_id)):
+        behavior_id = activity.must_show(character_id)[index]
+        index += 1
         # 跳过值为0的行为
-        if (
-            behavior_id in character_data.second_behavior
-            and character_data.second_behavior[behavior_id] == 0
-        ):
+        if activity.second_behavior(character_id, behavior_id) == 0:
             continue
         # 进行绘制
         now_talk_data, calculated_premise_dict = handle_talk_sub(
@@ -605,8 +600,8 @@ def must_show_talk_check(character_id: int) -> None:
                 character_id, change_data
             )
         # 触发后该行为值归零
-        character_data.second_behavior[behavior_id] = 0
-    character_data.must_show_second_behavior_id_list = []
+        activity.set_second_behavior(character_id, behavior_id, 0)
+    activity.set_must_show(character_id, [])
 
 
 def second_behavior_info_text(
@@ -878,7 +873,6 @@ def talk_common_judge_one_pass(now_talk: str, character_id: int) -> str:
     """
     # 固定为玩家触发
     pl_character_id = 0
-    pl_character_data: game_type.Character = cache.character_data[0]
     # 已计算过的前提字典
     calculated_premise_dict: dict[str, float] = {}
     # 遍历所有通用占位符的 key 和对应的 cid 集合
@@ -894,10 +888,10 @@ def talk_common_judge_one_pass(now_talk: str, character_id: int) -> str:
             # 该角色非玩家，非玩家交互对象，与玩家在同一地点，则将玩家的交互对象设置为该角色
             if (
                 character_id != 0
-                and pl_character_data.target_character_id != character_id
+                and activity.target(0) != character_id
                 and handle_premise.handle_in_player_scene(character_id)
             ):
-                pl_character_data.target_character_id = character_id
+                activity.set_target(0, character_id)
                 # 交互对象已变更，前提均是针对交互对象求值的，缓存结论全部失效，需清空以免跨角色误用
                 calculated_premise_dict = {}
             # 如果该key存在于部位列表中
@@ -1100,19 +1094,16 @@ def code_text_to_draw_text(
     character_data: game_type.Character = cache.character_data[character_id]
     player_data: game_type.Character = cache.character_data[0]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_data.cid)
     ]
 
     # 输入的原文本
     now_talk_text, __ = special_code_judge(talk_text)
 
     # 替换通用文本
-    original_target_character_id = player_data.target_character_id
-    try:
+    with activity.target_as(0, activity.target(0)):
         now_talk_text = talk_common_judge(now_talk_text, character_id)
-        common_target_character_id = player_data.target_character_id
-    finally:
-        player_data.target_character_id = original_target_character_id
+        common_target_character_id = activity.target(0)
 
     # 如果是纸娃娃地文文本，则将当前id改为玩家id
     if common_talk_flag:
@@ -1141,7 +1132,7 @@ def code_text_to_draw_text(
     elif (
         common_target_character_id
         if common_talk_flag
-        else character_data.target_character_id
+        else activity.target(character_data.cid)
     ) != 0 and chara_profile.nick_name_to_pl(target_data.cid) != "":
         pl_nick_name = chara_profile.nick_name_to_pl(target_data.cid)
     elif chara_profile.nick_name(0) != "":
@@ -1167,8 +1158,10 @@ def code_text_to_draw_text(
 
     # 当前行为食物
     behavior_food_name = ""
-    if character_data.behavior.target_food:
-        behavior_food_name = character_data.behavior.target_food.name
+    if activity.behavior(character_data.cid).target_food:
+        behavior_food_name = activity.behavior(
+            character_data.cid
+        ).target_food.name
 
     # 包中食物
     all_food_name = ""
@@ -1182,24 +1175,24 @@ def code_text_to_draw_text(
     # 桌游
     board_game_name = ""
     pl_board_game_type = (
-        player_data.behavior.board_game_type
-        if hasattr(player_data.behavior, "board_game_type")
+        activity.behavior(0).board_game_type
+        if hasattr(activity.behavior(0), "board_game_type")
         else 0
     )
     if character_id == 0 and pl_board_game_type != 0:
         board_game_name = game_config.config_board_game[pl_board_game_type].name
 
     # 地点
-    scene_path = character_data.position
+    scene_path = activity.position(character_data.cid)
     scene_path_str = map_handle.get_map_system_path_str_for_list(scene_path)
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     scene_name = scene_data.scene_name
 
     # 移动前地点
     src_scene_name, src_random_chara_name = "", ""
-    if len(player_data.behavior.move_src):
+    if len(activity.behavior(0).move_src):
         src_scene_path_str = map_handle.get_map_system_path_str_for_list(
-            player_data.behavior.move_src
+            activity.behavior(0).move_src
         )
         src_scene_data: game_type.Scene = cache.scene_data[src_scene_path_str]
         src_scene_name = src_scene_data.scene_name
@@ -1210,9 +1203,9 @@ def code_text_to_draw_text(
 
     # 移动后地点
     target_scene_name, tar_random_chara_name = "", ""
-    if len(character_data.behavior.move_target):
+    if len(activity.behavior(character_data.cid).move_target):
         target_scene_path_str = map_handle.get_map_system_path_str_for_list(
-            character_data.behavior.move_target
+            activity.behavior(character_data.cid).move_target
         )
         target_scene_data: game_type.Scene = cache.scene_data[
             target_scene_path_str
@@ -1285,32 +1278,32 @@ def code_text_to_draw_text(
     if character_id == 0 and len(target_worn[9]):
         for PanId in target_worn[9]:
             target_pan_name += game_config.config_clothing_tem[PanId].name
-    elif player_data.behavior.pan_name != "":
-        target_pan_name = player_data.behavior.pan_name
+    elif activity.behavior(0).pan_name != "":
+        target_pan_name = activity.behavior(0).pan_name
     if target_pan_name == "":
         target_pan_name = _("没有穿内裤的阴部")
     target_soc_name = ""
     if character_id == 0 and len(target_worn[10]):
         for SocId in target_worn[10]:
             target_soc_name += game_config.config_clothing_tem[SocId].name
-    elif player_data.behavior.socks_name != "":
-        target_soc_name = player_data.behavior.socks_name
+    elif activity.behavior(0).socks_name != "":
+        target_soc_name = activity.behavior(0).socks_name
     if target_soc_name == "":
         target_soc_name = _("没有穿袜子的双腿")
     pan_name = ""
     if character_id != 0 and len(self_worn[9]):
         for PanId in self_worn[9]:
             pan_name += game_config.config_clothing_tem[PanId].name
-    elif player_data.behavior.pan_name != "":
-        pan_name = player_data.behavior.pan_name
+    elif activity.behavior(0).pan_name != "":
+        pan_name = activity.behavior(0).pan_name
     if pan_name == "":
         pan_name = _("没有穿内裤的阴部")
     socks_name = ""
     if character_id != 0 and len(self_worn[10]):
         for SocId in self_worn[10]:
             socks_name += game_config.config_clothing_tem[SocId].name
-    elif player_data.behavior.socks_name != "":
-        socks_name = player_data.behavior.socks_name
+    elif activity.behavior(0).socks_name != "":
+        socks_name = activity.behavior(0).socks_name
     if socks_name == "":
         socks_name = _("没有穿袜子的双腿")
     up_cloth_name = ""
@@ -1340,12 +1333,14 @@ def code_text_to_draw_text(
         TargetNickName=target_nick_name,
         TargetNickNameToPl=target_nick_name_to_pl,
         FoodName=behavior_food_name,
-        MakeFoodTime=character_data.behavior.make_food_time,
+        MakeFoodTime=activity.behavior(character_data.cid).make_food_time,
         AllFoodName=all_food_name,
-        BookName=character_data.behavior.book_name,
+        BookName=activity.behavior(character_data.cid).book_name,
         BoardGameName=board_game_name,
-        MilkMl=character_data.behavior.milk_ml,
-        HInterruptCharaName=character_data.behavior.h_interrupt_chara_name,
+        MilkMl=activity.behavior(character_data.cid).milk_ml,
+        HInterruptCharaName=activity.behavior(
+            character_data.cid
+        ).h_interrupt_chara_name,
         SceneName=scene_name,
         SceneOneCharaName=random_chara_name,
         TargetSceneName=target_scene_name,

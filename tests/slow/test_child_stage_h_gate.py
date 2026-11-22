@@ -13,7 +13,9 @@ from collections.abc import Mapping
 from unittest import mock
 
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 AGE_TALENTS = range(101, 109)
 """ 年龄素质 """
@@ -41,7 +43,7 @@ class ChildStageHGateTest(SlowTestCase):
             ca.talent(child_id)[talent_id] = 0
         ca.talent(child_id)[stage] = 1
         kernel_data.put(kernel_data.domain("roster").discard, child_id)
-        self.world.move(child_id, self.cache.character_data[0].position)
+        self.world.move(child_id, activity.position(0))
         return child_id
 
     def assert_h_instructs_closed(self, stage: int) -> None:
@@ -58,13 +60,12 @@ class ChildStageHGateTest(SlowTestCase):
             see_instruct_panel,
         )
 
-        pl = self.cache.character_data[0]
         child_id = self.make_child(stage, "杜宾")
         # 监禁让 imprisonment_h 的「合作或监禁」或分支成立
         kernel_data.put(
             kernel_data.domain("flags").set, child_id, imprisonment=True
         )
-        pl.target_character_id = child_id
+        aim(0, child_id)
         listed = {
             "Tk面板": [
                 i
@@ -101,9 +102,7 @@ class ChildStageHGateTest(SlowTestCase):
         from Script.System.Instruct_System import see_instruct_panel
 
         self.cache.debug_mode = True
-        self.cache.character_data[0].target_character_id = self.make_child(
-            102, "杜宾"
-        )
+        aim(0, self.make_child(102, "杜宾"))
         listed = {
             "Tk面板": [
                 i
@@ -127,8 +126,7 @@ class ChildStageHGateTest(SlowTestCase):
         child_id = self.make_child(102, "杜宾")
         kernel_data.put(chara_life.work_type.set, child_id, MASSAGE_THERAPIST)
         npc_id = self.npc("阿米娅")
-        npc = self.cache.character_data[npc_id]
-        self.world.move(npc_id, self.cache.character_data[0].position)
+        self.world.move(npc_id, activity.position(0))
         kernel_data.written(
             constant.handle_state_machine_data[
                 constant.StateMachine.WORK_MASSAGE
@@ -136,7 +134,7 @@ class ChildStageHGateTest(SlowTestCase):
             npc_id,
         )
         self.assertEqual(
-            (npc.behavior.behavior_id, npc.target_character_id),
+            (activity.behavior(npc_id).behavior_id, activity.target(npc_id)),
             (constant.Behavior.SHARE_BLANKLY, npc_id),
             "按摩师状态机之后的（行为，对象）",
         )

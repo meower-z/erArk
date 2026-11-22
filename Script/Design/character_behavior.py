@@ -29,7 +29,13 @@ from Script.Modules.domains import h_state
 from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, realtime_settle
-from Script.Modules.domains import achievement, action_info, flags, history
+from Script.Modules.domains import (
+    achievement,
+    action_info,
+    activity,
+    flags,
+    history,
+)
 from Script.Modules.domains import modes, plan, roster
 
 game_path = game_path_config.game_path
@@ -55,8 +61,7 @@ def settle_start(character_id: int, minutes: int) -> None:
     character_id -- 角色id
     minutes -- 行动在内核里的分钟数（时停中玩家的行动是 0）
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    behavior_id = character_data.behavior.behavior_id
+    behavior_id = activity.behavior(character_id).behavior_id
     if character_id:
         if (
             not flags.get(character_id, "see_h_reaction_settled")
@@ -76,15 +81,17 @@ def settle_start(character_id: int, minutes: int) -> None:
             flags.set(npc_id, see_pl_h=False)
     judge_before_pl_behavior()
     judge_character_status(0)
-    if character_data.behavior.behavior_id == constant.Behavior.SLEEP:
+    if activity.behavior(character_id).behavior_id == constant.Behavior.SLEEP:
         sleep_settle.update_sleep()
     from Script.Design import handle_npc_ai_in_h
 
     handle_npc_ai_in_h.judge_character_h_obscenity_unconscious(
-        0, character_data.behavior.start_time
+        0, activity.behavior(character_id).start_time
     )
     if modes.time_stop() and minutes == 0:
-        achievement.add("time_stop_duration", character_data.behavior.duration)
+        achievement.add(
+            "time_stop_duration", activity.behavior(character_id).duration
+        )
 
 
 def end_action(character_id: int) -> None:
@@ -94,23 +101,22 @@ def end_action(character_id: int) -> None:
     Keyword arguments:
     character_id -- 角色id
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    old = character_data.behavior
-    character_data.last_behavior_id_list.append(old.behavior_id)
-    if len(character_data.last_behavior_id_list) > 5:
-        character_data.last_behavior_id_list.pop(0)
-    behavior = game_type.Behavior()
+    old = activity.behavior(character_id)
+    last = [*activity.last_behaviors(character_id), old.behavior_id]
+    if len(last) > 5:
+        last.pop(0)
+    activity.set_last_behaviors(character_id, last)
+    kept: dict[str, object] = {"move_src": old.move_src}
     if old.behavior_id in {
         constant.Behavior.MOVE,
         constant.Behavior.CARRY_MOVE,
     }:
-        behavior.move_final_target = old.move_final_target
-    behavior.move_src = old.move_src
-    behavior.start_time = game_time.at(core.state().clock)
-    character_data.behavior = behavior
-    character_data.state = constant.CharacterStatus.STATUS_ARDER
-    character_data.event.event_id = ""
-    character_data.event.son_event_id = ""
+        kept["move_final_target"] = old.move_final_target
+    activity.set_behavior(
+        character_id, start_time=game_time.at(core.state().clock), **kept
+    )
+    activity.set_state(character_id, constant.CharacterStatus.STATUS_ARDER)
+    activity.update_event(character_id, event_id="", son_event_id="")
     handle_talent.gain_talent(character_id, now_gain_type=0)
 
 
@@ -153,35 +159,34 @@ def settle_player_target() -> None:
     场景里没有别的角色时设为自己。
     主界面（in_scene_panel）只读不写，绘制时用的就是这里定下的交互对象
     """
-    pl_character_data = cache.character_data[0]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        pl_character_data.position
+        activity.position(0)
     )
     character_list = scene_characters(cache.scene_data[scene_path_str])
-    target = pl_character_data.target_character_id
+    target = activity.target(0)
     if not character_list:
-        pl_character_data.target_character_id = 0
+        activity.set_target(0, 0)
     elif target not in character_list and (
         target != 0
         or (history.recent() and history.recent()[-1] == constant.Behavior.MOVE)
     ):
-        pl_character_data.target_character_id = character_list[0]
+        activity.set_target(0, character_list[0])
 
 
-def target_left(character_id: int) -> bool:
+def target_left(character_id: int, game: core.GameState) -> bool:
     """
     角色的交互对象不是自己，且已不在角色所在的场景（玩家正在搬运的对象除外）
     Keyword arguments:
     character_id -- 角色id
+    game -- 事件触发函数收到的 GameState，交互对象与位置从它读
     Return arguments:
     bool -- 交互对象离开了时为真
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target = character_data.target_character_id
+    target = activity.target(character_id, game)
     if target in (character_id, flags.get(character_id, "bagging_chara_id")):
         return False
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id, game)
     )
     return target not in cache.scene_data[scene_path_str].character_list
 
@@ -194,10 +199,9 @@ def judge_character_status(character_id: int) -> int:
     Return arguments:\n
     int -- 结算是否成功
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    start_time = character_data.behavior.start_time
+    start_time = activity.behavior(character_id).start_time
     end_time = game_time.get_sub_date(
-        minute=character_data.behavior.duration, old_date=start_time
+        minute=activity.behavior(character_id).duration, old_date=start_time
     )
     # print(f"debug {character_data.name}的end_time = {end_time}")
 
@@ -209,7 +213,7 @@ def judge_character_status(character_id: int) -> int:
     event_type_now = 1
     if start_event_draw is not None:
         event_id = start_event_draw.event_id
-        character_data.event.event_id = event_id
+        activity.update_event(character_id, event_id=event_id)
         event_config = game_config.config_event[event_id]
         event_type_now = event_config.type
         # 事件绘制
@@ -233,7 +237,7 @@ def judge_character_status(character_id: int) -> int:
         # 指令前置类型的事件触发
         if end_event_type == 1:
             # print(f"debug 指令前置类型的事件触发")
-            character_data.event.event_id = end_event_id
+            activity.update_event(character_id, event_id=end_event_id)
             # 事件绘制
             end_event_draw.draw()
             # 事件的数值结算
@@ -271,27 +275,29 @@ def character_instruct_record(character_id: int) -> str:
     name = character_data.name
     instruct_text = ""
     # 记录时间的小时数和分钟数
-    now_time = character_data.behavior.start_time.strftime("%H:%M")
+    now_time = activity.behavior(character_id).start_time.strftime("%H:%M")
     instruct_text += _("{0}在{1}，").format(name, now_time)
     # 移动指令则记录移动路径
-    if character_data.behavior.behavior_id == constant.Behavior.MOVE:
-        move_src = character_data.behavior.move_src[-1]
+    if activity.behavior(character_id).behavior_id == constant.Behavior.MOVE:
+        move_src = activity.behavior(character_id).move_src[-1]
         if move_src == "0":
-            move_src = character_data.behavior.move_src[-2] + "出口"
-        move_target = character_data.behavior.move_target[-1]
+            move_src = activity.behavior(character_id).move_src[-2] + "出口"
+        move_target = activity.behavior(character_id).move_target[-1]
         if move_target == "0":
-            move_target = character_data.behavior.move_target[-2] + "出口"
+            move_target = (
+                activity.behavior(character_id).move_target[-2] + "出口"
+            )
         if move_target:
             instruct_text += _("从{0}移动至{1}\n").format(move_src, move_target)
     # 其他指令则记录状态
     else:
         now_chara_behavior_name = game_config.config_behavior[
-            character_data.behavior.behavior_id
+            activity.behavior(character_id).behavior_id
         ].name
         # 如果是交互指令则记录交互对象
-        if character_data.target_character_id != character_id:
+        if activity.target(character_id) != character_id:
             target_character_data: game_type.Character = cache.character_data[
-                character_data.target_character_id
+                activity.target(character_id)
             ]
             target_name = target_character_data.name
             instruct_text += _("对{0}进行了{1}\n").format(
@@ -310,10 +316,9 @@ def judge_before_pl_behavior() -> None:
     Return arguments:
     无
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
-    if pl_character_data.target_character_id != 0:
+    if activity.target(0) != 0:
         target_character_data: game_type.Character = cache.character_data[
-            pl_character_data.target_character_id
+            activity.target(0)
         ]
         # 重置交互对象的射精部位
         h_state.set(
@@ -324,14 +329,14 @@ def judge_before_pl_behavior() -> None:
 
     # 睡眠时间在6h及以上的额外恢复
     if (
-        pl_character_data.behavior.behavior_id == constant.Behavior.SLEEP
-        and pl_character_data.behavior.duration >= 360
+        activity.behavior(0).behavior_id == constant.Behavior.SLEEP
+        and activity.behavior(0).duration >= 360
     ):
         sleep_settle.refresh_temp_semen_max()  # 刷新玩家临时精液上限
 
     # 结算上次进行聊天的时间，以重置聊天计数器#
     settle_behavior.change_character_talkcount_for_time(
-        0, pl_character_data.behavior.start_time
+        0, activity.behavior(0).start_time
     )
 
     # 全获得角色刷新等待文本标记
@@ -346,7 +351,7 @@ def judge_before_pl_behavior() -> None:
     # 隐奸的被察觉情况结算，需要玩家的行为不是结束H
     if (
         handle_premise.handle_hidden_sex_mode_ge_1(0)
-        and pl_character_data.behavior.behavior_id != constant.Behavior.END_H
+        and activity.behavior(0).behavior_id != constant.Behavior.END_H
     ):
         from Script.System.Sex_System import hidden_sex_panel
 

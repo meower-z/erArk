@@ -15,6 +15,7 @@ from Script.Design import character_behavior, map_handle
 from Script.UI.Panel import all_npc_position_panel
 from tests.fast.base import FastTestCase
 from tests.world import play
+from Script.Modules.domains import activity
 
 START = ["宿舍", "1区", "101"]
 """ 博士出发的地点 """
@@ -62,18 +63,18 @@ class GoToOperatorTest(FastTestCase):
             Return arguments:
             int -- 1
             """
-            behavior = self.player.behavior
+            behavior = activity.behavior(self.player.cid)
             if (
                 character_id == 0
                 and behavior.behavior_id == constant.Behavior.MOVE
             ):
                 legs.append(list(behavior.move_target))
                 map_handle.character_move_scene(
-                    self.player.position, behavior.move_target, 0
+                    activity.position(self.player.cid), behavior.move_target, 0
                 )
                 if move_after_first_leg and len(legs) == 1:
                     map_handle.character_move_scene(
-                        self.operator.position, MOVED, 2
+                        activity.position(self.operator.cid), MOVED, 2
                     )
             return 1
 
@@ -90,11 +91,11 @@ class GoToOperatorTest(FastTestCase):
     def test_operator_is_target_on_arrival(self) -> None:
         """到达时交互对象是干员2"""
         self.go(move_after_first_leg=False)
-        self.assertEqual(self.player.position, TARGET)
-        self.assertEqual(self.player.target_character_id, 2)
+        self.assertEqual(activity.position(self.player.cid), TARGET)
+        self.assertEqual(activity.target(self.player.cid), 2)
 
     def test_follows_a_moving_operator(self) -> None:
         """干员2走开了，博士跟到会议室，交互对象是她"""
         self.go(move_after_first_leg=True)
-        self.assertEqual(self.player.position, MOVED)
-        self.assertEqual(self.player.target_character_id, 2)
+        self.assertEqual(activity.position(self.player.cid), MOVED)
+        self.assertEqual(activity.target(self.player.cid), 2)

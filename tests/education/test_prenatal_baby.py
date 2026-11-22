@@ -30,8 +30,8 @@ from Script.System.Official_Event_System import official_event_handle
 from Script.System.Pregnancy_System import pregnancy_handle
 from Script.Design import game_time
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import official
-from Script.Modules.domains import relations
+from tests.chara_activity import aim
+from Script.Modules.domains import official, relations
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -142,7 +142,7 @@ pregnancy.update(102, prenatal_point=0.0)
 
 section("胎教结算 555")
 change = game_type.CharacterStatusChange()
-pl.target_character_id = 102
+aim(pl.cid, 102)
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.PRENATAL_ADD_ADJUST
 ](0, 30, change, game_time.now())
@@ -151,7 +151,7 @@ constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.PRENATAL_ADD_ADJUST
 ](0, 0, change, game_time.now())
 check("add_time=0 不累积", pregnancy.of(102).prenatal_point == 0.5)
-pl.target_character_id = 0
+aim(pl.cid, 0)
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.PRENATAL_ADD_ADJUST
 ](0, 30, change, game_time.now())
@@ -203,7 +203,7 @@ check(
 )
 
 section("CVE 实跑")
-pl.target_character_id = 203
+aim(pl.cid, 203)
 change = game_type.CharacterStatusChange()
 settle_behavior.handle_comprehensive_value_effect(
     0, ["A2", "Growth|11", "G", "0.5"], change
@@ -246,7 +246,7 @@ check(
     == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
     and relations.favorability(baby_a.cid).get(0, 0) > favor_before,
 )
-nurse.target_character_id = 203
+aim(nurse.cid, 203)
 favor_before = relations.favorability(baby_a.cid).get(0, 0)
 hp_max = kernel_data.needs_of(baby_a.cid)["hit_max"]
 kernel_data.written(nurse_child, 105, 30, change, game_time.now())
@@ -256,11 +256,11 @@ check(
     == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
     and relations.favorability(baby_a.cid).get(0, 0) == favor_before,
 )
-pl.target_character_id = 102
+aim(pl.cid, 102)
 hp_max = kernel_data.needs_of(mother.cid)["hit_max"]
 kernel_data.written(nurse_child, 0, 30, change, game_time.now())
 check("非婴儿不生效", kernel_data.needs_of(mother.cid)["hit_max"] == hp_max)
-pl.target_character_id = 203
+aim(pl.cid, 203)
 hp_max = kernel_data.needs_of(baby_a.cid)["hit_max"]
 kernel_data.written(nurse_child, 0, 0, change, game_time.now())
 check(

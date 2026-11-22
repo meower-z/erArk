@@ -10,7 +10,7 @@ from _bootstrap import scene_str, schedule_handle, schedule_template_handle
 from _bootstrap import section, set_time, sex_class_handle
 import inspect
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import flags, library, chara_life
+from Script.Modules.domains import activity, chara_life, flags, library
 
 section("教室列表与开放判定")
 clear_schedules()
@@ -281,7 +281,7 @@ assert intern_course_2 is not None
 intern_place_2 = schedule_handle.get_course_place(intern_course_2)
 check(
     "实习课优先去在岗干员所在的那间房",
-    intern_place_2 == mentor.position,
+    intern_place_2 == activity.position(mentor.cid),
     intern_place_2,
 )
 move_to(201, intern_place_2)

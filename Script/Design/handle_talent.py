@@ -8,7 +8,13 @@ from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, dirty, first_record, hypnosis
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    dirty,
+    first_record,
+    hypnosis,
+)
 from Script.Modules.domains import pregnancy
 
 _: FunctionType = get_text._
@@ -33,12 +39,11 @@ def record_fall_talent_time(character_id: int, talent_id: int) -> None:
     """
     if talent_id not in {201, 202, 203, 204, 211, 212, 213, 214}:
         return
-    character_data = cache.character_data[character_id]
     with first_record.editing(character_id) as fr:
         if talent_id not in fr.fall_talent_time_dict:
             fr.fall_talent_time_dict[talent_id] = [
                 game_time.now(),
-                list(character_data.position),
+                list(activity.position(character_id)),
             ]
 
 
@@ -270,7 +275,6 @@ def npc_gain_and_lost_cumflation(character_id: int) -> None:
     干员获得和失去精液膨腹素质\n
     """
     talent = abilities.talent(character_id)
-    pl_character_data = cache.character_data[0]
     character_data = cache.character_data[character_id]
 
     # 计算腹部精液总量
@@ -296,10 +300,9 @@ def npc_gain_and_lost_cumflation(character_id: int) -> None:
         )
 
     # 绘制获得素质提示
-    if (
-        now_draw_text != ""
-        and character_data.position == pl_character_data.position
-    ):
+    if now_draw_text != "" and activity.position(
+        character_id
+    ) == activity.position(0):
         now_draw_succed = draw.WaitDraw()
         now_draw_succed.text = now_draw_text
         now_draw_succed.draw()

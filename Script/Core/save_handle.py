@@ -23,7 +23,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement, action_info
+from Script.Modules.domains import abilities, achievement, action_info, activity
 from Script.Modules.domains import body_manage, commission, country, diplomacy
 from Script.Modules.domains import dirty, dormitory, education, entertainment
 from Script.Modules.domains import facility, first_record, flags, fridge, growth
@@ -261,10 +261,9 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
                 ):
                     record["return_time"] = now_time
                     count += 1
-        behavior = character.behavior
+        behavior = activity.behavior(character.cid)
         if behavior.book_id and behavior.book_id not in game_config.config_book:
-            behavior.book_id = 0
-            behavior.book_name = ""
+            activity.update_behavior(character.cid, book_id=0, book_name="")
             count += 1
     return count
 
@@ -651,10 +650,10 @@ def input_load_save(save_id: str) -> None:
 def install_save(save_id: str, version: int) -> None:
     """
     读档的 Reset 步骤：装入文件 "1" 并修补旧存档。版本 0 补生理需求与供电策略，23 个 adopt 搬罗德岛属性（18 个计数）。
-    ID 迁移后 flags、action_info、player_ability、player_collection 搬标记等四项；修编号后、替换前 abilities 与
-    inventory、wardrobe、body_manage、status 搬四张表及道具、食物、服装、身体管理与状态值（abilities 计数）；替换先调
-    chara_key.lift，重建前 relations、chara_life、chara_profile 搬进角色键；重建后 adopt_pickled、pregnancy、growth 搬
-    数值、妊娠与养成，h_meters、h_state、dirty、hypnosis、first_record 与 roster、周目等七模块均计数；最后收尾会话。
+    ID 迁移之后 flags、action_info、player_ability、player_collection 搬四项；修编号后、替换前 abilities（计数）与
+    inventory、wardrobe、body_manage、status 搬四张表及道具、食物、服装、身体管理、状态值；替换先调 chara_key.lift，
+    重建前 relations、chara_life、chara_profile 搬角色键；重建后 adopt_pickled、activity（计数）、pregnancy、growth 搬
+    数值、活动、妊娠、养成，h_meters、h_state、dirty、hypnosis、first_record、roster 与周目等七模块计数；最后收尾会话。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -884,6 +883,7 @@ def install_save(save_id: str, version: int) -> None:
     if version == 0:
         upgrade.adopt_v0(loaded_dict)
     upgrade.adopt_pickled(loaded_dict)
+    update_count += activity.adopt_old_save(loaded_dict)
     pregnancy.adopt_old_save(loaded_dict, version)
     growth.adopt_old_save(loaded_dict, version)
     for chara_domain in (h_meters, h_state, dirty, hypnosis, first_record):
@@ -1085,9 +1085,12 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
     if change_map_flag:
         # 在2024.7月的版本中将人气快餐开封菜改为了约翰老妈汉堡店
         if "贸易\\人气快餐开封菜" in loaded_dict["scene_data"]:
-            for _key, value in loaded_dict["character_data"].items():
-                if value.position[-1] == "人气快餐开封菜":
-                    value.position[-1] = "约翰老妈汉堡店"
+            for cid in loaded_dict["character_data"]:
+                position = activity.position(cid)
+                if position[-1] == "人气快餐开封菜":
+                    activity.set_position(
+                        cid, [*position[:-1], "约翰老妈汉堡店"]
+                    )
         for key, _value in loaded_dict["scene_data"].copy().items():
             if key not in cache.scene_data:
                 del loaded_dict["scene_data"][key]
@@ -1104,18 +1107,13 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
     #    它把死场景删掉了却没管站在里面的人，之后每次读取 change_map_flag 都是假，
     #    坏位置于是永远留在存档里，再也没有代码会去碰它
     move_back_count = 0
-    for character_id, character_data in loaded_dict["character_data"].items():
-        old_position_str = map_handle.get_map_system_path_str_for_list(
-            character_data.position
-        )
+    for character_id in loaded_dict["character_data"]:
+        position = activity.position(character_id)
+        old_position_str = map_handle.get_map_system_path_str_for_list(position)
         if old_position_str in cache.scene_data:
             continue
         # 回落到同一区块的入口——每个区块都有一个"0"号入口场景；整个区块都没了才回落到地图原点
-        new_position = (
-            [character_data.position[0], "0"]
-            if character_data.position
-            else ["0", "0"]
-        )
+        new_position = [position[0], "0"] if position else ["0", "0"]
         if (
             map_handle.get_map_system_path_str_for_list(new_position)
             not in cache.scene_data
@@ -1132,7 +1130,7 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
         loaded_dict["scene_data"][new_position_str].character_list.add(
             character_id
         )
-        character_data.position = new_position
+        activity.set_position(character_id, new_position)
         update_count += 1
         move_back_count += 1
     if move_back_count:

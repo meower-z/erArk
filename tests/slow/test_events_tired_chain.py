@@ -15,7 +15,9 @@ import importlib
 from unittest import mock
 
 from tests import kernel_data
+from tests.chara_activity import aim, behave
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 AMIYA_ID = 1
 """ 阿米娅的角色id """
@@ -48,8 +50,8 @@ class EventsTiredChainTest(SlowTestCase):
                 kernel_data.domain("roster").active(),
                 f"本局应有干员 {cid}",
             )
-            self.world.move(cid, list(self.pl.position))
-        self.pl.target_character_id = AMIYA_ID
+            self.world.move(cid, list(activity.position(self.pl.cid)))
+        aim(self.pl.cid, AMIYA_ID)
         kernel_data.put(kernel_data.domain("flags").set, self.pl.cid, is_h=True)
         kernel_data.put(
             kernel_data.domain("flags").set, self.amiya.cid, is_h=True
@@ -57,7 +59,7 @@ class EventsTiredChainTest(SlowTestCase):
         kernel_data.put(
             kernel_data.domain("flags").set, self.kaltsit.cid, is_follow=1
         )
-        self.kaltsit.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+        behave(self.kaltsit.cid, constant.Behavior.SHARE_BLANKLY)
         for chara in (self.amiya, self.kaltsit):
             kernel_data.set_needs(chara.cid, hit=1)
             kernel_data.put(

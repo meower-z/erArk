@@ -24,10 +24,10 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, action_info, dirty, entertainment
-from Script.Modules.domains import facility, flags, h_meters, h_state, modes
-from Script.Modules.domains import needs, player_ability, playthrough
-from Script.Modules.domains import pregnancy, prison
+from Script.Modules.domains import abilities, action_info, activity, dirty
+from Script.Modules.domains import entertainment, facility, flags, h_meters
+from Script.Modules.domains import h_state, modes, needs, player_ability
+from Script.Modules.domains import playthrough, pregnancy, prison
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -122,9 +122,9 @@ def character_aotu_change_value(
         _drunk_sex_common = _drunk_module
     drunk_sex_common = _drunk_sex_common
     now_character_data: game_type.Character = cache.character_data[character_id]
-    now_behavior_id = now_character_data.behavior.behavior_id
-    if now_character_data.target_character_id not in cache.character_data:
-        now_character_data.target_character_id = character_id
+    now_behavior_id = activity.behavior(character_id).behavior_id
+    if activity.target(character_id) not in cache.character_data:
+        activity.set_target(character_id, character_id)
     # 获取实际增加时间
     true_add_time = get_true_add_time(character_id, now_time, since)
 
@@ -260,7 +260,7 @@ def settle_sex_class_notify(
     from Script.System.Education_System import sex_class_handle
 
     text_list = []
-    start_time = pl_character_data.behavior.start_time or since
+    start_time = activity.behavior(pl_character_data.cid).start_time or since
     # 第一次：起床时，只在结算到起床开始的那一段里发
     if (
         now_behavior_id == constant.Behavior.GET_UP
@@ -294,10 +294,10 @@ def get_true_add_time(
     Return arguments:\n
     true_add_time -- 真实的行动时间\n
     """
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    add_time = now_character_data.behavior.duration
+    now_behavior = activity.behavior(character_id)
+    add_time = now_behavior.duration
     # 真实的开始时间是当前角色行动开始时间和 since 中更晚的那个
-    now_character_behavior_start_time = now_character_data.behavior.start_time
+    now_character_behavior_start_time = now_behavior.start_time
     true_start_time = max(now_character_behavior_start_time, since)
     # 真实的结束时间是当前角色行动结束时间和当前时间中更早的那个
     now_character_end_time = game_time.get_sub_date(
@@ -430,10 +430,10 @@ def settle_tired(character_id: int, true_add_time: int) -> None:
     返回:
         None
     """
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    if (
-        now_character_data.behavior.behavior_id == constant.Behavior.SLEEP
-        or not handle_premise.handle_time_stop_off(character_id)
+    if activity.behavior(
+        character_id
+    ).behavior_id == constant.Behavior.SLEEP or not handle_premise.handle_time_stop_off(
+        character_id
     ):
         return
     global _drunk_sex_common
@@ -541,11 +541,10 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
         needs.set(character_id, sleep=min(max(sleep_point, 0), 100))
         # 熟睡值已减少到0时NPC直接醒来
         if needs.of(character_id)["sleep"] <= 0 and character_id:
-            pl_character_data: game_type.Character = cache.character_data[0]
             # 玩家与该角色在同一地点，且玩家正在对该角色睡奸中，则结算从无意识H中恢复意识
             if (
-                pl_character_data.position == now_char.position
-                and pl_character_data.target_character_id == character_id
+                activity.position(0) == activity.position(character_id)
+                and activity.target(0) == character_id
                 and flags.get(character_id, "unconscious_h") == 1
             ):
                 info_text = _("\n{0}已经睡饱了，从睡梦中自然苏醒过来\n").format(
@@ -658,7 +657,7 @@ def arts_break_due(game: "core.GameState | None" = None) -> bool:
     """
     if (
         needs.of(0, game)["sanity"] > 0
-        or cache.character_data[0].behavior.behavior_id in ARTS_BREAK_EXEMPT
+        or activity.behavior(0, game).behavior_id in ARTS_BREAK_EXEMPT
     ):
         return False
     return bool(
@@ -736,9 +735,8 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
         _drunk_sex_common = _drunk_module
     drunk_sex_common = _drunk_sex_common
 
-    now_character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        now_character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
 
@@ -747,7 +745,7 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
         # 上一个被吵醒的角色可能已经把玩家赶出了本场景，此时不再继续结算，避免玩家被连续推开多个场景
         if (
             map_handle.get_map_system_path_str_for_list(
-                now_character_data.position
+                activity.position(character_id)
             )
             != scene_path_str
         ):
@@ -756,12 +754,12 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
         if sleeper_id == 0:
             continue
         sleeper_data: game_type.Character = cache.character_data[sleeper_id]
-        if sleeper_data.behavior.behavior_id != constant.Behavior.SLEEP:
+        if activity.behavior(sleeper_id).behavior_id != constant.Behavior.SLEEP:
             continue
         # 等待、休息、睡觉行为，或目标服用安眠药、烂醉爆睡时不受影响
         # 烂醉豁免与安眠药同级：深度昏睡状态不会被动静吵醒，否则会反复吵醒后又立刻重新爆睡
         if (
-            now_character_data.behavior.behavior_id
+            activity.behavior(character_id).behavior_id
             in {
                 constant.Behavior.WAIT,
                 constant.Behavior.REST,
@@ -774,12 +772,12 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
 
         # 计算本次动作对熟睡程度的影响
         down_sleep = get_sleep_disturbance_value(
-            now_character_data.behavior.behavior_id, true_add_time
+            activity.behavior(character_id).behavior_id, true_add_time
         )
 
         # 仅玩家当前睡奸目标使用完整影响，非睡奸目标影响减半
         is_sleep_h_target = (
-            sleeper_id == now_character_data.target_character_id
+            sleeper_id == activity.target(character_id)
             and flags.get(sleeper_data.cid, "unconscious_h") == 1
         )
         if not is_sleep_h_target:

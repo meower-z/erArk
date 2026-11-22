@@ -28,7 +28,14 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities, action_info, dirty, flags, growth
+from Script.Modules.domains import (
+    abilities,
+    action_info,
+    activity,
+    dirty,
+    flags,
+    growth,
+)
 from Script.Modules.domains import h_state, history, hypnosis, needs
 from Script.Modules.domains import physical_exam, roster, status, chara_profile
 from Script.Modules.domains import relations
@@ -135,9 +142,8 @@ def get_weight_from_premise_dict(
     now_weight -- float，总权重
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
-    behavior_id = character_data.behavior.behavior_id
+    target_character_id = activity.target(character_id)
+    behavior_id = activity.behavior(character_id).behavior_id
     now_weight: float = 0  # 总权重
     now_premise_data = {}  # 记录已经计算过的前提
     if calculated_premise_dict:
@@ -271,11 +277,12 @@ def get_player_manual_teach_course(character_id: int) -> tuple | None:
 
     if character_id != 0:
         return None
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.behavior.behavior_id != constant.Behavior.TEACH:
+    if activity.behavior(character_id).behavior_id != constant.Behavior.TEACH:
         return None
     return (
-        schedule_handle.get_course_type_by_position(character_data.position),
+        schedule_handle.get_course_type_by_position(
+            activity.position(character_id)
+        ),
         education_constant.FALLBACK_SUBJECT_ABILITY,
     )
 
@@ -297,16 +304,17 @@ def get_listen_manual_teach_course(character_id: int) -> tuple | None:
 
     if character_id == 0 or character_id not in cache.character_data:
         return None
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.behavior.behavior_id != constant.Behavior.ATTENT_CLASS:
+    if (
+        activity.behavior(character_id).behavior_id
+        != constant.Behavior.ATTENT_CLASS
+    ):
         return None
-    pl_character_data: game_type.Character = cache.character_data[0]
-    if pl_character_data.behavior.behavior_id != constant.Behavior.TEACH:
+    if activity.behavior(0).behavior_id != constant.Behavior.TEACH:
         return None
     if (
-        character_data.position != pl_character_data.position
-        or character_data.behavior.start_time
-        != pl_character_data.behavior.start_time
+        activity.position(character_id) != activity.position(0)
+        or activity.behavior(character_id).start_time
+        != activity.behavior(0).start_time
     ):
         return None
     if schedule_handle.get_now_teaching(0) is not None:
@@ -440,8 +448,7 @@ def handle_comprehensive_value_premise(
     int -- 前提权重加成
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data = cache.character_data[0]
-    pl_target_character_id = pl_character_data.target_character_id
+    pl_target_character_id = activity.target(0)
     pl_target_character_data = cache.character_data[pl_target_character_id]
 
     # 罗德岛全局数值的主体RI（Plan 23）：资源、声望、公务量这类不属于任何角色的数值
@@ -460,9 +467,9 @@ def handle_comprehensive_value_premise(
     final_character_id = character_id
     final_character_data = character_data
     if premise_all_value_list[0] == "A2":
-        final_character_id = character_data.target_character_id
+        final_character_id = activity.target(character_id)
         final_character_data = cache.character_data[
-            character_data.target_character_id
+            activity.target(character_id)
         ]
     elif premise_all_value_list[0][:2] == "A3":
         final_character_adv = int(premise_all_value_list[0][3:])
@@ -492,7 +499,9 @@ def handle_comprehensive_value_premise(
         final_value = abilities.ability(final_character_id).get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "T":
         if "Time" in premise_all_value_list[1]:
-            final_value = final_character_data.behavior.start_time.hour
+            final_value = activity.behavior(
+                final_character_data.cid
+            ).start_time.hour
         else:
             final_value = abilities.talent(final_character_id).get(
                 type_son_id, 0
@@ -549,7 +558,10 @@ def handle_comprehensive_value_premise(
             )
         # 礼物前提
         elif "Gift" in premise_all_value_list[1]:
-            if final_character_data.behavior.gift_id == type_son_id:
+            if (
+                activity.behavior(final_character_data.cid).gift_id
+                == type_son_id
+            ):
                 return 1
             else:
                 return 0
@@ -595,7 +607,7 @@ def handle_comprehensive_value_premise(
                 target_character_data = final_character_data
             elif target_character_type == "是交互对象的":
                 target_character_data = cache.character_data[
-                    final_character_data.target_character_id
+                    activity.target(final_character_data.cid)
                 ]
             # 是指定id角色的
             else:
@@ -684,7 +696,9 @@ def handle_comprehensive_value_premise(
     # 其他角色在场的判定
     if premise_all_value_list[1][0] == "O":
         if "OtherChara" in premise_all_value_list[1]:
-            if character_data.position == final_character_data.position:
+            if activity.position(character_id) == activity.position(
+                final_character_data.cid
+            ):
                 return 1 if judge_value >= 1 else 0
             else:
                 return 0 if judge_value >= 1 else 1
@@ -823,8 +837,7 @@ def handle_target_instruct_judge_low_obscenity(character_id: int) -> int:
     输出：int - 权重
     """
     # 获取角色数据
-    character_data = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
+    target_character_id = activity.target(character_id)
     # 如果角色没有交互对象则返回0
     if character_id == target_character_id:
         return 0
@@ -882,9 +895,8 @@ def handle_target_instruct_judge_high_obscenity(character_id: int) -> int:
         int: 权重（1 表示满足，0 表示不满足）
     """
     # 获取当前角色数据
-    character_data = cache.character_data[character_id]
     # 获取交互对象id
-    target_character_id = character_data.target_character_id
+    target_character_id = activity.target(character_id)
     # 如果角色没有交互对象，则直接返回0
     if character_id == target_character_id:
         return 0
@@ -943,8 +955,7 @@ def handle_target_instruct_judge_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
+    target_character_id = activity.target(character_id)
     if character_id == target_character_id:
         return 0
     if instuct_judege.calculation_instuct_judege(
@@ -1032,15 +1043,14 @@ def handle_no_target_or_target_can_cooperate(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.target_character_id == 0:
+    if activity.target(character_id) == 0:
         return 1
     # 交互对象：HP正常，未疲劳，未睡眠，267正常
     elif (
         handle_target_hp_ne_1(character_id)
         and handle_t_tired_le_84(character_id)
         and handle_t_action_not_sleep(character_id)
-        and _check_normal_combo(character_data.target_character_id, (2, 6, 7))
+        and _check_normal_combo(activity.target(character_id), (2, 6, 7))
     ):
         return 1
     return 0
@@ -1320,8 +1330,7 @@ def handle_t_normal_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_normal_7(character_data.target_character_id)
+    return handle_normal_7(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.NORMAL_2_4)
@@ -1365,8 +1374,7 @@ def handle_t_normal_267(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     return _check_normal_combo(target_chara_id, (2, 6, 7))
 
 
@@ -1399,8 +1407,7 @@ def handle_t_normal_2467(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     return _check_normal_combo(target_chara_id, (2, 4, 6, 7))
 
 
@@ -1452,8 +1459,7 @@ def handle_t_normal_24567(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     return _check_normal_combo(target_chara_id, (2, 4, 5, 6, 7))
 
 
@@ -1519,8 +1525,7 @@ def handle_t_normal_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return _check_normal_combo(character_data.target_character_id, (1,))
+    return _check_normal_combo(activity.target(character_id), (1,))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_2)
@@ -1533,8 +1538,7 @@ def handle_t_normal_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return _check_normal_combo(character_data.target_character_id, (2,))
+    return _check_normal_combo(activity.target(character_id), (2,))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_6)
@@ -1547,8 +1551,7 @@ def handle_t_normal_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     return _check_normal_combo(target_chara_id, (6,))
 
 
@@ -1603,8 +1606,7 @@ def handle_t_normal_5_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     return _check_normal_combo(target_chara_id, (5, 6))
 
 
@@ -1640,8 +1642,7 @@ def handle_t_unnormal_5_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     return _check_unnormal_combo(target_chara_id, (5, 6))
 
 
@@ -1655,8 +1656,7 @@ def handle_t_unnormal_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     return _check_unnormal_combo(target_chara_id, (6,))
 
 
@@ -1687,9 +1687,8 @@ def handle_t_normal_256_or_unconscious_flag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    target_chara_id = character_data.target_character_id
+    target_data = cache.character_data[activity.target(character_id)]
+    target_chara_id = activity.target(character_id)
     if _check_normal_combo(target_chara_id, (2, 5, 6)):
         return 1
     if flags.get(target_data.cid, "unconscious_h") != 0:
@@ -1708,9 +1707,8 @@ def handle_t_normal_56_or_unconscious_flag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    target_chara_id = character_data.target_character_id
+    target_data = cache.character_data[activity.target(character_id)]
+    target_chara_id = activity.target(character_id)
     if _check_normal_combo(target_chara_id, (5, 6)):
         return 1
     if flags.get(target_data.cid, "unconscious_h") != 0:
@@ -1728,8 +1726,7 @@ def handle_t_normal_56_or_h_or_unconscious(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if flags.get(character_data.target_character_id, "is_h"):
+    if flags.get(activity.target(character_id), "is_h"):
         return 1
     return handle_t_normal_56_or_unconscious_flag(character_id)
 
@@ -1746,8 +1743,7 @@ def handle_t_unnormal_567(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     return _check_unnormal_combo(target_chara_id, (5, 6, 7))
 
 
@@ -1829,10 +1825,9 @@ def handle_t_work_is_warden_or_t_assistant(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if handle_work_is_warden(character_data.target_character_id):
+    if handle_work_is_warden(activity.target(character_id)):
         return 1
-    if handle_is_assistant(character_data.target_character_id):
+    if handle_is_assistant(activity.target(character_id)):
         return 1
     return 0
 

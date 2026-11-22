@@ -91,12 +91,7 @@ SCOPE: dict[str, frozenset[str] | None] = {
     ),
 }
 """ 选行动的代码：文件 -> 不属于选行动的顶层函数（None 为整个文件都是） """
-REMAINING: dict[tuple[str, str], str] = {
-    (
-        "Script/Design/handle_npc_ai_in_h.py",
-        "npc_ai_in_group_sex",
-    ): "H 中判断调用的入口：群交中的干员在自己的行为结束（actions.wrap_up）时写下模板与标记",
-}
+REMAINING: dict[tuple[str, str], str] = {}
 """ 还没搬走的写入：(文件, 函数) -> 写的是什么 """
 
 

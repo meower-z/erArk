@@ -7,23 +7,10 @@ from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import (
-    abilities,
-    body_manage,
-    commission,
-    economy,
-    facility,
-    hypnosis,
-    maintenance,
-    needs,
-    prison,
-    recruit,
-    roster,
-    visitor,
-    warehouse,
-    work,
-)
-from Script.Modules.domains import chara_life, chara_profile, relations
+from Script.Modules.domains import abilities, activity, body_manage, chara_life
+from Script.Modules.domains import chara_profile, commission, economy, facility
+from Script.Modules.domains import hypnosis, maintenance, needs, prison, recruit
+from Script.Modules.domains import relations, roster, visitor, warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -901,7 +888,7 @@ class Manage_Basement_Panel:
 
                             now_position = (
                                 map_handle.get_map_system_path_str_for_list(
-                                    character_data.position
+                                    activity.position(character_id)
                                 )
                             )
 

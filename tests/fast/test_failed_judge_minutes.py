@@ -24,6 +24,7 @@ from Script.Modules.gameplay_resolution import (
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
 from tests import kernel_data
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = (update, handle_instruct)
@@ -41,7 +42,7 @@ class FailedJudgeMinutesTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
-        self.player.target_character_id = NPC
+        aim(self.player.cid, NPC)
         core.reset_state(kernel_data.reprojected(core.state()))
 
     def test_failed_judge_takes_failure_minutes(self) -> None:

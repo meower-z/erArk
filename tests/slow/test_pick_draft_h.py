@@ -17,6 +17,8 @@ from typing import cast
 from tests import kernel_data
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 
 class PickDraftHTest(SlowTestCase):
@@ -76,10 +78,9 @@ class PickDraftHTest(SlowTestCase):
 
     def target_here(self) -> int:
         """把第一名干员移到玩家所在的场景并设为交互对象，交回她的角色id"""
-        pl = self.cache.character_data[0]
         target = min(c for c in kernel_data.domain("roster").active() if c)
-        self.world.move(target, pl.position)
-        pl.target_character_id = target
+        self.world.move(target, activity.position(0))
+        aim(0, target)
         return target
 
     def panel(self, panel_id: int) -> "Callable[[], None]":
@@ -260,8 +261,7 @@ class PickDraftHTest(SlowTestCase):
         from tests import world
 
         self.cache.debug_mode = True
-        pl = self.cache.character_data[0]
-        here = self.world.scene(pl.position).character_list
+        here = self.world.scene(activity.position(0)).character_list
         guest = min(
             c
             for c in kernel_data.domain("roster").active()
@@ -301,8 +301,7 @@ class PickDraftHTest(SlowTestCase):
         from Script.Modules.gameplay_resolution import edits
         from Script.Modules.tk_ui import player_pick
 
-        pl = self.cache.character_data[0]
-        pl.target_character_id = 0
+        aim(0, 0)
         cid = min(c for c in game_config.config_hypnosis_type if c > 0)
         type_data = game_config.config_hypnosis_type[cid]
         ca.talent(0)[type_data.talent_id] = 1

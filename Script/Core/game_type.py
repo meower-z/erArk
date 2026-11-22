@@ -1541,10 +1541,6 @@ class Character:
         """ 角色性别 """
         # self.age: int = 18
         # """ 角色年龄 """
-        self.state: int | str = 0
-        """ 角色当前状态 """
-        self.last_behavior_id_list: list = [0]
-        """ 角色之前的行为列表 """
         self.talk_size: int = 0
         """ 角色口上大小，单位kb """
         self.text_color: str = ""
@@ -1553,20 +1549,8 @@ class Character:
         # """ 角色的身高数据 """
         # self.measurements: Measurements = Measurements()
         # """ 角色的三围数据 """
-        self.behavior: Behavior = Behavior()
-        """ 角色当前行为状态数据 """
-        self.second_behavior: dict[str, int] = {}
-        """ 角色当前二段行为状态数据 """
-        self.must_settle_second_behavior_id_list: list[str] = []
-        """ 角色必须结算的二段行为id列表 """
-        self.must_show_second_behavior_id_list: list[str] = []
-        """ 角色必须显示的二段行为id列表 """
-        self.event: Chara_Event = Chara_Event()
-        """ 角色当前事件状态数据 """
         # self.gold: int = 0
         # """ 角色所持金钱数据 """
-        self.position: list[str] = ["0", "0"]
-        """ 角色当前坐标数据 """
         self.birthday: datetime.datetime = datetime.datetime(1, 1, 1)
         """ 角色生日数据 """
         # self.chest_tem: int = 0
@@ -1575,14 +1559,10 @@ class Character:
         # """ 角色社交关系数据 关系类型:角色id集合 """
         # self.social_contact_data: Dict[int, int] = {}
         # """ 角色社交关系数据 角色id:关系类型 """
-        self.target_character_id: int = 0
-        """ 角色当前交互对象id """
         self.adv: int = 0
         """ 剧情npc校验 """
         # self.no_wear: bool = False
         # """ 是否不想穿衣服 """
-        self.dead: bool = False
-        """ 角色已死亡 """
         self.profession: int = 0
         """ 角色职业 """
         self.race: int = 0

@@ -21,8 +21,9 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
-from Script.Modules.domains import abilities, education, flags, growth, modes
-from Script.Modules.domains import needs, roster, chara_life, relations
+from Script.Modules.domains import abilities, activity, chara_life, education
+from Script.Modules.domains import flags, growth, modes, needs, relations
+from Script.Modules.domains import roster
 from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 
 cache: game_type.Cache = cache_control.cache
@@ -391,8 +392,7 @@ def judge_can_join_sex_class(
 
     if character_id == 0 or character_id not in cache.character_data:
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return False
     # 课堂 H 只收学生岗（Plan 26 §3.10，Plan 24 口径 1「课表只对学生岗生效」的延伸）：改了岗的女儿人在教室也不拉进来。
     #    开课拉人、开课后到场的 JOIN、课堂模式下的邀请都经这里，一并收紧；必修名单本来就只列学生岗
@@ -455,7 +455,7 @@ def get_scene_student_list(scene_path: list | None = None) -> list[int]:
     List[int] -- 可参加的角色id列表（不含玩家自己）
     """
     if scene_path is None:
-        scene_path = cache.character_data[0].position
+        scene_path = activity.position(0)
     scene_path_str = map_handle.get_map_system_path_str_for_list(scene_path)
     if scene_path_str not in cache.scene_data:
         return []
@@ -489,9 +489,8 @@ def get_class_member_list() -> list[int]:
     """
     if not modes.sex_class():
         return []
-    pl_character_data: game_type.Character = cache.character_data[0]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        pl_character_data.position
+        activity.position(0)
     )
     if scene_path_str not in cache.scene_data:
         return []
@@ -904,8 +903,7 @@ def start_sex_class(
     Return arguments:
     dict -- 本节课的数据
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
-    classroom = get_scene_name(pl_character_data.position)
+    classroom = get_scene_name(activity.position(0))
     today = game_time.now().date().toordinal()
     period = game_time.get_class_period_by_time(game_time.now())
     class_key, now_class = find_class_to_start(classroom, game_time.now())
@@ -935,7 +933,7 @@ def start_sex_class(
             today, period, classroom, ability_id, running=True
         )
     if join_id_list is None:
-        join_id_list = get_scene_student_list(pl_character_data.position)
+        join_id_list = get_scene_student_list(activity.position(0))
     # 出勤只在开课时记这一次：拖堂占用的后续节次既不记出勤也不记缺课（方案 §3.28.9）
     for student_id in join_id_list:
         settle_attend(student_id, game_time.now())
@@ -1090,14 +1088,13 @@ def settle_attend(
     #    给她们惰性创建养成数据只会让全岛的存档一起变大（与 semester_handle 的约定一致）
     if student_id not in cache.character_data:
         return
-    student_data: game_type.Character = cache.character_data[student_id]
     if (
         relations.father_id(student_id) != 0
         and chara_life.work_type(student_id) != STUDENT_WORK_TYPE
     ):
         return
     if now_time is None:
-        now_time = student_data.behavior.start_time or game_time.now()
+        now_time = activity.behavior(student_id).start_time or game_time.now()
     judge_time = get_attend_judge_time(now_time)
     if growth_handle.judge_absent_this_period(student_id, judge_time):
         return

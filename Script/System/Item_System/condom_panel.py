@@ -7,7 +7,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
 from Script.UI.Moudle import draw
 from Script.System.Item_System import condom_handle
-from Script.Modules.domains import wardrobe
+from Script.Modules.domains import activity, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -46,8 +46,7 @@ class Condom_Select_Panel:
         dict | None -- 选择（op：操作类型；part：[部位类型, 部位cid]，饮用与取回时为 None；
                        condom：存量池下标列表，取回时为 [部位类型, 部位cid, 该部位列表中的下标] 的列表），取消时为 None
         """
-        character_data: game_type.Character = cache.character_data[0]
-        target_character_id = character_data.target_character_id
+        target_character_id = activity.target(0)
 
         # 取回装饰模式下选择的是对方身上的装饰，其他模式选择的是存量池
         if self.mode == "take_back":

@@ -60,14 +60,13 @@ class CodecTest(DraftCase):
         """
         self.world.chara(0, "博士")
         chara = self.world.chara(1, "阿米娅")
-        extra: dict[Any, Any] = chara.second_behavior
-        extra[0] = Fraction(7, 3)
         food = game_type.Food()
         food.name = "蛋糕"
         value = {
             "chara": chara,
             "foods": {food.uid: food},
             "tags": {3, 1, 2},
+            "ratio": Fraction(7, 3),
             "at": datetime.datetime(2026, 11, 19, 12, 30),
             "pair": (1, "x"),
             "nested": [[1, 2], {"k": None}],
@@ -77,14 +76,8 @@ class CodecTest(DraftCase):
         for back in (draft.decode(encoded), draft.decode(frozen)):
             self.assertEqual(draft.encode(back), encoded)
             assert isinstance(back, dict)
-            self.assertIs(
-                type(back["chara"].behavior.start_time),
-                type(chara.behavior.start_time),
-            )
-            self.assertEqual(
-                back["chara"].second_behavior[0],
-                Fraction(7, 3),
-            )
+            self.assertIs(type(back["chara"].birthday), type(chara.birthday))
+            self.assertEqual(back["ratio"], Fraction(7, 3))
             self.assertEqual(back["tags"], {1, 2, 3})
             self.assertEqual(list(back["foods"]), [food.uid])
 
@@ -104,17 +97,16 @@ class DiffApplyTest(DraftCase):
         self.world.chara(1, "阿米娅")
 
     def test_diff_then_apply_reproduces_copy(self) -> None:
-        """草稿里改了干员的体力、加了一件物品、删了一个键：apply 之后原物与副本 pickle 相等"""
+        """草稿里改干员 talk_size、加一件物品、向测试列表 notes 追加一项并删一个键：apply 后原物与副本 pickle 相等"""
+        cast(Any, cache_control.cache.character_data[1]).notes = []
         session = draft.Session(KEEP)
         cache = cache_control.cache
         cache.character_data[1].talk_size = 5
         kernel_data.put(inventory.set_item, 1, 99, 1)
-        cache.character_data[1].behavior.move_target.append("中枢")
+        notes: list[str] = cast(Any, cache.character_data[1]).notes
+        notes.append("中枢")
         cache.character_data.pop(0)
-        changed = (
-            pickled(dict(cache.character_data)),
-            pickled(cache.character_data[1].behavior.move_target),
-        )
+        changed = (pickled(dict(cache.character_data)), pickled(notes))
         changes, interrupts = session.close()
         self.assertEqual(interrupts, [])
         self.assertIn(0, cache.character_data)
@@ -123,7 +115,7 @@ class DiffApplyTest(DraftCase):
         draft.apply(cast(list[draft.Change], frozen))
         after = (
             pickled(dict(cache.character_data)),
-            pickled(cache.character_data[1].behavior.move_target),
+            pickled(cast(Any, cache.character_data[1]).notes),
         )
         self.assertEqual(after, changed)
 
@@ -131,21 +123,21 @@ class DiffApplyTest(DraftCase):
         """草稿里给嵌套字典加了一项（值是字典）、删了另一项：apply 之后原物与副本 pickle 相等"""
         cache = cache_control.cache
         nested: dict[Any, Any] = {0: {1: [0, "理论教室一"]}}
-        cache.character_data[1].second_behavior = nested
+        cast(Any, cache.character_data[1]).notes = nested
         session = draft.Session(KEEP)
-        selected: dict[Any, Any] = cache.character_data[1].second_behavior
+        selected: dict[Any, Any] = cast(Any, cache.character_data[1]).notes
         selected[1] = {2: [1, "实践教室一"]}
         del selected[0]
-        changed = pickled(cache.character_data[1].second_behavior)
+        changed = pickled(cast(Any, cache.character_data[1]).notes)
         changes, _ = session.close()
         self.assertEqual(
-            cache.character_data[1].second_behavior,
+            cast(Any, cache.character_data[1]).notes,
             {0: {1: [0, "理论教室一"]}},
         )
         frozen = core._frozen(cast(core.JSON, changes))
         draft.apply(cast(list[draft.Change], frozen))
         self.assertEqual(
-            pickled(cache.character_data[1].second_behavior),
+            pickled(cast(Any, cache.character_data[1]).notes),
             changed,
         )
 

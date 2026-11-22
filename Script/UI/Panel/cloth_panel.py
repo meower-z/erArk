@@ -7,7 +7,13 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.tk_ui import drawn_see, player_pick
-from Script.Modules.domains import abilities, dirty, player_ability, wardrobe
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    dirty,
+    player_ability,
+    wardrobe,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -72,10 +78,7 @@ class SeeCharacterClothPanel:
         """ 居中绘制状态文本 """
         self.type_number = type_number
         """ 显示的状态类型 """
-        character_data = cache.character_data[0]
-        target_character_data = cache.character_data[
-            character_data.target_character_id
-        ]
+        target_character_data = cache.character_data[activity.target(0)]
         cloth = wardrobe.of(target_character_data.cid)
 
         type_line = draw.LittleTitleLineDraw(_("服装"), width, ":")
@@ -136,7 +139,7 @@ class SeeCharacterClothPanel:
                 from Script.System.Item_System import condom_handle
 
                 decoration_count = condom_handle.get_decoration_count(
-                    character_data.target_character_id, 1, clothing_type
+                    activity.target(0), 1, clothing_type
                 )
                 if decoration_count:
                     # 开启详细污浊信息时显示等级描述文本，否则显示个数
@@ -319,8 +322,7 @@ class SeeUndressButtonList:
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
 
-        character_data: game_type.Character = cache.character_data[0]
-        cloth = wardrobe.of(character_data.target_character_id)
+        cloth = wardrobe.of(activity.target(0))
 
         # 按钮绘制
         name_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
@@ -411,7 +413,7 @@ class SeeUndressButtonList:
     def chose_button(self) -> None:
         """玩家点击了选项：脱衣在行动开始时进行"""
         player_pick.choose(
-            cache.character_data[0].behavior.behavior_id,
+            activity.behavior(0).behavior_id,
             5,
             kind="undress",
             args={"choice": self.button_id},
@@ -472,10 +474,7 @@ class SwitchCharacterClothPanel:
         self.draw_list.clear()
         self.button_list.clear()
         seen: dict[int, bool] = {}
-        character_data = cache.character_data[0]
-        target_character_data = cache.character_data[
-            character_data.target_character_id
-        ]
+        target_character_data = cache.character_data[activity.target(0)]
         cloth = wardrobe.of(target_character_data.cid)
         # 添加标题
         type_line = draw.LittleTitleLineDraw(_("服装"), self.width, ":")
@@ -680,10 +679,7 @@ class SwitchClothButton(draw.LeftButton):
         切换衣服穿脱状态
         """
         with player_pick.drafting("cloth switch"):
-            character_data = cache.character_data[0]
-            target_character_data = cache.character_data[
-                character_data.target_character_id
-            ]
+            target_character_data = cache.character_data[activity.target(0)]
             # 如果当前穿着，则脱下
             if self.is_wear:
                 if (

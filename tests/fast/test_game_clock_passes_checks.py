@@ -16,6 +16,9 @@ from Script.Design import game_time
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
 from tests import world
+from tests import kernel_data
+from tests.chara_activity import behave
+from Script.Modules.domains import activity
 
 if TYPE_CHECKING:
     from Script.Test.Static_Check.check_registry import CheckFailure
@@ -56,11 +59,14 @@ class GameClockPassesChecksTest(FastTestCase):
         """
         super().setUp()
         self.player = self.world.chara(0, "博士")
-        self.player.behavior.behavior_id = "share_blankly"
-        self.player.behavior.start_time = game_time.to_game_time(
-            datetime.datetime(2020, 9, 10, 7, 0)
+        behave(
+            self.player.cid,
+            "share_blankly",
+            start_time=game_time.to_game_time(
+                datetime.datetime(2020, 9, 10, 7, 0)
+            ),
+            duration=5,
         )
-        self.player.behavior.duration = 5
         world.set_clock(
             game_time.to_game_time(datetime.datetime(2020, 9, 10, 7, 3))
         )
@@ -68,14 +74,20 @@ class GameClockPassesChecksTest(FastTestCase):
     def test_checks_accept_game_time(self) -> None:
         """时钟与起时都是 GameTime，BEHAV-02 与 BEHAV-07 不报告失败"""
         self.assertIs(type(game_time.now()), game_time.GameTime)
-        self.assertIs(type(self.player.behavior.start_time), game_time.GameTime)
+        self.assertIs(
+            type(activity.behavior(self.player.cid).start_time),
+            game_time.GameTime,
+        )
         self.assertEqual(messages(run("BEHAV-02")), [])
         self.assertEqual(messages(run("BEHAV-07")), [])
 
     def test_start_time_after_clock_reported(self) -> None:
         """类型判定通过后，BEHAV-11 报告晚于游戏时间的起时"""
-        self.player.behavior.start_time = game_time.to_game_time(
-            datetime.datetime(2020, 9, 10, 8, 0)
+        behave(
+            self.player.cid,
+            start_time=game_time.to_game_time(
+                datetime.datetime(2020, 9, 10, 8, 0)
+            ),
         )
         failures = run("BEHAV-11")
         self.assertEqual(

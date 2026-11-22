@@ -3,7 +3,7 @@
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import map_handle, update
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import action_info, flags, inventory, plan
+from Script.Modules.domains import action_info, activity, flags, inventory, plan
 from types import FunctionType
 from Script.Modules.domains import chara_profile
 
@@ -27,8 +27,7 @@ def cancel_movement_plan(character_id: int) -> None:
     Return arguments:
     None -- 无返回值
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.behavior.move_final_target = []
+    activity.update_behavior(character_id, move_final_target=[])
 
 
 def own_charcter_move(
@@ -48,7 +47,7 @@ def own_charcter_move(
         plan.set_route(None)
         move_now = _player_leg(target_scene, follow, open_map)
         if move_now == "end" or move_now in _BREAK_LIST:
-            cache.character_data[0].target_character_id = 0
+            activity.set_target(0, 0)
         # 继续留在地图页面
         if move_now in ["Null", "wait_open", "door_lock"]:
             view.now_panel_id = constant.Panel.SEE_MAP
@@ -65,10 +64,9 @@ def continue_player_route() -> None:
     route = plan.route()
     if route is None:
         return
-    character_data: game_type.Character = cache.character_data[0]
     legs = (constant.Behavior.MOVE, constant.Behavior.CARRY_MOVE)
     # 这一段还没开始（界面刚定下）或还没走完
-    if character_data.behavior.behavior_id in legs:
+    if activity.behavior(0).behavior_id in legs:
         return
     # 事件把这一段排进了队列，还没开始
     from Script.Modules.gameplay_resolution import plan_queue
@@ -78,21 +76,19 @@ def continue_player_route() -> None:
     route_target, leg_start, *rest = route
     follow, open_map = (rest + [0, False])[:2]
     # 跟着干员走：目标是她此刻的位置
-    target_scene = (
-        cache.character_data[follow].position if follow else route_target
-    )
+    target_scene = activity.position(follow) if follow else route_target
     if (
-        character_data.position != leg_start
-        and character_data.position != target_scene
-        and character_data.behavior.move_final_target == route_target
+        activity.position(0) != leg_start
+        and activity.position(0) != target_scene
+        and activity.behavior(0).move_final_target == route_target
         and _player_leg(target_scene, follow, open_map)
         not in ["end", *_BREAK_LIST]
     ):
         return
     plan.set_route(None)
     # 跟到了干员身边时她是交互对象，否则不再有交互对象
-    character_data.target_character_id = (
-        follow if follow and character_data.position == target_scene else 0
+    activity.set_target(
+        0, follow if follow and activity.position(0) == target_scene else 0
     )
 
 
@@ -112,12 +108,11 @@ def _player_leg(
     Return arguments:
     str -- 寻路结果，"end" 为已在目标或被叫停
     """
-    character_data: game_type.Character = cache.character_data[0]
     if flags.get(0, "move_stop"):
         flags.set(0, move_stop=False)
         plan.set_route(None)
         return "end"
-    if character_data.position == target_scene:
+    if activity.position(0) == target_scene:
         return "end"
     move_now, __, now_target_position, now_need_time = character_move(
         0, target_scene
@@ -131,10 +126,10 @@ def _player_leg(
     else:
         behavior_id = constant.Behavior.MOVE
         state = constant.CharacterStatus.STATUS_MOVE
-    plan.set_route((target_scene, character_data.position, follow, open_map))
+    plan.set_route((target_scene, activity.position(0), follow, open_map))
     fields = {
         "behavior.move_target": now_target_position,
-        "behavior.move_src": character_data.position,
+        "behavior.move_src": activity.position(0),
         "behavior.move_final_target": target_scene,
         "action_info.ask_close_door_flag": False,
     }
@@ -177,8 +172,7 @@ def character_move(
     int -- 本次移动花费的时间 \n
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_position = character_data.position
+    now_position = activity.position(character_id)
     # if not character_id:
     #     print(f"debug now_position = {now_position},target_scene = {target_scene}")
     if now_position == target_scene:

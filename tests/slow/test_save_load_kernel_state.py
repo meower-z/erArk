@@ -24,6 +24,7 @@ from unittest import mock
 
 from tests import kernel_data
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -198,7 +199,7 @@ class SaveLoadKernelStateTest(SlowTestCase):
         plan = game("Script.Modules.domains.plan")
         plan_queue = game("Script.Modules.gameplay_resolution.plan_queue")
         npc = min(i for i in kernel_data.domain("roster").active() if i)
-        position = self.cache.character_data[0].position
+        position = activity.position(0)
         with kernel_data.writing():
             plan_queue.plan_next(npc, constant.Behavior.SLEEP, 60)
             plan.set_route([position, position])

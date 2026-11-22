@@ -1,8 +1,8 @@
 """
 gameplay_resolution 的事件
 ==========================
-疲劳、跟随与 H 结束是内核事件（core.event）：触发函数读缓存，按名单顺序检查干员，交回第一个成立的角色键；
-结算当场写缓存、画字，接着要做的行动经计划队列（plan_queue.plan_next）排给对应角色，在他下一次选行动时开始，
+疲劳、跟随与 H 结束是内核事件（core.event）：触发函数读 GameState 与缓存，按名单顺序检查干员，交回第一个成立的角色键；
+结算当场写状态与缓存、画字，接着要做的行动经计划队列（plan_queue.plan_next）排给对应角色，在他下一次选行动时开始，
 要结束谁的行动就经计划队列打断他（plan_queue.interrupt），不在结算里嵌套另一次结算。
 排下的打断在这一步的 ApplyEffects 里生效（plan_queue.drain），所以事件交回空的效果即可。
 每个条件都带"还没排上"的检查（plan_queue.plan_has），排上之后不再成立。
@@ -19,7 +19,8 @@ from types import FunctionType
 from Script.Core import cache_control, constant, game_type, get_text, num
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, plan_queue, time_hooks
-from Script.Modules.domains import flags, modes, needs, player_ability
+from Script.Modules.domains import activity, flags, modes, needs
+from Script.Modules.domains import player_ability
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -40,12 +41,11 @@ def _first_npc(
     """
     if not time_hooks.clock_settled(game) or modes.time_stop(game):
         return None
-    characters = cache.character_data
     for who in game.characters:
         if who == actions.PLAYER:
             continue
         cid = int(who)
-        if not characters[cid].dead and holds(cid):
+        if not activity.dead(cid, game) and holds(cid):
             return who
     return None
 
@@ -72,7 +72,7 @@ def tired_case(
     疲劳或困倦的干员在 H 或跟随中时该怎么收场
     Keyword arguments:
     character_id -- 干员id
-    game -- 触发函数收到的 GameState，疲劳与标记从它读
+    game -- 触发函数收到的 GameState，疲劳、体力、标记、群交模式、计划队列与当前行为从它读
     stored -- 可选，已读出的非默认标记映射，避免热路径重复查找
     Return arguments:
     str | None -- "follow" 停止跟随，"group" 退出群交，"h" 结束 H，None 不用收场。
@@ -99,10 +99,10 @@ def tired_case(
         >= 2
     ):
         return None
-    character_data: game_type.Character = cache.character_data[character_id]
     if (
         is_follow
-        and character_data.behavior.behavior_id != constant.Behavior.WAIT
+        and activity.behavior(character_id, game).behavior_id
+        != constant.Behavior.WAIT
     ):
         return "follow"
     if modes.group_sex(game) and is_h:
@@ -145,14 +145,13 @@ def _player_spent(game: core.GameState) -> bool:
     玩家力竭：game 里玩家的体力到 1，而还在 H 或群交中，玩家的队列里还没排着任何 H 或群交的结束
     （排着别的结束时 plan_h_end 与 plan_group_sex_end 什么也不排，所以排着就算已收场）
     Keyword arguments:
-    game -- 当前的 GameState，体力与标记从它读
+    game -- 当前的 GameState，体力、标记、群交模式、计划队列与玩家的交互对象从它读
     Return arguments:
     bool -- 成立时为真
     """
-    character_data: game_type.Character = cache.character_data[0]
     if needs.of(0, game)["hit"] > 1:
         return False
-    target_id = character_data.target_character_id
+    target_id = activity.target(0, game)
     if not (modes.group_sex(game) or flags.get(target_id, "is_h", game)):
         return False
     ends = {
@@ -328,7 +327,7 @@ def _left_behind(character_id: int, game: core.GameState) -> bool:
     这个干员被留在 H 里：玩家离开了场景，干员还在 H 或某种性爱模式中，且没有要先收场的疲劳
     Keyword arguments:
     character_id -- 干员id
-    game -- 触发函数收到的 GameState，交给 tired_case
+    game -- 触发函数收到的 GameState，交给 tired_case，标记、干员位置与空气催眠位置也从它读
     Return arguments:
     bool -- 成立时为真
     """
@@ -350,7 +349,7 @@ def _left_behind(character_id: int, game: core.GameState) -> bool:
     if (
         unconscious == 5
         and not (is_h or hidden > 0 or exhib > 0)
-        and cache.character_data[character_id].position
+        and activity.position(character_id, game)
         == player_ability.get(0, "air_hypnosis_position", game)
     ):
         return False

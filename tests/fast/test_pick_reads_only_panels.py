@@ -22,9 +22,10 @@ from Script.System.Cooking_System import cooking, make_food_panel
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Pregnancy_System import egg_handle, pregnancy_handle
 from Script.UI.Panel import gift_panel, play_gomoku_panel, talent_up_panel
-from Script.Modules.domains import achievement, inventory, pregnancy
+from Script.Modules.domains import achievement, activity, inventory, pregnancy
 from tests import chara_abilities as ca, kernel_data, pick_guard
 from tests import world as world_module
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
 
@@ -50,7 +51,7 @@ class PanelSubMenusReadOnly(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
-        self.player.target_character_id = NPC
+        aim(self.player.cid, NPC)
         if not self.cache.recipe_data:
             cooking.init_recipes()
         kernel_data.put(inventory.set_item, 0, DRUG, 0)
@@ -59,7 +60,7 @@ class PanelSubMenusReadOnly(FastTestCase):
         self.enterContext(
             mock.patch.object(flow_handle, "askfor_all", self.answer)
         )
-        self.started: list[game_type.Behavior] = []
+        self.started: list[activity.Behavior] = []
         behave = starts.behave
 
         def recording(
@@ -67,7 +68,9 @@ class PanelSubMenusReadOnly(FastTestCase):
         ) -> core.Effects:
             effects = behave(act, extra)
             if act.who == "0":
-                self.started.append(copy.deepcopy(self.player.behavior))
+                self.started.append(
+                    copy.deepcopy(activity.behavior(self.player.cid))
+                )
             return effects
 
         self.enterContext(mock.patch.object(starts, "behave", recording))
@@ -126,7 +129,7 @@ class PanelSubMenusReadOnly(FastTestCase):
 
     def assert_commits(
         self, answers: list[str], round_fn: Callable[[], None]
-    ) -> game_type.Behavior:
+    ) -> activity.Behavior:
         """
         这一轮定下行动，Chosen 之前什么都没写；行动开始过，时钟走了
         Keyword arguments:

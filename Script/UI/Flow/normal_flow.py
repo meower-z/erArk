@@ -45,10 +45,10 @@ from Script.UI.Panel import (
     navigation_panel,
     read_book_panel,
     sleep_panel,
-    diary_panel,
-    play_gomoku_panel,
 )
+from Script.UI.Panel import diary_panel, play_gomoku_panel
 from Script.Config import normal_config
+from Script.Modules.domains import activity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -325,7 +325,7 @@ def see_achievement_flow() -> None:
 def see_attr_flow() -> None:
     """查看属性面板"""
     now_panel = see_character_info_panel.SeeCharacterInfoInScenePanel(
-        cache.character_data[0].target_character_id, width
+        activity.target(0), width
     )
     now_panel.draw()
 
@@ -334,7 +334,7 @@ def see_attr_flow() -> None:
 def ability_up_flow() -> None:
     """能力提升面板"""
     now_panel = ability_up_panel.Character_abi_up_main_Handle(
-        cache.character_data[0].target_character_id, width
+        activity.target(0), width
     )
     now_panel.draw()
 

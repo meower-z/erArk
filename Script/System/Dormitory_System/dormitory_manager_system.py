@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from Script.Core import cache_control, game_type, get_text, constant
 from Script.Design import handle_state_machine, map_handle, handle_premise
-from Script.Modules.domains import abilities, dormitory, inventory
+from Script.Modules.domains import abilities, activity, dormitory, inventory
 from Script.System.Dormitory_System import common
 from Script.Modules.domains import chara_life
 
@@ -250,8 +250,7 @@ def ask_copy_key(character_id: int) -> int:
     输出类型: 无
     功能: 判断交互对象是否为宿舍管理员，若是则获取其负责层号并给予玩家对应层号的钥匙
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     # 判断交互对象是否为宿舍管理员，如果不是则不执行
     if not handle_premise.handle_work_is_dormitory_manager(target_id):
         return 0

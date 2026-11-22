@@ -8,7 +8,7 @@ Script/UI/Panel/in_scene_panel.py主循环重绘处、flow_handle.askfor_all()�
 以下五条生命周期事实已烘焙进本文件全部检查，任何依赖它们的护栏都不得删除：
 1. cache.over_behavior_character在结算开始时清空、结算结束后保留；钩子处可能是上一次结算的残留值，
    任何使用它的检查都必须容忍陈旧值。
-2. Character.state的整数取值(constant.CharacterStatus)与行为配表cid是两套已经漂移的编号，
+2. activity.state的整数取值(constant.CharacterStatus)与行为配表cid是两套已经漂移的编号，
    任何"state必须等于/映射到行为cid"的断言一律不做。
 3. 时停模式下玩家结算完即break、全局时间回退pl_duration分钟，NPC本轮完全未结算；
    玩家合法领先game_time.now()，NPC数据合法陈旧。
@@ -27,7 +27,13 @@ import datetime
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import achievement, action_info, flags, h_state
+from Script.Modules.domains import (
+    achievement,
+    action_info,
+    activity,
+    flags,
+    h_state,
+)
 from Script.Modules.domains import history, modes, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -65,7 +71,8 @@ def _end(chara: game_type.Character) -> datetime.datetime:
         4/5钳到6月……用timedelta近似会在跨季当天把合法行为误判成"早已过期"
     """
     return game_time.get_sub_date(
-        minute=chara.behavior.duration, old_date=chara.behavior.start_time
+        minute=activity.behavior(chara.cid).duration,
+        old_date=activity.behavior(chara.cid).start_time,
     )
 
 
@@ -82,7 +89,7 @@ def _behavior_type_ok(chara: game_type.Character) -> bool:
         布尔值不应被当作合法分钟数
     """
     try:
-        behavior = chara.behavior
+        behavior = activity.behavior(chara.cid)
         return (
             isinstance(behavior.behavior_id, str)
             and isinstance(behavior.start_time, datetime.datetime)
@@ -261,7 +268,7 @@ def check_behavior_core_field_types() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None or _behavior_type_ok(chara):
             continue
-        behavior = getattr(chara, "behavior", None)
+        behavior = activity.behavior(chara.cid)
         failures.append(
             make_failure(
                 "BEHAV-07",
@@ -301,7 +308,7 @@ def check_behavior_id_registered() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None:
             continue
-        behavior = getattr(chara, "behavior", None)
+        behavior = activity.behavior(chara.cid)
         behavior_id = getattr(behavior, "behavior_id", None)
         if behavior_id in config_behavior:
             continue
@@ -310,8 +317,8 @@ def check_behavior_id_registered() -> list[CheckFailure]:
                 "BEHAV-08",
                 "当前行为id必须已注册",
                 f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.behavior_id={behavior_id!r}"
-                f"未在game_config.config_behavior中注册，直接下标会KeyError；state={getattr(chara, 'state', None)!r}, "
-                f"last_behavior_id_list={getattr(chara, 'last_behavior_id_list', None)!r}",
+                f"未在game_config.config_behavior中注册，直接下标会KeyError；state={activity.state(chara.cid)!r}, "
+                f"last_behavior_id_list={activity.last_behaviors(chara.cid)!r}",
                 [cid],
             )
         )
@@ -337,7 +344,7 @@ def check_behavior_duration_non_negative_int() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None:
             continue
-        behavior = getattr(chara, "behavior", None)
+        behavior = activity.behavior(chara.cid)
         duration = getattr(behavior, "duration", None)
         if type(duration) is int and duration >= 0:
             continue
@@ -378,7 +385,7 @@ def check_behavior_start_time_not_sentinel() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None or not _behavior_type_ok(chara):
             continue
-        behavior = chara.behavior
+        behavior = activity.behavior(chara.cid)
         if behavior.start_time != sentinel:
             continue
         failures.append(
@@ -423,7 +430,7 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None or not _behavior_type_ok(chara):
             continue
-        behavior = chara.behavior
+        behavior = activity.behavior(chara.cid)
         try:
             ok = behavior.start_time <= game_t
         except Exception:
@@ -476,7 +483,7 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
         is_h = flags.get(cid, "is_h")
         if is_h:
             continue
-        behavior = chara.behavior
+        behavior = activity.behavior(chara.cid)
         if behavior.duration <= 0:
             continue
         try:
@@ -497,7 +504,7 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
                     f"game_time={game_t!r}；"
                     f"is_h={is_h}, unconscious_h={flags.get(cid, 'unconscious_h')}, "
                     f"time_stop_mode={modes.time_stop()}, group_sex_mode={group_sex_mode}, "
-                    f"target_character_id={getattr(chara, 'target_character_id', None)}"
+                    f"target_character_id={activity.target(chara.cid)}"
                 ),
                 [cid],
             )
@@ -533,7 +540,7 @@ def check_move_behavior_has_executable_path() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None:
             continue
-        behavior = getattr(chara, "behavior", None)
+        behavior = activity.behavior(chara.cid)
         if getattr(behavior, "behavior_id", None) != "move":
             continue
         is_h = flags.get(cid, "is_h")
@@ -581,9 +588,9 @@ def check_move_behavior_has_executable_path() -> list[CheckFailure]:
                 "移动行为必须带着可执行的路径",
                 (
                     f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的move行为快照非法：{'; '.join(problems)}；"
-                    f"position={getattr(chara, 'position', None)!r}, "
+                    f"position={activity.position(chara.cid)!r}, "
                     f"move_final_target={getattr(behavior, 'move_final_target', None)!r}, "
-                    f"duration={duration!r}, state={getattr(chara, 'state', None)!r}, "
+                    f"duration={duration!r}, state={activity.state(chara.cid)!r}, "
                     f"is_follow={flags.get(cid, 'is_follow')!r}"
                 ),
                 [cid],
@@ -698,11 +705,11 @@ def check_second_behavior_values_and_pending_ids() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验second_behavior(二段行为id→0/1触发标记字典)的取值只能是0或1的int，以及
-        must_settle_second_behavior_id_list/must_show_second_behavior_id_list两个待处理id列表中的每个id都在
+        校验activity.second_behaviors(二段行为id→0/1触发标记字典)的取值只能是0或1的int，以及
+        activity.must_settle/activity.must_show两个待处理id列表中的每个id都在
         game_config.config_behavior_effect_data中——must_settle_check()与must_show_talk_check()都会无保护地
-        下标该配表，键错即KeyError。不要求second_behavior的键都在效果配表里(普通路径对未知键是continue)；
-        不要求待处理id必须同时存在于second_behavior(两个消费函数键不存在时也会直接结算)；
+        下标该配表，键错即KeyError。不要求二段行为的键都在效果配表里(普通路径对未知键是continue)；
+        不要求待处理id在二段行为里有非0值(两个消费函数读到0时跳过这个id)；
         不要求钩子处所有值都为0(可以在结算之外置1，残留的1是合法中间态)。只查取值类型，不查键类型：
         旧存档可能带int键。配表未加载时，待结算id合法性部分降级为跳过
     """
@@ -714,20 +721,14 @@ def check_second_behavior_values_and_pending_ids() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None:
             continue
-        second_behavior = getattr(chara, "second_behavior", None) or {}
+        second_behavior = activity.second_behaviors(chara.cid)
         try:
             values = list(second_behavior.values())
         except Exception:
             values = []
-        must_settle = (
-            getattr(chara, "must_settle_second_behavior_id_list", None) or []
-        )
-        must_show = (
-            getattr(chara, "must_show_second_behavior_id_list", None) or []
-        )
-        behavior_id = getattr(
-            getattr(chara, "behavior", None), "behavior_id", None
-        )
+        must_settle = activity.must_settle(chara.cid)
+        must_show = activity.must_show(chara.cid)
+        behavior_id = getattr(activity.behavior(chara.cid), "behavior_id", None)
         is_h = flags.get(chara.cid, "is_h")
         for v in values:
             if type(v) is int and v in (0, 1):
@@ -785,7 +786,7 @@ def check_last_behavior_id_list_bounded() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None:
             continue
-        lst = getattr(chara, "last_behavior_id_list", None)
+        lst = activity.last_behaviors(chara.cid)
         ok = (
             isinstance(lst, list)
             and 1 <= len(lst) <= 5
@@ -793,9 +794,7 @@ def check_last_behavior_id_list_bounded() -> list[CheckFailure]:
         )
         if ok:
             continue
-        behavior_id = getattr(
-            getattr(chara, "behavior", None), "behavior_id", None
-        )
+        behavior_id = getattr(activity.behavior(chara.cid), "behavior_id", None)
         length = len(lst) if isinstance(lst, list) else None
         failures.append(
             make_failure(
@@ -890,7 +889,7 @@ def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
             "BEHAV-20",
             "群交模式必须有玩家在H中",
             f"[warning] mode.group_sex=True但0号玩家sp_flag.is_h=False，模式可能已泄漏，NPC的AI会一直走"
-            f"群交分支；behavior_id={getattr(getattr(player, 'behavior', None), 'behavior_id', None)!r}, "
+            f"群交分支；behavior_id={getattr(activity.behavior(player.cid), 'behavior_id', None)!r}, "
             f"当前在H中的角色样本(至多10个)={h_npcs}, time_stop_mode={modes.time_stop()}",
             [0],
         )
@@ -962,7 +961,7 @@ def check_behavior_start_time_seasonal_month() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None or not _behavior_type_ok(chara):
             continue
-        behavior = chara.behavior
+        behavior = activity.behavior(chara.cid)
         if behavior.start_time == sentinel:
             continue
         if behavior.start_time.month in {3, 6, 9, 12}:

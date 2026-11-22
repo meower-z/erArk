@@ -14,6 +14,7 @@ from Script.Design import update
 from Script.Design import handle_state_machine
 from Script.Modules.npc_action_choice import choose
 from tests.fast.base import FastTestCase
+from tests.chara_activity import behave
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行，
@@ -71,7 +72,7 @@ class NpcPickLeavesCacheTest(FastTestCase):
         super().setUp()
         self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
-        self.npc.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+        behave(self.npc.cid, constant.Behavior.SHARE_BLANKLY)
 
     def test_state_machines_leave_cache(self) -> None:
         """

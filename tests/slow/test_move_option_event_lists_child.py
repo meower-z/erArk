@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 from tests.slow.base import SlowTestCase
 from tests.world import UnplannedInput
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import behave
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from Script.UI.Panel.draw_event_text_panel import DrawEventTextPanel
@@ -51,13 +53,13 @@ class MoveOptionEventListsChildTest(SlowTestCase):
         npc_id = min(
             cid for cid in kernel_data.domain("roster").active() if cid
         )
-        npc = self.cache.character_data[npc_id]
         self.world.move(npc_id, LADIES_ONLY)
         ca.talent(npc_id)[FALL_2_TALENT] = 1
-        npc.behavior.behavior_id = constant.Behavior.WAIT
-        npc.state = constant.CharacterStatus.STATUS_WAIT
-        npc.behavior.start_time = game_time.now()
-        npc.behavior.duration = WAIT_MINUTES
+        behave(npc_id, constant.Behavior.WAIT)
+        kernel_data.put(
+            activity.set_state, npc_id, constant.CharacterStatus.STATUS_WAIT
+        )
+        behave(npc_id, start_time=game_time.now(), duration=WAIT_MINUTES)
 
     def _record(self) -> tuple[list[str], list[str], list[list[str]]]:
         """
@@ -98,7 +100,7 @@ class MoveOptionEventListsChildTest(SlowTestCase):
                         for path in kernel_data.domain("action_info").get(
                             player.cid, "past_move_position_list"
                         )
-                        if path != player.position
+                        if path != activity.position(0)
                     ][-1:]
             return result
 
@@ -136,8 +138,7 @@ class MoveOptionEventListsChildTest(SlowTestCase):
         from Script.Config import game_config
         from Script.Design import talk
 
-        player = self.cache.character_data[0]
-        self.assertEqual(player.position, START, "博士开局所在的场景")
+        self.assertEqual(activity.position(0), START, "博士开局所在的场景")
         self._prepare_npc()
         label = talk.code_text_to_draw_text(
             game_config.config_event[CHILD_ID].text.split("|")[0], 0
@@ -165,4 +166,6 @@ class MoveOptionEventListsChildTest(SlowTestCase):
             len(previous), 1, "父事件触发时博士的移动记录里有前一场景"
         )
         self.assertNotEqual(previous[0], LADIES_ONLY)
-        self.assertEqual(player.position, previous[0], "博士回到了前一场景")
+        self.assertEqual(
+            activity.position(0), previous[0], "博士回到了前一场景"
+        )

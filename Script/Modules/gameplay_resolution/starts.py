@@ -19,7 +19,7 @@ from typing import cast
 from Script.Core import cache_control, constant, game_type
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import action_info, flags, chara_key
+from Script.Modules.domains import action_info, activity, chara_key, flags
 from Script.Modules.gameplay_resolution import (
     actions,
     draft,
@@ -143,6 +143,9 @@ def write_field(who: int, path: str, value: core.JSON) -> None:
             raise AttributeError(f"{path} 不是角色身上已有的字段")
         action_info.set(who, name, plain(value))
         return
+    if root == "behavior" and len(names) == 1:
+        activity.update_behavior(who, **{names[0]: plain(value)})
+        return
     node: object = getattr(cache.character_data[who], root)
     *parents, last = names
     for name in parents:
@@ -164,17 +167,19 @@ def begin(who: int, act: core.Action, chosen: intent.Intent) -> None:
     """
     if chosen.get("queued"):
         plan_queue.pop(who)
-    character_data = cache.character_data[who]
-    behavior = game_type.Behavior()
-    behavior.behavior_id = chosen["behavior_id"]
-    behavior.duration = act.duration or chosen["minutes"]
-    behavior.start_time = game_time.at(act.start)
-    behavior.move_src = character_data.behavior.move_src
-    behavior.move_final_target = character_data.behavior.move_final_target
-    character_data.behavior = behavior
-    character_data.state = chosen.get("state", chosen["behavior_id"])
+    old = activity.behavior(who)
+    start_time = game_time.at(act.start)
+    activity.set_behavior(
+        who,
+        behavior_id=chosen["behavior_id"],
+        duration=act.duration or chosen["minutes"],
+        start_time=start_time,
+        move_src=old.move_src,
+        move_final_target=old.move_final_target,
+    )
+    activity.set_state(who, chosen.get("state", chosen["behavior_id"]))
     if "target" in chosen:
-        character_data.target_character_id = chosen["target"]
+        activity.set_target(who, chosen["target"])
     for path, value in chosen.get("fields", {}).items():
         write_field(who, path, value)
     move = chosen.get("move")
@@ -184,9 +189,10 @@ def begin(who: int, act: core.Action, chosen: intent.Intent) -> None:
         state_machine_default.general_movement_module(
             who, list(move["to"]), show_info_flag=move["show"]
         )
-        character_data.behavior.start_time = behavior.start_time
-        character_data.behavior.duration = act.duration
-        action_info.set(who, "last_move_time", behavior.start_time)
+        activity.update_behavior(
+            who, start_time=start_time, duration=act.duration
+        )
+        action_info.set(who, "last_move_time", start_time)
     say = chosen.get("say")
     if say is not None:
         args = chosen.get("args", {})

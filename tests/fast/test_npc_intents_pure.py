@@ -21,6 +21,7 @@ from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, intent, npc_starters
 from Script.Modules.npc_action_choice import choose
 from tests.fast.base import FastTestCase
+from tests.chara_activity import behave
 
 LOADED_FIRST = (update, npc_starters)
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行；
@@ -93,7 +94,7 @@ class NpcIntentsPureTest(FastTestCase):
         super().setUp()
         self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
-        self.npc.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+        behave(self.npc.cid, constant.Behavior.SHARE_BLANKLY)
         self.clock = game_time.minutes(game_time.now())
         core.reset_state(
             core.GameState(

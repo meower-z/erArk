@@ -12,7 +12,15 @@ from __future__ import annotations
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import map_handle
-from Script.Modules.domains import facility, flags, modes, needs, power, roster
+from Script.Modules.domains import (
+    activity,
+    facility,
+    flags,
+    modes,
+    needs,
+    power,
+    roster,
+)
 from Script.Modules.domains import warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -188,7 +196,7 @@ def check_time_stop_unconscious_survives_off_list() -> list[CheckFailure]:
                     f"是否在npc_id_got中={cid in npc_id_got}，"
                     f"field_commission={flags.get(cid, 'field_commission')}，"
                     f"escaping={flags.get(cid, 'escaping')}，be_bagged={flags.get(cid, 'be_bagged')}，"
-                    f"vistor={flags.get(cid, 'vistor')}，position={getattr(c, 'position', None)}，"
+                    f"vistor={flags.get(cid, 'vistor')}，position={activity.position(c.cid)}，"
                     f"疑似TIME_STOP_OFF清理范围漏掉了时停中已离开名单的角色"
                 ),
                 [cid],
@@ -288,7 +296,7 @@ def check_officeroom_reference_valid() -> list[CheckFailure]:
                     (
                         f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的officeroom={officeroom}非空但不是cache."
                         f"scene_data的合法键，"
-                        f"打开该角色信息面板时get_scene_path_text会索引失败；position={getattr(c, 'position', None)}"
+                        f"打开该角色信息面板时get_scene_path_text会索引失败；position={activity.position(c.cid)}"
                     ),
                     [cid],
                 )

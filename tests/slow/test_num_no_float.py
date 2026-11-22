@@ -23,6 +23,8 @@ from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests import kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -243,9 +245,11 @@ class NumNoFloatTest(SlowTestCase):
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
         operator = self.cache.character_data[operator_id]
-        operator.position = list(player.position)
-        player.target_character_id = operator_id
-        operator.target_character_id = 0
+        kernel_data.put(
+            activity.set_position, operator_id, list(activity.position(0))
+        )
+        aim(0, operator_id)
+        aim(operator_id, 0)
         effects = [
             (f"{kind}{effect_id}", effect, second)
             for kind, table, second in (

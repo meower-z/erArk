@@ -61,7 +61,6 @@ assert map_handle.get_map_system_path_str_for_list(SCENE) in cache.scene_data
 | `ability` | `get_ability_zero({})`，经 `abilities.ability(cid).replace(...)` 写入，写法同 `talent` | 同上 |
 | `juel` | `get_juel_zero({})`，经 `abilities.juel(cid).replace(...)` 写入，写法同 `talent` | 同上 |
 | `experience` | `get_experience_zero({})`，经 `abilities.experience(cid).replace(...)` 写入，写法同 `talent` | 同上 |
-| `second_behavior` | `get_second_behavior_zero({})` | 同上 |
 | `h_state` | 无需在 `Character` 上置零：默认状态由 `h_state.view(cid)` 直接提供；修改在 `kernel_data.writing()` 里经 `h_state.editing(cid)` / `h_state.set(cid, ...)` 写进 GameState（`h.state`） | `Character` 上没有 `h_state` 字段；H 结束重置调 `h_state.reset(cid)` |
 | `favorability` | 手写 `{0: 0}` | 好感/信赖类前提直接取 `[0]`；口上里的 `favorability_ge_3` 会走到 |
 | `talent[121]` | 在 `kernel_data.writing()` 里手写 `abilities.talent(cid)[121] = 1` | 罩杯素质 121~125 至少要有一个为 1：胸部成长/乳汁上限之类的代码用 `for tid in [121..125]: if talent[tid]: ...; break` 找罩杯，一个都没有时循环变量不赋值 → `UnboundLocalError`（报错在 `chest_grow`/`milk_max` 处） |
@@ -103,11 +102,11 @@ sum(1 for t in game_config.config_talk.values()
     if getattr(t, "behavior_id", "") == "give_gift" and "CVP_A1_Gift|39_G_0" in str(getattr(t, "premise", "")))
 
 # 前提 token（带参数的通用前提）直接用 handle_premise.handle_premise(token, cid)
-pl.behavior.gift_id = 39
+kernel_data.put(activity.update_behavior, 0, gift_id=39)
 handle_premise.handle_premise("CVP_A1_Gift|39_G_0", 0) == 1
 
 # 面板使用条件：面板类实例化后直接调它的判定方法，配合 messages 记录拦截文案
-panel = gift_panel.Gift_Panel(80); pl.target_character_id = 101
+panel = gift_panel.Gift_Panel(80); kernel_data.put(activity.set_target, 0, 101)
 messages.clear(); panel.is_drug_effective(39, mom) is False and any("育儿室" in m for m in messages)
 
 # 显示文本：把 WaitDraw 文本收进 messages 后断言关键词，同时断言「不该出现的词没出现」（如单胎文案里不含"胞胎"）
@@ -259,7 +258,7 @@ pl = cache.character_data[0]
 ```
 
 - 按名字找角色：遍历 `cache.character_data.items()` 比对 `cd.name`。
-- 体检清单（排查行为类 BUG 时先打印这些）：`behavior.behavior_id / duration / start_time`、`state`、`position`、`target_character_id`、`needs.of(cid)`（疲劳 `tired`、饥饿 `hunger`、尿意 `urine`、乳汁 `milk`、熟睡值 `sleep`、体力 `hit` 与上限 `hit_max`、气力 `mana` 与上限 `mana_max`）、`sp_flag` 全量（`sleep / rest / tired / sleep_h_awake / unconscious_h / imprisonment / is_follow / is_h / hidden_sex_mode`）、醉酒等级 `drunk_sex_common.get_drunk_level(cid)`、安眠药 `h_state.body_item[9][1]`、`work.work_type`、`entertainment.entertainment_type`。
+- 体检清单（排查行为类 BUG 时先打印这些）：`activity.behavior(cid)` 的 `behavior_id / duration / start_time`、`activity.state(cid)`、`activity.position(cid)`、`activity.target(cid)`、`needs.of(cid)`（疲劳 `tired`、饥饿 `hunger`、尿意 `urine`、乳汁 `milk`、熟睡值 `sleep`、体力 `hit` 与上限 `hit_max`、气力 `mana` 与上限 `mana_max`）、`sp_flag` 全量（`sleep / rest / tired / sleep_h_awake / unconscious_h / imprisonment / is_follow / is_h / hidden_sex_mode`）、醉酒等级 `drunk_sex_common.get_drunk_level(cid)`、安眠药 `h_state.body_item[9][1]`、`work.work_type`、`entertainment.entertainment_type`。
 - 需要移动角色到某场景：`map_handle.character_move_scene(旧位置, 新位置, cid)`。
 
 ### 第四步：下玩家的指令，带护栏地推进内核（核心）
@@ -312,18 +311,16 @@ orig_choose = handle_npc_ai.choose_state_machine
 def wrap_choose(cid):
     r = orig_choose(cid)
     if cid in WATCH:
-        cd = cache.character_data[cid]
-        print(f"    [选状态机] cid={cid} 返回={r} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} state={cd.state}")
+        print(f"    [选状态机] cid={cid} 返回={r} bhv={activity.behavior(cid).behavior_id} dur={activity.behavior(cid).duration} state={activity.state(cid)}")
     return r
 handle_npc_ai.choose_state_machine = wrap_choose   # 内核按 handle_npc_ai.xxx 调用，替换模块属性即生效
 
 orig_int = handle_npc_ai.judge_interrupt_character_behavior
 def wrap_int(cid):
-    pre = (cache.character_data[cid].behavior.behavior_id, cache.character_data[cid].behavior.duration)
+    pre = (activity.behavior(cid).behavior_id, activity.behavior(cid).duration)
     r = orig_int(cid)
     if cid in WATCH:
-        cd = cache.character_data[cid]
-        print(f"    [中断判定] cid={cid} 前={pre} 返回={r} 后=({cd.behavior.behavior_id},{cd.behavior.duration})")
+        print(f"    [中断判定] cid={cid} 前={pre} 返回={r} 后=({activity.behavior(cid).behavior_id},{activity.behavior(cid).duration})")
     return r
 handle_npc_ai.judge_interrupt_character_behavior = wrap_int
 
@@ -331,10 +328,10 @@ handle_npc_ai.judge_interrupt_character_behavior = wrap_int
 #    character_behavior 的 NPC 分支在实时结算之前调 judge_student_leave_truncate，要记截短就一并包它
 orig_trunc = handle_npc_ai.judge_student_leave_truncate
 def wrap_trunc(cid):
-    pre = cache.character_data[cid].behavior.duration
+    pre = activity.behavior(cid).duration
     r = orig_trunc(cid)
     if cid in WATCH and r:
-        print(f"    [学生截短] cid={cid} 时长 {pre} → {cache.character_data[cid].behavior.duration}")
+        print(f"    [学生截短] cid={cid} 时长 {pre} → {activity.behavior(cid).duration}")
     return r
 handle_npc_ai.judge_student_leave_truncate = wrap_trunc
 ```

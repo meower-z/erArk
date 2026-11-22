@@ -8,6 +8,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config
 from Script.Design import handle_premise
+from Script.Modules.domains import activity
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -26,9 +27,8 @@ def draw_cross_section_image() -> None:
     """
     选择并绘制断面图
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
     # 如果没有目标角色则返回
-    if pl_character_data.target_character_id == 0:
+    if activity.target(0) == 0:
         return
     # 判断精液量
     if handle_premise.handle_t_vw_semen_g_1000(0):

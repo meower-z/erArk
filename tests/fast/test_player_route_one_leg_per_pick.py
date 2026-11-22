@@ -16,6 +16,8 @@ from Script.Design import character_behavior, character_move, map_handle
 from Script.Kernel import core
 from tests.fast.base import FastTestCase
 from tests.world import play
+from tests.chara_activity import aim
+from Script.Modules.domains import activity
 
 START = ["宿舍", "1区", "101"]
 """ 博士出发的地点 """
@@ -40,7 +42,7 @@ class PlayerRouteOneLegPerPickTest(FastTestCase):
         self.world.scene(TARGET)
         self.player = self.world.chara(0, "博士", position=START)
         self.world.chara(1, "交互对象", position=START)
-        self.player.target_character_id = 1
+        aim(self.player.cid, 1)
         self.legs: list[list[str]] = []
 
     def run_route(self, moves: bool) -> None:
@@ -60,13 +62,13 @@ class PlayerRouteOneLegPerPickTest(FastTestCase):
             Return arguments:
             无
             """
-            behavior = self.player.behavior
+            behavior = activity.behavior(self.player.cid)
             if behavior.behavior_id != constant.Behavior.MOVE:
                 return
             self.legs.append(list(behavior.move_target))
             if moves:
                 map_handle.character_move_scene(
-                    self.player.position, behavior.move_target, 0
+                    activity.position(self.player.cid), behavior.move_target, 0
                 )
 
         def settle(character_id: int) -> int:
@@ -90,7 +92,9 @@ class PlayerRouteOneLegPerPickTest(FastTestCase):
     def test_walks_to_target(self) -> None:
         """每次选行动走一段，走到博士办公室为止"""
         self.run_route(moves=True)
-        self.assertEqual(self.player.position, TARGET, "博士走到了博士办公室")
+        self.assertEqual(
+            activity.position(self.player.cid), TARGET, "博士走到了博士办公室"
+        )
         self.assertEqual(self.legs[-1], TARGET, "最后一段的终点是博士办公室")
         self.assertGreater(len(self.legs), 1, "寻路走了不止一段")
         self.assertLessEqual(len(self.legs), MAX_LEGS)
@@ -99,10 +103,10 @@ class PlayerRouteOneLegPerPickTest(FastTestCase):
             len(self.legs),
             "每一段走到新的地点",
         )
-        self.assertEqual(self.player.target_character_id, 0)
+        self.assertEqual(activity.target(self.player.cid), 0)
 
     def test_stops_when_a_leg_does_not_move(self) -> None:
         """某一段没让博士走动时寻路结束"""
         self.run_route(moves=False)
         self.assertEqual(len(self.legs), 1, "只走了第一段")
-        self.assertEqual(self.player.position, START)
+        self.assertEqual(activity.position(self.player.cid), START)

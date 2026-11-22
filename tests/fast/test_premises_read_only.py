@@ -10,6 +10,7 @@
 """
 
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
 import pickle
 from collections.abc import Callable
 from typing import Any
@@ -91,8 +92,8 @@ class PremisesReadOnlyTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
-        self.player.target_character_id = NPC
-        self.npc.target_character_id = 0
+        aim(self.player.cid, NPC)
+        aim(self.npc.cid, 0)
 
     def writers(
         self, prepare: Callable[[], None], keys: list[str]

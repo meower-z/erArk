@@ -15,11 +15,11 @@ from unittest import mock
 from Script.Config import game_config
 from Script.Core import constant_promise
 from Script.Design import attr_calculation, clothing, handle_premise
-from Script.Modules.domains import player_collection, wardrobe
-from tests import kernel_data
+from Script.Modules.domains import player_collection, relations
+from Script.Modules.domains import wardrobe
+from tests import chara_abilities as ca, kernel_data
 from tests.fast.base import FastTestCase
-from tests import chara_abilities as ca
-from Script.Modules.domains import relations
+from tests.chara_activity import aim
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -74,8 +74,8 @@ class ChildStagesOfflineTest(FastTestCase):
         self.pl = self.world.chara(0, "博士")
         self.daughter = self.world.chara(1, "女儿")
         kernel_data.put(relations.father_id.set, self.daughter.cid, 0)
-        self.daughter.target_character_id = 1
-        self.pl.target_character_id = 1
+        aim(self.daughter.cid, 1)
+        aim(self.pl.cid, 1)
 
     def test_child_stage_is_offline(self) -> None:
         """婴儿与幼女的异常位7为异常（离线），学员正常"""

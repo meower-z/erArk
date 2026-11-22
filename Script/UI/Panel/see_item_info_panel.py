@@ -15,7 +15,13 @@ from Script.Core import (
 )
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import h_meters, inventory, needs, player_ability
+from Script.Modules.domains import (
+    activity,
+    h_meters,
+    inventory,
+    needs,
+    player_ability,
+)
 from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
@@ -456,8 +462,7 @@ class ItemInfoDraw:
         py_cmd.clr_cmd()
         item_config = game_config.config_item[self.cid]
         # 如果是对交互对象使用的，则加上交互对象的名字
-        pl_character_data = cache.character_data[0]
-        target_character_id = pl_character_data.target_character_id
+        target_character_id = activity.target(0)
         item_draw = draw.NormalDraw()
         item_draw.text = f"{item_config.name}: {item_config.info}"
         if item_config.tag == "npc_use" and target_character_id != 0:

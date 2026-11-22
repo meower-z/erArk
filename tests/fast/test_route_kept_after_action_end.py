@@ -9,8 +9,9 @@
 from Script.Core import constant
 from Script.Design import character_behavior, character_move
 from Script.Kernel import core
-from Script.Modules.domains import plan
+from Script.Modules.domains import activity, plan
 from Script.Modules.gameplay_resolution import plan_queue, working
+from tests.chara_activity import behave
 from tests.fast.base import FastTestCase
 
 START = ["宿舍", "1区", "101"]
@@ -30,15 +31,20 @@ class RouteKeptAfterActionEndTest(FastTestCase):
 
     def test_carry_move_keeps_final_target(self) -> None:
         """带人移动结束：新的空行为的最终目标仍是 TARGET"""
-        self.player.behavior.behavior_id = constant.Behavior.CARRY_MOVE
-        self.player.behavior.move_final_target = TARGET
+        behave(
+            self.player.cid,
+            constant.Behavior.CARRY_MOVE,
+            move_final_target=TARGET,
+        )
         character_behavior.end_action(0)
-        self.assertEqual(self.player.behavior.move_final_target, TARGET)
+        self.assertEqual(
+            activity.behavior(self.player.cid).move_final_target, TARGET
+        )
 
     def test_queued_first_leg_keeps_route(self) -> None:
         """寻路的第一段还在队列里：等待结束时寻路还在"""
         plan.set_route([TARGET, START])
-        self.player.behavior.behavior_id = constant.Behavior.WAIT
+        behave(self.player.cid, constant.Behavior.WAIT)
         plan_queue.plan_next(0, constant.Behavior.MOVE, 1)
         character_move.continue_player_route()
         self.assertEqual(plan.route(), [TARGET, START])
@@ -46,7 +52,7 @@ class RouteKeptAfterActionEndTest(FastTestCase):
     def test_queued_first_carry_leg_keeps_route(self) -> None:
         """寻路的第一段是带人移动、还在队列里：等待结束时寻路还在"""
         plan.set_route([TARGET, START])
-        self.player.behavior.behavior_id = constant.Behavior.WAIT
+        behave(self.player.cid, constant.Behavior.WAIT)
         plan_queue.plan_next(0, constant.Behavior.CARRY_MOVE, 1)
         character_move.continue_player_route()
         self.assertEqual(plan.route(), [TARGET, START])

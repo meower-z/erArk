@@ -5,7 +5,13 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import abilities, first_record, flags, h_state
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    first_record,
+    flags,
+    h_state,
+)
 from Script.Modules.domains import modes
 
 cache: game_type.Cache = cache_control.cache
@@ -63,13 +69,12 @@ def record_first_special_record(
     """
     if special_cid not in game_config.config_first_record_special:
         return
-    character_data = cache.character_data[character_id]
     with first_record.editing(character_id) as fr:
         if special_cid in fr.first_special_record_dict:
             return
         fr.first_special_record_dict[special_cid] = [
             game_time.now(),
-            list(character_data.position),
+            list(activity.position(character_id)),
             special_data,
         ]
 
@@ -92,7 +97,7 @@ def get_semen_source_text(character_id: int) -> str:
         return h_mode_text
     # 非H时从进食上下文取精液食物名（玩家喂食时食物挂在玩家的行为上，二段结算与进食结算同帧、target_food未被重置）
     for now_chara_id in (character_id, 0):
-        now_food = cache.character_data[now_chara_id].behavior.target_food
+        now_food = activity.behavior(now_chara_id).target_food
         if now_food is not None and getattr(
             now_food, "special_seasoning", 0
         ) in (
@@ -141,12 +146,11 @@ def record_first_h_mode(
     mode_key -- 模式键（unconscious_1~7/group_sex/exhibitionism/hidden_sex/pretend_sleep）\n
     extra_data -- 附加数据文本
     """
-    character_data = cache.character_data[character_id]
     with first_record.editing(character_id) as fr:
         if mode_key not in fr.first_h_mode_dict:
             fr.first_h_mode_dict[mode_key] = [
                 game_time.now(),
-                list(character_data.position),
+                list(activity.position(character_id)),
                 extra_data,
             ]
 
@@ -160,7 +164,6 @@ def check_first_h_mode(character_id: int) -> None:
     # 玩家不进履历面板，不做记录
     if not character_id:
         return
-    character_data = cache.character_data[character_id]
     # 需要处于H模式中
     if not flags.get(character_id, "is_h"):
         return
@@ -173,7 +176,7 @@ def check_first_h_mode(character_id: int) -> None:
     # 群交（附加数据：当时场景内角色数）
     if modes.group_sex():
         scene_path_str = map_handle.get_map_system_path_str_for_list(
-            character_data.position
+            activity.position(character_id)
         )
         scene_character_count = 0
         if scene_path_str in cache.scene_data:

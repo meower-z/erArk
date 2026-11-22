@@ -4,7 +4,13 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import action_info, entertainment, flags, h_meters
+from Script.Modules.domains import (
+    action_info,
+    activity,
+    entertainment,
+    flags,
+    h_meters,
+)
 from Script.Modules.domains import h_state, inventory, modes, prison
 
 cache: game_type.Cache = cache_control.cache
@@ -148,8 +154,7 @@ def handle_penis_in_t_anypart(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") != -1:
         return 1
     return 0
@@ -164,8 +169,7 @@ def handle_penis_in_t_hair(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 0:
         return 1
     return 0
@@ -180,8 +184,7 @@ def handle_penis_in_t_face(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 1:
         return 1
     return 0
@@ -196,8 +199,7 @@ def handle_penis_in_t_mouse(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 2:
         return 1
     return 0
@@ -224,8 +226,7 @@ def handle_penis_in_t_deep_throat(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 15:
         return 1
     return 0
@@ -252,8 +253,7 @@ def handle_penis_in_t_breast(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 3:
         return 1
     return 0
@@ -268,8 +268,7 @@ def handle_penis_in_t_axilla(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 4:
         return 1
     return 0
@@ -284,8 +283,7 @@ def handle_penis_in_t_hand(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 5:
         return 1
     return 0
@@ -300,8 +298,7 @@ def handle_penis_in_t_vagina(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 6:
         return 1
     return 0
@@ -316,8 +313,7 @@ def handle_penis_in_t_womb(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 7:
         return 1
     return 0
@@ -332,8 +328,7 @@ def handle_penis_in_t_anal(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 8:
         return 1
     return 0
@@ -360,8 +355,7 @@ def handle_penis_in_t_nrethral(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 9:
         return 1
     return 0
@@ -388,8 +382,7 @@ def handle_penis_in_t_leg(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 10:
         return 1
     return 0
@@ -404,8 +397,7 @@ def handle_penis_in_t_foot(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 11:
         return 1
     return 0
@@ -420,8 +412,7 @@ def handle_penis_in_t_tail(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 12:
         return 1
     return 0
@@ -436,8 +427,7 @@ def handle_penis_in_t_horn(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 13:
         return 1
     return 0
@@ -452,8 +442,7 @@ def handle_penis_in_t_ears(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "insert_position") == 14:
         return 1
     return 0
@@ -958,8 +947,7 @@ def handle_shoot_in_t_body(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") != -1:
         return 1
     return 0
@@ -974,8 +962,7 @@ def handle_shoot_in_t_hair(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 0:
         return 1
     return 0
@@ -990,8 +977,7 @@ def handle_shoot_in_t_face(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 1:
         return 1
     return 0
@@ -1006,8 +992,7 @@ def handle_shoot_in_t_mouse(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 2:
         return 1
     return 0
@@ -1022,8 +1007,7 @@ def handle_shoot_in_t_breast(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 3:
         return 1
     return 0
@@ -1038,8 +1022,7 @@ def handle_shoot_in_t_axilla(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 4:
         return 1
     return 0
@@ -1054,8 +1037,7 @@ def handle_shoot_in_t_hand(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 5:
         return 1
     return 0
@@ -1070,8 +1052,7 @@ def handle_shoot_in_t_vagina(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 6:
         return 1
     return 0
@@ -1086,8 +1067,7 @@ def handle_shoot_in_t_womb(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 7:
         return 1
     return 0
@@ -1102,8 +1082,7 @@ def handle_shoot_in_t_anal(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 8:
         return 1
     return 0
@@ -1118,8 +1097,7 @@ def handle_shoot_in_t_nrethral(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 9:
         return 1
     return 0
@@ -1134,8 +1112,7 @@ def handle_shoot_in_t_leg(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 10:
         return 1
     return 0
@@ -1150,8 +1127,7 @@ def handle_shoot_in_t_foot(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 11:
         return 1
     return 0
@@ -1166,8 +1142,7 @@ def handle_shoot_in_t_tail(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 12:
         return 1
     return 0
@@ -1182,8 +1157,7 @@ def handle_shoot_in_t_horn(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 13:
         return 1
     return 0
@@ -1198,8 +1172,7 @@ def handle_shoot_in_t_ears(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_body") == 14:
         return 1
     return 0
@@ -1214,8 +1187,7 @@ def handle_shoot_in_t_cloth(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "shoot_position_cloth") != -1:
         return 1
     return 0
@@ -1230,8 +1202,7 @@ def handle_t_turn_orgasm_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     orgasm_count = h_state.view(target_data.cid).orgasm_count
     for state_id in game_config.config_character_state:
         if game_config.config_character_state[state_id].type == 0:
@@ -1249,8 +1220,7 @@ def handle_t_turn_orgasm_g_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     orgasm_count = h_state.view(target_data.cid).orgasm_count
     count = 0
     for state_id in game_config.config_character_state:
@@ -1270,8 +1240,7 @@ def handle_t_turn_orgasm_g_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     orgasm_count = h_state.view(target_data.cid).orgasm_count
     count = 0
     for state_id in game_config.config_character_state:
@@ -1291,8 +1260,7 @@ def handle_t_turn_orgasm_g_10(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     orgasm_count = h_state.view(target_data.cid).orgasm_count
     count = 0
     for state_id in game_config.config_character_state:
@@ -1312,8 +1280,7 @@ def handle_t_turn_s_orgasm_g_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.view(target_data.cid).orgasm_count[0][1] > 3:
         return 1
     return 0
@@ -1328,8 +1295,7 @@ def handle_t_turn_b_orgasm_g_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.view(target_data.cid).orgasm_count[1][1] > 3:
         return 1
     return 0
@@ -1344,8 +1310,7 @@ def handle_t_turn_c_orgasm_g_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.view(target_data.cid).orgasm_count[2][1] > 3:
         return 1
     return 0
@@ -1390,8 +1355,7 @@ def handle_t_turn_v_orgasm_g_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.view(target_data.cid).orgasm_count[4][1] > 3:
         return 1
     return 0
@@ -1406,8 +1370,7 @@ def handle_t_turn_a_orgasm_g_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.view(target_data.cid).orgasm_count[5][1] > 3:
         return 1
     return 0
@@ -1422,8 +1385,7 @@ def handle_t_turn_u_orgasm_g_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.view(target_data.cid).orgasm_count[6][1] > 3:
         return 1
     return 0
@@ -1438,8 +1400,7 @@ def handle_t_turn_w_orgasm_g_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.view(target_data.cid).orgasm_count[7][1] > 3:
         return 1
     return 0
@@ -1454,8 +1415,7 @@ def handle_t_turn_m_orgasm_g_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.view(target_data.cid).orgasm_count[8][1] > 3:
         return 1
     return 0
@@ -1748,8 +1708,7 @@ def handle_target_orgasm_edge(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_orgasm_edge(character_data.target_character_id)
+    return handle_self_orgasm_edge(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_ORGASM_EDGE)
@@ -1761,8 +1720,7 @@ def handle_target_not_orgasm_edge(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_not_orgasm_edge(character_data.target_character_id)
+    return handle_self_not_orgasm_edge(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_ORGASM_EDGE_RELAESE)
@@ -1774,8 +1732,7 @@ def handle_target_orgasm_edge_relase(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_orgasm_edge_relase(character_data.target_character_id)
+    return handle_self_orgasm_edge_relase(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_TIME_STOP_ORGASM_RELAESE)
@@ -1800,10 +1757,7 @@ def handle_target_time_stop_orgasm_relase(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_time_stop_orgasm_relase(
-        character_data.target_character_id
-    )
+    return handle_self_time_stop_orgasm_relase(activity.target(character_id))
 
 
 @add_premise(
@@ -1848,8 +1802,7 @@ def handle_target_plural_orgasm_have_S(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_plural_orgasm_have_S(character_data.target_character_id)
+    return handle_self_plural_orgasm_have_S(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_PLURAL_ORGASM_HAVE_B)
@@ -1874,8 +1827,7 @@ def handle_target_plural_orgasm_have_B(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_plural_orgasm_have_B(character_data.target_character_id)
+    return handle_self_plural_orgasm_have_B(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_PLURAL_ORGASM_HAVE_C)
@@ -1900,8 +1852,7 @@ def handle_target_plural_orgasm_have_C(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_plural_orgasm_have_C(character_data.target_character_id)
+    return handle_self_plural_orgasm_have_C(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_PLURAL_ORGASM_HAVE_V)
@@ -1926,8 +1877,7 @@ def handle_target_plural_orgasm_have_V(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_plural_orgasm_have_V(character_data.target_character_id)
+    return handle_self_plural_orgasm_have_V(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_PLURAL_ORGASM_HAVE_A)
@@ -1952,8 +1902,7 @@ def handle_target_plural_orgasm_have_A(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_plural_orgasm_have_A(character_data.target_character_id)
+    return handle_self_plural_orgasm_have_A(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_PLURAL_ORGASM_HAVE_U)
@@ -1978,8 +1927,7 @@ def handle_target_plural_orgasm_have_U(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_plural_orgasm_have_U(character_data.target_character_id)
+    return handle_self_plural_orgasm_have_U(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_PLURAL_ORGASM_HAVE_W)
@@ -2004,8 +1952,7 @@ def handle_target_plural_orgasm_have_W(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_plural_orgasm_have_W(character_data.target_character_id)
+    return handle_self_plural_orgasm_have_W(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.NPC_ACTIVE_H)
@@ -2047,8 +1994,7 @@ def handle_t_npc_active_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "npc_active_h"):
         return 1
     return 0
@@ -2063,8 +2009,7 @@ def handle_t_npc_not_active_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if h_state.get(target_data.cid, "npc_active_h"):
         return 0
     return 1
@@ -2331,8 +2276,9 @@ def handle_scene_have_sex_class_student(character_id: int) -> int:
     """
     from Script.System.Education_System import sex_class_handle
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    return len(sex_class_handle.get_scene_student_list(character_data.position))
+    return len(
+        sex_class_handle.get_scene_student_list(activity.position(character_id))
+    )
 
 
 @add_premise(constant_promise.Premise.SELF_IN_SEX_CLASS)
@@ -2543,9 +2489,8 @@ def handle_target_sleep_h_awake_but_pretend_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     return handle_self_sleep_h_awake_but_pretend_sleep(
-        character_data.target_character_id
+        activity.target(character_id)
     )
 
 
@@ -2688,8 +2633,7 @@ def handle_target_now_nipple_clamp(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_now_nipple_clamp(character_data.target_character_id)
+    return handle_self_now_nipple_clamp(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_NIPPLE_CLAMP)
@@ -2701,10 +2645,7 @@ def handle_target_not_nipple_clamp(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_target_now_nipple_clamp(
-        character_data.target_character_id
-    )
+    return not handle_target_now_nipple_clamp(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HAVE_LOVE_EGG)
@@ -2767,8 +2708,7 @@ def handle_target_now_clit_clamp(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_now_clit_clamp(character_data.target_character_id)
+    return handle_self_now_clit_clamp(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_CLIT_CLAMP)
@@ -2780,8 +2720,7 @@ def handle_target_not_clit_clamp(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_self_now_clit_clamp(character_data.target_character_id)
+    return not handle_self_now_clit_clamp(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HAVE_ELECTRIC_MESSAGE_STICK)
@@ -2844,10 +2783,7 @@ def handle_target_now_vibrator_insertion(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_now_vibrator_insertion(
-        character_data.target_character_id
-    )
+    return handle_self_now_vibrator_insertion(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_VIBRATOR_INSERTION)
@@ -2859,10 +2795,7 @@ def handle_target_not_vibrator_insertion(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_self_now_vibrator_insertion(
-        character_data.target_character_id
-    )
+    return not handle_self_now_vibrator_insertion(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_NOW_VIBRATOR_INSERTION_ANAL)
@@ -2887,9 +2820,8 @@ def handle_target_now_vibrator_insertion_anal(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     return handle_self_now_vibrator_insertion_anal(
-        character_data.target_character_id
+        activity.target(character_id)
     )
 
 
@@ -2902,9 +2834,8 @@ def handle_target_not_vibrator_insertion_anal(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     return not handle_self_now_vibrator_insertion_anal(
-        character_data.target_character_id
+        activity.target(character_id)
     )
 
 
@@ -2942,8 +2873,7 @@ def handle_target_a_empty(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_a_empty(character_data.target_character_id)
+    return handle_self_a_empty(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOW_MILKING_MACHINE)
@@ -2955,9 +2885,8 @@ def handle_target_now_milking_machine(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if h_state.body_item_on(target_data.cid, 4):
         return 1
@@ -2973,9 +2902,8 @@ def handle_target_not_milking_machine(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if h_state.body_item_on(target_data.cid, 4):
         return 0
@@ -2991,9 +2919,8 @@ def handle_target_now_urine_collector(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if h_state.body_item_on(target_data.cid, 5):
         return 1
@@ -3009,9 +2936,8 @@ def handle_target_not_urine_collector(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if h_state.body_item_on(target_data.cid, 5):
         return 0
@@ -3052,8 +2978,7 @@ def handle_target_now_patch(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_now_patch(character_data.target_character_id)
+    return handle_self_now_patch(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_PATCH)
@@ -3065,8 +2990,7 @@ def handle_target_not_patch(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_self_now_patch(character_data.target_character_id)
+    return not handle_self_now_patch(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_NOW_GAG)
@@ -3103,8 +3027,7 @@ def handle_target_now_gag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_now_gag(character_data.target_character_id)
+    return handle_self_now_gag(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_GAG)
@@ -3116,8 +3039,7 @@ def handle_target_not_gag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_self_now_gag(character_data.target_character_id)
+    return not handle_self_now_gag(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_SEELP_PIILS)
@@ -3156,9 +3078,8 @@ def handle_target_now_birth_control_pills_before(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if h_state.body_item_on(target_data.cid, 11):
         return 1
@@ -3174,9 +3095,8 @@ def handle_target_not_birth_control_pills_before(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     if handle_target_now_birth_control_pills_before(
-        character_data.target_character_id
+        activity.target(character_id)
     ):
         return 0
     return 1
@@ -3191,9 +3111,8 @@ def handle_target_now_birth_control_pills_after(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if h_state.body_item_on(target_data.cid, 12):
         return 1
@@ -3209,9 +3128,8 @@ def handle_target_not_birth_control_pills_after(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     if handle_target_now_birth_control_pills_after(
-        character_data.target_character_id
+        activity.target(character_id)
     ):
         return 0
     return 1
@@ -3251,8 +3169,7 @@ def handle_target_semen_energy_agent(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_semen_energy_agent(character_data.target_character_id)
+    return handle_self_semen_energy_agent(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_SEMEN_ENERGY_AGENT)
@@ -3264,10 +3181,7 @@ def handle_target_not_semen_energy_agent(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_self_semen_energy_agent(
-        character_data.target_character_id
-    )
+    return not handle_self_semen_energy_agent(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.NOW_CONDOM)
@@ -3342,11 +3256,8 @@ def handle_t_condom_decoration_ge_1(character_id: int) -> int:
     """
     from Script.System.Item_System import condom_handle
 
-    character_data = cache.character_data[character_id]
     if (
-        condom_handle.get_decoration_total_count(
-            character_data.target_character_id
-        )
+        condom_handle.get_decoration_total_count(activity.target(character_id))
         >= 1
     ):
         return 1
@@ -3475,8 +3386,7 @@ def handle_target_now_bondage(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_now_bondage(character_data.target_character_id)
+    return handle_self_now_bondage(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_BONDAGE)
@@ -3584,8 +3494,7 @@ def handle_target_now_sex_toy_off(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_now_sex_toy_off(character_data.target_character_id)
+    return handle_self_now_sex_toy_off(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOW_SEX_TOY_ON)
@@ -3597,8 +3506,7 @@ def handle_target_now_sex_toy_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_now_sex_toy_on(character_data.target_character_id)
+    return handle_self_now_sex_toy_on(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOW_SEX_TOY_WEAK)
@@ -3610,8 +3518,7 @@ def handle_target_now_sex_toy_weak(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_now_sex_toy_weak(character_data.target_character_id)
+    return handle_self_now_sex_toy_weak(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOW_SEX_TOY_NOT_WEAK)
@@ -3623,8 +3530,7 @@ def handle_target_now_sex_toy_not_weak(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_self_now_sex_toy_weak(character_data.target_character_id)
+    return not handle_self_now_sex_toy_weak(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOW_SEX_TOY_MIDDLE)
@@ -3636,8 +3542,7 @@ def handle_target_now_sex_toy_middle(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_now_sex_toy_middle(character_data.target_character_id)
+    return handle_self_now_sex_toy_middle(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOW_SEX_TOY_STRONG)
@@ -3649,8 +3554,7 @@ def handle_target_now_sex_toy_strong(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_now_sex_toy_strong(character_data.target_character_id)
+    return handle_self_now_sex_toy_strong(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOW_SEX_TOY_NOT_STRONG)
@@ -3662,10 +3566,7 @@ def handle_target_now_sex_toy_not_strong(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_self_now_sex_toy_strong(
-        character_data.target_character_id
-    )
+    return not handle_self_now_sex_toy_strong(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_NO_SEX_TOY)
@@ -3709,8 +3610,7 @@ def handle_target_no_sex_toy(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_no_sex_toy(character_data.target_character_id)
+    return handle_self_no_sex_toy(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_SEX_TOY)
@@ -3722,8 +3622,7 @@ def handle_target_have_sex_toy(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_self_no_sex_toy(character_data.target_character_id)
+    return not handle_self_no_sex_toy(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SCENE_HAVE_OVER_TWO_CHARA_HAVE_SEX_TOY)
@@ -4066,8 +3965,7 @@ def handle_target_now_anal_beads(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_self_now_anal_beads(character_data.target_character_id):
+    if handle_self_now_anal_beads(activity.target(character_id)):
         return 1
     return 0
 
@@ -4081,8 +3979,7 @@ def handle_target_not_anal_beads(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_self_now_anal_beads(character_data.target_character_id):
+    if handle_self_now_anal_beads(activity.target(character_id)):
         return 0
     return 1
 
@@ -4435,8 +4332,7 @@ def handle_target_have_penis_mold(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_have_penis_mold(character_data.target_character_id)
+    return handle_have_penis_mold(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.NOT_HAVE_TARGET_MANAGE_DORMITORY_KEY)
@@ -4450,8 +4346,7 @@ def handle_not_have_target_manage_dormitory_key(character_id: int) -> int:
     """
     from Script.System.Dormitory_System import dormitory_manager_system
 
-    character_data = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
+    target_character_id = activity.target(character_id)
     # 获取目标角色管理的宿舍层号
     target_manager_layer = (
         dormitory_manager_system._get_manager_layer_by_character(
@@ -4479,8 +4374,7 @@ def handle_have_target_dormitory_layer_key(character_id: int) -> int:
     """
     from Script.System.Dormitory_System import dormitory_manager_system
 
-    character_data = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
+    target_character_id = activity.target(character_id)
     # 获取目标角色的宿舍层号
     target_manager_layer = (
         dormitory_manager_system.get_dormitory_layer_by_character(

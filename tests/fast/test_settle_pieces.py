@@ -20,6 +20,7 @@ from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
 from tests import kernel_data
+from tests.chara_activity import behave
 
 CUTS = {
     "8": [0, 8],
@@ -41,10 +42,7 @@ class SettlePiecesTest(FastTestCase):
         behavior_id -- 行为id
         minutes -- 分钟数
         """
-        behavior = self.cache.character_data[who].behavior
-        behavior.behavior_id = behavior_id
-        behavior.start_time = game_time.now()
-        behavior.duration = minutes
+        behave(who, behavior_id, start_time=game_time.now(), duration=minutes)
 
     def settle(self, who: int, cuts: list[int]) -> None:
         """

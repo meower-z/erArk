@@ -82,7 +82,7 @@ import Script.Settle  # 结算器靠装饰器注册，MinimalWorld 不导入它
 from Script.Config import game_config
 from Script.Core import constant, game_type
 from Script.Design import attr_calculation, game_time, handle_premise
-from Script.Modules.domains import status
+from Script.Modules.domains import activity, status
 from tests import kernel_data
 
 pl = world.chara(0, "博士")
@@ -102,7 +102,7 @@ check(
 
 # ==== 2. 结算器：settle_behavior_effect_data[效果id](角色id, add_time, change_data, now_time) ====
 target = world.chara(101, "样例干员")
-pl.target_character_id = 101
+kernel_data.put(activity.set_target, pl.cid, 101)
 change = game_type.CharacterStatusChange()
 kernel_data.written(
     constant.settle_behavior_effect_data[62], 0, 1, change, game_time.now()

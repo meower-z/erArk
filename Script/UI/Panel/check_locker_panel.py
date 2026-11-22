@@ -7,7 +7,7 @@ from typing import cast
 from Script.Core import cache_control, constant, flow_handle, game_type
 from Script.Core import get_text, py_cmd, text_handle
 from Script.Design import attr_text, clothing, handle_premise, map_handle
-from Script.Modules.domains import dirty
+from Script.Modules.domains import activity, dirty
 from Script.UI.Moudle import draw, panel, view
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import edits
@@ -44,13 +44,12 @@ class Check_locker_Panel:
 
     def draw(self) -> None:
         """绘制对象"""
-        pl_data: game_type.Character = cache.character_data[0]
 
         # 获得地图相关的数据
-        now_map = map_handle.get_map_for_path(pl_data.position)
+        now_map = map_handle.get_map_for_path(activity.position(0))
         map_name = attr_text.get_map_path_text(now_map)
         map_path_str = map_handle.get_map_system_path_str_for_list(
-            pl_data.position
+            activity.position(0)
         )
         map_data = cache.scene_data[map_path_str]
         title_draw = draw.TitleLineDraw(
@@ -278,9 +277,8 @@ class FindDraw:
         """ 绘制的文本列表 """
 
         # 获得地图相关的数据
-        pl_character_data: game_type.Character = cache.character_data[0]
         map_path_str = map_handle.get_map_system_path_str_for_list(
-            pl_character_data.position
+            activity.position(0)
         )
         map_data = cache.scene_data[map_path_str]
 
@@ -548,10 +546,9 @@ class Ejaculation_NameDraw:
         """ 按钮返回值 """
 
         # 获得地图相关的数据
-        pl_character_data: game_type.Character = cache.character_data[0]
         target_data: game_type.Character = cache.character_data[self.npc_id]
         map_path_str = map_handle.get_map_system_path_str_for_list(
-            pl_character_data.position
+            activity.position(0)
         )
         map_data = cache.scene_data[map_path_str]
 

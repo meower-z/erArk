@@ -20,6 +20,8 @@ import threading
 
 from tests import snapshot_states
 from tests.slow.base import SlowTestCase
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 BASE_URL = "http://chat.test/v1"
 """ 面板里填的自定义接口地址 """
@@ -117,15 +119,12 @@ class ChatAiCustomProxyTest(SlowTestCase):
         self.addCleanup(server.shutdown)
         self.proxy_url = f"http://127.0.0.1:{server.server_address[1]}"
         npc = snapshot_states.npc_id(self.world, NPC_NAME)
-        pl = self.cache.character_data[0]
         for _ in range(10):
-            if self.cache.character_data[npc].position == pl.position:
+            if activity.position(npc) == activity.position(0):
                 break
-            snapshot_states.walk(
-                self.world, list(self.cache.character_data[npc].position)
-            )
-        self.assertEqual(self.cache.character_data[npc].position, pl.position)
-        pl.target_character_id = npc
+            snapshot_states.walk(self.world, list(activity.position(npc)))
+        self.assertEqual(activity.position(npc), activity.position(0))
+        aim(0, npc)
         temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(temp_dir.cleanup)
         self.addCleanup(os.chdir, os.getcwd())

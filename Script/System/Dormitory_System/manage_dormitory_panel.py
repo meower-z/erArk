@@ -16,8 +16,8 @@ from Script.Design import basement, handle_premise, map_handle
 from Script.System.Dormitory_System import common
 from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
-from Script.Modules.domains import dormitory, facility, inventory, roster, work
-from Script.Modules.domains import chara_life
+from Script.Modules.domains import activity, chara_life, dormitory, facility
+from Script.Modules.domains import inventory, roster, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -977,11 +977,10 @@ class Manage_Dormitory_Panel:
         if manager_room_path == "":
             return
 
-        character_data = cache.character_data[character_id]
         common.register_permanent_dormitory(character_id)
         chara_life.dormitory.set(character_id, manager_room_path)
 
-        character_position = character_data.position
+        character_position = activity.position(character_id)
         target_scene = map_handle.get_map_system_path_for_str(manager_room_path)
         if target_scene:
             map_handle.character_move_scene(
@@ -995,13 +994,12 @@ class Manage_Dormitory_Panel:
         输出类型: 无
         功能: 若角色当前住在舍管房，则按恢复规则重新分配宿舍，并将其移动到落点房间
         """
-        character_data = cache.character_data[character_id]
         if not self._is_manager_room_path(chara_life.dormitory(character_id)):
             return
         restore_path = common.restore_character_dormitory(character_id)
         target_scene = map_handle.get_map_system_path_for_str(restore_path)
         map_handle.character_move_scene(
-            character_data.position, target_scene, character_id
+            activity.position(character_id), target_scene, character_id
         )
 
     def _get_dormitory_name(self, dormitory_path: str) -> str:

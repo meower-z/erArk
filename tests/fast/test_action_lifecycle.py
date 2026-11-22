@@ -27,6 +27,7 @@ from Script.Modules.gameplay_resolution import actions, intent, time_hooks
 from tests import chara_abilities as ca, world
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import activity
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update """
@@ -144,11 +145,10 @@ class ActionLifecycleTest(FastTestCase):
                     entry[:2] for entry in log
                 ]:
                     self.gated = core.state().characters["1"].action
-                    amiya = self.cache.character_data[AMIYA]
                     self.gated_cache = (
-                        amiya.behavior.behavior_id,
-                        amiya.behavior.duration,
-                        amiya.target_character_id,
+                        activity.behavior(AMIYA).behavior_id,
+                        activity.behavior(AMIYA).duration,
+                        activity.target(AMIYA),
                     )
         except ScriptDone:
             pass

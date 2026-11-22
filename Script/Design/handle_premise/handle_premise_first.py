@@ -4,7 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design import game_time
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities, first_record
+from Script.Modules.domains import abilities, activity, first_record
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -215,8 +215,7 @@ def handle_target_first_kiss_in_today(character_id: int) -> int:
     说明:
         直接调用自己的初吻函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_kiss_in_today(target_id)
 
 
@@ -231,8 +230,7 @@ def handle_target_first_kiss_before_today(character_id: int) -> int:
     说明:
         直接调用自己的初吻函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_kiss_before_today(target_id)
 
 
@@ -247,8 +245,7 @@ def handle_target_first_sex_in_today(character_id: int) -> int:
     说明:
         直接调用自己的V处女函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_sex_in_today(target_id)
 
 
@@ -263,8 +260,7 @@ def handle_target_first_sex_before_today(character_id: int) -> int:
     说明:
         直接调用自己的函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_sex_before_today(target_id)
 
 
@@ -279,8 +275,7 @@ def handle_target_first_a_sex_in_today(character_id: int) -> int:
     说明:
         直接调用自己的A处女函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_a_sex_in_today(target_id)
 
 
@@ -295,8 +290,7 @@ def handle_target_first_a_sex_before_today(character_id: int) -> int:
     说明:
         直接调用自己的函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_a_sex_before_today(target_id)
 
 
@@ -311,8 +305,7 @@ def handle_target_first_u_sex_in_today(character_id: int) -> int:
     说明:
         直接调用自己的U处女函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_u_sex_in_today(target_id)
 
 
@@ -327,8 +320,7 @@ def handle_target_first_u_sex_before_today(character_id: int) -> int:
     说明:
         直接调用自己的函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_u_sex_before_today(target_id)
 
 
@@ -343,8 +335,7 @@ def handle_target_first_w_sex_in_today(character_id: int) -> int:
     说明:
         直接调用自己的W处女函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_w_sex_in_today(target_id)
 
 
@@ -359,8 +350,7 @@ def handle_target_first_w_sex_before_today(character_id: int) -> int:
     说明:
         直接调用自己的函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_w_sex_before_today(target_id)
 
 
@@ -375,8 +365,7 @@ def handle_target_first_m_sex_in_today(character_id: int) -> int:
     说明:
         直接调用自己的M处女函数，传入交互对象的角色id
     """
-    character_data = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     return handle_first_m_sex_in_today(target_id)
 
 
@@ -497,9 +486,8 @@ def handle_target_no_first_kiss(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     return abilities.talent(target_data.cid)[4] == 0
 
@@ -513,9 +501,8 @@ def handle_target_have_first_kiss(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     return abilities.talent(target_data.cid)[4] == 1
 
@@ -565,9 +552,8 @@ def handle_target_have_virgin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     return abilities.talent(target_data.cid)[0] == 1
 
@@ -617,9 +603,8 @@ def handle_target_have_a_virgin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     return abilities.talent(target_data.cid)[1] == 1
 

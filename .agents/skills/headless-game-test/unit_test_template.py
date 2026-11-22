@@ -90,7 +90,7 @@ from Script.Core import (
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
 
-from Script.Modules.domains import relations
+from Script.Modules.domains import activity, relations
 from Script.Modules.save_load import kernel_state
 from Script.Modules.domains import abilities, status
 from tests import chara_data, kernel_data
@@ -166,11 +166,10 @@ def new_chara(
     cd.name = name
     cd.adv = adv
     cd.sex = 1
-    cd.second_behavior = attr_calculation.get_second_behavior_zero({})
     kernel_data.put(
         relations.favorability.set, cd.cid, {0: 0}
     )  # 一些前提直接读 favorability[0]，表里要有键 0
-    cd.position = list(SCENE)
+    kernel_data.put(activity.set_position, cd.cid, list(SCENE))
     cd.race = race
     cache.character_data[cid] = cd
     # 能力、经验、宝珠与素质表在 GameState 里，一步之外的写入要放在 kernel_data.writing 里
@@ -217,7 +216,7 @@ print("  sleep 效果链:", chain)
 # 5.3 直接调用结算器：constant.settle_behavior_effect_data[效果id](角色id, add_time, change_data, now_time)
 #     add_time 传 0 会命中绝大多数结算器开头的 `if not add_time: return`，断言会假阴性
 target = new_chara(101, "样例干员")
-pl.target_character_id = 101
+kernel_data.put(activity.set_target, pl.cid, 101)
 change = game_type.CharacterStatusChange()
 # 结算器写内核状态。一步之外调用时，kernel_data.written 在调用结束后把写入套用到内核状态上
 kernel_data.written(

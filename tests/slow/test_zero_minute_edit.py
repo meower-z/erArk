@@ -18,6 +18,8 @@ from collections.abc import Callable
 
 from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 VISITOR_ZONE = 13
 """ 访客区的设施id """
@@ -188,11 +190,12 @@ class ZeroMinuteEditTest(SlowTestCase):
         from Script.Modules.gameplay_resolution import edits
         from Script.System.Instruct_System import handle_instruct
 
-        pl = self.cache.character_data[0]
         target = sorted(kernel_data.domain("roster").active())[0]
-        self.world.move(target, pl.position)
-        pl.target_character_id = target
-        scene = map_handle.get_map_system_path_str_for_list(pl.position)
+        self.world.move(target, activity.position(0))
+        aim(0, target)
+        scene = map_handle.get_map_system_path_str_for_list(
+            activity.position(0)
+        )
         self.cache.scene_data[scene].close_flag = 1
         kernel_data.put(
             kernel_data.domain("flags").set, target, unconscious_h=0

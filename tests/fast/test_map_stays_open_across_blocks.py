@@ -14,6 +14,7 @@ from Script.UI.Panel import see_map_panel
 from tests.fast.base import FastTestCase
 from tests.world import play
 from Script.UI.Moudle import view
+from Script.Modules.domains import activity
 
 START = ["宿舍", "1区", "101"]
 """ 博士出发的地点 """
@@ -56,13 +57,13 @@ class MapStaysOpenAcrossBlocksTest(FastTestCase):
             Return arguments:
             int -- 1
             """
-            behavior = self.player.behavior
+            behavior = activity.behavior(self.player.cid)
             if (
                 character_id == 0
                 and behavior.behavior_id == constant.Behavior.MOVE
             ):
                 map_handle.character_move_scene(
-                    self.player.position, behavior.move_target, 0
+                    activity.position(self.player.cid), behavior.move_target, 0
                 )
             return 1
 
@@ -76,11 +77,11 @@ class MapStaysOpenAcrossBlocksTest(FastTestCase):
     def test_map_open_after_moving_to_another_block(self) -> None:
         """移动到另一个区块后仍是地图面板"""
         self.move(BLOCK)
-        self.assertEqual(self.player.position, BLOCK)
+        self.assertEqual(activity.position(self.player.cid), BLOCK)
         self.assertEqual(view.now_panel_id, constant.Panel.SEE_MAP)
 
     def test_main_panel_after_moving_in_the_same_block(self) -> None:
         """同一区块里移动后回到主界面"""
         self.move(SAME_BLOCK)
-        self.assertEqual(self.player.position, SAME_BLOCK)
+        self.assertEqual(activity.position(self.player.cid), SAME_BLOCK)
         self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)

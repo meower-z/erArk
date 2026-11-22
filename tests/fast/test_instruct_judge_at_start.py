@@ -32,7 +32,9 @@ from Script.System.Item_System import condom_panel
 from Script.System.Sex_System import group_sex_panel
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import action_info, flags, relations
+from tests.chara_activity import aim
+from Script.Modules.domains import action_info, flags
+from Script.Modules.domains import relations
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
@@ -61,7 +63,7 @@ class InstructJudgeAtStartTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
-        self.player.target_character_id = NPC
+        aim(self.player.cid, NPC)
         kernel_data.set_needs(self.player.cid, sanity=SANITY, sanity_max=SANITY)
         kernel_data.put(flags.set, self.npc.cid, unconscious_h=IN_HYPNOSIS)
         core.reset_state(kernel_data.reprojected(core.state()))

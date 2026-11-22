@@ -90,14 +90,6 @@ def get_ability_zero(ability_dict: dict[int, int]) -> dict[int, int]:
     return ability_list
 
 
-def get_event_zero() -> game_type.Chara_Event:
-    """
-    初始化事件结构体
-    """
-    event_data = game_type.Chara_Event()
-    return event_data
-
-
 def get_pregnancy_zero() -> game_type.PREGNANCY:
     """
     初始化受精怀孕情况数据结构体
@@ -182,18 +174,6 @@ def get_body_manage_zero() -> dict:
     for cid in game_config.config_body_manage_requirement:
         body_manage[cid] = 0
     return body_manage
-
-
-def get_second_behavior_zero(
-    second_behavior_dict: dict[str, int],
-) -> dict[str, int]:
-    """
-    将二段行为全项归零，读取配置文件中的二段行为，将其归零
-    """
-    for behavior_id in game_config.config_behavior:
-        if "二段结算" in game_config.config_behavior[behavior_id].tag:
-            second_behavior_dict[behavior_id] = 0
-    return second_behavior_dict
 
 
 def get_time_zero() -> datetime.datetime:

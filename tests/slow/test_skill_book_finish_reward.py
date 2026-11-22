@@ -10,6 +10,7 @@
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim, behave
 
 FINISH_REWARD = {0: 5, 1: 10, 2: 20, 3: 40}
 """ 书的难度 -> 读完技能书时加的对应经验 """
@@ -38,11 +39,10 @@ class SkillBookFinishRewardTest(SlowTestCase):
         from Script.Settle import default
 
         experience = ca.experience(character_id)
-        character_data = self.cache.character_data[character_id]
         exp_id = game_config.config_book_type[
             game_config.config_book[book_id].type
         ].exp_id
-        character_data.behavior.book_id = book_id
+        behave(character_id, book_id=book_id)
         kernel_data.put(
             chara_life.read_book_progress.set_item,
             character_id,
@@ -67,8 +67,7 @@ class SkillBookFinishRewardTest(SlowTestCase):
         character_id = min(
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
-        character_data = self.cache.character_data[character_id]
-        character_data.target_character_id = character_id
+        aim(character_id, character_id)
         reward_dict: dict[int, set[int]] = {}
         for book_id, book_data in sorted(game_config.config_book.items()):
             if not game_config.config_book_type[book_data.type].exp_id:

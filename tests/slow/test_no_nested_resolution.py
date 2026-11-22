@@ -23,6 +23,8 @@ from unittest import mock
 
 from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.chara_activity import aim, behave
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from typing import Any
@@ -87,7 +89,7 @@ class NoNestedResolutionTest(SlowTestCase):
             if name == "choose" or self.depth:
                 self.nested.append(f"{name}{args}")
             if name == "judge_character_status":
-                behavior_id = self.cache.character_data[args[0]].behavior
+                behavior_id = activity.behavior(args[0])
                 self.settled.append((args[0], behavior_id.behavior_id))
             self.depth += 1
             try:
@@ -202,7 +204,6 @@ class NoNestedResolutionTest(SlowTestCase):
         from Script.Core import constant
         from Script.Design import map_handle
 
-        player = self.cache.character_data[0]
         partner_id = self.npc(PARTNER_NAME)
         room_key = next(
             key
@@ -216,7 +217,7 @@ class NoNestedResolutionTest(SlowTestCase):
             relations.favorability.set_item, partner_id, 0, FAVORABILITY
         )
         kernel_data.put(relations.trust.set, partner_id, TRUST)
-        player.target_character_id = partner_id
+        aim(0, partner_id)
         self.instruct(constant.Instruct.DO_H)
         self.assertTrue(kernel_data.domain("flags").get(0, "is_h"), "博士在H中")
         return partner_id
@@ -239,9 +240,7 @@ class NoNestedResolutionTest(SlowTestCase):
             """效果 1701：博士等对方行动结束"""
             from Script.Design import game_time
 
-            partner = self.cache.character_data[partner_id]
-            partner.behavior.start_time = game_time.now()
-            partner.behavior.duration = 30
+            behave(partner_id, start_time=game_time.now(), duration=30)
             default.handle_wait_unitl_traget_action_end(
                 0, 5, game_type.CharacterStatusChange(), game_time.now()
             )
@@ -279,9 +278,7 @@ class NoNestedResolutionTest(SlowTestCase):
             for site in (wait_partner, active_h_switch, discovery):
                 self.wait_running(site)
             kernel_data.put(kernel_data.domain("flags").set, 0, is_h=False)
-            self.cache.character_data[0].behavior.behavior_id = (
-                constant.Behavior.SHARE_BLANKLY
-            )
+            behave(0, constant.Behavior.SHARE_BLANKLY)
             self.wait_running(event_move)
         self.world.player.check_done()
         self.assertEqual(reached, ["A1", "A2", "discovery", "A13"])
@@ -298,9 +295,7 @@ class NoNestedResolutionTest(SlowTestCase):
         from Script.Core import constant
         from Script.Design import map_handle
 
-        here = map_handle.get_map_system_path_str_for_list(
-            self.cache.character_data[0].position
-        )
+        here = map_handle.get_map_system_path_str_for_list(activity.position(0))
         return next(
             tag
             for tag, places in sorted(constant.place_data.items())
@@ -403,9 +398,7 @@ class NoNestedResolutionTest(SlowTestCase):
             for cid, behavior_id in self.settled
             if cid == 0 and behavior_id == constant.Behavior.MOVE
         ]
-        here = map_handle.get_map_system_path_str_for_list(
-            self.cache.character_data[0].position
-        )
+        here = map_handle.get_map_system_path_str_for_list(activity.position(0))
         self.assertEqual(self.nested, [], "结算途中没有嵌套的调用")
         self.assertIn(here, targets, "博士走到了目标地点")
         self.assertGreater(len(legs), 0, "博士走了寻路的各段")

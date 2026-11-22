@@ -26,7 +26,7 @@ from typing import cast
 from Script.Core import cache_control, game_type
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import flags, modes, needs
+from Script.Modules.domains import activity, flags, modes, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -92,7 +92,7 @@ def _settle(character_id: int, since: int, until: int | None = None) -> bool:
     bool -- 结算了时为真；角色不在缓存里或已死亡时为假
     """
     character_data = cache.character_data.get(character_id)
-    if character_data is None or character_data.dead:
+    if character_data is None or activity.dead(character_data.cid):
         return False
     from Script.Settle import realtime_settle
 
@@ -125,9 +125,14 @@ def tick_one(who: int) -> None:
         who == 0
         and modes.time_stop()
         and character_data is not None
-        and game_time.minutes(character_data.behavior.start_time) == game.clock
+        and game_time.minutes(activity.behavior(character_data.cid).start_time)
+        == game.clock
     ):
-        _settle(who, game.clock, game.clock + character_data.behavior.duration)
+        _settle(
+            who,
+            game.clock,
+            game.clock + activity.behavior(character_data.cid).duration,
+        )
     else:
         _settle(who, _ticked(game))
     _wake_the_woken()

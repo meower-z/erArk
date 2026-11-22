@@ -328,6 +328,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     食堂货架记作 world.cooking.dining_hall_data。医疗部数据记在 world.medical 下，
     名字为罗德岛对象上旧的属性名（medical.OLD_NAMES），病人按字段展开。
     外勤委托、载具、访客、邀请与罗德岛的位置由 _project_travel 记下。
+    周目、模式、成就等全局键、基地计数与角色的活动由 kernel_project.project_rest 记下。
     角色的能力、经验、宝珠与素质表由 chara_abilities.project 记下。
     Keyword arguments:
     cache -- 游戏缓存
@@ -403,8 +404,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     _project_economy(state)
     _project_travel(state)
     base_projection.project(state)
-    kernel_project.project_world_misc(state)
-    kernel_project.project_base_tallies(state)
+    kernel_project.project_rest(cache, state)
     chara_abilities.project(cache, state)
 
 

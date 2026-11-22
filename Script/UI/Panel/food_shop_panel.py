@@ -13,7 +13,7 @@ from Script.Core import (
     py_cmd,
 )
 from Script.Design import map_handle, attr_calculation
-from Script.Modules.domains import economy, kitchen
+from Script.Modules.domains import activity, economy, kitchen
 from Script.Modules.domains import inventory
 from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking
@@ -90,7 +90,7 @@ class FoodShopPanel:
 
     def draw(self) -> None:
         """绘制对象"""
-        scene_position = cache.character_data[0].position
+        scene_position = activity.position(0)
         scene_position_str = map_handle.get_map_system_path_str_for_list(
             scene_position
         )
@@ -243,7 +243,7 @@ class SeeFoodListByFoodNameDraw:
         """ 按钮返回值 """
 
         # 获取当前位置
-        scene_position = cache.character_data[0].position
+        scene_position = activity.position(0)
         scene_position_str = map_handle.get_map_system_path_str_for_list(
             scene_position
         )

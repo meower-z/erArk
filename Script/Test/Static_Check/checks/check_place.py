@@ -6,7 +6,7 @@
 收藏地点、宿舍、交互对象、助理、跟随、装袋搬运等状态的一致性约束。
 
 约定与踩坑说明（写在此处，避免散落在各检查函数注释里重复）：
-1. `["0", "0"]` 不是哨兵值，是真实场景「罗德岛出口」，也是 `Character.position` 的默认值；
+1. `["0", "0"]` 不是哨兵值，是真实场景「罗德岛出口」，也是 `activity.position` 的默认值；
 离线角色被置为它是合法的稳定状态。
 2. 新生儿写入 `character_data` 但不进 `npc_id_got`、也不移动，所以"角色→场景名册"方向的检查必须以
    `LIVE = roster.active() | {0}` 为域，不能用全体 `character_data`。
@@ -24,8 +24,8 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
-from Script.Modules.domains import action_info, education, flags, growth
-from Script.Modules.domains import roster, visitor, work
+from Script.Modules.domains import action_info, activity, education, flags
+from Script.Modules.domains import growth, roster, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -133,7 +133,7 @@ def check_character_dict_key_matches_cid() -> list[CheckFailure]:
                     "PLACE-01",
                     "角色字典键与cid一致",
                     f"character_data字典键={dict_key}，但角色对象自身cid={c_cid}，name={getattr(c, 'name', '')}，"
-                    f"adv={getattr(c, 'adv', None)}，position={getattr(c, 'position', None)}",
+                    f"adv={getattr(c, 'adv', None)}，position={activity.position(c.cid)}",
                     involved,
                 )
             )
@@ -226,10 +226,10 @@ def check_character_position_is_existing_scene() -> list[CheckFailure]:
     scene_data = getattr(cache, "scene_data", {}) or {}
     npc_id_got: set[int] = roster.active()
     for cid, c in character_data.items():
-        position = getattr(c, "position", None)
+        position = activity.position(c.cid)
         if _valid_scene_path(position, scene_data):
             continue
-        behavior = getattr(c, "behavior", None)
+        behavior = activity.behavior(c.cid)
         failures.append(
             make_failure(
                 "PLACE-04",
@@ -278,7 +278,7 @@ def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
                 )
             )
             continue
-        position = getattr(c, "position", None)
+        position = activity.position(c.cid)
         if not _valid_scene_path(position, scene_data):
             failures.append(
                 make_failure(
@@ -296,7 +296,7 @@ def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
         sc = scene_data.get(path)
         character_list = getattr(sc, "character_list", None) or []
         if cid not in character_list:
-            behavior = getattr(c, "behavior", None)
+            behavior = activity.behavior(c.cid)
             failures.append(
                 make_failure(
                     "PLACE-05",
@@ -344,14 +344,14 @@ def check_scene_to_character_direction_consistency() -> list[CheckFailure]:
             c = character_data.get(cid)
             if c is None:
                 continue
-            position = getattr(c, "position", None)
+            position = activity.position(c.cid)
             if (
                 isinstance(position, list)
                 and all(isinstance(p, str) for p in position)
                 and P(position) == path
             ):
                 continue
-            behavior = getattr(c, "behavior", None)
+            behavior = activity.behavior(c.cid)
             failures.append(
                 make_failure(
                     "PLACE-06",
@@ -400,7 +400,7 @@ def check_character_not_in_multiple_scenes() -> list[CheckFailure]:
                     (
                         f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}同时出现在{count}个场景的character_li"
                         f"st中: "
-                        f"{cid_to_scenes[cid]}，position={getattr(c, 'position', None) if c else None}"
+                        f"{cid_to_scenes[cid]}，position={activity.position(c.cid) if c else None}"
                     ),
                     [cid],
                 )
@@ -442,7 +442,7 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
                     (
                         f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}出现在场景名册{paths}中，"
                         f"但既非玩家也不在npc_id_got中；"
-                        f"position={getattr(c, 'position', None) if c else None}，"
+                        f"position={activity.position(c.cid) if c else None}，"
                         f"be_bagged={flags.get(cid, 'be_bagged') if c else None}，"
                         f"field_commission={flags.get(cid, 'field_commission') if c else None}，"
                         f"escaping={flags.get(cid, 'escaping') if c else None}，"
@@ -464,7 +464,7 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
                         f"{flags.get(cid, 'be_bagged')}，"
                         f"field_commission={flags.get(cid, 'field_commission')}，"
                         f"escaping={flags.get(cid, 'escaping')})，"
-                        f"但仍在npc_id_got中；position={getattr(c, 'position', None)}，"
+                        f"但仍在npc_id_got中；position={activity.position(c.cid)}，"
                         f"所在场景名册={cid_to_scenes.get(cid, [])}，"
                         f"vistor={flags.get(cid, 'vistor')}"
                     ),
@@ -583,9 +583,7 @@ def check_move_path_fields_are_existing_scenes() -> list[CheckFailure]:
     character_data = getattr(cache, "character_data", {}) or {}
     scene_data = getattr(cache, "scene_data", {}) or {}
     for cid, c in character_data.items():
-        behavior = getattr(c, "behavior", None)
-        if behavior is None:
-            continue
+        behavior = activity.behavior(cid)
         for field_name in ("move_src", "move_target", "move_final_target"):
             value = getattr(behavior, field_name, [])
             if _valid_scene_path_or_empty(value, scene_data):
@@ -597,7 +595,7 @@ def check_move_path_fields_are_existing_scenes() -> list[CheckFailure]:
                     (
                         f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的behavior.{field_name}={value}既非空列表"
                         f"也不是合法场景路径；"
-                        f"position={getattr(c, 'position', None)}，"
+                        f"position={activity.position(c.cid)}，"
                         f"behavior_id={getattr(behavior, 'behavior_id', None)}"
                         f"，"
                         f"move_src={getattr(behavior, 'move_src', None)}，"
@@ -638,7 +636,7 @@ def check_past_move_position_list_valid() -> list[CheckFailure]:
                     (
                         f"角色id={cid} name={getattr(c, 'name', '')}的action_info.past_move_position_list长度="
                         f"{len(past_list)}"
-                        f"（应≤10），其中非法项={bad_items}；position={getattr(c, 'position', None)}"
+                        f"（应≤10），其中非法项={bad_items}；position={activity.position(c.cid)}"
                     ),
                     [cid],
                 )
@@ -661,7 +659,6 @@ def check_collect_position_list_valid() -> list[CheckFailure]:
     collect_list = getattr(cache, "collect_position_list", None)
     if not isinstance(collect_list, list):
         return failures
-    pl = (getattr(cache, "character_data", {}) or {}).get(0)
     bad_items = [
         pos for pos in collect_list if not _valid_scene_path(pos, scene_data)
     ]
@@ -671,7 +668,7 @@ def check_collect_position_list_valid() -> list[CheckFailure]:
                 "PLACE-14",
                 "收藏地点必须是合法场景",
                 f"cache.collect_position_list中存在非法场景路径: {bad_items}；完整列表长度={len(collect_list)}，"
-                f"玩家当前position={getattr(pl, 'position', None)}",
+                f"玩家当前position={activity.position(0)}",
             )
         )
     return failures
@@ -705,7 +702,7 @@ def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
                     f"角色id={cid} name={getattr(c, 'name', '')}的dormitory={dormitory!r}既不是合法场景键也不是哨兵值('"
                     f"' / '无')；"
                     f"permanent_dormitory={chara_life.permanent_dormitory(cid)!r}，"
-                    f"position={getattr(c, 'position', None)}，"
+                    f"position={activity.position(c.cid)}，"
                     f"work_type={chara_life.work_type(cid)}，是否为访客={visitor.is_visitor(cid)}"
                 ),
                 [cid],
@@ -720,16 +717,16 @@ def check_target_character_id_exists() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验每个角色的target_character_id必须是cache.character_data的键。自指（==cid）是"无交互对象"的
+        校验每个角色的交互对象id（activity.target）必须是cache.character_data的键。自指（==cid）是"无交互对象"的
         默认值，合法；对NPC而言==0表示"目标是玩家"，同样合法（settle_behavior.py据此互换双方结算数据）
     """
     cache = cache_control.cache
     failures = []
     character_data = getattr(cache, "character_data", {}) or {}
     for cid, c in character_data.items():
-        target_id = getattr(c, "target_character_id", cid)
+        target_id = activity.target(c.cid)
         if target_id not in character_data:
-            behavior = getattr(c, "behavior", None)
+            behavior = activity.behavior(c.cid)
             failures.append(
                 make_failure(
                     "PLACE-16",
@@ -739,7 +736,7 @@ def check_target_character_id_exists() -> list[CheckFailure]:
                         f"不存在"
                         f"（自指=无交互对象、0=以玩家为交互对象均合法，此处既非自指也非现存id）；"
                         f"behavior_id={getattr(behavior, 'behavior_id', None)}，is_h={flags.get(cid, 'is_h')}，"
-                        f"position={getattr(c, 'position', None)}"
+                        f"position={activity.position(c.cid)}"
                     ),
                     [cid],
                 )
@@ -754,7 +751,7 @@ def check_h_state_target_same_scene() -> list[CheckFailure]:
     返回值: List[CheckFailure]: 失败记录列表
     功能:
         校验LIVE域内处于sp_flag.is_h的角色，其交互对象必须存在且与自己position相同。不放宽到
-        "所有角色的持久目标都必须同场"——引擎明确容忍普通目标离场，从不重置target_character_id。
+        "所有角色的持久目标都必须同场"——引擎明确容忍普通目标离场，从不重置交互对象。
         级别为warning：H结束到NPC AI清理is_h之间存在一拍误报窗口
     """
     cache = cache_control.cache
@@ -770,15 +767,15 @@ def check_h_state_target_same_scene() -> list[CheckFailure]:
             continue
         if not flags.get(cid, "is_h"):
             continue
-        target_id = getattr(c, "target_character_id", cid)
+        target_id = activity.target(c.cid)
         target = character_data.get(target_id)
-        if target is not None and getattr(target, "position", None) == getattr(
-            c, "position", None
-        ):
+        if target is not None and activity.position(
+            target.cid
+        ) == activity.position(c.cid):
             continue
-        behavior = getattr(c, "behavior", None)
+        behavior = activity.behavior(c.cid)
         target_desc = (
-            f"（目标name={getattr(target, 'name', '')}，target.position={getattr(target, 'position', None)}）"
+            f"（目标name={getattr(target, 'name', '')}，target.position={activity.position(target.cid)}）"
             if target is not None
             else "，目标在character_data中不存在"
         )
@@ -789,7 +786,7 @@ def check_h_state_target_same_scene() -> list[CheckFailure]:
                 (
                     f"[warning] 角色id={cid} name={getattr(c, 'name', '')}处于sp_flag.is_h=True，"
                     f"其target_character_id={target_id}"
-                    f"{target_desc}，自身position={getattr(c, 'position', None)}；"
+                    f"{target_desc}，自身position={activity.position(c.cid)}；"
                     f"behavior_id={getattr(behavior, 'behavior_id', None)}，"
                     f"unconscious_h={flags.get(cid, 'unconscious_h')}，pl.sp_flag.bagging_chara_id={bagging_id}"
                 ),
@@ -860,14 +857,14 @@ def check_current_assistant_valid_and_online() -> list[CheckFailure]:
                 "当前助理必须有效且在线",
                 (
                     f"玩家assistant_character_id={aid}指向的角色不在character_data中；"
-                    f"玩家position={getattr(pl, 'position', None)}"
+                    f"玩家position={activity.position(pl.cid)}"
                 ),
                 [aid],
             )
         )
         return failures
     in_got = aid in npc_id_got
-    dead = getattr(assistant, "dead", False)
+    dead = activity.dead(assistant.cid)
     offline = _offline_flags(aid)
     if not (in_got and not dead and not offline):
         failures.append(
@@ -876,11 +873,11 @@ def check_current_assistant_valid_and_online() -> list[CheckFailure]:
                 "当前助理必须有效且在线",
                 (
                     f"玩家当前助理id={aid} name={getattr(assistant, 'name', '')} "
-                    f"position={getattr(assistant, 'position', None)}，"
+                    f"position={activity.position(assistant.cid)}，"
                     f"是否在npc_id_got中={in_got}，dead={dead}，be_bagged={flags.get(aid, 'be_bagged')}，"
                     f"field_commission={flags.get(aid, 'field_commission')}，"
                     f"escaping={flags.get(aid, 'escaping')}，"
-                    f"玩家position={getattr(pl, 'position', None)}"
+                    f"玩家position={activity.position(pl.cid)}"
                 ),
                 [aid],
             )
@@ -1026,7 +1023,7 @@ def check_follow_mode_value_valid() -> list[CheckFailure]:
     for cid, c in character_data.items():
         is_follow = flags.get(cid, "is_follow")
         if is_follow not in (0, 1, 2, 3, 4):
-            behavior = getattr(c, "behavior", None)
+            behavior = activity.behavior(c.cid)
             services = relations.assistant_services(cid)
             failures.append(
                 make_failure(
@@ -1066,14 +1063,14 @@ def check_player_not_following_self() -> list[CheckFailure]:
             if debug_mode
             else ""
         )
-        behavior = getattr(pl, "behavior", None)
+        behavior = activity.behavior(pl.cid)
         failures.append(
             make_failure(
                 "PLACE-24",
                 "玩家不跟随自己",
                 (
                     f"{prefix}玩家(id 0)的sp_flag.is_follow={is_follow}，应恒为0；"
-                    f"position={getattr(pl, 'position', None)}，"
+                    f"position={activity.position(pl.cid)}，"
                     f"behavior_id={getattr(behavior, 'behavior_id', None)}，"
                     f"move_target={getattr(behavior, 'move_target', None)}，"
                     f"debug_mode={debug_mode}"
@@ -1102,7 +1099,7 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
         is_follow = flags.get(cid, "is_follow")
         if is_follow == 0:
             continue
-        dead = getattr(c, "dead", False)
+        dead = activity.dead(c.cid)
         offline = _offline_flags(cid)
         in_got = cid in npc_id_got
         if cid != 0 and in_got and not dead and not offline:
@@ -1120,7 +1117,7 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
                 (
                     f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的sp_flag.is_follow={is_follow}非0，"
                     f"但是否为玩家自身={cid == 0}，"
-                    f"是否在npc_id_got中={in_got}，dead={dead}，position={getattr(c, 'position', None)}，"
+                    f"是否在npc_id_got中={in_got}，dead={dead}，position={activity.position(c.cid)}，"
                     f"be_bagged={flags.get(cid, 'be_bagged')}，"
                     f"field_commission={flags.get(cid, 'field_commission')}，"
                     f"escaping={flags.get(cid, 'escaping')}，vistor={vistor}，"
@@ -1207,7 +1204,7 @@ def check_bagging_consistency() -> list[CheckFailure]:
                     "装袋搬运双向一致",
                     (
                         f"玩家sp_flag.bagging_chara_id={bid}指向的角色不在character_data中，"
-                        f"pl.position={getattr(pl, 'position', None)}"
+                        f"pl.position={activity.position(pl.cid)}"
                     ),
                     [bid],
                 )
@@ -1215,7 +1212,7 @@ def check_bagging_consistency() -> list[CheckFailure]:
         else:
             be_bagged = flags.get(bid, "be_bagged")
             in_got = bid in npc_id_got
-            position = getattr(target, "position", None)
+            position = activity.position(target.cid)
             scenes_with_bid = [
                 p
                 for p, s in scene_data.items()
@@ -1272,7 +1269,7 @@ def check_permanent_dormitory_not_equal_to_dormitory() -> list[CheckFailure]:
                     "登记宿舍不得停留在与当前宿舍相同的值",
                     f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的登记宿舍(permanent_dormitory)"
                     f"={permanent!r}与当前dormitory相同，说明离开特殊房间时的恢复点未清空该字段；"
-                    f"position={getattr(c, 'position', None)}",
+                    f"position={activity.position(c.cid)}",
                     [cid],
                 )
             )
@@ -1313,7 +1310,7 @@ def check_permanent_dormitory_is_valid_normal_room() -> list[CheckFailure]:
                     "登记宿舍非空时必须是合法的普通宿舍房间",
                     f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的登记宿舍(permanent_dormitory)"
                     f"={permanent!r}不在开放普通宿舍房间池中(len={len(normal_rooms)})，当前dormitory={dormitory!r}，"
-                    f"position={getattr(c, 'position', None)}",
+                    f"position={activity.position(c.cid)}",
                     [cid],
                 )
             )

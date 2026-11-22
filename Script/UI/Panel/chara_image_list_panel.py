@@ -10,6 +10,7 @@ from Script.Core import (
 )
 from Script.Design import handle_premise, cross_section_image, character_image
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import activity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -49,7 +50,6 @@ class CharacterImageListDraw:
         fix_draw.draw()
         self.return_list = []
 
-        player_data: game_type.Character = cache.character_data[0]
         # 优先绘制当前交互对象
         if len(self.character_list):
             text_draw = draw.NormalDraw()
@@ -57,10 +57,8 @@ class CharacterImageListDraw:
             text_draw.draw()
 
             # 绘制交互对象
-            if player_data.target_character_id != 0:
-                now_draw = CharacterImageButton(
-                    player_data.target_character_id, self.width
-                )
+            if activity.target(0) != 0:
+                now_draw = CharacterImageButton(activity.target(0), self.width)
                 now_draw.draw()
                 self.return_list.append(now_draw.return_text)
 
@@ -95,7 +93,7 @@ class CharacterImageListDraw:
 
         # 绘制非交互对象
         for now_character in npc_darw_list:
-            if now_character == player_data.target_character_id:
+            if now_character == activity.target(0):
                 continue
             now_draw = CharacterImageButton(now_character, self.width)
             now_draw.draw()
@@ -163,6 +161,5 @@ class CharacterImageButton:
     def change_target(self) -> None:
         """改变玩家当前交互对象"""
         with player_pick.drafting("portrait target"):
-            player_data: game_type.Character = cache.character_data[0]
             if self.character_id:
-                player_data.target_character_id = self.character_id
+                activity.set_target(0, self.character_id)

@@ -34,7 +34,7 @@ class Intent(TypedDict):
     target: NotRequired[int]
     """ 交互对象的角色id，默认自己 """
     state: NotRequired[int | str]
-    """ 开始时的角色状态（Character.state：CharacterStatus id，或行为id） """
+    """ 开始时的角色状态（activity.state：CharacterStatus id，或行为id） """
     fields: NotRequired[dict[str, core.JSON]]
     """ 开始时写在行动者自己身上的值：路径到 JSON 值，路径的根是 behavior、sp_flag、action_info
     或 life（chara_life 的角色键），例如 "behavior.move_target" """

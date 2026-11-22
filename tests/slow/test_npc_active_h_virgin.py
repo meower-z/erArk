@@ -23,6 +23,7 @@ from unittest import mock
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
 
 NPC_NAME = "阿米娅"
 """ 主动H的干员，开局时有素质0~4 """
@@ -61,7 +62,6 @@ class NpcActiveHVirginTest(SlowTestCase):
         from Script.Core import constant
         from Script.Design import map_handle
 
-        player = self.cache.character_data[0]
         npc_id = self.npc(NPC_NAME)
         room_key = next(
             key
@@ -75,7 +75,7 @@ class NpcActiveHVirginTest(SlowTestCase):
             relations.favorability.set_item, npc_id, 0, FAVORABILITY
         )
         kernel_data.put(relations.trust.set, npc_id, TRUST)
-        player.target_character_id = npc_id
+        aim(0, npc_id)
         self.instruct(constant.Instruct.DO_H)
         self.instruct(constant.Instruct.CHANGE_TOP_AND_BOTTOM)
         from Script.Modules.domains import h_state

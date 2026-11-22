@@ -12,7 +12,13 @@ from Script.UI.Panel import ejaculation_panel, system_setting
 
 import math
 import random
-from Script.Modules.domains import abilities, dirty, first_record, flags
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    dirty,
+    first_record,
+    flags,
+)
 from Script.Modules.domains import h_meters, h_state, history, hypnosis, modes
 from Script.Modules.domains import needs, player_ability, player_collection
 from Script.Modules.domains import playthrough, status, relations
@@ -54,9 +60,8 @@ def base_chara_hp_mp_common_settle(
     # 时停下不结算
     if handle_premise.handle_time_stop_on(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
-    if character_data.dead:
+    target_character_id = activity.target(character_id)
+    if activity.dead(character_id):
         return
     # 程度定义
     dregree_dict = {
@@ -83,7 +88,7 @@ def base_chara_hp_mp_common_settle(
         # 玩家的携带H中移动消耗为10倍
         if (
             character_id == 0
-            and character_data.behavior.behavior_id
+            and activity.behavior(character_id).behavior_id
             == constant.Behavior.CARRY_MOVE
         ):
             hp_adjust *= 10
@@ -219,9 +224,7 @@ def base_chara_state_common_settle(
     change_data_to_target_change -- 交互对象的结算信息记录对象\n
     exact -- 时间结算传 True，最终值保留精确值；一次性的行动效果为 False，最终值截断为整数
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     feel_state_set = []  # 快感状态
@@ -265,10 +268,7 @@ def base_chara_state_common_settle(
         )
 
     # 连续重复指令减值，非负面数值，仅玩家的交互对象
-    if (
-        state_id not in bad_state_set
-        and character_id == pl_character_data.target_character_id
-    ):
+    if state_id not in bad_state_set and character_id == activity.target(0):
         # 判断是否为连续指令
         if (
             len(history.recent()) >= 2
@@ -364,7 +364,6 @@ def chara_feel_state_adjust(
     """
 
     ability = abilities.ability(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
 
     from Script.Design import handle_talent
     from Script.System.Sex_System import drunk_sex_common
@@ -442,7 +441,7 @@ def chara_feel_state_adjust(
         character_id, "is_h"
     ) and handle_premise.handle_group_sex_mode_on(character_id):
         scene_path_str = map_handle.get_map_system_path_str_for_list(
-            character_data.position
+            activity.position(character_id)
         )
         scene_data: game_type.Scene = cache.scene_data[scene_path_str]
         other_npc_num = len(scene_data.character_list) - 2
@@ -472,7 +471,6 @@ def chara_base_state_adjust(
     ability_level -- 系数修正用能力等级
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     ability_level = max(0, ability_level)
 
     # 系数加成
@@ -560,7 +558,7 @@ def chara_base_state_adjust(
         character_id, "is_h"
     ) and handle_premise.handle_group_sex_mode_on(character_id):
         scene_path_str = map_handle.get_map_system_path_str_for_list(
-            character_data.position
+            activity.position(character_id)
         )
         scene_data: game_type.Scene = cache.scene_data[scene_path_str]
         other_npc_num = len(scene_data.character_list) - 2
@@ -626,8 +624,7 @@ def extra_feel_settle(
     change_data_to_target_change -- 状态变更信息记录对象
     exact -- 同 base_chara_state_common_settle：False 时额外快感的量截断为整数
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     share: num.Num = Fraction(final_value, 20)
     final_value = max(10, share) if exact else int(max(10, share))
@@ -732,11 +729,10 @@ def base_chara_favorability_and_trust_common_settle(
     change_data -- 结算信息记录对象\n
     target_character_id -- 交互对象id，默认为0。在为0时会自动获取角色的交互对象id。若角色没有交互对象，则不会进行结算
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     # 判断交互对象
     if target_character_id == 0:
-        target_character_id = character_data.target_character_id
+        target_character_id = activity.target(character_id)
     target_data: game_type.Character = cache.character_data[target_character_id]
 
     # 防止重复结算
@@ -745,7 +741,7 @@ def base_chara_favorability_and_trust_common_settle(
         and character_id != target_character_id
         and (character_id != 0 or target_character_id != 0)
     ):
-        if character_data.dead:
+        if activity.dead(character_id):
             return
         # 无意识状态下不结算
         if handle_premise.handle_unconscious_flag_ge_1(character_id):
@@ -842,7 +838,7 @@ def base_chara_favorability_and_trust_common_settle(
 
         # 信赖
         else:
-            if character_id == 0 and character_data.target_character_id != 0:
+            if character_id == 0 and activity.target(character_id) != 0:
                 add_trust = base_value + calculation_trust(
                     character_id, target_character_id, add_time
                 )
@@ -879,7 +875,7 @@ def base_chara_favorability_and_trust_common_settle(
 
             # 结算最终值
             add_trust *= final_adjust
-            if character_id == 0 and character_data.target_character_id != 0:
+            if character_id == 0 and activity.target(character_id) != 0:
                 trust = min(300, relations.trust(target_data.cid) + add_trust)
                 relations.trust.set(target_data.cid, trust)
                 target_change.trust += add_trust
@@ -906,7 +902,6 @@ def calculation_favorability(
     int -- 最终的好感值
     """
     target_character_id_talent = abilities.talent(target_character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     fix = 1.0
     # 状态相关计算#
 
@@ -982,7 +977,7 @@ def calculation_favorability(
     # 空气催眠置为零
     if flags.get(
         target_character_id, "unconscious_h"
-    ) == 5 and character_data.position == player_ability.get(
+    ) == 5 and activity.position(character_id) == player_ability.get(
         character_id, "air_hypnosis_position"
     ):
         fix = 0
@@ -999,7 +994,6 @@ def calculation_trust(giver_id: int, receiver_id: int, add_time: int) -> float:
     Return arguments:
     float -- 最终的信赖度
     """
-    character_data: game_type.Character = cache.character_data[giver_id]
     fix = 1.0
 
     # 能力相关计算#
@@ -1053,11 +1047,9 @@ def calculation_trust(giver_id: int, receiver_id: int, add_time: int) -> float:
     ):
         fix += 0.5
     # 空气催眠置为零
-    if flags.get(
-        receiver_id, "unconscious_h"
-    ) == 5 and character_data.position == player_ability.get(
-        giver_id, "air_hypnosis_position"
-    ):
+    if flags.get(receiver_id, "unconscious_h") == 5 and activity.position(
+        giver_id
+    ) == player_ability.get(giver_id, "air_hypnosis_position"):
         fix = 0
     trust_add = add_time / 60 * fix
     return trust_add
@@ -1085,8 +1077,7 @@ def base_chara_climix_common_settle(
     """
     from Script.Design import second_behavior
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     # 只能选择正确部位
     part_dict = {
@@ -1116,7 +1107,7 @@ def base_chara_climix_common_settle(
         else:
             adjust = random_adjust
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             base_value,
             part_id,
             extra_adjust=adjust,
@@ -1185,11 +1176,11 @@ def base_chara_experience_common_settle(
     character_data: game_type.Character = cache.character_data[character_id]
     experience_type = game_config.config_experience[experience_id].type
     final_character_id = character_id
-    if character_data.dead:
+    if activity.dead(character_data.cid):
         return
     # 改为加到交互对象身上
     if target_flag:
-        final_character_id = character_data.target_character_id
+        final_character_id = activity.target(character_data.cid)
         character_data = cache.character_data[final_character_id]
 
     # 深度无意识下心理经验不结算
@@ -1287,7 +1278,7 @@ def base_chara_experience_common_settle(
             fr.first_part_sex_dict[2] = {
                 "id": 0,
                 "time": game_time.now(),
-                "place": list(character_data.position),
+                "place": list(activity.position(character_data.cid)),
                 "posture": "",
                 "item": -1,
             }

@@ -22,9 +22,9 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement, action_info, dirty
-from Script.Modules.domains import flags, h_state, history, hypnosis, needs
-from Script.Modules.domains import player_ability, wardrobe
+from Script.Modules.domains import abilities, achievement, action_info, activity
+from Script.Modules.domains import dirty, flags, h_state, history, hypnosis
+from Script.Modules.domains import needs, player_ability, wardrobe
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -59,13 +59,11 @@ def judge_character_h_obscenity_unconscious(
 
         _settle_default = _settle_default_module
     default = _settle_default
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
 
     # 玩家部分
     if character_id == 0:
         # 清空空气催眠位置
-        if character_data.position != player_ability.get(
+        if activity.position(character_id) != player_ability.get(
             character_id, "air_hypnosis_position"
         ):
             player_ability.set(character_id, air_hypnosis_position="")
@@ -93,7 +91,8 @@ def judge_character_h_obscenity_unconscious(
         if (
             len(history.recent())
             and history.recent()[-1] in special_end_list
-            and character_data.behavior.behavior_id not in special_end_list
+            and activity.behavior(character_id).behavior_id
+            not in special_end_list
         ):
             default.handle_both_h_state_reset(
                 0,
@@ -104,10 +103,9 @@ def judge_character_h_obscenity_unconscious(
         # 如果在搬运角色，则直接移动到玩家同一地点
         if handle_premise.handle_carry_somebody(0):
             now_carry_chara_id = action_info.get(0, "carry_chara_id")
-            now_carry_character_data = cache.character_data[now_carry_chara_id]
             map_handle.character_move_scene(
-                now_carry_character_data.position,
-                pl_character_data.position,
+                activity.position(now_carry_chara_id),
+                activity.position(0),
                 now_carry_chara_id,
             )
 
@@ -134,7 +132,8 @@ def judge_character_h_obscenity_unconscious(
             flags.get(character_id, "is_h")
             or hypnosis.of(character_id)["blockhead"]
         )
-        and character_data.behavior.behavior_id != constant.Behavior.SLEEP
+        and activity.behavior(character_id).behavior_id
+        != constant.Behavior.SLEEP
         and handle_premise.handle_normal_6(character_id)
         and handle_premise.handle_group_sex_mode_on(character_id)
         and (
@@ -155,7 +154,6 @@ def end_h_left_behind(character_id: int) -> None:
     """
     from Script.Modules.gameplay_resolution import plan_queue
 
-    character_data: game_type.Character = cache.character_data[character_id]
     # 结束H状态
     if handle_premise.handle_self_is_h(character_id):
         flags.set(character_id, is_h=False)
@@ -173,7 +171,7 @@ def end_h_left_behind(character_id: int) -> None:
     # 结束空气催眠
     if handle_premise.handle_unconscious_flag_5(
         character_id
-    ) and character_data.position != player_ability.get(
+    ) and activity.position(character_id) != player_ability.get(
         0, "air_hypnosis_position"
     ):
         flags.set(character_id, unconscious_h=0)
@@ -197,12 +195,11 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
     from Script.Modules.gameplay_resolution import plan_queue
     from Script.Settle import default
 
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
 
@@ -224,7 +221,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
     now_draw.draw()
 
     # 睡眠中，则对方获得睡奸醒来状态
-    if handle_premise.handle_action_sleep(character_data.target_character_id):
+    if handle_premise.handle_action_sleep(activity.target(character_id)):
         flags.set(target_data.cid, sleep_h_awake=True)
 
     # 结算恢复无意识的二段行为
@@ -261,7 +258,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
 
     # 结算交互对象的响应
     response = handle_unconscious_h_response(
-        character_id, character_data.target_character_id
+        character_id, activity.target(character_id)
     )
 
     # 如果继续H，对方等待10分钟
@@ -281,9 +278,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
             interrupt=True,
         )
         # 睡眠中，则对方获得装睡状态，仍继续无意识H
-        if handle_premise.handle_action_sleep(
-            character_data.target_character_id
-        ):
+        if handle_premise.handle_action_sleep(activity.target(character_id)):
             h_state.set(target_data.cid, pretend_sleep=True)
             flags.set(target_data.cid, unconscious_h=1)
             # 成就刷新
@@ -358,8 +353,6 @@ def handle_unconscious_h_response(
     from Script.Settle import default, default_cloth
 
     # 从缓存中获取自己角色数据与目标角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[target_character_id]
 
     # 停止对方的无意识状态与H状态
     flags.set(target_character_id, unconscious_h=0)
@@ -400,16 +393,16 @@ def handle_unconscious_h_response(
         # 退出结算：退出奖励、H状态归位与穿回衣物。
         # 寸止解放按玩家的交互对象结算，结算时把玩家的交互对象暂时指向她，结算完复原；
         # 退出奖励会连同角色的交互对象一起结算，而她身上的交互对象可能是没有清理过的旧值，因此先把她的目标指向自己
-        old_target_character_id = character_data.target_character_id
-        character_data.target_character_id = target_character_id
+        old_target_character_id = activity.target(character_id)
+        activity.set_target(character_id, target_character_id)
         default.handle_orgasm_edge_release(
             character_id,
             1,
             game_type.CharacterStatusChange(),
             game_time.now(),
         )
-        character_data.target_character_id = old_target_character_id
-        target_data.target_character_id = target_character_id
+        activity.set_target(character_id, old_target_character_id)
+        activity.set_target(target_character_id, target_character_id)
         default.handle_end_h_add_hpmp_max(
             target_character_id,
             1,
@@ -644,8 +637,7 @@ def npc_active_h() -> int:
     from Script.Modules.tk_ui import player_pick
     from Script.System.Instruct_System import see_instruct_panel
 
-    pl_character_data: game_type.Character = cache.character_data[0]
-    target_character_id = pl_character_data.target_character_id
+    target_character_id = activity.target(0)
     target_character_data = cache.character_data[target_character_id]
 
     # 如果对方不是主动H状态，则返回
@@ -747,8 +739,6 @@ def npc_ai_in_group_sex(character_id: int) -> None:
     if character_id in group_sex_panel.count_group_sex_character_list():
         return
 
-    pl_character_data: game_type.Character = cache.character_data[0]
-
     # 如果不是H状态+群交，则返回
     if not flags.get(
         character_id, "is_h"
@@ -776,8 +766,8 @@ def npc_ai_in_group_sex(character_id: int) -> None:
             pl_hs.group_sex_body_template_dict["A"][1][0].append(character_id)
         return
     # 获取该部位的状态id列表：查询按玩家的交互对象判断前提，查完复原
-    old_target_character_id = pl_character_data.target_character_id
-    pl_character_data.target_character_id = character_id
+    old_target_character_id = activity.target(0)
+    activity.set_target(0, character_id)
     try:
         new_status_id_list = (
             group_sex_panel.get_status_id_list_from_group_sex_body_part(
@@ -785,7 +775,7 @@ def npc_ai_in_group_sex(character_id: int) -> None:
             )
         )
     finally:
-        pl_character_data.target_character_id = old_target_character_id
+        activity.set_target(0, old_target_character_id)
     if not new_status_id_list:
         return
     # 随机选择一个状态；侍奉时替换侍奉位，对单时占这个部位

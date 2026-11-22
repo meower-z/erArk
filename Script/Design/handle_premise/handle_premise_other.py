@@ -9,11 +9,11 @@ from Script.Design import child_stage_gate
 from Script.Config import normal_config, game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.UI.Moudle import view
-from Script.Modules.domains import abilities, action_info, facility, flags
-from Script.Modules.domains import growth, history, modes, needs, physical_exam
+from Script.Modules.domains import abilities, action_info, activity, chara_life
+from Script.Modules.domains import chara_profile, facility, flags, growth
+from Script.Modules.domains import history, modes, needs, physical_exam
 from Script.Modules.domains import player_ability, player_collection, pregnancy
-from Script.Modules.domains import status, visitor, chara_life, chara_profile
-from Script.Modules.domains import relations
+from Script.Modules.domains import relations, status, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -30,8 +30,7 @@ def handle_have_target(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.target_character_id == character_id:
+    if activity.target(character_id) == character_id:
         return 0
     return 1
 
@@ -57,8 +56,7 @@ def handle_target_no_player(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.target_character_id > 0:
+    if activity.target(character_id) > 0:
         return 1
     return 0
 
@@ -164,8 +162,7 @@ def handle_have_moved(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    now_time: datetime.datetime = character_data.behavior.start_time
+    now_time: datetime.datetime = activity.behavior(character_id).start_time
     last_move_time = action_info.get(character_id, "last_move_time")
     # 不同天，或同一天里已到了下一个小时
     if now_time.day != last_move_time.day:
@@ -254,12 +251,11 @@ def handle_have_not_wake_up(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     now_time = game_time.now()
     wake_up_time = action_info.get(character_id, "wake_time")
     if (
         wake_up_time.day != now_time.day
-        and wake_up_time.day != character_data.behavior.start_time.day
+        and wake_up_time.day != activity.behavior(character_id).start_time.day
     ):
         return 1
     return 0
@@ -322,8 +318,7 @@ def handle_self_have_conscious_h_today(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time
+    now_time = activity.behavior(character_id).start_time
     last_conscious_h_time = action_info.get(
         character_id, "last_conscious_h_time"
     )
@@ -357,8 +352,7 @@ def handle_self_have_unconscious_h_today(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time
+    now_time = activity.behavior(character_id).start_time
     last_unconscious_h_time = action_info.get(
         character_id, "last_unconscious_h_time"
     )
@@ -424,10 +418,7 @@ def handle_target_have_conscious_h_today(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_have_conscious_h_today(
-        character_data.target_character_id
-    )
+    return handle_self_have_conscious_h_today(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_HAVE_CONSCIOUS_H_TODAY)
@@ -451,10 +442,7 @@ def handle_target_have_unconscious_h_today(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_have_unconscious_h_today(
-        character_data.target_character_id
-    )
+    return handle_self_have_unconscious_h_today(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_HAVE_UNCONSCIOUS_H_TODAY)
@@ -482,9 +470,8 @@ def handle_target_have_conscious_or_unconscious_h_today(
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     return handle_self_have_conscious_or_unconscious_h_today(
-        character_data.target_character_id
+        activity.target(character_id)
     )
 
 
@@ -543,8 +530,7 @@ def handle_t_sleep_disturbed_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_sleep_disturbed_1(character_data.target_character_id)
+    return handle_sleep_disturbed_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_SLEEP_DISTURBED_0)
@@ -556,8 +542,7 @@ def handle_t_sleep_disturbed_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_sleep_disturbed_0(character_data.target_character_id)
+    return handle_sleep_disturbed_0(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.IS_MAN)
@@ -687,8 +672,7 @@ def handle_target_good_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_good_mood(character_data.target_character_id):
+    if handle_good_mood(activity.target(character_id)):
         return 1
     else:
         return 0
@@ -703,8 +687,7 @@ def handle_target_normal_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_normal_mood(character_data.target_character_id):
+    if handle_normal_mood(activity.target(character_id)):
         return 1
     else:
         return 0
@@ -719,8 +702,7 @@ def handle_target_bad_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_bad_mood(character_data.target_character_id):
+    if handle_bad_mood(activity.target(character_id)):
         return 1
     else:
         return 0
@@ -735,8 +717,7 @@ def handle_target_angry_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_angry_mood(character_data.target_character_id):
+    if handle_angry_mood(activity.target(character_id)):
         return 1
     else:
         return 0
@@ -751,8 +732,7 @@ def handle_t_bad_or_angry_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     value = needs.of(target_data.cid)["angry"]
     if value > 30:
         return 1
@@ -769,8 +749,7 @@ def handle_target_angry_with_player(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "angry_with_player"):
         return 1
     else:
@@ -786,8 +765,7 @@ def handle_target_not_angry_with_player(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "angry_with_player"):
         return 0
     else:
@@ -859,8 +837,7 @@ def handle_t_kiss_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.experience(target_data.cid)[40] == 0:
         return 1
     return 0
@@ -875,8 +852,7 @@ def handle_t_kiss_ge_10(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.experience(target_data.cid)[40] >= 10:
         return 1
     return 0
@@ -918,9 +894,8 @@ def handle_t_is_medical(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     return target_data.profession == 3
 
@@ -955,8 +930,7 @@ def handle_position_in_nursery_and_flag_baby_exist(character_id: int) -> int:
     int -- 权重
     """
 
-    character_data = cache.character_data[character_id]
-    now_position = character_data.position
+    now_position = activity.position(character_id)
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
     now_scene_data = cache.scene_data[now_scene_str]
     if "Nursery" in now_scene_data.scene_tag:
@@ -1052,9 +1026,8 @@ def handle_t_reproduction_period_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     reproduction_period = pregnancy.of(
-        character_data.target_character_id
+        activity.target(character_id)
     ).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
@@ -1074,9 +1047,8 @@ def handle_t_reproduction_period_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     reproduction_period = pregnancy.of(
-        character_data.target_character_id
+        activity.target(character_id)
     ).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
@@ -1096,9 +1068,8 @@ def handle_t_reproduction_period_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     reproduction_period = pregnancy.of(
-        character_data.target_character_id
+        activity.target(character_id)
     ).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
@@ -1118,9 +1089,8 @@ def handle_t_reproduction_period_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     reproduction_period = pregnancy.of(
-        character_data.target_character_id
+        activity.target(character_id)
     ).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
@@ -1152,8 +1122,7 @@ def handle_t_fertilization_or_pregnancy(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     talent = abilities.talent(target_data.cid)
     if talent[20] or talent[21] or talent[22] or talent[23]:
         return 1
@@ -1443,8 +1412,7 @@ def handle_target_is_player_daughter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_is_player_daughter(character_data.target_character_id)
+    return handle_self_is_player_daughter(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_PLAYER_DAUGHTER)
@@ -1456,10 +1424,7 @@ def handle_target_not_player_daughter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_self_is_player_daughter(
-        character_data.target_character_id
-    )
+    return not handle_self_is_player_daughter(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_REPORT_CARD_CHECKABLE)
@@ -1474,11 +1439,10 @@ def handle_target_report_card_checkable(character_id: int) -> int:
     """
     from Script.System.Education_System import semester_handle
 
-    character_data = cache.character_data[character_id]
     return (
         1
         if semester_handle.judge_report_card_checkable(
-            character_data.target_character_id
+            activity.target(character_id)
         )
         else 0
     )
@@ -1509,8 +1473,7 @@ def handle_t_birth_type_egg(character_id: int) -> int:
     """
     from Script.System.Pregnancy_System import egg_handle
 
-    character_data = cache.character_data[character_id]
-    return egg_handle.get_birth_type(character_data.target_character_id) == 11
+    return egg_handle.get_birth_type(activity.target(character_id)) == 11
 
 
 @add_premise(constant_promise.Premise.SELF_BIRTH_TYPE_MULTIPLE)
@@ -1538,8 +1501,7 @@ def handle_t_birth_type_multiple(character_id: int) -> int:
     """
     from Script.System.Pregnancy_System import egg_handle
 
-    character_data = cache.character_data[character_id]
-    return egg_handle.is_multiple_birth(character_data.target_character_id)
+    return egg_handle.is_multiple_birth(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_MULTIPLE_FETUS)
@@ -1563,8 +1525,7 @@ def handle_t_multiple_fetus(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return pregnancy.of(character_data.target_character_id).fetus_count >= 2
+    return pregnancy.of(activity.target(character_id)).fetus_count >= 2
 
 
 @add_premise(constant_promise.Premise.SELF_IDENTICAL_TWINS)
@@ -1588,10 +1549,7 @@ def handle_t_identical_twins(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return bool(
-        pregnancy.of(character_data.target_character_id).identical_twins
-    )
+    return bool(pregnancy.of(activity.target(character_id)).identical_twins)
 
 
 @add_premise(constant_promise.Premise.SELF_BIRTH_TYPE_EGG_SOFT)
@@ -1619,8 +1577,7 @@ def handle_t_birth_type_egg_soft(character_id: int) -> int:
     """
     from Script.System.Pregnancy_System import egg_handle
 
-    character_data = cache.character_data[character_id]
-    return egg_handle.is_egg_soft(character_data.target_character_id)
+    return egg_handle.is_egg_soft(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_EXTERNAL_OVULATION_CHANCE)
@@ -1648,11 +1605,7 @@ def handle_player_soft_eggs_in_scene(character_id: int) -> int:
     """
     from Script.System.Pregnancy_System import soft_egg_handle
 
-    pl_character_data = cache.character_data[0]
-    return (
-        len(soft_egg_handle.get_soft_eggs_in_scene(pl_character_data.position))
-        > 0
-    )
+    return len(soft_egg_handle.get_soft_eggs_in_scene(activity.position(0))) > 0
 
 
 @add_premise(constant_promise.Premise.HAVE_UNIDENTIFIED_EGGS)
@@ -1715,14 +1668,10 @@ def handle_t_have_takeable_eggs(character_id: int) -> int:
     """
     from Script.System.Pregnancy_System import egg_handle
 
-    character_data = cache.character_data[character_id]
-    if character_data.target_character_id == character_id:
+    if activity.target(character_id) == character_id:
         return 0
     return (
-        len(
-            egg_handle.get_unidentified_eggs(character_data.target_character_id)
-        )
-        > 0
+        len(egg_handle.get_unidentified_eggs(activity.target(character_id))) > 0
     )
 
 
@@ -1802,8 +1751,7 @@ def handle_target_is_player(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.target_character_id == 0:
+    if activity.target(character_id) == 0:
         return 1
     return 0
 
@@ -1901,15 +1849,14 @@ def handle_favorability_le_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
 
     level = 3
     if character_id == 0:
         level, __ = attr_calculation.get_favorability_level(
             relations.favorability(target_data.cid)[0]
         )
-    elif character_data.target_character_id == 0:
+    elif activity.target(character_id) == 0:
         level, __ = attr_calculation.get_favorability_level(
             relations.favorability(character_id)[0]
         )
@@ -1928,15 +1875,14 @@ def handle_favorability_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
 
     level = 0
     if character_id == 0:
         level, __ = attr_calculation.get_favorability_level(
             relations.favorability(target_data.cid)[0]
         )
-    elif character_data.target_character_id == 0:
+    elif activity.target(character_id) == 0:
         level, __ = attr_calculation.get_favorability_level(
             relations.favorability(character_id)[0]
         )
@@ -1955,8 +1901,7 @@ def handle_target_trust_ge_200(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
 
     return relations.trust(target_data.cid) >= 200
 
@@ -1987,8 +1932,7 @@ def handle_is_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(0)]
     if flags.get(0, "is_h") or flags.get(target_data.cid, "is_h"):
         return 1
     return 0
@@ -2003,8 +1947,7 @@ def handle_not_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(0)]
     if flags.get(0, "is_h") or flags.get(target_data.cid, "is_h"):
         return 0
     return 1
@@ -2043,8 +1986,7 @@ def handle_t_is_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_is_h(character_data.target_character_id)
+    return handle_self_is_h(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_H)
@@ -2056,8 +1998,7 @@ def handle_t_not_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_t_is_h(character_data.target_character_id)
+    return not handle_t_is_h(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.GROUP_SEX_MODE_ON)
@@ -2175,7 +2116,7 @@ def instruct_type_shown(instruct_type: int) -> bool:
         return False
     if instruct_type not in TARGET_HIDDEN_INSTRUCT_TYPES:
         return True
-    target_id = cache.character_data[0].target_character_id
+    target_id = activity.target(0)
     return not (
         handle_target_parturient_or_postpartum(0)
         or child_stage_gate.is_child_stage(target_id)
@@ -2666,8 +2607,7 @@ def handle_t_lubrication_l_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if status.of(target_data.cid)[8] < 1:
         return 1
     return 0
@@ -2682,8 +2622,7 @@ def handle_t_lubrication_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if status.of(target_data.cid)[8] >= 3:
         return 1
     return 0
@@ -2698,8 +2637,7 @@ def handle_t_lubrication_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if status.of(target_data.cid)[8] >= 1:
         return 1
     return 0
@@ -2714,8 +2652,7 @@ def handle_t_lubrication_ge_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if status.of(target_data.cid)[8] >= 5:
         return 1
     return 0
@@ -2730,8 +2667,7 @@ def handle_t_lubrication_ge_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if status.of(target_data.cid)[8] >= 7:
         return 1
     return 0
@@ -2746,8 +2682,7 @@ def handle_t_lubrication_l_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if status.of(target_data.cid)[8] < 3:
         return 1
     return 0
@@ -2762,8 +2697,7 @@ def handle_t_lubrication_l_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if status.of(target_data.cid)[8] < 7:
         return 1
     return 0
@@ -2778,8 +2712,7 @@ def handle_t_lactation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[27] == 1:
         return 1
     return 0
@@ -2794,8 +2727,7 @@ def handle_t_lactation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[27] == 0:
         return 1
     return 0
@@ -2866,8 +2798,7 @@ def handle_t_fertilization_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[20] == 0:
         return 1
     return 0
@@ -2882,8 +2813,7 @@ def handle_t_fertilization_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[20] == 1:
         return 1
     return 0
@@ -2898,8 +2828,7 @@ def handle_t_pregnancy_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[21] == 0:
         return 1
     return 0
@@ -2914,8 +2843,7 @@ def handle_t_pregnancy_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[21] == 1:
         return 1
     return 0
@@ -2958,8 +2886,7 @@ def handle_t_parturient_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[22] == 1:
         return 1
     return 0
@@ -2974,8 +2901,7 @@ def handle_t_parturient_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[22] == 0:
         return 1
     return 0
@@ -3018,8 +2944,7 @@ def handle_t_postpartum_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[23] == 0:
         return 1
     return 0
@@ -3034,8 +2959,7 @@ def handle_t_postpartum_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[23] == 1:
         return 1
     return 0
@@ -3108,8 +3032,7 @@ def handle_t_rearing_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[24] == 0:
         return 1
     return 0
@@ -3124,8 +3047,7 @@ def handle_t_rearing_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[24] == 1:
         return 1
     return 0
@@ -3170,8 +3092,7 @@ def handle_t_inflation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     talent = abilities.talent(target_data.cid)
     if talent[26] == 0 and talent[25] == 0:
         return 1
@@ -3187,8 +3108,7 @@ def handle_t_inflation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     talent = abilities.talent(target_data.cid)
     if talent[26] == 1 or talent[25] == 1:
         return 1
@@ -3232,8 +3152,7 @@ def handle_t_fake_inflation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[25] == 0:
         return 1
     return 0
@@ -3248,8 +3167,7 @@ def handle_t_fake_inflation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[25] == 1:
         return 1
     return 0
@@ -3292,8 +3210,7 @@ def handle_t_growth_stop_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[28] == 0:
         return 1
     return 0
@@ -3308,8 +3225,7 @@ def handle_t_growth_stop_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[28] == 1:
         return 1
     return 0
@@ -3352,8 +3268,7 @@ def handle_t_cumflation_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[32] == 0:
         return 1
     return 0
@@ -3368,8 +3283,7 @@ def handle_t_cumflation_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[32] == 1:
         return 1
     return 0
@@ -3440,8 +3354,7 @@ def handle_action_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.behavior_id == constant.Behavior.SLEEP:
+    if activity.behavior(character_id).behavior_id == constant.Behavior.SLEEP:
         return 1
     return 0
 
@@ -3455,8 +3368,7 @@ def handle_action_not_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.behavior_id == constant.Behavior.SLEEP:
+    if activity.behavior(character_id).behavior_id == constant.Behavior.SLEEP:
         return 0
     return 1
 
@@ -3470,9 +3382,11 @@ def handle_t_action_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    if target_data.behavior.behavior_id == constant.Behavior.SLEEP:
+    target_data = cache.character_data[activity.target(character_id)]
+    if (
+        activity.behavior(target_data.cid).behavior_id
+        == constant.Behavior.SLEEP
+    ):
         return 1
     return 0
 
@@ -3486,9 +3400,11 @@ def handle_t_action_not_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    if target_data.behavior.behavior_id == constant.Behavior.SLEEP:
+    target_data = cache.character_data[activity.target(character_id)]
+    if (
+        activity.behavior(target_data.cid).behavior_id
+        == constant.Behavior.SLEEP
+    ):
         return 0
     return 1
 
@@ -3502,8 +3418,7 @@ def handle_action_rest(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.behavior_id == constant.Behavior.REST:
+    if activity.behavior(character_id).behavior_id == constant.Behavior.REST:
         return 1
     return 0
 
@@ -3531,8 +3446,7 @@ def handle_action_move(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.behavior_id == constant.Behavior.MOVE:
+    if activity.behavior(character_id).behavior_id == constant.Behavior.MOVE:
         return 1
     return 0
 
@@ -3560,8 +3474,7 @@ def handle_pl_action_move(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
-    if pl_character_data.behavior.move_final_target != []:
+    if activity.behavior(0).move_final_target != []:
         return 1
     return 0
 
@@ -3587,8 +3500,7 @@ def handle_t_action_move(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_action_move(character_data.target_character_id):
+    if handle_action_move(activity.target(character_id)):
         return 1
     return 0
 
@@ -3602,8 +3514,7 @@ def handle_t_action_not_move(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_action_move(character_data.target_character_id):
+    if handle_action_move(activity.target(character_id)):
         return 0
     return 1
 
@@ -3617,10 +3528,12 @@ def handle_action_work_or_entertainment(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.behavior_id in game_config.config_behavior:
+    if (
+        activity.behavior(character_id).behavior_id
+        in game_config.config_behavior
+    ):
         behavior_data = game_config.config_behavior[
-            character_data.behavior.behavior_id
+            activity.behavior(character_id).behavior_id
         ]
         if "工作" in behavior_data.tag or "娱乐" in behavior_data.tag:
             return 1
@@ -3690,11 +3603,8 @@ def handle_target_is_carried(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
     if action_info.get(0, "carry_chara_id") > 0:
-        if pl_character_data.target_character_id == action_info.get(
-            0, "carry_chara_id"
-        ):
+        if activity.target(0) == action_info.get(0, "carry_chara_id"):
             return 1
     return 0
 
@@ -3708,8 +3618,7 @@ def handle_t_baby_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[101] == 1:
         return 1
     return 0
@@ -3724,8 +3633,7 @@ def handle_t_baby_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[101] == 0:
         return 1
     return 0

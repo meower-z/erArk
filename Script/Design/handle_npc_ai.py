@@ -15,9 +15,9 @@ from Script.Design import attr_calculation, character_move, game_time
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, action_info, entertainment
-from Script.Modules.domains import facility, flags, hypnosis, needs, roster
-from Script.Modules.domains import chara_life
+from Script.Modules.domains import abilities, action_info, activity, chara_life
+from Script.Modules.domains import entertainment, facility, flags, hypnosis
+from Script.Modules.domains import needs, roster
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -107,15 +107,13 @@ def commit_group_sex_tired_exit(character_id: int) -> None:
     from Script.Modules.gameplay_resolution import plan_queue
     from Script.System.Instruct_System import handle_instruct
 
-    character_data: game_type.Character = cache.character_data[character_id]
     # 目标指向自己并排上退出行为
-    character_data.target_character_id = character_id
+    activity.set_target(character_id, character_id)
     handle_instruct.plan_instruct_common_settle(
         constant.Behavior.GROUP_SEX_NPC_HP_0_END, character_id, character_id
     )
-    pl_character_data: game_type.Character = cache.character_data[0]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        pl_character_data.position
+        activity.position(0)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     remaining_ids = [
@@ -154,8 +152,7 @@ def judge_assistant_character(character_id: int) -> int:
     if handle_premise.handle_not_assistant(character_id):
         return 0
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    start_time_hour = character_data.behavior.start_time.hour
+    start_time_hour = activity.behavior(character_id).start_time.hour
     now_time_hour = game_time.now().hour
     # 如果超过了12点，则将早安问候设为已问候
     if start_time_hour >= 12 and now_time_hour >= 12:
@@ -179,8 +176,6 @@ def judge_character_follow(character_id: int) -> int:
     """
     from Script.Settle import default
 
-    character_data: game_type.Character = cache.character_data[character_id]
-
     # 智能跟随
     if flags.get(character_id, "is_follow") == 1:
         # 取消所有工作和娱乐状态
@@ -196,7 +191,7 @@ def judge_character_follow(character_id: int) -> int:
     if flags.get(character_id, "is_follow") == 2:
         from Script.Modules.gameplay_resolution import plan_queue
 
-        if character_data.position == cache.character_data[0].position:
+        if activity.position(character_id) == activity.position(0):
             plan_queue.plan_next(
                 character_id,
                 constant.Behavior.FOLLOW,
@@ -206,7 +201,7 @@ def judge_character_follow(character_id: int) -> int:
             )
             return 1
         _move_type, _path, move_path, move_time = character_move.character_move(
-            character_id, cache.character_data[0].position
+            character_id, activity.position(0)
         )
         plan_queue.plan_next(
             character_id,
@@ -229,7 +224,6 @@ def judge_character_cant_move(character_id: int) -> int:
     bool -- 本次update时间切片内活动是否已完成
     """
     talent = abilities.talent(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
 
     cant_move_flag = False
 
@@ -246,7 +240,7 @@ def judge_character_cant_move(character_id: int) -> int:
                 chara_life.dormitory(character_id)
             )
             map_handle.character_move_scene(
-                character_data.position, dormitory_list, character_id
+                activity.position(character_id), dormitory_list, character_id
             )
 
     # 临盆和产后
@@ -258,7 +252,7 @@ def judge_character_cant_move(character_id: int) -> int:
         # character_data.state = constant.CharacterStatus.STATUS_WAIT
 
         # 检测当前位置是否在医疗部的住院部，如果不在的话则移动至住院部
-        now_position = character_data.position
+        now_position = activity.position(character_id)
         now_scene_str = map_handle.get_map_system_path_str_for_list(
             now_position
         )
@@ -268,7 +262,9 @@ def judge_character_cant_move(character_id: int) -> int:
                 random.choice(constant.place_data["Inpatient_Department"])
             )
             map_handle.character_move_scene(
-                character_data.position, to_Inpatient_Department, character_id
+                activity.position(character_id),
+                to_Inpatient_Department,
+                character_id,
             )
     return cant_move_flag
 
@@ -762,11 +758,10 @@ def judge_student_leave_truncate(character_id: int) -> bool:
     功能: 待赴实操课提前退场（口径 62），没课的节次到了下一节开课前收手，人已在上课地点或今天已翘课的到开课那一刻收手。
           由每 5 分钟的 Tick 判，最多晚 4 分钟
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     # 这一分钟刚开始的行为不判，否则"结束→AI重选同一行为→再结束"会使NPC行为循环永不收敛
     if (
         game_time.judge_date_big_or_small(
-            game_time.now(), character_data.behavior.start_time
+            game_time.now(), activity.behavior(character_id).start_time
         )
         != 1
     ):
@@ -789,7 +784,6 @@ def get_salutation_wake_time(character_id: int) -> datetime.datetime | None:
     datetime | None -- 睡觉中、早安问候服务开启、今日未问候、没吃安眠药，
         行动结束时间晚于游戏时间且晚于玩家起床时刻、行动还是 480 分钟（未截过）时为玩家起床的时刻，否则为 None
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     if not (
         handle_premise.handle_action_sleep(character_id)
         and handle_premise.handle_self_not_sleep_pills(character_id)
@@ -798,12 +792,12 @@ def get_salutation_wake_time(character_id: int) -> datetime.datetime | None:
         and handle_premise.handle_chara_behavior_end_time_lateer_than_game_time(
             character_id
         )
-        and character_data.behavior.duration == 480
+        and activity.behavior(character_id).duration == 480
     ):
         return None
     end_time = game_time.get_sub_date(
-        minute=character_data.behavior.duration,
-        old_date=character_data.behavior.start_time,
+        minute=activity.behavior(character_id).duration,
+        old_date=activity.behavior(character_id).start_time,
     )
     wake_hour, wake_minute = action_info.get(0, "plan_to_wake_time")[:2]
     wake_up_time = end_time.replace(hour=wake_hour, minute=wake_minute)
@@ -822,13 +816,12 @@ def judge_interrupt_character_behavior(character_id: int) -> int:
     功能: 休息、睡觉与工作 / 娱乐中到了淋浴时间，以及早安问候的助理到了玩家起床的时刻，都立即结束当前行动（end_now）。
           学生岗赶去上课在 judge_student_leave_truncate
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     # 本轮内刚赋予的行为（开始时间不早于当前游戏时间）不做打断判定，
     # 否则"打断→AI重选同一行为→再打断"会使NPC行为循环永不收敛
     if (
         game_time.judge_date_big_or_small(
-            game_time.now(), character_data.behavior.start_time
+            game_time.now(), activity.behavior(character_id).start_time
         )
         != 1
     ):
@@ -896,11 +889,10 @@ def judge_same_position_npc_follow() -> None:
     """
     from Script.Modules.gameplay_resolution import plan_queue
 
-    pl_character_data: game_type.Character = cache.character_data[0]
     for character_id in roster.active():
         character_data: game_type.Character = cache.character_data[character_id]
         # 跳过不在同一位置的NPC
-        if character_data.position != pl_character_data.position:
+        if activity.position(character_id) != activity.position(0):
             continue
         # 智能跟随、异常状态267正常
         if flags.get(
@@ -910,7 +902,7 @@ def judge_same_position_npc_follow() -> None:
             # 变成移动状态，目标为玩家位置
             _move_type, _path, move_path, move_time = (
                 character_move.character_move(
-                    character_id, pl_character_data.behavior.move_final_target
+                    character_id, activity.behavior(0).move_final_target
                 )
             )
             move_flag, wait_flag = (
@@ -929,7 +921,7 @@ def judge_same_position_npc_follow() -> None:
                     fields={
                         "behavior.move_target": move_path,
                         "behavior.move_final_target": (
-                            pl_character_data.behavior.move_final_target
+                            activity.behavior(0).move_final_target
                         ),
                     },
                 )
@@ -945,13 +937,13 @@ def judge_same_position_npc_follow() -> None:
                 action_info.add(character_data.cid, "follow_wait_time", 5)
         elif flags.get(character_data.cid, "hidden_sex_mode") == 5:
             if (
-                len(pl_character_data.behavior.move_target)
-                and character_data.position
-                != pl_character_data.behavior.move_target
+                len(activity.behavior(0).move_target)
+                and activity.position(character_id)
+                != activity.behavior(0).move_target
             ):
                 map_handle.character_move_scene(
-                    character_data.position,
-                    pl_character_data.behavior.move_target,
+                    activity.position(character_id),
+                    activity.behavior(0).move_target,
                     character_id,
                 )
 
@@ -1063,9 +1055,8 @@ def select_random_free_character(character_id: int) -> int:
     Return arguments:
     int -- 对方的角色id
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     available_characters = []
@@ -1107,7 +1098,7 @@ def select_random_free_character(character_id: int) -> int:
             # 如果自己的行动开始时间晚于对方的互动结束时间，则跳过
             if (
                 game_time.judge_date_big_or_small(
-                    character_data.behavior.start_time,
+                    activity.behavior(character_id).start_time,
                     interacting_character_end_time,
                 )
                 < 0

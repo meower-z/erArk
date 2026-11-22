@@ -17,7 +17,7 @@ from Script.UI.Panel import achievement_panel
 from Script.Modules.gameplay_resolution import starts
 from Script.Modules.gameplay_resolution.intent import Intent
 from Script.Design import game_time
-from Script.Modules.domains import abilities, action_info, flags
+from Script.Modules.domains import abilities, action_info, activity, flags
 
 panel_info_data: dict[str, object] = {}
 
@@ -62,7 +62,7 @@ class Sex_Be_Discovered_Panel:
         self.pl_chara_data: game_type.Character = cache.character_data[0]
         """ 玩家角色数据 """
         self.target_chara_data = cache.character_data[
-            self.pl_chara_data.target_character_id
+            activity.target(self.pl_chara_data.cid)
         ]
         """ 玩家交互对象数据 """
         self.discoverer_reaction_settled = False
@@ -70,7 +70,7 @@ class Sex_Be_Discovered_Panel:
 
         # 如果当前交互对象没有在H，则选取一个正确的H中的对象
         if not handle_premise.handle_self_is_h(
-            self.pl_chara_data.target_character_id
+            activity.target(self.pl_chara_data.cid)
         ):
             from Script.Design import map_handle
 
@@ -84,7 +84,7 @@ class Sex_Be_Discovered_Panel:
                     cache.character_data[chara_id]
                 )
                 if handle_premise.handle_self_is_h(chara_id):
-                    self.pl_chara_data.target_character_id = chara_id
+                    activity.set_target(self.pl_chara_data.cid, chara_id)
                     self.target_chara_data = target_character_data
                     break
 
@@ -127,8 +127,9 @@ class Sex_Be_Discovered_Panel:
         )
 
         # 记录发现者名字
-        self.pl_chara_data.behavior.h_interrupt_chara_name = (
-            self.find_chara_data.name
+        activity.update_behavior(
+            self.pl_chara_data.cid,
+            h_interrupt_chara_name=self.find_chara_data.name,
         )
         # 重置发现者的逆推状态
         default.handle_masturebate_to_pl_flag_0(

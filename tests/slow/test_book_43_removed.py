@@ -24,7 +24,9 @@ from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests import kernel_data
+from tests.chara_activity import behave
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from typing import Any
@@ -228,7 +230,7 @@ class Book43RemovedTest(SlowTestCase):
         self.read_as_entertainment(*npc_list)
         reader_count = 0
         for character_id in npc_list:
-            behavior = self.cache.character_data[character_id].behavior
+            behavior = activity.behavior(character_id)
             if behavior.behavior_id == constant.Behavior.READ_BOOK:
                 reader_count += 1
                 self.assertIn(
@@ -250,7 +252,6 @@ class Book43RemovedTest(SlowTestCase):
 
         character_id = self.lend_and_read_book()
         self.save_and_load()
-        character_data = self.cache.character_data[character_id]
         self.assertNotIn(
             BOOK,
             chara_life.borrow_book_id_set(character_id),
@@ -258,8 +259,8 @@ class Book43RemovedTest(SlowTestCase):
         )
         self.assertEqual(
             (
-                character_data.behavior.behavior_id,
-                character_data.behavior.book_id,
+                activity.behavior(character_id).behavior_id,
+                activity.behavior(character_id).book_id,
             ),
             (constant.Behavior.READ_BOOK, 0),
             "读档后她还在读书，书号归零",
@@ -288,11 +289,11 @@ class Book43RemovedTest(SlowTestCase):
             "还有没读完的书：判定借得到书",
         )
 
-        read_start = character_data.behavior.start_time
+        read_start = activity.behavior(character_id).start_time
 
         def done() -> bool:
             """她读完了存档时正读的这一段"""
-            behavior = self.cache.character_data[character_id].behavior
+            behavior = activity.behavior(character_id)
             return (
                 behavior.behavior_id != constant.Behavior.READ_BOOK
                 or behavior.start_time != read_start
@@ -310,12 +311,12 @@ class Book43RemovedTest(SlowTestCase):
         )
         self.read_as_entertainment(character_id)
         self.assertEqual(
-            character_data.behavior.behavior_id,
+            activity.behavior(character_id).behavior_id,
             constant.Behavior.READ_BOOK,
             "她在读书",
         )
         self.assertIn(
-            character_data.behavior.book_id,
+            activity.behavior(character_id).book_id,
             game_config.config_book,
             "她读的书在书籍配置里",
         )
@@ -352,7 +353,6 @@ class Book43RemovedTest(SlowTestCase):
         character_id = min(
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
-        character_data = self.cache.character_data[character_id]
         borrow_book_id_set = chara_life.borrow_book_id_set(character_id)
         borrow_book_id_set.add(BOOK)
         kernel_data.put(
@@ -362,11 +362,18 @@ class Book43RemovedTest(SlowTestCase):
         kernel_data.written(
             borrow_book_panel.add_borrow_history_record, character_id, BOOK
         )
-        character_data.behavior.behavior_id = constant.Behavior.READ_BOOK
-        character_data.state = constant.CharacterStatus.STATUS_READ_BOOK
-        character_data.behavior.book_id = BOOK
-        character_data.behavior.start_time = game_time.now()
-        character_data.behavior.duration = READ_MINUTES
+        behave(character_id, constant.Behavior.READ_BOOK)
+        kernel_data.put(
+            activity.set_state,
+            character_id,
+            constant.CharacterStatus.STATUS_READ_BOOK,
+        )
+        behave(
+            character_id,
+            book_id=BOOK,
+            start_time=game_time.now(),
+            duration=READ_MINUTES,
+        )
         return character_id
 
     def test_old_save_loaned_book_passes_island_21(self) -> None:
@@ -400,7 +407,7 @@ class Book43RemovedTest(SlowTestCase):
                 for record in chara_life.borrow_book_history(character_id)
             ):
                 references.append(f"角色 {character_id} 借书卡上没还的记录")
-            if character_data.behavior.book_id == BOOK:
+            if activity.behavior(character_data.cid).book_id == BOOK:
                 references.append(f"角色 {character_id} 正读着的书")
         self.assertEqual(references, [], "存档里没有对 43 号书与类型 43 的引用")
         book_borrow_dict = library.holders()

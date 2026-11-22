@@ -8,11 +8,11 @@ final_invariants_h_group.md（H-xx + HS-xx 不变式清单）。
 1. `cid == 0` 恒为玩家角色(博士)。`NPCS = roster.active() - {0}`，`ALL = roster.active() | {0}`：
    统一用这两个集合而不是 `cache.character_data.keys()`——只有"已获得"角色会被结算逻辑写入，
    未获得角色可能带初始化/迁移残留数据。
-2. "同场景" = `chara.position == pl.position`（position为List[str]）。
+2. "同场景" = `activity.position(cid) == activity.position(0)`（位置为List[str]）。
 3. 隐奸模式1/2会主动把玩家is_h置False（hidden_sex_panel.py:439-441），凡以"玩家在H"为前提的
    检查都排除hidden_sex_mode!=0的情形；`ask_hidden_sex`效果链不含462，"隐奸模式3/4⇒玩家is_h"
    是假命题，本模块不实现该子句。
-4. `target_character_id`可在H中被UI自由切换（无H守卫），任何条目都不把它当H绑定关系使用，
+4. 交互对象（`activity.target`）可在H中被UI自由切换（无H守卫），任何条目都不把它当H绑定关系使用，
    只作为失败上下文里的诊断线索出现。
 5. 时停回合完全跳过NPC结算（character_behavior.py NPC循环在time_stop_mode为真时break），
    凡依赖"NPC AI每回合自愈"的检查都用`not mode.time_stop`守住。
@@ -30,7 +30,14 @@ from __future__ import annotations
 
 from Script.Core import cache_control, num
 from Script.Design import game_time
-from Script.Modules.domains import abilities, flags, h_state, history, hypnosis
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    flags,
+    h_state,
+    history,
+    hypnosis,
+)
 from Script.Modules.domains import modes, needs, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -100,7 +107,15 @@ def _name(chara: object) -> str:
     return str(getattr(chara, "name", "?"))
 
 
-def _behavior_id(chara: object) -> str | None:
+_pos = activity.position
+
+
+def _here(cid: int) -> bool:
+    """角色与玩家同场景"""
+    return _pos(cid) == _pos(0)
+
+
+def _behavior_id(chara: game_type.Character | None) -> str | None:
     """
     参数: chara 角色对象，允许为None
     返回值: Optional[str] 角色当前行为的behavior_id，取不到时返回None
@@ -108,7 +123,7 @@ def _behavior_id(chara: object) -> str | None:
     """
     if chara is None:
         return None
-    b = getattr(chara, "behavior", None)
+    b = activity.behavior(chara.cid)
     return getattr(b, "behavior_id", None) if b is not None else None
 
 
@@ -181,13 +196,11 @@ def check_hgroup_01() -> list[CheckFailure]:
     same_scene_h = [
         cid
         for cid in npcs
-        if cid in cache.character_data
-        and cache.character_data[cid].position == pl.position
-        and flags.get(cid, "is_h")
+        if cid in cache.character_data and _here(cid) and flags.get(cid, "is_h")
     ]
     msg = (
         f"mode.group_sex=True但玩家(cid=0,{_name(pl)})sp_flag.is_h=False；behavior_id={_behavior_id(pl)} "
-        f"state={getattr(pl, 'state', None)} 最近指令={_pre_instr(cache)} "
+        f"state={activity.state(pl.cid)} 最近指令={_pre_instr(cache)} "
         f"group_sex_body_template_dict={h_state.view(0).group_sex_body_template_dict!r} "
         f"同场景在H角色id={same_scene_h}；"
         f"请同时查看HGROUP-02，确认同场景在H的NPC人数是否满足当前模式要求"
@@ -219,10 +232,7 @@ def check_hgroup_02() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        if (
-            flags.get(c.cid, "is_h")
-            and getattr(c, "position", None) == pl.position
-        ):
+        if flags.get(c.cid, "is_h") and _here(c.cid):
             in_h.append(c)
     sex_class_mode = modes.sex_class()
     minimum = 1 if sex_class_mode else 2
@@ -572,7 +582,7 @@ def check_hgroup_08() -> list[CheckFailure]:
                         f"模板引用角色id={c}不是已获得的非玩家角色(npc_id_got成员={c in npc_id_got}, "
                         f"character_data成员={c in cache.character_data})；"
                         f"完整模板={tpls!r} mode.group_sex={modes.group_sex()} "
-                        f"pl.position={pl.position}"
+                        f"pl.position={activity.position(pl.cid)}"
                     ),
                     [c] if c != 0 else [0],
                 )
@@ -585,21 +595,21 @@ def check_hgroup_08() -> list[CheckFailure]:
                     "HGROUP-08",
                     "模板中的角色必须是已获得NPC、在H、且同场景",
                     (
-                        f"模板引用角色cid={c}({_name(chara)})不在H(is_h=False)；position={chara.position} "
+                        f"模板引用角色cid={c}({_name(chara)})不在H(is_h=False)；position={_pos(chara.cid)} "
                         f"behavior_id={_behavior_id(chara)}；"
                         f"完整模板={tpls!r} mode.group_sex={modes.group_sex()}"
                     ),
                     [c],
                 )
             )
-        if not time_stop and getattr(chara, "position", None) != pl.position:
+        if not time_stop and not _here(chara.cid):
             failures.append(
                 make_failure(
                     "HGROUP-08",
                     "模板中的角色必须是已获得NPC、在H、且同场景",
                     (
-                        f"模板引用角色cid={c}({_name(chara)})不与玩家同场景: position={chara.position} "
-                        f"pl.position={pl.position}；is_h={flags.get(chara.cid, "is_h")} "
+                        f"模板引用角色cid={c}({_name(chara)})不与玩家同场景: position={activity.position(chara.cid)} "
+                        f"pl.position={activity.position(pl.cid)}；is_h={flags.get(chara.cid, "is_h")} "
                         f"behavior_id={_behavior_id(chara)}；完整模板={tpls!r} "
                         f"mode.group_sex={modes.group_sex()}"
                     ),
@@ -851,8 +861,8 @@ def check_hgroup_12() -> list[CheckFailure]:
             bad.append("mode.group_sex=False")
         if not flags.get(c.cid, "is_h"):
             bad.append("is_h=False")
-        if not time_stop and getattr(c, "position", None) != pl.position:
-            bad.append(f"position={c.position}!=pl.position={pl.position}")
+        if not time_stop and not _here(c.cid):
+            bad.append(f"position={_pos(c.cid)}!=pl.position={_pos(0)}")
         if bad:
             failures.append(
                 make_failure(
@@ -932,14 +942,11 @@ def check_hgroup_14() -> list[CheckFailure]:
             )
         if flags.get(c.cid, "is_h"):
             bad.append("is_h=True")
-        if not time_stop and getattr(c, "position", None) == pl.position:
+        if not time_stop and _here(c.cid):
             bad.append("position==pl.position(已到场未清)")
         if bad:
-            second_behavior = getattr(c, "second_behavior", None)
-            invited = (
-                second_behavior.get("be_invited_join_group_sex")
-                if isinstance(second_behavior, dict)
-                else None
+            invited = activity.second_behavior(
+                c.cid, "be_invited_join_group_sex"
             )
             failures.append(
                 make_failure(
@@ -947,8 +954,8 @@ def check_hgroup_14() -> list[CheckFailure]:
                     "「前往参与群交」标记的生命周期",
                     (
                         f"[warning] NPC cid={cid}({_name(c)})go_to_join_group_sex=True但{'; '.join(bad)}；"
-                        f"position={c.position} pl.position={pl.position} "
-                        f"behavior_id={_behavior_id(c)} state={getattr(c, 'state', None)} "
+                        f"position={activity.position(c.cid)} pl.position={activity.position(pl.cid)} "
+                        f"behavior_id={_behavior_id(c)} state={activity.state(c.cid)} "
                         f"be_invited_join_group_sex={invited} game_time={game_time.now()}"
                     ),
                     [cid],
@@ -973,7 +980,7 @@ def check_hgroup_15() -> list[CheckFailure]:
         [warning已知bug探测器] 进入隐奸时玩家与对象被写入同一个hidden_sex_mode值，隐奸恒为"玩家+
         恰好一名NPC"的对称状态。已知泄漏：settle_discovered只清调用者(玩家)一侧的hidden_sex_mode，
         被发现面板的"[1]用花言巧语支开对方"分支判定通过后直接结束流程，NPC的hidden_sex_mode永久
-        残留而玩家已归0。不得把"隐奸NPC必须等于pl.target_character_id"加回来：切换交互对象是无H
+        残留而玩家已归0。不得把"隐奸NPC必须等于activity.target(0)"加回来：切换交互对象是无H
         守卫的自由UI动作
     """
     cache = cache_control.cache
@@ -993,13 +1000,13 @@ def check_hgroup_15() -> list[CheckFailure]:
     def _ctx() -> str:
         detail = [
             (
-                f"cid={h.cid} name={_name(h)} position={h.position} mode={flags.get(h.cid, "hidden_sex_mode")} "
+                f"cid={h.cid} name={_name(h)} position={_pos(h.cid)} mode={flags.get(h.cid, "hidden_sex_mode")} "
                 f"is_h={flags.get(h.cid, "is_h")} behavior_id={_behavior_id(h)}"
             )
             for h in hidden
         ]
         return (
-            f"pl.hidden_sex_mode={m} 明细={detail} pl.position={pl.position} "
+            f"pl.hidden_sex_mode={m} 明细={detail} pl.position={activity.position(pl.cid)} "
             f"hidden_sex_discovery_dregree={h_state.get(0, 'hidden_sex_discovery_dregree')} "
             f"behavior_id={_behavior_id(pl)} 最近指令={_pre_instr(cache)}；"
             "可观察后果：玩家模式为3/4（男隐/双隐）且场内无任何隐奸对象时，"
@@ -1045,17 +1052,14 @@ def check_hgroup_15() -> list[CheckFailure]:
                         [0, t.cid],
                     )
                 )
-            if (
-                not modes.time_stop()
-                and getattr(t, "position", None) != pl.position
-            ):
+            if not modes.time_stop() and not _here(t.cid):
                 failures.append(
                     make_failure(
                         "HGROUP-15",
                         "隐奸模式必须双向一致且至多一对",
                         (
-                            f"[warning] 隐奸对象不同场景：cid={t.cid}({_name(t)}) position={t.position} "
-                            f"pl.position={pl.position}；{_ctx()}"
+                            f"[warning] 隐奸对象不同场景：cid={t.cid}({_name(t)}) position={activity.position(t.cid)} "
+                            f"pl.position={activity.position(pl.cid)}；{_ctx()}"
                         ),
                         [0, t.cid],
                     )
@@ -1125,7 +1129,7 @@ def check_hgroup_16() -> list[CheckFailure]:
                     f"隐奸模式={m}(博士不隐藏)下玩家is_h=True，应已被清空；"
                     f"exhibitionism_sex_mode={exhib}(若非0，疑为切换对象后走"
                     f"ask_exhibitionism_sex重新进H，属已知可达误报路径，非本条描述的泄漏)；"
-                    f"behavior_id={_behavior_id(pl)} target_character_id={pl.target_character_id} "
+                    f"behavior_id={_behavior_id(pl)} target_character_id={activity.target(pl.cid)} "
                     f"最近指令={_pre_instr(cache)}"
                 ),
                 [0],
@@ -1215,7 +1219,7 @@ def check_hgroup_18() -> list[CheckFailure]:
         v = h_state.get(cid, "hidden_sex_discovery_dregree")
         if v != 0:
             ability_90 = abilities.ability(cid).get(90)
-            behavior = getattr(c, "behavior", None)
+            behavior = activity.behavior(c.cid)
             failures.append(
                 make_failure(
                     "HGROUP-18",
@@ -1261,13 +1265,14 @@ def check_hgroup_19() -> list[CheckFailure]:
     def _ctx() -> str:
         detail = [
             (
-                f"cid={x.cid} name={_name(x)} position={x.position} mode={flags.get(x.cid, "exhibitionism_sex_mode")} "
+                f"cid={x.cid} name={_name(x)} position={_pos(x.cid)} "
+                f"mode={flags.get(x.cid, "exhibitionism_sex_mode")} "
                 f"is_h={flags.get(x.cid, "is_h")}"
             )
             for x in ex
         ]
         return (
-            f"pl.exhibitionism_sex_mode={e} 明细={detail} pl.position={pl.position} "
+            f"pl.exhibitionism_sex_mode={e} 明细={detail} pl.position={activity.position(pl.cid)} "
             f"hidden_sex_mode={flags.get(pl.cid, "hidden_sex_mode")} behavior_id={_behavior_id(pl)}"
         )
 
@@ -1303,11 +1308,8 @@ def check_hgroup_19() -> list[CheckFailure]:
                 probs.append("NPC is_h=False")
             if not flags.get(pl.cid, "is_h"):
                 probs.append("玩家is_h=False")
-            if (
-                not modes.time_stop()
-                and getattr(t, "position", None) != pl.position
-            ):
-                probs.append(f"position不同场景: {t.position}!={pl.position}")
+            if not modes.time_stop() and not _here(t.cid):
+                probs.append(f"position不同场景: {_pos(t.cid)}!={_pos(0)}")
             if probs:
                 failures.append(
                     make_failure(
@@ -1394,7 +1396,7 @@ def check_hgroup_21() -> list[CheckFailure]:
                     "隐奸/露出模式值域",
                     (
                         f"角色cid={cid}({_name(c)}) {'; '.join(bad)}越界(应为0..4)；"
-                        f"is_h={flags.get(c.cid, "is_h")} position={getattr(c, 'position', None)} "
+                        f"is_h={flags.get(c.cid, "is_h")} position={activity.position(c.cid)} "
                         f"behavior_id={_behavior_id(c)}"
                     ),
                     [cid],
@@ -1431,17 +1433,14 @@ def check_hgroup_22() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        if (
-            flags.get(c.cid, "is_h")
-            and getattr(c, "position", None) != pl.position
-        ):
+        if flags.get(c.cid, "is_h") and not _here(c.cid):
             failures.append(
                 make_failure(
                     "HGROUP-22",
                     "在H的NPC必须与玩家同场景",
                     (
-                        f"NPC cid={cid}({_name(c)})is_h=True但position={c.position}!=pl.position={pl.position}；"
-                        f"behavior_id={_behavior_id(c)} state={getattr(c, 'state', None)} "
+                        f"NPC cid={cid}({_name(c)})is_h=True但position={_pos(c.cid)}!=pl.position={_pos(0)}；"
+                        f"behavior_id={_behavior_id(c)} state={activity.state(c.cid)} "
                         f"unconscious_h={flags.get(c.cid, "unconscious_h")} "
                         f"hidden_sex_mode={flags.get(c.cid, "hidden_sex_mode")} "
                         f"exhibitionism_sex_mode={flags.get(c.cid, "exhibitionism_sex_mode")} "
@@ -1463,9 +1462,9 @@ def check_hgroup_23() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验普通H(非群交、非隐奸、非时停)中玩家的H标记必然伴随至少一名同场景的在H NPC——所有给玩家
-        挂462的行为都同时给对象挂464。原H-02断言"pl.target_character_id指向的角色在H且同场景"已拆除：
-        交互对象可在H中被自由切换，target_character_id只保留在失败上下文里当线索。已知可命中的真泄漏：
-        NPC在H中被弄出玩家场景时，离场清理把NPC的target_character_id改成它自己再转END_H，玩家的is_h
+        挂462的行为都同时给对象挂464。原H-02断言"activity.target(0)指向的角色在H且同场景"已拆除：
+        交互对象可在H中被自由切换，它只保留在失败上下文里当线索。已知可命中的真泄漏：
+        NPC在H中被弄出玩家场景时，离场清理把NPC的交互对象改成它自己再转END_H，玩家的is_h
         无人清理
     """
     cache = cache_control.cache
@@ -1486,23 +1485,22 @@ def check_hgroup_23() -> list[CheckFailure]:
         c = cache.character_data.get(cid)
         if c is None:
             continue
-        if getattr(c, "position", None) == pl.position:
+        if activity.position(c.cid) == activity.position(pl.cid):
             scene_list.append(cid)
             if flags.get(c.cid, "is_h"):
                 same_scene_h.append(cid)
     if same_scene_h:
         return []
-    target = pl.target_character_id
+    target = activity.target(pl.cid)
     tinfo = "无"
     if target and target in cache.character_data:
-        t = cache.character_data[target]
-        tinfo = f"cid={target} is_h={flags.get(target, "is_h")} position={t.position}"
+        tinfo = f"cid={target} is_h={flags.get(target, "is_h")} position={activity.position(target)}"
     return [
         make_failure(
             "HGROUP-23",
             "玩家在H时场内必须有在H的NPC",
             (
-                f"玩家is_h=True(非群交/非隐奸/非时停)但同场景无任何在H的NPC；pl.position={pl.position} "
+                f"玩家is_h=True(非群交/非隐奸/非时停)但同场景无任何在H的NPC；pl.position={activity.position(pl.cid)} "
                 f"behavior_id={_behavior_id(pl)} "
                 f"exhibitionism_sex_mode={flags.get(pl.cid, "exhibitionism_sex_mode")} "
                 f"unconscious_h={flags.get(pl.cid, "unconscious_h")} "
@@ -1545,8 +1543,8 @@ def check_hgroup_24() -> list[CheckFailure]:
             bad.append("is_h=False")
         if modes.group_sex():
             bad.append("mode.group_sex=True")
-        if not time_stop and getattr(c, "position", None) != pl.position:
-            bad.append(f"position={c.position}!=pl.position={pl.position}")
+        if not time_stop and not _here(c.cid):
+            bad.append(f"position={_pos(c.cid)}!=pl.position={_pos(0)}")
         if bad:
             failures.append(
                 make_failure(
@@ -1557,7 +1555,7 @@ def check_hgroup_24() -> list[CheckFailure]:
                         f"hypnosis.active_h={hypnosis.get(cid, 'active_h')} "
                         f"hypnosis.blockhead={hypnosis.get(cid, 'blockhead')} "
                         f"unconscious_h={flags.get(c.cid, 'unconscious_h')} "
-                        f"target_character_id(玩家)={pl.target_character_id} behavior_id={_behavior_id(c)}"
+                        f"target_character_id(玩家)={activity.target(pl.cid)} behavior_id={_behavior_id(c)}"
                     ),
                     [cid],
                 )
@@ -1669,7 +1667,7 @@ def check_hgroup_27() -> list[CheckFailure]:
                     "时停开关与unconscious_h==3双向一致",
                     (
                         f"mode.time_stop=True但角色cid={cid}({_name(c)})unconscious_h={v!r}!=3；"
-                        f"position={c.position} is_h={flags.get(c.cid, "is_h")} "
+                        f"position={activity.position(c.cid)} is_h={flags.get(c.cid, "is_h")} "
                         f"game_time={game_time.now()} pl.behavior_id={pl_behavior_id}"
                     ),
                     [cid],
@@ -1682,7 +1680,7 @@ def check_hgroup_27() -> list[CheckFailure]:
                     "时停开关与unconscious_h==3双向一致",
                     (
                         f"mode.time_stop=False但角色cid={cid}({_name(c)})unconscious_h=3(未随时停关闭写回)；"
-                        f"position={c.position} "
+                        f"position={activity.position(c.cid)} "
                         f"is_h={flags.get(c.cid, "is_h")} game_time={game_time.now()} "
                         f"pl.behavior_id={pl_behavior_id}"
                     ),
@@ -1764,7 +1762,7 @@ def check_hgroup_29() -> list[CheckFailure]:
                     "「为玩家逆推而自慰」与去洗手间/宿舍自慰互斥",
                     (
                         f"角色cid={cid}({_name(c)})npc_masturebate_for_player=True且masturebate={mb}(应二选一)；"
-                        f"target_character_id={getattr(c, 'target_character_id', None)} "
+                        f"target_character_id={activity.target(c.cid)} "
                         f"behavior_id={_behavior_id(c)} follow_wait_time={getattr(c, 'follow_wait_time', None)} "
                         f"mode.group_sex={modes.group_sex()}"
                     ),
@@ -1803,7 +1801,7 @@ def check_hgroup_30() -> list[CheckFailure]:
                 "HGROUP-30",
                 "体位字段的值域与「仅博士持有」",
                 (
-                    f"玩家current_sex_position={cur!r}越界(应为-1或1..12)；target_character_id={pl.target_character_id}"
+                    f"玩家current_sex_position={cur!r}越界(应为-1或1..12)；target_character_id={activity.target(pl.cid)}"
                     f" behavior_id={_behavior_id(pl)}"
                 ),
                 [0],
@@ -1815,7 +1813,7 @@ def check_hgroup_30() -> list[CheckFailure]:
                 "HGROUP-30",
                 "体位字段的值域与「仅博士持有」",
                 (
-                    f"玩家pre_sex_position={pre!r}越界(应为-1或1..12)；target_character_id={pl.target_character_id} "
+                    f"玩家pre_sex_position={pre!r}越界(应为-1或1..12)；target_character_id={activity.target(pl.cid)} "
                     f"behavior_id={_behavior_id(pl)}"
                 ),
                 [0],
@@ -1828,7 +1826,7 @@ def check_hgroup_30() -> list[CheckFailure]:
                 "体位字段的值域与「仅博士持有」",
                 (
                     f"玩家current_womb_sex_position={womb!r}越界(应为0..2)；"
-                    f"target_character_id={pl.target_character_id} behavior_id={_behavior_id(pl)}"
+                    f"target_character_id={activity.target(pl.cid)} behavior_id={_behavior_id(pl)}"
                 ),
                 [0],
             )
@@ -1845,7 +1843,7 @@ def check_hgroup_30() -> list[CheckFailure]:
             getattr(hs, "current_womb_sex_position", None),
         )
         if vals != (-1, -1, 0):
-            target_id = getattr(c, "target_character_id", None)
+            target_id = activity.target(c.cid)
             t = (
                 cache.character_data.get(target_id)
                 if target_id is not None
@@ -1863,9 +1861,9 @@ def check_hgroup_30() -> list[CheckFailure]:
                     (
                         f"NPC cid={cid}({_name(c)})(current_sex_position,pre_sex_position,"
                         f"current_womb_sex_position)={vals}应为(-1,-1,0)；"
-                        f"target_character_id={getattr(c, 'target_character_id', None)} 其insert_position={insert_pos} "
+                        f"target_character_id={activity.target(c.cid)} 其insert_position={insert_pos} "
                         f"behavior_id={_behavior_id(c)} "
-                        f"last_behavior_id_list={getattr(c, 'last_behavior_id_list', None)}"
+                        f"last_behavior_id_list={activity.last_behaviors(c.cid)}"
                     ),
                     [cid],
                 )
@@ -1919,9 +1917,9 @@ def check_hgroup_31() -> list[CheckFailure]:
                         "HGROUP-31",
                         "完全脱离H的角色不应残留H局部状态",
                         (
-                            f"角色cid={cid}({_name(c)}, position={c.position})已完全脱离H但残留: {'; '.join(bad)}；"
+                            f"角色cid={cid}({_name(c)}, position={_pos(c.cid)})已完全脱离H但残留: {'; '.join(bad)}；"
                             f"behavior_id={_behavior_id(c)} "
-                            f"last_behavior_id_list={getattr(c, 'last_behavior_id_list', None)} "
+                            f"last_behavior_id_list={activity.last_behaviors(c.cid)} "
                             f"mode.group_sex={modes.group_sex()} "
                             f"mode.time_stop={modes.time_stop()} "
                             f"hypnosis.active_h={hypnosis.get(cid, 'active_h')}"

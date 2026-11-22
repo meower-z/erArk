@@ -15,7 +15,8 @@ from Script.Design import handle_premise, handle_ability, map_handle
 from Script.UI.Panel import dirty_panel
 
 import random
-from Script.Modules.domains import abilities, achievement, flags, h_state
+from Script.Modules.domains import abilities, achievement, activity, flags
+from Script.Modules.domains import h_state
 
 panel_info_data: dict[str, object] = {}
 
@@ -95,7 +96,7 @@ def get_hidden_sex_targets(character_id: int) -> list[int]:
     """
     # 获取玩家当前位置
 
-    position = cache.character_data[character_id].position
+    position = activity.position(character_id)
     scene_path = map_handle.get_map_system_path_str_for_list(position)
     scene_data: game_type.Scene = cache.scene_data[scene_path]
     result: list[int] = []
@@ -121,7 +122,7 @@ def get_nearby_conscious_unfallen_characters(character_id: int) -> list[int]:
         List[int]: 符合条件的角色id列表
     """
     # 获取角色当前位置对应的场景路径字符串
-    position = cache.character_data[character_id].position
+    position = activity.position(character_id)
     scene_path = map_handle.get_map_system_path_str_for_list(position)
     # 从缓存中取出该场景数据
     scene_data: game_type.Scene = cache.scene_data[scene_path]
@@ -163,9 +164,8 @@ def settle_hidden_value_by_action(
     返回:
         None
     """
-    character_data = cache.character_data[character_id]
     # 获取当前行为
-    now_behavior_id = character_data.behavior.behavior_id
+    now_behavior_id = activity.behavior(character_id).behavior_id
     behavior_data = game_config.config_behavior[now_behavior_id]
     # 如果没有指定，则根据行为类型判断是否需要增加隐蔽值
     if add_flag is None:
@@ -182,7 +182,7 @@ def settle_hidden_value_by_action(
             add_flag = True
     # 如果没有指定时间，则获取行为持续时间
     if now_duration == 0:
-        now_duration = character_data.behavior.duration
+        now_duration = activity.behavior(character_id).duration
     # 模式
     mode_adjust: float = 1
     # 双不隐容易被发现
@@ -207,7 +207,7 @@ def settle_hidden_value_by_action(
     abi_adjust = handle_ability.get_ability_adjust(now_ability_lv)
     # 在场人数
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     other_chara_adjust = max(len(scene_data.character_list) - 2, 1)
@@ -262,7 +262,6 @@ def settle_discovered(character_id: int) -> None:
         None
     """
     # 获取角色数据
-    character_data = cache.character_data[character_id]
     # 记录本次是否由隐奸被发现触发（清零标记前记录，供被发现面板判定选项与描述）
     from_hidden_sex_flag = flags.get(character_id, "hidden_sex_mode") > 0
     # 获取隐奸对象（需在清零对方标记前获取）
@@ -282,7 +281,7 @@ def settle_discovered(character_id: int) -> None:
     for hidden_target_id in hidden_sex_target_id_list:
         flags.set(hidden_target_id, hidden_sex_mode=0)
     if len(hidden_sex_target_id_list):
-        character_data.target_character_id = hidden_sex_target_id_list[0]
+        activity.set_target(character_id, hidden_sex_target_id_list[0])
     else:
         print(f"debug : 隐奸被发现时未找到隐奸对象，角色id:{character_id}")
         return
@@ -365,7 +364,6 @@ class See_Hidden_Sex_InfoPanel:
         # print("type_data.name :",type_data.name)
         text_draw = draw.NormalDraw()
 
-        pl_character_data = cache.character_data[0]
         all_text = ""
 
         # 被发现文本
@@ -376,9 +374,7 @@ class See_Hidden_Sex_InfoPanel:
 
         # 携带模式文本
         if flags.get(0, "hidden_sex_mode") == 5:
-            carry_target_data = cache.character_data[
-                pl_character_data.target_character_id
-            ]
+            carry_target_data = cache.character_data[activity.target(0)]
             all_text += _(" 正把{0}藏在衣服下抱着行动").format(
                 carry_target_data.name
             )
@@ -542,7 +538,7 @@ class Select_Hidden_Sex_Mode_Panel:
         from Script.Design import instuct_judege
 
         character_data: game_type.Character = cache.character_data[0]
-        target_character_id = character_data.target_character_id
+        target_character_id = activity.target(0)
 
         # 携带模式需要先选择插入的部位，取消则返回模式选择
         carry_sex_type = 0
@@ -569,7 +565,7 @@ class Select_Hidden_Sex_Mode_Panel:
         flags.set(target_character_id, is_follow=0)
         # 在场其他角色数量
         scene_path_str = map_handle.get_map_system_path_str_for_list(
-            character_data.position
+            activity.position(0)
         )
         scene_data: game_type.Scene = cache.scene_data[scene_path_str]
         other_chara_count = len(scene_data.character_list) - 2

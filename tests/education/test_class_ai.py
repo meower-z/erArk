@@ -17,10 +17,17 @@ from Script.Settle import realtime_settle
 from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
 from Script.Kernel import core
-from Script.Modules.domains import achievement, action_info, flags, hypnosis
+from Script.Modules.domains import (
+    achievement,
+    action_info,
+    activity,
+    flags,
+    hypnosis,
+)
 from Script.Modules.domains import library, modes, physical_exam as px, plan
 from Script.Modules.domains import chara_life, relations
 from tests import chara_abilities as ca, kernel_data, world
+from tests.chara_activity import aim, behave, doing, stand, status
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -89,12 +96,8 @@ def dispatch(cid: int, now_time: datetime.datetime | None = None) -> int:
     功能: 每次先把上一轮留下的移动 / 行为清掉，否则会被「继续移动」目标接管；
           起床时间拨到当前；开始时不跑行为的结算（character_behavior.settle_start），只看选择与开始代码写下的记录
     """
-    cd = cache.character_data[cid]
-    cd.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-    cd.behavior.duration = 0
-    cd.behavior.move_target = []
-    cd.behavior.move_final_target = []
-    cd.state = constant.CharacterStatus.STATUS_ARDER
+    stand(cid, constant.Behavior.SHARE_BLANKLY)
+    status(cid, constant.CharacterStatus.STATUS_ARDER)
     set_time(now_time if now_time is not None else period_time(0))
     kernel_data.put(action_info.set, cid, "wake_time", game_time.now())
     hit: list[int] = []
@@ -268,9 +271,9 @@ kernel_data.put(flags.set, teacher.cid, imprisonment=False)
 kernel_data.put(flags.set, teacher.cid, field_commission=True)
 check("外勤中不可用", not teacher_available())
 kernel_data.put(flags.set, teacher.cid, field_commission=False)
-teacher.dead = True
+kernel_data.put(activity.set_dead, teacher.cid, True)
 check("死亡不可用", not teacher_available())
-teacher.dead = False
+kernel_data.put(activity.set_dead, teacher.cid, False)
 # 第五轮补全：这些情况下教师这节确定来不了，学生必须降级自习而不是空等一整节
 chara_life.work_type.set(teacher.cid, 21)
 check("换了岗不可用", not teacher_available())
@@ -512,7 +515,7 @@ _absent = child_growth(201).absent_count
 check(
     "体力 < 30% → 721 记缺课并休息",
     dispatch(201) == SM.EDUCATION_ABSENT_REST
-    and student.behavior.behavior_id == constant.Behavior.REST,
+    and doing(student.cid) == constant.Behavior.REST,
 )
 check(
     "体力缺课记了一节",
@@ -676,9 +679,9 @@ for _cid in _interest_list:
         _move_sm != SM.EDUCATION_MOVE_TO_COURSE_PLACE
         or _do_sm != SM.EDUCATION_DO_COURSE
         or not _expect_behavior
-        or student.behavior.behavior_id != _expect_behavior
-        or student.state != _cfg.behavior_id
-        or student.behavior.duration != 45
+        or doing(student.cid) != _expect_behavior
+        or activity.state(student.cid) != _cfg.behavior_id
+        or activity.behavior(student.cid).duration != 45
         or child_growth(201).attend_class_count != _attend_before + 1
     ):
         _interest_bad.append(
@@ -688,25 +691,26 @@ for _cid in _interest_list:
                 scene_str(_place),
                 _move_sm,
                 _do_sm,
-                student.behavior.behavior_id,
+                doing(student.cid),
                 _expect_behavior,
-                student.behavior.duration,
+                activity.behavior(student.cid).duration,
                 child_growth(201).attend_class_count - _attend_before,
             )
         )
     # 读书：借到的那本要写进 behavior（Plan 29 §3.2）
     if _expect_behavior == constant.Behavior.READ_BOOK and (
-        student.behavior.book_id not in chara_life.borrow_book_id_set(201)
-        or student.behavior.book_name
-        != game_config.config_book[student.behavior.book_id].name
+        activity.behavior(student.cid).book_id
+        not in chara_life.borrow_book_id_set(201)
+        or activity.behavior(student.cid).book_name
+        != game_config.config_book[activity.behavior(student.cid).book_id].name
     ):
         _interest_bad.append(
             (
                 _cid,
                 _cfg.name,
                 "读书没借书或 behavior 没写书",
-                student.behavior.book_id,
-                student.behavior.book_name,
+                activity.behavior(student.cid).book_id,
+                activity.behavior(student.cid).book_name,
             )
         )
 check(
@@ -721,8 +725,8 @@ check(
 for _book_id in list(chara_life.borrow_book_id_set(student.cid)):
     kernel_data.put(library.set_holder, _book_id, -1)
 chara_life.borrow_book_id_set.set(student.cid, set())
-student.behavior.book_id = 0
-student.behavior.book_name = ""
+behave(student.cid, book_id=0)
+behave(student.cid, book_name="")
 
 section("整链派发：实习课逐岗（WorkType.csv 里可排实习的全部岗位）")
 _intern_list = [
@@ -752,9 +756,10 @@ for _wid in _intern_list:
     if (
         _move_sm != SM.EDUCATION_MOVE_TO_COURSE_PLACE
         or _do_sm != SM.EDUCATION_DO_COURSE
-        or student.behavior.behavior_id != constant.Behavior.INTERN_CLASS
-        or student.state != constant.CharacterStatus.STATUS_INTERN_CLASS
-        or student.behavior.duration != 45
+        or doing(student.cid) != constant.Behavior.INTERN_CLASS
+        or activity.state(student.cid)
+        != constant.CharacterStatus.STATUS_INTERN_CLASS
+        or activity.behavior(student.cid).duration != 45
         or child_growth(201).attend_class_count != _attend_before
     ):
         _intern_bad.append(
@@ -764,8 +769,8 @@ for _wid in _intern_list:
                 scene_str(_place),
                 _move_sm,
                 _do_sm,
-                student.behavior.behavior_id,
-                student.behavior.duration,
+                doing(student.cid),
+                activity.behavior(student.cid).duration,
             )
         )
 check(
@@ -824,7 +829,7 @@ if _multi_work is not None:
     check(
         "到了导师那间 → 716 实习，并找得到这位导师",
         dispatch(201) == SM.EDUCATION_DO_COURSE
-        and student.behavior.behavior_id == constant.Behavior.INTERN_CLASS
+        and doing(student.cid) == constant.Behavior.INTERN_CLASS
         and schedule_handle.get_intern_mentor(201, _multi_work) == 401,
     )
     remove_character(401)
@@ -850,9 +855,9 @@ kernel_data.put(flags.set, mother.cid, is_h=False)
 kernel_data.put(flags.set, mother.cid, imprisonment=True)
 check("母亲被监禁 → 无效", class_ai.judge_mother_available(202) == -1)
 kernel_data.put(flags.set, mother.cid, imprisonment=False)
-mother.dead = True
+kernel_data.put(activity.set_dead, mother.cid, True)
 check("母亲死亡 → 无效", class_ai.judge_mother_available(202) == -1)
-mother.dead = False
+kernel_data.put(activity.set_dead, mother.cid, False)
 relations.mother_id.set(202, -1)
 check("没有母亲 → 无效", class_ai.judge_mother_available(202) == -1)
 relations.mother_id.set(202, 102)
@@ -950,9 +955,9 @@ check(
 )
 check(
     "等开课的时长截到开课那一刻（15 分钟）",
-    teacher.behavior.behavior_id == constant.Behavior.WAIT
-    and teacher.behavior.duration == 15,
-    teacher.behavior.duration,
+    doing(teacher.cid) == constant.Behavior.WAIT
+    and activity.behavior(teacher.cid).duration == 15,
+    activity.behavior(teacher.cid).duration,
 )
 sunday = DEFAULT_TIME.date() + datetime.timedelta(days=6)
 move_to(101, office_path)
@@ -1056,8 +1061,8 @@ _absent = child_growth(201).absent_count
 check(
     "已在实操教室 → 720 原地等开课（Plan 24 §3.6，原先原地零距离移动空转）",
     dispatch(201, _pending_time) == SM.EDUCATION_WAIT_NEXT_PERIOD
-    and student.behavior.duration == 8,
-    student.behavior.duration,
+    and activity.behavior(student.cid).duration == 8,
+    activity.behavior(student.cid).duration,
 )
 check(
     "预到岗不记缺课",
@@ -1210,7 +1215,7 @@ check(
 )
 kernel_data.set_needs(teacher.cid, drunk=0)
 # 醉酒时派发的是睡觉：先把她叫起来，下面只验催眠与恢复
-teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(teacher.cid, constant.Behavior.SHARE_BLANKLY)
 kernel_data.put(flags.set, teacher.cid, sleep=False)
 kernel_data.put(flags.set, teacher.cid, unconscious_h=5)
 move_to(101, classroom_path(ROOM1))
@@ -1231,7 +1236,7 @@ check(
     (
         flags.get(teacher.cid, "sleep"),
         flags.get(teacher.cid, "is_h"),
-        teacher.behavior.behavior_id,
+        doing(teacher.cid),
         kernel_data.needs_of(teacher.cid)["drunk"],
         [
             handle_premise.handle_premise(f"normal_{n}", 101)
@@ -1262,11 +1267,7 @@ def begin(
     无
     """
     set_time(start)
-    cd = cache.character_data[cid]
-    cd.behavior.behavior_id = behavior_id
-    cd.behavior.duration = duration
-    cd.behavior.move_target = []
-    cd.behavior.move_final_target = []
+    stand(cid, behavior_id, duration=duration)
     kernel_data.put(action_info.set, cid, "wake_time", start)
     world.set_clock(now)
 
@@ -1280,11 +1281,11 @@ def leave_minutes(cid: int) -> int:
     Return arguments:
     int -- 分钟数
     """
-    cd = cache.character_data[cid]
+    behavior = activity.behavior(cid)
     leave = class_ai.get_student_leave_time(cid)
     if leave is None:
-        return int(cd.behavior.duration)
-    return int((leave - cd.behavior.start_time).total_seconds() // 60)
+        return int(behavior.duration)
+    return int((leave - behavior.start_time).total_seconds() // 60)
 
 
 section(
@@ -1306,7 +1307,7 @@ _absent = child_growth(201).absent_count
 check(
     "A 听课中、下一节是必修实操课 → 截到开课前 10 分钟（口径 62 提前退场；玩家一步跨过开课时刻也照截）",
     handle_npc_ai.judge_student_leave_truncate(201) == 1
-    and student.behavior.behavior_id == constant.Behavior.ATTENT_CLASS
+    and doing(student.cid) == constant.Behavior.ATTENT_CLASS
     and leave_minutes(201) == 35,
     leave_minutes(201),
 )
@@ -1478,7 +1479,8 @@ check(
     sm == SM.EDUCATION_JOIN_SEX_CLASS
     and flags.get(child.cid, "is_h")
     and flags.get(child.cid, "see_pl_h")
-    and child.second_behavior.get(constant.Behavior.JOIN_SEX_CLASS, 0) > 0,
+    and activity.second_behavior(child.cid, constant.Behavior.JOIN_SEX_CLASS)
+    > 0,
     sm,
 )
 check(
@@ -1528,13 +1530,10 @@ def teach_pull(cid: int) -> bool:
     功能: 303 拉人要过听课行的 normal 门槛
     """
     set_time(period_time(0))
-    cache.character_data[cid].behavior.behavior_id = constant.Behavior.WAIT
+    behave(cid, constant.Behavior.WAIT)
     start_sm(SM.WORK_TEACH, 101)
     quiet_turn(cid, keep_queue=True)
-    return (
-        cache.character_data[cid].behavior.behavior_id
-        == constant.Behavior.ATTENT_CLASS
-    )
+    return doing(cid) == constant.Behavior.ATTENT_CLASS
 
 
 check("正常学生被拉进听课", teach_pull(201))
@@ -1881,14 +1880,13 @@ schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 kernel_data.put(flags.set, student.cid, sleep=False)
-student.behavior.behavior_id = constant.Behavior.SLEEP
-student.behavior.duration = 120
+behave(student.cid, constant.Behavior.SLEEP, duration=120)
 check("行为是睡觉：判为不可拉", not class_ai.judge_student_pullable(201))
 kernel_data.written(constant.handle_state_machine_data[SM.WORK_TEACH], 101)
 check(
     "教师开讲（303）：她继续睡，不被改成听课",
-    student.behavior.behavior_id == constant.Behavior.SLEEP,
-    student.behavior.behavior_id,
+    doing(student.cid) == constant.Behavior.SLEEP,
+    doing(student.cid),
 )
 check("醒着的照旧被拉进听课", teach_pull(201))
 schedule_handle.clear_selected_course(201, 0, 0)
@@ -2015,8 +2013,7 @@ _read_place = class_ai.get_course_place_now_or_upcoming(201)
 move_to(201, _read_place)
 # 先把 0 号书标成被别人借走：改后随机借到 0 号书会让「不再读 0 号书」偶然失真
 kernel_data.put(library.set_holder, 0, 999)
-student.behavior.book_id = 0
-student.behavior.book_name = ""
+behave(student.cid, book_id=0, book_name="")
 child_growth(201).last_attend_period = []
 child_growth(201).last_absent_period = []
 _attend = child_growth(201).attend_class_count
@@ -2024,17 +2021,19 @@ sm = dispatch(201)
 check(
     "到场 → 716 派读书、先借了一本、behavior 写的是借到的那本（此前不借书、一律读 0 号书《天灾详解》、书名为空）",
     sm == SM.EDUCATION_DO_COURSE
-    and student.behavior.behavior_id == constant.Behavior.READ_BOOK
+    and activity.behavior(student.cid).behavior_id
+    == constant.Behavior.READ_BOOK
     and len(chara_life.borrow_book_id_set(student.cid)) == 1
-    and student.behavior.book_id in chara_life.borrow_book_id_set(student.cid)
-    and student.behavior.book_id != 0
-    and student.behavior.book_name
-    == game_config.config_book[student.behavior.book_id].name
-    and library.holders()[student.behavior.book_id] == 201,
+    and activity.behavior(student.cid).book_id
+    in chara_life.borrow_book_id_set(student.cid)
+    and activity.behavior(student.cid).book_id != 0
+    and activity.behavior(student.cid).book_name
+    == game_config.config_book[activity.behavior(student.cid).book_id].name
+    and library.holders()[activity.behavior(student.cid).book_id] == 201,
     (
         sm,
-        student.behavior.book_id,
-        student.behavior.book_name,
+        activity.behavior(student.cid).book_id,
+        activity.behavior(student.cid).book_name,
         chara_life.borrow_book_id_set(student.cid),
     ),
 )
@@ -2047,13 +2046,13 @@ check(
         child_growth(201).last_attend_period,
     ),
 )
-_held_book = student.behavior.book_id
+_held_book = activity.behavior(student.cid).book_id
 child_growth(201).last_attend_period = []
 dispatch(201)
 check(
     "手上已有书：再派不另借，读的还是那本",
     chara_life.borrow_book_id_set(student.cid) == {_held_book}
-    and student.behavior.book_id == _held_book,
+    and activity.behavior(student.cid).book_id == _held_book,
 )
 kernel_data.put(library.set_holder, _held_book, -1)
 chara_life.borrow_book_id_set.set(201, set())
@@ -2082,10 +2081,13 @@ _attend = child_growth(201).attend_class_count
 start_sm(SM.EDUCATION_DO_COURSE, 201)
 check(
     "判定与执行之间书被别人借走：716 等 1 分钟、不记出勤",
-    student.behavior.behavior_id == constant.Behavior.WAIT
-    and student.behavior.duration == 1
+    doing(student.cid) == constant.Behavior.WAIT
+    and activity.behavior(student.cid).duration == 1
     and child_growth(201).attend_class_count == _attend,
-    (student.behavior.behavior_id, student.behavior.duration),
+    (
+        activity.behavior(student.cid).behavior_id,
+        activity.behavior(student.cid).duration,
+    ),
 )
 borrow_book_panel.check_random_borrow_book = _orig_borrow
 # 401 对照：娱乐读书抽出的装配函数，行为与改前一致
@@ -2093,17 +2095,18 @@ reader = make_character(402, "读书的干员", 21, position=_read_place)
 start_sm(SM.ENTERTAIN_READ, 402)
 check(
     "对照：娱乐读书（401）借到书、写入 book_id 与书名、行为 read_book、时长 30",
-    reader.behavior.behavior_id == constant.Behavior.READ_BOOK
-    and reader.behavior.duration == 30
+    doing(reader.cid) == constant.Behavior.READ_BOOK
+    and activity.behavior(reader.cid).duration == 30
     and len(chara_life.borrow_book_id_set(reader.cid)) == 1
-    and reader.behavior.book_id in chara_life.borrow_book_id_set(reader.cid)
-    and reader.behavior.book_name
-    == game_config.config_book[reader.behavior.book_id].name
-    and reader.state == constant.CharacterStatus.STATUS_READ_BOOK,
+    and activity.behavior(reader.cid).book_id
+    in chara_life.borrow_book_id_set(reader.cid)
+    and activity.behavior(reader.cid).book_name
+    == game_config.config_book[activity.behavior(reader.cid).book_id].name
+    and activity.state(reader.cid) == constant.CharacterStatus.STATUS_READ_BOOK,
     (
-        reader.behavior.behavior_id,
-        reader.behavior.duration,
-        reader.behavior.book_id,
+        doing(reader.cid),
+        activity.behavior(reader.cid).duration,
+        activity.behavior(reader.cid).book_id,
     ),
 )
 for _book_id in list(chara_life.borrow_book_id_set(reader.cid)):
@@ -2113,8 +2116,8 @@ kernel_data.put(library.put_holders, dict.fromkeys(_saved_borrow, 999))
 start_sm(SM.ENTERTAIN_READ, 402)
 check(
     "对照：401 借不到书仍等 1 分钟",
-    reader.behavior.behavior_id == constant.Behavior.WAIT
-    and reader.behavior.duration == 1,
+    doing(reader.cid) == constant.Behavior.WAIT
+    and activity.behavior(reader.cid).duration == 1,
 )
 kernel_data.put(library.put_holders, {**_saved_borrow, 0: -1})
 remove_character(402)
@@ -2162,7 +2165,7 @@ sm = dispatch(201)
 check(
     "人已不在教室：714 开始摸鱼，记一节缺课、累计翘课 +1（此前翘课不计缺课，常翘课的孩子出勤率照样 100%）",
     sm == SM.EDUCATION_SKIP_CLASS
-    and student.behavior.behavior_id == constant.Behavior.SKIP_CLASS
+    and doing(student.cid) == constant.Behavior.SKIP_CLASS
     and _g.absent_count == _absent + 1
     and _g.skip_count == _skip + 1,
     (sm, _g.absent_count - _absent, _g.skip_count - _skip),
@@ -2245,7 +2248,7 @@ check(
     and class_ai.get_course_stage(201) == E.COURSE_STAGE_ATTEND,
     class_ai.get_course_stage(201),
 )
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 check(
     "被抓当天教师开讲拉人（303）同样不再判她翘课",
     class_ai.judge_student_join_class(201, ROOM1, period_time(8)),
@@ -2279,7 +2282,7 @@ schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 prepare_ai(101)
 prepare_ai(201)
-teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(teacher.cid, constant.Behavior.SHARE_BLANKLY)
 kernel_data.put(flags.set, teacher.cid, unconscious_h=5)
 move_to(101, SCENE_EDU_ENTRY)
 check(
@@ -2322,7 +2325,7 @@ section(
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 set_time(period_time(0))
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 g31.skip_caught_day = 0
 g31.skip_class_flag = True
 g31.skip_class_day = DAY31
@@ -2498,8 +2501,7 @@ move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 t_open = period_time(1) + datetime.timedelta(minutes=2)
 set_time(t_open)
-student.behavior.behavior_id = constant.Behavior.SELF_STUDY
-student.behavior.start_time = period_time(2)
+behave(student.cid, constant.Behavior.SELF_STUDY, start_time=period_time(2))
 check(
     (
         "H1 学生的当前行为开始于 10:30（已在这间教室上起第 3 节）、教师 9:47 才开讲 → 不拉（此前拉回 9:47，第 3 "
@@ -2507,36 +2509,33 @@ check(
     ),
     not class_ai.judge_student_join_class(201, ROOM1, t_open),
 )
-student.behavior.start_time = t_open
+behave(student.cid, start_time=t_open)
 check(
     "H1 与教师同时开始当前行为 → 照拉",
     class_ai.judge_student_join_class(201, ROOM1, t_open),
 )
-student.behavior.behavior_id = constant.Behavior.WAIT
-student.behavior.start_time = period_time(1) - datetime.timedelta(minutes=5)
-student.behavior.duration = 5
-teacher.behavior.start_time = t_open
+_at = period_time(1) - datetime.timedelta(minutes=5)
+behave(student.cid, constant.Behavior.WAIT, start_time=_at, duration=5)
+behave(teacher.cid, start_time=t_open)
 start_sm(SM.WORK_TEACH, 101)
 quiet_turn(201, keep_queue=True)
 check(
     "H1 303 开讲：开课前就在教室里等候的学生照拉，开始时刻对齐到开讲时刻",
-    student.behavior.behavior_id == constant.Behavior.ATTENT_CLASS
-    and student.behavior.start_time == t_open,
-    (student.behavior.behavior_id, student.behavior.start_time),
+    doing(student.cid) == constant.Behavior.ATTENT_CLASS
+    and activity.behavior(student.cid).start_time == t_open,
+    (doing(student.cid), activity.behavior(student.cid).start_time),
 )
-student.behavior.behavior_id = constant.Behavior.SELF_STUDY
-student.behavior.start_time = period_time(2)
-student.behavior.duration = 45
-teacher.behavior.start_time = t_open
+_at = period_time(2)
+behave(student.cid, constant.Behavior.SELF_STUDY, start_time=_at, duration=45)
+behave(teacher.cid, start_time=t_open)
 kernel_data.written(constant.handle_state_machine_data[SM.WORK_TEACH], 101)
 check(
     "H1 303 开讲：时间线在前的学生不被改动（行为与开始时刻都不变）",
-    student.behavior.behavior_id == constant.Behavior.SELF_STUDY
-    and student.behavior.start_time == period_time(2),
-    (student.behavior.behavior_id, student.behavior.start_time),
+    doing(student.cid) == constant.Behavior.SELF_STUDY
+    and activity.behavior(student.cid).start_time == period_time(2),
+    (doing(student.cid), activity.behavior(student.cid).start_time),
 )
-student.behavior.behavior_id = constant.Behavior.WAIT
-student.behavior.start_time = t_open
+behave(student.cid, constant.Behavior.WAIT, start_time=t_open)
 kernel_data.put(flags.set, student.cid, is_follow=1)
 check(
     "L5 跟随玩家中的学生（normal_3 不成立）：303 不拉（她自己决策时也不命中听课行，此前被拉成听课）",
@@ -2584,7 +2583,7 @@ def h1_gain_spy(
     Return arguments:
     bool -- 原函数的返回值：是否真的结算了
     """
-    start_time = cache.character_data[student_id].behavior.start_time
+    start_time = activity.behavior(student_id).start_time
     result = _orig_gain(student_id, teacher_id, *args, **kwargs)
     H1_GAIN_LOG.append(
         (
@@ -2619,8 +2618,7 @@ def h1_wrap_sm(
         sid = func(cid)
         if sid is None:
             return sid
-        cd = cache.character_data[cid]
-        now_scene_str = scene_str(cd.position)
+        now_scene_str = scene_str(activity.position(cid))
         scene_name = (
             cache.scene_data[now_scene_str].scene_name
             if now_scene_str in cache.scene_data
@@ -2706,9 +2704,8 @@ def run_h1(minute_list: tuple, npc_order: list) -> list:
     try:
         for minute in minute_list:
             pl_round, npc_pass, stuck = run_loop_round(minute, npc_order)
-            result.append(
-                (pl_round, npc_pass, stuck, student.behavior.start_time)
-            )
+            start = activity.behavior(student.cid).start_time
+            result.append((pl_round, npc_pass, stuck, start))
     finally:
         handle_npc_ai.choose_state_machine = choose_state_machine
         growth_handle.settle_student_class_gain = _orig_gain
@@ -2763,21 +2760,16 @@ def setup_h1(third_room: str) -> None:
         kernel_data.put(flags.set, cid, is_follow=0)
         kernel_data.put(flags.set, cid, unconscious_h=0)
         kernel_data.put(hypnosis.set, cid, blockhead=False)
-        for key in cd.second_behavior:
-            cd.second_behavior[key] = 0
-        for list_name in (
-            "must_settle_second_behavior_id_list",
-            "must_show_second_behavior_id_list",
-        ):
-            if hasattr(cd, list_name):
-                getattr(cd, list_name).clear()
-        cd.behavior.behavior_id = behavior_id
-        cd.behavior.start_time = period_time(0)
-        cd.behavior.duration = 45
-        cd.behavior.move_target = []
-        cd.behavior.move_final_target = []
-        cd.state = state
-        cd.target_character_id = cid
+        kernel_data.put(activity.set_second_behaviors, cd.cid, {})
+        kernel_data.put(activity.set_must_settle, cd.cid, [])
+        kernel_data.put(activity.set_must_show, cd.cid, [])
+        behave(cid, behavior_id)
+        behave(cid, start_time=period_time(0))
+        behave(cid, duration=45)
+        behave(cid, move_target=[])
+        behave(cid, move_final_target=[])
+        kernel_data.put(activity.set_state, cid, state)
+        aim(cid, cid)
         clear_need(cid)
     H1_SM_LOG.clear()
     H1_GAIN_LOG.clear()
@@ -2907,8 +2899,7 @@ for cid in (101, 201):
     cd = cache.character_data[cid]
     kernel_data.set_needs(cd.cid, hit_max=100, hit=100)
     kernel_data.set_needs(cd.cid, mana_max=100, mana=100)
-    cd.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-    cd.behavior.duration = 0
+    behave(cd.cid, constant.Behavior.SHARE_BLANKLY, duration=0)
 g31.selected_course = {}
 g31.last_attend_period = []
 class_ai.get_skip_class_rate = _orig_rate
@@ -2960,13 +2951,12 @@ def rt32_spy(
     int -- 原函数的返回值：这次结算的分钟数
     """
     result = _orig_true_add(character_id, now_time, since)
-    cd = cache.character_data[character_id]
     RT32_LOG.append(
         (
             character_id,
-            cd.behavior.behavior_id,
-            cd.behavior.start_time,
-            cd.behavior.duration,
+            doing(character_id),
+            activity.behavior(character_id).start_time,
+            activity.behavior(character_id).duration,
             result,
         )
     )
@@ -2998,21 +2988,18 @@ def run_rt32(
     kernel_data.put(flags.set, student.cid, is_follow=0)
     kernel_data.put(flags.set, student.cid, unconscious_h=0)
     kernel_data.put(hypnosis.set, student.cid, blockhead=False)
-    for key in student.second_behavior:
-        student.second_behavior[key] = 0
-    for list_name in (
-        "must_settle_second_behavior_id_list",
-        "must_show_second_behavior_id_list",
-    ):
-        if hasattr(student, list_name):
-            getattr(student, list_name).clear()
-    student.behavior.behavior_id = behavior_id
-    student.behavior.start_time = start
-    student.behavior.duration = minute
-    student.behavior.move_target = []
-    student.behavior.move_final_target = []
-    student.state = constant.CharacterStatus.STATUS_ARDER
-    student.target_character_id = 201
+    kernel_data.put(activity.set_second_behaviors, student.cid, {})
+    kernel_data.put(activity.set_must_settle, student.cid, [])
+    kernel_data.put(activity.set_must_show, student.cid, [])
+    behave(student.cid, behavior_id)
+    behave(student.cid, start_time=start)
+    behave(student.cid, duration=minute)
+    behave(student.cid, move_target=[])
+    behave(student.cid, move_final_target=[])
+    kernel_data.put(
+        activity.set_state, student.cid, constant.CharacterStatus.STATUS_ARDER
+    )
+    aim(student.cid, 201)
     kernel_data.put(action_info.set, student.cid, "wake_time", start)
     clear_need(201)
     H1_SM_LOG.clear()
@@ -3192,8 +3179,8 @@ check(
         "分支在实时结算之前先调）"
     ),
     handle_npc_ai.judge_interrupt_character_behavior(201) == 0
-    and student.behavior.duration == 60,
-    student.behavior.duration,
+    and activity.behavior(student.cid).duration == 60,
+    activity.behavior(student.cid).duration,
 )
 check(
     "L4 同一情形 judge_student_leave_truncate 照截到 8:40",
@@ -3401,15 +3388,10 @@ kernel_data.set_needs(child.cid, mana_max=2000)
 kernel_data.put(flags.set, child.cid, is_h=False)
 kernel_data.put(flags.set, child.cid, is_follow=0)
 kernel_data.put(flags.set, child.cid, unconscious_h=0)
-for key in child.second_behavior:
-    child.second_behavior[key] = 0
-child.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-child.behavior.start_time = T1030
-child.behavior.duration = 0
-child.behavior.move_target = []
-child.behavior.move_final_target = []
-child.state = constant.CharacterStatus.STATUS_ARDER
-child.target_character_id = 202
+kernel_data.put(activity.set_second_behaviors, child.cid, {})
+stand(child.cid, constant.Behavior.SHARE_BLANKLY, start_time=T1030)
+status(child.cid, constant.CharacterStatus.STATUS_ARDER)
+aim(child.cid, 202)
 clear_need(202)
 _l10_exp_id = growth_handle.get_class_exp_id(70)
 """ 指技课堂只发的理论经验（Plan 26 §3.1） """
@@ -3473,8 +3455,7 @@ check(
 )
 kernel_data.set_needs(child.cid, hit_max=100, hit=100)
 kernel_data.set_needs(child.cid, mana_max=100, mana=100)
-child.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-child.behavior.duration = 0
+behave(child.cid, constant.Behavior.SHARE_BLANKLY, duration=0)
 child_g32.selected_course = {}
 child_g32.last_attend_period = []
 move_to(202, SCENE_DORM)
@@ -3562,21 +3543,18 @@ def setup_ghost() -> dict:
     kernel_data.put(flags.set, student.cid, is_follow=0)
     kernel_data.put(flags.set, student.cid, unconscious_h=0)
     kernel_data.put(hypnosis.set, student.cid, blockhead=False)
-    for key in student.second_behavior:
-        student.second_behavior[key] = 0
-    for list_name in (
-        "must_settle_second_behavior_id_list",
-        "must_show_second_behavior_id_list",
-    ):
-        if hasattr(student, list_name):
-            getattr(student, list_name).clear()
-    student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-    student.behavior.start_time = GHOST_START
-    student.behavior.duration = 0
-    student.behavior.move_target = []
-    student.behavior.move_final_target = []
-    student.state = constant.CharacterStatus.STATUS_ARDER
-    student.target_character_id = 201
+    kernel_data.put(activity.set_second_behaviors, student.cid, {})
+    kernel_data.put(activity.set_must_settle, student.cid, [])
+    kernel_data.put(activity.set_must_show, student.cid, [])
+    behave(student.cid, constant.Behavior.SHARE_BLANKLY)
+    behave(student.cid, start_time=GHOST_START)
+    behave(student.cid, duration=0)
+    behave(student.cid, move_target=[])
+    behave(student.cid, move_final_target=[])
+    kernel_data.put(
+        activity.set_state, student.cid, constant.CharacterStatus.STATUS_ARDER
+    )
+    aim(student.cid, 201)
     clear_need(201)
     H1_SM_LOG.clear()
     H1_GAIN_LOG.clear()
@@ -3592,7 +3570,7 @@ check(
     and modes.group_sex()
     and sex_class_handle.get_running_class() == _ghost
     and not flags.get(pl.cid, "is_h")
-    and pl.position == SCENE_DORM
+    and activity.position(pl.cid) == SCENE_DORM
     and class_ai.judge_in_scene(201, ROOM_P)
     and sex_class_handle.judge_has_sex_skill_course(201)
     and sex_class_handle.judge_can_join_sex_class(201),
@@ -3666,12 +3644,10 @@ education.clear_temp_classes()
 for _cid in (0, 201, 202):
     kernel_data.put(flags.set, _cid, is_h=False)
 kernel_data.put(flags.set, student.cid, see_pl_h=False)
-for key in student.second_behavior:
-    student.second_behavior[key] = 0
+kernel_data.put(activity.set_second_behaviors, student.cid, {})
 kernel_data.set_needs(student.cid, hit_max=100, hit=100)
 kernel_data.set_needs(student.cid, mana_max=100, mana=100)
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-student.behavior.duration = 0
+behave(student.cid, constant.Behavior.SHARE_BLANKLY, duration=0)
 g32.selected_course = {}
 g32.last_attend_period = []
 g32.last_absent_period = []
@@ -3790,8 +3766,7 @@ remove_character(301)
 # 对照三：待赴的那节被玩家提前开讲（Plan 26 §3.5），教室里已有别的学生在课堂 H 里
 kernel_data.put(flags.set, child.cid, is_h=False)
 kernel_data.put(flags.set, child.cid, see_pl_h=False)
-for key in child.second_behavior:
-    child.second_behavior[key] = 0
+kernel_data.put(activity.set_second_behaviors, child.cid, {})
 kernel_data.put(flags.set, pl.cid, is_h=False)
 sex_class_handle.end_sex_class()
 kernel_data.set_world(modes.set_sex_class, False)
@@ -3828,8 +3803,7 @@ education.clear_temp_classes()
 for _cid in (0, 102, 201, 202):
     kernel_data.put(flags.set, _cid, is_h=False)
     kernel_data.put(flags.set, _cid, see_pl_h=False)
-for key in child.second_behavior:
-    child.second_behavior[key] = 0
+kernel_data.put(activity.set_second_behaviors, child.cid, {})
 move_to(201, SCENE_DORM)
 move_to(202, SCENE_DORM)
 clear_schedules()
@@ -3838,8 +3812,7 @@ clear_schedules()
 class_ai.get_skip_class_rate = _orig_rate
 kernel_data.set_needs(student.cid, hit_max=100, hit=100)
 kernel_data.set_needs(student.cid, mana_max=100, mana=100)
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-student.behavior.duration = 0
+behave(student.cid, constant.Behavior.SHARE_BLANKLY, duration=0)
 g32.selected_course = {}
 g32.last_attend_period = []
 g32.last_absent_period = []

@@ -20,6 +20,8 @@ from tests.slow.health_check import (
     HealthCheckTestCase,
 )
 from tests import kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 FOLLOW_MINUTES = 90
 """ 博士带着她在办公室里等待的分钟数 """
@@ -57,22 +59,23 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
         """
         from Script.Core import constant
 
-        pl = self.cache.character_data[0]
         picks = self.record_picks(self.operator_id)
         # 在场景里点选她，再点「邀请同行」
-        pl.target_character_id = self.operator_id
+        aim(0, self.operator_id)
         self.instruct(constant.Instruct.FOLLOW)
         self.assertEqual(
             kernel_data.domain("flags").get(self.operator.cid, "is_follow"), 1
         )
-        if pl.position != DR_OFFICE:
+        if activity.position(0) != DR_OFFICE:
             self.walk(DR_OFFICE)
         for _ in range(FOLLOW_MINUTES // 5):
             self.instruct(constant.Instruct.WAIT)
         # 吃饭、如厕等生理需求会让她暂时走开，跟随会把她带回博士身边
         self.assertTrue(
-            self.wait_until(lambda: self.operator.position == DR_OFFICE, 60),
-            f"她在 {self.operator.position}",
+            self.wait_until(
+                lambda: activity.position(self.operator.cid) == DR_OFFICE, 60
+            ),
+            f"她在 {activity.position(self.operator.cid)}",
         )
         self.assertEqual(
             kernel_data.domain("flags").get(self.operator.cid, "is_follow"),
@@ -84,7 +87,7 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
             [state_machine for _, state_machine in picks],
             "跟随中她不去体检科",
         )
-        pl.target_character_id = self.operator_id
+        aim(0, self.operator_id)
         self.instruct(constant.Instruct.END_FOLLOW)
         self.assertEqual(
             kernel_data.domain("flags").get(self.operator.cid, "is_follow"), 0
@@ -96,14 +99,16 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
 
         self.wait_until_hour(self.start - 1)
         # 把她带到博士身边，再邀请同行
-        self.world.move(self.operator_id, self.cache.character_data[0].position)
+        self.world.move(self.operator_id, activity.position(0))
         self.follow_doctor_in_office()
         self.assertGreaterEqual(
             game_time.now().hour, self.start, "跟随延续到时段内"
         )
         self.assertTrue(
-            self.wait_until(lambda: self.operator.position == EXAM_ROOM, 60),
-            f"她在 {self.operator.position}",
+            self.wait_until(
+                lambda: activity.position(self.operator.cid) == EXAM_ROOM, 60
+            ),
+            f"她在 {activity.position(self.operator.cid)}",
         )
 
     def test_waiting_follower_waits_until_follow_ends(self) -> None:
@@ -120,6 +125,8 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
             self.operator_id, self.waiting(), "跟随中她仍在等待体检名单上"
         )
         self.assertTrue(
-            self.wait_until(lambda: self.operator.position == EXAM_ROOM, 60),
-            f"她在 {self.operator.position}",
+            self.wait_until(
+                lambda: activity.position(self.operator.cid) == EXAM_ROOM, 60
+            ),
+            f"她在 {activity.position(self.operator.cid)}",
         )

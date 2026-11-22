@@ -15,6 +15,8 @@ from typing import cast
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 BABY = 101
 """ 婴儿素质的id """
@@ -76,12 +78,14 @@ class OfflineTargetActionsTest(SlowTestCase):
         from Script.UI.Moudle import view
         from Script.Core import constant
         from Script.Kernel import core
+        from Script.Modules.gameplay_resolution import working
         from tests import world
 
         baby_id = self.offline_chara()
         baby = self.cache.character_data[baby_id]
         ca.talent(baby_id)[BABY] = 1
-        before = pickle.dumps(baby)
+        offstage = cast(Mapping, core.state().data.get(working.OFFSTAGE) or {})
+        before = (pickle.dumps(baby), offstage.get(str(baby_id)))
         clock = core.state().clock
         label = f"[{str(baby.adv).rjust(4, '0')}]:{baby.name}"
         self.world.player.press(label, "抱一抱她")
@@ -96,9 +100,9 @@ class OfflineTargetActionsTest(SlowTestCase):
             self.starts_of(0)[:1], [(constant.Behavior.HOLD_CHILD, 30, None)]
         )
         self.assertGreaterEqual(core.state().clock - clock, 30)
-        self.assertNotEqual(
-            pickle.dumps(baby), before, "婴儿的数据没被照顾结算改过"
-        )
+        offstage = cast(Mapping, core.state().data.get(working.OFFSTAGE) or {})
+        after = (pickle.dumps(baby), offstage.get(str(baby_id)))
+        self.assertNotEqual(after, before, "婴儿的数据没被照顾结算改过")
 
     def test_release_from_bag_releases(self) -> None:
         """从袋中放出来：开始的是放出来，之后她在场、不在袋里，没有排上或开始等待"""
@@ -111,9 +115,8 @@ class OfflineTargetActionsTest(SlowTestCase):
         bagged_id = sorted(
             i for i in kernel_data.domain("roster").active() if i
         )[0]
-        player = self.cache.character_data[0]
-        self.world.move(bagged_id, player.position)
-        player.target_character_id = bagged_id
+        self.world.move(bagged_id, activity.position(0))
+        aim(0, bagged_id)
         kernel_data.put(
             kernel_data.domain("flags").set, 0, bagging_chara_id=bagged_id
         )

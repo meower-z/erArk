@@ -21,7 +21,7 @@ from Script.Design import child_stage_gate, handle_premise, virgin_break_gate
 from Script.Kernel import core
 from Script.Modules.domains import roster
 from Script.Modules.gameplay_resolution import intent
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, activity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -54,7 +54,7 @@ def _target(who: int, data: Data) -> int:
     target = data.get(TARGET)
     if isinstance(target, int):
         return target
-    return cache.character_data[who].target_character_id
+    return activity.target(who)
 
 
 def target_gone(who: int, behavior_id: str, data: Data) -> bool:
@@ -74,7 +74,7 @@ def target_gone(who: int, behavior_id: str, data: Data) -> bool:
     if not isinstance(target, int):
         return False
     target_data = cache.character_data.get(target)
-    if target_data is None or target_data.dead:
+    if target_data is None or activity.dead(target_data.cid):
         return True
     return bool(data.get("queued")) and target != 0 and not roster.has(target)
 

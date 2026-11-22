@@ -17,6 +17,7 @@ from Script.Modules.domains import hypnosis
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import default as settle_default
 from Script.UI.Panel import hypnosis_panel
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 
 
@@ -79,7 +80,7 @@ class HypnosisTest(FastTestCase):
 
     def test_degree_keeps_float_across_consecutive_settle_gains(self) -> None:
         """degree 保留小数催眠度，连续两次小数结算累加不丢小数"""
-        self.world.cache.character_data[0].target_character_id = 1
+        aim(0, 1)
         now = game_time.now()
         with (
             working.based_on(core.state()) as buf,

@@ -3,7 +3,7 @@
 from Script.Core import cache_control, constant_promise, game_type
 from Script.Design import game_time, map_handle
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import chara_life
+from Script.Modules.domains import activity, chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -425,10 +425,9 @@ def handle_scene_someone_entertainment_is_bathhouse_type(
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 场景角色数大于1时进行检测

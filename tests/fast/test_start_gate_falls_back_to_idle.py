@@ -21,8 +21,9 @@ from collections.abc import Mapping
 from Script.Core import constant, constant_promise
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, intent, start_gate
-from Script.Modules.domains import flags, modes, roster
+from Script.Modules.domains import activity, flags, modes, roster
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 
 AMIYA = 1
@@ -51,8 +52,8 @@ class StartGateTest(FastTestCase):
         self.pl = self.world.chara(0, "博士")
         self.amiya = self.world.chara(AMIYA, "阿米娅")
         self.kaltsit = self.world.chara(KALTSIT, "凯尔希")
-        self.amiya.target_character_id = KALTSIT
-        self.pl.target_character_id = KALTSIT
+        aim(self.amiya.cid, KALTSIT)
+        aim(self.pl.cid, KALTSIT)
 
     def start(
         self,
@@ -153,7 +154,7 @@ class StartGateTest(FastTestCase):
 
     def test_queued_target_gone_falls_back_to_idle(self) -> None:
         """排队时写明的交互对象在开始前死亡：换成发呆"""
-        self.kaltsit.dead = True
+        kernel_data.put(activity.set_dead, self.kaltsit.cid, True)
         act = self.start(AMIYA, 5, target=KALTSIT)
         self.assertEqual(
             self.started(act, AMIYA)[:3],
@@ -185,7 +186,7 @@ class StartGateTest(FastTestCase):
 
     def test_idle_keeps_queued_flag(self) -> None:
         """排队的行动因交互对象死亡换成发呆：发呆的意图仍标着来自队列"""
-        self.kaltsit.dead = True
+        kernel_data.put(activity.set_dead, self.kaltsit.cid, True)
         data = self.start(AMIYA, 5, target=KALTSIT, queued=True).action_data
         assert isinstance(data, Mapping)
         self.assertEqual(
@@ -244,7 +245,7 @@ class StartGateTest(FastTestCase):
     def test_time_stop_off_swapped_for_idle_takes_no_kernel_time(self) -> None:
         """时停中玩家解除时停，交互对象已死亡：换成发呆，时停没解除，内核时长 0"""
         kernel_data.set_world(modes.set_time_stop, True)
-        self.kaltsit.dead = True
+        kernel_data.put(activity.set_dead, self.kaltsit.cid, True)
         act = self.start(0, 1, constant.Behavior.TIME_STOP_OFF, target=KALTSIT)
         self.assertEqual(
             self.started(act, 0)[:3],

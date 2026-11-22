@@ -7,6 +7,7 @@
 """
 
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
 
 
@@ -26,7 +27,7 @@ class NamedCharacterValueEffectTest(SlowTestCase):
             if cache.character_data[cid].adv == cid
         )
         npc = cache.character_data[npc_id]
-        cache.character_data[0].target_character_id = npc_id
+        aim(0, npc_id)
         status_id = min(game_config.config_character_state)
         ability_id = min(game_config.config_ability)
         experience_id = min(game_config.config_experience)

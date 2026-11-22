@@ -8,7 +8,7 @@ from _bootstrap import game_time, growth_event_handle, growth_handle
 from _bootstrap import handle_premise, make_character, open_all_classroom
 from _bootstrap import period_time, random, remove_character
 from _bootstrap import schedule_handle, schedule_template_handle, section
-from _bootstrap import semester_handle, set_time
+from _bootstrap import semester_handle, set_time, activity
 from Script.System.Official_Event_System import official_event_handle
 from typing import Any
 from Script.System.Pregnancy_System import pregnancy_constant
@@ -16,7 +16,7 @@ import inspect
 from Script.Design import talk
 from Script.Settle import past_day_settle
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import h_state, official, chara_life, relations
+from Script.Modules.domains import chara_life, h_state, official, relations
 from collections.abc import Callable
 import _bootstrap as _boot
 from Script.UI.Moudle import draw as _draw_module
@@ -1336,14 +1336,14 @@ check(
     _high_calls,
 )
 _target_premise = constant_promise.Premise.TARGET_IS_PLAYER_DAUGHTER
-twin_a.target_character_id = 102
+kernel_data.put(activity.set_target, twin_a.cid, 102)
 check(
     (
         "M2 judge_premise_all_pass：判定期间交互对象指向 partner_id——指向妹妹 219 时 target_is_player_daughter 成立，"
         "判完交互对象还原为原来的 102（母亲）"
     ),
-    JP(_target_premise, 218, 219) is True and twin_a.target_character_id == 102,
-    twin_a.target_character_id,
+    JP(_target_premise, 218, 219) is True and activity.target(218) == 102,
+    activity.target(twin_a.cid),
 )
 check(
     (
@@ -1351,9 +1351,9 @@ check(
         "本身判不过这条前提"
     ),
     JP(_target_premise, 218, 0) is False
-    and twin_a.target_character_id == 102
+    and activity.target(twin_a.cid) == 102
     and not HP(_target_premise, 218),
-    twin_a.target_character_id,
+    activity.target(twin_a.cid),
 )
 remove_character(218)
 remove_character(219)

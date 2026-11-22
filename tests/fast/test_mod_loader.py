@@ -14,9 +14,16 @@ from unittest.mock import Mock, patch
 
 from Script.Config import game_config
 from Script.Core import mod_manager
-from Script.Modules.domains import action_info, h_meters, h_state, tallies
+from Script.Modules.domains import (
+    action_info,
+    activity,
+    h_meters,
+    h_state,
+    tallies,
+)
 from Script.Design import handle_premise
 from tests import kernel_data
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 
 
@@ -111,13 +118,13 @@ class ModLoaderTest(FastTestCase):
         self.load_semen_mod(mod_manager.ModManager())
         self.assertEqual(handle_premise.handle_pl_semen_le_2(0), 0)
         player = self.world.chara(0, "博士")
-        player.target_character_id = 0
+        aim(player.cid, 0)
         with kernel_data.writing():
             action_info.set(player.cid, "day_first_shoot_semen", False)
             h_meters.set(0, semen=50, extra_semen=0)
             h_state.set(0, endure_not_shot_count=0)
         for flag in ("p_orgasm_strong", "p_orgasm_normal"):
-            player.second_behavior[flag] = 0
+            kernel_data.put(activity.set_second_behavior, player.cid, flag, 0)
         for name in (
             "handle_self_semen_energy_agent",
             "handle_pl_semen_tmp_ge_max",

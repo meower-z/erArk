@@ -31,6 +31,8 @@ import uuid
 from typing import TYPE_CHECKING
 
 from tests import chara_abilities as ca, chara_data, kernel_data, outside_cache
+from tests.chara_activity import place
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -421,7 +423,7 @@ class MinimalWorld:
         from Script.Modules.gameplay_resolution import working
 
         self.scene(path)
-        pos = self.cache.character_data[cid].position
+        pos = activity.position(cid)
         with (
             contextlib.nullcontext()
             if working.active()
@@ -475,7 +477,6 @@ class MinimalWorld:
         cd.adv = adv
         cd.sex = 1
         cd.race = race
-        cd.second_behavior = attr_calculation.get_second_behavior_zero({})
         services = attr_calculation.get_assistant_services_zero()
         kernel_data.put(relations.assistant_services.set, cid, services)
         kernel_data.put(relations.favorability.set, cid, {0: 0})
@@ -483,8 +484,7 @@ class MinimalWorld:
         ca.talent(cid)[121] = 1
         dormitory = map_handle.get_map_system_path_str_for_list(DEFAULT_SCENE)
         kernel_data.put(chara_life.dormitory.set, cid, dormitory)
-        cd.behavior.start_time = game_time.now()
-        cd.position = position
+        place(cd.cid, position, start_time=game_time.now())
         cache.character_data[cid] = cd
         chara_data.seed(cid, {} if naked else STANDARD_OUTFIT)
         kernel_data.set_needs(cid, hit_max=100, hit=100, mana_max=100, mana=100)

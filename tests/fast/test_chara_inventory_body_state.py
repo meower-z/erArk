@@ -48,6 +48,7 @@ from Script.UI.Panel import check_locker_panel, cloth_panel, h_item_shop_panel
 from Script.Settle import item_effect
 from tests import chara_abilities as ca, kernel_data
 from tests import world as world_module
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 
 THIRD = Fraction(1, 3)
@@ -264,7 +265,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 5, [coat])
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 6, [bra])
         kernel_data.put(wardrobe.set, 1, "cloth_see", {6: True, 9: True})
-        self.cache.character_data[0].target_character_id = 1
+        aim(0, 1)
         panel = cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)
         shown = {b.cloth_id for b in panel.button_list}
         self.assertIn(coat, shown)
@@ -282,7 +283,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 9, [pan])
         kernel_data.put(wardrobe.set, 1, "cloth_see", {6: False, 9: False})
         kernel_data.put(flags.set, 0, is_h=1)
-        self.cache.character_data[0].target_character_id = 1
+        aim(0, 1)
 
         def click_pan() -> None:
             panel = cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)
@@ -306,7 +307,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 9, [pan])
         kernel_data.put(wardrobe.set, 1, "cloth_see", {6: False, 9: False})
         kernel_data.put(flags.set, 0, is_h=1)
-        self.cache.character_data[0].target_character_id = 1
+        aim(0, 1)
 
         def draw_then_wait() -> None:
             cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)
@@ -316,7 +317,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         world_module.act(draw_then_wait)
         self.assertEqual(wardrobe.of(1).cloth_see, {6: False, 9: True})
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 9, [])
-        self.cache.character_data[0].target_character_id = 1
+        aim(0, 1)
         panel = cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)
         texts = [getattr(d, "text", "") for d in panel.draw_list]
         name = game_config.config_clothing_type[9].name
@@ -334,7 +335,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 6, [bra])
         kernel_data.put(wardrobe.set, 1, "cloth_see", {6: False, 9: False})
         kernel_data.put(flags.set, 0, is_h=1)
-        self.cache.character_data[0].target_character_id = 1
+        aim(0, 1)
 
         def click_coat() -> None:
             panel = cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)
@@ -359,7 +360,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 9, [pan])
         kernel_data.put(wardrobe.set, 1, "cloth_see", {6: False, 9: False})
         kernel_data.put(flags.set, 0, is_h=1)
-        self.cache.character_data[0].target_character_id = 1
+        aim(0, 1)
 
         def draw_then_take() -> None:
             cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)

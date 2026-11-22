@@ -8,8 +8,8 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel, ejaculation_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement, first_record
-from Script.Modules.domains import h_meters, h_state, status
+from Script.Modules.domains import abilities, achievement, activity
+from Script.Modules.domains import first_record, h_meters, h_state, status
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -209,7 +209,6 @@ def orgasm_settle_in_second_behavior(
     from Script.Settle.common_default import base_chara_experience_common_settle
     from Script.Settle.power_settle import store_power_by_human_power
 
-    character_data = cache.character_data[character_id]
     # print(f"进入{character_data.name}的高潮结算")
     part_dict = {
         0: "s",
@@ -452,7 +451,7 @@ def orgasm_settle_in_second_behavior(
             if part_count not in fr.first_plural_orgasm_dict:
                 fr.first_plural_orgasm_dict[part_count] = [
                     game_time.now(),
-                    list(character_data.position),
+                    list(activity.position(character_id)),
                     sorted(tem_orgasm_set),
                 ]
         # 结算成就

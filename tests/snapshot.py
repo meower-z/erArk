@@ -54,6 +54,7 @@ import re
 import sys
 from typing import TYPE_CHECKING
 import uuid
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -271,10 +272,8 @@ class ActionLog:
         Return arguments:
         无
         """
-        from Script.Core import cache_control
         from Script.Design import event, talk
 
-        cache = cache_control.cache
         real_talk_draw = talk.handle_talk_draw
         real_handle_event = event.handle_event
 
@@ -322,9 +321,7 @@ class ActionLog:
             result = real_handle_event(character_id, *args, **kwargs)
             event_id = getattr(result, "event_id", "")
             if event_id:
-                behavior_id = cache.character_data[
-                    character_id
-                ].behavior.behavior_id
+                behavior_id = activity.behavior(character_id).behavior_id
                 self.event.append(
                     [character_id, str(behavior_id), str(event_id)]
                 )

@@ -17,7 +17,7 @@ from Script.Design import (
     game_time,
 )
 from Script.Config import game_config, character_config, normal_config
-from Script.Modules.domains import abilities, facility, flags, needs
+from Script.Modules.domains import abilities, activity, facility, flags, needs
 from Script.Modules.domains import player_collection, playthrough, roster
 from Script.Modules.domains import tallies, visitor, wardrobe, chara_key
 from Script.Modules.domains import chara_life, relations
@@ -75,7 +75,7 @@ def init_character(
         relations.father_id.set(now_character.cid, 0)
         relations.mother_id.set(now_character.cid, character_tem.Mother_id)
     now_character.adv = character_tem.AdvNpc
-    now_character.target_character_id = character_id
+    activity.set_target(now_character.cid, character_id)
     relations.favorability.set(now_character.cid, {0: 0})
     relations.trust.set(now_character.cid, 0)
     abilities.ability(character_id).replace(character_tem.Ability)
@@ -222,10 +222,9 @@ def born_new_character(mother_id: int, child_name: str) -> int:
 
 def init_character_position() -> None:
     """初始化角色位置"""
-    cache = cache_control.cache
     roster.add(0)
     for character_id in roster.active():
-        character_position = cache.character_data[character_id].position
+        character_position = activity.position(character_id)
         character_dormitory = chara_life.dormitory(character_id)
         character_dormitory_str = map_handle.get_map_system_path_for_str(
             character_dormitory
@@ -234,7 +233,7 @@ def init_character_position() -> None:
         map_handle.character_move_scene(
             character_position, character_dormitory_str, character_id
         )
-    character_position = cache.character_data[0].position
+    character_position = activity.position(0)
     map_handle.character_move_scene(["0", "0"], character_position, 0)
 
 
@@ -315,7 +314,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
     dormitory_common.new_character_get_dormitory(character_id)
 
     # 初始化新角色位置
-    character_position = character_data.position
+    character_position = activity.position(character_id)
     office_postion = ["中枢", "博士办公室"]
     map_handle.character_move_scene(
         character_position, office_postion, character_id
@@ -327,9 +326,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
     # 新角色原地等待30分钟：她加入内核时以此刻结束的空闲开始，接着开始排上的等待
     from Script.Modules.gameplay_resolution import plan_queue
 
-    character_data.behavior = game_type.Behavior()
-    character_data.behavior.start_time = game_time.now()
-    character_data.behavior.duration = 0
+    activity.set_behavior(character_id, start_time=game_time.now(), duration=0)
     plan_queue.plan_next(
         character_id,
         constant.Behavior.WAIT,
@@ -364,7 +361,6 @@ def add_favorability(
     favorability = relations.favorability(target_id)
     favorability.setdefault(character_id, 0)
     relations.favorability.set(target_id, favorability)
-    character_data: game_type.Character = cache.character_data[character_id]
     favorability = relations.favorability(character_id)
     favorability.setdefault(target_id, 0)
     relations.favorability.set(character_id, favorability)
@@ -392,7 +388,7 @@ def add_favorability(
     # else:
 
     # NPC对玩家
-    if (character_id != 0) and (character_data.target_character_id == 0):
+    if (character_id != 0) and (activity.target(character_id) == 0):
         with relations.favorability.editing(character_id) as favorability:
             favorability[target_id] += now_add_favorability
             favorability[target_id] = min(100000, favorability[target_id])
@@ -401,7 +397,7 @@ def add_favorability(
             change_data.favorability += now_add_favorability
 
     # 对NPC
-    if character_data.target_character_id != 0:
+    if activity.target(character_id) != 0:
         with relations.favorability.editing(target_id) as favorability:
             favorability[character_id] += now_add_favorability
             favorability[character_id] = min(100000, favorability[character_id])
@@ -412,7 +408,7 @@ def add_favorability(
     #     add_favorability(target_id, character_id, old_add_favorability, None, None, now_time)
 
     # 记录好感度增加
-    if character_id == 0 or character_data.target_character_id == 0:
+    if character_id == 0 or activity.target(character_id) == 0:
         tallies.add(tallies.FAVORABILITY, now_add_favorability)
 
 

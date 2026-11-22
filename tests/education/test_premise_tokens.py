@@ -4,15 +4,16 @@
 from _bootstrap import child_growth, growth, pregnancy, DEFAULT_TIME
 from _bootstrap import SCENE_DORM, SCENE_EDU_ENTRY, _, check, class_ai
 from _bootstrap import classroom_path, clear_schedules, constant
-from _bootstrap import constant_promise, datetime, education
+from _bootstrap import constant_promise, datetime, education, activity
 from _bootstrap import education_constant, finish, game_config, game_time
 from _bootstrap import game_type, handle_premise, make_character, move_to
 from _bootstrap import open_all_classroom, period_time, pl, remove_character
 from _bootstrap import schedule_handle, schedule_template_handle, section
 from _bootstrap import set_time, settle_behavior, sex_class_handle
 from Script.Design import handle_ability, second_behavior
-from Script.Modules.domains import flags, hypnosis, modes, chara_life, relations
+from Script.Modules.domains import chara_life, flags, hypnosis, modes, relations
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim, behave, doing
 
 open_all_classroom()
 clear_schedules()
@@ -100,7 +101,7 @@ check(
     and HP("work_is_student", 201) == 1
     and HP("work_is_student", 101) == 0,
 )
-pl.target_character_id = 201
+aim(pl.cid, 201)
 check(
     "t_work_is_student / t_work_is_teacher",
     HP("t_work_is_student", 0) == 1 and HP("t_work_is_teacher", 0) == 0,
@@ -268,7 +269,7 @@ check(
     and HP("CVP_A1_Growth|23_E_1", 201) == 0
     and HP("CVP_A1_Growth|23_E_0", 301) == 1,
 )
-pl.target_character_id = 201
+aim(pl.cid, 201)
 change = game_type.CharacterStatusChange()
 settle_behavior.handle_comprehensive_value_effect(
     0, ["A2", "Growth|10", "G", "0.5"], change
@@ -357,7 +358,7 @@ assert intern_course is not None
 intern_place = schedule_handle.get_course_place(intern_course)
 mentor = make_character(103, "带教", intern_work, position=intern_place)
 move_to(201, intern_place)
-student.behavior.behavior_id = constant.Behavior.INTERN_CLASS
+behave(student.cid, constant.Behavior.INTERN_CLASS)
 check(
     "有学徒在跟岗：have_intern_student",
     HP("have_intern_student", 103) == 1
@@ -393,7 +394,7 @@ for room in (
 move_to(0, SCENE_EDU_ENTRY)
 move_to(201, classroom_path(ROOM1))
 move_to(202, SCENE_DORM)
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 check(
     "玩家不在那间教室：别处有闲着的学生也不成立（原先扫全岛）",
     HP("student_not_study_in_classroom", 0) == 0,
@@ -403,18 +404,18 @@ check(
     "玩家所在的教室里有闲着的学生 → 成立",
     HP("student_not_study_in_classroom", 0) == 1,
 )
-student.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student.cid, constant.Behavior.ATTENT_CLASS)
 check("她已经在听课 → 不成立", HP("student_not_study_in_classroom", 0) == 0)
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 kernel_data.put(flags.set, student.cid, sleep=True)
 check("她在睡觉 → 不成立", HP("student_not_study_in_classroom", 0) == 0)
 kernel_data.put(flags.set, student.cid, sleep=False)
-student.behavior.behavior_id = constant.Behavior.SLEEP
+behave(student.cid, constant.Behavior.SLEEP)
 check(
     "她当场爆睡（行为是睡觉、没挂要睡觉标记）→ 不成立（Plan 27 §3.7）",
     HP("student_not_study_in_classroom", 0) == 0,
 )
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 move_to(0, SCENE_DORM)
 
 section("Plan 26 L6：t_baby_0 与检查成绩单挡婴儿")
@@ -423,7 +424,7 @@ check(
     "t_baby_0" in constant.handle_premise_data and P.T_BABY_0 == "t_baby_0",
 )
 baby = make_character(204, "婴儿", 0, daughter=True, stage=101, mother_id=102)
-pl.target_character_id = 204
+aim(pl.cid, 204)
 check(
     "交互对象是婴儿：t_baby_0 = 0、t_baby_1 = 1",
     HP("t_baby_0", 0) == 0 and HP("t_baby_1", 0) == 1,
@@ -440,9 +441,9 @@ check(
     and not all(HP(token, 0) for token in report_tokens),
     report_config.premise_set,
 )
-pl.target_character_id = 201
+aim(pl.cid, 201)
 check("对萝莉女儿成立", all(HP(token, 0) for token in report_tokens))
-pl.target_character_id = 0
+aim(pl.cid, 0)
 remove_character(204)
 
 section("Plan 28 §3.2 / §3.7：上不成的个人式课视为没课；日程自习的 <课> 悬停")
@@ -472,7 +473,7 @@ schedule_handle.set_selected_course(
 )
 check("换成下棋：CourseType 成立", HP(_ct_interest, 201) == 1)
 schedule_handle.clear_selected_course(201, 0, 0)
-student.behavior.behavior_id = constant.Behavior.SELF_STUDY
+behave(student.cid, constant.Behavior.SELF_STUDY)
 _self_study_tip = (False, _("自习中（日程安排，此刻没课）"))
 check(
     "本节没课的日程自习：<课> 悬停写「自习中」（此前写「上课中」）",
@@ -486,13 +487,13 @@ check(
     character_info_head.get_now_class_tip(201),
 )
 set_time(period_time(0))
-student.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student.cid, constant.Behavior.ATTENT_CLASS)
 check(
     "听课而此刻没课、也不是在听玩家的手动授课：仍写「上课中」",
     character_info_head.get_now_class_tip(201) == (False, _("上课中")),
     character_info_head.get_now_class_tip(201),
 )
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 
 section(
     "Plan 30：self_have_any_course 只看学生岗的真课、CVP Growth|24、检查成绩单的对象（Q1）"
@@ -535,7 +536,7 @@ report_tokens = [
 grown = make_character(
     206, "成年女儿", 21, daughter=True, stage=104, mother_id=102, born_days=500
 )
-pl.target_character_id = 206
+aim(pl.cid, 206)
 check(
     "成年后不在学生岗的女儿：检查成绩单不成立（用户拍板）",
     not all(HP(token, 0) for token in report_tokens)
@@ -552,20 +553,20 @@ check(
     "成年后仍在学生岗的女儿：成立", all(HP(token, 0) for token in report_tokens)
 )
 chara_life.work_type.set(student.cid, 21)
-pl.target_character_id = 201
+aim(pl.cid, 201)
 check(
     "改了岗的萝莉女儿：照旧成立（照出成绩单，Plan 29）",
     all(HP(token, 0) for token in report_tokens),
 )
 chara_life.work_type.set(student.cid, 152)
 other_student = make_character(302, "不是女儿的成年学生", 152)
-pl.target_character_id = 302
+aim(pl.cid, 302)
 check(
     "不是女儿的学生岗角色：不成立（target_is_player_daughter 挡住，用户拍板维持）",
     not all(HP(token, 0) for token in report_tokens)
     and HP("target_is_player_daughter", 0) == 0,
 )
-pl.target_character_id = 0
+aim(pl.cid, 0)
 remove_character(206)
 remove_character(302)
 
@@ -755,7 +756,7 @@ section(
     "Plan 31 §3.8（L4）：改任实习岗位的女儿在那个岗位上不再亮 <课>，CVP 不再读成实习课"
 )
 set_time(period_time(0))
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_INTERN, intern_work
 )
@@ -827,8 +828,8 @@ section(
     "Plan 31 §3.13（L9）：玩家手动授课时 CVP 按所在教室判课型、科目回落学识（与 512 同口径）"
 )
 set_time(period_time(0))
-_pl_behavior = pl.behavior.behavior_id
-pl.behavior.behavior_id = constant.Behavior.TEACH
+_pl_behavior = doing(pl.cid)
+behave(pl.cid, constant.Behavior.TEACH)
 move_to(0, classroom_path(ROOM1))
 check(
     "L9 在理论教室一手动授课：CourseType 为理论课、Course|45（学识）成立（此前两项都是 -1，授课口上只剩占位地文）",
@@ -864,22 +865,22 @@ check(
     HP("CVP_A1_Course|70_G_0", 0) == 1 and HP("CVP_A1_Course|45_G_0", 0) == 0,
 )
 education.clear_temp_classes()
-pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(pl.cid, constant.Behavior.SHARE_BLANKLY)
 check(
     "L9 玩家没在授课：不回落，两项都不成立",
     HP("CVP_A1_CourseType|1_E_1", 0) == 0
     and HP("CVP_A1_Course|45_G_0", 0) == 0,
 )
-adult.behavior.behavior_id = constant.Behavior.TEACH
+behave(adult.cid, constant.Behavior.TEACH)
 move_to(301, classroom_path(ROOM1))
 check(
     "L9 回落只给玩家：行为是授课的非教师 NPC 不按教室判",
     HP("CVP_A1_CourseType|0_E_1", 301) == 0
     and HP("CVP_A1_Course|45_G_0", 301) == 0,
 )
-adult.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(adult.cid, constant.Behavior.SHARE_BLANKLY)
 move_to(301, SCENE_DORM)
-pl.behavior.behavior_id = _pl_behavior
+behave(pl.cid, _pl_behavior)
 move_to(0, SCENE_DORM)
 check(
     "L18 同学前提的 docstring 写上新口径（双方都在学生岗、确有的课、对方是幼女或学员）",
@@ -934,12 +935,12 @@ section(
 )
 clear_schedules()
 _fallback = E.FALLBACK_SUBJECT_ABILITY
-_pl_behavior = pl.behavior.behavior_id
+_pl_behavior = doing(pl.cid)
 set_time(DEFAULT_TIME.replace(hour=20))
-pl.behavior.behavior_id = constant.Behavior.TEACH
+behave(pl.cid, constant.Behavior.TEACH)
 move_to(0, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
-student.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student.cid, constant.Behavior.ATTENT_CLASS)
 check(
     (
         "L13 节次外、在理论教室一被拉来听课：CourseType 为理论课、Course|学识 成立（此前两项都是 -1，529 "
@@ -965,20 +966,20 @@ check(
     HP(f"CVP_A1_Course|{_fallback}_G_0", 201) == 1
     and HP("CVP_A1_Course|43_G_0", 201) == 0,
 )
-student.behavior.start_time = period_time(0) + datetime.timedelta(minutes=5)
+behave(student.cid, start_time=period_time(0) + datetime.timedelta(minutes=5))
 check(
     "L13 对照：开始时刻与玩家没对齐（她自己坐下听课，不是被拉来的）→ 按课表读料理",
     HP("CVP_A1_Course|43_G_0", 201) == 1
     and HP(f"CVP_A1_Course|{_fallback}_G_0", 201) == 0,
 )
 set_time(period_time(0))
-pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(pl.cid, constant.Behavior.SHARE_BLANKLY)
 check(
     "L13 对照：玩家没在授课 → 按课表读料理",
     HP("CVP_A1_Course|43_G_0", 201) == 1,
 )
-pl.behavior.behavior_id = _pl_behavior
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(pl.cid, _pl_behavior)
+behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 move_to(0, SCENE_DORM)
 move_to(201, SCENE_DORM)
 schedule_handle.clear_selected_course(201, 0, 0)
@@ -995,10 +996,10 @@ _g201.selected_course = {}
 _g201.skip_class_flag = True
 _g201.skip_class_day = game_time.now().toordinal()
 _g201.show_off_ability = {45: 2}
-student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 kernel_data.put(flags.set, student.cid, is_h=False)
-_pl_behavior = pl.behavior.behavior_id
-pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+_pl_behavior = doing(pl.cid)
+behave(pl.cid, constant.Behavior.SHARE_BLANKLY)
 move_to(0, SCENE_DORM)
 move_to(201, SCENE_DORM)
 
@@ -1011,12 +1012,11 @@ def caught_dispatch() -> tuple:
     Return arguments:
     tuple -- (是否派出翘课被抓, 是否派出炫耀)
     """
-    student.second_behavior["caught_skip_class"] = 0
-    student.second_behavior["show_off_study"] = 0
+    keys = ("caught_skip_class", "show_off_study")
+    for key in keys:
+        kernel_data.put(activity.set_second_behavior, student.cid, key, 0)
     second_behavior.judge_child_growth_second_behavior(201)
-    return bool(student.second_behavior.get("caught_skip_class", 0)), bool(
-        student.second_behavior.get("show_off_study", 0)
-    )
+    return tuple(bool(activity.second_behavior(student.cid, k)) for k in keys)
 
 
 _r = caught_dispatch()
@@ -1075,9 +1075,9 @@ _g201.skip_class_flag = False
 _g201.skip_class_day = 0
 _g201.show_off_ability = {}
 _g201.selected_course = {}
-student.second_behavior["caught_skip_class"] = 0
-student.second_behavior["show_off_study"] = 0
-pl.behavior.behavior_id = _pl_behavior
+for _key in ("caught_skip_class", "show_off_study"):
+    kernel_data.put(activity.set_second_behavior, student.cid, _key, 0)
+behave(pl.cid, _pl_behavior)
 clear_schedules()
 set_time(period_time(0))
 

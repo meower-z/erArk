@@ -12,7 +12,13 @@ from Script.Core import (
 from Script.Design import map_handle, handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import flags, roster, visitor, chara_profile
+from Script.Modules.domains import (
+    activity,
+    chara_profile,
+    flags,
+    roster,
+    visitor,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -318,7 +324,7 @@ class MoveSonPanel:
         # 角色属性与信息
         name = character_data.name
         id = str(character_data.adv).rjust(4, "0")
-        scene_position = character_data.position.copy()
+        scene_position = activity.position(character_data.cid).copy()
         if normal_config.config_normal.language != "zh_CN":
             for i in range(len(scene_position)):
                 scene_position[i] = _(scene_position[i])
@@ -344,15 +350,15 @@ class MoveSonPanel:
         now_draw_text += f":{scene_position_str}   "
 
         behavior_text = game_config.config_behavior[
-            character_data.behavior.behavior_id
+            activity.behavior(character_data.cid).behavior_id
         ].name
         # 如果是在移动，则输出目的地
         # BUG 需要查明在什么情况下会导致虽然在移动但是move_final_target为空
         if behavior_text == _("移动") and len(
-            character_data.behavior.move_final_target
+            activity.behavior(character_data.cid).move_final_target
         ):
             now_draw_text += _("移动目的地:{0}").format(
-                character_data.behavior.move_final_target[-1]
+                activity.behavior(character_data.cid).move_final_target[-1]
             )
         # 否则输出状态
         else:
@@ -413,10 +419,10 @@ class MoveSonPanel:
             # now_draw.width = 1
             now_draw.draw()
         # 博士前往干员位置的情况：寻路的各段在玩家下一次选行动时接着走，她走开了就跟过去，到达时她是交互对象
-        elif character_data.position != cache.character_data[0].position:
+        elif activity.position(character_id) != activity.position(0):
             character_move.own_charcter_move(
-                character_data.position, follow=character_id
+                activity.position(character_id), follow=character_id
             )
         # 该干员就在玩家的位置，玩家的交互对象设为该干员
         else:
-            cache.character_data[0].target_character_id = character_id
+            activity.set_target(0, character_id)

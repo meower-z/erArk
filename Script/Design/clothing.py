@@ -9,7 +9,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_premise, map_handle
-from Script.Modules.domains import abilities, dirty, prison, wardrobe
+from Script.Modules.domains import abilities, activity, dirty, prison, wardrobe
 from Script.UI.Moudle import draw
 
 cache: game_type.Cache = cache_control.cache
@@ -87,9 +87,8 @@ def get_now_cloth_locker_type(character_id: int) -> int:
     Return arguments:
     int -- 衣柜类型（2大浴场更衣室/3宿舍）
     """
-    character_data = cache.character_data[character_id]
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     now_scene_data = cache.scene_data[now_scene_str]
     return get_cloth_locker_type_by_scene(now_scene_data.scene_tag)
@@ -425,7 +424,6 @@ def pl_get_chara_pan(character_id: int) -> None:
     Return arguments:
     无
     """
-    pl_character_data = cache.character_data[0]
     if character_id > 0:
         character_data = cache.character_data[character_id]
         # 如果角色穿了内裤
@@ -440,7 +438,7 @@ def pl_get_chara_pan(character_id: int) -> None:
             )
             # 加到玩家的行动记录里
             TPanName = game_config.config_clothing_tem[TagetPanId].name
-            pl_character_data.behavior.pan_name = TPanName
+            activity.update_behavior(0, pan_name=TPanName)
             # 脱掉内裤
             wardrobe.set_part(character_id, "cloth_wear", 9, [])
             wardrobe.set_part(character_id, "cloth_see", 9, True)
@@ -470,7 +468,6 @@ def pl_get_chara_socks(character_id: int) -> None:
     Return arguments:
     无
     """
-    pl_character_data = cache.character_data[0]
     if character_id > 0:
         character_data = cache.character_data[character_id]
         # 如果角色穿了袜子
@@ -484,7 +481,7 @@ def pl_get_chara_socks(character_id: int) -> None:
             )
             # 加到玩家的行动记录里
             TSocName = game_config.config_clothing_tem[TagetSocId].name
-            pl_character_data.behavior.socks_name = TSocName
+            activity.update_behavior(0, socks_name=TSocName)
             # 脱掉袜子
             wardrobe.set_part(character_id, "cloth_wear", 10, [])
             wardrobe.set_part(character_id, "cloth_see", 10, True)

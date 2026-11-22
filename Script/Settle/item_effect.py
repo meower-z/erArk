@@ -13,7 +13,14 @@ from Script.Design import (
 from Script.Core import cache_control, constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities, dirty, flags, h_state, inventory
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    dirty,
+    flags,
+    h_state,
+    inventory,
+)
 from Script.Modules.domains import kitchen, needs, status
 
 _: FunctionType = get_text._
@@ -68,9 +75,8 @@ def handle_target_item_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_item_off(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -120,9 +126,8 @@ def handle_target_item_off_except_pill(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_item_off_except_pill(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -145,8 +150,7 @@ def handle_target_b_item_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     for i in [0, 4]:
         h_state.set_body_item(target_id, i, False, None)
 
@@ -170,8 +174,7 @@ def handle_target_a_item_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     for i in [3, 7]:
         h_state.set_body_item(target_id, i, False, None)
 
@@ -195,8 +198,7 @@ def handle_target_vibrator_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 2, True)
+    h_state.set_body_item(activity.target(character_id), 2, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -218,8 +220,7 @@ def handle_target_vibrator_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 2, False)
+    h_state.set_body_item(activity.target(character_id), 2, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -241,8 +242,7 @@ def handle_target_anal_vibrator_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 3, True)
+    h_state.set_body_item(activity.target(character_id), 3, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -264,8 +264,7 @@ def handle_target_anal_vibrator_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 3, False)
+    h_state.set_body_item(activity.target(character_id), 3, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -287,8 +286,7 @@ def handle_target_nipple_clamp_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 0, True)
+    h_state.set_body_item(activity.target(character_id), 0, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -310,8 +308,7 @@ def handle_target_nipple_clamp_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 0, False)
+    h_state.set_body_item(activity.target(character_id), 0, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -333,8 +330,7 @@ def handle_target_clit_clamp_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 1, True)
+    h_state.set_body_item(activity.target(character_id), 1, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -356,8 +352,7 @@ def handle_target_clit_clamp_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 1, False)
+    h_state.set_body_item(activity.target(character_id), 1, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -379,8 +374,7 @@ def handle_target_anal_beads_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 7, True)
+    h_state.set_body_item(activity.target(character_id), 7, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -402,8 +396,7 @@ def handle_target_anal_beads_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 7, False)
+    h_state.set_body_item(activity.target(character_id), 7, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -425,8 +418,7 @@ def handle_target_milking_machine_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 4, True)
+    h_state.set_body_item(activity.target(character_id), 4, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -448,8 +440,7 @@ def handle_target_milking_machine_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 4, False)
+    h_state.set_body_item(activity.target(character_id), 4, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -471,8 +462,7 @@ def handle_target_urine_collector_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 5, True)
+    h_state.set_body_item(activity.target(character_id), 5, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -494,8 +484,7 @@ def handle_target_urine_collector_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 5, False)
+    h_state.set_body_item(activity.target(character_id), 5, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -517,8 +506,7 @@ def handle_target_patch_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 6, True)
+    h_state.set_body_item(activity.target(character_id), 6, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -540,8 +528,7 @@ def handle_target_patch_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 6, False)
+    h_state.set_body_item(activity.target(character_id), 6, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -563,8 +550,7 @@ def handle_target_gag_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 14, True)
+    h_state.set_body_item(activity.target(character_id), 14, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -586,8 +572,7 @@ def handle_target_gag_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 14, False)
+    h_state.set_body_item(activity.target(character_id), 14, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -611,11 +596,10 @@ def handle_adjust_body_manage_day_item(
         return
     if character_id == 0:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 这里把交互对象设为自己是因为下面的装备/取下道具函数都是让交互对象结算的
-    old_target_character_id = character_data.target_character_id
+    old_target_character_id = activity.target(character_id)
     try:
-        character_data.target_character_id = character_id
+        activity.set_target(character_id, character_id)
         # 身体管理_乳头夹
         if handle_premise.handle_ask_equp_nipple_clamp_in_day(
             character_id
@@ -675,7 +659,7 @@ def handle_adjust_body_manage_day_item(
                 character_id, add_time, change_data, now_time
             )
     finally:
-        character_data.target_character_id = old_target_character_id
+        activity.set_target(character_id, old_target_character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -699,11 +683,10 @@ def handle_adjust_body_manage_sleep_item(
         return
     if character_id == 0:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 这里把交互对象设为自己是因为下面的装备/取下道具函数都是让交互对象结算的
-    old_target_character_id = character_data.target_character_id
+    old_target_character_id = activity.target(character_id)
     try:
-        character_data.target_character_id = character_id
+        activity.set_target(character_id, character_id)
         # 身体管理_乳头夹
         if handle_premise.handle_ask_equp_nipple_clamp_in_sleep(
             character_id
@@ -763,7 +746,7 @@ def handle_adjust_body_manage_sleep_item(
                 character_id, add_time, change_data, now_time
             )
     finally:
-        character_data.target_character_id = old_target_character_id
+        activity.set_target(character_id, old_target_character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1201,11 +1184,10 @@ def handle_delete_food(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
-    if character_data.behavior.target_food is not None:
-        food: game_type.Food = character_data.behavior.target_food
+    if activity.behavior(character_id).target_food is not None:
+        food: game_type.Food = activity.behavior(character_id).target_food
         if food.uid in inventory.foods(character_id):
             inventory.drop_food(character_id, food.uid)
 
@@ -1233,10 +1215,9 @@ def handle_make_food(
 
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
-    if character_data.behavior.target_food is not None:
+    if activity.behavior(character_id).target_food is not None:
         base_chara_favorability_and_trust_common_settle(
             character_id, add_time, True, 0, 0, change_data
         )
@@ -1291,7 +1272,7 @@ def handle_npc_make_food_to_shop(
         # 将食物添加到当前所在食物商店中
         kitchen.stock(str(recipes_id), new_food)
         # 记录最近制作的食物对象
-        character_data.behavior.target_food = new_food
+        activity.update_behavior(character_id, target_food=new_food)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1328,7 +1309,7 @@ def handle_npc_make_food_to_bag(
         food_list, recipes_id, character_id_ability[43], character_data.name
     )
     inventory.put_food(character_id, new_food)
-    character_data.behavior.target_food = new_food
+    activity.update_behavior(character_id, target_food=new_food)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1383,7 +1364,7 @@ def handle_assistant_make_food_to_bag(
         character_data.name,
     )
     inventory.put_food(character_id, new_food)
-    character_data.behavior.target_food = new_food
+    activity.update_behavior(character_id, target_food=new_food)
     # 如果第二食谱不为空，则从中随机选择一个食谱
     if non_main_cookable_recipes_list:
         non_main_recipes_id = random.choice(non_main_cookable_recipes_list)
@@ -1419,8 +1400,7 @@ def handle_delete_all_food(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     for food_id in inventory.foods(character_id).copy():
         food: game_type.Food = inventory.foods(character_id)[food_id]
@@ -1446,8 +1426,7 @@ def handle_delete_last_food(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     if inventory.foods(character_id):
         last_food_id = list(inventory.foods(character_id).keys())[-1]
@@ -1473,11 +1452,10 @@ def handle_target_add_huge_lubrication(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if target_data.dead:
+    if activity.dead(target_data.cid):
         return
     status.setdefault(target_data.cid, 8, 0)
     now_lust = status.of(target_data.cid)[8]
@@ -1513,11 +1491,10 @@ def handle_target_add_huge_desire_and_submit(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if target_data.dead:
+    if activity.dead(target_data.cid):
         return
 
     # 欲情
@@ -1574,11 +1551,10 @@ def handle_target_enema(
 
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if target_data.dead:
+    if activity.dead(target_data.cid):
         return
 
     # 增加润滑
@@ -1603,7 +1579,7 @@ def handle_target_enema(
     enema_capacity_adjust = 2 ** (enema_capacity + 1)
     extra_adjust = enema_capacity_adjust / ability_adjust
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         17,
         base_value=1000,
@@ -1639,11 +1615,10 @@ def handle_target_enema_end(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if target_data.dead:
+    if activity.dead(target_data.cid):
         return
 
     # 增加润滑
@@ -1707,8 +1682,7 @@ def handle_target_add_urinate(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    needs.set(character_data.target_character_id, urine=240)
+    needs.set(activity.target(character_id), urine=240)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1730,9 +1704,8 @@ def handle_target_diuretics_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     end_time = now_time + datetime.timedelta(hours=4)
-    h_state.set_body_item(character_data.target_character_id, 8, True, end_time)
+    h_state.set_body_item(activity.target(character_id), 8, True, end_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1754,8 +1727,7 @@ def handle_target_add_tired_tosleep(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     needs.set(target_id, tired=160, sleep=100)
     h_state.set_body_item(
         target_id, 9, True, now_time + datetime.timedelta(hours=8)
@@ -1781,8 +1753,7 @@ def handle_target_add_pregnancy_chance(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 10, True)
+    h_state.set_body_item(activity.target(character_id), 10, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1804,9 +1775,8 @@ def handle_target_no_pregnancy_next_day(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     h_state.set_body_item(
-        character_data.target_character_id,
+        activity.target(character_id),
         11,
         True,
         now_time + datetime.timedelta(days=30),
@@ -1832,8 +1802,7 @@ def handle_target_no_pregnancy_from_last_h(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    h_state.set_body_item(character_data.target_character_id, 12, True)
+    h_state.set_body_item(activity.target(character_id), 12, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1987,9 +1956,8 @@ def handle_target_remote_toy_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_remote_toy_off(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -2012,14 +1980,11 @@ def handle_target_remote_toy_set_weak(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 如果对方没有情趣玩具则跳过
-    if handle_premise.handle_self_no_sex_toy(
-        character_data.target_character_id
-    ):
+    if handle_premise.handle_self_no_sex_toy(activity.target(character_id)):
         return
     handle_self_remote_toy_set_weak(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -2042,14 +2007,11 @@ def handle_target_remote_toy_set_medium(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 如果对方没有情趣玩具则跳过
-    if handle_premise.handle_self_no_sex_toy(
-        character_data.target_character_id
-    ):
+    if handle_premise.handle_self_no_sex_toy(activity.target(character_id)):
         return
     handle_self_remote_toy_set_medium(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -2072,14 +2034,11 @@ def handle_target_remote_toy_set_strong(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 如果对方没有情趣玩具则跳过
-    if handle_premise.handle_self_no_sex_toy(
-        character_data.target_character_id
-    ):
+    if handle_premise.handle_self_no_sex_toy(activity.target(character_id)):
         return
     handle_self_remote_toy_set_strong(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -2232,18 +2191,13 @@ def handle_target_remote_toy_use_or_set_weak(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 如果对方没有情趣玩具则跳过
-    if handle_premise.handle_self_no_sex_toy(
-        character_data.target_character_id
-    ):
+    if handle_premise.handle_self_no_sex_toy(activity.target(character_id)):
         return
     # 交互对象已有强度设定则继续使用
-    if handle_premise.handle_self_now_sex_toy_on(
-        character_data.target_character_id
-    ):
+    if handle_premise.handle_self_now_sex_toy_on(activity.target(character_id)):
         return
     # 否则开启到弱档
     handle_self_remote_toy_set_weak(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )

@@ -29,7 +29,12 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import action_info, entertainment, physical_exam
+from Script.Modules.domains import (
+    action_info,
+    activity,
+    entertainment,
+    physical_exam,
+)
 from Script.Modules.domains import abilities, chara_life, dirty, h_state, roster
 from Script.Modules.domains import flags, needs, pregnancy, relations, warehouse
 from Script.Modules.domains import facility, h_meters, hypnosis, recruit, status
@@ -306,7 +311,6 @@ class TALK_QUICK_TEST:
             change_value_panel = panel.AskForOneMessage()
             change_value_panel.set(_("请输入角色id"), 100)
             chara_adv_id = int(change_value_panel.draw())
-            pl_character_data = cache.character_data[0]
             target_chara_id = 0
             for tem_chara_id in cache.character_data:
                 tem_character_data = cache.character_data[tem_chara_id]
@@ -345,16 +349,12 @@ class TALK_QUICK_TEST:
                         target_chara_id, talk_id_list
                     )
                 else:
-                    # 保存博士当前交互对象，避免批量测试污染游戏状态
-                    old_target_character_id = (
-                        pl_character_data.target_character_id
-                    )
                     report_lines = []
                     pass_count = 0
                     fail_count = 0
                     pass_id_list = []
                     fail_id_list = []
-                    try:
+                    with activity.target_as(0, activity.target(0)):
                         for talk_index, talk_id in enumerate(talk_id_list, 1):
                             report_text, pass_flag = self.test_single_talk(
                                 target_chara_id, talk_id
@@ -372,11 +372,6 @@ class TALK_QUICK_TEST:
                             else:
                                 fail_count += 1
                                 fail_id_list.append(talk_id)
-                    finally:
-                        # 恢复博士的交互对象
-                        pl_character_data.target_character_id = (
-                            old_target_character_id
-                        )
                     # 输出汇总信息
                     report_lines.append(
                         _(
@@ -447,7 +442,6 @@ class TALK_QUICK_TEST:
         """
         from Script.Design import talk
 
-        pl_character_data = cache.character_data[0]
         target_character_data = cache.character_data[target_chara_id]
         # 在chara_adv_id前面补零为4位数
         full_adv_id = str(target_character_data.adv).rjust(4, "0")
@@ -477,7 +471,7 @@ class TALK_QUICK_TEST:
         else:
             draw_text += _("  博士已获得该角色(√)\n")
         # 当前交互对象是否是该角色
-        if pl_character_data.target_character_id != target_chara_id:
+        if activity.target(0) != target_chara_id:
             draw_text += _("  博士当前交互对象不是该角色(X)\n")
             pass_flag = False
         else:
@@ -521,13 +515,7 @@ class TALK_QUICK_TEST:
                 draw_text += _("  交互对象：未填写，本测试中默认选择为博士\n")
                 end_chara_id = 0
         # 设置交互对象
-        old_target_character_id = cache.character_data[
-            start_chara_id
-        ].target_character_id
-        try:
-            cache.character_data[start_chara_id].target_character_id = (
-                end_chara_id
-            )
+        with activity.target_as(start_chara_id, end_chara_id):
 
             # 输出口上文本
             talk_context = game_config.config_talk[full_talk_id].context
@@ -564,10 +552,6 @@ class TALK_QUICK_TEST:
                 draw_text += _("\n最终结果：\n  测试未通过，该口上无法触发\n")
 
             return draw_text, pass_flag
-        finally:
-            cache.character_data[start_chara_id].target_character_id = (
-                old_target_character_id
-            )
 
     def run_batch_talk_test_in_groups(
         self, target_chara_id: int, talk_id_list: list[int]
@@ -580,15 +564,13 @@ class TALK_QUICK_TEST:
         Return arguments:
         无
         """
-        pl_character_data = cache.character_data[0]
-        old_target_character_id = pl_character_data.target_character_id
         total_count = len(talk_id_list)
         group_size = 10
         group_count = (total_count + group_size - 1) // group_size
         all_pass_id_list = []
         all_fail_id_list = []
         test_stopped = False
-        try:
+        with activity.target_as(0, activity.target(0)):
             for group_index in range(group_count):
                 start_index = group_index * group_size
                 end_index = min(start_index + group_size, total_count)
@@ -646,9 +628,6 @@ class TALK_QUICK_TEST:
                     now_draw = draw.WaitDraw()
                     now_draw.text = "\n".join(report_lines)
                     now_draw.draw()
-        finally:
-            # 恢复博士的交互对象
-            pl_character_data.target_character_id = old_target_character_id
         # 输出最终汇总信息
         pass_count = len(all_pass_id_list)
         fail_count = len(all_fail_id_list)
@@ -1380,10 +1359,11 @@ class Debug_Panel:
                                 "01区", "1区"
                             ),
                         )
-                        character_data.position = (
+                        activity.set_position(
+                            character_data.cid,
                             map_handle.get_map_system_path_for_str(
                                 chara_life.dormitory(character_data.cid)
-                            )
+                            ),
                         )
                 # 重置文职部的招募数据
                 elif key_index == 14:
@@ -1396,7 +1376,7 @@ class Debug_Panel:
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    target_id = cache.character_data[0].target_character_id
+                    target_id = activity.target(0)
                     for state_id in game_config.config_character_state:
                         if (
                             game_config.config_character_state[state_id].type
@@ -1600,9 +1580,9 @@ class Debug_Panel:
             elif key_index == 4:
                 draw_text_list = []
                 info_text = "\n"
-                for behavior_cid in target_data.second_behavior:
+                for behavior_cid in activity.second_ids(target_data.cid):
                     name = game_config.config_behavior[behavior_cid].name
-                    info_text += f"({behavior_cid}){name}:{target_data.second_behavior[behavior_cid]}  "
+                    info_text += f"({behavior_cid}){name}:{activity.second_behavior(target_data.cid, behavior_cid)}  "
                     if behavior_cid % 5 == 0:
                         info_text += "\n"
                 draw_text_list.append(f"[000]:二段行为列表：\n{info_text}")
@@ -1632,7 +1612,9 @@ class Debug_Panel:
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
 
-                    target_data.second_behavior[value_index] = new_value
+                    activity.set_second_behavior(
+                        target_data.cid, value_index, new_value
+                    )
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False

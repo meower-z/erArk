@@ -2,12 +2,15 @@
 """
 快照投影补充
 ============
-供 tests/kernel_data.project_state 调用，把 GameState 里的全局键按旧缓存的属性名记进快照。
+tests/kernel_data.project_state 调用 project_rest。
+本模块把 GameState 里的一些全局键与角色的活动按旧缓存的属性名记进快照。
 project_world_misc 记世界设定、周目、国家、模式、吵醒名单、成就、事件与指令记录、计划队列与寻路，共 14 个全局键。
 指令记录只记最近行为，每日记录不在快照里。
 project_world_misc 还经 chara_data.project 记下各角色的道具、食物背包、服装、身体管理与状态值。
 project_base_tallies 记基地的派对排期、旅馆房间档次、计数与冰箱，共 4 个全局键。
 它还记干员人数上限与仓库容量，这两项读时算出。
+project_rest 依次调用这两个函数与 activity_projection.project（角色的活动）。
+activity 是角色活动的领域模块的替身，供不能在顶部导入游戏模块的慢速层与测试工具用。
 stepping 与 auto_commit_outside_step 供教育区测试在内核单步之外自动套用指定键的写入。
 """
 
@@ -16,7 +19,10 @@ from __future__ import annotations
 import contextlib
 import importlib
 from collections.abc import Callable, Collection, Iterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from Script.Core import game_type
 
 _in_step = 0
 """ 经 stepping() 包住的内核单步嵌套层数 """
@@ -72,6 +78,22 @@ def auto_commit_outside_step(keys: Collection[str]) -> None:
 def domain(name: str) -> Any:
     """按模块名导入 Script.Modules.domains 下的领域模块，供慢速层延迟导入用"""
     return importlib.import_module(f"Script.Modules.domains.{name}")
+
+
+class _Lazy:
+    """领域模块的替身：第一次取属性时才导入模块，供不能在顶部导入游戏模块的慢速层与测试工具用"""
+
+    def __init__(self, name: str) -> None:
+        """name -- Script.Modules.domains 下的模块名"""
+        self._name = name
+
+    def __getattr__(self, attr: str) -> Any:
+        """取模块的属性"""
+        return getattr(domain(self._name), attr)
+
+
+activity: Any = _Lazy("activity")
+""" 角色活动的领域模块（Script.Modules.domains.activity），用到时才导入 """
 
 
 def world_settings() -> dict[int, Any]:
@@ -154,6 +176,20 @@ def project_world_misc(state: dict[str, object]) -> None:
         if cg is not None:
             flatten(f"chara.{cid}.child_growth", cg, state)
     chara_data.project(state)
+
+
+def project_rest(cache: game_type.Cache, state: dict[str, object]) -> None:
+    """
+    快照里补上 project_world_misc、project_base_tallies 与 activity_projection.project 记的值
+    Keyword arguments:
+    cache -- 游戏缓存
+    state -- 快照，原地补上
+    """
+    from tests import activity_projection
+
+    project_world_misc(state)
+    project_base_tallies(state)
+    activity_projection.project(cache, state)
 
 
 def project_base_tallies(state: dict[str, object]) -> None:

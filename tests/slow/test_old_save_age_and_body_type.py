@@ -16,7 +16,10 @@ import shutil
 from typing import TYPE_CHECKING
 
 from tests import chara_abilities as ca, kernel_data as kd
+from tests.chara_activity import aim, behave, doing, scene_of
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
+from tests import kernel_data
 
 if TYPE_CHECKING:
     from typing import Any
@@ -152,13 +155,13 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         mother = cache.character_data[mother_id]
         with kd.writing():
             map_handle.character_move_scene(
-                child.position, mother.position, id_dict["d102"]
+                activity.position(child.cid),
+                activity.position(mother.cid),
+                id_dict["d102"],
             )
         self.assertIn(
             id_dict["d102"],
-            cache.scene_data[
-                map_handle.get_map_system_path_str_for_list(mother.position)
-            ].character_list,
+            cache.scene_data[scene_of(mother.cid)].character_list,
             "存档前102的孩子在母亲所在的场景里",
         )
         # 学生岗在职业名单里，分到宿舍床位（旧规则下长成102时上线所做的）
@@ -183,9 +186,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
 
         with kd.writing(), dirty.editing(id_dict["d102"]) as d:
             d.body_semen[min(game_config.config_body_part)] = ["", 20, 20, 1]
-        player = cache.character_data[0]
-        player.target_character_id = id_dict["d102"]
-        mother.target_character_id = id_dict["d102"]
+        aim(0, id_dict["d102"])
+        aim(mother.cid, id_dict["d102"])
         kd.put(relations.assistant_character_id.set, 0, id_dict["d102"])
         first = min(relations.assistant_services(child.cid))
         kd.put(relations.assistant_services.set_item, child.cid, first, 1)
@@ -246,14 +248,14 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         #    她身上有快感、催眠、待触发事件与必须结算的二段行为
         kd.put(h_state.set, 0, insert_position=2)
         cache.scene_data[
-            map_handle.get_map_system_path_str_for_list(player.position)
+            map_handle.get_map_system_path_str_for_list(activity.position(0))
         ].close_flag = 1
         clothing_type = min(game_config.config_clothing_type)
         cloth = kd.domain("wardrobe").of(child.cid)
         cloth.cloth_wear[clothing_type] = []
         cloth.cloth_off[clothing_type] = [min(game_config.config_clothing_tem)]
         kd.put(kd.domain("wardrobe").put, child.cid, cloth)
-        mother.behavior.behavior_id = "wait"
+        behave(mother.cid, "wait")
         pleasure_state = min(
             state_id
             for state_id, state in game_config.config_character_state.items()
@@ -261,15 +263,15 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
         kd.put(kd.domain("status").set, child.cid, pleasure_state, 500)
         kd.put(hypnosis.set, child_id, hypnosis_degree=50)
-        child.event.event_id = "test_event"
-        child.must_settle_second_behavior_id_list = ["test_second_behavior"]
+        kernel_data.put(activity.update_event, child.cid, event_id="test_event")
+        kd.put(activity.set_must_settle, child.cid, ["test_second_behavior"])
         id_dict["cloth"] = (clothing_type, min(game_config.config_clothing_tem))
         id_dict["pleasure_state"] = pleasure_state
         id_dict["commission"] = commission_id
         id_dict["book"] = book_id
-        child.behavior.behavior_id = "follow_mother"
-        child.state = 231
-        child.target_character_id = mother_id
+        behave(child.cid, "follow_mother")
+        kernel_data.put(activity.set_state, child.cid, 231)
+        aim(child.cid, mother_id)
         follow = FOLLOW_MOTHER_ENTERTAINMENT
         kd.put(chara_life.entertainment_type.set, child.cid, [follow] * 2 + [0])
         growth = kd.domain("growth")
@@ -279,7 +281,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         kd.put(chara_life.entertainment_type.set, id_dict["d104"], [176, 0, 0])
         missing = [MISSING_ENTERTAINMENT, 0, 0]
         kd.put(chara_life.entertainment_type.set, student.cid, missing)
-        cache.character_data[minor_id].behavior.behavior_id = MISSING_BEHAVIOR
+        behave(minor_id, MISSING_BEHAVIOR)
         with kd.writing():
             with growth.editing(id_dict["d102"]) as child_g:
                 child_g.follow_mother_flag = True
@@ -330,7 +332,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                     1: {"mother_id": mother_id, "semen_count": 5.0},
                 },
             )
-        baby.target_character_id = 0
+        aim(baby.cid, 0)
         for talent_id in (20, 21, 27):
             ca.talent(baby)[talent_id] = 1
         kd.set_needs(baby.cid, milk=50)
@@ -409,18 +411,18 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             snapshot[cid] = (
                 dict(ca.talent(chara)),
                 dict(kd.domain("inventory").items(chara.cid)),
-                chara.behavior.behavior_id,
-                chara.state,
+                activity.behavior(chara.cid).behavior_id,
+                activity.state(chara.cid),
                 list(life.entertainment_type(chara.cid)),
-                list(chara.position),
-                chara.target_character_id,
+                list(activity.position(chara.cid)),
+                activity.target(chara.cid),
                 ai.get(chara.cid, "carry_chara_id"),
                 repr(
                     (
                         vars(kd.domain("wardrobe").of(chara.cid)),
                         hypnosis.degree(cid),
-                        chara.event.event_id,
-                        chara.must_settle_second_behavior_id_list,
+                        activity.event(chara.cid).event_id,
+                        activity.must_settle(chara.cid),
                         sorted(kd.domain("status").of(chara.cid).items()),
                     )
                 ),
@@ -502,7 +504,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 f"角色{cid}不应在见学",
             )
             self.assertNotEqual(
-                chara.behavior.behavior_id,
+                doing(chara.cid),
                 "follow_mother",
                 f"角色{cid}的行为不应是跟随母亲",
             )
@@ -572,7 +574,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
         child = cache.character_data[id_dict["d102"]]
         self.assertEqual(
-            (child.behavior.behavior_id, child.state),
+            (doing(child.cid), activity.state(child.cid)),
             ("share_blankly", 0),
             "102的孩子应在发呆",
         )
@@ -606,7 +608,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "表里没有的娱乐：槽位换成0，单项覆盖删掉",
         )
         self.assertEqual(
-            cache.character_data[id_dict["minor"]].behavior.behavior_id,
+            doing(id_dict["minor"]),
             "share_blankly",
             "表里没有的行为换成发呆",
         )
@@ -729,9 +731,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             )
             self.assertEqual(
                 (
-                    child.position,
+                    activity.position(child.cid),
                     fl.get(child.cid, "is_follow"),
-                    child.target_character_id,
+                    activity.target(child.cid),
                 ),
                 (["0", "0"], 0, child_id),
                 f"{stage}的孩子的位置、跟随与目标都不指向场景或别人",
@@ -740,7 +742,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 [
                     cid
                     for cid, chara in cache.character_data.items()
-                    if cid != child_id and chara.target_character_id == child_id
+                    if cid != child_id and activity.target(cid) == child_id
                 ],
                 [],
                 f"没有角色以{stage}的孩子为目标",
@@ -899,10 +901,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         Return arguments:
         无
         """
-        from Script.Design import map_handle
-
         cache = self.cache
-        player = cache.character_data[0]
         child = cache.character_data[id_dict["d102"]]
         mother = cache.character_data[id_dict["mother"]]
         from Script.Modules.domains import h_state, hypnosis
@@ -912,7 +911,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         self.assertEqual(
             (
                 fl.get(0, "is_h"),
-                player.target_character_id,
+                activity.target(0),
                 h_state.get(0, "insert_position"),
                 fl.get(0, "hidden_sex_mode"),
             ),
@@ -920,9 +919,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "玩家已结束H，交互对象是自己",
         )
         self.assertEqual(
-            cache.scene_data[
-                map_handle.get_map_system_path_str_for_list(player.position)
-            ].close_flag,
+            cache.scene_data[scene_of(0)].close_flag,
             0,
             "结束H后房门打开",
         )
@@ -940,14 +937,14 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             (
                 kd.domain("status").of(child.cid)[id_dict["pleasure_state"]],
                 hypnosis.degree(child.cid),
-                child.event.event_id,
-                child.must_settle_second_behavior_id_list,
+                activity.event(child.cid).event_id,
+                activity.must_settle(child.cid),
             ),
             (0, 0, "", []),
             "孩子的快感、催眠、待触发事件与必须结算的二段行为归零",
         )
         self.assertEqual(
-            (mother.behavior.behavior_id, mother.target_character_id),
+            (doing(mother.cid), activity.target(mother.cid)),
             ("share_blankly", id_dict["mother"]),
             "母亲对孩子的行为换成发呆",
         )
@@ -1008,7 +1005,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         from Script.Design import map_handle
 
         cache = self.cache
-        player = cache.character_data[0]
         roster = kd.domain("roster")
         static_id_list = sorted(
             cid
@@ -1022,9 +1018,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         with kd.writing():
             for cid in (child_id, other_id):
                 map_handle.character_move_scene(
-                    cache.character_data[cid].position, player.position, cid
+                    activity.position(cid), activity.position(0), cid
                 )
-                cache.character_data[cid].target_character_id = 0
+                activity.set_target(cid, 0)
             modes.set_group_sex(True)
             for cid in (0, child_id, other_id):
                 fl.set(cid, is_h=True)
@@ -1034,14 +1030,14 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             tpl = phs.group_sex_body_template_dict
             tpl["A"][0]["L_hand"] = [other_id, 5]
             if child_in_template:
-                player.target_character_id = child_id
+                aim(0, child_id)
                 tpl["A"][0]["mouth"] = [child_id, 5]
                 tpl["B"][1] = [[child_id, other_id], 3]
             else:
-                player.target_character_id = other_id
+                aim(0, other_id)
             phs.insert_position = 2
         scene_path = map_handle.get_map_system_path_str_for_list(
-            player.position
+            activity.position(0)
         )
         self.assertTrue(
             {0, child_id, other_id}
@@ -1059,13 +1055,13 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                     f"角色{character_id}不在H中",
                 )
                 self.assertIn(
-                    chara.target_character_id,
+                    activity.target(character_id),
                     cache.character_data,
                     f"角色{character_id}的交互对象是存在的角色",
                 )
                 if character_id != child_id:
                     self.assertNotEqual(
-                        chara.target_character_id,
+                        activity.target(character_id),
                         child_id,
                         f"角色{character_id}的交互对象不是孩子",
                     )
@@ -1082,11 +1078,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                     {-1},
                     f"角色{character_id}的群交部位模板已清空",
                 )
-            loaded_player = cache.character_data[0]
             self.assertEqual(
                 (
                     h_state.get(0, "insert_position"),
-                    loaded_player.target_character_id,
+                    activity.target(0),
                 ),
                 (-1, 0 if child_in_template else other_id),
                 "玩家的插入位置复位，交互对象有效",

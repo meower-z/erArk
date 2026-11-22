@@ -14,6 +14,8 @@ from Script.Core import constant
 from Script.Design import character_behavior, character_move, map_handle
 from tests.fast.base import FastTestCase
 from tests.world import play
+from tests.chara_activity import aim
+from Script.Modules.domains import activity
 
 START = ["宿舍", "1区", "101"]
 """ 博士出发的地点 """
@@ -31,7 +33,7 @@ class RouteTargetBetweenLegsTest(FastTestCase):
         self.player = self.world.chara(0, "博士", position=START)
         self.world.chara(1, "交互对象", position=START)
         self.passer = self.world.chara(2, "路人", position=START)
-        self.player.target_character_id = 1
+        aim(self.player.cid, 1)
         self.targets: list[int] = []
 
     def test_target_kept_until_arrival(self) -> None:
@@ -45,16 +47,16 @@ class RouteTargetBetweenLegsTest(FastTestCase):
             Return arguments:
             int -- 1
             """
-            behavior = self.player.behavior
+            behavior = activity.behavior(self.player.cid)
             if character_id or behavior.behavior_id != constant.Behavior.MOVE:
                 return 1
-            self.targets.append(self.player.target_character_id)
+            self.targets.append(activity.target(self.player.cid))
             if len(self.targets) == 1:
                 map_handle.character_move_scene(
-                    self.passer.position, behavior.move_target, 2
+                    activity.position(self.passer.cid), behavior.move_target, 2
                 )
             map_handle.character_move_scene(
-                self.player.position, behavior.move_target, 0
+                activity.position(self.player.cid), behavior.move_target, 0
             )
             return 1
 
@@ -62,7 +64,7 @@ class RouteTargetBetweenLegsTest(FastTestCase):
             character_behavior, "judge_character_status", settle
         ):
             play(lambda: character_move.own_charcter_move(list(TARGET)))
-        self.assertEqual(self.player.position, TARGET)
+        self.assertEqual(activity.position(self.player.cid), TARGET)
         self.assertGreater(len(self.targets), 2, "寻路走了不止两段")
         self.assertEqual(self.targets, [1] * len(self.targets))
-        self.assertEqual(self.player.target_character_id, 0)
+        self.assertEqual(activity.target(self.player.cid), 0)

@@ -16,8 +16,8 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import manage_basement_panel, recruit_panel
 import random
-from Script.Modules.domains import abilities, facility, flags, location, roster
-from Script.Modules.domains import visitor, chara_life, relations
+from Script.Modules.domains import abilities, activity, chara_life, facility
+from Script.Modules.domains import flags, location, relations, roster, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -179,8 +179,6 @@ def visitor_leave(character_id: int) -> None:
     character_id -- 角色id
     """
 
-    character_data = cache.character_data[character_id]
-
     # flag置为已访问
     flags.set(character_id, vistor=2)
 
@@ -192,11 +190,11 @@ def visitor_leave(character_id: int) -> None:
 
     # 位置初始化
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     if character_id in cache.scene_data[scene_path_str].character_list:
         cache.scene_data[scene_path_str].character_list.remove(character_id)
-    character_data.position = ["0", "0"]
+    activity.set_position(character_id, ["0", "0"])
 
 
 def settle_visitor_arrivals_and_departures() -> None:

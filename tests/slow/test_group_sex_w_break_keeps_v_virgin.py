@@ -18,6 +18,8 @@
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 AMIYA_ID = 1
 """ 阿米娅的角色id """
@@ -49,7 +51,7 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
         # 干员位置一览记住上次选的召集方式，只在第一次按
         self.summon(KALTSIT_ID, ("召集到自己当前位置",))
         self.summon(AMIYA_ID, ())
-        self.pl.target_character_id = AMIYA_ID
+        aim(self.pl.cid, AMIYA_ID)
         self.instruct(constant.Instruct.ASK_GROUP_SEX)
         self.assertTrue(
             handle_premise.handle_group_sex_mode_on(0), "进入了群交"
@@ -80,7 +82,9 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
         self.show_panel()
         self.world.player.check_done()
         arrived = self.wait_until(
-            lambda: chara.position == self.pl.position, 120
+            lambda: activity.position(chara_id)
+            == activity.position(self.pl.cid),
+            120,
         )
         self.assertTrue(arrived, f"{chara.name} 走到了博士身边")
         # 好感与信赖的上限，日常互动能攒到，够邀请群交的判定

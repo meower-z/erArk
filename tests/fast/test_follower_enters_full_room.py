@@ -14,6 +14,7 @@ from Script.Core import constant
 from Script.Design import map_handle
 from tests.fast.base import FastTestCase
 from tests import kernel_data
+from tests.chara_activity import behave
 from Script.Modules.domains import flags
 
 ROOM = ["医疗", "体检科"]
@@ -63,11 +64,13 @@ class FollowerEntersFullRoomTest(FastTestCase):
 
     def test_follower_steps_in_with_doctor(self) -> None:
         """博士正从门口迈进满员的体检科：智能跟随的干员能进，没在跟随的干员进不了"""
-        behavior = self.pl.behavior
-        behavior.behavior_id = constant.Behavior.MOVE
-        behavior.move_target = ROOM
-        behavior.move_final_target = ROOM
-        behavior.duration = 1
+        behave(
+            self.pl.cid,
+            constant.Behavior.MOVE,
+            move_target=ROOM,
+            move_final_target=ROOM,
+            duration=1,
+        )
         kernel_data.put(flags.set, self.follower.cid, is_follow=1)
         self.assertEqual(self.access(ROOM, 1), "open")
         self.assertEqual(self.access(ROOM, 2), "full")

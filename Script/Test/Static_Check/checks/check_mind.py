@@ -22,8 +22,8 @@ from typing import TypeGuard
 
 from Script.Core import cache_control, num
 from Script.Design import map_handle
-from Script.Modules.domains import abilities, achievement, action_info, flags
-from Script.Modules.domains import h_state as h_state_domain
+from Script.Modules.domains import abilities, achievement, action_info, activity
+from Script.Modules.domains import flags, h_state as h_state_domain
 from Script.Modules.domains import hypnosis as hypnosis_domain, modes, needs
 from Script.Modules.domains import player_ability, roster
 from ..check_registry import CheckFailure, register_check, make_failure
@@ -127,13 +127,13 @@ def _u(chara: object) -> int:
     return flags.get(cid, "unconscious_h") if isinstance(cid, int) else -1
 
 
-def _behavior_id(chara: object) -> str:
+def _behavior_id(chara: game_type.Character) -> str:
     """
     参数: chara 角色对象
     返回值: str 当前行为id，结构缺失时返回"?"
     功能: 防御式读取behavior.behavior_id
     """
-    return getattr(getattr(chara, "behavior", None), "behavior_id", "?")
+    return getattr(activity.behavior(chara.cid), "behavior_id", "?")
 
 
 def _scene_key(position: object) -> str | None:
@@ -221,7 +221,7 @@ def check_time_stop_npc_unconscious() -> list[CheckFailure]:
                     _name(chara),
                     u,
                     _behavior_id(chara),
-                    getattr(chara, "position", "?"),
+                    activity.position(chara.cid),
                 )
             )
     if not hits:
@@ -359,7 +359,7 @@ def check_time_stop_no_residual_release_flag() -> list[CheckFailure]:
         return []
     hits = []
     for cid, chara in _iter_npcs():
-        if getattr(chara, "dead", False):
+        if activity.dead(chara.cid):
             continue
         h_state = h_state_domain.view(cid)
         if getattr(h_state, "time_stop_release", False):
@@ -409,17 +409,14 @@ def check_carry_target_valid_and_colocated() -> list[CheckFailure]:
     target = (
         character_data.get(cid) if isinstance(character_data, dict) else None
     )
-    if (
-        target is not None
-        and not getattr(target, "dead", False)
-        and getattr(target, "position", None) == getattr(pl, "position", None)
-    ):
-        return []
-    target_pos = getattr(target, "position", "?") if target is not None else "?"
-    pl_pos = getattr(pl, "position", "?")
+    target_pos = activity.position(target.cid) if target is not None else "?"
+    pl_pos = activity.position(pl.cid)
+    if target is not None and not activity.dead(target.cid):
+        if target_pos == pl_pos:
+            return []
     if target is None:
         reason = "不存在"
-    elif getattr(target, "dead", False):
+    elif activity.dead(target.cid):
         reason = "已死亡"
     else:
         reason = f"position={target_pos}与玩家position={pl_pos}不同"
@@ -868,12 +865,12 @@ def check_air_hypnosis_colocated_with_anchor() -> list[CheckFailure]:
     if pl is None:
         return []
     air = player_ability.get(pl.cid, "air_hypnosis_position")
-    pl_pos = getattr(pl, "position", None)
+    pl_pos: object = activity.position(pl.cid)
     hits = []
     for cid, chara in _iter_all():
         if _u(chara) != 5:
             continue
-        pos = getattr(chara, "position", None)
+        pos: object = activity.position(cid)
         if isinstance(air, str) and air != "" and pos == air == pl_pos:
             continue
         hits.append((cid, _name(chara), pos))
@@ -913,7 +910,7 @@ def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
     for cid, chara in _iter_all():
         if _u(chara) != 5:
             continue
-        key = _scene_key(getattr(chara, "position", None))
+        key = _scene_key(activity.position(chara.cid))
         scene = scene_data.get(key) if key is not None else None
         if (
             scene is not None
@@ -933,7 +930,7 @@ def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
                 f"[warning] 角色id={cid}({_name(chara)})unconscious_h=5但所在场景{key!r}未处于锁门状态: "
                 f"close_type={getattr(scene, 'close_type', '?') if scene is not None else '场景不存在'} "
                 f"close_flag={getattr(scene, 'close_flag', '?') if scene is not None else '?'}，"
-                f"玩家position={getattr(pl, 'position', '?') if pl is not None else '?'}，"
+                f"玩家position={activity.position(pl.cid) if pl is not None else '?'}，"
                 f"air_hypnosis_position={air_position}",
                 [cid],
             )
@@ -975,7 +972,7 @@ def check_air_hypnosis_anchor_shape() -> list[CheckFailure]:
             "MIND-20",
             "空气催眠地点记录的形状可解析",
             f"[warning] 玩家air_hypnosis_position无法解析成合法场景: 取值={air!r}(类型{type(air).__name__}) "
-            f"scene_key={key!r}，玩家position={getattr(pl, 'position', '?')}，当前是否有u=5的角色={has_air_u5}",
+            f"scene_key={key!r}，玩家position={activity.position(pl.cid)}，当前是否有u=5的角色={has_air_u5}",
             [0],
         )
     ]
@@ -1046,7 +1043,7 @@ def check_unconscious_h_range() -> list[CheckFailure]:
                     (
                         f"[warning] 角色id={cid}({_name(chara)})的sp_flag.unconscious_h越界: {u!r}，"
                         f"is_h={flags.get(chara.cid, "is_h")} "
-                        f"behavior_id={_behavior_id(chara)} state={getattr(chara, 'state', '?')}"
+                        f"behavior_id={_behavior_id(chara)} state={activity.state(chara.cid)}"
                     ),
                     [cid],
                 )
@@ -1069,10 +1066,10 @@ def check_sleep_behavior_state_alignment() -> list[CheckFailure]:
     for cid, chara in _iter_pl_and_npcs():
         if _behavior_id(chara) != "sleep":
             continue
-        state = getattr(chara, "state", None)
+        state = activity.state(chara.cid)
         if state == 111:
             continue
-        behavior = getattr(chara, "behavior", None)
+        behavior = activity.behavior(chara.cid)
         failures.append(
             make_failure(
                 "MIND-23",
@@ -1149,7 +1146,7 @@ def check_sleep_unconscious_needs_sleep_or_pretend() -> list[CheckFailure]:
                     f"behavior_id={_behavior_id(chara)} "
                     f"pretend_sleep={h_state_domain.get(cid, 'pretend_sleep')} "
                     f"sleep_h_awake={flags.get(cid, 'sleep_h_awake')} "
-                    f"sleep_point={num.shown(needs.of(cid)['sleep'])} state={getattr(chara, 'state', '?')}"
+                    f"sleep_point={num.shown(needs.of(cid)['sleep'])} state={activity.state(chara.cid)}"
                 ),
                 [cid],
             )

@@ -13,13 +13,13 @@ from Script.Design import handle_premise, attr_calculation, game_time, attr_text
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import physical_exam, chara_life, relations
+from Script.Modules.domains import abilities, achievement, action_info, activity
+from Script.Modules.domains import body_manage, chara_life, dirty, first_record
+from Script.Modules.domains import hypnosis, physical_exam, player_collection
+from Script.Modules.domains import pregnancy, relations, roster
 import random
 
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import abilities, achievement, action_info
-from Script.Modules.domains import body_manage, dirty, first_record, hypnosis
-from Script.Modules.domains import player_collection, pregnancy, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -114,7 +114,7 @@ class Physical_Check_And_Manage_Panel:
         """ 玩家的角色数据 """
         self.done_check_behavior_id_set: set[str] = physical_exam.checks(
             physical_exam.IN_PROGRESS
-        ).get(self.pl_character_data.target_character_id, set())
+        ).get(activity.target(self.pl_character_data.cid), set())
         """ 这次体检里已经检查过的行为id集合（游戏数据里的，面板重开后仍在） """
 
     def draw(self) -> None:
@@ -126,7 +126,7 @@ class Physical_Check_And_Manage_Panel:
             self.pl_character_data = cache.character_data[
                 0
             ]  # 更新玩家的角色数据
-            target_character_id = self.pl_character_data.target_character_id
+            target_character_id = activity.target(self.pl_character_data.cid)
             target_character_data = cache.character_data[target_character_id]
             return_list = []
             title_draw.draw()
@@ -419,7 +419,7 @@ class Physical_Check_And_Manage_Panel:
         随检查的行动开始时写进游戏；在询问里返回或判定没过时不写，这项检查不算做过
         """
         behavior_data = game_config.config_behavior[behavior_id]
-        examined_id = self.pl_character_data.target_character_id
+        examined_id = activity.target(self.pl_character_data.cid)
         physical_exam.record_check(examined_id, behavior_id)
         self.done_check_behavior_id_set = physical_exam.checks(
             physical_exam.IN_PROGRESS
@@ -431,8 +431,7 @@ class Physical_Check_And_Manage_Panel:
         achievement.add("health_check_count", 1)
         achievement_panel.achievement_flow(_("身体检查"))
         # 在干员的破处当天进行处女膜检查
-        pl_character_data = cache.character_data[0]
-        target_character_id = pl_character_data.target_character_id
+        target_character_id = activity.target(0)
         if (
             handle_premise.handle_first_sex_in_today(target_character_id)
             and behavior_id == "examine_hymen"
@@ -1123,7 +1122,7 @@ class Physical_Check_And_Manage_Panel:
         #     # "examine_urination_status": "排尿情况",  # 测试排尿
         # }
 
-        target_character_id = self.pl_character_data.target_character_id
+        target_character_id = activity.target(self.pl_character_data.cid)
         target_character_id_abi = abilities.ability(target_character_id)
         target_character_id_exp = abilities.experience(target_character_id)
         target_character_data = cache.character_data[target_character_id]

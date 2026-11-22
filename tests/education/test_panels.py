@@ -5,7 +5,7 @@ from _bootstrap import child_growth, growth, roster, DEFAULT_TIME, SCENE_DORM
 from _bootstrap import _, auto_schedule, cache, check, classroom_path
 from _bootstrap import clear_schedules, constant, datetime, draw, drawn_text
 from _bootstrap import education, education_constant, finish, flow_handle
-from _bootstrap import game_config, make_character, move_to
+from _bootstrap import game_config, make_character, move_to, activity
 from _bootstrap import open_all_classroom, period_time, pl, schedule_handle
 from _bootstrap import section, semester_handle, set_time, sex_class_handle
 from Script.System.Education_System import class_schedule_panel
@@ -18,8 +18,8 @@ from Script.Core import text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.UI.Moudle import view
 import inspect
-from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import flags, library, chara_life, relations
+from tests import chara_abilities as ca, kernel_data, chara_activity as chara
+from Script.Modules.domains import chara_life, flags, library, relations
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -1299,13 +1299,13 @@ _st_growth.selected_course = {}
 _st_growth.skip_class_flag = False
 _st_growth.skip_class_day = 0
 _st_growth.last_absent_period = []
-_pl_saved = (pl.behavior.behavior_id, list(pl.position))
+_pl_saved = (activity.behavior(pl.cid).behavior_id, activity.position(pl.cid))
 schedule_handle.set_class_cell(ROOM1, _st_day, 0, 43, -1)
 schedule_handle.set_selected_course(
     201, _st_day, 0, E.COURSE_TYPE_THEORY, ROOM1
 )
 move_to(201, classroom_path(ROOM1))
-_st.behavior.behavior_id = constant.Behavior.SELF_STUDY
+chara.behave(201, constant.Behavior.SELF_STUDY)
 _tip = character_info_head.get_now_class_tip(201)
 check(
     (
@@ -1320,14 +1320,14 @@ check(
 )
 
 schedule_handle.set_class_cell(ROOM1, _st_day, 0, 43, 101)
-_st.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+chara.behave(201, constant.Behavior.ATTENT_CLASS)
 _tip = character_info_head.get_now_class_tip(201)
 check(
     "L13 对照：玩家没在授课时照她的课表写「授课：教师甲」",
     _tip is not None and "授课：教师甲" in _tip[1],
     _tip,
 )
-pl.behavior.behavior_id = constant.Behavior.TEACH
+chara.behave(pl.cid, constant.Behavior.TEACH)
 move_to(0, classroom_path(ROOM1))
 _fallback_name = game_config.config_ability[E.FALLBACK_SUBJECT_ABILITY].name
 _theory_name = E.COURSE_TYPE_NAME[E.COURSE_TYPE_THEORY]
@@ -1341,7 +1341,7 @@ check(
     and "第1节" in _tip[1],
     _tip,
 )
-_st.behavior.start_time = period_time(0) + datetime.timedelta(minutes=5)
+chara.behave(201, start_time=period_time(0) + datetime.timedelta(minutes=5))
 _tip = character_info_head.get_now_class_tip(201)
 check(
     "L13 对照：开始时刻与玩家没对齐（她自己坐下听课，不是被拉来的）→ 照她的课表写",
@@ -1355,7 +1355,7 @@ check(
     _tip is not None and f"授课：{pl.name}" in _tip[1] and "第" not in _tip[1],
     _tip,
 )
-pl.behavior.behavior_id = _pl_saved[0]
+chara.behave(pl.cid, _pl_saved[0])
 move_to(0, _pl_saved[1])
 set_time(period_time(0))
 
@@ -1365,20 +1365,20 @@ schedule_handle.set_selected_course(
 _st_course = schedule_handle.get_now_course(201)
 assert _st_course is not None
 move_to(201, schedule_handle.get_course_place(_st_course))
-_st.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+chara.behave(201, constant.Behavior.SHARE_BLANKLY)
 _tip = character_info_head.get_now_class_tip(201)
 check(
     "L14 对照：人在体育课的地点：亮 <课>",
     _tip is not None and not _tip[0],
     _tip,
 )
-_st.behavior.behavior_id = constant.Behavior.REST
+chara.behave(201, constant.Behavior.REST)
 check(
     "L14 体力不足缺这一节、在上课地点原地休息（721 派休息）：不亮 <课>（此前照亮）",
     character_info_head.get_now_class_tip(201) is None,
     character_info_head.get_now_class_tip(201),
 )
-_st.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+chara.behave(201, constant.Behavior.SHARE_BLANKLY)
 _st_growth.last_absent_period = [game_time.now().toordinal(), 0]
 check(
     "L14 这一节已记过缺课、休完回到地点：不亮 <课>",
@@ -1449,7 +1449,7 @@ education.clear_temp_classes()
 _st_growth.skip_class_flag = False
 _st_growth.skip_class_day = 0
 _st_growth.selected_course = {}
-_st.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+chara.behave(201, constant.Behavior.SHARE_BLANKLY)
 move_to(201, SCENE_DORM)
 clear_schedules()
 

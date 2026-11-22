@@ -18,6 +18,8 @@ from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
 from tests import chara_abilities as ca
+from tests.chara_activity import aim
+from Script.Modules.domains import activity, kitchen
 
 NPC = 1
 """ 交互对象 """
@@ -42,7 +44,7 @@ class EatSeasonedFoodTest(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
         ca.talent(self.npc)[SEMEN_TASTE] = 1
-        self.player.target_character_id = NPC
+        aim(self.player.cid, NPC)
         if not self.cache.recipe_data:
             cooking.init_recipes()
         recipe_id = next(
@@ -59,7 +61,7 @@ class EatSeasonedFoodTest(FastTestCase):
 
     def test_eating_seasoned_food_picks_eat(self) -> None:
         """选择不出错，定下的是食用，选择时博士的 target_food 没被改写"""
-        before = self.player.behavior.target_food
+        before = activity.behavior(self.player.cid).target_food
         panel = food_bag_panel.FoodGroupDraw.__new__(
             food_bag_panel.FoodGroupDraw
         )
@@ -71,4 +73,8 @@ class EatSeasonedFoodTest(FastTestCase):
         chosen = caught.exception.action.action_data
         assert isinstance(chosen, Mapping)
         self.assertEqual(chosen["behavior_id"], constant.Behavior.EAT)
-        self.assertIs(self.player.behavior.target_food, before)
+        after = activity.behavior(self.player.cid).target_food
+        self.assertEqual(
+            (after.uid, kitchen.record(after)),
+            (before.uid, kitchen.record(before)),
+        )

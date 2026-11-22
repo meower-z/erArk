@@ -11,7 +11,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
-from Script.Modules.domains import abilities, h_state
+from Script.Modules.domains import abilities, activity, h_state
 
 panel_info_data: dict[str, object] = {}
 
@@ -45,8 +45,6 @@ class Bondage_Panel:
     def draw(self) -> None:
         """绘制对象"""
 
-        character_data: game_type.Character = cache.character_data[0]
-
         title_text = _("绳艺")
         title_draw = draw.TitleLineDraw(title_text, self.width)
 
@@ -55,7 +53,7 @@ class Bondage_Panel:
             title_draw.draw()
 
             # 交互对象的捆绑状态
-            target_character_id = character_data.target_character_id
+            target_character_id = activity.target(0)
             now_bondage_id = h_state.get(target_character_id, "bondage")
             now_bondage_data = game_config.config_bondage[now_bondage_id]
 

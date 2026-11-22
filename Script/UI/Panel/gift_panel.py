@@ -6,7 +6,7 @@ from Script.Core import cache_control, constant, flow_handle, game_type
 from Script.Core import get_text
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, handle_premise
-from Script.Modules.domains import pregnancy
+from Script.Modules.domains import activity, pregnancy
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import abilities, action_info, flags, inventory
 
@@ -109,9 +109,8 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
     elif drug_id == 36:  # 孵化加速药
         from Script.System.Pregnancy_System import egg_handle, pregnancy_panel
 
-        pl_character_data: game_type.Character = cache.character_data[0]
-        egg_id = getattr(pl_character_data.behavior, "gift_egg_id", -1)
-        pl_character_data.behavior.gift_egg_id = -1
+        egg_id = activity.behavior(0).gift_egg_id
+        activity.update_behavior(0, gift_egg_id=-1)
         with pregnancy.editing(character_id) as preg:
             egg_data = preg.eggs.get(egg_id)
             # 兜底：选中的卵已不存在或不在孵化中则不生效
@@ -157,14 +156,13 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
             pregnancy_panel,
         )
 
-        pl_character_data = cache.character_data[0]
         if pregnancy_handle.is_growth_drug_self_target(character_id):
             # 幼女/学员阶段的女儿：对收礼者本人生效
             child_id = character_id
         else:
             # 母亲：对送礼前选中的婴儿生效
-            child_id = getattr(pl_character_data.behavior, "gift_child_id", -1)
-            pl_character_data.behavior.gift_child_id = -1
+            child_id = activity.behavior(0).gift_child_id
+            activity.update_behavior(0, gift_child_id=-1)
             # 兜底：选中的孩子已不是目标名下的婴儿则不生效
             if child_id not in pregnancy_handle.get_baby_id_list(character_id):
                 child_id = -1
@@ -338,7 +336,6 @@ class Gift_Panel:
         """礼物的确认选择"""
         from Script.System.Instruct_System import handle_instruct
 
-        character_data: game_type.Character = cache.character_data[0]
         gift_data = game_config.config_gift_items[gift_id]
 
         # 检查是否可以赠送礼物
@@ -358,7 +355,7 @@ class Gift_Panel:
             from Script.System.Pregnancy_System import pregnancy_handle
 
             if not pregnancy_handle.is_growth_drug_self_target(
-                character_data.target_character_id
+                activity.target(0)
             ):
                 child_id = self.select_target_baby()
                 if child_id is None:
@@ -387,9 +384,8 @@ class Gift_Panel:
         """
         from Script.System.Pregnancy_System import egg_handle, pregnancy_panel
 
-        character_data: game_type.Character = cache.character_data[0]
         target_character_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
+            activity.target(0)
         ]
         accelerable_eggs = egg_handle.get_accelerable_hatching_eggs(
             target_character_data.cid
@@ -447,9 +443,8 @@ class Gift_Panel:
             pregnancy_panel,
         )
 
-        character_data: game_type.Character = cache.character_data[0]
         target_character_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
+            activity.target(0)
         ]
         accelerable_babies = pregnancy_handle.get_accelerable_babies(
             target_character_data.cid
@@ -511,9 +506,8 @@ class Gift_Panel:
         """
         from Script.Design import second_behavior
 
-        character_data: game_type.Character = cache.character_data[0]
         target_character_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
+            activity.target(0)
         ]
         gift_data = game_config.config_gift_items[gift_id]
         # 药物礼物的情况
@@ -541,7 +535,7 @@ class Gift_Panel:
         elif gift_data.type == 2:
             hate_count, _hate_count_text = (
                 second_behavior.get_now_state_all_value_and_text_from_mark_up_data(
-                    51, character_data.target_character_id
+                    51, activity.target(0)
                 )
             )
             if abilities.ability(target_character_data.cid)[18] >= 2:
