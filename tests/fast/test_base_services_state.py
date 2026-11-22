@@ -23,8 +23,14 @@ from Script.Config import game_config
 from Script.Design import basement, game_time
 from Script.Design.handle_premise import handle_premise_work
 from Script.Kernel import core
-from Script.Modules.domains import diplomacy, dormitory, library, official
-from Script.Modules.domains import recruit
+from Script.Modules.domains import (
+    diplomacy,
+    dormitory,
+    library,
+    official,
+    recruit,
+    roster,
+)
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state, upgrade
 from Script.System.Official_Event_System import official_event_handle
@@ -58,7 +64,7 @@ class BaseServicesStateTest(FastTestCase):
         int -- 角色id
         """
         self.world.chara(cid, f"干员{cid}")
-        self.cache.npc_id_got.add(cid)
+        roster.add(cid)
         return cid
 
     def test_lines_open_by_level(self) -> None:
@@ -72,13 +78,13 @@ class BaseServicesStateTest(FastTestCase):
         candidate = next(
             cid
             for cid, tem in self.cache.npc_tem_data.items()
-            if cid not in self.cache.forbidden_npc_id
+            if not roster.is_forbidden(cid)
             and cid
             and tem.Mother_id == 0
             and tem.AdvNpc < 9000
         )
         self.world.chara(candidate, "候选")
-        self.cache.npc_id_got.discard(candidate)
+        roster.discard(candidate)
         recruit.open_lines([0, 1])
         recruit.set_line(0, progress=100, strategy=1)
         recruit.set_line(1, progress=40.5, strategy=1)

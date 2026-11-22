@@ -21,7 +21,7 @@ from collections.abc import Mapping
 from Script.Core import constant, constant_promise
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, intent, start_gate
-from Script.Modules.domains import flags, modes
+from Script.Modules.domains import flags, modes, roster
 from tests import chara_abilities as ca, kernel_data
 from tests.fast.base import FastTestCase
 
@@ -162,8 +162,8 @@ class StartGateTest(FastTestCase):
         )
 
     def test_queued_target_off_line_falls_back_to_idle(self) -> None:
-        """排队时在场的交互对象在开始前离线（不在 npc_id_got 里）：换成发呆"""
-        self.cache.npc_id_got.discard(KALTSIT)
+        """排队时在场的交互对象在开始前离线（不在名册里）：换成发呆"""
+        kernel_data.put(roster.discard, KALTSIT)
         act = self.start(AMIYA, 5, target=KALTSIT, queued=True)
         self.assertEqual(
             self.started(act, AMIYA)[:3],
@@ -173,7 +173,7 @@ class StartGateTest(FastTestCase):
 
     def test_picked_off_line_target_starts(self) -> None:
         """刚选出的行动以不在场的角色（如婴儿）为对象：原样开始"""
-        self.cache.npc_id_got.discard(KALTSIT)
+        kernel_data.put(roster.discard, KALTSIT)
         act = self.start(
             0, 30, behavior_id=constant.Behavior.HOLD_CHILD, target=KALTSIT
         )

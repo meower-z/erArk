@@ -32,8 +32,9 @@ class NeedsFollowRosterTest(SlowTestCase):
         super().setUp()
         core = game("Script.Kernel.core")
         needs = game("Script.Modules.domains.needs")
+        roster = game("Script.Modules.domains.roster")
         working = game("Script.Modules.gameplay_resolution.working")
-        self.cid = min(cid for cid in self.cache.npc_id_got if cid != 0)
+        self.cid = min(cid for cid in roster.active() if cid != 0)
         self.wait()
         with working.based_on(core.state()) as buffer:
             needs.set(self.cid, milk=MILK, hunger=100)
@@ -52,15 +53,18 @@ class NeedsFollowRosterTest(SlowTestCase):
         """离开列表时数据进 roster.offstage，乳汁不变。回到列表时数据回到角色身上"""
         core = game("Script.Kernel.core")
         needs = game("Script.Modules.domains.needs")
+        roster = game("Script.Modules.domains.roster")
         working = game("Script.Modules.gameplay_resolution.working")
+        from tests import kernel_data
+
         who = str(self.cid)
-        self.cache.npc_id_got.discard(self.cid)
+        kernel_data.put(roster.discard, self.cid)
         self.wait()
         state = core.state()
         self.assertNotIn(who, state.characters)
         self.assertIn(who, state.data[working.OFFSTAGE])
         self.assertEqual(needs.of(self.cid)["milk"], MILK)
-        self.cache.npc_id_got.add(self.cid)
+        kernel_data.put(roster.add, self.cid)
         self.wait()
         state = core.state()
         self.assertIn(needs.KEY, state.characters[who].data)

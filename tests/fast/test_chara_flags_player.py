@@ -45,7 +45,7 @@ class CharaFlagsPlayerTest(FastTestCase):
         fresh = game_type.Character()
         for attr in ("sp_flag", "action_info", "pl_ability", "pl_collection"):
             self.assertFalse(hasattr(fresh, attr), attr)
-        self.assertEqual(upgrade.CURRENT, 17)
+        self.assertGreaterEqual(upgrade.CURRENT, 17)
         self.assertIn(16, upgrade.STEPS)
 
     def test_flags_sparse_coerce_reset_copy_remap_adopt(self) -> None:
@@ -320,7 +320,10 @@ class CharaFlagsPlayerTest(FastTestCase):
         kernel_data.put(action_info.set, 2, "talk_count", 3)
 
         def fake_init(
-            cid: int, _tem: object, collect_reset: bool = True
+            cid: int,
+            _tem: object,
+            collect_reset: bool = True,
+            register_roster: bool = True,
         ) -> game_type.Character:
             flags.reset(cid)
             action_info.set(cid, "talk_count", 0)

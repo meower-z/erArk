@@ -1,23 +1,11 @@
 # -*- coding: UTF-8 -*-
 """schedule_template_handle：预设模板、增删改、套用与覆盖、每日改写"""
 
-from _bootstrap import (
-    _,
-    attr_calculation,
-    cache,
-    check,
-    clear_schedules,
-    education,
-    education_constant,
-    finish,
-    game_config,
-    make_character,
-    open_all_classroom,
-    remove_character,
-    schedule_handle,
-    schedule_template_handle,
-    section,
-)
+from _bootstrap import child_growth, growth, roster, _, attr_calculation, check
+from _bootstrap import clear_schedules, education, education_constant, finish
+from _bootstrap import game_config, make_character, open_all_classroom
+from _bootstrap import remove_character, schedule_handle
+from _bootstrap import schedule_template_handle, section
 from typing import TYPE_CHECKING
 import ast
 import inspect
@@ -130,8 +118,8 @@ check(
     schedule_template_handle.delete_template(5)
     and 5 not in education.templates(),
 )
-loli_growth = loli.child_growth
-assert loli_growth is not None
+assert growth.of(loli.cid) is not None
+loli_growth = child_growth(loli.cid)
 check(
     "删前解开引用它的孩子",
     loli_growth.schedule_template_id == 0
@@ -146,13 +134,13 @@ check(
 )
 schedule_template_handle.apply_template(202, reused_id)
 schedule_template_handle.create_template("第七套")
-child_growth = child.child_growth
-assert child_growth is not None
+assert growth.of(child.cid) is not None
+daughter_growth = child_growth(child.cid)
 check(
     "中间空缺号不被补",
     schedule_template_handle.delete_template(reused_id)
     and schedule_template_handle.create_template("再一套") == 7
-    and child_growth.schedule_template_id == 0,
+    and daughter_growth.schedule_template_id == 0,
 )
 
 section("套用与覆盖")
@@ -432,7 +420,7 @@ away = make_character(
     mother_id=102,
     born_days=300,
 )
-cache.npc_id_got.discard(204)  # 外勤 / 外交 / 离线时移出 npc_id_got
+roster.discard(204)  # 外勤 / 外交 / 离线时移出 npc_id_got
 _l17_id = schedule_template_handle.create_template("外勤前套的")
 check(
     "L17 对照：新模板是现存最大编号（删掉后会被下一套新模板复用）",
@@ -447,7 +435,7 @@ check(
     schedule_template_handle.get_template_use_count(_l17_id),
 )
 check("L17 删掉这套模板", schedule_template_handle.delete_template(_l17_id))
-away_growth = away.child_growth
+away_growth = growth.of(away.cid)
 assert away_growth is not None
 check(
     "L17 离线的女儿一并解开：编号归 0、单项覆盖清空（此前仍指着被删的编号）",
@@ -459,7 +447,7 @@ check(
     ),
 )
 _l17_reused = schedule_template_handle.create_template("复用这个编号的新模板")
-cache.npc_id_got.add(204)  # 回岛
+roster.add(204)  # 回岛
 check(
     "L17 新模板复用了这个编号，她回岛后仍是「未设置」，不会静默套上新模板",
     _l17_reused == _l17_id
@@ -493,7 +481,7 @@ check(
     adult_student.entertainment.entertainment_type == [11, 12, 13],
     adult_student.entertainment.entertainment_type,
 )
-adult_growth = adult_student.child_growth
+adult_growth = growth.of(adult_student.cid)
 assert adult_growth is not None
 check(
     "L18 模板本身保留：她仍指着这套模板",

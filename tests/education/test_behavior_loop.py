@@ -4,11 +4,11 @@
 不 inline 调用 init_character_behavior()（其结尾的成就结算可能写文件）。"""
 
 from _bootstrap import ROOT, SCENE_EDU_ENTRY, auto_schedule, cache, check
-from _bootstrap import class_ai, constant, datetime, education
+from _bootstrap import child_growth, class_ai, constant, datetime, education
 from _bootstrap import education_constant, finish, game_time, growth_handle
 from _bootstrap import handle_premise, make_character, map_handle, move_to, os
-from _bootstrap import save_handle, schedule_handle, section, semester_handle
-from _bootstrap import set_time, sex_class_handle, wait
+from _bootstrap import roster, save_handle, schedule_handle, section
+from _bootstrap import semester_handle, set_time, sex_class_handle, wait
 from tests.education._skip import skip
 from Script.Design import clothing
 from Script.Kernel import core
@@ -65,7 +65,7 @@ daughter_list = [
 ]
 if not daughter_list:
     mother_id = next(
-        cid for cid in sorted(cache.npc_id_got) if cid in cache.character_data
+        cid for cid in sorted(roster.active()) if cid in cache.character_data
     )
     for index in range(3):
         cd = make_character(
@@ -122,7 +122,7 @@ def clear_need(cid: int) -> None:
 
 teacher_list = schedule_handle.get_teacher_candidate_list()
 if len(teacher_list) < 2:
-    for cid in sorted(cache.npc_id_got):
+    for cid in sorted(roster.active()):
         cd = cache.character_data[cid]
         if (
             cid in all_daughter_list
@@ -161,7 +161,7 @@ education.clear_class_schedule()
 filled, skipped = auto_schedule.auto_fill_class_schedule()
 check("一键排课", filled > 0, (filled, skipped))
 for cid in daughter_list:
-    growth_handle.get_child_growth(cid).selected_course = {}
+    child_growth(cid).selected_course = {}
     auto_schedule.auto_fill_selected_course(cid)
 check(
     "每个女儿第一节都有课",
@@ -198,8 +198,7 @@ round_log = []
 in_class_log = []
 teacher_log = []
 attend_start = sum(
-    growth_handle.get_child_growth(cid).attend_class_count
-    for cid in daughter_list
+    child_growth(cid).attend_class_count for cid in daughter_list
 )
 # 第一轮从 08:40 走 40 分钟，之后每轮 45 分钟：检查点落在每节课的中段（09:20 / 10:05 / 10:50 / 11:35 …）。
 #    第五轮起每节课的时长截到本节结束，节次交界处人人都在换教室，在交界处取样看到的全是「移动中」
@@ -267,10 +266,7 @@ check(
     round_log,
 )
 attend_gain = (
-    sum(
-        growth_handle.get_child_growth(cid).attend_class_count
-        for cid in daughter_list
-    )
+    sum(child_growth(cid).attend_class_count for cid in daughter_list)
     - attend_start
 )
 check("女儿们累计听课节数 > 0", attend_gain > 0, attend_gain)
@@ -436,7 +432,7 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
     功能: 交回自己的交互对象，否则交互对象不在场会提前结束她的行为
     """
     cd = cache.character_data[l4_id]
-    growth_data = growth_handle.get_child_growth(l4_id)
+    growth_data = child_growth(l4_id)
     growth_data.selected_course = {}
     growth_data.skip_class_flag = False
     if class_period >= 0:
@@ -545,10 +541,8 @@ set_time(game_time.now().replace(hour=0, minute=1))
 # 跨天只清前一天及更早挂上的翘课 flag（Plan 32 §3.7 L5：一步跨过午夜时，新一天刚挂上的 flag 不能被清掉）。
 #    存档当天可能真有女儿翘过课，她的 flag 认的就是今天：统一改成前一天挂上的，下面的断言才不随存档而变
 for cid in daughter_list:
-    if growth_handle.get_child_growth(cid).skip_class_flag:
-        growth_handle.get_child_growth(cid).skip_class_day = (
-            game_time.now().toordinal() - 1
-        )
+    if child_growth(cid).skip_class_flag:
+        child_growth(cid).skip_class_day = game_time.now().toordinal() - 1
 try:
     with kernel_data.writing():
         past_day_settle.update_new_day()
@@ -561,8 +555,8 @@ except Exception as error:
 check(
     "跨天后翘课（前一天挂上的）与见学 flag 都清了",
     all(
-        not growth_handle.get_child_growth(cid).skip_class_flag
-        and not growth_handle.get_child_growth(cid).follow_mother_flag
+        not child_growth(cid).skip_class_flag
+        and not child_growth(cid).follow_mother_flag
         for cid in daughter_list
     ),
 )

@@ -5,13 +5,15 @@ from _bootstrap import (
     ROOT,
     cache,
     check,
+    child_growth,
     education,
     finish,
     game_config,
     game_type,
-    growth_handle,
+    growth,
     make_character,
     os,
+    pregnancy,
     save_handle,
     scene_str,
     section,
@@ -31,8 +33,8 @@ student_b = make_character(
     202, "女儿B", 152, daughter=True, stage=102, mother_id=102
 )
 adult = make_character(301, "成年干员", 21)
-ga = growth_handle.get_child_growth(201)
-gb = growth_handle.get_child_growth(202)
+legacy_ga = game_type.CHILD_GROWTH()
+legacy_gb = game_type.CHILD_GROWTH()
 for name in (
     "semester_id",
     "report_card_history",
@@ -45,12 +47,20 @@ for name in (
     "skip_class_day",
     "sex_class_count",
 ):
-    delattr(ga, name)
-    delattr(gb, name)
-setattr(ga, "last_report_card", {"year": 2026, "month": 6, "grade": 1})
-del adult.child_growth
-del student_b.pregnancy.prenatal_point
-save_handle._normalize_loaded_save_paths(cache)
+    delattr(legacy_ga, name)
+    delattr(legacy_gb, name)
+setattr(legacy_ga, "last_report_card", {"year": 2026, "month": 6, "grade": 1})
+vars(student_a)["child_growth"] = legacy_ga
+vars(student_b)["child_growth"] = legacy_gb
+legacy_preg_b = game_type.PREGNANCY()
+del legacy_preg_b.prenatal_point
+vars(student_b)["pregnancy"] = legacy_preg_b
+legacy_loaded = {"character_data": cache.character_data}
+growth.adopt_old_save(legacy_loaded, 14)
+pregnancy.adopt_old_save(legacy_loaded, 14)
+ga = growth.of(201)
+gb = growth.of(202)
+assert ga is not None and gb is not None
 default_names = set(vars(game_type.CHILD_GROWTH()))
 check(
     "两个孩子的字段集合与新结构体一致",
@@ -67,8 +77,8 @@ check(
     ga.report_card_history == [{"year": 2026, "month": 6, "grade": 1}]
     and not hasattr(ga, "last_report_card"),
 )
-check("没有养成数据的角色补出 child_growth = None", adult.child_growth is None)
-check("母亲侧胎教字段回填", student_b.pregnancy.prenatal_point == 0.0)
+check("没有养成数据的角色补出 child_growth = None", growth.of(301) is None)
+check("母亲侧胎教字段回填", pregnancy.of(202).prenatal_point == 0.0)
 check(
     "Plan 30 的三个新字段按默认值回填：累计翘课 0、被抓日 0、学期初岗位 -1（未知）",
     all(
@@ -113,14 +123,15 @@ check(
     "模板侧：再跑一次是幂等的",
     save_handle._migrate_child_schedule_template() == 0,
 )
-ga.schedule_override = {1: 176, 2: 152}
+ga_live = child_growth(201)
+ga_live.schedule_override = {1: 176, 2: 152}
 student_a.entertainment.entertainment_type = [175, 58, 178]
 save_handle._normalize_loaded_save_paths(cache)
 check(
     "角色侧：单孩覆盖与当天娱乐槽位换成表里有的新编号",
-    ga.schedule_override == {1: 176, 2: 152}
+    ga_live.schedule_override == {1: 176, 2: 152}
     and student_a.entertainment.entertainment_type == [152, 58, 155],
-    (ga.schedule_override, student_a.entertainment.entertainment_type),
+    (ga_live.schedule_override, student_a.entertainment.entertainment_type),
 )
 education.clear_templates()
 
@@ -129,7 +140,7 @@ section(
 )
 
 _record = {"time": game_time.now(), "choice": 2}
-ga.event_history = {
+ga_live.event_history = {
     "萝莉1": dict(_record),
     "萝莉20": dict(_record),
     "萝莉2": dict(_record),
@@ -138,8 +149,8 @@ save_handle._normalize_loaded_save_paths(cache)
 _expect_history = {"期末17": _record, "期末18": _record, "萝莉2": _record}
 check(
     "孩子的履历：萝莉 1 / 20 改成期末 17 / 18、记录原样保留，其余 uid 不动",
-    ga.event_history == _expect_history,
-    ga.event_history,
+    ga_live.event_history == _expect_history,
+    ga_live.event_history,
 )
 check(
     "改名后按新 uid 去重：经历过萝莉 1 的孩子不会在学期切换时再遇到同文的期末 17；没经历过萝莉 26 的照常能遇到期末 19",
@@ -148,7 +159,9 @@ check(
 )
 save_handle._normalize_loaded_save_paths(cache)
 check(
-    "再读一次档是幂等的", ga.event_history == _expect_history, ga.event_history
+    "再读一次档是幂等的",
+    ga_live.event_history == _expect_history,
+    ga_live.event_history,
 )
 _global_history = {
     "萝莉26@305": dict(_record),
@@ -168,7 +181,7 @@ check(
     and _both_history == {"萝莉1": {"choice": 1}, "期末17": {"choice": 3}},
     _both_history,
 )
-ga.event_history = {}
+ga_live.event_history = {}
 
 OLD_REPORT_UID_SET = frozenset(save_handle._OFFICIAL_EVENT_UID_MIGRATE)
 """ Plan 32 L22 挪进期末桶的三条旧 uid（萝莉 1 / 20 / 26） """
@@ -187,8 +200,8 @@ def find_old_report_uid_left(label: str) -> list:
     for key in official.history():
         if isinstance(key, str) and key.partition("@")[0] in OLD_REPORT_UID_SET:
             result.append((label, "rhodes", key))
-    for cid, character_data in cache.character_data.items():
-        growth_data = getattr(character_data, "child_growth", None)
+    for cid in cache.character_data:
+        growth_data = growth.of(cid)
         if growth_data is None:
             continue
         for key in sorted(set(growth_data.event_history) & OLD_REPORT_UID_SET):
@@ -200,7 +213,7 @@ section(
     "Plan 32 实施复审补：读档后查旧 uid 残留的辅助函数（L22；下面真实存档一段逐个存档拿它查）"
 )
 _saved_global_history = official.history()
-ga.event_history = {"萝莉26": dict(_record), "萝莉2": dict(_record)}
+ga_live.event_history = {"萝莉26": dict(_record), "萝莉2": dict(_record)}
 _old_history = {"萝莉1@305": dict(_record), "通用3@305": dict(_record)}
 kernel_data.put(official.set_history, _old_history)
 check(
@@ -218,7 +231,7 @@ check(
     find_old_report_uid_left("本地") == [],
     find_old_report_uid_left("本地"),
 )
-ga.event_history = {}
+ga_live.event_history = {}
 kernel_data.put(official.set_history, _saved_global_history)
 
 section("真实存档只读载入")
@@ -255,19 +268,17 @@ for save_id in candidate_list:
     if _old_report_uid_gone:
         l22_left.extend(find_old_report_uid_left(save_id))
     for cid, character_data in cache.character_data.items():
-        if not hasattr(character_data, "child_growth"):
-            problem.append((save_id, cid, "no child_growth attr"))
+        if hasattr(character_data, "child_growth"):
+            problem.append((save_id, cid, "legacy child_growth attr"))
             break
-        if (
-            character_data.child_growth is not None
-            and set(vars(character_data.child_growth)) != default_names
-        ):
+        cg = growth.of(cid)
+        if cg is not None and set(vars(cg)) != default_names:
             problem.append(
                 (
                     save_id,
                     cid,
                     "growth fields",
-                    set(vars(character_data.child_growth)) ^ default_names,
+                    set(vars(cg)) ^ default_names,
                 )
             )
             break

@@ -63,6 +63,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
         tuple -- (母亲id int, 姐姐id int, 妹妹id int)
         """
         from Script.Design import talk
+        from Script.Modules.domains import roster
         from Script.System.Pregnancy_System import (
             pregnancy_constant,
             pregnancy_handle,
@@ -73,7 +74,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
             setattr, talk, "must_show_talk_check", talk.must_show_talk_check
         )
         talk.must_show_talk_check = lambda character_id: None
-        mother_id = min(cid for cid in self.cache.npc_id_got if cid)
+        mother_id = min(cid for cid in roster.active() if cid)
         elder_id = kernel_data.born(mother_id, "测试姐姐")
         ca.talent(mother_id)[REARING_TALENT] = 1
         with mock.patch.object(
@@ -165,10 +166,9 @@ class GrowthEventsMatchStageTest(SlowTestCase):
         from Script.Core import save_handle
         from Script.System.Education_System import (
             education_constant,
-            growth_handle,
             growth_panel,
         )
-        from Script.Modules.domains import official
+        from Script.Modules.domains import growth, official
         from Script.System.Official_Event_System import official_event_handle
         from Script.Test.Static_Check.checks import check_official
 
@@ -196,12 +196,12 @@ class GrowthEventsMatchStageTest(SlowTestCase):
             ),
             f"{KNOWN_EVENT_UID} 入队",
         )
-        growth_handle.get_child_growth(elder_id).event_history[
-            UNKNOWN_EVENT_UID
-        ] = {
-            "time": datetime.datetime(2020, 12, 1),
-            "choice": 1,
-        }
+        with kernel_data.writing():
+            with growth.editing(elder_id) as elder_cg:
+                elder_cg.event_history[UNKNOWN_EVENT_UID] = {
+                    "time": datetime.datetime(2020, 12, 1),
+                    "choice": 1,
+                }
         save_handle.establish_save(SAVE_ID)
         self.assertTrue(
             save_handle.judge_save_file_exist(SAVE_ID), "存档应已写到盘上"
@@ -217,7 +217,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
             [],
             "公务事件的静态检查没有失败",
         )
-        elder_growth = self.cache.character_data[elder_id].child_growth
+        elder_growth = growth.of(elder_id)
         assert elder_growth is not None
         self.assertIn(
             UNKNOWN_EVENT_UID,

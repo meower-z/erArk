@@ -197,7 +197,7 @@ class SaveLoadKernelStateTest(SlowTestCase):
         constant = game("Script.Core.constant")
         plan = game("Script.Modules.domains.plan")
         plan_queue = game("Script.Modules.gameplay_resolution.plan_queue")
-        npc = min(i for i in self.cache.npc_id_got if i)
+        npc = min(i for i in kernel_data.domain("roster").active() if i)
         position = self.cache.character_data[0].position
         with kernel_data.writing():
             plan_queue.plan_next(npc, constant.Behavior.SLEEP, 60)

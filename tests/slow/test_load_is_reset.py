@@ -12,6 +12,7 @@
 
 import importlib
 import os
+import pickle
 import sys
 import tempfile
 from types import ModuleType
@@ -119,6 +120,15 @@ class LoadIsResetTest(SlowTestCase):
         saved = core.state()
         save_handle.establish_save(SAVE_ID)
         if old:
+            roster = game("Script.Modules.domains.roster")
+            cache_path = os.path.join(self.folder, SAVE_ID, "1")
+            with open(cache_path, "rb") as f:
+                legacy_cache = pickle.load(f)
+            vars(legacy_cache)["npc_id_got"] = roster.active()
+            vars(legacy_cache)["forbidden_npc_id"] = roster.forbidden()
+            vars(legacy_cache)["npc_name_data"] = roster.names()
+            with open(cache_path, "wb") as f:
+                pickle.dump(legacy_cache, f)
             os.remove(
                 os.path.join(self.folder, SAVE_ID, kernel_state.SAVE_FILE)
             )

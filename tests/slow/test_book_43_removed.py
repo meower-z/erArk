@@ -213,7 +213,9 @@ class Book43RemovedTest(SlowTestCase):
             "再存再读一次，借阅表不变",
         )
 
-        npc_list = sorted(cid for cid in self.cache.npc_id_got if cid != 0)
+        npc_list = sorted(
+            cid for cid in kernel_data.domain("roster").active() if cid != 0
+        )
         self.assertTrue(npc_list, "本局有干员")
         for character_id in npc_list:
             borrow_book_panel.judge_can_get_read_book(character_id)
@@ -333,7 +335,9 @@ class Book43RemovedTest(SlowTestCase):
         from Script.Modules.domains import library
         from Script.UI.Panel import borrow_book_panel
 
-        character_id = min(cid for cid in self.cache.npc_id_got if cid != 0)
+        character_id = min(
+            cid for cid in kernel_data.domain("roster").active() if cid != 0
+        )
         character_data = self.cache.character_data[character_id]
         character_data.entertainment.borrow_book_id_set.add(BOOK)
         kernel_data.put(library.set_holder, BOOK, character_id)

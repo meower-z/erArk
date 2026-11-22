@@ -10,7 +10,7 @@
 """
 
 from tests.slow.base import SlowTestCase
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
 
 BABY = 101
 """ 婴儿素质：差分文本表里没有她的行 """
@@ -44,7 +44,9 @@ class ChildStageDirtTextTest(SlowTestCase):
         super().setUp()
         from Script.Config import normal_config
 
-        self.target_id = min(cid for cid in self.cache.npc_id_got if cid != 0)
+        self.target_id = min(
+            cid for cid in kernel_data.domain("roster").active() if cid != 0
+        )
         self.target = self.cache.character_data[self.target_id]
         for clothing_type in self.target.cloth.cloth_wear:
             self.target.cloth.cloth_wear[clothing_type] = []

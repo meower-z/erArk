@@ -46,7 +46,7 @@ class MaintenanceExamSaveTest(SlowTestCase):
         m = game("Script.Modules.domains.maintenance")
         px = game("Script.Modules.domains.physical_exam")
         map_handle = game("Script.Design.map_handle")
-        a, b = sorted(self.cache.npc_id_got - {0})[:2]
+        a, b = sorted(kernel_data.domain("roster").active() - {0})[:2]
         office = map_handle.get_map_system_path_str_for_list(
             ["中枢", "博士办公室"]
         )

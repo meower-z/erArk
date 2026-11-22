@@ -18,7 +18,7 @@ from unittest import mock
 from Script.Core import constant
 from Script.Design import game_time, handle_npc_ai_in_h
 from Script.Kernel import core
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, roster
 from Script.Modules.gameplay_resolution import (
     actions,
     plan_queue,
@@ -54,11 +54,11 @@ class BridgeInterruptsTest(FastTestCase):
         self._reset(actions.roster())
         self.addCleanup(plan_queue.forget)
 
-    def _reset(self, roster: tuple[str, ...], ticked: int = CLOCK) -> None:
+    def _reset(self, roster_ids: tuple[str, ...], ticked: int = CLOCK) -> None:
         """
-        GameState 换成 roster 里的角色各做一件 START 开始、120 分钟长的事
+        GameState 换成 roster_ids 里的角色各做一件 START 开始、120 分钟长的事
         Keyword arguments:
-        roster -- 角色键
+        roster_ids -- 角色键
         ticked -- 上一次 Tick 结算到的时钟
         Return arguments:
         无
@@ -68,12 +68,13 @@ class BridgeInterruptsTest(FastTestCase):
                 core.Action(who, core.idle.name, None, START, 120),
                 MappingProxyType({}),
             )
-            for who in roster
+            for who in roster_ids
         }
-        data = {
+        data: dict[str, core.JSON] = {
             **core.state().data,
             time_hooks.TICKED: ticked,
             time_hooks.SETTLED_DAY: game_time.day(CLOCK),
+            roster.ACTIVE: tuple(sorted(int(who) for who in roster_ids)),
         }
         core.reset_state(
             working.reconcile(
@@ -192,7 +193,7 @@ class BridgeInterruptsTest(FastTestCase):
         Return arguments:
         无
         """
-        self.cache.npc_id_got.discard(3)
+        kernel_data.put(roster.discard, 3)
         plan_queue.interrupt(3)
         effects = plan_queue.drain(())[0]
         self.assertEqual(effects, (core.RemoveCharacter("3"),))

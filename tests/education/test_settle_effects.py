@@ -4,15 +4,15 @@
 from functools import partial
 from typing import Any
 
-from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, cache, check, class_ai
-from _bootstrap import classroom_path, clear_schedules, constant
+from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, check, class_ai
+from _bootstrap import child_growth, classroom_path, clear_schedules, constant
 from _bootstrap import constant_effect, datetime, drawn_text, education
 from _bootstrap import education_constant, finish, game_config, game_time
-from _bootstrap import game_type, growth_handle, handle_premise, make_character
-from _bootstrap import move_to, open_all_classroom, period_time, pl, play
-from _bootstrap import remove_character, schedule_handle
-from _bootstrap import schedule_template_handle, section, semester_handle
-from _bootstrap import set_time, sex_class_handle, start
+from _bootstrap import game_type, growth, growth_handle, handle_premise
+from _bootstrap import make_character, move_to, open_all_classroom
+from _bootstrap import period_time, pl, play, remove_character, roster
+from _bootstrap import schedule_handle, schedule_template_handle, section
+from _bootstrap import semester_handle, set_time, sex_class_handle, start
 from Script.Settle import common_default, default as settle_default
 from Script.System.Instruct_System import handle_instruct
 from Script.Design import character_behavior, second_behavior
@@ -63,7 +63,7 @@ character_behavior.judge_character_status = lambda character_id: 0
 def reset_mark(*character_id_list: int) -> None:
     """清掉学生的「本节已结算」去重标记：同一节里要连着验好几种结算时用"""
     for character_id in character_id_list:
-        growth_handle.get_child_growth(character_id).last_attend_period = []
+        child_growth(character_id).last_attend_period = []
 
 
 section("注册")
@@ -100,10 +100,10 @@ ca.ability(teacher)[45] = 4
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 schedule_handle.set_selected_course(202, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
-student_a_growth = student_a.child_growth
-assert student_a_growth is not None
-student_b_growth = student_b.child_growth
-assert student_b_growth is not None
+assert growth.has(student_a.cid)
+student_a_growth = child_growth(student_a.cid)
+assert growth.has(student_b.cid)
+student_b_growth = child_growth(student_b.cid)
 student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
 student_b.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
 bystander = make_character(
@@ -132,8 +132,7 @@ check(
     "NPC 教师不给课表没指向这间教室的人发（第五轮）",
     ca.experience(bystander).get(exp_45, 0) == 0
     and (
-        bystander.child_growth is None
-        or bystander.child_growth.attend_class_count == 0
+        (_bg := growth.of(bystander.cid)) is None or _bg.attend_class_count == 0
     ),
 )
 EFFECT[512](101, 45, change, game_time.now())
@@ -595,7 +594,7 @@ section(
     "Plan 27 §3.6：检查成绩单看过之后给本学期截至目前，养成数值 23 读待查看"
 )
 pl.target_character_id = 201
-growth_a = growth_handle.get_child_growth(201)
+growth_a = child_growth(201)
 growth_a.report_card_flag = False
 drawn_text.clear()
 EFFECT[550](0, 15, change, game_time.now())
@@ -636,7 +635,7 @@ check(
 )
 check(
     "没有养成数据的角色：养成数值 23 为 0",
-    mother.child_growth is None
+    growth.of(mother.cid) is None
     and growth_handle.get_growth_value(102, E.GROWTH_VALUE_REPORT_PENDING)
     == 0.0,
 )
@@ -790,7 +789,7 @@ section(
     "Plan 31 §3.6（L2）：549 置翘课 flag 时记下行为开始那一天；前一天挂的 flag 不触发翘课被抓"
 )
 
-growth_a = growth_handle.get_child_growth(201)
+growth_a = child_growth(201)
 _late_start = DEFAULT_TIME.replace(hour=23, minute=40)
 set_time(_late_start)
 growth_a.skip_class_flag = False
@@ -1167,8 +1166,8 @@ def l13_gain_spy(student_id: int, *args: Any, **kwargs: Any) -> bool:
     return paid
 
 
-_l13_roster = set(cache.npc_id_got)
-cache.npc_id_got.intersection_update({201})
+_l13_roster = roster.active()
+roster.set_active(_l13_roster & {201})
 for _l13_before, _l13_label in (
     (constant.Behavior.SELF_STUDY, "被授课拉来听课的"),
     (constant.Behavior.ATTENT_CLASS, "开讲时已在听课的"),
@@ -1212,7 +1211,7 @@ for _l13_before, _l13_label in (
     )
     student_a.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-cache.npc_id_got.update(_l13_roster)
+roster.set_active(_l13_roster)
 move_to(0, SCENE_DORM)
 set_time(DEFAULT_TIME)
 reset_mark(201)

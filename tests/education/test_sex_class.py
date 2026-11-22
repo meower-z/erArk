@@ -1,41 +1,15 @@
 # -*- coding: UTF-8 -*-
 """sex_class_handle：临时课程、提醒、开课下课、旁观结算"""
 
-from _bootstrap import (
-    DEFAULT_TIME,
-    SCENE_DORM,
-    SCENE_EDU_ENTRY,
-    _,
-    check,
-    class_ai,
-    classroom_path,
-    clear_schedules,
-    constant,
-    constant_promise,
-    datetime,
-    drawn_text,
-    education,
-    education_constant,
-    finish,
-    game_config,
-    game_time,
-    game_type,
-    growth_handle,
-    handle_premise,
-    make_character,
-    move_to,
-    open_all_classroom,
-    period_time,
-    pl,
-    random,
-    remove_character,
-    schedule_handle,
-    section,
-    play,
-    set_time,
-    sex_class_handle,
-    sync,
-)
+from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, _
+from _bootstrap import check, child_growth, class_ai, classroom_path
+from _bootstrap import clear_schedules, constant, constant_promise, datetime
+from _bootstrap import drawn_text, education, education_constant, finish
+from _bootstrap import game_config, game_time, game_type, growth
+from _bootstrap import growth_handle, handle_premise, make_character, move_to
+from _bootstrap import open_all_classroom, period_time, pl, play, random
+from _bootstrap import remove_character, schedule_handle, section, set_time
+from _bootstrap import sex_class_handle, sync
 from Script.Design import handle_npc_ai, instuct_judege
 from Script.Settle import common_default
 from Script.Modules.domains import flags, modes, player_ability
@@ -322,8 +296,8 @@ check("起床提醒只发一次", sex_class_handle.get_today_class_notify_text()
 
 section("开课与下课")
 set_time(period_time(4))
-student_a_growth = student_a.child_growth
-assert student_a_growth is not None
+assert growth.has(student_a.cid)
+student_a_growth = child_growth(student_a.cid)
 student_a_growth.attend_class_count = 0
 now_class = sex_class_handle.start_sex_class(70)
 check(
@@ -333,7 +307,7 @@ check(
 check(
     "到场学生记出勤",
     student_a_growth.attend_class_count == 1
-    and growth_handle.get_child_growth(202).attend_class_count == 1,
+    and child_growth(202).attend_class_count == 1,
 )
 check("当前主修科目 70", sex_class_handle.get_now_class_ability() == 70)
 check(
@@ -466,14 +440,14 @@ adult_attend = make_character(302, "路过的成年干员", 21)
 sex_class_handle.settle_attend(302)
 check(
     "非学生的成年干员：不记、不惰性创建养成数据",
-    adult_attend.child_growth is None,
+    growth.of(adult_attend.cid) is None,
 )
 adult_student = make_character(303, "成年学生", 152)
 sex_class_handle.settle_attend(303)
 check(
     "成年学生：记一节",
-    adult_student.child_growth is not None
-    and adult_student.child_growth.attend_class_count == 1,
+    (_asg := growth.of(adult_student.cid)) is not None
+    and _asg.attend_class_count == 1,
 )
 
 section("Plan 26 §3.5：提前几分钟开讲预约的课，开的就是预约那节")
@@ -608,10 +582,10 @@ move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 kernel_data.put(flags.set, student_a.cid, is_h=False)
 set_time(period_time(1) + datetime.timedelta(minutes=5))
-_attend = growth_handle.get_child_growth(201).attend_class_count
+_attend = child_growth(201).attend_class_count
 sex_class_handle.start_sex_class(70)
 sex_class_handle.end_sex_class()
-_first = growth_handle.get_child_growth(201).attend_class_count
+_first = child_growth(201).attend_class_count
 kernel_data.put(flags.set, student_a.cid, is_h=False)
 set_time(period_time(1) + datetime.timedelta(minutes=15))
 sex_class_handle.start_sex_class(70)
@@ -619,8 +593,8 @@ sex_class_handle.end_sex_class()
 check(
     "每次开课单独记一次（用户拍板，复查时别当成重复计数去重）：开课 +1，同一节下课后再开又 +1",
     _first == _attend + 1
-    and growth_handle.get_child_growth(201).attend_class_count == _attend + 2,
-    (_attend, _first, growth_handle.get_child_growth(201).attend_class_count),
+    and child_growth(201).attend_class_count == _attend + 2,
+    (_attend, _first, child_growth(201).attend_class_count),
 )
 kernel_data.put(flags.set, student_a.cid, is_h=False)
 education.clear_temp_classes()
@@ -631,30 +605,30 @@ kernel_data.set_world(modes.set_group_sex, False)
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 set_time(period_time(2) + datetime.timedelta(minutes=5))
-growth_handle.get_child_growth(201).last_absent_period = [
+child_growth(201).last_absent_period = [
     game_time.now().toordinal(),
     2,
 ]
-_attend = growth_handle.get_child_growth(201).attend_class_count
+_attend = child_growth(201).attend_class_count
 sex_class_handle.start_sex_class(70, [201])
 check(
     "开课时到场的学生这一节已缺课：不记出勤（开课传此刻 game_time.now()）",
-    growth_handle.get_child_growth(201).attend_class_count == _attend,
+    child_growth(201).attend_class_count == _attend,
 )
 sex_class_handle.end_sex_class()
 kernel_data.put(flags.set, student_a.cid, is_h=False)
 sex_class_handle.settle_attend(201)
 check(
     "722 晚到（取学生的行为开始时刻）：同一节同样不记",
-    growth_handle.get_child_growth(201).attend_class_count == _attend,
+    child_growth(201).attend_class_count == _attend,
 )
 set_time(period_time(3) + datetime.timedelta(minutes=5))
 sex_class_handle.settle_attend(201)
 check(
     "下一节没缺课：照常记",
-    growth_handle.get_child_growth(201).attend_class_count == _attend + 1,
+    child_growth(201).attend_class_count == _attend + 1,
 )
-growth_handle.get_child_growth(201).last_absent_period = []
+child_growth(201).last_absent_period = []
 education.clear_temp_classes()
 
 section(
@@ -800,7 +774,7 @@ kernel_data.set_world(modes.set_group_sex, False)
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 kernel_data.put(flags.set, student_a.cid, is_h=False)
-_g201 = growth_handle.get_child_growth(201)
+_g201 = child_growth(201)
 _l3_early = period_time(5) - datetime.timedelta(minutes=5)
 check(
     "L3 前置：14:40 开讲还在上一节（节次 4），预约的是 14:45 开始的节次 5",
@@ -1129,7 +1103,7 @@ section(
 )
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
-_g201 = growth_handle.get_child_growth(201)
+_g201 = child_growth(201)
 _g201.last_absent_period = []
 _g201.last_attend_period = []
 set_time(period_time(2) + datetime.timedelta(minutes=5))
@@ -1257,7 +1231,7 @@ check(
     204 in _l8_list,
     _l8_list,
 )
-_g204 = growth_handle.get_child_growth(204)
+_g204 = child_growth(204)
 _attend, _sex = _g204.attend_class_count, _g204.sex_class_count
 sex_class_handle.start_sex_class(72, _l8_list)
 check(

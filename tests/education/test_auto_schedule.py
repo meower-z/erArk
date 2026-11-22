@@ -2,8 +2,9 @@
 """auto_schedule：一键排课与一键选课"""
 
 from _bootstrap import (
+    child_growth,
+    growth,
     auto_schedule,
-    cache,
     check,
     clear_schedules,
     education,
@@ -184,8 +185,8 @@ ca.ability(student)[45] = 8
 clear_schedules()
 schedule_handle.set_class_cell(room_list[0], 0, 0, 45, 101)
 schedule_handle.set_class_cell(room_list[1], 0, 0, 43, 103)
-student_growth = cache.character_data[201].child_growth
-assert student_growth is not None
+assert growth.has(201)
+student_growth = child_growth(201)
 student_growth.selected_course = {}
 auto_schedule.auto_fill_selected_course(201)
 check(

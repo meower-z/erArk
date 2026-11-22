@@ -508,7 +508,7 @@ class MinimalWorld:
             del cache.character_data[cid]
             raise
         if cid:
-            cache.npc_id_got.add(cid)
+            kernel_data.put(kernel_data.domain("roster").add, cid)
         scene.character_list.add(cid)
         return cd
 

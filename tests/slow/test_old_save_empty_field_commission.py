@@ -68,7 +68,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         """
         return min(
             cid
-            for cid in self.cache.npc_id_got
+            for cid in kernel_data.domain("roster").active()
             if cid != 0
             and self.cache.character_data[cid].relationship.father_id != 0
         )

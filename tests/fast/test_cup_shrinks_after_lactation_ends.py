@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from Script.Design import handle_talent
 from Script.Kernel import core
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, pregnancy
 from Script.Modules.gameplay_resolution import working
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
@@ -82,10 +82,9 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         tuple -- (罩杯素质id列表, 涨奶标记)
         """
         handle_talent.npc_b_talent_change_for_lactation_flag(cid)
-        cd = self.cache.character_data[cid]
-        return [
-            t for t in CUPS if ca.talent(cid)[t]
-        ], cd.pregnancy.lactation_flag
+        return [t for t in CUPS if ca.talent(cid)[t]], pregnancy.of(
+            cid
+        ).lactation_flag
 
     def test_stop_lactation_shrinks_cup_once(self) -> None:
         """涨奶后用停乳药：罩杯缩回涨奶前的大小，只缩一次"""
@@ -101,7 +100,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     def test_stuck_old_save_repaired_once(self) -> None:
         """旧存档里卡住的状态（没有泌乳素质、涨奶标记还在、奶量为 0）：第一次结算修复，只修一次"""
         cd = self.make(2, 123)
-        cd.pregnancy.lactation_flag = True
+        pregnancy.update(cd.cid, lactation_flag=True)
         needs.set(cd.cid, milk=0)
         self.assertEqual(self.settle(2), ([122], False))
         self.assertEqual(self.settle(2), ([122], False))

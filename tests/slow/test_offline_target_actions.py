@@ -68,7 +68,7 @@ class OfflineTargetActionsTest(SlowTestCase):
             for cid in sorted(self.cache.npc_tem_data)
             if cid
             and cid in self.cache.character_data
-            and cid not in self.cache.npc_id_got
+            and cid not in kernel_data.domain("roster").active()
         )
 
     def test_nursery_care_from_panel_cares(self) -> None:
@@ -108,7 +108,9 @@ class OfflineTargetActionsTest(SlowTestCase):
         from Script.Settle import default
         from tests import world
 
-        bagged_id = sorted(i for i in self.cache.npc_id_got if i)[0]
+        bagged_id = sorted(
+            i for i in kernel_data.domain("roster").active() if i
+        )[0]
         player = self.cache.character_data[0]
         self.world.move(bagged_id, player.position)
         player.target_character_id = bagged_id
@@ -118,10 +120,11 @@ class OfflineTargetActionsTest(SlowTestCase):
         kernel_data.put(
             kernel_data.domain("flags").set, bagged_id, be_bagged=True
         )
-        default.handle_chara_off_line(
-            bagged_id, 1, game_type.CharacterStatusChange(), game_time.now()
-        )
-        self.assertNotIn(bagged_id, self.cache.npc_id_got)
+        with kernel_data.writing():
+            default.handle_chara_off_line(
+                bagged_id, 1, game_type.CharacterStatusChange(), game_time.now()
+            )
+        self.assertNotIn(bagged_id, kernel_data.domain("roster").active())
 
         def pick() -> None:
             """玩家点下从袋中放出来"""
@@ -134,7 +137,7 @@ class OfflineTargetActionsTest(SlowTestCase):
         )
         self.assertEqual(
             (
-                bagged_id in self.cache.npc_id_got,
+                bagged_id in kernel_data.domain("roster").active(),
                 kernel_data.domain("flags").get(bagged_id, "be_bagged"),
             ),
             (True, False),

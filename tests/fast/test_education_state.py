@@ -12,9 +12,8 @@
 from types import SimpleNamespace
 
 from Script.Config import game_config
-from Script.Core import game_type
 from Script.Kernel import core
-from Script.Modules.domains import education
+from Script.Modules.domains import education, growth
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state, upgrade
 from Script.System.Education_System import schedule_template_handle
@@ -222,9 +221,8 @@ class EducationStateTest(FastTestCase):
         self.assertTrue(self.flagged("EDU-10"))
         education.put_template(1, {"name": "方案一", "slot": {0: valid_ent}})
 
-        growth = game_type.CHILD_GROWTH()
-        growth.schedule_template_id = 99
-        self.cache.character_data[1].child_growth = growth
+        with growth.editing(1) as cg:
+            cg.schedule_template_id = 99
         self.assertTrue(self.flagged("EDU-11"))
 
 

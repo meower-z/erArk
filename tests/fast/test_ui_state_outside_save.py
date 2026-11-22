@@ -19,7 +19,7 @@ from unittest import mock
 
 from Script.Config import normal_config
 from Script.Core import constant, game_type, save_handle
-from Script.Modules.domains import country
+from Script.Modules.domains import country, roster
 from Script.Modules.save_load import index
 from Script.UI.Moudle import view
 from tests import kernel_data
@@ -51,7 +51,7 @@ class UiStateOutsideSaveTest(FastTestCase):
         folder = self.enterContext(tempfile.TemporaryDirectory())
         self.enterContext(mock.patch.object(index, "SAVE_DIR", folder))
         self.world.chara(0, "博士")
-        self.cache.npc_id_got = {0}
+        kernel_data.put(roster.set_active, {0})
         kernel_data.written(country.fill)
 
     def test_ui_choices_leave_save_alone(self) -> None:

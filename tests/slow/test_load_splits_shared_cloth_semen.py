@@ -16,6 +16,7 @@
 import shutil
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 SAVE_ID = "test_load_splits_shared_cloth_semen"
 """ 本测试写入 save/ 的存档id，测试结束时删掉 """
@@ -87,7 +88,7 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
         whole_dict_id = self.npc("阿米娅")
         shared_list_id, short_id = sorted(
             cid
-            for cid in self.cache.npc_id_got
+            for cid in kernel_data.domain("roster").active()
             if cid not in (0, whole_dict_id)
             and self.cache.character_data[cid].cloth.cloth_wear[SOCKS]
         )[:2]

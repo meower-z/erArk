@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -240,7 +241,7 @@ class ZeroMinutePanelsTest(SlowTestCase):
         self.assertEqual(settings[2], 1)
         self.assertEqual(settings[7], 1)
 
-        cid = sorted(self.cache.npc_id_got)[0]
+        cid = sorted(kernel_data.domain("roster").active())[0]
         setting = sorted(game_config.config_chara_setting)[0]
         before = self.cache.character_data[cid].chara_setting.get(setting, 0)
         self.run_edit(

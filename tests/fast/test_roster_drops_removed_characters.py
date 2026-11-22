@@ -9,7 +9,9 @@ GameState 由缓存投影出来（actions.state_from_cache，同读档、开新�
 """
 
 from Script.Kernel import core
+from Script.Modules.domains import roster
 from Script.Modules.gameplay_resolution import actions, plan_queue
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 
@@ -28,11 +30,11 @@ class RosterDropsRemovedTest(FastTestCase):
         self.assertFalse(core.in_settlement(), "内核不在结算里")
         for cid, name in ((0, "博士"), (1, "阿米娅"), (2, "凯尔希")):
             self.world.chara(cid, name)
-        self.cache.npc_id_got = {1, 2}
+        kernel_data.put(roster.set_active, {1, 2})
         game = actions.state_from_cache()
         self.assertEqual(sorted(game.characters), ["0", "1", "2"])
         core.reset_state(game)
-        self.cache.npc_id_got = {1}
+        kernel_data.put(roster.set_active, {1})
         effects = plan_queue.roster_changes()
         self.assertEqual(effects, (core.RemoveCharacter("2"),))
         after = core.preview(game, effects)

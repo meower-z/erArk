@@ -53,13 +53,14 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         """
         super().setUp()
         from Script.Design import map_handle, talk
+        from Script.Modules.domains import roster
 
         # 母亲一侧必显二段的口上显示与本条无关，不显示
         self.addCleanup(
             setattr, talk, "must_show_talk_check", talk.must_show_talk_check
         )
         talk.must_show_talk_check = lambda character_id: None
-        self.mother_id = min(cid for cid in self.cache.npc_id_got if cid)
+        self.mother_id = min(cid for cid in roster.active() if cid)
         self.mother = self.cache.character_data[self.mother_id]
         self.baby_id_list = [
             kernel_data.born(self.mother_id, f"测试女儿{index}")
@@ -103,10 +104,15 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         无
         """
         from Script.Design import game_time
+        from Script.Modules.domains import pregnancy
 
         for baby_id in self.baby_id_list:
-            self.cache.character_data[baby_id].pregnancy.born_time = (
-                game_time.get_sub_date(day=-day, old_date=game_time.now())
+            kernel_data.put(
+                pregnancy.update,
+                baby_id,
+                born_time=game_time.get_sub_date(
+                    day=-day, old_date=game_time.now()
+                ),
             )
 
     def test_growth_accelerate_drug_tip(self) -> None:

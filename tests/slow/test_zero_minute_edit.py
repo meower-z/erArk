@@ -189,7 +189,7 @@ class ZeroMinuteEditTest(SlowTestCase):
         from Script.System.Instruct_System import handle_instruct
 
         pl = self.cache.character_data[0]
-        target = sorted(self.cache.npc_id_got)[0]
+        target = sorted(kernel_data.domain("roster").active())[0]
         self.world.move(target, pl.position)
         pl.target_character_id = target
         scene = map_handle.get_map_system_path_str_for_list(pl.position)

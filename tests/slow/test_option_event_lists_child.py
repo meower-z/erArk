@@ -47,6 +47,8 @@ class OptionEventListsChildTest(SlowTestCase):
         game_type.Character -- 星熊的角色数据
         """
         from Script.Design import handle_premise
+        from Script.Modules.domains import roster
+        from tests import kernel_data
 
         player = self.cache.character_data[0]
         npc_id = next(
@@ -55,7 +57,7 @@ class OptionEventListsChildTest(SlowTestCase):
             if chara.adv == ADV_ID
         )
         npc = self.cache.character_data[npc_id]
-        self.cache.npc_id_got.add(npc_id)
+        kernel_data.put(roster.add, npc_id)
         self.world.move(npc_id, player.position)
         ca.talent(npc_id)[FALL_3_TALENT] = 1
         npc.favorability[0] = FAVORABILITY

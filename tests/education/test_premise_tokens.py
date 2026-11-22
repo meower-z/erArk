@@ -1,39 +1,15 @@
 # -*- coding: UTF-8 -*-
 """前提与结算 token：CVP Course / CourseType / CourseShowOff / Growth、CVE Growth、实操课与岗位前提、女儿前提"""
 
-from _bootstrap import (
-    DEFAULT_TIME,
-    SCENE_DORM,
-    SCENE_EDU_ENTRY,
-    _,
-    check,
-    class_ai,
-    classroom_path,
-    clear_schedules,
-    constant,
-    constant_promise,
-    datetime,
-    education,
-    education_constant,
-    finish,
-    game_config,
-    game_time,
-    game_type,
-    growth_handle,
-    handle_premise,
-    make_character,
-    move_to,
-    open_all_classroom,
-    period_time,
-    pl,
-    remove_character,
-    schedule_handle,
-    schedule_template_handle,
-    section,
-    set_time,
-    settle_behavior,
-    sex_class_handle,
-)
+from _bootstrap import child_growth, growth, pregnancy, DEFAULT_TIME
+from _bootstrap import SCENE_DORM, SCENE_EDU_ENTRY, _, check, class_ai
+from _bootstrap import classroom_path, clear_schedules, constant
+from _bootstrap import constant_promise, datetime, education
+from _bootstrap import education_constant, finish, game_config, game_time
+from _bootstrap import game_type, handle_premise, make_character, move_to
+from _bootstrap import open_all_classroom, period_time, pl, remove_character
+from _bootstrap import schedule_handle, schedule_template_handle, section
+from _bootstrap import set_time, settle_behavior, sex_class_handle
 from Script.Design import handle_ability, second_behavior
 from Script.Modules.domains import flags, modes
 from tests import chara_abilities as ca, kernel_data
@@ -55,7 +31,7 @@ student = make_character(
     position=classroom_path(ROOM1),
 )
 child = make_character(
-    202, "女儿B", 152, daughter=True, stage=102, mother_id=102, born_days=120
+    202, "女儿B", 152, daughter=True, stage=103, mother_id=102, born_days=280
 )
 adult = make_character(301, "成年干员", 21)
 P = constant_promise.Premise
@@ -231,7 +207,7 @@ check(
     HP("CVP_A1_Course|43_G_0", 201) == 1
     and HP("CVP_A1_CourseType|5_E_1", 201) == 1,
 )
-growth_handle.get_child_growth(201).show_off_ability = {45: 2}
+child_growth(201).show_off_ability = {45: 2}
 check(
     "CourseShowOff：待炫耀的科目",
     HP("CVP_A1_CourseShowOff|45_G_0", 201) == 1
@@ -261,7 +237,7 @@ check("过了这一节就不成立", HP("CVP_A1_Course|74_G_0", 0) == 0)
 set_time(period_time(5))
 
 section("Growth 系列 CVP / CVE")
-g = growth_handle.get_child_growth(201)
+g = child_growth(201)
 g.attend_class_count = 8
 g.absent_count = 2
 check(
@@ -524,7 +500,7 @@ section(
 clear_schedules()
 set_time(period_time(0))
 student.work.work_type = 152
-growth_handle.get_child_growth(201).selected_course = {}
+child_growth(201).selected_course = {}
 schedule_handle.set_selected_course(201, 1, 2, E.COURSE_TYPE_THEORY, ROOM1)
 check(
     "个人课表只有一格已停课的教室课：self_have_any_course 不成立（此前课表非空即成立）",
@@ -537,14 +513,14 @@ check("改了岗：课表还在也不成立", HP(P.SELF_HAVE_ANY_COURSE, 201) ==
 student.work.work_type = 152
 schedule_handle.clear_selected_course(201, 1, 2)
 clear_schedules()
-growth_handle.get_child_growth(201).skip_count = 3
+child_growth(201).skip_count = 3
 check(
     "CVP Growth|24 累计翘课数",
     HP("CVP_A1_Growth|24_GE_3", 201) == 1
     and HP("CVP_A1_Growth|24_G_3", 201) == 0
     and HP("CVP_A1_Growth|24_E_0", 301) == 1,
 )
-growth_handle.get_child_growth(201).skip_count = 0
+child_growth(201).skip_count = 0
 check(
     "前提 target_report_card_checkable 已注册、挂在 1036 的前提串末尾",
     "target_report_card_checkable" in constant.handle_premise_data
@@ -565,12 +541,12 @@ check(
     not all(HP(token, 0) for token in report_tokens)
     and HP(P.TARGET_REPORT_CARD_CHECKABLE, 0) == 0,
 )
-growth_handle.get_child_growth(206).report_card_flag = True
+child_growth(206).report_card_flag = True
 check(
     "她还有一份没看过的成绩单：成立（否则养成总览的待查看永远消不掉）",
     all(HP(token, 0) for token in report_tokens),
 )
-growth_handle.get_child_growth(206).report_card_flag = False
+child_growth(206).report_card_flag = False
 grown.work.work_type = 152
 check(
     "成年后仍在学生岗的女儿：成立", all(HP(token, 0) for token in report_tokens)
@@ -606,7 +582,7 @@ for name in _new_premise_list:
     check(f"L11 / L13 前提 {name} 已注册", name in constant.handle_premise_data)
 clear_schedules()
 set_time(period_time(0))
-growth_handle.get_child_growth(201).selected_course = {}
+child_growth(201).selected_course = {}
 _type_premise = {
     E.COURSE_TYPE_THEORY: P.SELF_HAVE_THEORY_COURSE,
     E.COURSE_TYPE_PRACTICE: P.SELF_HAVE_PRACTICE_COURSE,
@@ -679,16 +655,16 @@ check(
 student.work.work_type = 152
 check(
     "L11 前提只读：没有养成数据的干员五个都不成立，也不被惰性创建养成数据",
-    adult.child_growth is None
+    growth.of(adult.cid) is None
     and course_type_hit(301) == []
-    and adult.child_growth is None,
+    and growth.of(adult.cid) is None,
 )
-growth_handle.get_child_growth(201).selected_course = {}
+child_growth(201).selected_course = {}
 clear_schedules()
 
 section("Plan 31 §3.14 L13：self_birthday_today 读 pregnancy.born_time")
-_saved_born_time = student.pregnancy.born_time
-student.pregnancy.born_time = datetime.datetime(2025, 9, 7, 6, 30)
+_saved_born_time = pregnancy.of(student.cid).born_time
+pregnancy.update(student.cid, born_time=datetime.datetime(2025, 9, 7, 6, 30))
 set_time(datetime.datetime(2026, 9, 7, 0, 5))
 check("L13 出生的月日与今天相同：成立", HP(P.SELF_BIRTHDAY_TODAY, 201) == 1)
 set_time(datetime.datetime(2026, 9, 8, 0, 5))
@@ -696,7 +672,7 @@ check(
     "L13 第二天：不成立（此前没有生日前提，通用 3「今天是{Name}的生日」任意一天都抽得到）",
     HP(P.SELF_BIRTHDAY_TODAY, 201) == 0,
 )
-student.pregnancy.born_time = game_time.GameTime(2025, 12, 30, 12, 0)
+pregnancy.update(student.cid, born_time=game_time.GameTime(2025, 12, 30, 12, 0))
 _last_day_birthday = []
 for _now_time in (
     datetime.datetime(2026, 12, 30, 9, 0),
@@ -712,9 +688,10 @@ check(
 set_time(datetime.datetime(2027, 1, 1, 9, 0))
 check(
     "L13 born_time 还是缺省值（公元 1 年 1 月 1 日）的干员：1 月 1 日也不成立",
-    adult.pregnancy.born_time.year == 1 and HP(P.SELF_BIRTHDAY_TODAY, 301) == 0,
+    pregnancy.of(adult.cid).born_time.year == 1
+    and HP(P.SELF_BIRTHDAY_TODAY, 301) == 0,
 )
-student.pregnancy.born_time = _saved_born_time
+pregnancy.update(student.cid, born_time=_saved_born_time)
 set_time(period_time(0))
 
 section(
@@ -807,7 +784,7 @@ check(
 )
 
 section("Plan 31 §3.6（L2）：<翘> 只认今天挂上的翘课 flag")
-_growth_201 = growth_handle.get_child_growth(201)
+_growth_201 = child_growth(201)
 _growth_201.skip_class_flag = True
 _growth_201.skip_class_day = game_time.now().toordinal() - 1
 _tip = character_info_head.get_now_class_tip(201)
@@ -922,7 +899,7 @@ check(
 )
 clear_schedules()
 set_time(period_time(0))
-growth_handle.get_child_growth(201).selected_course = {}
+child_growth(201).selected_course = {}
 _hall = schedule_handle.get_classroom_list(E.COURSE_TYPE_PUBLIC)[0]
 schedule_handle.set_class_cell(ROOM1, 1, 2, 45, 101)
 schedule_handle.set_selected_course(201, 1, 2, E.COURSE_TYPE_THEORY, ROOM1)
@@ -943,13 +920,13 @@ check(
 student.work.work_type = 21
 check("L26 改了岗：课表还在也不成立", HP(P.SELF_HAVE_PUBLIC_COURSE, 201) == 0)
 student.work.work_type = 152
-_adult_growth = adult.child_growth
+_adult_growth = growth.of(adult.cid)
 check(
     "L26 没有养成数据的干员：不成立，也不被惰性创建养成数据",
     HP(P.SELF_HAVE_PUBLIC_COURSE, 301) == 0
-    and adult.child_growth is _adult_growth,
+    and growth.of(adult.cid) is _adult_growth,
 )
-growth_handle.get_child_growth(201).selected_course = {}
+child_growth(201).selected_course = {}
 clear_schedules()
 
 section(
@@ -1013,7 +990,7 @@ section(
 
 clear_schedules()
 set_time(period_time(0))
-_g201 = growth_handle.get_child_growth(201)
+_g201 = child_growth(201)
 _g201.selected_course = {}
 _g201.skip_class_flag = True
 _g201.skip_class_day = game_time.now().toordinal()
@@ -1125,13 +1102,13 @@ _l20_worker = make_character(
     born_days=300,
 )
 for _one in (_l20_student, _l20_worker):
-    growth_handle.get_child_growth(_one.cid).show_off_ability = {}
+    child_growth(_one.cid).show_off_ability = {}
     ca.juel(_one).replace(dict.fromkeys(ca.juel(_one), 10**7))
     ca.experience(_one).replace(dict.fromkeys(ca.experience(_one), 10**7))
     handle_ability.gain_ability(_one.cid)
-_l20_student_growth = _l20_student.child_growth
+_l20_student_growth = growth.of(_l20_student.cid)
 assert _l20_student_growth is not None
-_l20_worker_growth = _l20_worker.child_growth
+_l20_worker_growth = growth.of(_l20_worker.cid)
 assert _l20_worker_growth is not None
 check(
     "L20 对照：学生岗的萝莉女儿，升了级的科目记进待炫耀",

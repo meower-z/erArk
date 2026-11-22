@@ -1,27 +1,12 @@
 # -*- coding: UTF-8 -*-
 """growth_handle：速度曲线、教育区加成、成长停滞、上课/见学结算、成年结算、养成数值、候选名单"""
 
-from _bootstrap import (
-    DEFAULT_TIME,
-    _,
-    cache,
-    check,
-    clear_schedules,
-    datetime,
-    education_constant,
-    finish,
-    game_config,
-    game_time,
-    growth_handle,
-    make_character,
-    open_all_classroom,
-    period_time,
-    remove_character,
-    schedule_handle,
-    schedule_template_handle,
-    section,
-    set_time,
-)
+from _bootstrap import child_growth, growth, pregnancy, roster, DEFAULT_TIME
+from _bootstrap import _, check, clear_schedules, datetime, education_constant
+from _bootstrap import finish, game_config, game_time, growth_handle
+from _bootstrap import make_character, open_all_classroom, period_time
+from _bootstrap import remove_character, schedule_handle
+from _bootstrap import schedule_template_handle, section, set_time
 from Script.System.Pregnancy_System import pregnancy_constant  # noqa: E402
 from Script.Design import handle_ability
 import inspect
@@ -122,8 +107,8 @@ check(
     ),
     exp_gain,
 )
-student_growth = student.child_growth
-assert student_growth is not None
+assert growth.of(student.cid) is not None
+student_growth = child_growth(student.cid)
 check("记了一节出勤", student_growth.attend_class_count == 1)
 check(
     "记下了本节的去重标记",
@@ -242,7 +227,7 @@ cook_work = next(
 )
 
 section("成年结算")
-g = growth_handle.get_child_growth(201)
+g = child_growth(201)
 g.personality_point = {}
 text = growth_handle.settle_personality_talent(201)
 check("全为 0：性格尚未定型", "尚未定型" in text)
@@ -294,11 +279,15 @@ GIRL_SPAN = (
     pregnancy_constant.GROW_TO_GIRL_DAY - pregnancy_constant.GROW_TO_LOLI_DAY
 )
 """ 萝莉期一共的天数 """
-student.pregnancy.born_time = NOW - datetime.timedelta(
-    days=pregnancy_constant.GROW_TO_LOLI_DAY + 30
+pregnancy.update(
+    student.cid,
+    born_time=NOW
+    - datetime.timedelta(days=pregnancy_constant.GROW_TO_LOLI_DAY + 30),
 )
-child.pregnancy.born_time = NOW - datetime.timedelta(
-    days=pregnancy_constant.REARING_COMPLETE_DAY + 30
+pregnancy.update(
+    child.cid,
+    born_time=NOW
+    - datetime.timedelta(days=pregnancy_constant.REARING_COMPLETE_DAY + 30),
 )
 check(
     "阶段读取",
@@ -374,8 +363,9 @@ check(
     growth_handle.get_student_candidate_list() == [201],
 )
 check(
-    "个人课表名单 = 学生岗（Plan 24 口径 1）",
-    growth_handle.get_course_candidate_list() == [201, 202, 301],
+    "个人课表名单 = 在编学生岗（离线的幼女 202 不在 roster.active）",
+    not roster.has(202)
+    and growth_handle.get_course_candidate_list() == [201, 301],
 )
 baby = make_character(
     203, "婴儿", 152, daughter=True, stage=101, mother_id=102, born_days=10
@@ -383,7 +373,7 @@ baby = make_character(
 check("婴儿不进女儿名单", 203 not in growth_handle.get_student_candidate_list())
 check(
     "婴儿不在 npc_id_got（夹具与真实婴儿对齐，Plan 28 §3.9），学生岗也不进个人课表名单",
-    203 not in cache.npc_id_got
+    not roster.has(203)
     and 203 not in growth_handle.get_course_candidate_list(),
 )
 student.work.work_type = 0
@@ -397,13 +387,13 @@ student.work.work_type = education_constant.STUDENT_WORK_TYPE
 section("待炫耀只记课程科目、只记幼女/萝莉期的女儿（第五轮）")
 
 for one in (student, adult):
-    growth_handle.get_child_growth(one.cid).show_off_ability = {}
+    child_growth(one.cid).show_off_ability = {}
     for juel_id in list(ca.juel(one)):
         ca.juel(one)[juel_id] = 10**7
     for exp_id_one in list(ca.experience(one)):
         ca.experience(one)[exp_id_one] = 10**7
     handle_ability.gain_ability(one.cid)
-student_show = growth_handle.get_child_growth(201).show_off_ability
+student_show = child_growth(201).show_off_ability
 check(
     "学生岗的萝莉女儿：升了级的科目记进待炫耀",
     len(student_show) > 0,
@@ -416,8 +406,8 @@ check(
 )
 check(
     "成年学生：升级不记待炫耀（口上只写给女儿）",
-    growth_handle.get_child_growth(301).show_off_ability == {},
-    growth_handle.get_child_growth(301).show_off_ability,
+    child_growth(301).show_off_ability == {},
+    child_growth(301).show_off_ability,
 )
 
 section("Plan 26 §3.1：性技科目的课堂只发理论经验")
@@ -476,8 +466,8 @@ check(
         for e in real_sex_exp
     ),
 )
-theory_growth = theory_student.child_growth
-assert theory_growth is not None
+assert growth.has(theory_student.cid)
+theory_growth = child_growth(theory_student.cid)
 theory_growth.last_attend_period = []
 learn_before = theory_student.status_data.get(E6.LEARN_STATE_ID, 0)
 exp_snapshot = dict(ca.experience(theory_student))
@@ -494,16 +484,22 @@ section(
 )
 # 今天 2026-09-07 09:00；幼女、萝莉、少女的本阶段都从 30 天前（2026-06-07 09:00）起，婴儿出生 10 天（2026-06-27 09:00）
 set_time(period_time(0))
-student.pregnancy.born_time = NOW - datetime.timedelta(
-    days=pregnancy_constant.GROW_TO_LOLI_DAY + 30
+pregnancy.update(
+    student.cid,
+    born_time=NOW
+    - datetime.timedelta(days=pregnancy_constant.GROW_TO_LOLI_DAY + 30),
 )
-child.pregnancy.born_time = NOW - datetime.timedelta(
-    days=pregnancy_constant.REARING_COMPLETE_DAY + 30
+pregnancy.update(
+    child.cid,
+    born_time=NOW
+    - datetime.timedelta(days=pregnancy_constant.REARING_COMPLETE_DAY + 30),
 )
-baby.pregnancy.born_time = NOW - datetime.timedelta(days=10)
+pregnancy.update(baby.cid, born_time=NOW - datetime.timedelta(days=10))
 teen = make_character(208, "少女", 152, daughter=True, stage=104, mother_id=102)
-teen.pregnancy.born_time = NOW - datetime.timedelta(
-    days=pregnancy_constant.GROW_TO_GIRL_DAY + 30
+pregnancy.update(
+    teen.cid,
+    born_time=NOW
+    - datetime.timedelta(days=pregnancy_constant.GROW_TO_GIRL_DAY + 30),
 )
 check(
     "各阶段起点：婴儿 0 / 幼女、萝莉、少女各为对应的成长阈值，成年干员 0",
@@ -536,15 +532,19 @@ check(
     growth_handle.get_stage_day(301) == 0
     and growth_handle.get_stage_day(999) == 0,
 )
-student.pregnancy.born_time = NOW - datetime.timedelta(
-    days=pregnancy_constant.GROW_TO_LOLI_DAY - 30
+pregnancy.update(
+    student.cid,
+    born_time=NOW
+    - datetime.timedelta(days=pregnancy_constant.GROW_TO_LOLI_DAY - 30),
 )
 check(
     "有效天数低于本阶段起点（成长停滞解除前的近似）：夹到 0",
     growth_handle.get_stage_day(201) == 0,
 )
-student.pregnancy.born_time = NOW - datetime.timedelta(
-    days=pregnancy_constant.GROW_TO_LOLI_DAY + 30
+pregnancy.update(
+    student.cid,
+    born_time=NOW
+    - datetime.timedelta(days=pregnancy_constant.GROW_TO_LOLI_DAY + 30),
 )
 check(
     "M1 阶段进度 = 本阶段已过天数 ÷ 本阶段总天数：幼女 30 ÷ 幼女期天数、萝莉 30 ÷ 萝莉期天数，少女 100",
@@ -556,7 +556,7 @@ check(
 lolified = make_character(219, "萝莉化的干员", 21, stage=103)
 check(
     "M1 没有可认出生日的萝莉（不是女儿、born_time 为缺省的公元 1 年）：本阶段天数 0、进度按走完 100",
-    lolified.pregnancy.born_time.year == 1
+    pregnancy.of(lolified.cid).born_time.year == 1
     and growth_handle.get_stage_day(219) == 0
     and growth_handle.get_stage_progress(219) == 100.0,
 )
@@ -572,7 +572,7 @@ check(
     "养成数值 24 读累计翘课数；没有养成数据为 0",
     growth_handle.get_growth_value(201, V.GROWTH_VALUE_SKIP) == 3.0
     and growth_handle.get_growth_value(209, V.GROWTH_VALUE_SKIP) == 0.0
-    and no_growth.child_growth is None,
+    and growth.of(no_growth.cid) is None,
 )
 g.skip_count = 0
 set_time(period_time(2))
@@ -600,7 +600,7 @@ check(
     "没有养成数据、角色不存在：False，且不惰性创建",
     not growth_handle.judge_absent_this_period(209, period_time(2))
     and not growth_handle.judge_absent_this_period(999, period_time(2))
-    and no_growth.child_growth is None,
+    and growth.of(no_growth.cid) is None,
 )
 g.last_absent_period = []
 student.work.work_type = 152
@@ -682,7 +682,7 @@ check(
     "L12 养成数值 25 读累计实操课次数；没有养成数据为 0",
     growth_handle.get_growth_value(201, V.GROWTH_VALUE_SEX_CLASS) == 4.0
     and growth_handle.get_growth_value(209, V.GROWTH_VALUE_SEX_CLASS) == 0.0
-    and no_growth.child_growth is None,
+    and growth.of(no_growth.cid) is None,
 )
 g.sex_class_count = 0
 schedule_handle.set_selected_course(201, 3, 0, E6.COURSE_TYPE_THEORY, ROOM1)
@@ -712,7 +712,7 @@ check(
     "L11 没有养成数据、角色不存在都不算，且不惰性创建养成数据",
     not growth_handle.judge_have_course_type(209, E6.COURSE_TYPE_THEORY)
     and not growth_handle.judge_have_course_type(999, E6.COURSE_TYPE_THEORY)
-    and no_growth.child_growth is None,
+    and growth.of(no_growth.cid) is None,
 )
 for _p in (0, 1):
     schedule_handle.clear_selected_course(201, 3, _p)
@@ -771,12 +771,12 @@ section(
     "Plan 32 M1：阶段进度与出生日期无关（全年 120 个出生日期，用 world.set_clock 逐日拨时钟）"
 )
 _saved_time = game_time.now()
-_saved_born = baby.pregnancy.born_time
+_saved_born = pregnancy.of(baby.cid).born_time
 _new_count = {}
 for _month in game_time.SEASON_MONTH_LIST:
     for _day in range(1, game_time.SEASON_DAY + 1):
         # 06:00 出生，此后每天 00:05（跨天结算派养成事件的时刻）取样，直到有效成长天数满婴儿期（长成幼女）
-        baby.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
+        pregnancy.update(baby.cid, born_time=GT(2026, _month, _day, 6, 0))
         world.set_clock(GT(2026, _month, _day, 0, 5))
         _new_count[(_month, _day)] = 0
         for _step in range(pregnancy_constant.REARING_COMPLETE_DAY + 10):
@@ -799,7 +799,7 @@ check(
 )
 
 section("Plan 32 M1：9/7 出生的婴儿跨过季月交替，本阶段天数与进度只走一天")
-baby.pregnancy.born_time = GT(2026, 9, 7, 6, 0)
+pregnancy.update(baby.cid, born_time=GT(2026, 9, 7, 6, 0))
 world.set_clock(GT(2026, 9, 30, 0, 5))
 _day_before = growth_handle.get_stage_day(203)
 _progress_before = growth_handle.get_stage_progress(203)
@@ -833,15 +833,15 @@ check(
         growth_handle.get_stage_progress(203),
     ),
 )
-baby.pregnancy.born_time = _saved_born
+pregnancy.update(baby.cid, born_time=_saved_born)
 set_time(_saved_time)
 
 section("Plan 32 M3：成年后改写性格倾向即重选这一对素质")
 grown = make_character(
     210, "成年女儿", 21, daughter=True, stage=104, mother_id=102
 )
-grown.pregnancy.born_time = DT(2025, 3, 14, 9, 0)
-_g_grown = growth_handle.get_child_growth(210)
+pregnancy.update(grown.cid, born_time=DT(2025, 3, 14, 9, 0))
+_g_grown = child_growth(210)
 _g_grown.personality_point = {1: -1.0}
 growth_handle.settle_personality_talent(210)
 check(
@@ -918,7 +918,7 @@ check(
     and growth_handle.settle_personality_pair(210, 9) == 0
     and growth_handle.settle_personality_pair(211, 0) == 0
     and growth_handle.settle_personality_pair(999, 0) == 0
-    and no_growth_m3.child_growth is None,
+    and growth.of(no_growth_m3.cid) is None,
 )
 check(
     "M3 settle_adult_personality_pair：只对已成年的女儿生效（未成年女儿、成年学生返回 0）",
@@ -977,12 +977,12 @@ section(
     "Plan 32 实施复审补：M1 萝莉期 Growth|3_GE_70 的窗口（全年 120 个出生日期，用 world.set_clock 逐日拨时钟萝莉期）"
 )
 _saved_time = game_time.now()
-_saved_born_loli = student.pregnancy.born_time
+_saved_born_loli = pregnancy.of(student.cid).born_time
 _loli_ge70 = {}
 for _month in game_time.SEASON_MONTH_LIST:
     for _day in range(1, game_time.SEASON_DAY + 1):
         # 06:00 出生，此后每天 00:05（跨天结算派养成事件的时刻）取样；只数有效成长天数落在萝莉期的日子
-        student.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
+        pregnancy.update(student.cid, born_time=GT(2026, _month, _day, 6, 0))
         world.set_clock(GT(2026, _month, _day, 0, 5))
         _loli_ge70[(_month, _day)] = 0
         for _step in range(pregnancy_constant.GROW_TO_GIRL_DAY + 10):
@@ -994,7 +994,7 @@ for _month in game_time.SEASON_MONTH_LIST:
                 continue
             if growth_handle.get_stage_progress(201) >= 70:
                 _loli_ge70[(_month, _day)] += 1
-student.pregnancy.born_time = _saved_born_loli
+pregnancy.update(student.cid, born_time=_saved_born_loli)
 set_time(_saved_time)
 check(
     "M1 萝莉期：枚举了全年 120 个出生日期",
@@ -1011,11 +1011,11 @@ section(
     "Plan 32 实施复审补：M1 婴儿期阶段进度 ≥ 50 首次成立的日子严格早于 ≥ 60（逐个出生日期，真实时钟）"
 )
 _saved_time = game_time.now()
-_saved_born_baby = baby.pregnancy.born_time
+_saved_born_baby = pregnancy.of(baby.cid).born_time
 _first_gap = {}
 for _month in game_time.SEASON_MONTH_LIST:
     for _day in range(1, game_time.SEASON_DAY + 1):
-        baby.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
+        pregnancy.update(baby.cid, born_time=GT(2026, _month, _day, 6, 0))
         world.set_clock(GT(2026, _month, _day, 0, 5))
         _first: dict[int, datetime.datetime | None] = {50: None, 60: None}
         for _step in range(pregnancy_constant.REARING_COMPLETE_DAY + 10):
@@ -1032,7 +1032,7 @@ for _month in game_time.SEASON_MONTH_LIST:
             if _first[50] and _first[60] and _first[50] < _first[60]
             else 0
         )
-baby.pregnancy.born_time = _saved_born_baby
+pregnancy.update(baby.cid, born_time=_saved_born_baby)
 set_time(_saved_time)
 _expect_gap = [
     next(
@@ -1067,8 +1067,8 @@ accel = make_character(
 _accel_born = NOW - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_LOLI_DAY + 6
 )
-accel.pregnancy.born_time = _accel_born
-accel.pregnancy.growth_acceleration_days = 30.0
+pregnancy.update(accel.cid, born_time=_accel_born)
+pregnancy.update(accel.cid, growth_acceleration_days=30.0)
 _accel_start = _accel_born + datetime.timedelta(
     days=pregnancy_constant.GROW_TO_LOLI_DAY - 30
 )
@@ -1104,7 +1104,7 @@ check(
     < 0.01,
     growth_handle.get_stage_progress(212),
 )
-accel.pregnancy.growth_acceleration_days = 30.7
+pregnancy.update(accel.cid, growth_acceleration_days=30.7)
 check(
     "M1 加速药天数带小数（30.7）按整数 30 算，与有效成长天数（get_child_grow_day）同口径",
     growth_handle.get_stage_day(212) == 36
@@ -1112,7 +1112,7 @@ check(
     == pregnancy_constant.GROW_TO_LOLI_DAY + 36,
     growth_handle.get_stage_day(212),
 )
-accel.pregnancy.growth_acceleration_days = 0.0
+pregnancy.update(accel.cid, growth_acceleration_days=0.0)
 check(
     "M1 加速药对照：同一出生日不吃药，本阶段才过 6 天",
     growth_handle.get_stage_day(212) == 6,
@@ -1126,8 +1126,8 @@ section(
 grown_b = make_character(
     213, "成年女儿乙", 21, daughter=True, stage=104, mother_id=102
 )
-grown_b.pregnancy.born_time = DT(2025, 3, 14, 9, 0)
-_g_grown_b = growth_handle.get_child_growth(213)
+pregnancy.update(grown_b.cid, born_time=DT(2025, 3, 14, 9, 0))
+_g_grown_b = child_growth(213)
 _pair_talent = E6.PERSONALITY_PAIR_TALENT
 _g_grown_b.personality_point = {0: 2.0, 1: -1.0, 2: -3.0}
 for _pair_id in _pair_talent:

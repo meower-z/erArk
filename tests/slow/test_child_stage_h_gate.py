@@ -9,6 +9,7 @@ NPC的状态机选出以她为对象的H类行为时，行为换成发呆；她�
 测试里没有任何H类指令或行为真正执行或结算：指令的处理函数换成只记下调用的替身，状态机只赋予行为。
 """
 
+from collections.abc import Mapping
 from unittest import mock
 
 from tests import chara_abilities as ca, kernel_data
@@ -39,6 +40,7 @@ class ChildStageHGateTest(SlowTestCase):
         for talent_id in AGE_TALENTS:
             ca.talent(child_id)[talent_id] = 0
         ca.talent(child_id)[stage] = 1
+        kernel_data.put(kernel_data.domain("roster").discard, child_id)
         self.world.move(child_id, self.cache.character_data[0].position)
         return child_id
 
@@ -139,20 +141,42 @@ class ChildStageHGateTest(SlowTestCase):
         )
 
     def test_child_keeps_ordinary_wait(self) -> None:
-        """102自己的等待30分钟不是H类行为：博士等待五分钟时她开始这一行动，行为与时长不变"""
+        """102自己的等待30分钟不是H类行为：离线不进在编名册与内核角色表，排定意图经开始门不变"""
         from Script.Core import constant
+        from Script.Kernel import core
+        from Script.Modules.gameplay_resolution import (
+            intent,
+            plan_queue,
+            start_gate,
+        )
 
         child_id = self.make_child(102, "杜宾")
-        child = self.cache.character_data[child_id]
         kernel_data.written(
             constant.handle_state_machine_data[
                 constant.StateMachine.WAIT_30_MIN
             ],
             child_id,
         )
-        self.instruct(constant.Instruct.WAIT)
-        self.assertEqual(
-            (child.behavior.behavior_id, child.behavior.duration),
-            (constant.Behavior.WAIT, 30),
-            "102等待30分钟之后的（行为，时长）",
+        queued = plan_queue.planned(child_id)
+        self.assertEqual(len(queued), 1)
+        direct = queued[0].copy()
+        direct.pop("queued", None)
+        act = intent.behavior_action(child_id, direct)
+        assert isinstance(act.action_data, Mapping)
+        self.assertFalse(
+            start_gate.child_stage_h(
+                child_id, constant.Behavior.WAIT, act.action_data
+            ),
+            "幼年阶段H闸不拦普通等待",
         )
+        result = start_gate.gate(act)
+        assert isinstance(result, tuple)
+        (gated,) = result
+        assert isinstance(gated.action_data, Mapping)
+        self.assertEqual(
+            (gated.action_data["behavior_id"], gated.duration),
+            (constant.Behavior.WAIT, 30),
+            "102等待30分钟经开始门之后的（行为，时长）",
+        )
+        self.instruct(constant.Instruct.WAIT)
+        self.assertNotIn(str(child_id), core.state().characters)

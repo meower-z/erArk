@@ -22,6 +22,7 @@ from Script.Core import constant
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules import load_order
+from Script.Modules.domains import roster
 from Script.Modules.gameplay_resolution import actions, intent, time_hooks
 from tests import chara_abilities as ca, world
 from tests import kernel_data
@@ -107,11 +108,13 @@ class ActionLifecycleTest(FastTestCase):
         self.world.chara(0, "博士")
         self.world.chara(AMIYA, "阿米娅")
         self.kaltsit = self.world.chara(KALTSIT, "凯尔希")
-        ca.talent(self.kaltsit)[CHILD] = 1
+        young = self.world.chara(3, "幼年对象")
+        ca.talent(young)[CHILD] = 1
+        kernel_data.put(roster.discard, 3)
         script.clear()
         script["0"] = [wait(10), wait(5), wait(15)]
         kiss = intent.Intent(
-            behavior_id=constant.Behavior.KISS_H, minutes=10, target=KALTSIT
+            behavior_id=constant.Behavior.KISS_H, minutes=10, target=3
         )
         script[str(AMIYA)] = [kiss, wait(7)] + [wait(30)] * 3
         core.load((*load_order.LOAD_ORDER, sys.modules[__name__]))

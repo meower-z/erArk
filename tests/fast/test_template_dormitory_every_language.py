@@ -41,15 +41,20 @@ from Script.Core import get_text
 game_config.init()
 character_config.init_character_tem_data()
 map_config.init_map_data()
+from Script.Kernel import core
+from Script.Modules.domains import roster
+from Script.Modules.gameplay_resolution import working
 from Script.System.Dormitory_System import common
 
 cache = cache_control.cache
-for adv_id, tem in character_config.character_tem_list.items():
-  if tem.Dormitory != "无":
-    cache.character_data[adv_id] = game_type.Character()
-    cache.character_data[adv_id].dormitory = tem.Dormitory
-    cache.npc_id_got.add(adv_id)
-common.init_character_dormitory()
+with working.based_on(core.state()):
+  for adv_id, tem in character_config.character_tem_list.items():
+    if tem.Dormitory != "无":
+      cache.character_data[adv_id] = game_type.Character()
+      cache.character_data[adv_id].dormitory = tem.Dormitory
+      roster.add(adv_id)
+  common.init_character_dormitory()
+  active_ids = sorted(roster.active())
 print(json.dumps({
     "language": get_text.now_language,
     "dormitory": {
@@ -57,7 +62,7 @@ print(json.dumps({
             cache.character_data[chara_id].dormitory,
             cache.character_data[chara_id].dormitory in cache.scene_data,
         ]
-        for chara_id in sorted(cache.npc_id_got)
+        for chara_id in active_ids
     },
 }))
 """

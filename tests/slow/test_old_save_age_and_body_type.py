@@ -50,13 +50,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         super().tearDown()
 
     def _template_body(self, adv: int) -> list:
-        """
-        角色模板（data/character）持有的体型素质
-        Keyword arguments:
-        adv -- 角色的adv
-        Return arguments:
-        list -- 体型素质id列表
-        """
+        """角色模板（data/character）持有的体型素质"""
         from Script.Config import character_config
 
         tem_character = character_config.character_tem_list.get(adv)
@@ -91,7 +85,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             ca.talent(daughter_id)[7] = 1
         if stage >= 102:
             daughter.work.work_type = 152
-        daughter.child_growth = game_type.CHILD_GROWTH()
+        kd.put(kd.domain("growth").put, daughter_id, game_type.CHILD_GROWTH())
         return daughter_id
 
     def _build_old_save(self) -> dict:
@@ -138,9 +132,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             in ([105], [106])
         )
         cache.character_data[0].item[32] = 2
-        mother_id = min(
-            cid for cid in cache.npc_id_got if cid in static_id_list
-        )
+        roster = kd.domain("roster")
+        mother_id = min(cid for cid in roster.active() if cid in static_id_list)
         id_dict: dict[str, Any] = {
             "minor": minor_id,
             "shrink": shrink_id,
@@ -162,7 +155,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             map_handle.character_move_scene(
                 child.position, mother.position, id_dict["d102"]
             )
-        cache.npc_id_got.add(id_dict["d102"])
         self.assertIn(
             id_dict["d102"],
             cache.scene_data[
@@ -286,32 +278,33 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             FOLLOW_MOTHER_ENTERTAINMENT,
             0,
         ]
-        assert child.child_growth is not None
-        child.child_growth.follow_mother_flag = True
-        child.child_growth.selected_course = {0: {0: [0, "理论教室一"]}}
-        child.child_growth.schedule_template_id = 1
-        child.child_growth.schedule_override = {0: FOLLOW_MOTHER_ENTERTAINMENT}
-        child.child_growth.skip_class_flag = True
-        child.child_growth.skip_class_day = game_time.now().toordinal()
-        # 103的学员：未初潮、未成年、在见学，有课表；毕业的女儿：有听课与成绩单记录
+        growth = kd.domain("growth")
+        pregnancy = kd.domain("pregnancy")
         student = cache.character_data[id_dict["d103"]]
         ca.talent(student)[6] = 1
-        assert student.child_growth is not None
-        student.child_growth.follow_mother_flag = True
-        student.child_growth.selected_course = {
-            1: {2: [0, "理论教室一"], 3: [4, MISSING_ENTERTAINMENT]}
-        }
         graduate_entertainment = cache.character_data[
             id_dict["d104"]
         ].entertainment
         graduate_entertainment.entertainment_type = [176, 0, 0]
         student.entertainment.entertainment_type = [MISSING_ENTERTAINMENT, 0, 0]
-        student.child_growth.schedule_override = {1: MISSING_ENTERTAINMENT}
         cache.character_data[minor_id].behavior.behavior_id = MISSING_BEHAVIOR
-        graduate = cache.character_data[id_dict["d104"]]
-        assert graduate.child_growth is not None
-        graduate.child_growth.attend_class_count = 30
-        graduate.child_growth.report_card_history = [{"semester": [2020, 6]}]
+        with kd.writing():
+            with growth.editing(id_dict["d102"]) as child_g:
+                child_g.follow_mother_flag = True
+                child_g.selected_course = {0: {0: [0, "理论教室一"]}}
+                child_g.schedule_template_id = 1
+                child_g.schedule_override = {0: FOLLOW_MOTHER_ENTERTAINMENT}
+                child_g.skip_class_flag = True
+                child_g.skip_class_day = game_time.now().toordinal()
+            with growth.editing(id_dict["d103"]) as stu_g:
+                stu_g.follow_mother_flag = True
+                stu_g.selected_course = {
+                    1: {2: [0, "理论教室一"], 3: [4, MISSING_ENTERTAINMENT]}
+                }
+                stu_g.schedule_override = {1: MISSING_ENTERTAINMENT}
+            with growth.editing(id_dict["d104"]) as grad_g:
+                grad_g.attend_class_count = 30
+                grad_g.report_card_history = [{"semester": [2020, 6]}]
         # 101的婴儿：有污浊、H状态与身体道具、H标记与后续链、泌乳、妊娠与卵；母亲在产后、育儿、泌乳
         baby = cache.character_data[id_dict["d101"]]
         body_part = min(game_config.config_body_part)
@@ -347,11 +340,15 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         for talent_id in (20, 21, 27):
             ca.talent(baby)[talent_id] = 1
         kd.set_needs(baby.cid, milk=50)
-        baby.pregnancy.lactation_flag = True
-        baby.pregnancy.fertilization_rate = 30
-        baby.pregnancy.eggs = {0: {"identified": False, "fertilized": True}}
-        baby.pregnancy.next_egg_id = 1
-        baby.pregnancy.born_time = game_time.now()
+        kd.put(
+            pregnancy.update,
+            baby.cid,
+            lactation_flag=True,
+            fertilization_rate=30,
+            eggs={0: {"identified": False, "fertilized": True}},
+            next_egg_id=1,
+            born_time=game_time.now(),
+        )
         id_dict["baby_born_time"] = game_time.now()
         mother = cache.character_data[mother_id]
         for talent_id in (23, 24, 27):
@@ -360,20 +357,27 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         id_dict["mother"] = mother_id
         return id_dict
 
-    def _save_and_load(self) -> None:
-        """
-        写盘再读档
-        Keyword arguments:
-        无
-        Return arguments:
-        无
-        """
+    def _save_and_load(self, inject_active: tuple[int, ...] = ()) -> None:
+        """写盘（可选往旧存档文件注入在编 id）再读档"""
+        import json
+        import os
         from Script.Core import save_handle
+        from Script.Modules.save_load import index, kernel_state
 
         save_handle.establish_save(SAVE_ID)
         self.assertTrue(
             save_handle.judge_save_file_exist(SAVE_ID), "存档应已写到盘上"
         )
+        if inject_active:
+            path = os.path.join(index.path(SAVE_ID), kernel_state.SAVE_FILE)
+            with open(path, encoding="utf-8") as f:
+                payload = json.load(f)
+            active = set(payload["data"].get("roster.active", []))
+            payload["data"]["roster.active"] = sorted(
+                active | set(inject_active)
+            )
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, ensure_ascii=False)
         save_handle.input_load_save(SAVE_ID)
 
     def _snapshot(self) -> dict:
@@ -386,15 +390,17 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
            全部全局数据，以及场景面板记着的角色
         """
         from Script.Modules.domains import action_info as ai, education
-        from Script.Modules.domains import flags as fl, player_ability as pa
+        from Script.Modules.domains import flags as fl, growth as growth_mod
+        from Script.Modules.domains import player_ability as pa
         from Script.Modules.domains import player_collection as pc
+        from Script.Modules.domains import pregnancy as pregnancy_mod, roster
         from Script.Kernel import core
 
         snapshot: dict[str | int, object] = {
             "world_setting": kd.world_settings(),
             "template": repr(education.templates()),
             "eggs": repr((pc.get("held_eggs"), pc.get("soft_eggs"))),
-            "npc_id_got": sorted(self.cache.npc_id_got),
+            "npc_id_got": sorted(roster.active()),
             "scene": {
                 path: sorted(scene.character_list)
                 for path, scene in self.cache.scene_data.items()
@@ -403,7 +409,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "old_character_id": self.cache.old_character_id,
         }
         for cid, chara in self.cache.character_data.items():
-            growth = chara.child_growth
+            growth = growth_mod.of(cid)
             snapshot[cid] = (
                 dict(ca.talent(chara)),
                 dict(chara.item),
@@ -455,7 +461,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                         for part in (
                             chara.dirty,
                             chara.h_state,
-                            chara.pregnancy,
+                            pregnancy_mod.of(cid),
                         )
                     ]
                     + [sorted(fl.snapshot(chara.cid).items())]
@@ -474,7 +480,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         from Script.Config import game_config
 
         cache = self.cache
-        work = importlib.import_module("Script.Modules.domains.work")
+        work = kd.domain("work")
+        growth_mod = kd.domain("growth")
+        pregnancy_mod = kd.domain("pregnancy")
+        roster = kd.domain("roster")
         self.assertEqual(kd.world_settings().get(1, 0), 0, "世界设定1应已关闭")
         for cid, chara in cache.character_data.items():
             stage_list = [
@@ -491,9 +500,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 chara.item.get(31, 0) or chara.item.get(32, 0),
                 f"角色{cid}的道具栏里不应有外表年龄药",
             )
+            cg = growth_mod.of(cid)
             self.assertFalse(
-                chara.child_growth is not None
-                and chara.child_growth.follow_mother_flag,
+                cg is not None and cg.follow_mother_flag,
                 f"角色{cid}不应在见学",
             )
             self.assertNotEqual(
@@ -558,12 +567,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             ([], 1),
             "毕业的女儿保持少女",
         )
-        assert graduate.child_growth is not None
+        grad_g = growth_mod.of(graduate.cid)
+        assert grad_g is not None
         self.assertEqual(
-            (
-                graduate.child_growth.attend_class_count,
-                graduate.child_growth.report_card_history,
-            ),
+            (grad_g.attend_class_count, grad_g.report_card_history),
             (30, [{"semester": [2020, 6]}]),
             "毕业的女儿的养成记录保持原样",
         )
@@ -573,7 +580,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             ("share_blankly", 0),
             "102的孩子应在发呆",
         )
-        growth = child.child_growth
+        growth = growth_mod.of(child.cid)
         assert growth is not None
         self.assertEqual(
             (
@@ -587,17 +594,15 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "102的孩子应没有课表、日程与翘课标记",
         )
         student = cache.character_data[id_dict["d103"]]
-        assert student.child_growth is not None
+        stu_g = growth_mod.of(student.cid)
+        assert stu_g is not None
         self.assertEqual(
-            student.child_growth.selected_course,
+            stu_g.selected_course,
             {1: {2: [0, "理论教室一"]}},
             "103的学员保留课表，目标不在娱乐表里的兴趣课删掉",
         )
         self.assertEqual(
-            (
-                student.entertainment.entertainment_type,
-                student.child_growth.schedule_override,
-            ),
+            (student.entertainment.entertainment_type, stu_g.schedule_override),
             ([0, 0, 0], {}),
             "表里没有的娱乐：槽位换成0，单项覆盖删掉",
         )
@@ -666,19 +671,20 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             [],
             "101的婴儿没有妊娠与泌乳素质",
         )
+        baby_preg = pregnancy_mod.of(baby.cid)
         self.assertEqual(
             (
                 kd.needs_of(baby.cid)["milk"],
-                baby.pregnancy.lactation_flag,
-                baby.pregnancy.fertilization_rate,
-                baby.pregnancy.eggs,
-                baby.pregnancy.next_egg_id,
+                baby_preg.lactation_flag,
+                baby_preg.fertilization_rate,
+                baby_preg.eggs,
+                baby_preg.next_egg_id,
             ),
             (0, False, 0, {}, 0),
             "101的婴儿没有奶、受精率与卵",
         )
         self.assertEqual(
-            baby.pregnancy.born_time,
+            baby_preg.born_time,
             id_dict["baby_born_time"],
             "101的婴儿保留出生时间",
         )
@@ -716,8 +722,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 [],
                 f"{stage}的孩子不在任何场景里",
             )
-            self.assertNotIn(
-                child_id, cache.npc_id_got, f"{stage}的孩子不在当前干员列表里"
+            self.assertFalse(
+                roster.has(child_id), f"{stage}的孩子不在当前干员列表里"
             )
             self.assertEqual(
                 (
@@ -941,15 +947,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
 
     def test_old_save_converts_once(self) -> None:
-        """
-        旧存档读档后符合现行规则；再写盘读档一次，数据不变
-        Keyword arguments:
-        无
-        Return arguments:
-        无
-        """
+        """旧存档读档后符合现行规则；再写盘读档一次，数据不变"""
         id_dict = self._build_old_save()
-        self._save_and_load()
+        self._save_and_load(inject_active=(id_dict["d102"],))
         self._assert_converted(id_dict)
         first = self._snapshot()
         self._save_and_load()
@@ -959,13 +959,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
 
     def test_stage_without_world_setting(self) -> None:
-        """
-        没开世界设定1时，持有103的静态干员读档后持有少女，不取模板的体型
-        Keyword arguments:
-        无
-        Return arguments:
-        无
-        """
+        """没开世界设定1时，持有103的静态干员读档后持有少女，不取模板的体型"""
         cache = self.cache
         kd.set_world_setting(1, 0)
         static_id_list = [
@@ -1009,9 +1003,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
 
         cache = self.cache
         player = cache.character_data[0]
+        roster = kd.domain("roster")
         static_id_list = sorted(
             cid
-            for cid in cache.npc_id_got
+            for cid in roster.active()
             if cid != 0
             and cache.character_data[cid].relationship.father_id != 0
         )
@@ -1028,7 +1023,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             modes.set_group_sex(True)
             for cid in (0, child_id, other_id):
                 fl.set(cid, is_h=True)
-        cache.npc_id_got.add(child_id)
         player.h_state.group_sex_body_template_dict["A"][0]["L_hand"] = [
             other_id,
             5,
@@ -1055,8 +1049,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "存档前三人同场景",
         )
         snapshot_list = []
-        for _ in range(2):
-            self._save_and_load()
+        for idx in range(2):
+            self._save_and_load(inject_active=(child_id,) if idx == 0 else ())
             self.assertFalse(kd.mode("group_sex"), "群交模式已关闭")
             for character_id in (0, child_id, other_id):
                 chara = cache.character_data[character_id]

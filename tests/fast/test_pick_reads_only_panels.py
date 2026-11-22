@@ -22,11 +22,11 @@ from Script.System.Cooking_System import cooking, make_food_panel
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Pregnancy_System import egg_handle, pregnancy_handle
 from Script.UI.Panel import gift_panel, play_gomoku_panel, talent_up_panel
-from tests import chara_abilities as ca, pick_guard
+from tests import chara_abilities as ca, kernel_data, pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
-from Script.Modules.domains import achievement
+from Script.Modules.domains import achievement, pregnancy
 
 LOADED_FIRST = (update, handle_instruct)
 """ 先于 Script.Modules 导入的 update；handle_instruct 登记指令处理函数 """
@@ -184,7 +184,8 @@ class PanelSubMenusReadOnly(FastTestCase):
             mock.patch.object(egg_handle, "get_hatch_day", return_value=1)
         )
         for cid in (2, 3):
-            self.world.chara(cid, f"婴儿{cid}").pregnancy.born_time = now
+            self.world.chara(cid, f"婴儿{cid}")
+            kernel_data.put(pregnancy.update, cid, born_time=now)
         self.enterContext(
             mock.patch.object(
                 pregnancy_handle,

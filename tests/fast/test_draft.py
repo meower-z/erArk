@@ -103,38 +103,46 @@ class DiffApplyTest(DraftCase):
         cache = cache_control.cache
         cache.character_data[1].eja_point = 5
         cache.character_data[1].item[99] = 1
-        cache.npc_id_got.add(1)
+        cache.character_data[1].entertainment.borrow_book_id_set.add(1)
         cache.character_data.pop(0)
-        changed = pickled(dict(cache.character_data)), pickled(cache.npc_id_got)
+        changed = (
+            pickled(dict(cache.character_data)),
+            pickled(cache.character_data[1].entertainment.borrow_book_id_set),
+        )
         changes, interrupts = session.close()
         self.assertEqual(interrupts, [])
         self.assertIn(0, cache.character_data)
         self.assertNotEqual(cache.character_data[1].eja_point, 5)
         frozen = core._frozen(cast(core.JSON, changes))
         draft.apply(cast(list[draft.Change], frozen))
-        after = pickled(dict(cache.character_data)), pickled(cache.npc_id_got)
+        after = (
+            pickled(dict(cache.character_data)),
+            pickled(cache.character_data[1].entertainment.borrow_book_id_set),
+        )
         self.assertEqual(after, changed)
 
     def test_new_and_removed_dict_values_apply(self) -> None:
-        """草稿里给个人课表加了一天（值是字典）、删了另一天：apply 之后原物与副本 pickle 相等"""
+        """草稿里给嵌套字典加了一项（值是字典）、删了另一项：apply 之后原物与副本 pickle 相等"""
         cache = cache_control.cache
-        growth = game_type.CHILD_GROWTH()
-        growth.selected_course = {0: {1: [0, "理论教室一"]}}
-        cache.character_data[1].child_growth = growth
+        cache.character_data[1].first_record.first_part_sex_dict = {
+            0: {1: [0, "理论教室一"]}
+        }
         session = draft.Session(KEEP)
-        selected = cache.character_data[1].child_growth.selected_course
+        selected = cache.character_data[1].first_record.first_part_sex_dict
         selected[1] = {2: [1, "实践教室一"]}
         del selected[0]
-        changed = pickled(cache.character_data[1].child_growth.selected_course)
+        changed = pickled(
+            cache.character_data[1].first_record.first_part_sex_dict
+        )
         changes, _ = session.close()
         self.assertEqual(
-            cache.character_data[1].child_growth.selected_course,
+            cache.character_data[1].first_record.first_part_sex_dict,
             {0: {1: [0, "理论教室一"]}},
         )
         frozen = core._frozen(cast(core.JSON, changes))
         draft.apply(cast(list[draft.Change], frozen))
         self.assertEqual(
-            pickled(cache.character_data[1].child_growth.selected_course),
+            pickled(cache.character_data[1].first_record.first_part_sex_dict),
             changed,
         )
 

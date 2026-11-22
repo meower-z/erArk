@@ -14,8 +14,9 @@ H 类与公务的选择只读：选择期间缓存不变，选定的东西在行
 from collections.abc import Callable, Mapping
 from typing import cast
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
-from tests import chara_abilities as ca, kernel_data
+from tests import chara_abilities as ca
 
 
 class PickDraftHTest(SlowTestCase):
@@ -76,7 +77,7 @@ class PickDraftHTest(SlowTestCase):
     def target_here(self) -> int:
         """把第一名干员移到玩家所在的场景并设为交互对象，交回她的角色id"""
         pl = self.cache.character_data[0]
-        target = min(c for c in self.cache.npc_id_got if c)
+        target = min(c for c in kernel_data.domain("roster").active() if c)
         self.world.move(target, pl.position)
         pl.target_character_id = target
         return target
@@ -261,7 +262,11 @@ class PickDraftHTest(SlowTestCase):
         self.cache.debug_mode = True
         pl = self.cache.character_data[0]
         here = self.world.scene(pl.position).character_list
-        guest = min(c for c in self.cache.npc_id_got if c and c not in here)
+        guest = min(
+            c
+            for c in kernel_data.domain("roster").active()
+            if c and c not in here
+        )
         guest_data = self.cache.character_data[guest]
         calls = self.watch_judge("群交")
         self.world.player.press("▶邀请", guest_data.name, "返回", "返回")

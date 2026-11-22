@@ -1,35 +1,14 @@
 # -*- coding: UTF-8 -*-
 """growth_event_handle：候选人、同胞与同学、事件桶、入队、注册式容量与抬头"""
 
-from _bootstrap import (
-    DEFAULT_TIME,
-    _,
-    cache,
-    check,
-    class_ai,
-    clear_schedules,
-    constant,
-    constant_promise,
-    datetime,
-    education_constant,
-    finish,
-    game_config,
-    game_time,
-    growth_event_handle,
-    growth_handle,
-    handle_premise,
-    make_character,
-    open_all_classroom,
-    period_time,
-    pl,
-    random,
-    remove_character,
-    schedule_handle,
-    schedule_template_handle,
-    section,
-    semester_handle,
-    set_time,
-)
+from _bootstrap import child_growth, pregnancy, roster, DEFAULT_TIME, _, check
+from _bootstrap import class_ai, clear_schedules, constant, constant_promise
+from _bootstrap import datetime, education_constant, finish, game_config
+from _bootstrap import game_time, growth_event_handle, growth_handle
+from _bootstrap import handle_premise, make_character, open_all_classroom
+from _bootstrap import period_time, pl, random, remove_character
+from _bootstrap import schedule_handle, schedule_template_handle, section
+from _bootstrap import semester_handle, set_time
 from Script.System.Official_Event_System import official_event_handle
 from typing import Any
 from Script.System.Pregnancy_System import pregnancy_constant
@@ -85,8 +64,8 @@ check(
     == sorted(growth_event_handle.get_growth_event_character_list()),
 )
 check(
-    "同胞：同父即算（异母也算），婴儿不算（Plan 26）",
-    sorted(growth_event_handle.get_sibling_child_list(201)) == [202, 203],
+    "同胞：同父即算（异母也算），离线的婴儿与幼女不算（Plan 26）",
+    sorted(growth_event_handle.get_sibling_child_list(201)) == [203],
 )
 check(
     "双亲都没登记的孩子不互认",
@@ -191,7 +170,7 @@ check(
     "候选项形状 [uid, 权重>0, 对象id]",
     all(len(one) == 3 and one[1] > 0 for one in candidate),
 )
-growth_handle.get_child_growth(201).event_history[candidate[0][0]] = {
+child_growth(201).event_history[candidate[0][0]] = {
     "time": game_time.now(),
     "choice": 0,
 }
@@ -344,7 +323,7 @@ check(
 )
 kernel_data.put(official.set_queue, [])
 for uid in semester_bucket:
-    growth_handle.get_child_growth(202).event_history[uid] = {
+    child_growth(202).event_history[uid] = {
         "time": game_time.now(),
         "choice": 0,
     }
@@ -394,7 +373,7 @@ check(
 section("Plan 28 §3.1：婴儿不在 npc_id_got 也照常派养成事件")
 check(
     "夹具与真实婴儿对齐：婴儿不在 npc_id_got（Plan 28 §3.9）",
-    204 not in cache.npc_id_got,
+    not roster.has(204),
 )
 check(
     "婴儿照样进每日派发名单（此前只遍历 npc_id_got，婴儿桶的事件一条都派不出来）",
@@ -407,13 +386,11 @@ _picked = {
 }
 random.randint = _orig_randint
 check("必派时派得到婴儿", 204 in _picked, _picked)
-cache.npc_id_got.discard(202)
 check(
     "幼女与婴儿一样离线，不在 npc_id_got 里也进名单",
     202 in growth_event_handle.get_growth_event_character_list(),
     growth_event_handle.get_growth_event_character_list(),
 )
-cache.npc_id_got.add(202)
 check(
     "婴儿占 4 条容量，成年少女照旧不进",
     growth_event_handle.get_growth_event_queue_capacity()
@@ -433,12 +410,12 @@ section(
 )
 real_baby_id = kernel_data.born(102, "新生儿")
 # 生产面板随后会写出生时刻（born_event_panel），这里照做
-cache.character_data[real_baby_id].pregnancy.born_time = (
-    game_time.now() - datetime.timedelta(days=20)
+pregnancy.update(
+    real_baby_id, born_time=(game_time.now() - datetime.timedelta(days=20))
 )
 check(
     "真实出生的婴儿不在 npc_id_got（到长成幼女才上线），是玩家的女儿、阶段 101",
-    real_baby_id not in cache.npc_id_got
+    not roster.has(real_baby_id)
     and handle_premise.handle_self_is_player_daughter(real_baby_id)
     and growth_event_handle.get_character_stage(real_baby_id) == 101,
 )
@@ -480,13 +457,19 @@ section(
 )
 # 今天 2026-09-07 09:00（游戏时间）：萝莉与幼女的本阶段都从 30 天前（2026-06-07 09:00）起，婴儿 5 天前出生
 set_time(DEFAULT_TIME)
-loli.pregnancy.born_time = game_time.now() - datetime.timedelta(
-    days=pregnancy_constant.GROW_TO_LOLI_DAY + 30
+pregnancy.update(
+    loli.cid,
+    born_time=game_time.now()
+    - datetime.timedelta(days=pregnancy_constant.GROW_TO_LOLI_DAY + 30),
 )
-child.pregnancy.born_time = game_time.now() - datetime.timedelta(
-    days=pregnancy_constant.REARING_COMPLETE_DAY + 30
+pregnancy.update(
+    child.cid,
+    born_time=game_time.now()
+    - datetime.timedelta(days=pregnancy_constant.REARING_COMPLETE_DAY + 30),
 )
-baby.pregnancy.born_time = game_time.now() - datetime.timedelta(days=5)
+pregnancy.update(
+    baby.cid, born_time=game_time.now() - datetime.timedelta(days=5)
+)
 check(
     "M1 萝莉本阶段已过 30 天：「萝莉期第 31 天」（不按出生以来的总天数写）",
     growth_event_handle.get_growth_event_title({"chara_id": 201})
@@ -557,7 +540,7 @@ check(
     and HP("self_have_any_course", 201) == 0,
 )
 schedule_handle.set_class_cell(_("理论教室一"), 0, 0, 45, -1)
-_g201 = growth_handle.get_child_growth(201)
+_g201 = child_growth(201)
 _g201.report_card_history = []
 semester_handle.push_report_card(
     201,
@@ -590,7 +573,7 @@ check(
     "期末9" in _sem and "期末10" in _sem,
     _sem,
 )
-growth_handle.get_child_growth(202).report_card_history = [
+child_growth(202).report_card_history = [
     {"year": 2026, "month": 6, "grade": E.REPORT_GRADE_POOR}
 ]
 check(
@@ -623,7 +606,7 @@ check(
 )
 _g201.absent_count, _g201.skip_count = 0, 0
 _g201.report_card_history = []
-growth_handle.get_child_growth(202).report_card_history = []
+child_growth(202).report_card_history = []
 
 section(
     "Plan 31 §3.11（L7）：同班同学只取幼女 / 萝莉，仍在学生岗的成年姐姐不算"
@@ -719,9 +702,10 @@ check(
     ),
 )
 kernel_data.put(official.set_queue, [])
-growth_handle.get_child_growth(214).event_history[
-    E.ADULT_EXTRA_EVENT_UID_LIST[0]
-] = {"time": game_time.now(), "choice": 0}
+child_growth(214).event_history[E.ADULT_EXTRA_EVENT_UID_LIST[0]] = {
+    "time": game_time.now(),
+    "choice": 0,
+}
 push_graduation(214)
 _queue_uid = [one["uid"] for one in official.queue()]
 check(
@@ -729,9 +713,7 @@ check(
     _queue_uid == _adult_order[:2] + [E.ADULT_EXTRA_EVENT_UID_LIST[1]],
     _queue_uid,
 )
-growth_handle.get_child_growth(214).event_history.pop(
-    E.ADULT_EXTRA_EVENT_UID_LIST[0], None
-)
+child_growth(214).event_history.pop(E.ADULT_EXTRA_EVENT_UID_LIST[0], None)
 fill_queue(loli_bucket[0])
 push_graduation(214)
 _queue_uid = [one["uid"] for one in official.queue() if one["chara_id"] == 214]
@@ -768,8 +750,8 @@ def candidate_uid_set(cid: int) -> set:
 section("Plan 31 §3.14（Q4 / L11）：点名课型的事件改挂按课型查课表的前提")
 clear_schedules()
 set_time(period_time(0))
-growth_handle.get_child_growth(211).selected_course = {}
-growth_handle.get_child_growth(212).selected_course = {}
+child_growth(211).selected_course = {}
+child_growth(212).selected_course = {}
 _intern_work = next(
     cid
     for cid in game_config.config_work_type
@@ -819,7 +801,7 @@ for _step_uid, _step_type, _step_target, _step_period in _loli_steps:
 section(
     "Plan 31 §3.14（Q4 / L10）：写成绩单的事件要有待查看的新成绩单；萝莉 6 读本学期出勤"
 )
-_growth_211 = growth_handle.get_child_growth(211)
+_growth_211 = child_growth(211)
 _growth_211.attend_class_count = 20
 _growth_211.report_card_flag = False
 _report_uid = {"萝莉1", "萝莉20", "萝莉26", "期末17", "期末18", "期末19"}
@@ -870,17 +852,21 @@ _growth_211.attend_class_count = _growth_211.absent_count = (
 section(
     "Plan 31 §3.14（Q4 / L13）：生日、季月交替、断奶的事件只在正文写的时点出现"
 )
-_saved_born_211 = mate.pregnancy.born_time
-mate.pregnancy.born_time = game_time.now().replace(
-    year=game_time.now().year - 1, hour=6
+_saved_born_211 = pregnancy.of(mate.cid).born_time
+pregnancy.update(
+    mate.cid,
+    born_time=game_time.now().replace(year=game_time.now().year - 1, hour=6),
 )
 check("L13 今天是她的生日：通用 3 进候选", "通用3" in candidate_uid_set(211))
-mate.pregnancy.born_time = mate.pregnancy.born_time - datetime.timedelta(days=1)
+pregnancy.update(
+    mate.cid,
+    born_time=pregnancy.of(mate.cid).born_time - datetime.timedelta(days=1),
+)
 check(
     "L13 生日是昨天：通用 3 不在候选里（此前任意一天都抽得到）",
     "通用3" not in candidate_uid_set(211),
 )
-mate.pregnancy.born_time = _saved_born_211
+pregnancy.update(mate.cid, born_time=_saved_born_211)
 # 通用 15 的正文是「被人抱着从一个部门送到另一个部门」，Plan 32 L23 起不派萝莉：正反两向改用幼女 212，另验萝莉判不过
 check(
     "L13 学期第 7 天（进度约 21%）：通用 15「季月交替的这几天」不在幼女的候选里",
@@ -909,7 +895,7 @@ check(
 )
 # 9/1 06:00 出生；每天 00:05（跨天派发的时刻）取样，本阶段第 N 天的取样时刻是出生 + N 天 18 时 5 分
 _baby_e_born = game_time.GameTime(2026, 9, 1, 6, 0)
-baby_e.pregnancy.born_time = _baby_e_born
+pregnancy.update(baby_e.cid, born_time=_baby_e_born)
 _rearing_day = pregnancy_constant.REARING_COMPLETE_DAY
 _day_50 = next(
     one for one in range(_rearing_day + 1) if one * 100.0 / _rearing_day >= 50
@@ -979,14 +965,16 @@ def queue_pair_list() -> list:
 section("Plan 32 M2：生日当天，跨天结算直接把生日事件（通用 3）插到队首")
 clear_schedules()
 set_time(datetime.datetime(2026, 9, 7, 0, 5))
-mate.pregnancy.born_time = datetime.datetime(2025, 9, 7, 6, 0)
-big_sister.pregnancy.born_time = datetime.datetime(2024, 9, 7, 6, 0)
+pregnancy.update(mate.cid, born_time=datetime.datetime(2025, 9, 7, 6, 0))
+pregnancy.update(big_sister.cid, born_time=datetime.datetime(2024, 9, 7, 6, 0))
 _saved_born_other = {
-    cid: cache.character_data[cid].pregnancy.born_time
-    for cid in (201, 202, 212)
+    cid: pregnancy.of(cid).born_time for cid in (201, 202, 212)
 }
 for _cid in _saved_born_other:
-    cache.character_data[_cid].pregnancy.born_time -= datetime.timedelta(days=1)
+    pregnancy.update(
+        _cid,
+        born_time=pregnancy.of(_cid).born_time - datetime.timedelta(days=1),
+    )
 check(
     "M2 前提：萝莉 C 与成年姐姐今天都过生日",
     HP(constant_promise.Premise.SELF_BIRTHDAY_TODAY, 211)
@@ -1020,7 +1008,7 @@ check(
     and queue_pair_list()[0] == (E.BIRTHDAY_EVENT_UID, 211),
 )
 kernel_data.put(official.set_queue, [])
-growth_handle.get_child_growth(211).event_history[E.BIRTHDAY_EVENT_UID] = {
+child_growth(211).event_history[E.BIRTHDAY_EVENT_UID] = {
     "time": game_time.now(),
     "choice": 1,
 }
@@ -1028,9 +1016,7 @@ check(
     "M2 已经历过的不再推",
     push_birthday() == [] and official.queue() == [],
 )
-growth_handle.get_child_growth(211).event_history.pop(
-    E.BIRTHDAY_EVENT_UID, None
-)
+child_growth(211).event_history.pop(E.BIRTHDAY_EVENT_UID, None)
 set_time(datetime.datetime(2026, 9, 8, 0, 5))
 check(
     "M2 第二天（不是生日）不推",
@@ -1044,7 +1030,7 @@ check(
     < _new_day_src.find("official_event_handle.check_new_day_official_event("),
 )
 for _cid, _born_time in _saved_born_other.items():
-    cache.character_data[_cid].pregnancy.born_time = _born_time
+    pregnancy.update(_cid, born_time=_born_time)
 set_time(period_time(0))
 
 section(
@@ -1146,8 +1132,10 @@ set_time(period_time(0))
 to_loli = make_character(
     216, "要长成萝莉的幼女", 152, daughter=True, stage=102, mother_id=103
 )
-to_loli.pregnancy.born_time = game_time.now() - datetime.timedelta(
-    days=pregnancy_constant.GROW_TO_LOLI_DAY + 10
+pregnancy.update(
+    to_loli.cid,
+    born_time=game_time.now()
+    - datetime.timedelta(days=pregnancy_constant.GROW_TO_LOLI_DAY + 10),
 )  # 已过长成萝莉的阈值 10 天
 for _uid in (child_bucket[0], "通用27", "通用16"):
     push_event(_uid, 216)
@@ -1166,8 +1154,10 @@ check(
 to_girl = make_character(
     217, "要成年的萝莉", 152, daughter=True, stage=103, mother_id=103
 )
-to_girl.pregnancy.born_time = game_time.now() - datetime.timedelta(
-    days=pregnancy_constant.GROW_TO_GIRL_DAY + 13
+pregnancy.update(
+    to_girl.cid,
+    born_time=game_time.now()
+    - datetime.timedelta(days=pregnancy_constant.GROW_TO_GIRL_DAY + 13),
 )  # 已过成年的阈值 13 天
 for _uid in (loli_bucket[0], "通用16", "期末1", "期末3"):
     push_event(_uid, 217)
@@ -1218,7 +1208,7 @@ twin_b = make_character(
     219, "双胞胎妹妹", 152, daughter=True, stage=103, mother_id=102
 )
 for _twin in (twin_a, twin_b):
-    _twin.pregnancy.born_time = datetime.datetime(2025, 9, 8, 6, 0)
+    pregnancy.update(_twin.cid, born_time=datetime.datetime(2025, 9, 8, 6, 0))
 _birthday_premise = game_config.config_official_event[E.BIRTHDAY_EVENT_UID].get(
     "premise", ""
 )
@@ -1468,7 +1458,7 @@ check(
 )
 # 处理公务的真实流程：出队 → 决断（askfor_all 桩默认选第一个可选项）→ 结算 → 单独显示后果
 kernel_data.put(official.set_queue, [])
-growth_handle.get_child_growth(201).event_history.pop(_od_uid, None)
+child_growth(201).event_history.pop(_od_uid, None)
 push_event(_od_uid, 201)
 _od_seq: list[tuple[str, Any]] = []
 """ 结算与 WaitDraw 的先后：("settle", 选项序号) / ("wait", 文本) """
@@ -1522,9 +1512,7 @@ check(
     and _od_choice in (1, 2, 3, 4)
     and _od_choice_tip
     and _od_choice_tip in _od_seq[1][1]
-    and growth_handle.get_child_growth(201)
-    .event_history.get(_od_uid, {})
-    .get("choice")
+    and child_growth(201).event_history.get(_od_uid, {}).get("choice")
     == _od_choice
     and official.queue() == [],
     _od_seq,
@@ -1562,7 +1550,7 @@ check(
     ),
     _gray_line,
 )
-growth_handle.get_child_growth(201).event_history.pop(_od_uid, None)
+child_growth(201).event_history.pop(_od_uid, None)
 kernel_data.put(official.set_queue, [])
 
 section(

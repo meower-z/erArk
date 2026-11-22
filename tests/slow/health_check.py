@@ -166,7 +166,7 @@ class HealthCheckTestCase(SlowTestCase):
         recruits = sorted(
             cid
             for cid in self.cache.character_data
-            if cid and cid not in self.cache.npc_id_got
+            if cid and cid not in kernel_data.domain("roster").active()
         )[:10]
         for cid in recruits:
             with kernel_data.writing():

@@ -3,13 +3,13 @@
 外层闸、见学回落链"""
 
 from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, SCENE_NURSERY
-from _bootstrap import _, cache, check, class_ai, classroom_path
+from _bootstrap import _, cache, check, child_growth, class_ai, classroom_path
 from _bootstrap import clear_schedules, constant, constant_effect, datetime
 from _bootstrap import education, education_constant, finish, game_config
-from _bootstrap import game_time, game_type, growth_handle, handle_premise
-from _bootstrap import make_character, map_handle, move_to, npc_turn
-from _bootstrap import open_all_classroom, period_time, pl, random
-from _bootstrap import remove_character, scene_str, schedule_handle
+from _bootstrap import game_time, game_type, growth, growth_handle
+from _bootstrap import handle_premise, make_character, map_handle, move_to
+from _bootstrap import npc_turn, open_all_classroom, period_time, pl, random
+from _bootstrap import remove_character, roster, scene_str, schedule_handle
 from _bootstrap import schedule_template_handle, section, set_time
 from _bootstrap import sex_class_handle, sync, wait
 from Script.Design import character_behavior, clothing, handle_npc_ai
@@ -17,10 +17,15 @@ from Script.Settle import realtime_settle
 from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
 from Script.Kernel import core
-from Script.Modules.domains import achievement, action_info, flags, modes
+from Script.Modules.domains import (
+    achievement,
+    action_info,
+    flags,
+    library,
+    modes,
+)
 from Script.Modules.domains import physical_exam as px, plan
 from tests import chara_abilities as ca, kernel_data, world
-from Script.Modules.domains import library
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -287,9 +292,9 @@ check(
     teacher_available(),
 )
 kernel_data.set_ward()
-cache.npc_id_got.discard(101)
+roster.discard(101)
 check("不在岛上（不在 npc_id_got）不可用", not teacher_available())
-cache.npc_id_got.add(101)
+roster.add(101)
 # Plan 24 §3.4：教师目标行挂着 normal 前提，这些状态下她不会去授课，这里必须同步判为不可用
 ca.talent(teacher)[22] = 1
 check("临盆不可用（normal_2）", not teacher_available())
@@ -310,8 +315,8 @@ section("缺课去重")
 set_time(period_time(0))
 class_ai.settle_absent(201)
 class_ai.settle_absent(201)
-absent_growth = cache.character_data[201].child_growth
-assert absent_growth is not None
+assert growth.of(201) is not None
+absent_growth = child_growth(201)
 check("同一节只记一次", absent_growth.absent_count == 1)
 set_time(period_time(1))
 class_ai.settle_absent(201)
@@ -380,13 +385,13 @@ check(
     class_ai.get_course_stage(201) == E.COURSE_STAGE_ABSENT_HP,
 )
 kernel_data.set_needs(student.cid, hit=100)
-growth_handle.get_child_growth(201).skip_class_flag = True
-growth_handle.get_child_growth(201).skip_class_day = game_time.now().toordinal()
+child_growth(201).skip_class_flag = True
+child_growth(201).skip_class_day = game_time.now().toordinal()
 check(
     "今日已翘课 → SKIP（flag 认日期：今天挂上的，Plan 31 §3.6）",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_SKIP,
 )
-growth_handle.get_child_growth(201).skip_class_flag = False
+child_growth(201).skip_class_flag = False
 class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check(
     "本节掷中翘课 → SKIP", class_ai.get_course_stage(201) == E.COURSE_STAGE_SKIP
@@ -418,15 +423,15 @@ education.clear_temp_classes()
 set_time(period_time(0))
 sex_class_handle.set_temp_class(_today, 0, ROOM_P, 70, must_attend=[201])
 kernel_data.set_needs(student.cid, hit=10)
-growth_handle.get_child_growth(201).skip_class_flag = True
-growth_handle.get_child_growth(201).skip_class_day = game_time.now().toordinal()
+child_growth(201).skip_class_flag = True
+child_growth(201).skip_class_day = game_time.now().toordinal()
 class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check(
     "必修实操课：体力不足、翘课 flag、掷中翘课同时成立也是 ATTEND（口径 60 / 65）",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_ATTEND,
 )
 class_ai.roll_skip_class = _orig_roll
-growth_handle.get_child_growth(201).skip_class_flag = False
+child_growth(201).skip_class_flag = False
 kernel_data.set_needs(student.cid, hit=100)
 education.clear_temp_classes()
 schedule_handle.set_selected_course(101, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
@@ -460,7 +465,7 @@ for _premise in [
     handle_premise.handle_premise(_premise, 301)
 check(
     "前提只读：对没有养成数据的学生岗跑一遍师生前提，不会惰性创建养成数据",
-    adult.child_growth is None,
+    growth.of(adult.cid) is None,
 )
 remove_character(301)
 clear_schedules()
@@ -508,7 +513,7 @@ schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 section("整链派发：两道闸（220805 / 220810）")
 move_to(201, classroom_path(ROOM1))
 kernel_data.set_needs(student.cid, hit=10)
-_absent = growth_handle.get_child_growth(201).absent_count
+_absent = child_growth(201).absent_count
 check(
     "体力 < 30% → 721 记缺课并休息",
     dispatch(201) == SM.EDUCATION_ABSENT_REST
@@ -516,29 +521,29 @@ check(
 )
 check(
     "体力缺课记了一节",
-    growth_handle.get_child_growth(201).absent_count == _absent + 1,
+    child_growth(201).absent_count == _absent + 1,
 )
 move_to(201, classroom_path(ROOM1))
 dispatch(201)
 check(
     "同一节再派发一次不重复记",
-    growth_handle.get_child_growth(201).absent_count == _absent + 1,
+    child_growth(201).absent_count == _absent + 1,
 )
 check(
     "体力缺课不置翘课 flag",
-    not growth_handle.get_child_growth(201).skip_class_flag,
+    not child_growth(201).skip_class_flag,
 )
 kernel_data.set_needs(student.cid, hit=100)
 # 这一节已记了缺课的不再计出勤（Plan 30 §3.4）；后面各段仍在同一天的第 1 节里验出勤，清掉缺课标记
-growth_handle.get_child_growth(201).last_absent_period = []
-growth_handle.get_child_growth(201).skip_class_flag = True
-growth_handle.get_child_growth(201).skip_class_day = period_time(0).toordinal()
+child_growth(201).last_absent_period = []
+child_growth(201).skip_class_flag = True
+child_growth(201).skip_class_day = period_time(0).toordinal()
 move_to(201, classroom_path(ROOM1))
 check(
     "翘课 flag 挂着（今天挂上的）→ 714 翘课",
     dispatch(201) == SM.EDUCATION_SKIP_CLASS,
 )
-growth_handle.get_child_growth(201).skip_class_flag = False
+child_growth(201).skip_class_flag = False
 class_ai.roll_skip_class = lambda character_id, now_time=None: True
 move_to(201, classroom_path(ROOM1))
 check("本节掷中翘课 → 714", dispatch(201) == SM.EDUCATION_SKIP_CLASS)
@@ -555,12 +560,11 @@ check("必修判定成立", class_ai.judge_must_attend_sex_class(201))
 check("非必修的人不成立", not class_ai.judge_must_attend_sex_class(202))
 move_to(201, classroom_path(ROOM_P))
 kernel_data.set_needs(student.cid, hit=10)
-_absent = growth_handle.get_child_growth(201).absent_count
+_absent = child_growth(201).absent_count
 sm = dispatch(201)
 check(
     "必修 + 体力不足：留在教室听课、不记缺课",
-    sm == SM.WORK_ATTENT_CLASS
-    and growth_handle.get_child_growth(201).absent_count == _absent,
+    sm == SM.WORK_ATTENT_CLASS and child_growth(201).absent_count == _absent,
     sm,
 )
 kernel_data.set_needs(student.cid, hit=100)
@@ -611,18 +615,18 @@ pe_course = schedule_handle.get_now_course(201)
 assert pe_course is not None
 pe_place = schedule_handle.get_course_place(pe_course)
 move_to(201, pe_place)
-_attend = growth_handle.get_child_growth(201).attend_class_count
+_attend = child_growth(201).attend_class_count
 check(
     "体育课：到场 → 716 执行该课行为", dispatch(201) == SM.EDUCATION_DO_COURSE
 )
 check(
     "Plan 29 §3.1：体育课派出时记一节出勤（此前体育 / 兴趣课上完不计出勤，体力不足缺课却照记）",
-    growth_handle.get_child_growth(201).attend_class_count == _attend + 1,
+    child_growth(201).attend_class_count == _attend + 1,
 )
 check(
     "同一节再派 716（被打断后回去上）不重复记",
     dispatch(201) == SM.EDUCATION_DO_COURSE
-    and growth_handle.get_child_growth(201).attend_class_count == _attend + 1,
+    and child_growth(201).attend_class_count == _attend + 1,
 )
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, 99999)
 move_to(201, SCENE_DORM)
@@ -667,8 +671,8 @@ for _cid in _interest_list:
     _move_sm = dispatch(201)
     move_to(201, _place)
     # 各项都在同一节里验，去重标记逐项清掉，出勤才验得到每一项（Plan 29）
-    growth_handle.get_child_growth(201).last_attend_period = []
-    _attend_before = growth_handle.get_child_growth(201).attend_class_count
+    child_growth(201).last_attend_period = []
+    _attend_before = child_growth(201).attend_class_count
     _do_sm = dispatch(201)
     _expect_behavior = schedule_handle.get_behavior_name_by_cid(
         _cfg.behavior_id
@@ -680,8 +684,7 @@ for _cid in _interest_list:
         or student.behavior.behavior_id != _expect_behavior
         or student.state != _cfg.behavior_id
         or student.behavior.duration != 45
-        or growth_handle.get_child_growth(201).attend_class_count
-        != _attend_before + 1
+        or child_growth(201).attend_class_count != _attend_before + 1
     ):
         _interest_bad.append(
             (
@@ -693,8 +696,7 @@ for _cid in _interest_list:
                 student.behavior.behavior_id,
                 _expect_behavior,
                 student.behavior.duration,
-                growth_handle.get_child_growth(201).attend_class_count
-                - _attend_before,
+                child_growth(201).attend_class_count - _attend_before,
             )
         )
     # 读书：借到的那本要写进 behavior（Plan 29 §3.2）
@@ -749,8 +751,8 @@ for _wid in _intern_list:
     move_to(201, course_start_place(_place))
     _move_sm = dispatch(201)
     move_to(201, _place)
-    growth_handle.get_child_growth(201).last_attend_period = []
-    _attend_before = growth_handle.get_child_growth(201).attend_class_count
+    child_growth(201).last_attend_period = []
+    _attend_before = child_growth(201).attend_class_count
     _do_sm = dispatch(201)
     if (
         _move_sm != SM.EDUCATION_MOVE_TO_COURSE_PLACE
@@ -758,8 +760,7 @@ for _wid in _intern_list:
         or student.behavior.behavior_id != constant.Behavior.INTERN_CLASS
         or student.state != constant.CharacterStatus.STATUS_INTERN_CLASS
         or student.behavior.duration != 45
-        or growth_handle.get_child_growth(201).attend_class_count
-        != _attend_before
+        or child_growth(201).attend_class_count != _attend_before
     ):
         _intern_bad.append(
             (
@@ -1056,7 +1057,7 @@ check(
     dispatch(201, _pending_time) == SM.MOVE_TO_CLASS_ROOM,
 )
 move_to(201, classroom_path(ROOM_P))
-_absent = growth_handle.get_child_growth(201).absent_count
+_absent = child_growth(201).absent_count
 check(
     "已在实操教室 → 720 原地等开课（Plan 24 §3.6，原先原地零距离移动空转）",
     dispatch(201, _pending_time) == SM.EDUCATION_WAIT_NEXT_PERIOD
@@ -1065,7 +1066,7 @@ check(
 )
 check(
     "预到岗不记缺课",
-    growth_handle.get_child_growth(201).absent_count == _absent,
+    child_growth(201).absent_count == _absent,
 )
 clear_schedules()
 
@@ -1306,7 +1307,7 @@ sex_class_handle.set_temp_class(
 )
 move_to(201, classroom_path(ROOM1))
 begin(201, constant.Behavior.ATTENT_CLASS, period_time(0), _round_end, 45)
-_absent = growth_handle.get_child_growth(201).absent_count
+_absent = child_growth(201).absent_count
 check(
     "A 听课中、下一节是必修实操课 → 截到开课前 10 分钟（口径 62 提前退场；玩家一步跨过开课时刻也照截）",
     handle_npc_ai.judge_student_leave_truncate(201) == 1
@@ -1316,7 +1317,7 @@ check(
 )
 check(
     "A 提前退场不记缺课（口径 66）",
-    growth_handle.get_child_growth(201).absent_count == _absent,
+    child_growth(201).absent_count == _absent,
 )
 check(
     "A 在离开的那一刻重新决策 → 派 561 去实操教室",
@@ -1423,8 +1424,8 @@ check(
     and leave_minutes(201) == 10,
 )
 # Plan 31 §3.5 改写：原先断言「B 今天已翘课 → 不截」（整段豁免），空节里的长娱乐会盖过下一节、这一节缺课整节漏记
-growth_handle.get_child_growth(201).skip_class_flag = True
-growth_handle.get_child_growth(201).skip_class_day = period_time(0).toordinal()
+child_growth(201).skip_class_flag = True
+child_growth(201).skip_class_day = period_time(0).toordinal()
 begin(201, constant.Behavior.PLAY_HOUSE, period_time(0), _round_end)
 check(
     "L1 B 今天已翘课 → 截到开课那一刻（45 分钟），她在那一刻当场判翘课（此前不截）",
@@ -1432,9 +1433,7 @@ check(
     and leave_minutes(201) == 45,
     leave_minutes(201),
 )
-growth_handle.get_child_growth(201).skip_class_day = (
-    period_time(0).toordinal() - 1
-)
+child_growth(201).skip_class_day = period_time(0).toordinal() - 1
 begin(201, constant.Behavior.PLAY_HOUSE, period_time(0), _round_end)
 check(
     "L2 B 前一天挂上、跨天没清掉的 flag 不算今天翘课 → 照常截到开课前 20 分钟",
@@ -1442,8 +1441,8 @@ check(
     and leave_minutes(201) == 25,
     leave_minutes(201),
 )
-growth_handle.get_child_growth(201).skip_class_flag = False
-growth_handle.get_child_growth(201).skip_class_day = 0
+child_growth(201).skip_class_flag = False
+child_growth(201).skip_class_day = 0
 schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_INTEREST, _interest_list[0]
 )
@@ -1472,7 +1471,7 @@ check(
     dispatch(202, _late) == SM.EDUCATION_MOVE_TO_COURSE_PLACE,
 )
 move_to(202, classroom_path(ROOM_P))
-_attend = growth_handle.get_child_growth(202).attend_class_count
+_attend = child_growth(202).attend_class_count
 set_time(_late)
 check(
     "走进正在上实操课的教室 → JOIN_SEX_CLASS",
@@ -1489,7 +1488,7 @@ check(
 )
 check(
     "晚到的人补记一节出勤",
-    growth_handle.get_child_growth(202).attend_class_count == _attend + 1,
+    child_growth(202).attend_class_count == _attend + 1,
 )
 kernel_data.put(flags.set, child.cid, is_h=False)
 kernel_data.put(flags.set, child.cid, see_pl_h=False)
@@ -1699,13 +1698,13 @@ check(
     "玩家提前开讲了那节：人已在教室 → JOIN",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_JOIN_SEX_CLASS,
 )
-_attend = growth_handle.get_child_growth(201).attend_class_count
+_attend = child_growth(201).attend_class_count
 sm = dispatch(201, _early)
 check(
     "整条链：派 722 入课并补记出勤",
     sm == SM.EDUCATION_JOIN_SEX_CLASS
     and flags.get(student.cid, "is_h")
-    and growth_handle.get_child_growth(201).attend_class_count == _attend + 1,
+    and child_growth(201).attend_class_count == _attend + 1,
     sm,
 )
 kernel_data.put(flags.set, student.cid, is_h=False)
@@ -1788,12 +1787,12 @@ check(
     schedule_handle.get_now_course(201) is None
     and class_ai.get_course_stage(201) == E.COURSE_STAGE_NONE,
 )
-_attend = growth_handle.get_child_growth(201).attend_class_count
+_attend = child_growth(201).attend_class_count
 sm = dispatch(201)
 check(
     "整条链：不派 713 自习，交回娱乐链（日程排了照料卵 → 去育儿室），也不记出勤",
     sm == SM.MOVE_TO_NURSERY
-    and growth_handle.get_child_growth(201).attend_class_count == _attend,
+    and child_growth(201).attend_class_count == _attend,
     sm,
 )
 set_time(period_time(0) - datetime.timedelta(minutes=15))
@@ -1912,20 +1911,19 @@ schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_INTEREST, NO_ENTERTAINMENT
 )
 student.entertainment.entertainment_type = [TEND] * 3
-growth_handle.get_child_growth(201).skip_class_flag = False
+child_growth(201).skip_class_flag = False
 check(
     "排着不存在的兴趣课：当前课程为 None、上课状态 NONE（此前是 ATTEND，两道闸照样按有课判）",
     schedule_handle.get_now_course(201) is None
     and class_ai.get_course_stage(201) == E.COURSE_STAGE_NONE,
 )
 kernel_data.set_needs(student.cid, hit=10)
-_absent = growth_handle.get_child_growth(201).absent_count
+_absent = child_growth(201).absent_count
 move_to(201, SCENE_DORM)
 sm = dispatch(201)
 check(
     "体力低：不派 721、不记缺课，交回娱乐链（此前记一节缺课去休息）",
-    sm not in CLASS_SM_SET
-    and growth_handle.get_child_growth(201).absent_count == _absent,
+    sm not in CLASS_SM_SET and child_growth(201).absent_count == _absent,
     sm,
 )
 kernel_data.set_needs(student.cid, hit=100)
@@ -1934,8 +1932,7 @@ move_to(201, SCENE_DORM)
 sm = dispatch(201)
 check(
     "心情闸必中：不派 714、不挂翘课 flag（此前翘课，还可能被抓）",
-    sm not in CLASS_SM_SET
-    and not growth_handle.get_child_growth(201).skip_class_flag,
+    sm not in CLASS_SM_SET and not child_growth(201).skip_class_flag,
     sm,
 )
 class_ai.get_skip_class_rate = _orig_rate
@@ -2025,9 +2022,9 @@ move_to(201, _read_place)
 kernel_data.put(library.set_holder, 0, 999)
 student.behavior.book_id = 0
 student.behavior.book_name = ""
-growth_handle.get_child_growth(201).last_attend_period = []
-growth_handle.get_child_growth(201).last_absent_period = []
-_attend = growth_handle.get_child_growth(201).attend_class_count
+child_growth(201).last_attend_period = []
+child_growth(201).last_absent_period = []
+_attend = child_growth(201).attend_class_count
 sm = dispatch(201)
 check(
     "到场 → 716 派读书、先借了一本、behavior 写的是借到的那本（此前不借书、一律读 0 号书《天灾详解》、书名为空）",
@@ -2048,15 +2045,15 @@ check(
 )
 check(
     "记一节出勤",
-    growth_handle.get_child_growth(201).attend_class_count == _attend + 1,
+    child_growth(201).attend_class_count == _attend + 1,
     (
-        growth_handle.get_child_growth(201).attend_class_count - _attend,
-        growth_handle.get_child_growth(201).last_absent_period,
-        growth_handle.get_child_growth(201).last_attend_period,
+        child_growth(201).attend_class_count - _attend,
+        child_growth(201).last_absent_period,
+        child_growth(201).last_attend_period,
     ),
 )
 _held_book = student.behavior.book_id
-growth_handle.get_child_growth(201).last_attend_period = []
+child_growth(201).last_attend_period = []
 dispatch(201)
 check(
     "手上已有书：再派不另借，读的还是那本",
@@ -2073,26 +2070,26 @@ check(
     and class_ai.get_course_stage(201) == E.COURSE_STAGE_NONE
     and not student.entertainment.borrow_book_id_set,
 )
-_attend = growth_handle.get_child_growth(201).attend_class_count
+_attend = child_growth(201).attend_class_count
 sm = dispatch(201)
 check(
     "整条链：不派 715 / 716、不记出勤，交回娱乐链",
     sm not in (SM.EDUCATION_MOVE_TO_COURSE_PLACE, SM.EDUCATION_DO_COURSE)
-    and growth_handle.get_child_growth(201).attend_class_count == _attend,
+    and child_growth(201).attend_class_count == _attend,
     sm,
 )
 kernel_data.put(library.put_holders, _saved_borrow)
 # 判定与执行之间书被别人借走：716 等 1 分钟、不记出勤
 _orig_borrow = borrow_book_panel.check_random_borrow_book
 borrow_book_panel.check_random_borrow_book = lambda character_id: 0
-growth_handle.get_child_growth(201).last_attend_period = []
-_attend = growth_handle.get_child_growth(201).attend_class_count
+child_growth(201).last_attend_period = []
+_attend = child_growth(201).attend_class_count
 start_sm(SM.EDUCATION_DO_COURSE, 201)
 check(
     "判定与执行之间书被别人借走：716 等 1 分钟、不记出勤",
     student.behavior.behavior_id == constant.Behavior.WAIT
     and student.behavior.duration == 1
-    and growth_handle.get_child_growth(201).attend_class_count == _attend,
+    and child_growth(201).attend_class_count == _attend,
     (student.behavior.behavior_id, student.behavior.duration),
 )
 borrow_book_panel.check_random_borrow_book = _orig_borrow
@@ -2139,7 +2136,7 @@ set_time(period_time(0))
 prepare_ai(201)
 kernel_data.set_needs(student.cid, hit_max=100)
 kernel_data.set_needs(student.cid, hit=100)
-_g = growth_handle.get_child_growth(201)
+_g = child_growth(201)
 _g.selected_course = {}
 for _p in range(8):
     schedule_handle.set_selected_course(
@@ -2281,7 +2278,7 @@ DAY31 = DEFAULT_TIME.date().toordinal()
 """ 本轮各段的「今天」：DEFAULT_TIME 那天的日期序数 """
 ROOM2 = _("理论教室二")
 ROOM3 = _("理论教室三")
-g31 = growth_handle.get_child_growth(201)
+g31 = child_growth(201)
 set_time(period_time(0))
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
@@ -2676,14 +2673,14 @@ def run_loop_round(minute: int, npc_order: list) -> tuple:
     """
     for cid in npc_order:
         clear_need(cid)
-    roster = set(cache.npc_id_got)
-    cache.npc_id_got.intersection_update(npc_order)
+    saved_roster = roster.active()
+    roster.set_active(saved_roster & set(npc_order))
     world.set_clock(game_time.now())
     try:
         steps = wait(minute)
         game = core.state()
     finally:
-        cache.npc_id_got.update(roster)
+        roster.set_active(saved_roster)
         world.set_clock(game_time.now())
     return (
         1,
@@ -2931,7 +2928,7 @@ set_time(DEFAULT_TIME)
 # ---------------------------------------------------------------------------
 # 本轮各段都把翘课概率钉成 0：前面 623 给 201 加了抑郁与恐怖，照原表会随机翘课
 class_ai.get_skip_class_rate = lambda character_id: 0.0
-g32 = growth_handle.get_child_growth(201)
+g32 = child_growth(201)
 """ 学生 201 的养成数据（与 g31 是同一个对象） """
 T_MON_10 = DEFAULT_TIME.replace(hour=10)
 """ 周一 10:00：第 2 节中段，学生这一节没课，工作岗在上班时间 """
@@ -3269,7 +3266,7 @@ section(
 )
 clear_schedules()
 g32.selected_course = {}
-child_g32 = growth_handle.get_child_growth(202)
+child_g32 = child_growth(202)
 """ 幼女 202 的养成数据 """
 child_g32.selected_course = {}
 T1030 = period_time(2)
@@ -3747,7 +3744,7 @@ check(
     and handle_premise.handle_premise(_NOT_HERE, 202) == 0,
     (sorted(_premise_500), handle_premise.handle_premise(_NOT_HERE, 202)),
 )
-_attend = growth_handle.get_child_growth(202).attend_class_count
+_attend = child_growth(202).attend_class_count
 sm = dispatch(202, _late)
 check(
     (
@@ -3757,7 +3754,7 @@ check(
     sm == SM.EDUCATION_JOIN_SEX_CLASS
     and flags.get(child.cid, "is_h")
     and flags.get(child.cid, "see_pl_h")
-    and growth_handle.get_child_growth(202).attend_class_count == _attend + 1,
+    and child_growth(202).attend_class_count == _attend + 1,
     sm,
 )
 # 对照一：走进来的非学生干员照旧目击 H

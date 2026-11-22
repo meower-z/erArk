@@ -24,7 +24,7 @@ class UnconsciousHRefusalEndsHTest(SlowTestCase):
     def setUp(self) -> None:
         """开新游戏，玩家与两名干员在同一场景，玩家以A为交互对象"""
         super().setUp()
-        npcs = sorted(i for i in self.cache.npc_id_got if i)
+        npcs = sorted(i for i in kernel_data.domain("roster").active() if i)
         self.a_id, self.b_id = npcs[0], npcs[1]
         player = self.cache.character_data[0]
         for cid in (self.a_id, self.b_id):

@@ -228,7 +228,7 @@ class NoNestedResolutionTest(SlowTestCase):
         partner_id = self.start_h()
         finder_id = next(
             cid
-            for cid in sorted(self.cache.npc_id_got)
+            for cid in sorted(kernel_data.domain("roster").active())
             if cid not in (0, partner_id)
         )
         reached: list[str] = []
@@ -314,7 +314,7 @@ class NoNestedResolutionTest(SlowTestCase):
         partner_id = self.start_h()
         finder_id = next(
             cid
-            for cid in sorted(self.cache.npc_id_got)
+            for cid in sorted(kernel_data.domain("roster").active())
             if cid not in (0, partner_id)
         )
         opened: list[tuple[int, int]] = []
