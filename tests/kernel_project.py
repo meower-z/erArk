@@ -104,6 +104,7 @@ def project_world_misc(state: dict[str, object]) -> None:
         achievement,
         country,
         growth,
+        h_meters,
         history,
         modes,
         needs,
@@ -143,6 +144,7 @@ def project_world_misc(state: dict[str, object]) -> None:
         "npc_id_got": roster.active(),
         "forbidden_npc_id": roster.forbidden(),
         "npc_name_data": roster.names(),
+        "shoot_position": h_meters.shoot_position(),
     }
     for field, value in fields.items():
         flatten(f"world.{CACHE_AREAS.get(field, field)}.{field}", value, state)

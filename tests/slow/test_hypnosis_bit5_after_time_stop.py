@@ -34,11 +34,17 @@ class HypnosisBit5AfterTimeStopTest(SlowTestCase):
         pl = self.cache.character_data[0]
         talent[PRIMARY_HYPNOSIS] = 1
         talent[PRIMARY_TIME_STOP] = 1
+        from Script.Modules.domains import hypnosis
+
         operator_id = self.npc("杜宾")
         operator = self.cache.character_data[operator_id]
-        operator.hypnosis.hypnosis_degree = game_config.config_hypnosis_type[
-            CALM
-        ].hypnosis_degree
+        kernel_data.put(
+            hypnosis.set,
+            operator_id,
+            hypnosis_degree=game_config.config_hypnosis_type[
+                CALM
+            ].hypnosis_degree,
+        )
         self.walk(ROOM)
         self.world.player.press("召集到自己当前位置", "杜宾", "返回")
         self.instruct(constant.Instruct.ALL_NPC_POSITION)

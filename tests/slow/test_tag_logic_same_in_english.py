@@ -188,7 +188,8 @@ class LanguageRun:
         try:
             self.instruct(instruct.EDIT_GROUP_SEX_TEMPLE, presses)
             # 编辑随退出面板时的 Edit 写进缓存，模板要在之后读
-            template = self.player.h_state.group_sex_body_template_dict["A"]
+            h_state_mod: Any = game("Script.Modules.domains.h_state")
+            template = h_state_mod.view(0).group_sex_body_template_dict["A"]
             return [dict(template[0]), template[1]]
         finally:
             # 面板中途出错时清掉没用掉的按钮，回到主界面再结束群交
@@ -244,16 +245,24 @@ class LanguageRun:
     def hidden_value(self) -> dict[str, int]:
         """隐奸中玩家做各项H行为后的被发现度"""
         panel: Any = game("Script.System.Sex_System.hidden_sex_panel")
-        h_state = self.player.h_state
+        h_state_mod: Any = game("Script.Modules.domains.h_state")
         value_dict = {}
         now_behavior_id = self.player.behavior.behavior_id
-        for behavior_id, behavior_data in self.config.config_behavior.items():
-            if not HIDDEN_TAG_SET & set(behavior_data.tag.split("|")):
-                continue
-            self.player.behavior.behavior_id = behavior_id
-            h_state.hidden_sex_discovery_dregree = HIDDEN_START
-            panel.settle_hidden_value_by_action(0, now_duration=HIDDEN_DURATION)
-            value_dict[behavior_id] = h_state.hidden_sex_discovery_dregree
+        with kernel_data.writing():
+            for (
+                behavior_id,
+                behavior_data,
+            ) in self.config.config_behavior.items():
+                if not HIDDEN_TAG_SET & set(behavior_data.tag.split("|")):
+                    continue
+                self.player.behavior.behavior_id = behavior_id
+                h_state_mod.set(0, hidden_sex_discovery_dregree=HIDDEN_START)
+                panel.settle_hidden_value_by_action(
+                    0, now_duration=HIDDEN_DURATION
+                )
+                value_dict[behavior_id] = h_state_mod.get(
+                    0, "hidden_sex_discovery_dregree"
+                )
         self.player.behavior.behavior_id = now_behavior_id
         return value_dict
 

@@ -9,8 +9,8 @@
 import datetime
 
 from Script.Core import constant, constant_effect, game_type
+from Script.Modules.domains import dirty, status
 from Script.Settle import realtime_settle
-from Script.Modules.domains import status
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
@@ -41,8 +41,8 @@ class StatusAmountsTest(FastTestCase):
 
     def test_time_settlement_stays_exact(self) -> None:
         """灌肠中、苦痛刻印 1 的干员：5 次 1 分钟的苦痛等于 1 次 5 分钟的苦痛，且不是整数"""
-        self.npc.dirty.a_clean = 1
-        self.npc.dirty.enema_capacity = 1
+        with kernel_data.writing():
+            dirty.set(1, a_clean=1, enema_capacity=1)
         ca.ability(self.npc)[15] = 1
         for _ in range(5):
             kernel_data.written(

@@ -70,14 +70,17 @@ class ChildStageDirtTextTest(SlowTestCase):
         Return arguments:
         str -- 面板文字
         """
+        from Script.Modules.domains import dirty
         from Script.UI.Panel import dirty_panel
+        from tests import kernel_data
 
         for age_talent in AGE_TALENT_LIST:
             ca.talent(self.target)[age_talent] = (
                 1 if age_talent == talent_id else 0
             )
-        for part_id in AGE_PART_LIST:
-            self.target.dirty.body_semen[part_id][2] = semen_level
+        with kernel_data.writing(), dirty.editing(self.target_id) as d:
+            for part_id in AGE_PART_LIST:
+                d.body_semen[part_id][2] = semen_level
         panel = dirty_panel.SeeCharacterBodyPanel(
             self.target_id, PANEL_WIDTH, 9, 0
         )

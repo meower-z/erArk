@@ -22,11 +22,11 @@ from Script.Modules.gameplay_resolution import intent, start_gate
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Sex_System import bondage_panel, sex_position_panel
-from tests import chara_abilities as ca, pick_guard
+from tests import chara_abilities as ca, kernel_data, pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
-from Script.Modules.domains import action_info, history
+from Script.Modules.domains import action_info, dirty, h_state, history
 
 NPC = 1
 """ 玩家的交互对象 """
@@ -139,7 +139,7 @@ class InstructSubMenuTest(FastTestCase):
         self.assert_backs_out(hang, "condom_0", "confirm", "cancel")
         self.assert_commits(hang, "condom_0", "confirm", "part_0")
         self.assertEqual(player_collection.get("used_condoms"), [20])
-        self.assertEqual(self.npc.dirty.condom_decoration, {(0, 0): [10]})
+        self.assertEqual(dirty.view(NPC).condom_decoration, {(0, 0): [10]})
 
     def test_close_door(self) -> None:
         """关门：关不上的地方回答否时取消；回答关门时门在行动开始时关上，记下问过"""
@@ -165,17 +165,18 @@ class InstructSubMenuTest(FastTestCase):
             history.recent()[-1],
             constant.Behavior.HIGH_OBSCENITY_ANUS,
         )
-        self.assertEqual(self.npc.h_state.bondage, 0)
+        self.assertEqual(h_state.get(NPC, "bondage"), 0)
         self.cache.debug_mode = True
         self.assert_commits(lambda: panel.select_bondage(bondage_id))
-        self.assertEqual(self.npc.h_state.bondage, bondage_id)
+        self.assertEqual(h_state.get(NPC, "bondage"), bondage_id)
 
     def test_sex_position(self) -> None:
         """换体位：处女的询问能取消；确定后换之前的体位在行动开始时才记下"""
         self.cache.debug_mode = True
         ca.talent(self.npc)[0] = 1
-        self.player.h_state.current_sex_position = 3
-        self.player.h_state.pre_sex_position = -1
+        kernel_data.put(
+            h_state.set, 0, current_sex_position=3, pre_sex_position=-1
+        )
         position_id = next(
             key
             for key, data in game_config.config_sex_position_data.items()
@@ -187,9 +188,9 @@ class InstructSubMenuTest(FastTestCase):
         self.assert_backs_out(
             lambda: panel.select_sex_position(position_id), NO
         )
-        self.assertEqual(self.player.h_state.pre_sex_position, -1)
+        self.assertEqual(h_state.get(0, "pre_sex_position"), -1)
         self.assert_commits(lambda: panel.select_sex_position(position_id), YES)
-        self.assertEqual(self.player.h_state.pre_sex_position, 3)
+        self.assertEqual(h_state.get(0, "pre_sex_position"), 3)
 
     def test_diy_event(self) -> None:
         """角色特殊指令：选择时玩家的事件不变，行动开始时才记下"""

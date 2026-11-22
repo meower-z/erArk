@@ -14,8 +14,10 @@ from Script.Core import constant
 from Script.Design import update
 from Script.Design import game_time, handle_npc_ai
 from Script.Kernel import core
+from Script.Modules.domains import hypnosis
 from Script.Modules.gameplay_resolution import actions, npc_starters
 from Script.Modules.npc_action_choice import choose
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = (update, npc_starters)
@@ -86,5 +88,5 @@ class BlockheadNpcWaitsTest(FastTestCase):
 
     def test_blockhead_npc_idles(self) -> None:
         """木头人：不选目标，发呆到下一次 Tick（3 分钟）"""
-        self.npc.hypnosis.blockhead = True
+        kernel_data.put(hypnosis.set, NPC, blockhead=True)
         self.assertEqual(self.picked(), (constant.Behavior.SHARE_BLANKLY, 3))

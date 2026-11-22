@@ -47,15 +47,15 @@ DENOMINATOR_LIMIT = 2**64
 """ 分母的上限（不含） """
 END_H = "尴尬地结束H"
 """ H 中被撞见时按的结束 H 按钮文字 """
-PLAIN = ("eja_point", "semen_point")
-""" 角色上直接存放的连续数值 """
+H_METERS = ("eja", "semen")
+""" h.meters 里的连续数值 """
 
 
 def num_fields(
     character: "game_type.Character",
 ) -> Iterator[tuple[str, object]]:
     """
-    列出一个角色的全部连续数值，含 GameState 里的生理需求（body.needs）
+    列出一个角色的全部连续数值，含 GameState 里的生理需求（body.needs）、H 数值与污浊
     Keyword arguments:
     character -- 角色数据（game_type.Character）
     Return arguments:
@@ -63,14 +63,17 @@ def num_fields(
     """
     from Script.Modules.domains import status
 
+    dirty_mod = importlib.import_module("Script.Modules.domains.dirty")
+    h_meters = importlib.import_module("Script.Modules.domains.h_meters")
     needs = importlib.import_module("Script.Modules.domains.needs")
-    for name in PLAIN:
-        yield name, getattr(character, name)
+    meters = h_meters.of(character.cid)
+    for name in H_METERS:
+        yield f"h_meters.{name}", meters[name]
     for stat, value in needs.of(character.cid).items():
         yield f"needs.{stat}", value
     for status_id, value in status.of(character.cid).items():
         yield f"status_data[{status_id}]", value
-    dirty = character.dirty
+    dirty = dirty_mod.view(character.cid)
     for part, slot in dirty.body_semen.items():
         yield f"dirty.body_semen[{part}][1]", slot[1]
     yield "dirty.absorbed_total_semen", dirty.absorbed_total_semen
@@ -97,14 +100,20 @@ def set_thirds(character: "game_type.Character") -> None:
     """
     from Script.Modules.domains import status
 
-    for name in PLAIN:
-        setattr(character, name, max(int(getattr(character, name)), 1) + THIRD)
+    dirty_mod = importlib.import_module("Script.Modules.domains.dirty")
+    h_meters = importlib.import_module("Script.Modules.domains.h_meters")
+    meters = h_meters.of(character.cid)
+    h_meters.set(
+        character.cid,
+        **{name: max(int(meters[name]), 1) + THIRD for name in H_METERS},
+    )
     for status_id, value in status.of(character.cid).items():
         kernel_data.put(
             status.set, character.cid, status_id, max(int(value), 1) + THIRD
         )
-    for slot in character.dirty.body_semen.values():
-        slot[1] = max(int(slot[1]), 1) + THIRD
+    with dirty_mod.editing(character.cid) as d:
+        for slot in d.body_semen.values():
+            slot[1] = max(int(slot[1]), 1) + THIRD
     needs = importlib.import_module("Script.Modules.domains.needs")
     stats = needs.of(character.cid)
     needs.set(

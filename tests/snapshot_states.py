@@ -254,9 +254,9 @@ def fertilize(world: FullWorld, mother_id: int) -> None:
     from tests.kernel_data import writing
 
     mother = world.cache.character_data[mother_id]
-    # 部位 7 为子宫，类型 0 为身体
-    ejaculation_panel.update_semen_dirty(mother_id, 7, 0, 1000)
     with writing():
+        # 部位 7 为子宫，类型 0 为身体
+        ejaculation_panel.update_semen_dirty(mother_id, 7, 0, 1000)
         for _ in range(7):
             if pregnancy.of(mother_id).ovulation_flag:
                 break

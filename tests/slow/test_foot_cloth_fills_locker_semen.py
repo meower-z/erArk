@@ -40,12 +40,11 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.Core import game_type
         from Script.Design import game_time
 
-        from Script.Core import game_type
-
-        change = game_type.CharacterStatusChange()
-        kernel_data.written(effect, cid, 5, change, game_time.now())
+        with kernel_data.writing():
+            effect(cid, 5, game_type.CharacterStatusChange(), game_time.now())
 
     def foot_cloth_to_locker(
         self,
@@ -60,19 +59,23 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
         from Script.Modules.domains import wardrobe
 
         from Script.Design import attr_calculation
+        from Script.Modules.domains import dirty
         from Script.Settle import default_cloth
 
         cid = self.npc("阿米娅")
         cd = self.cache.character_data[cid]
-        self.assertEqual(cd.dirty.cloth_locker_semen, {}, "开局的衣柜精液表")
+        self.assertEqual(
+            dirty.view(cid).cloth_locker_semen, {}, "开局的衣柜精液表"
+        )
         socks, shoes = list(wardrobe.of(cid).cloth_wear[10]), list(
             wardrobe.of(cid).cloth_wear[11]
         )
         self.assertTrue(shoes, "开局穿着鞋")
-        cd.dirty.cloth_semen[11][1] = SHOE_SEMEN
-        cd.dirty.cloth_semen[11][2] = attr_calculation.get_semen_now_level(
-            SHOE_SEMEN, 11, 1
-        )
+        with kernel_data.writing(), dirty.editing(cid) as d:
+            d.cloth_semen[11][1] = SHOE_SEMEN
+            d.cloth_semen[11][2] = attr_calculation.get_semen_now_level(
+                SHOE_SEMEN, 11, 1
+            )
         self.settle(default_cloth.handle_foot_cloth_to_shower_locker, cid)
         return cd, socks, shoes
 
@@ -93,13 +96,16 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
             (socks, shoes),
             "衣柜里的鞋袜",
         )
+        from Script.Modules.domains import dirty
+
+        d = dirty.view(cd.cid)
         self.assertEqual(
-            (cd.dirty.cloth_semen[11][1], cd.dirty.cloth_locker_semen[11][1]),
+            (d.cloth_semen[11][1], d.cloth_locker_semen[11][1]),
             (0, SHOE_SEMEN),
             "鞋上的精液进了衣柜",
         )
         self.assertEqual(
-            sorted(cd.dirty.cloth_locker_semen),
+            sorted(d.cloth_locker_semen),
             sorted(game_config.config_clothing_type),
             "衣柜精液表的服装部位",
         )
@@ -123,6 +129,8 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
             (socks, shoes),
             "穿回身上的鞋袜",
         )
+        from Script.Modules.domains import dirty
+
         self.assertEqual(
-            cd.dirty.cloth_semen[11][1], SHOE_SEMEN, "精液回到鞋上"
+            dirty.view(cd.cid).cloth_semen[11][1], SHOE_SEMEN, "精液回到鞋上"
         )

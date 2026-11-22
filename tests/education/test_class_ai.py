@@ -17,13 +17,8 @@ from Script.Settle import realtime_settle
 from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
 from Script.Kernel import core
-from Script.Modules.domains import (
-    achievement,
-    action_info,
-    flags,
-    library,
-    modes,
-)
+from Script.Modules.domains import achievement, action_info, flags, hypnosis
+from Script.Modules.domains import library, modes
 from Script.Modules.domains import physical_exam as px, plan
 from tests import chara_abilities as ca, kernel_data, world
 
@@ -2304,7 +2299,7 @@ check(
     not class_ai.judge_teacher_available(101, ROOM2),
 )
 kernel_data.put(flags.set, teacher.cid, unconscious_h=6)
-teacher.hypnosis.blockhead = True
+kernel_data.put(hypnosis.set, teacher.cid, blockhead=True)
 check(
     "M3 体控-木头人、人就在本节教室 → 也来不了（每轮被锁成原地等待，玩家离开也不解除；此前判能到岗）",
     not class_ai.judge_teacher_available(101, ROOM1),
@@ -2316,7 +2311,7 @@ check(
     sm == SM.EDUCATION_SELF_STUDY,
     sm,
 )
-teacher.hypnosis.blockhead = False
+kernel_data.put(hypnosis.set, teacher.cid, blockhead=False)
 kernel_data.put(flags.set, teacher.cid, unconscious_h=0)
 check("M3 催眠解除后恢复能到岗", class_ai.judge_teacher_available(101, ROOM1))
 clear_schedules()
@@ -2767,7 +2762,7 @@ def setup_h1(third_room: str) -> None:
         kernel_data.put(flags.set, cid, is_h=False)
         kernel_data.put(flags.set, cid, is_follow=0)
         kernel_data.put(flags.set, cid, unconscious_h=0)
-        cd.hypnosis.blockhead = False
+        kernel_data.put(hypnosis.set, cid, blockhead=False)
         for key in cd.second_behavior:
             cd.second_behavior[key] = 0
         for list_name in (
@@ -3004,7 +2999,7 @@ def run_rt32(
     kernel_data.put(flags.set, student.cid, is_h=False)
     kernel_data.put(flags.set, student.cid, is_follow=0)
     kernel_data.put(flags.set, student.cid, unconscious_h=0)
-    student.hypnosis.blockhead = False
+    kernel_data.put(hypnosis.set, student.cid, blockhead=False)
     for key in student.second_behavior:
         student.second_behavior[key] = 0
     for list_name in (
@@ -3568,7 +3563,7 @@ def setup_ghost() -> dict:
     kernel_data.put(flags.set, student.cid, see_pl_h=False)
     kernel_data.put(flags.set, student.cid, is_follow=0)
     kernel_data.put(flags.set, student.cid, unconscious_h=0)
-    student.hypnosis.blockhead = False
+    kernel_data.put(hypnosis.set, student.cid, blockhead=False)
     for key in student.second_behavior:
         student.second_behavior[key] = 0
     for list_name in (

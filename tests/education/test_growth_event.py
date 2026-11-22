@@ -6,7 +6,7 @@ from _bootstrap import class_ai, clear_schedules, constant, constant_promise
 from _bootstrap import datetime, education_constant, finish, game_config
 from _bootstrap import game_time, growth_event_handle, growth_handle
 from _bootstrap import handle_premise, make_character, open_all_classroom
-from _bootstrap import period_time, pl, random, remove_character
+from _bootstrap import period_time, random, remove_character
 from _bootstrap import schedule_handle, schedule_template_handle, section
 from _bootstrap import semester_handle, set_time
 from Script.System.Official_Event_System import official_event_handle
@@ -16,7 +16,7 @@ import inspect
 from Script.Design import talk
 from Script.Settle import past_day_settle
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import official
+from Script.Modules.domains import h_state, official
 from collections.abc import Callable
 import _bootstrap as _boot
 from Script.UI.Moudle import draw as _draw_module
@@ -1223,8 +1223,8 @@ _twin_head = [(E.BIRTHDAY_EVENT_UID, 218), (E.BIRTHDAY_EVENT_UID, 219)]
 check(
     "M2 双胞胎前提：今天（9/8）过生日的只有这对双胞胎（萝莉 C 的生日在 9/7），口球字段在（h_state.body_item[14]）",
     _birthday_today == [218, 219]
-    and 14 in twin_a.h_state.body_item
-    and 14 in pl.h_state.body_item,
+    and 14 in h_state.view(218).body_item
+    and 14 in h_state.view(0).body_item,
     _birthday_today,
 )
 _pushed = push_birthday()
@@ -1238,7 +1238,7 @@ check(
     "M2 口球对照：没人塞口球时，按口上的判法（official_event_handle.judge_premise_pass）通用 3 的前提对姐姐成立",
     official_event_handle.judge_premise_pass(_birthday_premise, 218, 0) > 0,
 )
-twin_a.h_state.body_item[14][1] = True
+kernel_data.put(h_state.set_body_item, 218, 14, True)
 check(
     "M2 姐姐被塞着口球：self_now_gag 成立，按口上的判法通用 3 的前提整组判 0（口球状态真的生效了）",
     bool(HP(constant_promise.Premise.SELF_NOW_GAG, 218))
@@ -1254,9 +1254,9 @@ check(
     _pushed == [218, 219] and queue_pair_list()[:2] == _twin_head,
     (_pushed, queue_pair_list()),
 )
-twin_a.h_state.body_item[14][1] = False
+kernel_data.put(h_state.set_body_item, 218, 14, False)
 kernel_data.put(official.set_queue, [])
-pl.h_state.body_item[14][1] = True
+kernel_data.put(h_state.set_body_item, 0, 14, True)
 check(
     "M2 博士被塞着口球：按口上的判法（交互对象指向博士）同样整组判 0",
     official_event_handle.judge_premise_pass(_birthday_premise, 218, 0) == 0,
@@ -1267,7 +1267,7 @@ check(
     _pushed == [218, 219] and queue_pair_list()[:2] == _twin_head,
     (_pushed, queue_pair_list()),
 )
-pl.h_state.body_item[14][1] = False
+kernel_data.put(h_state.set_body_item, 0, 14, False)
 kernel_data.put(official.set_queue, [])
 JP = growth_event_handle.judge_premise_all_pass
 check(

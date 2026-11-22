@@ -12,7 +12,7 @@ from Script.Design import handle_ability
 import inspect
 from Script.System.Official_Event_System import official_event_handle
 from tests import chara_abilities as ca, kernel_data, world
-from Script.Modules.domains import library, status
+from Script.Modules.domains import first_record, library, status
 
 open_all_classroom()
 clear_schedules()
@@ -451,7 +451,7 @@ check(
     "学生上舌技课：口交理论经验增加，任何真实性交经验都是 0，没有口交初体验",
     ca.experience(theory_student).get(171, 0) > 0
     and all(ca.experience(theory_student).get(e, 0) == 0 for e in real_sex_exp)
-    and 2 not in theory_student.first_record.first_part_sex_dict,
+    and not first_record.has_part_sex(205, 2),
 )
 teacher_sex_before = {e: ca.experience(teacher).get(e, 0) for e in real_sex_exp}
 teacher_theory_before = ca.experience(teacher).get(171, 0)

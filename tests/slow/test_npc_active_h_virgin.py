@@ -76,7 +76,11 @@ class NpcActiveHVirginTest(SlowTestCase):
         player.target_character_id = npc_id
         self.instruct(constant.Instruct.DO_H)
         self.instruct(constant.Instruct.CHANGE_TOP_AND_BOTTOM)
-        self.assertTrue(npc.h_state.npc_active_h, f"{NPC_NAME}在主动H")
+        from Script.Modules.domains import h_state
+
+        self.assertTrue(
+            h_state.get(npc_id, "npc_active_h"), f"{NPC_NAME}在主动H"
+        )
         return npc_id
 
     def picks_at_part(self, part_id: int) -> collections.Counter[str]:

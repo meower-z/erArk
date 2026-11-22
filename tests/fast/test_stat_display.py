@@ -30,6 +30,8 @@ WHOLE_NEEDS = frozenset(
     {"hit_max", "mana_max", "sanity_max", "angry", "desire"}
 )
 """ body.needs 里只存 int 的项，显示时不用包 shown """
+WHOLE_H_METERS = frozenset({"eja_max", "semen_max", "extra_semen"})
+""" h.meters 里只存 int 的项，显示时不用包 shown """
 PASS_THROUGH = frozenset({"int", "float", "round", "abs", "max", "min"})
 """ 数值穿过它们仍然原样变成文字的函数 """
 
@@ -40,22 +42,33 @@ def is_num_read(node: ast.AST) -> bool:
     Keyword arguments:
     node -- 表达式
     Return arguments:
-    bool -- 是 PLAIN 里的属性、needs.of(...)[...]（下标是 WHOLE_NEEDS 里的常量时除外）、status.of(...)[...]、
+    bool -- 是 PLAIN 里的属性、needs.of(...)[...]（下标是 WHOLE_NEEDS 里的常量时除外）、
+    h_meters.of(...)[...]（下标是 WHOLE_H_METERS 里的常量时除外）、status.of(...)[...]、
+    dirty.body_semen_amount(...)、dirty.get(..., "absorbed_total_semen")、
     status_data[...] 或 body_semen[...][1] 时为真
     """
     if isinstance(node, ast.Attribute):
         return node.attr in PLAIN
-    if (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "get"
-        and isinstance(node.func.value, ast.Name)
-        and node.func.value.id == "player_ability"
-        and len(node.args) >= 2
-        and isinstance(node.args[1], ast.Constant)
-        and node.args[1].value == "today_sanity_point_cost"
-    ):
-        return True
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+        if isinstance(node.func.value, ast.Name):
+            mod = node.func.value.id
+            if mod == "player_ability":
+                return (
+                    node.func.attr == "get"
+                    and len(node.args) >= 2
+                    and isinstance(node.args[1], ast.Constant)
+                    and node.args[1].value == "today_sanity_point_cost"
+                )
+            if mod == "dirty":
+                if node.func.attr == "body_semen_amount":
+                    return True
+                return (
+                    node.func.attr == "get"
+                    and len(node.args) >= 2
+                    and isinstance(node.args[1], ast.Constant)
+                    and node.args[1].value == "absorbed_total_semen"
+                )
+        return False
     if not isinstance(node, ast.Subscript):
         return False
     base = node.value
@@ -64,12 +77,18 @@ def is_num_read(node: ast.AST) -> bool:
         and isinstance(base.func, ast.Attribute)
         and base.func.attr == "of"
         and isinstance(base.func.value, ast.Name)
-        and base.func.value.id in ("needs", "status")
     ):
         stat = node.slice
-        return base.func.value.id == "status" or not (
-            isinstance(stat, ast.Constant) and stat.value in WHOLE_NEEDS
-        )
+        if base.func.value.id == "status":
+            return True
+        if base.func.value.id == "needs":
+            return not (
+                isinstance(stat, ast.Constant) and stat.value in WHOLE_NEEDS
+            )
+        if base.func.value.id == "h_meters":
+            return not (
+                isinstance(stat, ast.Constant) and stat.value in WHOLE_H_METERS
+            )
     if isinstance(base, ast.Attribute) and base.attr == "status_data":
         return True
     return (
@@ -216,12 +235,14 @@ class StatDisplayTest(FastTestCase):
                 "b = str(int(c.status_data[3]))",
                 'd = "%d/%d" % (c.mana_point, c.mana_point_max)',
                 'e = _("{0}").format(needs.of(c.cid)["milk"] + 1)',
-                'f = f"{c.dirty.body_semen[2][1]}"',
+                'f = f"{dirty.view(c.cid).body_semen[2][1]}"',
                 'g = f"{num.shown(c.hit_point)}"',
                 'h = f"{get_level(needs.of(0)["tired"])}"',
-                'i = f"{c.sp_flag.milk}{c.dirty.body_semen[2][2]}"',
-                'j = f"{c.hit_point_max}"',
-                'k = f"{status.of(c.cid)[3]}"',
+                'i = f"{c.sp_flag.milk}{dirty.view(c.cid).body_semen[2][2]}"',
+                'j = f"{h_meters.of(0)["semen_max"]}"',
+                'k = f"{h_meters.of(0)["eja"]}"',
+                'm = f"{dirty.body_semen_amount(c.cid, 6)}"',
+                'n = f"{status.of(c.cid)[3]}"',
             ]
         )
         self.assertEqual(
@@ -231,7 +252,9 @@ class StatDisplayTest(FastTestCase):
                 "x.py:2 c.status_data[3]",
                 "x.py:3 c.mana_point",
                 "x.py:4 needs.of(c.cid)['milk']",
-                "x.py:5 c.dirty.body_semen[2][1]",
-                "x.py:10 status.of(c.cid)[3]",
+                "x.py:5 dirty.view(c.cid).body_semen[2][1]",
+                "x.py:10 h_meters.of(0)['eja']",
+                "x.py:11 dirty.body_semen_amount(c.cid, 6)",
+                "x.py:12 status.of(c.cid)[3]",
             ],
         )

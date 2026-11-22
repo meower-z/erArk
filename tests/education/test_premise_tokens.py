@@ -11,7 +11,7 @@ from _bootstrap import open_all_classroom, period_time, pl, remove_character
 from _bootstrap import schedule_handle, schedule_template_handle, section
 from _bootstrap import set_time, settle_behavior, sex_class_handle
 from Script.Design import handle_ability, second_behavior
-from Script.Modules.domains import flags, modes
+from Script.Modules.domains import flags, hypnosis, modes
 from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
@@ -735,14 +735,14 @@ check(
     teacher_premise_pair(),
 )
 kernel_data.put(flags.set, teacher.cid, unconscious_h=0)
-teacher.hypnosis.blockhead = True
+kernel_data.put(hypnosis.set, teacher.cid, blockhead=True)
 move_to(101, classroom_path(ROOM1))
 check(
     "M3 木头人：人在教室也来不了（每轮被锁成原地等待；此前判能到岗）",
     teacher_premise_pair() == (0, 1),
     teacher_premise_pair(),
 )
-teacher.hypnosis.blockhead = False
+kernel_data.put(hypnosis.set, 101, blockhead=False)
 check(
     "M3 解除后恢复能到岗",
     teacher_premise_pair() == (1, 0),

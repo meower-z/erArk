@@ -38,14 +38,14 @@ class UnconsciousHRefusalEndsHTest(SlowTestCase):
         cid -- 角色id
         unconscious -- sp_flag.unconscious_h 的值
         """
-        from Script.Modules.domains import wardrobe
+        from Script.Modules.domains import h_state, wardrobe
+        from tests import kernel_data
 
-        data = self.cache.character_data[cid]
         kernel_data.put(kernel_data.domain("flags").set, cid, is_h=True)
         kernel_data.put(
             kernel_data.domain("flags").set, cid, unconscious_h=unconscious
         )
-        data.h_state.insert_position = INSERTED
+        kernel_data.put(h_state.set, cid, insert_position=INSERTED)
         if cid == 0:
             return
         kind = next(
@@ -66,12 +66,11 @@ class UnconsciousHRefusalEndsHTest(SlowTestCase):
         Return arguments:
         tuple -- (仍在H中, 插入位置, 还有脱下的衣服)
         """
-        from Script.Modules.domains import wardrobe
+        from Script.Modules.domains import h_state, wardrobe
 
-        data = self.cache.character_data[cid]
         return (
             kernel_data.domain("flags").get(cid, "is_h"),
-            data.h_state.insert_position,
+            h_state.get(cid, "insert_position"),
             any(wardrobe.of(cid).cloth_off.values()),
         )
 

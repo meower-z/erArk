@@ -115,33 +115,33 @@ class PickDraftWorldTest(SlowTestCase):
             for cid, cloth in game_config.config_clothing_tem.items()
             if cloth.clothing_type == PANTIES
         )
+        from Script.Modules.domains import dirty, h_meters
+        from tests import kernel_data
+
         self.world.move(0, LOCKER_ROOM)
         npc = self.cache.character_data[self.chara_id]
-        kernel_data.put(
-            wardrobe.set_part,
-            npc.cid,
-            "cloth_locker_in_shower",
-            PANTIES,
-            [pan_id],
-        )
-        npc.dirty.cloth_locker_semen[PANTIES] = [
-            game_config.config_clothing_type[PANTIES].name,
-            0,
-            0,
-            0,
-        ]
-        player = self.cache.character_data[0]
-        player.semen_point = player.semen_point_max = 1000
+        with kernel_data.writing():
+            wardrobe.set_part(
+                npc.cid, "cloth_locker_in_shower", PANTIES, [pan_id]
+            )
+            with dirty.editing(self.chara_id) as d:
+                d.cloth_locker_semen[PANTIES] = [
+                    game_config.config_clothing_type[PANTIES].name,
+                    0,
+                    0,
+                    0,
+                ]
+            h_meters.set(0, semen=1000, semen_max=1000)
         return pan_id
 
     def test_locker_shoot_settles_at_start(self) -> None:
         """射在衣柜的内裤上：一个 0 分钟的具名编辑，选择期间不掷骰，Edit 开始后精液射出"""
         from Script.Config import game_config
         from Script.Core import constant
+        from Script.Modules.domains import h_meters
 
         self.fill_locker()
-        player = self.cache.character_data[0]
-        before = player.semen_point
+        before = h_meters.of(0)["semen"]
         self.world.player.press(
             "的衣柜",
             "用衣服冲",
@@ -154,7 +154,7 @@ class PickDraftWorldTest(SlowTestCase):
         edit = next(a for a in self.started if a.who == "0")
         data = cast(Mapping[str, object], edit.action_data)
         self.assertEqual(data["edit"], "locker_shoot")
-        self.assertLess(player.semen_point, before)
+        self.assertLess(h_meters.of(0)["semen"], before)
 
     def test_locker_steal_rides_edit(self) -> None:
         """偷走内裤再退出：一个 0 分钟的 Edit，之后内裤在玩家的藏品里，衣柜空了"""

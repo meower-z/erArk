@@ -10,17 +10,17 @@ from fractions import Fraction
 
 from Script.Core import save_handle
 from Script.Kernel import core
+from Script.Modules.domains import h_meters, needs, status
 from Script.Modules.gameplay_resolution import working
 from Script.Test.Static_Check.check_registry import get_all_checks
-from Script.Modules.domains import needs, status
 from tests.fast.base import FastTestCase
 from Script.Config import normal_config
 from tests import kernel_data
 
 THIRD = Fraction(1, 3)
 """ 加到每个数值上的零头 """
-FIELDS = {"eja_point": 100, "semen_point": 10}
-""" 角色身上的连续数值与测试用的整数部分，都在各自量程内 """
+H_METERS = {"eja": 100, "semen": 10}
+""" h.meters 里的连续数值与测试用的整数部分，都在各自量程内 """
 NEEDS = {
     "tired": 48,
     "urine": 100,
@@ -49,12 +49,12 @@ class ExactStatsPassChecksTest(FastTestCase):
             self.world.chara(0, "博士"),
             self.world.chara(1, "干员"),
         ]
+        self.enterContext(working.based_on(core.state()))
         for chara in self.charas:
             kernel_data.set_needs(
                 chara.cid, hit_max=1000, mana_max=1000, sanity_max=100
             )
-            chara.semen_point_max = 100
-        self.enterContext(working.based_on(core.state()))
+            h_meters.set(chara.cid, semen_max=100)
 
     def set_stats(self, extra: int | Fraction) -> None:
         """
@@ -63,8 +63,9 @@ class ExactStatsPassChecksTest(FastTestCase):
         extra -- 零头（0 时数值都是 int）
         """
         for chara in self.charas:
-            for field, value in FIELDS.items():
-                setattr(chara, field, value + extra)
+            h_meters.set(
+                chara.cid, **{k: v + extra for k, v in H_METERS.items()}
+            )
             needs.set(chara.cid, **{k: v + extra for k, v in NEEDS.items()})
             kernel_data.put(status.set, chara.cid, 0, 1 + extra)
 
@@ -96,9 +97,10 @@ class ExactStatsPassChecksTest(FastTestCase):
         save_handle.repair_installed()
         for chara in self.charas:
             with self.subTest(chara=chara.cid):
+                meters = h_meters.of(chara.cid).items()
                 self.assertEqual(
-                    {f: getattr(chara, f) for f in FIELDS},
-                    {f: v + THIRD for f, v in FIELDS.items()},
+                    {k: v for k, v in meters if k in H_METERS},
+                    {k: v + THIRD for k, v in H_METERS.items()},
                 )
                 stats = needs.of(chara.cid).items()
                 self.assertEqual(
