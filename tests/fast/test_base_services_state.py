@@ -27,6 +27,7 @@ from Script.Modules.domains import (
     diplomacy,
     dormitory,
     library,
+    npc_template,
     official,
     recruit,
     roster,
@@ -78,7 +79,7 @@ class BaseServicesStateTest(FastTestCase):
         """进度满 100 的全泰拉招募线：唯一可招募的角色进待确认名单，进度归 0。没满的线不变"""
         candidate = next(
             cid
-            for cid, tem in self.cache.npc_tem_data.items()
+            for cid, tem in npc_template.table().items()
             if not roster.is_forbidden(cid)
             and cid
             and tem.Mother_id == 0

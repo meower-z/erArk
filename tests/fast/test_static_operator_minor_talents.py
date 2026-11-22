@@ -4,9 +4,10 @@
 ==========================================
 data/character/ 下的静态干员模板不带未初潮（T|6）、未成年（T|7）与萝莉（T|103）素质；
 GIRL_OPERATOR_ADV_IDS 列出的 26 名干员带少女（T|104）素质。
-断言落在 MinimalWorld 载入的模板素质（cache.npc_tem_data）上，新游戏按这些模板生成静态干员。
+断言落在 MinimalWorld 载入的静态模板素质（character_config.character_tem_list）上，新游戏按这些模板生成静态干员。
 """
 
+from Script.Config import character_config
 from tests.fast.base import FastTestCase
 
 NO_MENARCHE_TALENT = 6
@@ -57,7 +58,7 @@ class StaticOperatorMinorTalentTest(FastTestCase):
             with self.subTest(talent_id=talent_id):
                 holders = sorted(
                     adv_id
-                    for adv_id, character_tem in self.cache.npc_tem_data.items()
+                    for adv_id, character_tem in character_config.character_tem_list.items()
                     if character_tem.Talent.get(talent_id)
                 )
                 self.assertEqual(
@@ -69,6 +70,8 @@ class StaticOperatorMinorTalentTest(FastTestCase):
         missing = [
             adv_id
             for adv_id in GIRL_OPERATOR_ADV_IDS
-            if not self.cache.npc_tem_data[adv_id].Talent.get(GIRL_TALENT)
+            if not character_config.character_tem_list[adv_id].Talent.get(
+                GIRL_TALENT
+            )
         ]
         self.assertEqual(missing, [])

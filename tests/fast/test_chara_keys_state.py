@@ -284,7 +284,9 @@ class CharaKeysStateTest(FastTestCase):
             "npc_tem_data": {},
         }
         with (
-            mock.patch.object(old_chara_to_new.cache, "npc_tem_data", {}),
+            mock.patch.dict(
+                old_chara_to_new.character_config.character_tem_list, clear=True
+            ),
             mock.patch.object(
                 old_chara_to_new, "update_new_character", return_value=0
             ),

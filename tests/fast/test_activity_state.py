@@ -9,7 +9,7 @@
 - 给出 GameState 时只读那个 GameState。
 - 读档：旧存档角色对象上的十个属性写进状态，再从对象上删掉。整数的行为id与二段行为键换成名字。
   adopt_old_save 交回缺的二段行为配置项数。
-- 编解码：十个键经 kernel_state 往返后不变，写出的存档版本为 22。
+- 编解码：十个键经 kernel_state 往返后不变，写出的版本等于 upgrade.CURRENT 且不低于 22。
 - 角色对象上没有这十个属性。
 """
 
@@ -227,7 +227,7 @@ class ActivityStateTest(FastTestCase):
         self.assertEqual(working.get(str(NPC), activity.TARGET), before)
 
     def test_codec_round_trip(self) -> None:
-        """十个键经存档编解码往返后不变，写出的存档版本为 22"""
+        """十个键经存档编解码往返后不变，写出的版本等于 upgrade.CURRENT 且不低于 22"""
         now = game_time.now()
         food = game_type.Food()
         food.name = "便当"
@@ -254,7 +254,8 @@ class ActivityStateTest(FastTestCase):
             effects = buf.effects()
         state = core.preview(core.state(), effects)
         encoded = kernel_state.encode(state, "tok")
-        self.assertEqual((encoded["version"], upgrade.CURRENT), (22, 22))
+        self.assertEqual(encoded["version"], upgrade.CURRENT)
+        self.assertGreaterEqual(upgrade.CURRENT, 22)
         decoded = kernel_state.decode(encoded, tagged=True)
         self.assertEqual(activity.state(NPC, decoded), "eat")
         self.assertEqual(activity.last_behaviors(NPC, decoded), [0, "eat"])

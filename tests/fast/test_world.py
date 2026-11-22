@@ -13,9 +13,11 @@ from unittest import mock
 
 import numpy
 
+from Script.Core import game_type
 from Script.Design import game_time as clock
 from Script.Design import handle_premise
-from tests import world
+from Script.Modules.domains import npc_template
+from tests import kernel_data, world
 from tests.fast import FORBIDDEN, FastLayerImportError
 from tests.fast.base import FastTestCase
 from tests.world import FixtureError
@@ -75,14 +77,16 @@ class WorldTest(FastTestCase):
         room = self.world.scene(ROOM)
         room.close_flag = 1
         world.set_clock(game_time + datetime.timedelta(days=1))
-        cache.npc_tem_data[-1] = cache.npc_tem_data[1]
+        template = game_type.NpcTem()
+        template.AdvNpc = 9999
+        kernel_data.written(npc_template.add, template)
         self.world.reset()
         self.assertIs(self.cache, cache)
         self.assertEqual(cache.character_data, {})
         self.assertEqual(room.close_flag, 0)
         self.assertEqual(room.character_list, set())
         self.assertEqual(clock.now(), game_time)
-        self.assertNotIn(-1, cache.npc_tem_data)
+        self.assertIsNone(npc_template.get(9999))
 
     def test_new_game_clock_is_start_time(self) -> None:
         """开新游戏读的开局时间是 START_TIME，不是 config.ini 的；测试改过的配置复原时读回来"""

@@ -356,7 +356,6 @@ class KernelStateTest(FastTestCase):
             == 12
         )
         self.world.chara(0, "博士")
-        self.cache.npc_tem_data[soft_cid] = soft_tem
         kernel_data.put(
             character_handle.init_character,
             soft_cid,

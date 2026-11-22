@@ -86,8 +86,9 @@ class LoadRebuildsDerivedTest(SlowTestCase):
             "medical_bed_limit": medical.state().bed_limit,
         }
         out["recipe_data"] = draft.encode(self.cache.recipe_data)
+        npc_template = game("Script.Modules.domains.npc_template")
         out["npc_tem_data"] = [
-            (k, id(v)) for k, v in self.cache.npc_tem_data.items()
+            (k, id(v)) for k, v in npc_template.table().items()
         ]
         return out
 

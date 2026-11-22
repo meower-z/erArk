@@ -59,7 +59,7 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
             cid
             for cid in self.cache.character_data
             if cid not in kernel_data.domain("roster").active()
-            and cid in self.cache.npc_tem_data
+            and cid in game("Script.Config.character_config").character_tem_list
         )
         self.loaded = dict(vars(self.cache))
         self.loaded["character_data"] = dict(self.cache.character_data)
@@ -75,7 +75,9 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
 
     def template_maxima(self) -> dict[str, int]:
         """新id模板的体力与气力上限，键是 body.needs 的项"""
-        tem = self.cache.npc_tem_data[self.new]
+        tem = game("Script.Config.character_config").character_tem_list[
+            self.new
+        ]
         return {"hit_max": tem.Hp, "mana_max": tem.Mp}
 
     def test_current_save_moves_needs(self) -> None:

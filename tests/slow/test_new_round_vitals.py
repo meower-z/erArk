@@ -30,6 +30,7 @@ class NewRoundVitalsTest(SlowTestCase):
 
         new_round = game("Script.UI.Panel.new_round")
         cache_control = game("Script.Core.cache_control")
+        npc_template = game("Script.Modules.domains.npc_template")
         kernel_data.set_needs(0, hit_max=3000, mana_max=2600, sanity_max=300)
         handle = new_round.New_Round_Handle()
         handle.pl_extra_growth_count = 2
@@ -46,7 +47,7 @@ class NewRoundVitalsTest(SlowTestCase):
         self.assertTrue(npcs, "新周目有干员")
         wrong = {}
         for cid in npcs:
-            tem = cache.npc_tem_data[cid]
+            tem = npc_template.get(cid)
             stats = kernel_data.needs_of(cid)
             got = tuple(
                 stats[k] for k in ("hit_max", "mana_max", "hit", "mana")
