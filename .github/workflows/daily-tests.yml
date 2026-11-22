@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
+    inputs:
+      test_path:
+        description: "Single pytest file or node id under tests/fast/, tests/slow/ or tools/verify/ (for example tests/slow/test_foo.py or tests/slow/test_foo.py::TestCls::test_bar). Leave empty to run the full suites."
+        required: false
+        default: ""
+        type: string
   pull_request:
     branches: [main]
 
@@ -37,24 +43,49 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends openbox
 
       - name: Fast suite
-        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' && (github.event_name != 'workflow_dispatch' || inputs.test_path == '') }}
         timeout-minutes: 15
         run: python -m pytest tests/fast -p no:cacheprovider -rfEs --junitxml=test-reports/fast.xml
 
       - name: Slow suite
-        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' && (github.event_name != 'workflow_dispatch' || inputs.test_path == '') }}
         timeout-minutes: 60
         run: xvfb-run -a sh -c 'openbox & python -m pytest tests/slow --forked -k "not EducationSuiteTest" -p no:cacheprovider -rfEs --junitxml=test-reports/slow.xml'
 
       - name: Education suite
-        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' && (github.event_name != 'workflow_dispatch' || inputs.test_path == '') }}
         timeout-minutes: 20
         run: python -m pytest tests/slow --forked -k EducationSuiteTest -p no:cacheprovider -rfEsP --junitxml=test-reports/education.xml
 
       - name: tools/verify unit tests
-        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' && (github.event_name != 'workflow_dispatch' || inputs.test_path == '') }}
         timeout-minutes: 10
         run: python -m pytest tools/verify -p no:cacheprovider -rfEs --junitxml=test-reports/verify.xml
+
+      - name: Targeted test
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' && github.event_name == 'workflow_dispatch' && inputs.test_path != '' }}
+        timeout-minutes: 30
+        shell: bash
+        env:
+          TEST_PATH: ${{ inputs.test_path }}
+        run: |
+          if [[ ! "$TEST_PATH" =~ ^(tests/fast|tests/slow|tools/verify)/[A-Za-z0-9_./:-]+$ ]]; then
+            echo "::error::Invalid test_path: must start with tests/fast/, tests/slow/ or tools/verify/ and use only ASCII letters, digits, _, ., /, : and -."
+            exit 1
+          fi
+          if [[ "$TEST_PATH" == *..* ]]; then
+            echo "::error::Invalid test_path: the character sequence .. is not allowed."
+            exit 1
+          fi
+          if [[ ! -f "${TEST_PATH%%::*}" ]]; then
+            echo "::error::Invalid test_path: the file part of test_path, before any test node id, must be an existing regular file (directories are not accepted)."
+            exit 1
+          fi
+          if [[ "$TEST_PATH" == tests/slow/* ]]; then
+            xvfb-run -a sh -c 'openbox & python -m pytest --forked -p no:cacheprovider -rfEs --junitxml=test-reports/targeted.xml -- "$1"' sh "$TEST_PATH"
+          else
+            xvfb-run -a sh -c 'openbox & python -m pytest -p no:cacheprovider -rfEs --junitxml=test-reports/targeted.xml -- "$1"' sh "$TEST_PATH"
+          fi
 
       - name: Upload test reports
         if: failure()
