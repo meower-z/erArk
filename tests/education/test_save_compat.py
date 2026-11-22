@@ -3,7 +3,6 @@
 
 from _bootstrap import (
     ROOT,
-    cache,
     check,
     child_growth,
     education,
@@ -25,6 +24,7 @@ from Script.Modules.domains import activity, official
 from tests import kernel_data
 from Script.Modules.domains import chara_life
 from Script.Modules.domains import identity
+from Script.Core import constant
 
 
 def records() -> dict[int, game_type.Character]:
@@ -301,7 +301,7 @@ for save_id in candidate_list:
             break
         if (
             scene_str(activity.position(character_data.cid))
-            not in cache.scene_data
+            not in constant.scene_data
         ):
             problem.append(
                 (

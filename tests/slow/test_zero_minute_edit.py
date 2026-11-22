@@ -196,7 +196,9 @@ class ZeroMinuteEditTest(SlowTestCase):
         scene = map_handle.get_map_system_path_str_for_list(
             activity.position(0)
         )
-        self.cache.scene_data[scene].close_flag = 1
+        kernel_data.put(
+            kernel_data.domain("scene_state").set_close_flag, scene, 1
+        )
         kernel_data.put(
             kernel_data.domain("flags").set, target, unconscious_h=0
         )

@@ -2,7 +2,7 @@
 """schedule_handle：教室、全局课表、个人课表、当前课程、上课地点、实习导师"""
 
 from _bootstrap import child_growth, growth, DEFAULT_TIME, SCENE_DORM, _
-from _bootstrap import auto_schedule, cache, check, clear_schedules, constant
+from _bootstrap import auto_schedule, check, clear_schedules, constant
 from _bootstrap import datetime, education, education_constant, finish
 from _bootstrap import game_config, game_time, make_character, move_to
 from _bootstrap import open_all_classroom, period_time, pl, remove_character
@@ -55,7 +55,7 @@ check(
 room_path = schedule_handle.get_classroom_position(_("理论教室一"))
 check(
     "教室场景路径可达",
-    room_path and scene_str(room_path) in cache.scene_data,
+    room_path and scene_str(room_path) in constant.scene_data,
     room_path,
 )
 check(
@@ -236,7 +236,7 @@ pe_place = schedule_handle.get_course_place(pe_course)
 check(
     "体育课：木桩房精确到那间房",
     pe_place
-    and cache.scene_data[scene_str(pe_place)].scene_name == _("木桩房"),
+    and constant.scene_data[scene_str(pe_place)].scene_name == _("木桩房"),
     pe_place,
 )
 interest_cid = next(
@@ -391,7 +391,7 @@ for _cid in game_config.config_entertainment:
     _cfg = game_config.config_entertainment[_cid]
     _names = (
         [
-            cache.scene_data[s].scene_name
+            constant.scene_data[s].scene_name
             for s in constant.place_data.get(_cfg.place_tag, [])
         ]
         if _cfg.class_ok
@@ -425,7 +425,7 @@ if lockable is not None:
     check(
         "开放其中一间：解析到已开放的那间",
         bool(_place)
-        and cache.scene_data[scene_str(_place)].scene_name == _names[-1],
+        and constant.scene_data[scene_str(_place)].scene_name == _names[-1],
         _place,
     )
     open_all_classroom()

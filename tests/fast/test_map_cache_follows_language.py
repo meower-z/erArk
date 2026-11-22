@@ -45,8 +45,8 @@ from Script.Design import map_handle
 map_config.init_map_data()
 cache = cache_control.cache
 print(json.dumps({
-    "scene_names": {k: v.scene_name for k, v in cache.scene_data.items()},
-    "map_names": {k: v.map_name for k, v in cache.map_data.items()},
+    "scene_names": {k: v.scene_name for k, v in constant.scene_data.items()},
+    "map_names": {k: v.map_name for k, v in constant.map_data.items()},
     "place_and_path_sha256": hashlib.sha256(json.dumps(
         [constant.place_data, map_handle.scene_path_edge], sort_keys=True
     ).encode()).hexdigest(),

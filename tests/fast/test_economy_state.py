@@ -116,8 +116,7 @@ class EconomyStateTest(FastTestCase):
         self.assertEqual(warehouse.amount(1, game), 42)
 
     def restock(self) -> None:
-        """载入菜谱，按 3 名已招募干员给新的一天进货"""
-        cooking.init_recipes()
+        """按 3 名已招募干员给新的一天进货"""
         roster.set_active({1, 2, 3})
         cooking.init_food_shop_data(new_day_flag=True)
 
@@ -151,7 +150,9 @@ class EconomyStateTest(FastTestCase):
             (food.uid, food.recipe, food.quality, food.maker),
             (uuid.UUID(uid), int(recipe), quality, ""),
         )
-        self.assertEqual(food.name, self.cache.recipe_data[int(recipe)].name)
+        self.assertEqual(
+            food.name, game_config.config_recipes[int(recipe)].name
+        )
         self.assertNotIn(uid, economy.shelf(rid)[recipe])
         self.assertIsNone(economy.take(rid, recipe, uid))
 
@@ -202,8 +203,7 @@ class EconomyStateTest(FastTestCase):
         Return arguments:
         Rhodes_Island -- 罗德岛对象
         """
-        cooking.init_recipes()
-        recipe = next(iter(self.cache.recipe_data))
+        recipe = next(iter(game_config.config_recipes))
         made = cooking.create_food("", recipe, 6, "")
         sold = cooking.create_food("", recipe, 2, "")
         island = game_type.Rhodes_Island()

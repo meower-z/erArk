@@ -216,11 +216,12 @@ SCENE_EDU_ENTRY = ["教", "0"]
 SCENE_NURSERY = ["教", "育儿"]
 """ 育儿室 """
 assert (
-    map_handle.get_map_system_path_str_for_list(SCENE_DORM) in cache.scene_data
+    map_handle.get_map_system_path_str_for_list(SCENE_DORM)
+    in constant.scene_data
 )
 assert (
     map_handle.get_map_system_path_str_for_list(SCENE_EDU_ENTRY)
-    in cache.scene_data
+    in constant.scene_data
 )
 
 
@@ -229,30 +230,16 @@ def scene_str(path: list) -> str:
     return map_handle.get_map_system_path_str_for_list(path)
 
 
-def _scene_list_add(scene_path_str: str, character_id: int) -> None:
-    """把角色登记进场景的角色名单"""
-    if scene_path_str in cache.scene_data:
-        cache.scene_data[scene_path_str].character_list.add(character_id)
-
-
-def _scene_list_remove(scene_path_str: str, character_id: int) -> None:
-    """把角色从场景的角色名单里移除"""
-    if scene_path_str in cache.scene_data:
-        cache.scene_data[scene_path_str].character_list.discard(character_id)
-
-
 def move_to(character_id: int, path: list) -> None:
     """
-    把角色直接放到某个场景（同步 position 与两边的场景名单，不走寻路）
+    直接将角色的 activity.position 设为目标场景路径（不走寻路）
     Keyword arguments:
     character_id -- 角色id
     path -- 目标场景路径列表
     Return arguments:
     无
     """
-    _scene_list_remove(scene_str(activity.position(character_id)), character_id)
     kernel_data.put(activity.set_position, character_id, list(path))
-    _scene_list_add(scene_str(path), character_id)
 
 
 def set_time(now_time: datetime.datetime) -> None:
@@ -328,7 +315,6 @@ def make_character(
     # 婴儿/幼女不进在编名册，与真实成长阶段边界一致
     if cid and stage not in (101, 102):
         roster.add(cid)
-    _scene_list_add(scene_str(activity.position(cid)), cid)
     return identity.of(cid)
 
 
@@ -341,7 +327,6 @@ def remove_character(cid: int) -> None:
     无
     """
     if identity.exists(cid):
-        _scene_list_remove(scene_str(activity.position(cid)), cid)
         kernel_data.put(identity.discard, cid)
     roster.discard(cid)
 

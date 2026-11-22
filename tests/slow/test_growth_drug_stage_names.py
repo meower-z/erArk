@@ -54,6 +54,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         无
         """
         super().setUp()
+        from Script.Core import constant
         from Script.Design import map_handle, talk
         from Script.Modules.domains import roster
 
@@ -70,7 +71,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         ]
         nursery = next(
             key
-            for key, scene in self.cache.scene_data.items()
+            for key, scene in constant.scene_data.items()
             if NURSERY_TAG in scene.scene_tag
         )
         self.world.move(0, map_handle.get_map_system_path_for_str(nursery))

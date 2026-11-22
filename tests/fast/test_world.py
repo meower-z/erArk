@@ -16,7 +16,7 @@ import numpy
 from Script.Core import game_type
 from Script.Design import game_time as clock
 from Script.Design import handle_premise
-from Script.Modules.domains import npc_template
+from Script.Modules.domains import npc_template, scene_state
 from tests import kernel_data, world
 from tests.fast import FORBIDDEN, FastLayerImportError
 from tests.fast.base import FastTestCase
@@ -76,7 +76,7 @@ class WorldTest(FastTestCase):
         game_time = clock.now()
         self.world.chara(0, "博士", position=ROOM)
         room = self.world.scene(ROOM)
-        room.close_flag = 1
+        kernel_data.put(scene_state.set_close_flag, room.scene_path, 1)
         world.set_clock(game_time + datetime.timedelta(days=1))
         template = game_type.NpcTem()
         template.AdvNpc = 9999
@@ -84,8 +84,8 @@ class WorldTest(FastTestCase):
         self.world.reset()
         self.assertIs(self.cache, cache)
         self.assertEqual(identity.table(), {})
-        self.assertEqual(room.close_flag, 0)
-        self.assertEqual(room.character_list, set())
+        self.assertEqual(scene_state.close_flag(room.scene_path), 0)
+        self.assertEqual(scene_state.occupants(room.scene_path), [])
         self.assertEqual(clock.now(), game_time)
         self.assertIsNone(npc_template.get(9999))
 

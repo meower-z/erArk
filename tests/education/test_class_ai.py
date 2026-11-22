@@ -3,7 +3,7 @@
 外层闸、见学回落链"""
 
 from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, SCENE_NURSERY
-from _bootstrap import _, cache, check, child_growth, class_ai, classroom_path
+from _bootstrap import _, check, child_growth, class_ai, classroom_path
 from _bootstrap import clear_schedules, constant, constant_effect, datetime
 from _bootstrap import education, education_constant, finish, game_config
 from _bootstrap import game_time, game_type, growth, growth_handle
@@ -1864,7 +1864,7 @@ check(
     "全开时回落在已开放的 6 间里随机",
     len({scene_str(one) for one in _moves}) > 1
     and all(
-        cache.scene_data[scene_str(one)].scene_name
+        constant.scene_data[scene_str(one)].scene_name
         in schedule_handle.get_classroom_list(E.COURSE_TYPE_THEORY)
         for one in _moves
     ),
@@ -2620,8 +2620,8 @@ def h1_wrap_sm(
             return sid
         now_scene_str = scene_str(activity.position(cid))
         scene_name = (
-            cache.scene_data[now_scene_str].scene_name
-            if now_scene_str in cache.scene_data
+            constant.scene_data[now_scene_str].scene_name
+            if now_scene_str in constant.scene_data
             else ""
         )
         H1_SM_LOG.append((cid, sid, game_time.now(), scene_name))

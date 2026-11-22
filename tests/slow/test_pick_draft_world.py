@@ -211,11 +211,9 @@ class PickDraftWorldTest(SlowTestCase):
 
         self.world.move(self.chara_id, activity.position(0))
         aim(0, self.chara_id)
-        if not self.cache.recipe_data:
-            cooking.init_recipes()
         recipe_id = next(
             rid
-            for rid in self.cache.recipe_data
+            for rid in game_config.config_recipes
             if rid != -1
             and rid in game_config.config_recipes
             and game_config.config_recipes[rid].alcohol == 0
@@ -270,11 +268,9 @@ class PickDraftWorldTest(SlowTestCase):
 
         self.world.move(self.chara_id, activity.position(0))
         aim(0, self.chara_id)
-        if not self.cache.recipe_data:
-            cooking.init_recipes()
         recipe_id = next(
             rid
-            for rid in self.cache.recipe_data
+            for rid in game_config.config_recipes
             if rid != -1
             and rid in game_config.config_recipes
             and game_config.config_recipes[rid].alcohol == 0
@@ -378,6 +374,8 @@ class PickDraftWorldTest(SlowTestCase):
 
     def test_load_drops_old_format_food(self) -> None:
         """存档里玩家背包有一份没有母乳量的旧版本食物：读档后它不在了，另一份新版本的食物还在"""
+        from Script.Config import game_config
+
         from Script.Modules.domains import inventory
 
         import shutil
@@ -385,9 +383,7 @@ class PickDraftWorldTest(SlowTestCase):
         from Script.Core import save_handle
         from Script.System.Cooking_System import cooking
 
-        if not self.cache.recipe_data:
-            cooking.init_recipes()
-        recipe_id = next(rid for rid in self.cache.recipe_data if rid != -1)
+        recipe_id = next(rid for rid in game_config.config_recipes if rid != -1)
         old = cooking.create_food("0", recipe_id)
         del old.milk_ml
         new = cooking.create_food("0", recipe_id)

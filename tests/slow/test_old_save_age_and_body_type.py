@@ -159,9 +159,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 activity.position(mother.cid),
                 id_dict["d102"],
             )
-        self.assertIn(
-            id_dict["d102"],
-            cache.scene_data[scene_of(mother.cid)].character_list,
+        self.assertEqual(
+            scene_of(id_dict["d102"]),
+            scene_of(mother.cid),
             "存档前102的孩子在母亲所在的场景里",
         )
         # 学生岗在职业名单里，分到宿舍床位（旧规则下长成102时上线所做的）
@@ -247,9 +247,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         # 玩家与她在单人H中（双方都在H、玩家所在房间关着门，她脱了一件衣服），母亲正对她做着别的行为；
         #    她身上有快感、催眠、待触发事件与必须结算的二段行为
         kd.put(h_state.set, 0, insert_position=2)
-        cache.scene_data[
-            map_handle.get_map_system_path_str_for_list(activity.position(0))
-        ].close_flag = 1
+        kd.put(kd.domain("scene_state").set_close_flag, scene_of(0), 1)
         clothing_type = min(game_config.config_clothing_type)
         cloth = kd.domain("wardrobe").of(child.cid)
         cloth.cloth_wear[clothing_type] = []
@@ -385,9 +383,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         dict -- 角色id到数据的字典，外加世界设定、日程模板、玩家收藏品里的卵、当前干员列表、各场景的角色、GameState 的
            全部全局数据，以及场景面板记着的角色
         """
+        from Script.Core import constant
         from Script.Modules.domains import action_info as ai, dirty, education
         from Script.Modules.domains import flags as fl, growth as growth_mod
-        from Script.Modules.domains import h_state, hypnosis
+        from Script.Modules.domains import h_state, hypnosis, scene_state
         from Script.Modules.domains import player_ability as pa
         from Script.Modules.domains import player_collection as pc
         from Script.Modules.domains import pregnancy as pregnancy_mod, roster
@@ -400,8 +399,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "eggs": repr((pc.get("held_eggs"), pc.get("soft_eggs"))),
             "npc_id_got": sorted(roster.active()),
             "scene": {
-                path: sorted(scene.character_list)
-                for path, scene in self.cache.scene_data.items()
+                path: sorted(scene_state.occupants(scene.scene_path))
+                for path, scene in constant.scene_data.items()
             },
             "data": dict(core.state().data),
             "old_character_id": self.cache.old_character_id,
@@ -474,10 +473,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         Return arguments:
         无
         """
-        from Script.Modules.domains import chara_life, relations
+        from Script.Core import constant
+        from Script.Modules.domains import chara_life, relations, scene_state
         from Script.Config import game_config
 
-        cache = self.cache
         work = kd.domain("work")
         growth_mod = kd.domain("growth")
         pregnancy_mod = kd.domain("pregnancy")
@@ -720,8 +719,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             self.assertEqual(
                 [
                     path
-                    for path, scene in cache.scene_data.items()
-                    if child_id in scene.character_list
+                    for path, scene in constant.scene_data.items()
+                    if child_id in scene_state.occupants(scene.scene_path)
                 ],
                 [],
                 f"{stage}的孩子不在任何场景里",
@@ -901,10 +900,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         Return arguments:
         无
         """
-        cache = self.cache
         child = identity.of(id_dict["d102"])
         mother = identity.of(id_dict["mother"])
-        from Script.Modules.domains import h_state, hypnosis
+        from Script.Modules.domains import h_state, hypnosis, scene_state
 
         clothing_type, cloth_id = id_dict["cloth"]
         fl = kd.domain("flags")
@@ -919,7 +917,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "玩家已结束H，交互对象是自己",
         )
         self.assertEqual(
-            cache.scene_data[scene_of(0)].close_flag,
+            scene_state.close_flag(scene_of(0)),
             0,
             "结束H后房门打开",
         )
@@ -999,10 +997,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         Return arguments:
         无
         """
-        from Script.Modules.domains import relations
+        from Script.Modules.domains import relations, scene_state
         from Script.Design import map_handle
 
-        cache = self.cache
         roster = kd.domain("roster")
         static_id_list = sorted(
             cid
@@ -1034,12 +1031,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             else:
                 aim(0, other_id)
             phs.insert_position = 2
-        scene_path = map_handle.get_map_system_path_str_for_list(
-            activity.position(0)
-        )
-        self.assertTrue(
-            {0, child_id, other_id}
-            <= set(cache.scene_data[scene_path].character_list),
+        scene_path = scene_of(0)
+        self.assertEqual(
+            {scene_of(cid) for cid in (0, child_id, other_id)},
+            {scene_path},
             "存档前三人同场景",
         )
         snapshot_list = []
@@ -1086,7 +1081,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             )
             self.assertNotIn(
                 child_id,
-                cache.scene_data[scene_path].character_list,
+                scene_state.occupants(scene_path),
                 "孩子离开了场景",
             )
             snapshot_list.append(self._snapshot())

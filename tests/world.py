@@ -57,8 +57,8 @@ DEFAULT_SCENE = ["宿舍", "1区", "101"]
 STANDARD_OUTFIT = {5: [501], 6: [651], 9: [951], 11: [1101]}
 """ 默认穿的衣服，衣物类型: 衣服id 列表：罗德岛制服夹克、纯白色胸罩、纯白色内裤、深蓝色小皮鞋 """
 
-SHALLOW_CACHE_FIELDS = ("map_data",)
-""" 复原时只浅拷贝的字典字段（地图）：键复原到基线，值对象共用，测试不能改这些值对象 """
+SHALLOW_CACHE_FIELDS: tuple[str, ...] = ()
+""" 复原时只浅拷贝的字典字段：键复原到基线，值对象共用，测试不能改这些值对象 """
 
 
 class FixtureError(AssertionError):
@@ -340,26 +340,23 @@ class MinimalWorld:
 
     def _snapshot(self) -> None:
         """
-        记下基线：SHALLOW_CACHE_FIELDS 中字段的浅拷贝，其余缓存字段（场景字典除外）的深拷贝，每个场景的属性，
+        记下基线：SHALLOW_CACHE_FIELDS 中字段的浅拷贝，其余缓存字段的深拷贝，每个场景的属性，
         以及 GameState 的全局数据（_boot 里 get_base_updata 开放的房间在其中）
         Keyword arguments:
         无
         Return arguments:
         无
         """
+        from Script.Core import constant
         from Script.Kernel import core
 
-        fields = {
-            key: value
-            for key, value in self.cache.__dict__.items()
-            if key != "scene_data"
-        }
+        fields = dict(self.cache.__dict__)
         self._shallow = {
             key: dict(fields.pop(key)) for key in SHALLOW_CACHE_FIELDS
         }
         self._baseline = copy.deepcopy(fields)
         self._data = core.state().data
-        self._scene_data = self.cache.scene_data
+        self._scene_data = constant.scene_data
         self._scenes = dict(self._scene_data)
         self._scene_baseline = {
             key: copy.deepcopy(scene.__dict__)
@@ -377,6 +374,8 @@ class MinimalWorld:
             缓存对象与场景对象都不换，只改写内容：游戏模块与测试手里的引用一直有效。
             游戏配置（game_config 等）与模块级打桩不在复原范围内：测试不能改配置，打桩用 unittest.mock 自行恢复。
         """
+        from Script.Core import constant
+
         cache = self.cache
         cache.__dict__.clear()
         cache.__dict__.update(copy.deepcopy(self._baseline))
@@ -385,12 +384,11 @@ class MinimalWorld:
         )
         self._scene_data.clear()
         self._scene_data.update(self._scenes)
-        cache.scene_data = self._scene_data
+        constant.scene_data = self._scene_data
         for key, scene in self._scenes.items():
             baseline = self._scene_baseline[key]
             scene.__dict__.clear()
             scene.__dict__.update(baseline)
-            scene.character_list = set(baseline["character_list"])
             scene.scene_tag = list(baseline["scene_tag"])
         self.wait_texts.clear()
         _fresh_config()
@@ -410,12 +408,13 @@ class MinimalWorld:
         Return arguments:
         game_type.Scene -- 场景对象
         """
+        from Script.Core import constant
         from Script.Design import map_handle
 
         key = map_handle.get_map_system_path_str_for_list(path)
-        if key not in self.cache.scene_data:
+        if key not in constant.scene_data:
             raise FixtureError(f"没有这个场景：{path}")
-        return self.cache.scene_data[key]
+        return constant.scene_data[key]
 
     def move(self, cid: int, path: list) -> None:
         """用游戏的移动函数把角色从当前位置移到 path（cid: 角色id；path: 目标场景路径列表）"""
@@ -442,7 +441,7 @@ class MinimalWorld:
         adv: int = 0,
     ) -> identity.Identity:
         """
-        造一个角色写入身份表（identity.characters），核对她的状态，通过后登记进在编名单与所在场景
+        造一个角色写入身份表（identity.characters），核对她的状态，通过后登记进在编名单
         Keyword arguments:
         cid -- 角色id（0 为玩家，造 NPC 前须先造玩家）
         name -- 角色名
@@ -456,7 +455,7 @@ class MinimalWorld:
             角色在 GameState 里的多项字典默认是空的，游戏代码直接下标访问，这里全部按置零函数预填。
             默认角色当场核对：穿着衣服（不是大致全裸），NPC 的异常位 1~7 全部正常（normal_all 为 1）。
             naked=True 的角色当场核对：全裸，NPC 还须只有位 4 异常（玩家的异常位恒为正常）。
-            不符合时把她从身份表里删掉，再抛 FixtureError。这时她还没登记进在编名单和场景。
+            不符合时把她从身份表里删掉，再抛 FixtureError。这时她还没登记进在编名单。
         """
         from Script.Modules.domains import chara_life, relations
         from Script.Core import game_type
@@ -469,7 +468,7 @@ class MinimalWorld:
                 "先造玩家（cid 0）再造 NPC：异常位的判定要读玩家数据"
             )
         position = list(position if position is not None else DEFAULT_SCENE)
-        scene = self.scene(position)
+        self.scene(position)
         services = attr_calculation.get_assistant_services_zero()
         kernel_data.put(relations.assistant_services.set, cid, services)
         kernel_data.put(relations.favorability.set, cid, {0: 0})
@@ -491,7 +490,6 @@ class MinimalWorld:
             raise
         if cid:
             kernel_data.put(kernel_data.domain("roster").add, cid)
-        scene.character_list.add(cid)
         return identity.of(cid)
 
     def _check_chara(self, cid: int, naked: bool) -> None:
