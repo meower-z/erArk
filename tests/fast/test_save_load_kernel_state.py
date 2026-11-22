@@ -29,9 +29,10 @@ from Script.Core import game_type, save_handle
 from Script.Design import character_handle
 from Script.Kernel import core
 from Script.Modules import load_order
-from Script.Modules.domains import abilities, country, facility, medical
-from Script.Modules.domains import physical_exam, player_collection
-from Script.Modules.domains import playthrough, pregnancy, roster, warehouse
+from Script.Modules.domains import abilities, body_manage, country, facility
+from Script.Modules.domains import inventory, medical, physical_exam
+from Script.Modules.domains import player_collection, playthrough, pregnancy
+from Script.Modules.domains import roster, status, wardrobe, warehouse
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
 from Script.System.Pregnancy_System import pregnancy_constant
@@ -166,8 +167,8 @@ class KernelStateTest(FastTestCase):
         存档时难度 1 为 3、系统设置 1 号为 0。之后把难度改成 1、系统设置改成 1，再读档。
         难度回到 3，系统设置还是 1、还是同一个对象。
         内核的 GameState 除去全局键（roster.offstage、医疗部的三个键、体检设置、
-        待开放设施开放情况）和角色数据里的 abilities 四个键与玩家收藏品键之外，
-        与存档时相同。这几项存档里没有，是读档修补补上的
+        待开放设施开放情况）和角色数据里的 abilities 四个键、玩家收藏品键，
+        以及角色的状态值、道具、身体管理和服装之外，与存档时相同。这几项存档里没有，是读档修补补上的
         """
         self.world.chara(0, "博士")
         kernel_data.put(roster.set_active, {0})
@@ -202,13 +203,20 @@ class KernelStateTest(FastTestCase):
         ):
             data.pop(key, None)
         tables = abilities.PICKLED.values()
+        filled = {
+            *tables,
+            status.KEY,
+            inventory.ITEMS,
+            body_manage.KEY,
+            wardrobe.KEY,
+        }
         characters = {
             who: replace(
                 c,
                 data={
                     k: v
                     for k, v in c.data.items()
-                    if k not in tables
+                    if k not in filled
                     and not (who == "0" and k == player_collection.KEY)
                 },
             )

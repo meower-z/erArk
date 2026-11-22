@@ -28,6 +28,8 @@ from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions, draft, edits, intent
 from Script.Modules.save_load import kernel_state
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import inventory
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
 
@@ -102,7 +104,7 @@ class DiffApplyTest(DraftCase):
         session = draft.Session(KEEP)
         cache = cache_control.cache
         cache.character_data[1].eja_point = 5
-        cache.character_data[1].item[99] = 1
+        kernel_data.put(inventory.set_item, 1, 99, 1)
         cache.character_data[1].entertainment.borrow_book_id_set.add(1)
         cache.character_data.pop(0)
         changed = (

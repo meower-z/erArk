@@ -22,8 +22,8 @@ import os
 from typing import TYPE_CHECKING
 from unittest import mock
 
-from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -61,12 +61,14 @@ def num_fields(
     Return arguments:
     Iterator[tuple[str, object]] -- (数值路径, 值)
     """
+    from Script.Modules.domains import status
+
     needs = importlib.import_module("Script.Modules.domains.needs")
     for name in PLAIN:
         yield name, getattr(character, name)
     for stat, value in needs.of(character.cid).items():
         yield f"needs.{stat}", value
-    for status_id, value in character.status_data.items():
+    for status_id, value in status.of(character.cid).items():
         yield f"status_data[{status_id}]", value
     dirty = character.dirty
     for part, slot in dirty.body_semen.items():
@@ -93,10 +95,14 @@ def set_thirds(character: "game_type.Character") -> None:
     Return arguments:
     无
     """
+    from Script.Modules.domains import status
+
     for name in PLAIN:
         setattr(character, name, max(int(getattr(character, name)), 1) + THIRD)
-    for status_id, value in character.status_data.items():
-        character.status_data[status_id] = max(int(value), 1) + THIRD
+    for status_id, value in status.of(character.cid).items():
+        kernel_data.put(
+            status.set, character.cid, status_id, max(int(value), 1) + THIRD
+        )
     for slot in character.dirty.body_semen.values():
         slot[1] = max(int(slot[1]), 1) + THIRD
     needs = importlib.import_module("Script.Modules.domains.needs")

@@ -40,8 +40,8 @@ def is_num_read(node: ast.AST) -> bool:
     Keyword arguments:
     node -- 表达式
     Return arguments:
-    bool -- 是 PLAIN 里的属性、needs.of(...)[...]（下标是 WHOLE_NEEDS 里的常量时除外）、status_data[...]
-    或 body_semen[...][1] 时为真
+    bool -- 是 PLAIN 里的属性、needs.of(...)[...]（下标是 WHOLE_NEEDS 里的常量时除外）、status.of(...)[...]、
+    status_data[...] 或 body_semen[...][1] 时为真
     """
     if isinstance(node, ast.Attribute):
         return node.attr in PLAIN
@@ -64,10 +64,10 @@ def is_num_read(node: ast.AST) -> bool:
         and isinstance(base.func, ast.Attribute)
         and base.func.attr == "of"
         and isinstance(base.func.value, ast.Name)
-        and base.func.value.id == "needs"
+        and base.func.value.id in ("needs", "status")
     ):
         stat = node.slice
-        return not (
+        return base.func.value.id == "status" or not (
             isinstance(stat, ast.Constant) and stat.value in WHOLE_NEEDS
         )
     if isinstance(base, ast.Attribute) and base.attr == "status_data":
@@ -221,6 +221,7 @@ class StatDisplayTest(FastTestCase):
                 'h = f"{get_level(needs.of(0)["tired"])}"',
                 'i = f"{c.sp_flag.milk}{c.dirty.body_semen[2][2]}"',
                 'j = f"{c.hit_point_max}"',
+                'k = f"{status.of(c.cid)[3]}"',
             ]
         )
         self.assertEqual(
@@ -231,5 +232,6 @@ class StatDisplayTest(FastTestCase):
                 "x.py:3 c.mana_point",
                 "x.py:4 needs.of(c.cid)['milk']",
                 "x.py:5 c.dirty.body_semen[2][1]",
+                "x.py:10 status.of(c.cid)[3]",
             ],
         )

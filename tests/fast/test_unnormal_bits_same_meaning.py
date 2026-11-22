@@ -17,7 +17,7 @@ import random
 from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import handle_premise as HP
-from Script.Modules.domains import action_info, flags, modes
+from Script.Modules.domains import action_info, flags, modes, wardrobe
 from Script.Modules.domains import physical_exam as exam
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
@@ -202,18 +202,20 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
             if talent_id in ca.talent(operator):
                 ca.talent(operator)[talent_id] = 1 if rng.random() < 0.15 else 0
         kernel_data.set_world(modes.set_time_stop, rng.random() < 0.2)
+        worn = wardrobe.of(operator.cid).cloth_wear
         for clothing_type in game_config.config_clothing_type:
             roll = rng.random()
             if roll < 0.45:
-                operator.cloth.cloth_wear[clothing_type] = []
+                worn[clothing_type] = []
             elif clothing_type == 3 and roll < 0.6:
-                operator.cloth.cloth_wear[clothing_type] = [352]
+                worn[clothing_type] = [352]
             elif clothing_type == 7 and roll < 0.6:
-                operator.cloth.cloth_wear[clothing_type] = [751]
+                worn[clothing_type] = [751]
             else:
-                operator.cloth.cloth_wear[clothing_type] = [
+                worn[clothing_type] = [
                     rng.choice(self.cloth_by_type[clothing_type])
                 ]
+        kernel_data.put(wardrobe.set, operator.cid, "cloth_wear", worn)
 
     def test_short_circuit_matches_full_definition(self) -> None:
         """随机状态下位3~6与完整定义相同，normal_all 与 unnormal 与逐位判定一致"""
@@ -268,10 +270,15 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
 
     def test_player_bits_always_normal(self) -> None:
         """玩家的位1~7恒为正常，unnormal 恒不成立"""
-        self.player.cloth.cloth_wear = {
-            clothing_type: []
-            for clothing_type in game_config.config_clothing_type
-        }
+        kernel_data.put(
+            wardrobe.set,
+            self.player.cid,
+            "cloth_wear",
+            {
+                clothing_type: []
+                for clothing_type in game_config.config_clothing_type
+            },
+        )
         kernel_data.set_world(modes.set_time_stop, True)
         self.assertEqual([f(0) for f in ALL_BITS], [1] * 7)
         self.assertEqual(HP.handle_unnormal(0), 0)

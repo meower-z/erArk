@@ -78,6 +78,8 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
 
     def test_tables_split_after_load(self) -> None:
         """三种存档读档后：精液量按读档规则保留或清零，射在穿着的袜子上只改穿着的表，BODY-14 通过，再存读一次不变"""
+        from Script.Modules.domains import wardrobe
+
         from Script.Config import game_config
         from Script.Test.Static_Check.checks.check_body import (
             check_semen_list_aliasing,
@@ -90,11 +92,11 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
             cid
             for cid in kernel_data.domain("roster").active()
             if cid not in (0, whole_dict_id)
-            and self.cache.character_data[cid].cloth.cloth_wear[SOCKS]
+            and wardrobe.of(cid).cloth_wear[SOCKS]
         )[:2]
         for cid in (whole_dict_id, shared_list_id, short_id):
             self.assertTrue(
-                self.cache.character_data[cid].cloth.cloth_wear[SOCKS],
+                wardrobe.of(cid).cloth_wear[SOCKS],
                 f"{cid} 穿着袜子",
             )
             ejaculation_panel.update_semen_dirty(cid, SOCKS, 1, SOCKS_SEMEN)

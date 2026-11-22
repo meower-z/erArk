@@ -6,8 +6,8 @@
 其效果为交互对象的状态12加10、经验0加1、宝珠0加1；结算后宝珠0多1，状态12多10，经验0增加。
 """
 
-from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.slow.base import SlowTestCase
 
 EVENT_ID = "108c4126-9c89-4fb5-9de3-b56a94de9d5e"
 """ 星熊的子事件，效果含 CVE_A2_J|0_G_1 """
@@ -20,6 +20,8 @@ class JuelEventEffectTest(SlowTestCase):
 
     def test_event_adds_juel(self) -> None:
         """结算星熊的子事件：她的宝珠0多1，状态12多10，经验0增加"""
+        from Script.Modules.domains import status
+
         from Script.Design import game_time
 
         from Script.Core import game_type
@@ -31,11 +33,10 @@ class JuelEventEffectTest(SlowTestCase):
             for cid, chara in cache.character_data.items()
             if chara.adv == ADV_ID
         )
-        npc = cache.character_data[npc_id]
         cache.character_data[0].target_character_id = npc_id
         before = [
             ca.juel(npc_id).get(0, 0),
-            npc.status_data.get(12, 0),
+            status.of(npc_id).get(12, 0),
             ca.experience(npc_id).get(0, 0),
         ]
         change_data = game_type.CharacterStatusChange()
@@ -49,7 +50,7 @@ class JuelEventEffectTest(SlowTestCase):
         )
         after = [
             ca.juel(npc_id).get(0, 0),
-            npc.status_data.get(12, 0),
+            status.of(npc_id).get(12, 0),
             ca.experience(npc_id).get(0, 0),
         ]
         self.assertEqual(

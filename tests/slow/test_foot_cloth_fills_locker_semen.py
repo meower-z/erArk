@@ -11,6 +11,7 @@
 
 from typing import TYPE_CHECKING
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -43,7 +44,8 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
 
         from Script.Core import game_type
 
-        effect(cid, 5, game_type.CharacterStatusChange(), game_time.now())
+        change = game_type.CharacterStatusChange()
+        kernel_data.written(effect, cid, 5, change, game_time.now())
 
     def foot_cloth_to_locker(
         self,
@@ -55,14 +57,16 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
         Return arguments:
         tuple -- (角色对象, 脱下前的袜子列表, 脱下前的鞋子列表)
         """
+        from Script.Modules.domains import wardrobe
+
         from Script.Design import attr_calculation
         from Script.Settle import default_cloth
 
         cid = self.npc("阿米娅")
         cd = self.cache.character_data[cid]
         self.assertEqual(cd.dirty.cloth_locker_semen, {}, "开局的衣柜精液表")
-        socks, shoes = list(cd.cloth.cloth_wear[10]), list(
-            cd.cloth.cloth_wear[11]
+        socks, shoes = list(wardrobe.of(cid).cloth_wear[10]), list(
+            wardrobe.of(cid).cloth_wear[11]
         )
         self.assertTrue(shoes, "开局穿着鞋")
         cd.dirty.cloth_semen[11][1] = SHOE_SEMEN
@@ -74,6 +78,8 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
 
     def test_locker_table_complete(self) -> None:
         """脱鞋袜进衣柜后：鞋袜与鞋上的精液进了衣柜，衣柜精液表覆盖全部服装部位，BODY-10 不报告失败"""
+        from Script.Modules.domains import wardrobe
+
         import Script.Test.Static_Check  # noqa: F401  导入即注册全部检查
         from Script.Config import game_config
         from Script.Test.Static_Check.check_registry import get_all_checks
@@ -81,8 +87,8 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
         cd, socks, shoes = self.foot_cloth_to_locker()
         self.assertEqual(
             (
-                cd.cloth.cloth_locker_in_shower[10],
-                cd.cloth.cloth_locker_in_shower[11],
+                wardrobe.of(cd.cid).cloth_locker_in_shower[10],
+                wardrobe.of(cd.cid).cloth_locker_in_shower[11],
             ),
             (socks, shoes),
             "衣柜里的鞋袜",
@@ -103,12 +109,17 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
 
     def test_back_on_with_semen(self) -> None:
         """脱鞋袜进衣柜后再穿回：鞋袜回到身上，鞋上的精液回到鞋上"""
+        from Script.Modules.domains import wardrobe
+
         from Script.Settle import default_cloth
 
         cd, socks, shoes = self.foot_cloth_to_locker()
         self.settle(default_cloth.handle_shower_locker_to_wear, cd.cid)
         self.assertEqual(
-            (cd.cloth.cloth_wear[10], cd.cloth.cloth_wear[11]),
+            (
+                wardrobe.of(cd.cid).cloth_wear[10],
+                wardrobe.of(cd.cid).cloth_wear[11],
+            ),
             (socks, shoes),
             "穿回身上的鞋袜",
         )

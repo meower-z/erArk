@@ -30,7 +30,7 @@ import sys
 import uuid
 from typing import TYPE_CHECKING
 
-from tests import chara_abilities as ca, kernel_data, outside_cache
+from tests import chara_abilities as ca, chara_data, kernel_data, outside_cache
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -476,21 +476,9 @@ class MinimalWorld:
         cd.adv = adv
         cd.sex = 1
         cd.race = race
-        cd.cloth = attr_calculation.get_cloth_zero()
-        cd.cloth.cloth_locker_in_dormitory = (
-            attr_calculation.get_cloth_locker_in_dormitory_zero()
-        )
-        cd.cloth.cloth_locker_in_shower = (
-            attr_calculation.get_shower_cloth_locker_zero()
-        )
-        if not naked:
-            for clothing_type, cloth_ids in STANDARD_OUTFIT.items():
-                cd.cloth.cloth_wear[clothing_type] = list(cloth_ids)
         cd.dirty = attr_calculation.get_zero_dirty()
-        cd.status_data = attr_calculation.get_status_zero({})
         cd.second_behavior = attr_calculation.get_second_behavior_zero({})
         cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)
-        cd.body_manage = attr_calculation.get_body_manage_zero()
         cd.assistant_services = attr_calculation.get_assistant_services_zero()
         cd.favorability = {0: 0}
         ca.zero_tables(cid)
@@ -501,6 +489,7 @@ class MinimalWorld:
         cd.behavior.start_time = game_time.now()
         cd.position = position
         cache.character_data[cid] = cd
+        chara_data.seed(cid, {} if naked else STANDARD_OUTFIT)
         kernel_data.set_needs(cid, hit_max=100, hit=100, mana_max=100, mana=100)
         try:
             self._check_chara(cid, naked)

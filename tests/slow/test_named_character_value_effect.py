@@ -6,8 +6,8 @@
 主体先写 A2（交互对象），再写 A3|<她的干员编号>；两次都记下她的数值变化与结算记录里记给她的变化，逐项比较。
 """
 
-from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.slow.base import SlowTestCase
 
 
 class NamedCharacterValueEffectTest(SlowTestCase):
@@ -45,8 +45,10 @@ class NamedCharacterValueEffectTest(SlowTestCase):
             list -- 状态、能力、经验三项各自的增加量
             dict -- 结算记录里记给该角色的状态、能力与经验变化
             """
+            from Script.Modules.domains import status
+
             before = [
-                npc.status_data.get(status_id, 0),
+                status.of(npc_id).get(status_id, 0),
                 ca.ability(npc).get(ability_id, 0),
                 ca.experience(npc).get(experience_id, 0),
             ]
@@ -59,7 +61,7 @@ class NamedCharacterValueEffectTest(SlowTestCase):
                     change_data,
                 )
             after = [
-                npc.status_data.get(status_id, 0),
+                status.of(npc_id).get(status_id, 0),
                 ca.ability(npc).get(ability_id, 0),
                 ca.experience(npc).get(experience_id, 0),
             ]

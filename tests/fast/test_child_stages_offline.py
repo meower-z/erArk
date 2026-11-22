@@ -15,7 +15,7 @@ from unittest import mock
 from Script.Config import game_config
 from Script.Core import constant_promise
 from Script.Design import attr_calculation, clothing, handle_premise
-from Script.Modules.domains import player_collection
+from Script.Modules.domains import player_collection, wardrobe
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
@@ -150,10 +150,15 @@ class ChildStagesOfflineTest(FastTestCase):
             attr_calculation, "get_character_fall_level", return_value=2
         ):
             for _ in range(60):
+                with kernel_data.writing():
+                    for clothing_type in UNDERWEAR_TYPE_LIST:
+                        wardrobe.set_part(
+                            self.daughter.cid, "cloth_wear", clothing_type, []
+                        )
+                    clothing.get_underwear(1)
                 for clothing_type in UNDERWEAR_TYPE_LIST:
-                    self.daughter.cloth.cloth_wear[clothing_type] = []
-                clothing.get_underwear(1)
-                for clothing_type in UNDERWEAR_TYPE_LIST:
-                    picked.update(self.daughter.cloth.cloth_wear[clothing_type])
+                    picked.update(
+                        wardrobe.of(self.daughter.cid).cloth_wear[clothing_type]
+                    )
         self.assertTrue(picked, "挑到了胸衣或内裤")
         self.assertFalse(picked & h_id_set, sorted(picked & h_id_set))

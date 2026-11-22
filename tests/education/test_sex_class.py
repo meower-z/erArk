@@ -12,7 +12,7 @@ from _bootstrap import remove_character, schedule_handle, section, set_time
 from _bootstrap import sex_class_handle, sync
 from Script.Design import handle_npc_ai, instuct_judege
 from Script.Settle import common_default
-from Script.Modules.domains import flags, modes, player_ability
+from Script.Modules.domains import flags, modes, player_ability, status
 from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
@@ -406,13 +406,13 @@ change = game_type.CharacterStatusChange()
 change.target_change.setdefault(202, game_type.TargetChange())
 change.target_change[202].experience[exp_id] = 40
 exp_before = student_a_exp.get(exp_id, 0)
-shy_before = student_a.status_data.get(16, 0)
+shy_before = status.of(student_a.cid).get(16, 0)
 _orig_random = random.random
 random.random = lambda: 0.99
 sex_class_handle.settle_watcher(5, change)
 random.random = _orig_random
 check("旁观者拿 25% 主修经验", student_a_exp.get(exp_id, 0) - exp_before == 10)
-check("旁观者羞耻上升", student_a.status_data.get(16, 0) > shy_before)
+check("旁观者羞耻上升", status.of(student_a.cid).get(16, 0) > shy_before)
 check(
     "变更记录里也记了旁观者",
     change.target_change[201].experience.get(exp_id, 0) == 10,

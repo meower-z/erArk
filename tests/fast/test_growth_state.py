@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
 """
-养成状态、版本 18 编解码、草稿回放、静态自检与缓冲区写保护
-==========================================================
+养成状态、存档版本与编解码、草稿回放、静态自检与缓冲区写保护
+============================================================
 - 养成（growth.child）：惰性创建、全部 25 项字段存取、可重入 editing、边界与旧存档导入。
-- 版本 18 与 kernel_state 编解码往返、选行动草稿回放、静态自检与缓冲区外写保护。
+- 存档版本（不低于 18 且含步骤 17、编码版本同 upgrade.CURRENT）与 kernel_state
+  编解码往返、选行动草稿回放、静态自检与缓冲区外写保护。
 """
 
 from Script.Config import game_config
@@ -153,7 +154,7 @@ class GrowthStateTest(FastTestCase):
 
 
 class CodecPickAndChecksTest(FastTestCase):
-    """版本 18、kernel_state 编解码、选行动草稿回放与静态自检"""
+    """存档版本检查、kernel_state 编解码、选行动草稿回放与静态自检"""
 
     def setUp(self) -> None:
         """放入玩家与干员"""
@@ -167,8 +168,11 @@ class CodecPickAndChecksTest(FastTestCase):
         return bool(run())
 
     def test_version_18_and_codec_round_trip(self) -> None:
-        """存档版本为 18，名册、妊娠与养成经 kernel_state 编解码往返一致"""
-        self.assertEqual(upgrade.CURRENT, 18)
+        """
+        存档版本不低于 18 且含步骤 17，编码版本等于 upgrade.CURRENT，
+        名册、妊娠与养成经 kernel_state 编解码往返一致
+        """
+        self.assertGreaterEqual(upgrade.CURRENT, 18)
         self.assertIn(17, upgrade.STEPS)
         now = game_time.now()
         with working.based_on(core.state()) as buf:
@@ -186,7 +190,7 @@ class CodecPickAndChecksTest(FastTestCase):
             effects = buf.effects()
         state = core.preview(core.state(), effects)
         encoded = kernel_state.encode(state, "tok")
-        self.assertEqual(encoded["version"], 18)
+        self.assertEqual(encoded["version"], upgrade.CURRENT)
         decoded = kernel_state.decode(encoded, tagged=True)
         self.assertEqual(roster.active_sorted(decoded), (1,))
         self.assertEqual(roster.forbidden(decoded), {99})

@@ -3,8 +3,9 @@
 读档时的连续数值
 ================
 - 默认值是 int 的字段，存档里的 int 与 Fraction 经 update_dict_with_default 补齐字段后值与类型都不变。
-- 读档的 Reset 步骤 exact_stats 把存档里是 float 的连续数值换成相等的 Fraction（取 6 位小数），int 与 Fraction 不动。
-  测到的数值有角色属性、状态值、污浊的三处精液量与当日理智消耗。
+- 读档时 status.adopt_old_save 与 Reset 步骤 exact_stats 把存档里是 float 的连续数值换成相等的 Fraction（取 6 位小数），
+  int 与 Fraction 不动。状态值由 status.adopt_old_save 换。测到的其余数值有角色属性、污浊的三处精液量与当日理智消耗，
+  由 exact_stats 换。
 - 体力与气力的上限是 float 的旧存档，upgrade.adopt_pickled 把上限换成相等的 Fraction，读档后第一次时间结算不出错。
 - upgrade.adopt_pickled 把版本 3 之前的角色对象上的体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒写进
   body.needs，乳汁上限写进 body.pregnancy，再从对象上删掉这些属性与 last_hunger_time。
@@ -21,10 +22,17 @@ import datetime
 from Script.Core import game_type, save_handle
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import needs, player_ability, power, pregnancy
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import upgrade
 from Script.Settle import realtime_settle
+from Script.Modules.domains import (
+    needs,
+    player_ability,
+    power,
+    pregnancy,
+    status,
+)
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 
@@ -51,7 +59,7 @@ class OldSaveIntsTest(FastTestCase):
         self.assertEqual(got, [(int, 7), (Fraction, Fraction(10, 3)), (int, 0)])
 
     def test_exact_stats_turns_floats_exact(self) -> None:
-        """旧存档里的 float（经 vars 写入，同 pickle 读回）换成相等的 Fraction，int 与 Fraction 原样留下"""
+        """经 vars 写入的 float 由 status.adopt_old_save 与 exact_stats 换成相等的 Fraction，int 与 Fraction 不动"""
         npc = self.world.chara(0, "博士")
         vars(npc).update(
             eja_point=12.5,
@@ -71,15 +79,17 @@ class OldSaveIntsTest(FastTestCase):
         pa = game_type.PLAYER_ABILITY()
         vars(pa)["today_sanity_point_cost"] = 0.1
         vars(npc)["pl_ability"] = pa
-        save_handle.exact_stats()
+        loaded = {"character_data": {npc.cid: npc}}
+        kernel_data.written(status.adopt_old_save, loaded)
+        kernel_data.written(save_handle.exact_stats)
         with working.based_on(core.state()):
             player_ability.adopt_old_save({"character_data": {0: npc}})
             adopted_cost = player_ability.get(0, "today_sanity_point_cost")
         got = [
             npc.eja_point,
             npc.semen_point,
-            npc.status_data[1],
-            npc.status_data[2],
+            status.of(npc.cid)[1],
+            status.of(npc.cid)[2],
             npc.dirty.absorbed_total_semen,
             npc.dirty.body_semen[0][1],
             npc.dirty.semen_flow[0]["targets"][0]["remaining_volume"],

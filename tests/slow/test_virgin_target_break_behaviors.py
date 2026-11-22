@@ -13,6 +13,7 @@ import re
 from typing import TYPE_CHECKING
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca
 
@@ -41,6 +42,8 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         无
         """
         super().setUp()
+        from Script.Modules.domains import inventory
+
         from Script.Core import constant
         from Script.Design import handle_premise
 
@@ -50,7 +53,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         self.summon(KALTSIT_ID, ("召集到自己当前位置",))
         self.summon(AMIYA_ID, ())
         for item_id in TOOL_ITEM_LIST:
-            self.pl.item[item_id] = 1
+            kernel_data.put(inventory.set_item, self.pl.cid, item_id, 1)
         self.pl.target_character_id = AMIYA_ID
         self.instruct(constant.Instruct.ASK_GROUP_SEX)
         self.assertTrue(
