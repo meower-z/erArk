@@ -18,6 +18,10 @@ follow_imports = "silent"
 # tests/education 的脚本按顶层模块名导入 _bootstrap 与 official_event_check，tests/_mypy_stubs 的存根把这两个名字指到真实模块
 # tools/test_quality 的脚本也以自己的目录为脚本目录运行，按顶层模块名导入同目录的 data_check、fast_suite 与 checkout_fixture
 # tools/verify 的 tk.py、tk_game.py、test_limited_run.py 与 test_tk_game.py 把自己的目录加进 sys.path，再按顶层模块名导入同目录的模块。被这样导入的模块是 limited_run、tk 与 tk_game。tests/_mypy_stubs 里同名的存根把这三个名字指到真实模块。
+# mypy 优先读取 tests/_mypy_stubs 里的 openai 与 google/genai 存根，以此避开解析这两个完整的已安装包。
+# 存根的参数类型可等于或窄于真实包中的类型。除下述例外，返回类型与代码读取的属性类型与真实包一致。
+# openai.DefaultHttpxClient 声明为不依赖 httpx2 的独立存根类。构造该类或调用 __enter__ 均得到该存根类。
+# 这些存根对应 requirements-lint.txt 固定的版本，即 openai 3.31.0 与 google-genai 2.31.0。
 mypy_path = ["tools/test_quality", "tests/_mypy_stubs"]
 check_untyped_defs = true
 strict_equality = true
