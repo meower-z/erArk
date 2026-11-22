@@ -320,7 +320,7 @@ class CharaKeysStateTest(FastTestCase):
         chara_profile.nick_name.set(1, "甲")
         chara_profile.nick_name_to_pl.set(1, "乙")
         state: dict[str, object] = {}
-        chara_key_projection.project(self.cache, state)
+        chara_key_projection.project(state)
         self.assertEqual(state["chara.1.favorability.0"], 5)
         self.assertEqual(state["chara.1.relationship.mother_id"], -1)
         self.assertFalse([name for name in state if "nick_name" in name])

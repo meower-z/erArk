@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
 """
 名册、妊娠与养成状态（roster.*、body.pregnancy、growth.child）
-============================================================
+==============================================================
 - 名册：在编名单、禁用名单、已用姓名、换号重映射、新周目沿用、旧存档导入与 101/102 阶段禁入边界。
 - 妊娠：全部 16 项字段的稀疏存取、可重入 editing、缺省与非季月时间编解码、卵字典、参数边界与旧存档导入。
 - 养成：惰性创建（只读不写）、全部 25 项字段存取、可重入 editing、参数边界与旧存档导入。
-- 编解码、选行动草稿、静态自检与缓冲区外写保护。
+- 编解码、选行动写入缓冲、静态自检与缓冲区外写保护。
 """
 
 import datetime
@@ -25,6 +25,7 @@ from Script.Modules.gameplay_resolution import actions, working
 from Script.Modules.save_load import upgrade
 from tests.fast.base import FastTestCase
 from Script.Modules.domains import identity
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 class RosterStateTest(FastTestCase):
@@ -37,13 +38,6 @@ class RosterStateTest(FastTestCase):
         self.world.chara(1, "干员甲")
         self.world.chara(2, "干员乙")
         self.enterContext(working.based_on(core.state()))
-
-    def test_legacy_cache_attributes_removed(self) -> None:
-        """Cache 不再持有 npc_id_got、forbidden_npc_id、npc_name_data"""
-        fresh = game_type.Cache()
-        for attr in ("npc_id_got", "forbidden_npc_id", "npc_name_data"):
-            self.assertFalse(hasattr(fresh, attr), attr)
-            self.assertFalse(hasattr(self.cache, attr), attr)
 
     def test_active_forbidden_names_crud_and_remap(self) -> None:
         """在编名单、禁用名单与已用姓名的读写、删除、重映射与新周目沿用"""
@@ -179,10 +173,10 @@ class RosterStateTest(FastTestCase):
             tuple(working.get(None, k) for k in roster.KEYS), before
         )
 
-        # 读档按 loaded["character_data"] 检查 101/102 边界，不受旧缓存里同号角色阶段干扰
+        # 读档按 loaded["character_data"] 检查 101/102 边界，不受当前状态里同号角色阶段干扰
         self.world.chara(9200, "旧缓存幼童")
         abilities.talent(9200)[101] = 1
-        adult_in_save = game_type.Character()
+        adult_in_save = LegacyObject()
         vars(adult_in_save)["talent"] = {101: 0}
         self.assertEqual(
             roster.adopt_old_save(
@@ -197,7 +191,7 @@ class RosterStateTest(FastTestCase):
             0,
         )
         self.assertEqual(roster.active_sorted(), (9200,))
-        child_in_save = game_type.Character()
+        child_in_save = LegacyObject()
         vars(child_in_save)["talent"] = {102: 1}
         with self.assertRaises(ValueError):
             roster.adopt_old_save(
@@ -221,9 +215,7 @@ class PregnancyStateTest(FastTestCase):
         self.enterContext(working.based_on(core.state()))
 
     def test_legacy_attribute_removed_and_defaults(self) -> None:
-        """Character 不再持有 pregnancy 属性，未写入时读默认值且不写键"""
-        fresh = game_type.Character()
-        self.assertFalse(hasattr(fresh, "pregnancy"))
+        """未写入的角色读出妊娠默认值，且不产生写入"""
         self.assertFalse(hasattr(identity.of(1), "pregnancy"))
         self.assertEqual(pregnancy.milk_max(1), 200)
         p = pregnancy.of(1)
@@ -358,7 +350,7 @@ class PregnancyStateTest(FastTestCase):
                 "acceleration_days": 999.0,
             }
         }
-        npc = game_type.Character()
+        npc = LegacyObject()
         vars(npc)["pregnancy"] = legacy_p
         pregnancy.adopt_old_save({"character_data": {1: npc}}, 14)
         self.assertFalse(hasattr(npc, "pregnancy"))

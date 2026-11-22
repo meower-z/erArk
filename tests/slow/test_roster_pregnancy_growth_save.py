@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 """
 存档往返（版本不低于 18）：名册、妊娠与养成状态
-============================================
+===============================================
 开一局新游戏，写入名册（在编、禁用、已用姓名）、成年干员的妊娠数据与养成数据，
-真实写盘再读档，核对文件 "2" 版本等于 upgrade.CURRENT 且当前版本不低于 18、
-文件 "1" 不带旧属性、三个领域状态往返一致、继续推进后再次写盘的文件 "2" 稳定。
+真实写盘再读档，核对 save.json 版本等于 upgrade.CURRENT 且当前版本不低于 18、
+目录里只有 save.json、三个领域状态往返一致、继续推进后再次写盘的 save.json（除 head 外）稳定。
 """
 
 import importlib
@@ -28,7 +28,7 @@ class RosterPregnancyGrowthSaveTest(SlowTestCase):
         from Script.Design import game_time
         from Script.Kernel import core
         from Script.Modules.domains import growth, pregnancy, roster
-        from Script.Modules.save_load import index, kernel_state, upgrade
+        from Script.Modules.save_load import index, upgrade
         from Script.Core import constant
 
         folder = self.enterContext(tempfile.TemporaryDirectory())
@@ -76,17 +76,13 @@ class RosterPregnancyGrowthSaveTest(SlowTestCase):
         save_handle.establish_save(SLOT)
         save_dir = os.path.join(folder, SLOT)
         with open(
-            os.path.join(save_dir, kernel_state.SAVE_FILE), encoding="utf-8"
+            os.path.join(save_dir, index.SAVE_FILE), encoding="utf-8"
         ) as f:
             first_file = json.load(f)
         self.assertEqual(first_file["version"], upgrade.CURRENT)
         self.assertGreaterEqual(upgrade.CURRENT, 18)
 
-        with open(os.path.join(save_dir, "1"), "rb") as f:
-            raw_cache = save_handle.SaveUnpickler(f).load()
-        for attr in ("npc_id_got", "forbidden_npc_id", "npc_name_data"):
-            self.assertFalse(hasattr(raw_cache, attr))
-        self.assertNotIn("character_data", vars(raw_cache))
+        self.assertEqual(os.listdir(save_dir), [index.SAVE_FILE])
 
         save_handle.input_load_save(SLOT)
         self.assertEqual(roster.active_sorted(), expected_active)
@@ -100,11 +96,11 @@ class RosterPregnancyGrowthSaveTest(SlowTestCase):
 
         save_handle.establish_save(SLOT)
         with open(
-            os.path.join(save_dir, kernel_state.SAVE_FILE), encoding="utf-8"
+            os.path.join(save_dir, index.SAVE_FILE), encoding="utf-8"
         ) as f:
             second_file = json.load(f)
         for payload in (first_file, second_file):
-            payload.pop(kernel_state.TOKEN)
+            payload.pop("head")
         self.assertEqual(second_file, first_file)
 
         # 读档后正常推进一步

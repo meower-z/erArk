@@ -18,6 +18,7 @@ from Script.Modules import load_order
 from Script.Modules.domains import first_record
 from Script.Modules.gameplay_resolution import working
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 class FirstRecordTest(FastTestCase):
@@ -103,7 +104,7 @@ class FirstRecordTest(FastTestCase):
     def test_adopt_old_save(self) -> None:
         """旧档角色对象上的 first_record 与 first_record_history 迁入内核后删除原属性"""
         now = game_time.now()
-        chara = game_type.Character()
+        chara = LegacyObject()
         old_fr = game_type.FIRST_RECORD()
         old_fr.first_meet = 0
         old_fr.first_kiss_id = 0

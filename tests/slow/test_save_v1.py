@@ -4,19 +4,18 @@
 ============================
 开新游戏（SlowTestCase.setUp），存档目录换成临时目录。
 - 等待 60 分钟。在动力系统管理面板里把一个区块的供电策略调高一档，再加一台 L1 蓄电池。
-  在基建面板里把访客区升到 2 级，再存进新存档。
-  文件 "2" 里有 Fraction 的标签、base.power、base.facility_level、base.food_shelves、base.work 与 base.tallies。
+  在基建面板里把访客区升到 2 级，再存进新存档。save.json 里有 Fraction 的标签、base.power、
+  base.facility_level、base.food_shelves、base.work 与 base.tallies。
   读回这个存档，内核状态的 JSON 与存档前相同。
 - 存档之后接着玩 60 分钟，与读回存档后接着玩 60 分钟（随机数同样重设）比较。内核状态、花名册顺序、
   全部角色的生理需求、开始的行动序列与随机数状态都相同。
-- 读回后再存一次，文件 "2" 除了存档标记都与上一次相同。再读一次，内核状态与存档前相同，缓存的 JSON 与第一次读回时相同。
-- 文件 "2" 截断或换成另一次存档的，读档抛 SaveRefused，错误里有存档id。
+- 读回后再存一次，save.json（除 head 外）与上一次相同。再读一次，内核状态与存档前相同。
+- save.json 截断，以及旧槽位的文件 "2" 截断或换成另一次存档的标记时，读档抛 SaveRefused，错误里有存档id。
 """
 
 import hashlib
 import importlib
 import json
-import os
 import random
 import tempfile
 from typing import TYPE_CHECKING, Any
@@ -106,28 +105,13 @@ class SaveV1Test(SlowTestCase):
 
     def state_json(self) -> str:
         """
-        内核此刻的状态按文件 "2" 的编码换成排好键的 JSON，存档标记固定
+        内核此刻的状态经 kernel_state.encode 换成排好键的 JSON
         Return arguments:
         str -- JSON 文本
         """
         kernel = game("Script.Kernel.core")
         kernel_state = game("Script.Modules.save_load.kernel_state")
-        return json.dumps(
-            kernel_state.encode(kernel.state(), "fixed"), sort_keys=True
-        )
-
-    def cache_json(self) -> str:
-        """
-        缓存的属性（全局设置除外）按草稿的编码换成排好键的 JSON
-        Return arguments:
-        str -- JSON 文本
-        """
-        draft = game("Script.Modules.gameplay_resolution.draft")
-        attrs = {
-            name: draft.encode(value)
-            for name, value in sorted(vars(self.cache).items())
-        }
-        return json.dumps(attrs, sort_keys=True, ensure_ascii=False)
+        return json.dumps(kernel_state.encode(kernel.state()), sort_keys=True)
 
     def digest(self) -> tuple[object, ...]:
         """
@@ -159,7 +143,7 @@ class SaveV1Test(SlowTestCase):
         constant = game("Script.Core.constant")
         save_handle = game("Script.Core.save_handle")
         world = game("tests.world")
-        kernel_state = game("Script.Modules.save_load.kernel_state")
+        index = game("Script.Modules.save_load.index")
         power = game("Script.Modules.domains.power")
         economy = game("Script.Modules.domains.economy")
         self.wait(60)
@@ -180,7 +164,7 @@ class SaveV1Test(SlowTestCase):
         self.assertEqual(facility.level(13), 2, "访客区升到 2 级")
         before_save = self.state_json()
         save_handle.establish_save(SLOT)
-        path = os.path.join(self.folder, SLOT, kernel_state.SAVE_FILE)
+        path = index.file(SLOT, index.SAVE_FILE)
         with open(path, encoding="utf-8") as f:
             first_file = json.load(f)
         self.assertIn('"$frac"', json.dumps(first_file), "文件 2 里有 Fraction")
@@ -204,7 +188,6 @@ class SaveV1Test(SlowTestCase):
         self.assertTrue(
             self.state_json() == before_save, "读回的内核状态与存档前相同"
         )
-        first_cache = self.cache_json()
         random.seed(SEED)
         self.started.clear()
         self.wait(60)
@@ -219,27 +202,36 @@ class SaveV1Test(SlowTestCase):
         with open(path, encoding="utf-8") as f:
             second_file = json.load(f)
         for data in (first_file, second_file):
-            data.pop(kernel_state.TOKEN)
+            data.pop("head")
         self.assertTrue(second_file == first_file, "再存一次，文件 2 不变")
         self.load(SLOT)
         self.assertTrue(self.state_json() == before_save)
-        self.assertTrue(self.cache_json() == first_cache, "两次读回的缓存相同")
 
-    def test_broken_v1_slots_are_refused(self) -> None:
-        """存档头有标记的存档：文件 "2" 截断或换成另一次存档的，读档抛 SaveRefused，错误里有存档id，不当旧存档读"""
+    def test_broken_slots_are_refused(self) -> None:
+        """
+        save.json 截断、旧槽位文件 "2" 截断或标记不符时，读档均抛 SaveRefused 且消息含槽位名
+        """
         save_handle = game("Script.Core.save_handle")
+        index = game("Script.Modules.save_load.index")
         kernel_state = game("Script.Modules.save_load.kernel_state")
+        legacy_save = game("tests.legacy_save")
         save_handle.establish_save(SLOT)
-        save_handle.establish_save("other")
-        path = os.path.join(self.folder, SLOT, kernel_state.SAVE_FILE)
+        path = index.file(SLOT, index.SAVE_FILE)
         with open(path, encoding="utf-8") as f:
             text = f.read()
-        with open(
-            os.path.join(self.folder, "other", "2"), encoding="utf-8"
-        ) as f:
-            other = f.read()
-        for body in (text[: len(text) // 2], other):
-            with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text[: len(text) // 2])
+        with self.assertRaisesRegex(index.SaveRefused, SLOT):
+            save_handle.input_load_save(SLOT)
+        save_handle.establish_save(SLOT)
+        legacy_save.to_legacy(SLOT, legacy_save.old("Cache"))
+        state_path = index.file(SLOT, kernel_state.LEGACY_FILE)
+        with open(state_path, encoding="utf-8") as f:
+            text = f.read()
+        state = json.loads(text)
+        state[kernel_state.TOKEN] = "another-save"
+        for body in (text[: len(text) // 2], json.dumps(state)):
+            with open(state_path, "w", encoding="utf-8") as f:
                 f.write(body)
-            with self.assertRaisesRegex(kernel_state.SaveRefused, SLOT):
+            with self.assertRaisesRegex(index.SaveRefused, SLOT):
                 save_handle.input_load_save(SLOT)

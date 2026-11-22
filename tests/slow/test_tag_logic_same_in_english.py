@@ -98,7 +98,6 @@ class LanguageRun:
         # 测试里的按钮文字不进翻译模板
         self.translate = set_language(language)
         self.world: Any = game("tests.world").FullWorld.load()
-        self.cache: Any = self.world.cache
         self.constant: Any = game("Script.Core.constant")
         self.config: Any = game("Script.Config.game_config")
         self.new_game()
@@ -194,7 +193,7 @@ class LanguageRun:
         )
         try:
             self.instruct(instruct.EDIT_GROUP_SEX_TEMPLE, presses)
-            # 编辑随退出面板时的 Edit 写进缓存，模板要在之后读
+            # 编辑随退出面板时的 Edit 写进内核状态，模板要在之后读
             h_state_mod: Any = game("Script.Modules.domains.h_state")
             template = h_state_mod.view(0).group_sex_body_template_dict["A"]
             return [dict(template[0]), template[1]]

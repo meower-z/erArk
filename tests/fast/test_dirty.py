@@ -22,6 +22,7 @@ from Script.Modules.domains import dirty
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import default as settle_default
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 class DirtyTest(FastTestCase):
@@ -114,7 +115,7 @@ class DirtyTest(FastTestCase):
     def test_adopt_old_save_exact_and_unshared_and_short(self) -> None:
         """旧档 float 转 Fraction、共用衣柜表独立保存、缺键服装表重置为 0"""
         all_types = sorted(game_config.config_clothing_type)
-        c1 = game_type.Character()
+        c1 = LegacyObject()
         d1 = game_type.DIRTY()
         d1.body_semen = {
             p: [game_config.config_body_part[p].name, 0, 0, 0]
@@ -137,7 +138,7 @@ class DirtyTest(FastTestCase):
         d1.cloth_locker_semen = d1.cloth_semen  # 整表别名
         vars(c1)["dirty"] = d1
 
-        c2 = game_type.Character()
+        c2 = LegacyObject()
         d2 = game_type.DIRTY()
         d2.cloth_semen = {
             t: [game_config.config_clothing_type[t].name, 5, 1, 5]
@@ -173,7 +174,7 @@ class DirtyTest(FastTestCase):
         all_types = sorted(game_config.config_clothing_type)
         slot = all_types[0]
         slot_name = game_config.config_clothing_type[slot].name
-        c0 = game_type.Character()
+        c0 = LegacyObject()
         d0 = game_type.DIRTY()
         d0.cloth_semen = {
             slot: [slot_name, 12, 1, 12],
@@ -194,7 +195,7 @@ class DirtyTest(FastTestCase):
         self.assertEqual(v0.cloth_locker_semen[slot][1], 8)
         self.assertEqual(v0.cloth_locker_semen[all_types[-1]][1], 0)
 
-        c0_empty = game_type.Character()
+        c0_empty = LegacyObject()
         d0_empty = game_type.DIRTY()
         d0_empty.cloth_semen = {slot: [slot_name, 4, 1, 4]}
         d0_empty.cloth_locker_semen = {}

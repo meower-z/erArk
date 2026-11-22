@@ -22,6 +22,7 @@ from Script.Settle import default as settle_default
 from Script.System.Sex_System import group_sex_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 class HStateTest(FastTestCase):
@@ -134,7 +135,7 @@ class HStateTest(FastTestCase):
 
     def test_adopt_old_save_repairs_legacy_shapes(self) -> None:
         """旧档 orgasm_count==0 与列表型 body_item 在导入时修复并计入更新数"""
-        chara = game_type.Character()
+        chara = LegacyObject()
         old = game_type.BODY_H_STATE()
         old.bondage = 3
         vars(old)["body_item"] = []

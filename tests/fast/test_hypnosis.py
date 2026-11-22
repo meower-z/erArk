@@ -19,6 +19,7 @@ from Script.Settle import default as settle_default
 from Script.UI.Panel import hypnosis_panel
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 class HypnosisTest(FastTestCase):
@@ -61,7 +62,7 @@ class HypnosisTest(FastTestCase):
 
     def test_adopt_old_save_fixes_int_roleplay(self) -> None:
         """旧档 roleplay 为 int 时归空并计 1 条更新，属性从对象上删除"""
-        chara = game_type.Character()
+        chara = LegacyObject()
         old = game_type.HYPNOSIS()
         old.hypnosis_degree = 50
         old.force_ovulation = True

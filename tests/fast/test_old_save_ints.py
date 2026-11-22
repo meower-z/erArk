@@ -3,16 +3,16 @@
 读档时的连续数值
 ================
 - 默认值是 int 的字段，存档里的 int 与 Fraction 经 update_dict_with_default 补齐字段后值与类型都不变。
-- 读档时 status.adopt_old_save 与 Reset 步骤 exact_stats 把存档里是 float 的连续数值换成相等的 Fraction（取 6 位小数），
-  int 与 Fraction 不动。状态值由 status.adopt_old_save 换。测到的其余数值有角色属性、污浊的三处精液量与当日理智消耗，
-  由 exact_stats 换。
-- 体力与气力的上限是 float 的旧存档，upgrade.adopt_pickled 把上限换成相等的 Fraction，读档后第一次时间结算不出错。
-- upgrade.adopt_pickled 把版本 3 之前的角色对象上的体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒写进
+- 读档时 status、h_meters、dirty 与 player_ability 的 adopt_old_save 把旧存档里是 float 的连续数值换成
+  相等的 Fraction（取 6 位小数），int 与 Fraction 不动；exact_stats 保持空操作不破坏已转换结果。
+- 体力与气力的上限是 float 的旧存档，upgrade.adopt_pickled 把上限换成相等的 Fraction，
+  读档后第一次时间结算不出错。
+- upgrade.adopt_pickled 把版本 3 之前的旧角色对象上的体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒写进
   body.needs，乳汁上限写进 body.pregnancy，再从对象上删掉这些属性与 last_hunger_time。
-- upgrade.adopt_v0 把旧存档角色对象上的疲劳、饥饿、尿意与乳汁写进 body.needs，float 换成相等的 Fraction，int 不动。
-  这些属性从对象上删掉，供电策略表写进 base.power_strategy。
-- 旧存档角色缺需求属性时，fill_v0_defaults 补上 0。角色缺妊娠数据时，重建后的妊娠数据没有乳汁，adopt_v0 把乳汁读成 0。
-  罗德岛缺供电策略表时补空表。
+- upgrade.adopt_v0 把旧存档角色对象上的疲劳、饥饿、尿意与乳汁写进 body.needs，
+  float 换成相等的 Fraction，int 不动。这些属性从对象上删掉，供电策略表写进 base.power_strategy。
+- 旧存档角色缺需求属性时，fill_v0_defaults 补上 0。角色缺妊娠数据时，重建后的妊娠数据没有乳汁，
+  adopt_v0 把乳汁读成 0。罗德岛缺供电策略表时补空表。
 """
 
 from fractions import Fraction
@@ -37,6 +37,7 @@ from Script.Settle import realtime_settle
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests.chara_activity import behave
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 class OldSaveIntsTest(FastTestCase):
@@ -64,7 +65,7 @@ class OldSaveIntsTest(FastTestCase):
     def test_exact_stats_turns_floats_exact(self) -> None:
         """经 vars 写入的 float 由 status.adopt_old_save 与 exact_stats 换成相等的 Fraction，int 与 Fraction 不动"""
         self.world.chara(0, "博士")
-        npc = game_type.Character()
+        npc = LegacyObject()
         old_dirty = game_type.DIRTY()
         vars(old_dirty)["absorbed_total_semen"] = 3.5
         old_dirty.body_semen = {0: ["头发", 1.5, 0, 2]}
@@ -122,7 +123,7 @@ class OldSaveIntsTest(FastTestCase):
     def test_float_maxima_settle(self) -> None:
         """体力与气力上限是 float：换成相等的 Fraction，之后的时间结算不出错"""
         self.world.chara(0, "博士")
-        npc = game_type.Character()
+        npc = LegacyObject()
         vars(npc).update(
             hit_point=500,
             hit_point_max=1000.5,
@@ -155,7 +156,7 @@ class OldSaveIntsTest(FastTestCase):
         """
         self.world.chara(0, "博士")
         self.world.chara(1, "干员")
-        npc = game_type.Character()
+        npc = LegacyObject()
         vars(npc).update(
             hit_point=900,
             hit_point_max=1000,
@@ -203,12 +204,12 @@ class OldSaveIntsTest(FastTestCase):
         """
         self.world.chara(0, "博士")
         self.world.chara(1, "干员")
-        npc = game_type.Character()
+        npc = LegacyObject()
         vars(npc).update(tired_point=12.5, hunger_point=240, urinate_point=0.25)
         old_preg = game_type.PREGNANCY()
         vars(old_preg)["milk"] = 4.75
         vars(npc)["pregnancy"] = old_preg
-        island = game_type.Rhodes_Island()
+        island = LegacyObject()
         vars(island)["power_supply_strategy"] = {4: 1}
         loaded = {"character_data": {1: npc}, "rhodes_island": island}
         with working.based_on(core.state()):
@@ -235,9 +236,9 @@ class OldSaveIntsTest(FastTestCase):
         """缺需求属性的旧角色补上 0，重建后没有乳汁的妊娠数据读成乳汁 0，缺策略表的罗德岛补空表"""
         self.world.chara(0, "博士")
         self.world.chara(1, "干员")
-        npc = game_type.Character()
+        npc = LegacyObject()
         rebuilt = game_type.PREGNANCY()
-        island = game_type.Rhodes_Island()
+        island = LegacyObject()
         loaded = {"character_data": {1: npc}, "rhodes_island": island}
         upgrade.fill_v0_defaults(loaded)
         vars(npc)["pregnancy"] = rebuilt

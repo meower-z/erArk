@@ -14,7 +14,6 @@
 from collections.abc import Mapping
 from typing import Any, cast
 
-from Script.Core import game_type
 from Script.Design import basement
 from Script.Modules.domains import roster, work
 from Script.Modules.gameplay_resolution import working
@@ -24,6 +23,7 @@ from Script.Test.Static_Check.check_registry import get_all_checks
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.Modules.domains import chara_life
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 JOBS = {1: 71, 2: 0, 3: 71, 4: 191, 5: 22, 6: 71}
 """ 角色id到岗位id：三名招聘专员、一名无岗位、一名监狱长、一名检修 """
@@ -103,7 +103,7 @@ class WorkRostersTest(FastTestCase):
 
     def test_old_island_moves_into_state(self) -> None:
         """旧存档的罗德岛对象带着名册属性。名册按在编顺序写进 GameState，不在编的 8 号排在后面，属性从对象上删掉"""
-        island = game_type.Rhodes_Island()
+        island = LegacyObject()
         vars(island).update(
             all_work_npc_set={0: set(), 71: {6, 3, 1}, 22: {8, 5}, 99999: {2}},
             work_people_now=6,
@@ -127,7 +127,7 @@ class WorkRostersTest(FastTestCase):
         kernel_data.written(basement.update_work_people)
         before = (work.rosters(), work.warden())
         with kernel_data.writing():
-            upgrade.adopt_work({"rhodes_island": game_type.Rhodes_Island()})
+            upgrade.adopt_work({"rhodes_island": LegacyObject()})
         self.assertEqual((work.rosters(), work.warden()), before)
 
     def test_island_checks_and_repair(self) -> None:
@@ -140,5 +140,5 @@ class WorkRostersTest(FastTestCase):
             work.set_warden(1)
         self.assertTrue(self.flagged("ISLAND-29"))
         with kernel_data.writing():
-            repair.repair_warden_reference(self.cache)
+            repair.repair_warden_reference()
         self.assertEqual(work.warden(), 4)

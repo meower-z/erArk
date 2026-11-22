@@ -12,7 +12,6 @@
 """
 
 from Script.Config import game_config
-from Script.Core import game_type
 from Script.Design import basement
 from Script.Kernel import core
 from Script.Modules.domains import facility, official
@@ -21,6 +20,7 @@ from Script.Modules.save_load import upgrade
 from Script.System.Official_Event_System import ri_value
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 DORMITORY = 4
 """ 宿舍区的设施id """
@@ -102,7 +102,7 @@ class FacilityStateTest(FastTestCase):
 
     def test_old_island_moves_into_state(self) -> None:
         """版本 3 的罗德岛对象带着三个设施属性。adopt_facility 把值写进 GameState，并删掉这些属性。缺的个数为 0"""
-        island = game_type.Rhodes_Island()
+        island = LegacyObject()
         vars(island).update(
             facility_level={0: 2, OFFICE: 3},
             facility_open={101: True, 102: False},
@@ -120,7 +120,7 @@ class FacilityStateTest(FastTestCase):
     def test_old_island_missing_fields(self) -> None:
         """版本 0 的罗德岛对象只带设施等级。adopt_facility 只写等级。开放情况与效率不变。缺的个数为 2"""
         opens = facility.opens()
-        island = game_type.Rhodes_Island()
+        island = LegacyObject()
         vars(island)["facility_level"] = {OFFICE: 4}
         missing = upgrade.adopt_facility({"rhodes_island": island}, 0)
         self.assertEqual(missing, 2)
@@ -132,9 +132,7 @@ class FacilityStateTest(FastTestCase):
         """版本 4 的罗德岛对象没有设施属性。GameState 里的设施等级与效率不变。缺的个数为 0"""
         facility.set_level(OFFICE, 3)
         facility.set_effectiveness(120)
-        missing = upgrade.adopt_facility(
-            {"rhodes_island": game_type.Rhodes_Island()}, 4
-        )
+        missing = upgrade.adopt_facility({"rhodes_island": LegacyObject()}, 4)
         self.assertEqual(missing, 0)
         self.assertEqual(facility.level(OFFICE), 3)
         self.assertEqual(facility.effectiveness(), 120)

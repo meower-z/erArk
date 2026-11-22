@@ -101,7 +101,7 @@ class AiSettingTestCase(FastTestCase):
 
     def load_ai(self, ai: game_type.Ai_Setting | None) -> int:
         """
-        模拟一次读档：把存档里的 AI 设置交给 adopt_ai 准备，再经 _reset_keeping_cache 完成读档
+        模拟一次读档：把存档里的 AI 设置交给 adopt_ai 准备，再经 kernel_state._reset 完成读档
         Keyword arguments:
         ai -- 存档里的 AI 设置对象，不含 AI 设置的存档传 None
         Return arguments:
@@ -112,8 +112,8 @@ class AiSettingTestCase(FastTestCase):
         return notice
 
     def finish_load(self) -> None:
-        """以空 GameState 经 kernel_state._reset_keeping_cache 跑完一次读档 Reset，使暂存 AI 设置生效或被丢弃"""
-        kernel_state._reset_keeping_cache(empty_game(), {"cause": "load"})
+        """以空 GameState 经 kernel_state._reset 跑完一次读档 Reset，使暂存 AI 设置生效或被丢弃"""
+        kernel_state._reset(empty_game(), {"cause": "load"})
 
     def has_section(self) -> bool:
         """

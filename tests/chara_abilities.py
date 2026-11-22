@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, Any
 from tests.kernel_project import identity
 
 if TYPE_CHECKING:
-    from Script.Core import game_type
     from Script.Kernel import core
     from Script.Modules.domains.abilities import Table
 
@@ -123,11 +122,10 @@ def auto_commit_outside_step() -> None:
     working.change = change
 
 
-def project(cache: game_type.Cache, state: dict[str, object]) -> None:
+def project(state: dict[str, object]) -> None:
     """
     在快照里用 abilities.PICKLED 的属性名记下每个角色的四张表，名字为 chara.<id>.<属性名>.<编号>
     Keyword arguments:
-    cache -- 游戏缓存
     state -- 快照，原地补上
     """
     from Script.Modules.domains import abilities

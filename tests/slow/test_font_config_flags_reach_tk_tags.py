@@ -37,7 +37,6 @@ class FontConfigFlagsReachTkTagsTest(SlowTestCase):
         signal.alarm(self.time_limit)
         remove_parent_guard()
         self.world = FullWorld.load()
-        self.cache = self.world.cache
         from Script.Core import io_init
 
         try:

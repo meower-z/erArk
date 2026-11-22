@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
 """
-NPC 选行动的代码只读缓存
-========================
+NPC 选行动的代码只读游戏状态
+============================
 npc_action_choice 的代码（状态机、选目标、宿舍管理员的状态机、模块自己的文件）不写游戏状态：
-不给缓存或角色数据赋值，不调用会改变状态或嵌套结算的函数。状态机把选出的行动记进计划，由行动开始时写进缓存。
-写入的判定是静态的启发式：赋值或变更调用的目标链上有 cache 的属性，或有 Character 的字段名（基底不是 self），
-或目标链从 abilities.ability、experience、juel 或 talent 的调用开始。对这样一张表调用 merge 或 replace 也算写入。
+不写入角色能力表，不调用会改变状态或嵌套结算的函数。状态机把选出的行动记进计划，由行动开始时写进游戏状态。
+写入的判定是静态的启发式：赋值或变更调用的目标链从 abilities.ability、experience、juel 或 talent 的调用开始，
+或对这样一张表调用 merge 或 replace，以及调用 FORBIDDEN_CALLS 或 _set_ 开头的函数。
 还没搬走的写入列在 REMAINING 里：某个函数不再写时要从表里删掉，表只减不增。
 """
 
@@ -111,56 +111,6 @@ def chain(node: ast.AST) -> list[ast.AST]:
     return out[::-1]
 
 
-def cache_attr(target: ast.AST) -> str | None:
-    """
-    目标链上 cache 的属性名
-    Keyword arguments:
-    target -- 赋值目标
-    Return arguments:
-    str | None -- 属性名，链上没有 cache 时为 None
-    """
-    nodes = chain(target)
-    for i, node in enumerate(nodes):
-        if isinstance(node, ast.Attribute) and i:
-            base = nodes[i - 1]
-            if isinstance(base, ast.Name) and base.id == "cache":
-                return node.attr
-            if (
-                isinstance(base, ast.Attribute)
-                and base.attr == "cache"
-                and isinstance(base.value, ast.Name)
-                and base.value.id == "cache_control"
-            ):
-                return node.attr
-    return None
-
-
-def char_field(target: ast.AST, fields: frozenset[str]) -> str | None:
-    """
-    目标链上 Character 的字段名
-    Keyword arguments:
-    target -- 赋值目标
-    fields -- Character 的字段名
-    Return arguments:
-    str | None -- 字段名，没有时为 None
-    """
-    if cache_attr(target) not in (None, "character_data"):
-        return None
-    nodes = chain(target)
-    for i, node in enumerate(nodes):
-        if isinstance(node, ast.Attribute) and node.attr in fields:
-            base = nodes[i - 1]
-            if isinstance(base, ast.Name) and base.id not in ("self", "cache"):
-                return node.attr
-            if (
-                isinstance(base, ast.Subscript)
-                and cache_attr(base) == "character_data"
-            ):
-                return node.attr
-            return None
-    return None
-
-
 def table_write(target: ast.AST) -> bool:
     """
     目标链是否从 abilities.ability、experience、juel 或 talent 的调用开始
@@ -179,39 +129,11 @@ def table_write(target: ast.AST) -> bool:
     )
 
 
-def character_fields() -> frozenset[str]:
-    """
-    Character 在 __init__ 里设的字段名
-    Return arguments:
-    frozenset -- 字段名
-    """
-    source = (pathlib.Path(ROOT) / "Script/Core/game_type.py").read_text(
-        encoding="utf-8"
-    )
-    for cls in ast.parse(source).body:
-        if isinstance(cls, ast.ClassDef) and cls.name == "Character":
-            names = set()
-            for node in ast.walk(cls):
-                targets = getattr(
-                    node, "targets", [getattr(node, "target", None)]
-                )
-                for target in targets:
-                    if (
-                        isinstance(target, ast.Attribute)
-                        and isinstance(target.value, ast.Name)
-                        and target.value.id == "self"
-                    ):
-                        names.add(target.attr)
-            return frozenset(names)
-    raise AssertionError("game_type.py 里没有 Character")
-
-
-def problems(tree: ast.AST, fields: frozenset[str]) -> list[str]:
+def problems(tree: ast.AST) -> list[str]:
     """
     一段代码里的写入与禁用调用
     Keyword arguments:
     tree -- 语法树
-    fields -- Character 的字段名
     Return arguments:
     list -- 每处一行：行号与说明
     """
@@ -241,11 +163,7 @@ def problems(tree: ast.AST, fields: frozenset[str]) -> list[str]:
             ):
                 targets = [func.value]
         for target in targets:
-            if (
-                cache_attr(target)
-                or char_field(target, fields)
-                or table_write(target)
-            ):
+            if table_write(target):
                 out.append(f"{line} 写 {ast.unparse(target)}")
     return out
 
@@ -256,7 +174,6 @@ def scanned() -> dict[tuple[str, str], list[str]]:
     Return arguments:
     dict -- (文件, 函数) -> 问题；模块层的代码记在函数名 "<module>" 下
     """
-    fields = character_fields()
     found: dict[tuple[str, str], list[str]] = {}
     for rel, skipped in SCOPE.items():
         tree = ast.parse((pathlib.Path(ROOT) / rel).read_text(encoding="utf-8"))
@@ -265,16 +182,16 @@ def scanned() -> dict[tuple[str, str], list[str]]:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 if skipped is not None and node.name in skipped:
                     continue
-                hits = problems(node, fields)
+                hits = problems(node)
                 if hits:
                     found[(rel, node.name)] = hits
             elif isinstance(node, ast.ClassDef):
-                hits = problems(node, fields)
+                hits = problems(node)
                 if hits:
                     found[(rel, node.name)] = hits
             else:
                 rest.append(node)
-        hits = problems(ast.Module(body=rest, type_ignores=[]), fields)
+        hits = problems(ast.Module(body=rest, type_ignores=[]))
         if hits:
             found[(rel, "<module>")] = hits
     return found

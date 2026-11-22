@@ -2,16 +2,13 @@
 """
 读版本 22 存档后开新周目去掉配置外素质
 ======================================
-开新游戏并存档，把存档改写为版本 22，在文件 "1" 的 npc_tem_data 里放入带 6 与 7 号素质的局内生成模板。
+开新游戏并存档，把槽位换成版本 22 的旧存档，在文件 "1" 的 npc_tem_data 里放入带 6 与 7 号素质的局内生成模板。
 6 与 7 号素质不在 Talent.csv（game_config.config_talent）里。
 读档后验证该角色存在，再按「醒来」开始新周目。
 新周目后该角色仍存在，且 identity.table() 里每个角色都不带 game_config.config_talent 中没有的素质编号。
 """
 
 import importlib
-import json
-import os
-import pickle
 import shutil
 from types import ModuleType
 
@@ -39,13 +36,14 @@ class NewRoundGeneratedTalentsTest(SlowTestCase):
 
     def write_version_22(self) -> None:
         """
-        存一份当前进度，再把它改写为版本 22 存档。
-        文件 "1" 的 npc_tem_data 写入静态配置键的 None 占位与带 6、7 号素质的局内生成模板，文件 "2" 的版本设为 22。
+        存一份当前进度，再把它换成版本 22 的旧存档。
+        文件 "1" 的 npc_tem_data 写入静态配置键的 None 占位与带 6、7 号素质的局内生成模板，
+        文件 "2" 的版本设为 22
         """
         character_config = game("Script.Config.character_config")
         character_handle = game("Script.Design.character_handle")
         save_handle = game("Script.Core.save_handle")
-        kernel_state = game("Script.Modules.save_load.kernel_state")
+        legacy_save = game("tests.legacy_save")
         template = character_handle.create_empty_character_tem()
         template.Name = "甲"
         template.AdvNpc = GENERATED
@@ -53,19 +51,11 @@ class NewRoundGeneratedTalentsTest(SlowTestCase):
         template.Hp = 1500
         template.Mp = 1200
         save_handle.establish_save(SAVE_ID)
-        folder = save_handle.get_save_dir_path(SAVE_ID)
-        with open(os.path.join(folder, "1"), "rb") as f:
-            legacy = pickle.load(f)
         templates = dict.fromkeys(character_config.character_tem_list)
-        vars(legacy)["npc_tem_data"] = {**templates, GENERATED: template}
-        with open(os.path.join(folder, "1"), "wb") as f:
-            pickle.dump(legacy, f)
-        path = os.path.join(folder, kernel_state.SAVE_FILE)
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        data["version"] = 22
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False)
+        cache = legacy_save.old(
+            "Cache", npc_tem_data={**templates, GENERATED: template}
+        )
+        legacy_save.to_legacy(SAVE_ID, cache, version=22)
 
     def test_new_round_after_version_22_load(self) -> None:
         """读版本 22 存档并开新周目后，局内生成角色仍存在，所有角色都不带 config_talent 中没有的素质"""

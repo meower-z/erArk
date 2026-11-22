@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """
 角色的道具、食物背包、服装、身体管理与状态值在内核状态里
-======================================================
+========================================================
 - 给状态值加量时按给出的上下限夹住，整数加分数得分数。给没有的状态加量报 KeyError。
 - 综合数值结算按状态效果给角色状态值加量，并在结算记录里记下改变量。
 - 商店买道具时数量停在 99。用掉一个道具时数量减一。
@@ -9,16 +9,17 @@
 - 变质结算拿走品质降到 0 或更低的食物，留下的食物品质下降。
 - 脱下首饰和必须穿着的衣物以外的服装时，脱衣途中嵌套调用穿上的衣物留在服装里。
 - 新角色有每种状态、道具与身体管理的项，值为 0。
-- 读档时 adopt_old_save 把角色对象上的五个属性搬进内核状态，并从对象上删掉。服装缺的属性取默认值，多的属性不存。
-  没有 milk_ml 的食物照样搬进背包，读档修复 _drop_old_format_food 再删掉它。
+- 读档时 adopt_old_save 把角色对象上的五个属性搬进内核状态，并从对象上删掉。
+  服装缺的属性取默认值，多的属性不存。没有 milk_ml 的食物照样搬进背包，
+  读档修复 _drop_old_format_food 再删掉它。
 - 存档编解码后五个键的值与类型不变，分数的状态值仍是分数。
 - 写回读出的同一个值不产生写入。值相等而类型不同时产生写入。
 - body_manage.clear 把给出编号里不为 0 的项清成 0，其余项不变。
 - H 中的服装面板绘制时在写缓冲外读取服装，被外衣遮住的内衣不显示按钮，
   不改存下的 cloth_see，只记下本次绘制判定的可见性。
-- 记下的可见性在选择草稿开启时、点服装按钮重绘后，或之后第一个行动开始
+- 记下的可见性在进入选择草稿块时、点服装按钮重绘后，或之后第一个行动开始
   （开始代码之前）或结束时写入 cloth_see；点按钮时接着脱下对应衣物。
-- H 中外衣遮住胸衣时，在选择阶段绘制面板并点击外衣按钮，草稿在开启时与重绘后
+- H 中外衣遮住胸衣时，在选择阶段绘制面板并点击外衣按钮，选择草稿块在开启时与重绘后
   各写入一次可见性，落成的编辑行动正常开始，外衣脱下，cloth_see[6] 变为可见。
 - H 中下衣遮住内裤且无透视时，绘制面板后再选收走内裤：行动开始先写入绘制判定的
   不可见，收内裤开始代码再把 cloth_see[9] 设为 True，内裤收入玩家收藏。
@@ -223,7 +224,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
             wardrobe.set_part(1, "cloth_off", 7, [751])
             body_manage.set(1, 24, 1)
         before = core.state()
-        text = json.dumps(kernel_state.encode(before, "tok"))
+        text = json.dumps(kernel_state.encode(before))
         after = kernel_state.decode(json.loads(text), tagged=True)
         self.assertEqual(status.of(1, after)[0], THIRD)
         self.assertIs(type(status.of(1, after)[0]), Fraction)
@@ -275,7 +276,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         """
         玩家处于 H（is_h=1）、目标未穿下衣且穿着内裤（部位 9）、存下的 cloth_see
         为 {6: False, 9: False} 时，在玩家选择（world.act）中绘制面板并点击内裤
-        按钮（switch_cloth）：草稿在开启时写入绘制判定的可见性，cloth_see 更新为
+        按钮（switch_cloth）：选择草稿块开启时写入绘制判定的可见性，cloth_see 更新为
         {6: False, 9: True}，内裤从 cloth_wear[9] 移入 cloth_off[9]
         """
         pan = _cloth_of_part(9)
@@ -326,7 +327,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         """
         玩家处于 H（is_h=1）、目标穿着外衣（部位 5）与胸衣（部位 6）且存下的 cloth_see
         为 {6: False, 9: False} 时，在玩家选择（world.act）中绘制面板并点击外衣按钮：
-        草稿在开启时与重绘后各写入一次可见性，形成的编辑行动正常开始不报错，
+        选择草稿块开启时与重绘后各写入一次可见性，形成的编辑行动正常开始不报错，
         外衣从 cloth_wear[5] 移入 cloth_off[5]，cloth_see[6] 更新为重绘判定的 True
         """
         coat, bra = _cloth_of_part(5), _cloth_of_part(6)

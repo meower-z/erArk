@@ -14,7 +14,6 @@ FullWorld 另有：
     world.new_game()                       -- 走一遍开新游戏的界面流程
     world.player.press(...) / type(...)    -- 安排玩家接下来按的按钮与输入的文字（PlayerInput）
 
-游戏模块在导入时就绑定 cache = cache_control.cache，所以缓存对象只建一次，复原时原地改写它的内容。
 每次复原都重设全部随机源（random、numpy.random、uuid.uuid4），见 seed_everything。
 """
 
@@ -56,9 +55,6 @@ DEFAULT_SCENE = ["宿舍", "1区", "101"]
 
 STANDARD_OUTFIT = {5: [501], 6: [651], 9: [951], 11: [1101]}
 """ 默认穿的衣服，衣物类型: 衣服id 列表：罗德岛制服夹克、纯白色胸罩、纯白色内裤、深蓝色小皮鞋 """
-
-SHALLOW_CACHE_FIELDS: tuple[str, ...] = ()
-""" 复原时只浅拷贝的字典字段：键复原到基线，值对象共用，测试不能改这些值对象 """
 
 
 class FixtureError(AssertionError):
@@ -302,15 +298,11 @@ class MinimalWorld:
         Return arguments:
         无
         功能描述:
-            顺序同 game.py：缓存先于配置建好；构建与配置载入的打印被收起。
+            顺序同 game.py：基础配置先于游戏配置初始化，再载入角色模板与地图并重设内核时钟；
+            构建与配置载入的打印被收起。
         """
         with contextlib.redirect_stdout(io.StringIO()):
             import auto_build_config  # noqa: F401
-        from Script.Core import cache_control, game_type
-
-        # 类型标注里 cache 总是 Cache；运行时启动前为 None，按模块字典读出真实值
-        if vars(cache_control)["cache"] is None:
-            cache_control.cache = game_type.Cache()
         _fresh_config()
         from Script.Config import character_config, game_config, map_config
 
@@ -321,8 +313,6 @@ class MinimalWorld:
         from Script.Design import basement
         from Script.Modules.domains import playthrough
 
-        self.cache = cache_control.cache
-        """ 游戏缓存（对象一直不变，复原时原地改写） """
         kernel_data.reset_clock(start_time(), {})
         kernel_data.written(playthrough.reset_difficulty_and_birth)
         kernel_data.reset_medical()
@@ -339,8 +329,7 @@ class MinimalWorld:
 
     def _snapshot(self) -> None:
         """
-        记下基线：SHALLOW_CACHE_FIELDS 中字段的浅拷贝，其余缓存字段的深拷贝，每个场景的属性，
-        以及 GameState 的全局数据（_boot 里 get_base_updata 开放的房间在其中）
+        记下基线：GameState 的全局数据（_boot 里 get_base_updata 开放的房间在其中）与每个场景的属性深拷贝
         Keyword arguments:
         无
         Return arguments:
@@ -349,11 +338,6 @@ class MinimalWorld:
         from Script.Core import constant
         from Script.Kernel import core
 
-        fields = dict(self.cache.__dict__)
-        self._shallow = {
-            key: dict(fields.pop(key)) for key in SHALLOW_CACHE_FIELDS
-        }
-        self._baseline = copy.deepcopy(fields)
         self._data = core.state().data
         self._scene_data = constant.scene_data
         self._scenes = dict(self._scene_data)
@@ -370,17 +354,12 @@ class MinimalWorld:
         Return arguments:
         无
         功能描述:
-            缓存对象与场景对象都不换，只改写内容：游戏模块与测试手里的引用一直有效。
-            游戏配置（game_config 等）与模块级打桩不在复原范围内：测试不能改配置，打桩用 unittest.mock 自行恢复。
+            场景对象不换，只改写内容；内核状态按基线重置，核外模块状态一并清零。
+            游戏配置（game_config 等）与模块级打桩不在复原范围内：
+            测试不能改配置，打桩用 unittest.mock 自行恢复。
         """
         from Script.Core import constant
 
-        cache = self.cache
-        cache.__dict__.clear()
-        cache.__dict__.update(copy.deepcopy(self._baseline))
-        cache.__dict__.update(
-            {key: dict(value) for key, value in self._shallow.items()}
-        )
         self._scene_data.clear()
         self._scene_data.update(self._scenes)
         constant.scene_data = self._scene_data
@@ -725,7 +704,7 @@ class FullWorld(MinimalWorld):
     def _load_game(self) -> None:
         """
         先载入小世界，再导入 Script.Settle、Script.StateMachine、医疗系统与界面流程（靠装饰器注册），
-        随后重置缓存外状态并加载内核模块
+        随后重置核外状态并加载内核模块
         Keyword arguments:
         无
         Return arguments:

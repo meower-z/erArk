@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 """
-换入失败时一切如旧：Reset 的钩子出错，内核状态与游戏缓存都回到换入前
-==================================================================
-新周目的步骤先改了缓存（测试放在缓存上的 round_mark、玩家名），之后的一步或一个输出钩子出错：
-错误照常抛出，core.state() 还是换入前的那个，缓存里的值也都是换入前的。
+换态失败时内核状态保持不变
+==========================
+新周目的 setup 运行（计数并把玩家改名）后，后续步骤或输出钩子抛错：
+异常向外传播，core.state() 仍是换态前的状态。
 """
 
 import sys
@@ -22,14 +22,13 @@ class FailedResetTest(FastTestCase):
     """新周目换入中途出错"""
 
     def setUp(self) -> None:
-        """玩家在场；新周目的面板换成只改缓存的替身，载入游戏的模块"""
+        """建出玩家，用计数并可改名的替身替换 new_round 面板，加载内核模块"""
         super().setUp()
         self.world.chara(0, "博士")
-        vars(self.cache)["round_mark"] = 0
-        self.addCleanup(vars(self.cache).pop, "round_mark", None)
+        self.setups = 0
 
         def setup(inherit: object) -> None:
-            vars(self.cache)["round_mark"] += 1
+            self.setups += 1
             identity.put(identity.Identity(0, name="新周目"))
 
         panel = SimpleNamespace(setup=setup)
@@ -39,16 +38,16 @@ class FailedResetTest(FastTestCase):
         core.load(load_order.LOAD_ORDER)
 
     def check_failed(self) -> None:
-        """新周目出错抛出，内核状态与缓存都是换入前的"""
+        """新周目在 setup 运行后抛错，验证异常传播且内核状态与玩家姓名保持换态前的状态"""
         before = core.state()
         with self.assertRaises(RuntimeError):
             kernel_state.new_round({})
         self.assertIs(core.state(), before)
-        self.assertEqual(vars(self.cache)["round_mark"], 0)
+        self.assertEqual(self.setups, 1)
         self.assertEqual(identity.of(0).name, "博士")
 
     def test_failed_step(self) -> None:
-        """改过缓存之后的投影一步出错"""
+        """setup 之后的投影步骤抛错"""
         broken = mock.Mock(side_effect=RuntimeError("project"))
         with mock.patch.object(actions, "project", broken):
             self.check_failed()

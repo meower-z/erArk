@@ -2,25 +2,25 @@
 """
 存档里的内核状态
 ================
-- kernel_state.write 把 core.state() 写成 JSON，read 读回同一个 GameState 与当前版本。
-- 存档头没有标记、也没有文件 "2" 的存档（旧存档）读回 None 与版本 0。
+- kernel_state.write 把 core.state() 写成 save.json，read 读回同一个 GameState 与当前版本。
+- 存档头没有标记且没有文件 "2" 的旧槽位（版本 0），read 返回 (None, 0)。
 - 玩家选行动时读档（kernel_state.load）中止这次选择，越过插件的 except Exception。
   行动不开始，step() 照常返回，下一步在读回的 GameState 上选行动。
 - save_handle 存档再读档：难度取存档里的，系统设置是全局的，读档不换它。内核换成存档时的 GameState。
-- 存档的内核状态里带 open 键（开始了、还没收尾的行为为真）。读档后 open 不为真的角色换成同样起止的 kernel.Idle，
-  为真的保留行为，open 一律去掉。行为的结束函数只对还没收尾的角色各运行一次。
+- 存档的内核状态里带 open 键（开始了、还没收尾的行为为真）。
+  读档后 open 不为真的角色换成同样起止的 kernel.Idle，为真的保留行为，open 一律去掉。
+  行为的结束函数只对还没收尾的角色各运行一次。
 - 读档后，各设施当前等级够得上的待开放设施设为已开放，等级未够到的保持未开放。
 存档都写在临时目录里（index.SAVE_DIR 换成它）。
 """
 
 import itertools
 import os
-import pickle
 import sys
 import tempfile
 from collections.abc import Callable
 from dataclasses import replace
-from types import MappingProxyType, ModuleType, SimpleNamespace
+from types import MappingProxyType, ModuleType
 from typing import Any
 from unittest import mock
 
@@ -37,8 +37,9 @@ from Script.Modules.domains import chara_key, chara_profile, identity, relations
 from Script.Design import attr_calculation
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 from Script.System.Pregnancy_System import pregnancy_constant
-from tests import chara_projection, kernel_data
+from tests import chara_projection, kernel_data, legacy_save
 from tests.fast.base import FastTestCase
 
 SAVE_ID = "kernel_state_test"
@@ -102,14 +103,9 @@ def game(clock: int, ends: dict[str, int]) -> core.GameState:
     return core.state()
 
 
-def write(token: str = "t") -> None:
-    """
-    写一个存档头带标记 token 的存档：存档头与文件 "2"
-    Keyword arguments:
-    token -- 本次存档的标记
-    """
-    index.write_head(SAVE_ID, {kernel_state.TOKEN: token})
-    kernel_state.write(SAVE_ID, token)
+def write() -> None:
+    """以空存档头把内核状态写入测试槽位的 save.json"""
+    kernel_state.write(SAVE_ID, {})
 
 
 class KernelStateTest(FastTestCase):
@@ -133,8 +129,8 @@ class KernelStateTest(FastTestCase):
         self.assertEqual(tuple(loaded.characters), ("0", "2", "1"))
 
     def test_read_without_kernel_state_is_none(self) -> None:
-        """存档头没有标记、也没有文件 "2" 的存档（旧存档）读回 None 与版本 0"""
-        index.write_head(SAVE_ID, {})
+        """存档头无标记且缺少文件 "2" 的旧槽位，kernel_state.read 返回 (None, 0)"""
+        legacy_save.write_head(SAVE_ID, {})
         self.assertEqual(kernel_state.read(SAVE_ID), (None, 0))
 
     def test_load_inside_pick_restarts_step(self) -> None:
@@ -377,24 +373,17 @@ class KernelStateTest(FastTestCase):
         kernel_data.written(country.fill)
         kernel_data.written(playthrough.reset_difficulty_and_birth)
         save_handle.establish_save(SAVE_ID)
-        save_dir = save_handle.get_save_dir_path(SAVE_ID)
-        file_1 = os.path.join(save_dir, "1")
-        file_2 = os.path.join(save_dir, "2")
-        if os.path.exists(file_2):
-            os.remove(file_2)
-        head = dict(index.head(SAVE_ID))
-        head.pop(kernel_state.TOKEN, None)
-        index.write_head(SAVE_ID, head)
+        head = index.head(SAVE_ID)
+        os.remove(index.file(SAVE_ID, index.SAVE_FILE))
+        legacy_save.write_head(SAVE_ID, head)
 
         for soft_egg_flag, expect_pregnant in ((0, 1), (1, 0)):
-            with open(file_1, "rb") as f:
-                legacy = pickle.load(f)
-            legacy.__dict__.pop("birth_type_setting", None)
-            vars(legacy)["all_system_setting"] = SimpleNamespace(
-                birth_type_setting={
-                    pregnancy_constant.BIRTH_TYPE_EGG_SOFT: soft_egg_flag
-                }
-            )
+            legacy = legacy_save.old("Cache")
+            setting = LegacyObject()
+            vars(setting)["birth_type_setting"] = {
+                pregnancy_constant.BIRTH_TYPE_EGG_SOFT: soft_egg_flag
+            }
+            vars(legacy)["all_system_setting"] = setting
             legacy.npc_id_got = {0, soft_cid}
             legacy.forbidden_npc_id = set()
             legacy.npc_name_data = {"博士", soft_tem.Name}
@@ -407,8 +396,7 @@ class KernelStateTest(FastTestCase):
             preg.fetus_count = 1
             preg.acceleration_days = 5.0
             vars(saved_npc)["pregnancy"] = preg
-            with open(file_1, "wb") as f:
-                pickle.dump(legacy, f)
+            legacy_save.write_cache(SAVE_ID, legacy)
             save_handle.input_load_save(SAVE_ID)
             self.assertEqual(
                 abilities.talent(soft_cid).get(21, 0), expect_pregnant

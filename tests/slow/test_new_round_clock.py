@@ -42,7 +42,6 @@ class NewRoundClockTest(SlowTestCase):
         game_time = game("Script.Design.game_time")
         kernel_state = game("Script.Modules.save_load.kernel_state")
         new_round = game("Script.UI.Panel.new_round")
-        game("Script.Core.cache_control")
         playthrough = game("Script.Modules.domains.playthrough")
         first = kernel_state.first_clock()
         self.wait(12)

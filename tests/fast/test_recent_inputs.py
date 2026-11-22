@@ -15,7 +15,6 @@
 """
 
 import json
-import os
 import tempfile
 from unittest import mock
 
@@ -140,8 +139,8 @@ class OrdersKernelTest(KernelTestCase):
         self.run_world(game(0, {"1": 0}))
         kernel_data.put(history.add_inputs, ["1"])
         orders.accept("save")
-        kernel_state.write(SLOT, "tok")
-        path = os.path.join(index.path(SLOT), kernel_state.SAVE_FILE)
+        kernel_state.write(SLOT, {})
+        path = index.file(SLOT, index.SAVE_FILE)
         with open(path, encoding="utf-8") as f:
             saved = kernel_state.decode(json.load(f), tagged=True)
         self.assertEqual(history.inputs(saved), ["1", "save"])
@@ -187,7 +186,7 @@ class RecentInputsTest(FastTestCase):
         """log.inputs 随 kernel_state 编解码完整往返"""
         kernel_data.put(history.add_inputs, ["3", "确定"])
         decoded = kernel_state.decode(
-            kernel_state.encode(core.state(), "tok"), tagged=True
+            kernel_state.encode(core.state()), tagged=True
         )
         self.assertEqual(history.inputs(decoded), ["3", "确定"])
 
@@ -195,7 +194,7 @@ class RecentInputsTest(FastTestCase):
         """读档后 log.inputs 恢复为存档时的输入（含暂存输入），读档前输入不保留且 view.input_cache 不变"""
         kernel_data.put(history.add_inputs, ["1"])
         orders.accept("save")
-        save_handle.establish_save_linux(SLOT)
+        save_handle.establish_save(SLOT)
         kernel_data.put(history.add_inputs, ["after save"])
         orders.accept("load")
         self.enterContext(mock.patch.object(view, "input_cache", ["ui"]))

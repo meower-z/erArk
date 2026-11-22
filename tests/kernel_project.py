@@ -3,9 +3,9 @@
 快照投影补充
 ============
 tests/kernel_data.project_state 调用 project_rest。
-本模块把 GameState 里的一些全局键与角色的活动按旧缓存的属性名记进快照。
-project_world_misc 记本周目设定、周目、国家、模式、收藏地点、吵醒名单、成就、事件与指令记录、计划、名册与射精位置，
-共 20 个全局键。
+本模块把 GameState 里的一些全局键与角色的活动按旧格式属性名记进快照。
+project_world_misc 记本周目设定、周目、国家、模式、收藏地点、吵醒名单、成就、事件与指令记录、
+计划、名册与射精位置，共 20 个全局键。
 指令记录只记最近行为，每日记录不在快照里。
 project_world_misc 还经 chara_data.project 记下各角色的道具、食物背包、服装、身体管理与状态值。
 project_base_tallies 记基地的派对排期、旅馆房间档次、计数与冰箱，共 4 个全局键。
@@ -21,9 +21,6 @@ import contextlib
 import importlib
 from collections.abc import Callable, Collection, Iterator
 from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from Script.Core import game_type
 
 _in_step = 0
 """ 经 stepping() 包住的内核单步嵌套层数 """
@@ -121,7 +118,7 @@ def mode(name: str) -> bool:
 
 def project_world_misc(state: dict[str, object]) -> None:
     """
-    快照里按旧缓存的属性名记下 GameState 里的本周目设定、周目数、势力与国家、模式开关、收藏地点、
+    快照里按旧格式属性名记下 GameState 里的本周目设定、周目数、势力与国家、模式开关、收藏地点、
     被吵醒的角色、成就、事件与最近行为记录、计划、名册与全局射精位置，以及各角色的妊娠与养成状态。
     随后经 chara_data.project 记下各角色的道具、食物背包、服装、身体管理与状态值
     Keyword arguments:
@@ -187,18 +184,17 @@ def project_world_misc(state: dict[str, object]) -> None:
     chara_data.project(state)
 
 
-def project_rest(cache: game_type.Cache, state: dict[str, object]) -> None:
+def project_rest(state: dict[str, object]) -> None:
     """
     快照里补上 project_world_misc、project_base_tallies 与 activity_projection.project 记的值
     Keyword arguments:
-    cache -- 游戏缓存
     state -- 快照，原地补上
     """
     from tests import activity_projection
 
     project_world_misc(state)
     project_base_tallies(state)
-    activity_projection.project(cache, state)
+    activity_projection.project(state)
 
 
 def project_base_tallies(state: dict[str, object]) -> None:

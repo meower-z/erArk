@@ -1,12 +1,11 @@
 # -*- coding: UTF-8 -*-
 """
 一个时钟：内核的 clock 就是游戏时间
-====================================
+===================================
 - 时间流逝最多走 5 分钟或到下一个 0 点；Tick 每 5 分钟把每个角色从上一次 Tick 结算到此刻，
   跨进新一天时先结算到 0 点；NewDay 在 0 点、任何人选行动之前只跑一次。
 - tick_one 只结算一个角色，从上一次 Tick 算起；没有 ticked / settled_day 的 GameState 从它的时钟记起。
 - game_time.minutes 与 at 互为逆运算，跨季也一样。
-- 太阳与月相的取值不往缓存里写东西。
 """
 
 import datetime
@@ -193,7 +192,7 @@ class OneClockTest(FastTestCase):
 
 
 class ClockHelpersTest(FastTestCase):
-    """分钟数与游戏时间的换算，以及不写缓存的天象"""
+    """分钟数与游戏时间的换算"""
 
     def test_minutes_and_at_round_trip_across_seasons(self) -> None:
         """两年里每隔 997 分钟取一点，minutes(at(m)) == m，at(m) 总在四季月上"""
@@ -208,20 +207,3 @@ class ClockHelpersTest(FastTestCase):
             game_time.at(first + game_time.SEASON_DAY * 1440),
             datetime.datetime(2019, 6, 1),
         )
-
-    def test_sun_and_moon_leave_the_cache_alone(self) -> None:
-        """取太阳位置与月相不给缓存添键，也不改已有的值（字典按内容比）"""
-        before = {
-            key: dict(value) if isinstance(value, dict) else value
-            for key, value in vars(self.cache).items()
-        }
-        when = datetime.datetime(2019, 9, 14, 21, 30)
-        phase = game_time.get_moon_phase(when)
-        game_time.get_sun_time(when)
-        self.assertEqual(game_time.get_moon_phase(when), phase)
-        self.assertEqual(vars(self.cache).keys(), before.keys())
-        for key, value in vars(self.cache).items():
-            if isinstance(value, dict):
-                self.assertEqual(value, before[key], key)
-            else:
-                self.assertIs(value, before[key], key)

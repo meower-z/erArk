@@ -25,18 +25,17 @@ from tests import kernel_data
 from Script.Modules.domains import chara_life
 from Script.Modules.domains import identity
 from Script.Core import constant
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
-def records() -> dict[int, game_type.Character]:
+def records() -> dict[int, LegacyObject]:
     """按身份表顺序为每个角色构造空的旧角色对象，模拟读档时的 character_data"""
-    return {cid: game_type.Character() for cid in identity.ids()}
+    return {cid: LegacyObject() for cid in identity.ids()}
 
 
 def normalize() -> None:
-    """构造带 records() 的存档缓存并运行 save_handle._normalize_loaded_save_paths"""
-    loaded = game_type.Cache()
-    vars(loaded)["character_data"] = records()
-    save_handle._normalize_loaded_save_paths(loaded)
+    """构造带 records() 的旧存档属性表并运行 save_handle._normalize_loaded_save_paths"""
+    save_handle._normalize_loaded_save_paths({"character_data": records()})
 
 
 section("CHILD_GROWTH 字段级回填")
@@ -206,7 +205,7 @@ OLD_REPORT_UID_SET = frozenset(save_handle._OFFICIAL_EVENT_UID_MIGRATE)
 
 def find_old_report_uid_left(label: str) -> list:
     """
-    找出缓存里还留着的旧 uid 履历：罗德岛全局履历的键是「uid@角色id」（没有主体时就是 uid），
+    找出当前状态里还留着的旧 uid 履历：罗德岛全局履历的键是「uid@角色id」（没有主体时就是 uid），
     孩子的 event_history 以 uid 为键
     Keyword arguments:
     label -- 写进结果里的来源标记（存档编号）

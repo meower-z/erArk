@@ -80,12 +80,12 @@ class SmokeNewGameTest(SlowTestCase):
         npc_behaviors: set[str] = set()
         """ 干员在各步结束时的行为id """
         start = game_time.now()
-        recorder.record("0000", capture(self.cache, log, memo))
+        recorder.record("0000", capture(log, memo))
         run_checks()
         for index in range(1, HOURS * 60 // STEP_MINUTES + 1):
             self.instruct(constant.Instruct.WAIT)
             now = game_time.now()
-            recorder.record(f"{index:04d}", capture(self.cache, log, memo))
+            recorder.record(f"{index:04d}", capture(log, memo))
             npc_behaviors.update(
                 activity.behavior(cid).behavior_id
                 for cid in kernel_data.domain("roster").active()

@@ -29,7 +29,7 @@ class SlowTestTimeout(AssertionError):
 
 
 class SlowTestCase(unittest.TestCase):
-    """慢速层测试的基类：self.world 为刚开新游戏的 FullWorld，self.cache 为游戏缓存"""
+    """慢速层测试的基类：self.world 为刚开新游戏的 FullWorld"""
 
     time_limit = TIME_LIMIT
     """ 这个类的每个测试的时限，秒 """
@@ -48,7 +48,6 @@ class SlowTestCase(unittest.TestCase):
         signal.alarm(self.time_limit)
         remove_parent_guard()
         self.world = FullWorld.load()
-        self.cache = self.world.cache
         self.world.new_game(self.first_bonus)
 
     def _time_up(self, signum: int, frame: "FrameType | None") -> "NoReturn":

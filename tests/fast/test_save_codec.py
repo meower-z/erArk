@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 """
-存档文件 "2" 的编码：Fraction 的标签与存档头的标记
-==================================================
-- Fraction（96 位分子、88 位分母，以及分母为 1 的）写进文件再读回，值与类型不变。int 读回仍是 int。
-- 草稿那种 {"$frac": [3, 4]} 与带 "$frac" 的两键映射原样读回。只有一个键 "$frac" 且值是字符串的映射不能写。
-- 进行中的玩家行动带着草稿与选择时的写入，写进文件再读回不变。
-- 存档头有标记时，文件 "2" 缺失、截断、标记不同或版本过高都拒绝读档，不当旧存档读。
-- 版本 1 的文件读回时升到当前版本：角色数据与 roster.offstage 里的每份 body.needs 补上体力、气力、理智与它们的上限，
-  愤怒、熟睡、欲望、醉酒，都取默认值 0，原有的项不变。
+存档内核状态编码：Fraction 标签与旧存档校验标记
+===============================================
+- Fraction（96 位分子、88 位分母，以及分母为 1 的）写进 save.json 再读回，值与类型不变。int 读回仍是 int。
+- {"$frac": [3, 4]} 与带 "$frac" 的两键映射原样读回。只有一个键 "$frac" 且值是字符串的映射不能写。
+- 进行中的玩家行动带着标签样本与选择时的写入，写进 save.json 再读回不变。
+- 旧存档头有标记时，文件 "2" 缺失、截断、标记不同或版本过高都抛 SaveRefused，不当版本 0 读。
+- 版本 1 的旧存档文件 "2" 读回时升到当前版本：角色数据与 roster.offstage 里的每份 body.needs 补上体力、气力、
+  理智与它们的上限，愤怒、熟睡、欲望、醉酒，都取默认值 0，原有的项不变。
 存档都写在临时目录里（index.SAVE_DIR 换成它）。
 """
 
@@ -20,6 +20,7 @@ from unittest import mock
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
+from tests import legacy_save
 from tests.fast.base import FastTestCase
 
 SAVE_ID = "save_codec_test"
@@ -30,7 +31,8 @@ BIG = Fraction(3**60 + 1, 2**88 - 1)
 
 def state(data: dict[str, core.JSON]) -> core.GameState:
     """
-    内核换成时钟 100、只有玩家的状态。玩家的行动带着草稿与选择时的写入，玩家数据里有生理需求，全局数据是 data
+    内核换成时钟 100、只有玩家的状态。玩家的行动带着标签样本与选择时的写入，
+    玩家数据里有生理需求，全局数据是 data
     Keyword arguments:
     data -- 全局数据
     Return arguments:
@@ -42,7 +44,7 @@ def state(data: dict[str, core.JSON]) -> core.GameState:
         {
             "behavior_id": "wait",
             "minutes": 5,
-            "draft": ((("a", "x"), {"$frac": (3, 4)}, {"$frac": (1, 2)}),),
+            "tags": ((("a", "x"), {"$frac": (3, 4)}, {"$frac": (1, 2)}),),
             "effects": (
                 {
                     "who": "0",
@@ -70,7 +72,7 @@ def state(data: dict[str, core.JSON]) -> core.GameState:
 
 
 class SaveCodecTest(FastTestCase):
-    """文件 "2" 的编码与读档前的检查"""
+    """存档内核状态的编码与旧存档读档前检查"""
 
     def setUp(self) -> None:
         """存档写进临时目录"""
@@ -78,17 +80,13 @@ class SaveCodecTest(FastTestCase):
         folder = self.enterContext(tempfile.TemporaryDirectory())
         self.enterContext(mock.patch.object(index, "SAVE_DIR", folder))
 
-    def write(self, token: str = "t") -> None:
-        """
-        把内核此刻的状态写成存档头带标记 token 的存档
-        Keyword arguments:
-        token -- 本次存档的标记
-        """
-        index.write_head(SAVE_ID, {kernel_state.TOKEN: token})
-        kernel_state.write(SAVE_ID, token)
+    def write(self) -> None:
+        """把内核状态写入测试槽位的 save.json，存档头含游戏时间与存档时间"""
+        when = "2026-06-01T08:00:00"
+        kernel_state.write(SAVE_ID, {"game_time": when, "save_time": when})
 
     def test_round_trip_keeps_values_and_types(self) -> None:
-        """Fraction、分母为 1 的 Fraction、int、草稿的标签与带 "$frac" 的两键映射读回不变"""
+        """Fraction、分母为 1 的 Fraction、int、值为元组的 "$frac" 与带 "$frac" 的两键映射读回不变"""
         saved = state({"two": {"$frac": "1/2", "n": 1}, "big": -BIG})
         self.write()
         loaded, version = kernel_state.read(SAVE_ID)
@@ -105,22 +103,25 @@ class SaveCodecTest(FastTestCase):
     def test_literal_tag_is_refused(self) -> None:
         """只有一个键 "$frac"、值是字符串的映射读回会变成 Fraction，所以写的时候报 TypeError"""
         with self.assertRaisesRegex(TypeError, "reads back as a Fraction"):
-            kernel_state.encode(state({"tag": {"$frac": "1/2"}}), "t")
+            kernel_state.encode(state({"tag": {"$frac": "1/2"}}))
 
     def test_broken_files_are_refused(self) -> None:
-        """存档头有标记时，文件 "2" 截断、标记不同、缺失或版本过高都抛 SaveRefused，错误里有存档id"""
-        path = os.path.join(index.path(SAVE_ID), kernel_state.SAVE_FILE)
+        """
+        存档头带标记的旧槽位中，文件 "2" 截断、标记不符、缺失或版本过高都抛 SaveRefused 且消息含槽位名
+        """
+        path = index.file(SAVE_ID, kernel_state.LEGACY_FILE)
         state({})
         self.write()
+        legacy_save.to_legacy(SAVE_ID, legacy_save.old("Cache"))
         with open(path, encoding="utf-8") as f:
             text = f.read()
+        token = f'"{kernel_state.TOKEN}": "legacy-token"'
+        self.assertIn(token, text)
         cases = {
             "truncated": text[: len(text) // 2],
-            "other token": text.replace('"t"', '"u"', 1),
+            "other token": text.replace(token, f'"{kernel_state.TOKEN}": "u"'),
             "too new": text.replace(
-                f'"version": {upgrade.CURRENT}',
-                f'"version": {upgrade.CURRENT + 1}',
-                1,
+                '"version": 27', f'"version": {upgrade.CURRENT + 1}', 1
             ),
             "missing": None,
         }
@@ -131,23 +132,17 @@ class SaveCodecTest(FastTestCase):
                 else:
                     with open(path, "w", encoding="utf-8") as f:
                         f.write(body)
-                with self.assertRaisesRegex(kernel_state.SaveRefused, SAVE_ID):
+                with self.assertRaisesRegex(index.SaveRefused, SAVE_ID):
                     kernel_state.read(SAVE_ID)
 
     def test_version_1_gains_the_new_stats(self) -> None:
         """版本 1 的文件读回后版本为当前版本，玩家与 roster.offstage 里的 body.needs 补上十项默认值 0，原有的项不变"""
-        path = os.path.join(index.path(SAVE_ID), kernel_state.SAVE_FILE)
         parked: core.JSON = {
             "7": {"body.needs": {"tired": 3, "hunger": Fraction(5, 2)}}
         }
         state({"roster.offstage": parked})
         self.write()
-        with open(path, encoding="utf-8") as f:
-            text = f.read()
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(
-                text.replace(f'"version": {upgrade.CURRENT}', '"version": 1', 1)
-            )
+        legacy_save.to_legacy(SAVE_ID, legacy_save.old("Cache"), version=1)
         loaded, version = kernel_state.read(SAVE_ID)
         self.assertEqual(version, upgrade.CURRENT)
         assert loaded is not None
