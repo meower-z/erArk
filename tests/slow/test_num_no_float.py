@@ -2,10 +2,11 @@
 """
 连续数值从不为浮点
 ==================
-读用户存档 99（不入库，装在 save/99 时才跑，没装时报跳过），玩家每次选行动都等待五分钟，内核推进 3 个游戏小时。
-每一步之后，每个角色的每个连续数值（Num：体力、气力、理智、射精欲、精液、疲劳、尿意、饥饿、困倦、醉酒、各状态值、
-身体各部位的当前精液量、累计吸收精液量、精液流通的剩余量、乳汁量、当日理智消耗）都是 int 或 Fraction，
-Fraction 的分母都小于 2**64。
+测试读入用户存档 99（不入库，装在 save/99 时才跑，没装时报跳过），然后推进内核 3 个游戏小时。玩家每次选行动时，
+处于 H 状态选 H 内等待五分钟，其余时候选日常等待五分钟。H 中被撞见时，玩家按屏幕上的结束 H 按钮。每一步之后，
+每个角色的每个连续数值（Num：体力、气力、理智、射精欲、精液、疲劳、尿意、饥饿、困倦、醉酒、各状态值、
+身体各部位的当前精液量、累计吸收精液量、精液流通的剩余量、乳汁量、
+当日理智消耗）都是 int 或分母小于 2**64 的 Fraction。
 
 结算效果（Settle/default.py、Second_effect.py、item_effect.py 里登记的行为效果与二段行为效果）逐个结算一次：
 开新游戏，博士与同一处的一名干员互为交互对象，两人的每个连续数值先设为 n + 1/3
@@ -44,6 +45,8 @@ MINUTES = 180
 """ 推进的游戏分钟数 """
 DENOMINATOR_LIMIT = 2**64
 """ 分母的上限（不含） """
+END_H = "尴尬地结束H"
+""" H 中被撞见时按的结束 H 按钮文字 """
 PLAIN = ("eja_point", "semen_point")
 """ 角色上直接存放的连续数值 """
 
@@ -128,6 +131,11 @@ class NumNoFloatTest(SlowTestCase):
         from Script.UI.Moudle import view
 
         constant = importlib.import_module("Script.Core.constant")
+        constant_promise = importlib.import_module(
+            "Script.Core.constant_promise"
+        )
+        flow_handle = importlib.import_module("Script.Core.flow_handle")
+        handle_premise = importlib.import_module("Script.Design.handle_premise")
         save_handle = importlib.import_module("Script.Core.save_handle")
         core = importlib.import_module("Script.Kernel.core")
         load_order = importlib.import_module("Script.Modules.load_order")
@@ -145,8 +153,46 @@ class NumNoFloatTest(SlowTestCase):
         core.load(load_order.LOAD_ORDER)
 
         def wait() -> None:
-            """玩家每次选行动都等待"""
-            handle_instruct.handle_instruct(constant.Instruct.WAIT)
+            """处于 H 状态时执行 H 内等待五分钟，其余时候执行日常等待五分钟"""
+            in_h = handle_premise.handle_premise(
+                constant_promise.Premise.IS_H, 0
+            )
+            handle_instruct.handle_instruct(
+                constant.Instruct.WAIT_5_MIN_IN_H
+                if in_h
+                else constant.Instruct.WAIT
+            )
+
+        player = self.world.player
+        real_order_deal = flow_handle.order_deal
+
+        def order_deal(
+            flag: str = "order",
+            print_order: bool = True,
+            donot_return_null_str: bool = True,
+        ) -> str | None:
+            """
+            本测试对 flow_handle.order_deal 的替身：未安排输入、
+            donot_return_null_str 为真且屏幕上有结束 H 按钮时先安排按下该按钮，再转调原函数
+            Keyword arguments:
+            flag -- 输入模式，原样传给原函数（str）
+            print_order -- 是否回显输入，原样传给原函数（bool）
+            donot_return_null_str -- 是否不接受空串，原样传给原函数（bool）
+            Return arguments:
+            str | None -- 原函数的返回值
+            """
+            shown = [text for text, _ in player.buttons]
+            if (
+                not player.planned
+                and donot_return_null_str
+                and any(END_H in text for text in shown)
+            ):
+                player.press(END_H)
+            return real_order_deal(flag, print_order, donot_return_null_str)
+
+        self.enterContext(
+            mock.patch.object(flow_handle, "order_deal", order_deal)
+        )
 
         found: dict[tuple[int, str], str] = {}
         start = core.state().clock
