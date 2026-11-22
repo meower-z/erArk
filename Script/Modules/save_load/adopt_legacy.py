@@ -154,16 +154,16 @@ def adopt_v0(loaded_dict: dict[str, Any]) -> None:
     for cid, character in loaded_dict["character_data"].items():
         if not hasattr(character, "tired_point"):
             continue
+        preg = getattr(character, "pregnancy", None)
         values = {
             stat: num.exact(getattr(character, name))
             for name, stat in V0_NEEDS.items()
-        }
-        values["milk"] = num.exact(getattr(character.pregnancy, V0_MILK, 0))
+        } | {"milk": num.exact(getattr(preg, V0_MILK, 0))}
         needs.set(cid, **values)
         for name in V0_NEEDS:
             delattr(character, name)
-        if hasattr(character.pregnancy, V0_MILK):
-            delattr(character.pregnancy, V0_MILK)
+        if hasattr(preg, V0_MILK):
+            delattr(preg, V0_MILK)
     island = loaded_dict["rhodes_island"]
     strategy = getattr(island, V0_STRATEGY)
     table = {str(zone): value for zone, value in strategy.items()}
@@ -340,11 +340,11 @@ def adopt_pickled(loaded_dict: dict[str, Any]) -> None:
             if hasattr(character, name):
                 delattr(character, name)
         needs.set(cid, **values)
-        milk_max = getattr(character.pregnancy, PICKLED_MILK_MAX, 200)
-        if milk_max != 200:
+        preg = getattr(character, "pregnancy", None)
+        if (milk_max := getattr(preg, PICKLED_MILK_MAX, 200)) != 200:
             pregnancy.set_milk_max(cid, milk_max)
-        if hasattr(character.pregnancy, PICKLED_MILK_MAX):
-            delattr(character.pregnancy, PICKLED_MILK_MAX)
+        if hasattr(preg, PICKLED_MILK_MAX):
+            delattr(preg, PICKLED_MILK_MAX)
         if hasattr(character, STALE):
             delattr(character, STALE)
 

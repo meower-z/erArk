@@ -5,7 +5,7 @@
 final_invariants_h_group.md（H-xx + HS-xx 不变式清单）。
 
 约定与踩坑说明（写在此处，避免散落在各检查函数注释里重复）：
-1. `cid == 0` 恒为玩家角色(博士)。`NPCS = cache.npc_id_got - {0}`，`ALL = cache.npc_id_got | {0}`：
+1. `cid == 0` 恒为玩家角色(博士)。`NPCS = roster.active() - {0}`，`ALL = roster.active() | {0}`：
    统一用这两个集合而不是 `cache.character_data.keys()`——只有"已获得"角色会被结算逻辑写入，
    未获得角色可能带初始化/迁移残留数据。
 2. "同场景" = `chara.position == pl.position`（position为List[str]）。
@@ -28,10 +28,10 @@ final_invariants_h_group.md（H-xx + HS-xx 不变式清单）。
 
 from __future__ import annotations
 
-
 from Script.Core import cache_control, num
 from Script.Design import game_time
 from Script.Modules.domains import abilities, flags, history, modes, needs
+from Script.Modules.domains import roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -74,7 +74,7 @@ def _npcs(cache: game_type.Cache) -> set[int]:
     返回值: Set[int] 已获得的非玩家角色id集合，即npc_id_got - {0}
     功能: 提供不变式清单约定的NPCS集合，供各检查复用，避免每个检查函数各自求一遍差集
     """
-    got = getattr(cache, "npc_id_got", None) if cache is not None else None
+    got = roster.active() if cache is not None else None
     if not got:
         return set()
     return set(got) - {0}
@@ -86,7 +86,7 @@ def _all(cache: game_type.Cache) -> set[int]:
     返回值: Set[int] 已获得的全部角色id集合(含玩家)，即npc_id_got | {0}
     功能: 提供不变式清单约定的ALL集合，供各检查复用
     """
-    got = getattr(cache, "npc_id_got", None) if cache is not None else None
+    got = roster.active() if cache is not None else None
     base = set(got) if got else set()
     return base | {0}
 
@@ -545,7 +545,7 @@ def check_hgroup_08() -> list[CheckFailure]:
     tpls = _tpl_dict(pl)
     if tpls is None:
         return []
-    npc_id_got = getattr(cache, "npc_id_got", None) or set()
+    npc_id_got = roster.active()
     time_stop = modes.time_stop()
     ids = set()
     for k in ("A", "B"):

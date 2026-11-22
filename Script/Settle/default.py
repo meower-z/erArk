@@ -4,56 +4,36 @@ import datetime
 import random, math
 from types import FunctionType
 
-from Script.Design import (
-    basement,
-    settle_behavior,
-    map_handle,
-    attr_calculation,
-    game_time,
-    handle_npc_ai_in_h,
-    handle_premise,
-    hypnosis_state,
-    clothing,
-    handle_ability,
-    second_behavior,
-    character_move,
-)
-from Script.Core import (
-    cache_control,
-    constant,
-    constant_effect,
-    game_type,
-    get_text,
-    num,
-)
+from Script.Design import basement, settle_behavior, map_handle
+from Script.Design import attr_calculation, game_time, handle_npc_ai_in_h
+from Script.Design import handle_premise, hypnosis_state, clothing
+from Script.Design import handle_ability, second_behavior, character_move
+from Script.Core import cache_control, constant, constant_effect, game_type
+from Script.Core import get_text, num
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Instruct_System.common_behavior_utils import (
     get_last_valid_sex_behavior_id,
 )
-from Script.UI.Panel import (
-    hypnosis_panel,
-    event_option_panel,
-    ejaculation_panel,
-    achievement_panel,
-)
+from Script.UI.Panel import hypnosis_panel, event_option_panel
+from Script.UI.Panel import ejaculation_panel, achievement_panel
 
+from Script.Settle.common_default import base_chara_hp_mp_common_settle
+from Script.Settle.common_default import base_chara_state_common_settle
 from Script.Settle.common_default import (
-    base_chara_hp_mp_common_settle,
-    base_chara_state_common_settle,
     base_chara_favorability_and_trust_common_settle,
-    base_chara_climix_common_settle,
-    base_chara_experience_common_settle,
 )
+from Script.Settle.common_default import base_chara_climix_common_settle
+from Script.Settle.common_default import base_chara_experience_common_settle
 
 from Script.Settle.item_effect import *
 from Script.Modules.domains import abilities, achievement, action_info
-from Script.Modules.domains import facility, flags, fridge, history
+from Script.Modules.domains import facility, flags, fridge, growth, history
 from Script.Modules.domains import maintenance, medical, modes, needs, official
 from Script.Modules.domains import physical_exam, player_ability
-from Script.Modules.domains import player_collection, prison, recruit, visitor
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import player_collection, pregnancy, prison
+from Script.Modules.domains import recruit, roster, visitor, warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -1838,12 +1818,13 @@ def handle_target_hypnosis_force_ovulation_on(
         return
     santi_down = 10
     target_character_data.hypnosis.force_ovulation = True
-    target_character_data.pregnancy.reproduction_period = 5
-    # 无壳卵生：强制进入排卵日的同时给予本日的体外排卵机会（周期直接改写不经过每日推进，需在此补置）
     from Script.System.Pregnancy_System import egg_handle
 
-    if egg_handle.is_egg_soft(character_data.target_character_id):
-        target_character_data.pregnancy.external_ovulation_chance = True
+    with pregnancy.editing(character_data.target_character_id) as target_preg:
+        target_preg.reproduction_period = 5
+        # 无壳卵生：强制进入排卵日的同时给予本日的体外排卵机会（周期直接改写不经过每日推进，需在此补置）
+        if egg_handle.is_egg_soft(character_data.target_character_id):
+            target_preg.external_ovulation_chance = True
     needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
     player_ability.add_sanity_cost(character_id, santi_down)
@@ -2099,7 +2080,7 @@ def handle_time_stop_on(
     now_time -- 结算的时间
     """
     modes.set_time_stop(True)
-    target_chara_set = cache.npc_id_got.copy()
+    target_chara_set = roster.active()
     target_chara_set.add(0)
     for chara_id in target_chara_set:
         chara_data = cache.character_data[chara_id]
@@ -2128,7 +2109,7 @@ def handle_time_stop_off(
     now_time -- 结算的时间
     """
     modes.set_time_stop(False)
-    target_chara_set = cache.npc_id_got.copy()
+    target_chara_set = roster.active()
     target_chara_set.add(0)
     for chara_id in target_chara_set:
         chara_data = cache.character_data[chara_id]
@@ -5235,8 +5216,8 @@ def handle_chara_off_line(
     # 清零跟随数据
     flags.set(character_id, is_follow=0)
     # 从当前干员列表中移除
-    if character_id in cache.npc_id_got:
-        cache.npc_id_got.remove(character_id)
+    if roster.has(character_id):
+        roster.remove(character_id)
     # 离开地图
     old_scene_path_str = map_handle.get_map_system_path_str_for_list(
         character_data.position
@@ -5288,8 +5269,8 @@ def handle_chara_on_line(
     character_data.state = constant.CharacterStatus.STATUS_ARDER
     plan_queue.interrupt(character_id)
     # 加入当前干员列表
-    if character_id not in cache.npc_id_got:
-        cache.npc_id_got.add(character_id)
+    if not roster.has(character_id):
+        roster.add(character_id)
     # 进入地图
     now_scene_path_str = map_handle.get_map_system_path_str_for_list(
         character_data.position
@@ -6761,7 +6742,7 @@ def handle_all_chara_masturebate_in_group_sex_flag_0(
     """
     if not add_time:
         return
-    for chara_id in cache.npc_id_got:
+    for chara_id in roster.active():
         character_data: game_type.Character = cache.character_data[chara_id]
         if handle_premise.handle_masturebate_flag_3(chara_id):
             flags.set(character_data.cid, masturebate=0)
@@ -7533,7 +7514,7 @@ def handle_invite_visitor_add_adjust(
         return
 
     # 如果该角色已经被招募，则直接返回
-    if target in cache.npc_id_got or target in recruit.pending():
+    if roster.has(target) or target in recruit.pending():
         visitor.set_invite(0)
         # 玩家使用时显示提示
         if character_id == 0:
@@ -7961,7 +7942,7 @@ def handle_time_stop_orgasm_release(
 
     if not add_time:
         return
-    for chara_id in cache.npc_id_got:
+    for chara_id in roster.active():
         if chara_id == 0:
             continue
         character_data = cache.character_data[chara_id]
@@ -9294,13 +9275,12 @@ def handle_skip_class_add_just(
     """
     if not add_time:
         return
-    from Script.System.Education_System import growth_handle
-
-    growth_data = growth_handle.get_child_growth(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
-    growth_data.skip_class_flag = True
     start_time = character_data.behavior.start_time or game_time.now()
-    growth_data.skip_class_day = start_time.toordinal()
+    with growth.editing(character_id) as growth_data:
+        assert growth_data is not None
+        growth_data.skip_class_flag = True
+        growth_data.skip_class_day = start_time.toordinal()
     # 翘课换来的那点轻松：抑郁小幅回落。不给任何学习收益，这是翘课的代价
     if 19 in character_data.status_data:
         character_data.status_data[19] = max(
@@ -9381,7 +9361,6 @@ def handle_check_report_card_add_just(
         return
     from Script.System.Education_System import (
         education_constant,
-        growth_handle,
         semester_handle,
     )
 
@@ -9390,55 +9369,56 @@ def handle_check_report_card_add_just(
     if target_id == character_id or target_id not in cache.character_data:
         return
     target_data: game_type.Character = cache.character_data[target_id]
-    growth_data = growth_handle.get_child_growth(target_id)
-
-    # 两条路径：有还没看过的新成绩单（学期结算时**冻结**的那一份，report_card_flag 置着）就发那份；
-    #    否则现算一份本学期「截至目前」的（Plan 27 §3.6，用户拍板）。此前以「有没有历史」判：有过一份成绩单之后，
-    #    学期中途再查永远只给上一份，看不到本学期的情况，分档口上夸的也是上学期。
-    # 不能因为还没有成绩单就什么都不显示：指令本身没有「有成绩单」这条前提，
-    #    玩家学期中途照样能用，那时也该给他看到东西
-    report_data = semester_handle.get_last_report_card(target_id)
-    finished = growth_data.report_card_flag and bool(report_data)
-    if not finished:
-        report_data = semester_handle.build_report_card(target_id)
-    now_draw = draw.NormalDraw()
-    now_draw.width = normal_config.config_normal.text_width
-    now_draw.text = semester_handle.get_report_card_text(
-        target_id, report_data, finished
-    )
-    # 更早的学期不在这里翻——指令是一段式的打印，翻页要有面板才做得了。
-    #    发的是冻结那一份时它自己就是历史里最新的一份；给的是本学期截至目前时，历史里的每一份都更早（Plan 27 §3.6）
-    history_count = len(semester_handle.get_report_card_history(target_id))
-    earlier_count = history_count - 1 if finished else history_count
-    if earlier_count > 0:
-        now_draw.text += _(
-            "（更早的 {0} 个学期可以在教育管理系统的养成总览里翻看）\n"
-        ).format(earlier_count)
-    now_draw.draw()
-
-    # 成绩档位越高，检查成绩单时的反馈越正面
-    # 档位已经把「出勤率 + 有没有真学出东西」并进一个口径了，
-    #    这里再单写一遍出勤率阈值，会与成绩单正文里的评定对不上
-    base_chara_favorability_and_trust_common_settle(
-        character_id,
-        add_time,
-        True,
-        0,
-        abilities.ability(target_id)[32],
-        change_data,
-        target_data.cid,
-    )
-    if report_data.get("grade", education_constant.REPORT_GRADE_POOR) in {
-        education_constant.REPORT_GRADE_EXCELLENT,
-        education_constant.REPORT_GRADE_GOOD,
-    }:
-        base_chara_state_common_settle(
-            target_id, add_time, 13, change_data_to_target_change=change_data
+    with growth.editing(target_id) as growth_data:
+        assert growth_data is not None
+        # 两条路径：有还没看过的新成绩单（学期结算时**冻结**的那一份，report_card_flag 置着）就发那份；
+        #    否则现算一份本学期「截至目前」的（Plan 27 §3.6，用户拍板）。此前以「有没有历史」判：有过一份成绩单之后，
+        #    学期中途再查永远只给上一份，看不到本学期的情况，分档口上夸的也是上学期。
+        # 不能因为还没有成绩单就什么都不显示：指令本身没有「有成绩单」这条前提，
+        #    玩家学期中途照样能用，那时也该给他看到东西
+        report_data = semester_handle.get_last_report_card(target_id)
+        finished = growth_data.report_card_flag and bool(report_data)
+        if not finished:
+            report_data = semester_handle.build_report_card(target_id)
+        now_draw = draw.NormalDraw()
+        now_draw.width = normal_config.config_normal.text_width
+        now_draw.text = semester_handle.get_report_card_text(
+            target_id, report_data, finished
         )
-    # 只有发的是冻结那一份才算「看过了」；学期中途看的是进行时数据，flag 不动。
-    #    口上在效果之前输出，按档位分的口上判「有待查看的成绩单」（养成数值 23）时 flag 还在（Plan 27 §3.6）
-    if finished:
-        growth_data.report_card_flag = False
+        # 更早的学期不在这里翻——指令是一段式的打印，翻页要有面板才做得了。
+        #    发的是冻结那一份时它自己就是历史里最新的一份；给的是本学期截至目前时，历史里的每一份都更早（Plan 27 §3.6）
+        history_count = len(semester_handle.get_report_card_history(target_id))
+        earlier_count = history_count - 1 if finished else history_count
+        if earlier_count > 0:
+            now_draw.text += _(
+                "（更早的 {0} 个学期可以在教育管理系统的养成总览里翻看）\n"
+            ).format(earlier_count)
+        now_draw.draw()
+
+        # 成绩档位越高，检查成绩单时的反馈越正面
+        # 档位已经把「出勤率 + 有没有真学出东西」并进一个口径了，
+        #    这里再单写一遍出勤率阈值，会与成绩单正文里的评定对不上
+        base_chara_favorability_and_trust_common_settle(
+            character_id,
+            add_time,
+            True,
+            0,
+            abilities.ability(target_id)[32],
+            change_data,
+            target_data.cid,
+        )
+        if report_data.get("grade", education_constant.REPORT_GRADE_POOR) in {
+            education_constant.REPORT_GRADE_EXCELLENT,
+            education_constant.REPORT_GRADE_GOOD,
+        }:
+            base_chara_state_common_settle(
+                target_id,
+                add_time,
+                13,
+                change_data_to_target_change=change_data,
+            )
+        if finished:
+            growth_data.report_card_flag = False
 
 
 @settle_behavior.add_settle_behavior_effect(

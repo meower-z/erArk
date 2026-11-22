@@ -28,7 +28,7 @@ from Script.System.Pregnancy_System import born_event_panel
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config, normal_config
 from Script.Modules.gameplay_resolution import working
-from Script.Modules.domains import abilities, pregnancy, work
+from Script.Modules.domains import abilities, growth, pregnancy, roster, work
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -49,11 +49,11 @@ def get_pregnancy_past_day(character_id: int) -> int:
     Return arguments:
     int -- 有效孕期天数
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    preg = pregnancy.of(character_id)
     natural_day = game_time.count_day_for_datetime(
-        character_data.pregnancy.fertilization_time, game_time.now()
+        preg.fertilization_time, game_time.now()
     )
-    return natural_day + int(character_data.pregnancy.acceleration_days)
+    return natural_day + int(preg.acceleration_days)
 
 
 def get_acceleration_amount(
@@ -91,8 +91,7 @@ def get_pregnancy_acceleration_amount(character_id: int) -> float:
     Return arguments:
     float -- 可入账加速天数（<=0时表示已到极限无法使用）
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_acc = character_data.pregnancy.acceleration_days
+    now_acc = pregnancy.of(character_id).acceleration_days
     return get_acceleration_amount(
         now_acc,
         get_pregnancy_past_day(character_id),
@@ -108,13 +107,11 @@ def get_child_grow_day(child_id: int) -> int:
     Return arguments:
     int -- 有效成长天数
     """
-    child_character_data: game_type.Character = cache.character_data[child_id]
+    child_preg = pregnancy.of(child_id)
     natural_day = game_time.count_day_for_datetime(
-        child_character_data.pregnancy.born_time, game_time.now()
+        child_preg.born_time, game_time.now()
     )
-    return natural_day + int(
-        getattr(child_character_data.pregnancy, "growth_acceleration_days", 0)
-    )
+    return natural_day + int(child_preg.growth_acceleration_days)
 
 
 def get_child_growth_stage_total_day(child_id: int) -> int:
@@ -236,10 +233,11 @@ def get_fetus_count_draw_text(character_id: int) -> str:
     str -- 胎数说明文本（含首尾换行）
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    fetus_count = getattr(character_data.pregnancy, "fetus_count", 0)
+    preg = pregnancy.of(character_id)
+    fetus_count = preg.fetus_count
     if fetus_count < 2:
         return ""
-    if getattr(character_data.pregnancy, "identical_twins", False):
+    if preg.identical_twins:
         return _("\n{0}腹中孕育着一对同卵双胞胎\n").format(character_data.name)
     return _("\n{0}腹中孕育着{1}个孩子\n").format(
         character_data.name, fetus_count
@@ -298,7 +296,7 @@ def get_fertilization_rate(character_id: int) -> tuple[float, str]:
 
     semen_count = character_data.dirty.body_semen[7][1]
     semen_level = character_data.dirty.body_semen[7][2]
-    now_reproduction = character_data.pregnancy.reproduction_period
+    now_reproduction = pregnancy.of(character_id).reproduction_period
     # 基础概率
     now_rate = get_base_fertilization_rate(semen_count, semen_level)
 
@@ -361,7 +359,7 @@ def get_fertilization_rate(character_id: int) -> tuple[float, str]:
                 now_rate = new_rate
     # 保留两位小数
     now_rate = round(now_rate, 2)
-    character_data.pregnancy.fertilization_rate = now_rate
+    pregnancy.update(character_id, fertilization_rate=now_rate)
     return now_rate, draw_text
 
 
@@ -375,158 +373,158 @@ def check_fertilization(character_id: int) -> int | None:
     character_data: game_type.Character = cache.character_data[character_id]
     draw_text = ""
 
-    # 仅在本周期排卵日事件待处理时进行判定（标记于周期推进到排卵日时置位，0点结算有兜底，玩家不睡觉也不会错过）
-    if not character_data.pregnancy.ovulation_flag:
-        return 0
-    # 无壳卵生没有体内受精判定（排卵在性绝顶时体外发生、受精在体外进行）：只消费标记，体内精液不清零、不判定、不提示
-    if egg_handle.is_egg_soft(character_id):
-        character_data.pregnancy.ovulation_flag = False
-        return 0
-    # 胎生的受精判定即本周期排卵日事件的一次性消费；卵生的标记留给排卵结算消费
-    if (
-        egg_handle.get_birth_type(character_id)
-        != pregnancy_constant.BIRTH_TYPE_EGG
-    ):
-        character_data.pregnancy.ovulation_flag = False
-
-    # 多胎判定用的临时精液量：须在清空精液之前读取子宫精液量与等级
-    semen_total = character_data.dirty.body_semen[7][1]
-    semen_level = character_data.dirty.body_semen[7][2]
-    multiple_birth_flag = egg_handle.is_multiple_birth(character_id)
-
-    # 清空小穴和子宫的当前精液量
-    for body_cid in [6, 7]:
-        character_data.dirty.body_semen[body_cid][1] = 0
-        character_data.dirty.body_semen[body_cid][2] = 0
-
-    # 消除强制排卵状态
-    if character_data.hypnosis.force_ovulation:
-        character_data.hypnosis.force_ovulation = False
-    # 如果当前已受精，则跳过判断
-    for i in {20, 21, 22}:
-        if talent[i] == 1:
-            character_data.pregnancy.fertilization_rate = 0
+    with pregnancy.editing(character_id) as preg:
+        # 仅在本周期排卵日事件待处理时进行判定（标记于周期推进到排卵日时置位，0点结算有兜底，玩家不睡觉也不会错过）
+        if not preg.ovulation_flag:
             return 0
-    if child_stage_gate.is_child_stage(character_id):
-        character_data.pregnancy.fertilization_rate = 0
-        return 0
+        # 无壳卵生没有体内受精判定（排卵在性绝顶时体外发生、受精在体外进行）：只消费标记，体内精液不清零、不判定、不提示
+        if egg_handle.is_egg_soft(character_id):
+            preg.ovulation_flag = False
+            return 0
+        # 胎生的受精判定即本周期排卵日事件的一次性消费；卵生的标记留给排卵结算消费
+        if (
+            egg_handle.get_birth_type(character_id)
+            != pregnancy_constant.BIRTH_TYPE_EGG
+        ):
+            preg.ovulation_flag = False
 
-    # 只判断有受精可能的
-    if character_data.pregnancy.fertilization_rate:
+        # 多胎判定用的临时精液量：须在清空精液之前读取子宫精液量与等级
+        semen_total = character_data.dirty.body_semen[7][1]
+        semen_level = character_data.dirty.body_semen[7][2]
+        multiple_birth_flag = egg_handle.is_multiple_birth(character_id)
 
-        # 假孕孕肚状态下无法受精（正常经get_fertilization_rate已清零概率，此处为绕过概率计算路径的兜底）
-        if handle_premise.handle_fake_inflation_1(character_id):
-            character_data.pregnancy.fertilization_rate = 0
-            draw_text += _(
-                "\n{0}正处于假孕状态，精子无法使其真正受精\n"
-            ).format(character_data.name)
+        # 清空小穴和子宫的当前精液量
+        for body_cid in [6, 7]:
+            character_data.dirty.body_semen[body_cid][1] = 0
+            character_data.dirty.body_semen[body_cid][2] = 0
 
-        # 种族是机械的则需要判断是否有生育模组
-        elif character_data.race == 2 and talent[171] == 0:
-            character_data.pregnancy.fertilization_rate = 0
-            draw_text += _(
-                "\n{0}是机械体，且未安装生育模组，无法受精\n"
-            ).format(character_data.name)
+        # 消除强制排卵状态
+        if character_data.hypnosis.force_ovulation:
+            character_data.hypnosis.force_ovulation = False
+        # 如果当前已受精，则跳过判断
+        for i in {20, 21, 22}:
+            if talent[i] == 1:
+                preg.fertilization_rate = 0
+                return 0
+        if child_stage_gate.is_child_stage(character_id):
+            preg.fertilization_rate = 0
+            return 0
 
-        # 正常情况下可以受精
-        else:
-
-            # 多胎胎生：先从种族的产胎数量范围随机本次排卵数，逐轮判定；单胎胎生恒为1轮，与原单次判定完全等价
-            min_num, max_num = get_multiple_birth_range(character_id)
-            ovum_count = random.randint(min_num, max_num)
-            success_count = 0
-            base_rate = get_base_fertilization_rate(semen_total, semen_level)
-            now_semen = semen_total
-            for _round in range(ovum_count):
-                # 每轮概率：以判定前的受精概率为基准，按临时精液量对应的基础概率比例缩放（首轮比例为1，与原判定一致）
-                if base_rate > 0:
-                    now_rate = (
-                        character_data.pregnancy.fertilization_rate
-                        * get_base_fertilization_rate(now_semen, semen_level)
-                        / base_rate
-                    )
-                else:
-                    now_rate = character_data.pregnancy.fertilization_rate
-                # 由随机数判断本轮是否受精
-                if random.randint(1, 100) <= now_rate:
-                    success_count += 1
-                # 无论成功与否，临时精液量都衰减后进入下一轮
-                now_semen *= 1 - pregnancy_constant.MULTIPLE_BIRTH_SEMEN_DECAY
-
-            if success_count >= 1:
-                draw_text += "\n※※※※※※※※※\n"
+        # 只判断有受精可能的
+        if preg.fertilization_rate:
+            # 假孕孕肚状态下无法受精（正常经get_fertilization_rate已清零概率，此处为绕过概率计算路径的兜底）
+            if handle_premise.handle_fake_inflation_1(character_id):
+                preg.fertilization_rate = 0
                 draw_text += _(
-                    "\n博士的精子与{0}的卵子结合，成功在子宫里着床了\n"
+                    "\n{0}正处于假孕状态，精子无法使其真正受精\n"
                 ).format(character_data.name)
-                # 多胎胎生：说明本次排卵数与受精数
-                if multiple_birth_flag:
-                    if success_count >= 2:
-                        draw_text += _(
-                            "\n{0}的卵巢一次排出了{1}颗卵子，其中{2}颗成功受精，{0}怀上了{2}胞胎\n"
-                        ).format(character_data.name, ovum_count, success_count)
-                    else:
-                        draw_text += _(
-                            "\n{0}的卵巢一次排出了{1}颗卵子，其中1颗成功受精\n"
-                        ).format(character_data.name, ovum_count)
-                # 单胎胎生：按概率判定为同卵双胞胎
-                elif (
-                    random.randint(1, 100)
-                    <= pregnancy_constant.IDENTICAL_TWINS_RATE
-                ):
-                    success_count = 2
-                    character_data.pregnancy.identical_twins = True
-                    draw_text += _(
-                        "\n受精卵在着床后分裂成了两个胚胎，{0}怀上了同卵双胞胎\n"
-                    ).format(character_data.name)
-                draw_text += _("\n{0}获得了[受精]\n").format(
-                    character_data.name
+
+            # 种族是机械的则需要判断是否有生育模组
+            elif character_data.race == 2 and talent[171] == 0:
+                preg.fertilization_rate = 0
+                draw_text += _(
+                    "\n{0}是机械体，且未安装生育模组，无法受精\n"
+                ).format(character_data.name)
+
+            # 正常情况下可以受精
+            else:
+                min_num, max_num = get_multiple_birth_range(character_id)
+                ovum_count = random.randint(min_num, max_num)
+                success_count = 0
+                base_rate = get_base_fertilization_rate(
+                    semen_total, semen_level
                 )
-                draw_text += "\n※※※※※※※※※\n"
-                talent[20] = 1
-                character_data.pregnancy.fertilization_time = game_time.now()
-                character_data.pregnancy.fetus_count = success_count
-                # 新受精重置妊娠加速药的累计加速天数
-                character_data.pregnancy.acceleration_days = 0.0
-                # 判断是否是无意识妊娠
-                if character_data.pregnancy.unconscious_fertilization:
-                    talent[35] = 1
+                now_semen = semen_total
+                for _round in range(ovum_count):
+                    if base_rate > 0:
+                        now_rate = (
+                            preg.fertilization_rate
+                            * get_base_fertilization_rate(
+                                now_semen, semen_level
+                            )
+                            / base_rate
+                        )
+                    else:
+                        now_rate = preg.fertilization_rate
+                    if random.randint(1, 100) <= now_rate:
+                        success_count += 1
+                    now_semen *= (
+                        1 - pregnancy_constant.MULTIPLE_BIRTH_SEMEN_DECAY
+                    )
+
+                if success_count >= 1:
+                    draw_text += "\n※※※※※※※※※\n"
                     draw_text += _(
-                        "\n{0}从未在有意识下被中出过，因此不会意识到自己已经怀孕了\n"
+                        "\n博士的精子与{0}的卵子结合，成功在子宫里着床了\n"
                     ).format(character_data.name)
-                    draw_text += _("\n{0}获得了[无意识妊娠]\n").format(
+                    if multiple_birth_flag:
+                        if success_count >= 2:
+                            draw_text += _(
+                                "\n{0}的卵巢一次排出了{1}颗卵子，其中{2}颗成功受精，{0}怀上了{2}胞胎\n"
+                            ).format(
+                                character_data.name, ovum_count, success_count
+                            )
+                        else:
+                            draw_text += _(
+                                "\n{0}的卵巢一次排出了{1}颗卵子，其中1颗成功受精\n"
+                            ).format(character_data.name, ovum_count)
+                    elif (
+                        random.randint(1, 100)
+                        <= pregnancy_constant.IDENTICAL_TWINS_RATE
+                    ):
+                        success_count = 2
+                        preg.identical_twins = True
+                        draw_text += _(
+                            "\n受精卵在着床后分裂成了两个胚胎，{0}怀上了同卵双胞胎\n"
+                        ).format(character_data.name)
+                    draw_text += _("\n{0}获得了[受精]\n").format(
                         character_data.name
                     )
                     draw_text += "\n※※※※※※※※※\n"
-                # 触发受精的二段行动
-                second_behavior.character_get_second_behavior(
-                    character_id, "fertilization"
-                )
-            else:
-                if (
-                    character_data.h_state.body_item[11][1]
-                    or character_data.h_state.body_item[12][1]
-                ):
-                    draw_text += _("\n在避孕药的影响下——")
-                if multiple_birth_flag:
-                    draw_text += _(
-                        "\n{0}的卵巢一次排出了{1}颗卵子，但没有一颗成功受精\n"
-                    ).format(character_data.name, ovum_count)
+                    talent[20] = 1
+                    preg.fertilization_time = game_time.now()
+                    preg.fetus_count = success_count
+                    # 新受精重置妊娠加速药的累计加速天数
+                    preg.acceleration_days = 0.0
+                    # 判断是否是无意识妊娠
+                    if preg.unconscious_fertilization:
+                        talent[35] = 1
+                        draw_text += _(
+                            "\n{0}从未在有意识下被中出过，因此不会意识到自己已经怀孕了\n"
+                        ).format(character_data.name)
+                        draw_text += _("\n{0}获得了[无意识妊娠]\n").format(
+                            character_data.name
+                        )
+                        draw_text += "\n※※※※※※※※※\n"
+                    second_behavior.character_get_second_behavior(
+                        character_id, "fertilization"
+                    )
                 else:
-                    draw_text += _(
-                        "\n精子在{0}的阴道中游荡，但未能成功受精\n"
-                    ).format(character_data.name)
-                second_behavior.character_get_second_behavior(
-                    character_id, "fertilization_failed"
-                )
+                    if (
+                        character_data.h_state.body_item[11][1]
+                        or character_data.h_state.body_item[12][1]
+                    ):
+                        draw_text += _("\n在避孕药的影响下——")
+                    if multiple_birth_flag:
+                        draw_text += _(
+                            "\n{0}的卵巢一次排出了{1}颗卵子，但没有一颗成功受精\n"
+                        ).format(character_data.name, ovum_count)
+                    else:
+                        draw_text += _(
+                            "\n精子在{0}的阴道中游荡，但未能成功受精\n"
+                        ).format(character_data.name)
+                    second_behavior.character_get_second_behavior(
+                        character_id, "fertilization_failed"
+                    )
 
-        character_data.pregnancy.fertilization_rate = 0
-    elif (
-        character_data.h_state.body_item[11][1]
-        or character_data.h_state.body_item[12][1]
-    ):
-        draw_text += _(
-            "\n在避孕药的影响下——\n精子在{0}的阴道中游荡，但未能成功受精\n"
-        ).format(character_data.name)
+            preg.fertilization_rate = 0
+        elif (
+            character_data.h_state.body_item[11][1]
+            or character_data.h_state.body_item[12][1]
+        ):
+            draw_text += _(
+                "\n在避孕药的影响下——\n精子在{0}的阴道中游荡，但未能成功受精\n"
+            ).format(character_data.name)
 
     # 绘制输出
     talk.must_show_talk_check(character_id)
@@ -842,8 +840,9 @@ def check_grow_to_girl(character_id: int) -> None:
             # 成长为少女后成长停滞素质已无意义，顺手清除
             talent[28] = 0
             # 学员期记下的待炫耀也清掉：炫耀口上只写幼女 / 学员，毕业后见面再派只会静默地加一份好感
-            if character_data.child_growth is not None:
-                character_data.child_growth.show_off_ability = {}
+            with growth.editing(character_id, create=False) as cg:
+                if cg is not None:
+                    cg.show_off_ability = {}
             from Script.System.Education_System import (
                 growth_event_handle,
                 growth_handle,
@@ -931,20 +930,19 @@ def update_reproduction_period(character_id: int) -> None:
     """
 
     character_data: game_type.Character = cache.character_data[character_id]
-    now_reproduction = character_data.pregnancy.reproduction_period
-    if now_reproduction == 6:
-        character_data.pregnancy.reproduction_period = 0
-    else:
-        character_data.pregnancy.reproduction_period += 1
-    # 该角色自己的排卵日开始时置位待办标记（胎生由受精判定消费，卵生由排卵结算消费）
-    if character_data.pregnancy.reproduction_period == 5:
-        character_data.pregnancy.ovulation_flag = True
-        # 无壳卵生：排卵日当天获得一次体外排卵机会
-        character_data.pregnancy.external_ovulation_chance = True
-    else:
-        # 离开排卵日：体外排卵机会过期；无壳卵生的排卵促进药/催眠强制排卵效果只保留到当日机会结束
-        if character_data.pregnancy.external_ovulation_chance:
-            character_data.pregnancy.external_ovulation_chance = False
+    with pregnancy.editing(character_id) as preg:
+        if preg.reproduction_period == 6:
+            preg.reproduction_period = 0
+        else:
+            preg.reproduction_period += 1
+        # 该角色自己的排卵日开始时置位待办标记（胎生由受精判定消费，卵生由排卵结算消费）
+        if preg.reproduction_period == 5:
+            preg.ovulation_flag = True
+            # 无壳卵生：排卵日当天获得一次体外排卵机会
+            preg.external_ovulation_chance = True
+        elif preg.external_ovulation_chance:
+            # 离开排卵日：体外排卵机会过期；无壳卵生的排卵促进药/催眠强制排卵效果只保留到当日机会结束
+            preg.external_ovulation_chance = False
             character_data.h_state.body_item[10][1] = False
             character_data.hypnosis.force_ovulation = False
 
@@ -1152,7 +1150,7 @@ def remove_abnormal_daughter(character_id: int) -> bool:
     ):
         cache.scene_data[scene_path_str].character_list.remove(character_id)
     # 删掉角色数据与已获得集合，用 working.forget 丢掉停放的数据，再删掉角色模板，免得再被实例化
-    cache.npc_id_got.discard(character_id)
+    roster.discard(character_id)
     cache.character_data.pop(character_id, None)
     working.forget(character_id)
     cache.npc_tem_data.pop(character_id, None)

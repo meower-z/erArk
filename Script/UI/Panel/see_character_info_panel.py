@@ -15,7 +15,7 @@ from Script.UI.Panel import body_info_panel, character_info_head
 from Script.System.First_Record_System import first_record_panel
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, player_collection, visitor
+from Script.Modules.domains import abilities, player_collection, roster, visitor
 
 panel_info_data: dict[str, object] = {}
 
@@ -1364,7 +1364,7 @@ class PlayerAbilityText:
             line_feed.draw()
             # 绘制可选择的装备信物
             count = 0
-            for character_id in cache.npc_id_got:
+            for character_id in roster.active():
                 if character_id == 0:
                     continue
                 # 跳过未拥有信物的

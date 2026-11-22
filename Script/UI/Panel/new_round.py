@@ -1,6 +1,4 @@
-"""
-新周目面板：选择继承到新周目的玩家与干员数据，并显示角色能力与经验
-"""
+"""新周目面板：选择继承到新周目的玩家与干员数据，并显示角色能力与经验"""
 
 from collections.abc import Mapping
 from types import FunctionType
@@ -10,12 +8,12 @@ from Script.Core.num import Num
 from Script.UI.Moudle import draw, panel
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import normal_config, game_config
-from Script.Design import handle_talent, character_handle
+from Script.Design import child_stage_gate, handle_talent, character_handle
 from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
 import copy
 from Script.Modules.domains import abilities, facility, needs
-from Script.Modules.domains import player_collection, playthrough
+from Script.Modules.domains import player_collection, playthrough, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -115,7 +113,7 @@ class New_Round_Handle:
             info_text = "\n"
             chara_count, chara_point_all = 0, 0
             # 遍历所有获得的干员
-            for chara_id in cache.npc_id_got:
+            for chara_id in roster.active():
                 talent_id = handle_talent.have_fall_talent(chara_id)
                 # 如果已经陷落
                 if talent_id:
@@ -1119,20 +1117,21 @@ def _inherit_npc_data(
     info_draw_text = "\n"
     info_draw_text += _("开始继承干员数据\n")
 
-    # 记录旧的干员数据
     old_npc_data = copy.deepcopy(cache.character_data)
-    cache.npc_id_got = set()
-
+    old = cast(Mapping[str, core.JSON], inherit["abilities"])
+    roster.clear_active()
     for now_id, now_npc_data in cache.npc_tem_data.items():
         character_handle.init_character(
             now_id, now_npc_data, collect_reset=False
         )
-        if now_id in fallen_ids:
+        if now_id in fallen_ids and child_stage_gate.restore_grown_stage(
+            now_id, abilities.carried(old, now_id, "talent")
+        ):
             new_npc_data = cache.character_data[now_id]
-            cache.npc_id_got.add(now_id)
-            if len(cache.npc_id_got) > 0:
+            roster.add(now_id)
+            if roster.count() > 0:
                 info_draw_text += _("共有{0}名陷落干员继承到下一周目\n").format(
-                    len(cache.npc_id_got)
+                    roster.count()
                 )
             else:
                 info_draw_text += _("没有陷落干员\n")
@@ -1158,7 +1157,6 @@ def _inherit_npc_data(
             now_rate = _inherit_rate(
                 5, _count(inherit, "chara_abi_and_exp_count")
             )
-            old = cast(Mapping[str, core.JSON], inherit["abilities"])
             for name in ("ability", "experience"):
                 table = abilities.carried(old, now_id, name)
                 new = {i: int(v * now_rate / 100) for i, v in table.items()}
@@ -1219,7 +1217,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     old_cache = copy.deepcopy(cache_control.cache)
     new_game_round = playthrough.game_round() + 1
     new_character_data = old_cache.character_data
-    new_npc_id_got = old_cache.npc_id_got
+    new_npc_id_got = roster.active()
     kept = {
         table: playthrough.settings(table)
         for table in (playthrough.DIFFICULTY, playthrough.BIRTH_TYPE)
@@ -1240,7 +1238,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
         playthrough.set_settings(table, values)
     playthrough.set_game_round(new_game_round)
     cache.character_data = new_character_data
-    cache.npc_id_got = new_npc_id_got
+    roster.set_active(new_npc_id_got)
     creator_character_flow.game_start()
 
     # 根据继承的角色，将有人住的宿舍设为开放

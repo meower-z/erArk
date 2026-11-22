@@ -18,11 +18,11 @@
 import datetime
 import random
 from types import FunctionType
-
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
-from Script.Modules.domains import abilities, education, flags, modes, needs
+from Script.Modules.domains import abilities, education, flags, growth, modes
+from Script.Modules.domains import needs, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -315,7 +315,7 @@ def judge_has_sex_skill_course(character_id: int) -> bool:
 
     if character_id not in cache.character_data:
         return False
-    growth_data = cache.character_data[character_id].child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return False
     for week_day, day_data in growth_data.selected_course.items():
@@ -534,7 +534,7 @@ def get_selected_student_list(
     from Script.System.Education_System import schedule_handle
 
     result = []
-    for character_id in sorted(cache.npc_id_got):
+    for character_id in list(roster.active_sorted()):
         if (
             cache.character_data[character_id].work.work_type
             != education_constant.STUDENT_WORK_TYPE
@@ -1104,13 +1104,13 @@ def settle_attend(
     judge_time = get_attend_judge_time(now_time)
     if growth_handle.judge_absent_this_period(student_id, judge_time):
         return
-    growth_data = growth_handle.get_child_growth(student_id)
-    growth_data.attend_class_count += 1
-    growth_data.sex_class_count += 1
-    # 记下这一节已记过出勤（同一节只落一种记录的另一个方向），节次外的当场课没有节次可记
-    period = game_time.get_class_period_by_time(judge_time)
-    if period != -1:
-        growth_data.last_attend_period = [judge_time.toordinal(), period]
+    with growth.editing(student_id) as growth_data:
+        growth_data.attend_class_count += 1
+        growth_data.sex_class_count += 1
+        # 记下这一节已记过出勤（同一节只落一种记录的另一个方向），节次外的当场课没有节次可记
+        period = game_time.get_class_period_by_time(judge_time)
+        if period != -1:
+            growth_data.last_attend_period = [judge_time.toordinal(), period]
 
 
 # ---------------------------------------------------------------------------

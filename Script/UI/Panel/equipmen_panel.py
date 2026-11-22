@@ -11,8 +11,8 @@ from Script.Core import (
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_ability, handle_premise, basement
-from Script.Modules.domains import abilities, commission, maintenance
-from Script.Modules.domains import achievement, physical_exam
+from Script.Modules.domains import abilities, achievement, commission
+from Script.Modules.domains import maintenance, physical_exam, roster
 import random
 from Script.UI.Panel import achievement_panel
 
@@ -62,7 +62,7 @@ def show_damaged_equipment() -> None:
             "○中度损坏的装备会降低进行外勤委托的干员的能力值，如果装备严重损坏了则无法安排进行外勤委托\n\n"
         )
         damaged_count = 0
-        for npc_id in cache.npc_id_got:
+        for npc_id in roster.active():
             npc_data = cache.character_data[npc_id]
             condition_val = npc_data.cloth.equipment_condition
             if condition_val < 0:
@@ -98,7 +98,7 @@ def show_maintained_equipment() -> None:
             "○良好保养的装备有更高的耐久度，完美保养的装备还可以为外勤干员提供额外的能力加成\n\n"
         )
         maintained_count = 0
-        for npc_id in cache.npc_id_got:
+        for npc_id in roster.active():
             npc_data = cache.character_data[npc_id]
             condition_val = npc_data.cloth.equipment_condition
             if condition_val > 0:
@@ -265,7 +265,7 @@ def repair_equipment(
     # 如果没有指定目标，则查找所有损坏装备的角色
     if target_chara_id == 0:
         repair_list = []
-        for npc_id in cache.npc_id_got:
+        for npc_id in roster.active():
             if npc_id == 0:
                 continue
             npc_data = cache.character_data[npc_id]
@@ -348,7 +348,7 @@ def maintain_equipment(
         # 获取保养候选
         if maintain_target == 0:
             # 全部干员
-            candidate_ids = [i for i in cache.npc_id_got if i != smith_chara_id]
+            candidate_ids = [i for i in roster.active() if i != smith_chara_id]
         else:
             # 仅指定目标
             candidate_ids = [
@@ -602,7 +602,7 @@ class Equipment_Maintain_Panel:
         )
         select_state: dict[str, int | str] = {}
         while 1:
-            npc_id_got_list = sorted(cache.npc_id_got)
+            npc_id_got_list = list(roster.active_sorted())
             # 已选择的角色id列表
             selected_id_list = maintenance.operators()
             final_list = []

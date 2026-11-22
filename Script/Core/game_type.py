@@ -362,7 +362,7 @@ class CHILD_GROWTH:
     普通干员也可以选课学技能（已确认口径 24），此时同样会被惰性创建出本结构体：学生岗的出勤、缺课、翘课、
     实操课次数与翘课 flag 都记在这里，
        性格倾向、照料、胎教、成绩单等其余养成字段保持初值。
-    创建入口统一为 Script/System/Education_System/growth_handle.get_child_growth()，
+    读写与惰性创建统一经 Script/Modules/domains/growth.py，
     不要在别处直接 new，以免出现"有的角色有、有的角色没有"的不一致。
     """
 
@@ -1645,11 +1645,6 @@ class Character:
         """ 角色的工作情况 """
         self.entertainment: CHARA_ENTERTAINMENT = CHARA_ENTERTAINMENT()
         """ 角色的娱乐与兴趣情况 """
-        self.pregnancy: PREGNANCY = PREGNANCY()
-        """ 角色的怀孕情况 """
-        self.child_growth: CHILD_GROWTH | None = None
-        """ 角色的生长养成数据（Plan 22）。默认None，由 growth_handle.get_child_growth() 惰性创建，
-            只有孩子与选了课的干员才会有，避免给全部干员的存档都塞一份空结构体 """
         self.relationship: RELATIONSHIP = RELATIONSHIP()
         """ 角色的社会关系 """
         self.hypnosis: HYPNOSIS = HYPNOSIS()
@@ -1682,10 +1677,6 @@ class Cache:
         """ 角色对象数据缓存组 """
         self.npc_tem_data: dict[int, NpcTem] = {}
         """ npc模板字典，键为AdvNpc """
-        self.npc_id_got: set = set()
-        """ 已拥有的干员id集合 """
-        self.forbidden_npc_id: set = set()
-        """ 禁止出现的干员id集合 """
         self.input_cache: list[str] = []
         """ 玩家指令输入记录（最大20）"""
         self.collect_position_list: list = []
@@ -1704,8 +1695,6 @@ class Cache:
         """ 本次update中已结束结算的npc """
         self.recipe_data: dict[int, Recipes] = {}
         """ 菜谱数据 """
-        self.npc_name_data: set = set()
-        """ 已有的npc姓名集合 """
         self.shoot_position: int = 0
         """ 记录射精位置 """
         self.debug_mode: bool = False

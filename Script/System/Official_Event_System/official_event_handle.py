@@ -27,7 +27,7 @@ from Script.Core import cache_control, constant, game_type, get_text
 from Script.Config import game_config
 from Script.System.Official_Event_System import ri_value
 from Script.Design import game_time
-from Script.Modules.domains import official
+from Script.Modules.domains import growth, official
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -284,7 +284,7 @@ def judge_event_done(uid: str, character_id: int) -> bool:
     bool -- 是否已触发过
     """
     if character_id and character_id in cache.character_data:
-        growth_data = cache.character_data[character_id].child_growth
+        growth_data = growth.of(character_id)
         if growth_data is not None:
             return uid in growth_data.event_history
     return official.done(get_history_key(uid, character_id))
@@ -302,10 +302,10 @@ def record_event_done(uid: str, character_id: int, option_index: int) -> None:
     """
     now_record = {"time": game_time.now(), "choice": option_index}
     if character_id and character_id in cache.character_data:
-        growth_data = cache.character_data[character_id].child_growth
-        if growth_data is not None:
-            growth_data.event_history[uid] = now_record
-            return
+        with growth.editing(character_id, create=False) as growth_data:
+            if growth_data is not None:
+                growth_data.event_history[uid] = now_record
+                return
     official.record(get_history_key(uid, character_id), now_record)
 
 

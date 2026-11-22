@@ -1104,11 +1104,7 @@ def check_reproduction_period() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_charas():
-        period = getattr(
-            getattr(chara, "pregnancy", None), "reproduction_period", None
-        )
-        if period is None:
-            continue
+        period = pregnancy.of(cid).reproduction_period
         if type(period) is not int or period not in period_config:
             failures.append(
                 make_failure(
@@ -1211,9 +1207,7 @@ def check_fertilization_time() -> list[CheckFailure]:
     for cid, chara in _iter_charas():
         if not any(_talent_get(chara, i) for i in (20, 21, 22)):
             continue
-        ft = getattr(
-            getattr(chara, "pregnancy", None), "fertilization_time", None
-        )
+        ft = pregnancy.of(cid).fertilization_time
         if not (
             isinstance(ft, datetime.datetime) and ft.year > 1 and ft <= now_time
         ):
@@ -1270,9 +1264,6 @@ def check_milk_bounds() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        preg = getattr(chara, "pregnancy", None)
-        if preg is None:
-            continue
         milk = needs.of(cid)["milk"]
         milk_max = pregnancy.milk_max(cid)
         if not (
@@ -1305,9 +1296,7 @@ def check_lactation_flag() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        flag = getattr(
-            getattr(chara, "pregnancy", None), "lactation_flag", False
-        )
+        flag = pregnancy.of(cid).lactation_flag
         if flag and _talent_get(chara, 27) != 1:
             failures.append(
                 make_failure(
@@ -1557,9 +1546,7 @@ def check_child_born_time() -> list[CheckFailure]:
         ):
             continue
         child = cache.character_data[child_list[-1]]
-        born_time = getattr(
-            getattr(child, "pregnancy", None), "born_time", None
-        )
+        born_time = pregnancy.of(child_list[-1]).born_time
         if not (
             isinstance(born_time, datetime.datetime)
             and born_time.year > 1

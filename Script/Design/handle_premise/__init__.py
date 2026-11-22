@@ -28,8 +28,8 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities, action_info, flags, history
-from Script.Modules.domains import needs, physical_exam
+from Script.Modules.domains import abilities, action_info, flags, growth
+from Script.Modules.domains import history, needs, physical_exam, roster
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -469,7 +469,7 @@ def handle_comprehensive_value_premise(
         )
         final_character_data = cache.character_data[final_character_id]
         # 如果还没拥有该角色，则返回0
-        if final_character_id not in cache.npc_id_got:
+        if not roster.has(final_character_id):
             return 0
 
     type_son_id = 0
@@ -578,8 +578,7 @@ def handle_comprehensive_value_premise(
         # 三者判序不能改：CourseShowOff 与 CourseType 的字符串里都含有 "Course"，
         #    长的必须先判，否则会被 Course 分支抢先吃掉（而且不报错，只是永远不成立）
         if "CourseShowOff" in premise_all_value_list[1]:
-            growth_data = final_character_data.child_growth
-            if growth_data is None:
+            if (growth_data := growth.of(final_character_data.cid)) is None:
                 return 0
             return 1 if type_son_id in growth_data.show_off_ability else 0
         if "CourseType" in premise_all_value_list[1]:

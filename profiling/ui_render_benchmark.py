@@ -27,6 +27,8 @@ from datetime import datetime
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
+from Script.Modules.domains import roster
+
 if TYPE_CHECKING:
     from typing import TypedDict
 
@@ -151,7 +153,7 @@ def main() -> None:
     if not cache.character_data or 0 not in cache.character_data:
         log("错误：存档未正确加载（无玩家数据），中止。")
         sys.exit(1)
-    log(f"存档已加载：NPC 数量 = {len(cache.npc_id_got)}")
+    log(f"存档已加载：NPC 数量 = {roster.count()}")
 
     # 基准运行状态
     state: BenchmarkState = {
@@ -273,7 +275,7 @@ def main() -> None:
                     round(t * 1000, 1) for t in state["warmup_wall_times"]
                 ],
                 "aborted": state["aborted"],
-                "npc_count": len(cache.npc_id_got),
+                "npc_count": roster.count(),
                 "total_wall_s": round(total_wall, 3),
                 "screen_wall_ms": [
                     round(t * 1000, 1) for t in state["screen_wall_times"]

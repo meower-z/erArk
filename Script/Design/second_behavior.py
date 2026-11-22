@@ -8,9 +8,8 @@ from Script.Design import game_time, handle_premise, settle_behavior, talk
 from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities, flags
+from Script.Modules.domains import abilities, flags, growth
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -453,7 +452,7 @@ def judge_child_growth_second_behavior(character_id: int) -> None:
     无
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None:
         return
     pl_character_data: game_type.Character = cache.character_data[0]

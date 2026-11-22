@@ -4,6 +4,8 @@
 指令的列表与执行、NPC状态机选出的行为据此避开幼年阶段的角色
 """
 
+from collections.abc import Mapping
+
 from Script.Core import cache_control, constant, game_type
 from Script.Config import game_config
 from Script.Modules.domains import abilities
@@ -52,6 +54,30 @@ def is_child_stage(character_id: int) -> bool:
         abilities.talent(character_data.cid).get(talent_id, 0)
         for talent_id in CHILD_STAGE_TALENTS
     )
+
+
+def restore_grown_stage(
+    character_id: int, old_talent: Mapping[int, int]
+) -> bool:
+    """
+    角色按模板重建后若仍带 101/102（如已长大的自生女儿模板固定为 101），
+    按旧素质表还原阶段与体型素质（101~108）；返回还原后是否已脱离幼年阶段
+    Keyword arguments:
+    character_id -- 角色id
+    old_talent -- 旧周目带入的素质表
+    Return arguments:
+    bool -- 可进入在编名册为True；仍处101/102阶段或无旧素质依据时为False
+    """
+    if not is_child_stage(character_id):
+        return True
+    if not old_talent or any(
+        old_talent.get(tid, 0) for tid in CHILD_STAGE_TALENTS
+    ):
+        return False
+    talent = abilities.talent(character_id)
+    for tid in range(101, 109):
+        talent[tid] = old_talent.get(tid, 0)
+    return not is_child_stage(character_id)
 
 
 def _build_h_sets() -> None:

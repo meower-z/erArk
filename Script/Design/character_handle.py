@@ -18,8 +18,8 @@ from Script.Design import (
 )
 from Script.Config import game_config, character_config, normal_config
 from Script.Modules.domains import abilities, facility, flags, needs
-from Script.Modules.domains import player_collection, playthrough, tallies
-from Script.Modules.domains import visitor
+from Script.Modules.domains import player_collection, playthrough, roster
+from Script.Modules.domains import tallies, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -40,6 +40,7 @@ def init_character(
     character_id: int,
     character_tem: game_type.NpcTem,
     collect_reset: bool = True,
+    register_roster: bool = True,
 ) -> game_type.Character:
     """
     按id生成角色属性
@@ -47,6 +48,7 @@ def init_character(
     character_id -- 角色id
     character_tem -- 角色生成模板数据
     skip_collect_reset -- 是否进行藏品重置
+    register_roster -- 是否写入在编名册与已用姓名（读档补模板角色时为 False）
     returns:
     game_type.Character -- 角色数据
     """
@@ -57,9 +59,10 @@ def init_character(
     now_character.cid = character_id
     now_character.name = character_tem.Name
     # 检测基础干员并加入已有干员列表
-    if character_tem.AdvNpc in constant.first_NPC_adv_set:
-        cache.npc_id_got.add(character_id)
-    cache.npc_name_data.add(now_character.name)  # 加入到已有干员姓名中
+    if register_roster:
+        if character_tem.AdvNpc in constant.first_NPC_adv_set:
+            roster.add(character_id)
+        roster.add_name(now_character.name)  # 加入到已有干员姓名中
     now_character.sex = character_tem.Sex
     now_character.profession = character_tem.Profession
     now_character.race = character_tem.Race
@@ -114,7 +117,7 @@ def first_NPC_work() -> None:
     """
     初始角色的工作安排
     """
-    for character_id in cache.npc_id_got:
+    for character_id in roster.active():
         character_data = cache.character_data[character_id]
         # 按干员编号认人：角色名随语言翻译
         if character_data.adv in {7}:  # 可露希尔
@@ -209,7 +212,7 @@ def born_new_character(mother_id: int, child_name: str) -> int:
     from Script.System.First_Record_System import first_record_handle
 
     first_record_handle.record_first_special_record(mother_id, 2, child_name)
-    # cache.npc_id_got.add(now_id)
+    # roster.add(now_id)
     init_character(now_id, cache.npc_tem_data[now_id])
     return now_id
 
@@ -217,9 +220,8 @@ def born_new_character(mother_id: int, child_name: str) -> int:
 def init_character_position() -> None:
     """初始化角色位置"""
     cache = cache_control.cache
-    id_list = cache.npc_id_got
-    id_list.add(0)
-    for character_id in id_list:
+    roster.add(0)
+    for character_id in roster.active():
         character_position = cache.character_data[character_id].position
         character_dormitory = cache.character_data[character_id].dormitory
         character_dormitory_str = map_handle.get_map_system_path_for_str(
@@ -235,10 +237,8 @@ def init_character_position() -> None:
 
 def init_character_entertainment() -> None:
     """初始化角色娱乐"""
-    cache = cache_control.cache
-    id_list = cache.npc_id_got
-    id_list.add(0)
-    for character_id in id_list:
+    roster.add(0)
+    for character_id in roster.active():
         handle_npc_ai.get_chara_entertainment(character_id)
 
 
@@ -248,7 +248,7 @@ def init_character_facility_open() -> None:
     for open_cid in game_config.config_facility_open:
         if game_config.config_facility_open[open_cid].NPC_id == 0:
             continue
-        for character_id in cache.npc_id_got:
+        for character_id in roster.active():
             # 跳过玩家id
             if character_id == 0:
                 continue

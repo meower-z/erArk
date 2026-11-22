@@ -25,7 +25,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant, egg_handle
 from Script.Design import game_time
-from Script.Modules.domains import abilities, player_collection
+from Script.Modules.domains import abilities, player_collection, pregnancy
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -45,12 +45,10 @@ def have_external_ovulation_chance(character_id: int) -> bool:
     """
     if not egg_handle.is_egg_soft(character_id):
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.pregnancy.reproduction_period != 5:
+    p = pregnancy.of(character_id)
+    if p.reproduction_period != 5:
         return False
-    return bool(
-        getattr(character_data.pregnancy, "external_ovulation_chance", False)
-    )
+    return bool(p.external_ovulation_chance)
 
 
 def get_external_ovulation_rate(
@@ -120,7 +118,7 @@ def judge_external_ovulation(
     if random.randint(1, 100) > now_rate:
         return False
     # 命中：消耗本日机会，排卵促进药与催眠强制排卵效果随之结束
-    character_data.pregnancy.external_ovulation_chance = False
+    pregnancy.update(character_id, external_ovulation_chance=False)
     character_data.h_state.body_item[10][1] = False
     character_data.hypnosis.force_ovulation = False
     second_behavior.character_get_second_behavior(
@@ -346,16 +344,14 @@ def check_soft_eggs_fertilization() -> None:
         player_collection.remove_soft_egg(egg_id)
         draw_text = "\n※※※※※※※※※\n"
         if success_count >= 1 and mother_id in cache.character_data:
-            mother_character_data: game_type.Character = cache.character_data[
-                mother_id
-            ]
-            for _index in range(success_count):
-                new_egg_id = egg_handle.add_egg(mother_id, True, soft=True)
-                new_egg_data = mother_character_data.pregnancy.eggs[new_egg_id]
-                new_egg_data["identified"] = True
-                new_egg_data["identify_time"] = game_time.now()
-                # 孵化计时自体外排出起算，与带壳卵生以排出时间为基准一致
-                new_egg_data["lay_time"] = egg_data["lay_time"]
+            with pregnancy.editing(mother_id) as mother_preg:
+                for _index in range(success_count):
+                    new_egg_id = egg_handle.add_egg(mother_id, True, soft=True)
+                    new_egg_data = mother_preg.eggs[new_egg_id]
+                    new_egg_data["identified"] = True
+                    new_egg_data["identify_time"] = game_time.now()
+                    # 孵化计时自体外排出起算，与带壳卵生以排出时间为基准一致
+                    new_egg_data["lay_time"] = egg_data["lay_time"]
             draw_text += _(
                 "\n{1}ml精液渗过了{0}的凝胶层，与其中的卵粒完成了结合，共有{2}颗卵粒受精，已送往育儿室孵化\n"
             ).format(egg_name, int(semen_total), success_count)

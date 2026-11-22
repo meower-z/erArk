@@ -16,7 +16,7 @@ from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
 from Script.Modules.domains import abilities, action_info, flags, modes, needs
-from Script.Modules.domains import work
+from Script.Modules.domains import roster, work
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -713,7 +713,7 @@ def handle_instruct_data(
         )
     # 如果是玩家的解除时停，则进行所有NPC的二段结算
     if character_id == 0 and behavior_id == constant.Behavior.TIME_STOP_OFF:
-        second_behavior_effect_target_id_set = cache.npc_id_got
+        second_behavior_effect_target_id_set = roster.active()
     # 进行所有人的二段结算
     for target_chara_id in second_behavior_effect_target_id_set:
         change_data.target_change.setdefault(
@@ -1095,7 +1095,7 @@ def handle_comprehensive_value_effect(
             final_character_adv
         )
         # 如果还没拥有该角色，则返回0
-        if final_character_id not in cache.npc_id_got:
+        if not roster.has(final_character_id):
             return 0
         final_change_data = change_data.target_change.setdefault(
             final_character_id, game_type.TargetChange()

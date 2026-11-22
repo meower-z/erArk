@@ -7,6 +7,7 @@ from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, flags, needs, player_ability
+from Script.Modules.domains import pregnancy
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -403,10 +404,9 @@ class SeeCharacterBodyPanel:
 
         # 如果有生理透视，则显示当前生理周期、受精概率、欲望值
         if visual_flag >= 3:
+            target_preg = pregnancy.of(target_character_data.cid)
             # 生理周期文本
-            reproduction_period = (
-                target_character_data.pregnancy.reproduction_period
-            )
+            reproduction_period = target_preg.reproduction_period
             now_reproduction_period_type = (
                 game_config.config_reproduction_period[reproduction_period].type
             )
@@ -414,7 +414,7 @@ class SeeCharacterBodyPanel:
             reproduction_text = game_config.ui_text_data["h_state"][period_cid]
             # 受精概率文本
             fertilization_text = _("受精概率{0}%").format(
-                target_character_data.pregnancy.fertilization_rate
+                target_preg.fertilization_rate
             )
             # 欲望值文本
             desire_text = _("欲望值{0}%").format(

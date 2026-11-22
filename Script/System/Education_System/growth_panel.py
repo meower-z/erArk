@@ -15,13 +15,10 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import attr_calculation, game_time
-from Script.System.Education_System import (
-    education_constant,
-    semester_handle,
-    growth_handle,
-    student_select,
-    class_ai,
-)
+from Script.Modules.domains import growth
+from Script.System.Education_System import education_constant, semester_handle
+from Script.System.Education_System import growth_handle, student_select
+from Script.System.Education_System import class_ai
 from Script.UI.Moudle import draw
 from Script.Modules.domains import abilities
 
@@ -250,7 +247,7 @@ class Growth_Panel:
         输出类型: 无
         功能: 听课节数、缺课节数与出勤率
         """
-        growth_data = cache.character_data[character_id].child_growth
+        growth_data = growth.of(character_id)
         if growth_data is None:
             return
         draw.LittleTitleLineDraw(_("出勤"), self.width).draw()
@@ -388,7 +385,7 @@ class Growth_Panel:
         输出类型: 无
         功能: 正数偏前者、负数偏后者；主要写入方是三期的养成事件与四期的照料行为
         """
-        growth_data = cache.character_data[character_id].child_growth
+        growth_data = growth.of(character_id)
         if growth_data is None:
             return
         draw.LittleTitleLineDraw(_("性格倾向"), self.width).draw()
@@ -415,7 +412,7 @@ class Growth_Panel:
         输出类型: 无
         功能: 列出已触发过的养成事件与当时的选择，读 child_growth.event_history
         """
-        growth_data = cache.character_data[character_id].child_growth
+        growth_data = growth.of(character_id)
         if growth_data is None or not growth_data.event_history:
             return
         draw.LittleTitleLineDraw(_("养成履历"), self.width).draw()
@@ -469,7 +466,7 @@ class Growth_Panel:
         输出类型: 无
         功能: 成绩单待查看、有待炫耀的能力、今日翘课中（翘课只认挂上 flag 的那一天，Plan 31 §3.6）
         """
-        growth_data = cache.character_data[character_id].child_growth
+        growth_data = growth.of(character_id)
         if growth_data is None:
             return
         text_list = []

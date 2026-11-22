@@ -11,7 +11,7 @@
 
 结果必须**可复现**：同样的存档点两次一键，排出来的课表要一模一样。
    所以凡是遍历 set 的地方都先 sorted()——schedule_handle.get_teacher_candidate_list()
-   遍历的 cache.npc_id_got 是 set，直接用会让每次排课结果都不同。
+   遍历的 roster.active() 是 set，直接用会让每次排课结果都不同。
 """
 
 from Script.Core import cache_control, game_type

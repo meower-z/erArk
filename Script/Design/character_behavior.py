@@ -29,7 +29,7 @@ from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, realtime_settle
 from Script.Modules.domains import achievement, action_info, flags, history
-from Script.Modules.domains import modes, plan
+from Script.Modules.domains import modes, plan, roster
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -71,7 +71,7 @@ def settle_start(character_id: int, minutes: int) -> None:
         # 同场景里的NPC的跟随与被携带角色的同步移动
         handle_npc_ai.judge_same_position_npc_follow()
         # 全角色重置目击玩玩家H
-        for npc_id in cache.npc_id_got:
+        for npc_id in roster.active():
             flags.set(npc_id, see_pl_h=False)
     judge_before_pl_behavior()
     judge_character_status(0)
@@ -333,7 +333,7 @@ def judge_before_pl_behavior() -> None:
     )
 
     # 全获得角色刷新等待文本标记
-    for character_id in cache.npc_id_got:
+    for character_id in roster.active():
         if character_id == 0:
             continue
         character_data: game_type.Character = cache.character_data[character_id]

@@ -2,25 +2,17 @@
 
 import datetime
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    constant,
-    constant_promise,
-    game_type,
-    get_text,
-)
-from Script.Design import (
-    map_handle,
-    game_time,
-    attr_calculation,
-    child_stage_gate,
-)
+from Script.Core import cache_control, constant, constant_promise, game_type
+from Script.Core import get_text
+from Script.Design import map_handle, game_time, attr_calculation
+from Script.Design import child_stage_gate
 from Script.Config import normal_config, game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.UI.Moudle import view
 from Script.Modules.domains import abilities, action_info, facility, flags
-from Script.Modules.domains import history, modes, needs, physical_exam
-from Script.Modules.domains import player_ability, player_collection, visitor
+from Script.Modules.domains import growth, history, modes, needs, physical_exam
+from Script.Modules.domains import player_ability, player_collection, pregnancy
+from Script.Modules.domains import visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -984,8 +976,7 @@ def handle_reproduction_period_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    reproduction_period = character_data.pregnancy.reproduction_period
+    reproduction_period = pregnancy.of(character_id).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
     ].type
@@ -1004,8 +995,7 @@ def handle_reproduction_period_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    reproduction_period = character_data.pregnancy.reproduction_period
+    reproduction_period = pregnancy.of(character_id).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
     ].type
@@ -1024,8 +1014,7 @@ def handle_reproduction_period_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    reproduction_period = character_data.pregnancy.reproduction_period
+    reproduction_period = pregnancy.of(character_id).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
     ].type
@@ -1044,8 +1033,7 @@ def handle_reproduction_period_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    reproduction_period = character_data.pregnancy.reproduction_period
+    reproduction_period = pregnancy.of(character_id).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
     ].type
@@ -1065,8 +1053,9 @@ def handle_t_reproduction_period_0(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    reproduction_period = target_data.pregnancy.reproduction_period
+    reproduction_period = pregnancy.of(
+        character_data.target_character_id
+    ).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
     ].type
@@ -1086,8 +1075,9 @@ def handle_t_reproduction_period_1(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    reproduction_period = target_data.pregnancy.reproduction_period
+    reproduction_period = pregnancy.of(
+        character_data.target_character_id
+    ).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
     ].type
@@ -1107,8 +1097,9 @@ def handle_t_reproduction_period_2(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    reproduction_period = target_data.pregnancy.reproduction_period
+    reproduction_period = pregnancy.of(
+        character_data.target_character_id
+    ).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
     ].type
@@ -1128,8 +1119,9 @@ def handle_t_reproduction_period_3(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    reproduction_period = target_data.pregnancy.reproduction_period
+    reproduction_period = pregnancy.of(
+        character_data.target_character_id
+    ).reproduction_period
     now_reproduction_period_type = game_config.config_reproduction_period[
         reproduction_period
     ].type
@@ -1281,7 +1273,7 @@ def handle_self_have_any_course(character_id: int) -> int:
     """
     from Script.System.Education_System import growth_handle
 
-    growth_data = cache.character_data[character_id].child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None or not growth_data.selected_course:
         return 0
     for week_day, day_data in growth_data.selected_course.items():
@@ -1432,7 +1424,7 @@ def handle_self_birthday_today(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    born_time = cache.character_data[character_id].pregnancy.born_time
+    born_time = pregnancy.of(character_id).born_time
     if born_time.year <= 1:
         return 0
     now_time = game_time.now()
@@ -1560,8 +1552,7 @@ def handle_self_multiple_fetus(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return getattr(character_data.pregnancy, "fetus_count", 0) >= 2
+    return pregnancy.of(character_id).fetus_count >= 2
 
 
 @add_premise(constant_promise.Premise.T_MULTIPLE_FETUS)
@@ -1574,8 +1565,7 @@ def handle_t_multiple_fetus(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    return getattr(target_data.pregnancy, "fetus_count", 0) >= 2
+    return pregnancy.of(character_data.target_character_id).fetus_count >= 2
 
 
 @add_premise(constant_promise.Premise.SELF_IDENTICAL_TWINS)
@@ -1587,8 +1577,7 @@ def handle_self_identical_twins(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return bool(getattr(character_data.pregnancy, "identical_twins", False))
+    return bool(pregnancy.of(character_id).identical_twins)
 
 
 @add_premise(constant_promise.Premise.T_IDENTICAL_TWINS)
@@ -1601,8 +1590,9 @@ def handle_t_identical_twins(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    return bool(getattr(target_data.pregnancy, "identical_twins", False))
+    return bool(
+        pregnancy.of(character_data.target_character_id).identical_twins
+    )
 
 
 @add_premise(constant_promise.Premise.SELF_BIRTH_TYPE_EGG_SOFT)

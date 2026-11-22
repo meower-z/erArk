@@ -29,7 +29,7 @@ from Script.Design import game_time
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import abilities, achievement, action_info, flags
-from Script.Modules.domains import needs, player_collection
+from Script.Modules.domains import needs, player_collection, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -370,7 +370,7 @@ def _plan_target_wait(target: int, minutes: int) -> None:
     """
     from Script.Modules.gameplay_resolution import plan_queue
 
-    if target != 0 and target not in cache.npc_id_got:
+    if target != 0 and not roster.has(target):
         return
     plan_queue.plan_next(
         target,
@@ -601,7 +601,7 @@ def handle_comprehensive_state_effect(
     else:
         target_character_id = int(effect_all_value_list[0][3:])
         # 如果还没拥有该角色，则返回0
-        if target_character_id not in cache.npc_id_got:
+        if not roster.has(target_character_id):
             return 0
 
     behavior_id = effect_all_value_list[1]
@@ -1175,7 +1175,7 @@ def _start_follow(who: int, chosen: intent.Intent) -> None:
 
     # 去掉其他NPC的跟随
     if not cache.debug_mode:
-        for npc_id in cache.npc_id_got:
+        for npc_id in roster.active():
             if npc_id not in {
                 0,
                 chosen["target"],

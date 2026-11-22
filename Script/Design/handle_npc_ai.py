@@ -11,17 +11,12 @@ from Script.Core import (
     value_handle,
     get_text,
 )
-from Script.Design import (
-    game_time,
-    handle_premise,
-    character_move,
-    attr_calculation,
-    map_handle,
-)
+from Script.Design import attr_calculation, character_move, game_time
+from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, action_info, entertainment
-from Script.Modules.domains import facility, flags, needs
+from Script.Modules.domains import facility, flags, needs, roster
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -903,7 +898,7 @@ def judge_same_position_npc_follow() -> None:
     from Script.Modules.gameplay_resolution import plan_queue
 
     pl_character_data: game_type.Character = cache.character_data[0]
-    for character_id in cache.npc_id_got:
+    for character_id in roster.active():
         character_data: game_type.Character = cache.character_data[character_id]
         # 跳过不在同一位置的NPC
         if character_data.position != pl_character_data.position:

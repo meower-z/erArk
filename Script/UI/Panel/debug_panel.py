@@ -31,7 +31,7 @@ from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.domains import abilities, action_info, entertainment
 from Script.Modules.domains import facility, flags, needs, physical_exam
-from Script.Modules.domains import pregnancy, recruit, warehouse
+from Script.Modules.domains import pregnancy, recruit, roster, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -473,7 +473,7 @@ class TALK_QUICK_TEST:
         draw_text += _("测试角色：{0}\n").format(target_character_data.name)
         draw_text += _("口上id：{0}\n").format(full_talk_id)
         # 是否已获得该角色
-        if target_chara_id not in cache.npc_id_got:
+        if not roster.has(target_chara_id):
             draw_text += _("  博士未获得该角色(X)\n")
             pass_flag = False
         else:
@@ -831,7 +831,7 @@ class Debug_Panel:
                 draw_text_list = []
                 draw_text_list.append(f"[000]:游戏时间：{game_time.now()}")
                 draw_text_list.append(
-                    f"[001]:已拥有的干员id列表：{cache.npc_id_got}"
+                    f"[001]:已拥有的干员id列表：{roster.active()}"
                 )
                 draw_text_list.append("[002]:全干员id列表（太长了无法显示）")
                 draw_text_list.append(f"[003]:龙门币：{warehouse.amount(1)}")
@@ -1124,7 +1124,7 @@ class Debug_Panel:
 
                 elif key_index == 1:
                     info_text = "[001]:已拥有的干员id列表：\n"
-                    for chara_id in cache.npc_id_got:
+                    for chara_id in roster.active():
                         name = cache.character_data[chara_id].name
                         info_text += f"{chara_id}:{name} "
                     info_text += "\n\n全干员id列表：\n"
@@ -1156,7 +1156,7 @@ class Debug_Panel:
                         info_draw.draw()
                         continue
                     elif value_index[1] == 0:
-                        cache.npc_id_got.discard(value_index[0])
+                        roster.discard(value_index[0])
                     elif value_index[1] == 1:
                         character_handle.get_new_character(value_index[0])
                 elif key_index == 3:
@@ -1363,19 +1363,19 @@ class Debug_Panel:
                         basement.get_base_updata()
                 # 重置全角色特殊flag
                 elif key_index == 11:
-                    cache.npc_id_got.discard(0)
-                    for chara_id in cache.npc_id_got:
+                    roster.discard(0)
+                    for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
                         flags.reset(character_data.cid)
                 # 重置全角色服装
                 elif key_index == 12:
-                    cache.npc_id_got.discard(0)
-                    for chara_id in cache.npc_id_got:
+                    roster.discard(0)
+                    for chara_id in roster.active():
                         clothing.get_npc_cloth(chara_id)
                 # 重置全角色位置至宿舍
                 elif key_index == 13:
-                    cache.npc_id_got.discard(0)
-                    for chara_id in cache.npc_id_got:
+                    roster.discard(0)
+                    for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
                         # 将字符串中的"01区"替换为"1区"
                         character_data.dormitory = (
@@ -1418,7 +1418,7 @@ class Debug_Panel:
                     character_id = character.get_character_id_from_adv(
                         new_value
                     )
-                    if character_id not in cache.npc_id_got:
+                    if not roster.has(character_id):
                         recruit.set_pending(recruit.pending() | {character_id})
                         info_draw.text = _("\n招募成功\n")
                     else:
@@ -1429,8 +1429,8 @@ class Debug_Panel:
                 elif key_index == 17:
                     from Script.Design import handle_npc_ai
 
-                    cache.npc_id_got.discard(0)
-                    for chara_id in cache.npc_id_got:
+                    roster.discard(0)
+                    for chara_id in roster.active():
                         handle_npc_ai.get_chara_entertainment(chara_id)
 
             line_feed.draw()
@@ -2151,11 +2151,12 @@ class Debug_Panel:
 
             # 怀孕数据
             elif key_index == 18:
+                preg = pregnancy.of(target_data.cid)
                 draw_text_list = []
                 draw_text_list.append(
-                    f"[000]:受精概率：{target_data.pregnancy.fertilization_rate}"
+                    f"[000]:受精概率：{preg.fertilization_rate}"
                 )
-                reproduction_period = target_data.pregnancy.reproduction_period
+                reproduction_period = preg.reproduction_period
                 now_reproduction_period_type = (
                     game_config.config_reproduction_period[
                         reproduction_period
@@ -2166,16 +2167,16 @@ class Debug_Panel:
                     period_cid
                 ]
                 draw_text_list.append(
-                    f"[001]:生殖周期的第几天(0安全1普通2危险3排卵，0110232)：{target_data.pregnancy.reproduction_period},{reproduction_text}"
+                    f"[001]:生殖周期的第几天(0安全1普通2危险3排卵，0110232)：{preg.reproduction_period},{reproduction_text}"
                 )
                 draw_text_list.append(
-                    f"[002]:开始受精的时间：{target_data.pregnancy.fertilization_time}      年月日分别为0,1,2"
+                    f"[002]:开始受精的时间：{preg.fertilization_time}      年月日分别为0,1,2"
                 )
                 draw_text_list.append(
                     f"[003]:当前妊娠素质：0受精-{talent[20]}，1妊娠-{talent[21]}，2临盆-{talent[22]}，3产后-{talent[23]}，4育儿-{talent[24]}"
                 )
                 draw_text_list.append(
-                    f"[004]:出生的时间：{target_data.pregnancy.born_time}      年月日分别为0,1,2"
+                    f"[004]:出生的时间：{preg.born_time}      年月日分别为0,1,2"
                 )
                 draw_text_list.append("[005]:一键触发生产事件")
                 draw_text_list.append("[006]:一键触发育儿+育儿完成事件")
@@ -2213,37 +2214,28 @@ class Debug_Panel:
 
                     # 根据第几项更改对应值
                     if value_index == 0:
-                        target_data.pregnancy.fertilization_rate = new_value
-                        # print(f"debug value_index = {value_index},new_value = {new_value}")
+                        pregnancy.update(
+                            target_data.cid, fertilization_rate=new_value
+                        )
                     elif value_index == 1:
-                        target_data.pregnancy.reproduction_period = new_value
+                        pregnancy.update(
+                            target_data.cid, reproduction_period=new_value
+                        )
                     elif value_index == 5:
                         talent[22] = 1
-                        target_data.pregnancy.fertilization_time = (
-                            game_time.now()
-                        )
-                        new_year = (
-                            target_data.pregnancy.fertilization_time.year - 1
-                        )
-                        target_data.pregnancy.fertilization_time = (
-                            target_data.pregnancy.fertilization_time.replace(
-                                year=new_year
-                            )
+                        now_t = game_time.now()
+                        pregnancy.update(
+                            target_data.cid,
+                            fertilization_time=now_t.replace(
+                                year=now_t.year - 1
+                            ),
                         )
                     elif value_index == 6:
-
                         child_id = target_data.relationship.child_id_list[-1]
-                        child_character_data: game_type.Character = (
-                            cache.character_data[child_id]
-                        )
-                        new_year = (
-                            child_character_data.pregnancy.born_time.year - 1
-                        )
-                        child_character_data.pregnancy.born_time = (
-                            child_character_data.pregnancy.born_time.replace(
-                                year=new_year
+                        with pregnancy.editing(child_id) as child_preg:
+                            child_preg.born_time = child_preg.born_time.replace(
+                                year=child_preg.born_time.year - 1
                             )
-                        )
                     elif value_index == 7:
                         needs.set(target_data.cid, milk=new_value)
                     elif value_index == 8:
@@ -2253,50 +2245,46 @@ class Debug_Panel:
                             info_draw.text = "\n输出格式错误，请重试\n"
                             info_draw.draw()
                             continue
-                        if value_index[1] == 0:
-                            target_data.pregnancy.fertilization_time = target_data.pregnancy.fertilization_time.replace(
-                                year=new_value
-                            )
-                        elif value_index[1] == 1:
-                            target_data.pregnancy.fertilization_time = target_data.pregnancy.fertilization_time.replace(
-                                month=new_value
-                            )
-                        elif value_index[1] == 2:
-                            target_data.pregnancy.fertilization_time = target_data.pregnancy.fertilization_time.replace(
-                                day=new_value
-                            )
+                        with pregnancy.editing(target_data.cid) as p:
+                            if value_index[1] == 0:
+                                p.fertilization_time = (
+                                    p.fertilization_time.replace(year=new_value)
+                                )
+                            elif value_index[1] == 1:
+                                p.fertilization_time = (
+                                    p.fertilization_time.replace(
+                                        month=new_value
+                                    )
+                                )
+                            elif value_index[1] == 2:
+                                p.fertilization_time = (
+                                    p.fertilization_time.replace(day=new_value)
+                                )
                     elif value_index[0] == 3:
                         if len(value_index) == 1:
                             info_draw.text = "\n输出格式错误，请重试\n"
                             info_draw.draw()
                             continue
                         talent[20 + value_index[1]] = new_value
-                        target_data.pregnancy.fertilization_time = (
-                            game_time.now()
+                        pregnancy.update(
+                            target_data.cid, fertilization_time=game_time.now()
                         )
                     elif value_index[0] == 4:
                         if len(value_index) == 1:
                             info_draw.text = "\n输出格式错误，请重试\n"
                             info_draw.draw()
                             continue
-                        if value_index[1] == 0:
-                            target_data.pregnancy.born_time = (
-                                target_data.pregnancy.born_time.replace(
+                        with pregnancy.editing(target_data.cid) as p:
+                            if value_index[1] == 0:
+                                p.born_time = p.born_time.replace(
                                     year=new_value
                                 )
-                            )
-                        elif value_index[1] == 1:
-                            target_data.pregnancy.born_time = (
-                                target_data.pregnancy.born_time.replace(
+                            elif value_index[1] == 1:
+                                p.born_time = p.born_time.replace(
                                     month=new_value
                                 )
-                            )
-                        elif value_index[1] == 2:
-                            target_data.pregnancy.born_time = (
-                                target_data.pregnancy.born_time.replace(
-                                    day=new_value
-                                )
-                            )
+                            elif value_index[1] == 2:
+                                p.born_time = p.born_time.replace(day=new_value)
 
                     # 接着刷新一遍显示新内容
                     change_draw_flag = False

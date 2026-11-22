@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import player_collection, warehouse
+from Script.Modules.domains import player_collection, roster, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -235,7 +235,7 @@ class Collection_Panel:
                 self.token_count = 0
                 token_chara_list = []
                 tokens = player_collection.get("token_list")
-                for npc_id in cache.npc_id_got:
+                for npc_id in roster.active():
                     if npc_id == 0:
                         continue
                     if tokens.get(npc_id):
@@ -256,7 +256,7 @@ class Collection_Panel:
                 first_panties = player_collection.get("first_panties")
                 npc_panties = player_collection.get("npc_panties")
 
-                for npc_id in cache.npc_id_got:
+                for npc_id in roster.active():
                     if npc_id == 0:
                         continue
                     # 如果有收集到该角色的处子胖次或其他普通胖次
@@ -282,7 +282,7 @@ class Collection_Panel:
                 socks_chara_list = []
                 npc_socks = player_collection.get("npc_socks")
 
-                for npc_id in cache.npc_id_got:
+                for npc_id in roster.active():
                     if npc_id == 0:
                         continue
                     socks_list = npc_socks.get(npc_id, [])

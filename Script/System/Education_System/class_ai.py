@@ -48,11 +48,10 @@ from Script.Design import attr_calculation, game_time, map_handle
 from Script.System.Education_System import (
     education_constant,
     schedule_handle,
-    growth_handle,
 )
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import flags, modes, needs
+from Script.Modules.domains import flags, growth, modes, needs, roster
 
 if TYPE_CHECKING:
     import datetime
@@ -146,7 +145,7 @@ def judge_teacher_available(teacher_id: int, classroom: str = "") -> bool:
         return False
     # 已经不在岛上 / 换了岗：课表里还挂着她，但她的 AI 不会再来上课
     if (
-        teacher_id not in cache.npc_id_got
+        not roster.has(teacher_id)
         or teacher_data.work.work_type != education_constant.TEACHER_WORK_TYPE
     ):
         return False
@@ -248,23 +247,21 @@ def settle_absent(character_id: int, by_skip: bool = False) -> bool:
     Return arguments:
     bool -- 是否真的记上了；同一节已记过缺课、已记了出勤、不在节次内为 False
     """
-    growth_data = growth_handle.get_child_growth(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     now_time = character_data.behavior.start_time or game_time.now()
     period = game_time.get_class_period(character_id)
-    # 两个调用方都只在节次内派发，这里兜一道：节次外记下的标记会占掉当天真正的缺课
     if period == -1:
         return False
     now_mark = [now_time.toordinal(), period]
-    if growth_data.last_absent_period == now_mark:
-        return False
-    # 这一节已记了出勤：同一节只落一种记录（Plan 32 §3.8 L7），缺课与累计翘课数都不加
-    if growth_data.last_attend_period == now_mark:
-        return False
-    growth_data.last_absent_period = now_mark
-    growth_data.absent_count += 1
-    if by_skip:
-        growth_data.skip_count += 1
+    with growth.editing(character_id) as growth_data:
+        if growth_data.last_absent_period == now_mark:
+            return False
+        if growth_data.last_attend_period == now_mark:
+            return False
+        growth_data.last_absent_period = now_mark
+        growth_data.absent_count += 1
+        if by_skip:
+            growth_data.skip_count += 1
     return True
 
 
@@ -600,8 +597,7 @@ def roll_skip_class(
     character_data: game_type.Character = cache.character_data[character_id]
     if now_time is None:
         now_time = character_data.behavior.start_time or game_time.now()
-    # 前提路径上只读 child_growth，不走会惰性创建养成数据的 get_child_growth
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if (
         growth_data is not None
         and growth_data.skip_caught_day == now_time.toordinal()
@@ -634,7 +630,7 @@ def judge_skip_class_today(
     if character_id not in cache.character_data:
         return False
     character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
+    growth_data = growth.of(character_id)
     if growth_data is None or not growth_data.skip_class_flag:
         return False
     if now_time is None:

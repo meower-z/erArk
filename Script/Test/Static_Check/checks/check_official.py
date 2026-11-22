@@ -4,7 +4,7 @@
 from datetime import datetime
 
 from Script.Core import cache_control
-from Script.Modules.domains import official
+from Script.Modules.domains import growth, official
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
@@ -66,16 +66,12 @@ def check_official_02() -> list[CheckFailure]:
     ]
     characters = getattr(cache, "character_data", None)
     if isinstance(characters, dict):
-        for cid, character in characters.items():
+        for cid in characters:
             histories.append(
                 (
                     cid,
                     "child_growth.event_history",
-                    getattr(
-                        getattr(character, "child_growth", None),
-                        "event_history",
-                        None,
-                    ),
+                    getattr(growth.of(cid), "event_history", None),
                 )
             )
     failures = []

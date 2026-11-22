@@ -1,6 +1,4 @@
-"""
-射精：忍住射精的判断、射精量与部位污浊的结算、精液流动，以及射精面板
-"""
+"""射精：忍住射精的判断、射精量与部位污浊的结算、精液流动，以及射精面板"""
 
 from types import FunctionType
 from Script.Core import cache_control, constant, flow_handle, game_type
@@ -15,7 +13,7 @@ import random
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info, flags
-from Script.Modules.domains import modes, tallies
+from Script.Modules.domains import modes, pregnancy, tallies
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -534,7 +532,9 @@ def ejaculation_flow(
                         part_cid in [6, 7]
                         and flags.get(target_character_id, "unconscious_h") == 0
                     ):
-                        target_data.pregnancy.unconscious_fertilization = False
+                        pregnancy.update(
+                            target_data.cid, unconscious_fertilization=False
+                        )
                 else:
                     cloth_text = game_config.config_clothing_type[part_cid].name
                     now_text = _("在{0}的{1}{2}").format(

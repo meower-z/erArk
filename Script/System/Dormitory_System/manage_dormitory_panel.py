@@ -16,7 +16,7 @@ from Script.Design import basement, handle_premise, map_handle
 from Script.System.Dormitory_System import common
 from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
-from Script.Modules.domains import dormitory, facility, work
+from Script.Modules.domains import dormitory, facility, roster, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -145,7 +145,7 @@ class Manage_Dormitory_Panel:
         open_layers = sorted(open_rooms_by_layer.keys())
         efficiency = basement.calc_facility_efficiency(4)
         max_open_layer = common.get_dormitory_max_open_layer()
-        npc_count = str(len(cache.npc_id_got))
+        npc_count = str(roster.count())
 
         temp_blank_list = self._get_temp_blank_character_ids()
         temp_blank_names = []
@@ -288,7 +288,7 @@ class Manage_Dormitory_Panel:
 
         while 1:
             chara_ids = sorted(
-                [cid for cid in cache.npc_id_got if cid != 0],
+                [cid for cid in roster.active() if cid != 0],
                 key=lambda x: cache.character_data[x].adv,
             )
             final_list = []
@@ -818,7 +818,7 @@ class Manage_Dormitory_Panel:
         assigned_manager_ids.discard(0)
 
         reset_count = 0
-        for character_id in cache.npc_id_got:
+        for character_id in roster.active():
             if character_id == 0:
                 continue
             character_data = cache.character_data.get(character_id)

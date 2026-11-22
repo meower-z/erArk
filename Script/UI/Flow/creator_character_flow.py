@@ -5,27 +5,14 @@
 
 import random
 from types import FunctionType
-from Script.Core import (
-    get_text,
-    constant,
-    game_type,
-    cache_control,
-    flow_handle,
-    py_cmd,
-    io_init,
-)
-from Script.Design import (
-    handle_panel,
-    character,
-    character_handle,
-    attr_calculation,
-    basement,
-    game_time,
-)
+from Script.Core import get_text, constant, game_type, cache_control
+from Script.Core import flow_handle, py_cmd, io_init
+from Script.Design import handle_panel, character, character_handle
+from Script.Design import attr_calculation, basement, game_time
 from Script.Kernel import core
 from Script.Modules.domains import abilities, country, physical_exam
-from Script.Modules.domains import player_ability, playthrough, prison, visitor
-from Script.Modules.domains import warehouse, work
+from Script.Modules.domains import player_ability, playthrough, prison, roster
+from Script.Modules.domains import visitor, warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
@@ -55,11 +42,11 @@ def creator_character_panel() -> None:
     #    character_data 里，而标题画面开新游戏并不重置这些运行时数据。不清的话 init_character_list
     #    会把上一局的女儿一并实例化进这一局，从而触发本局并不存在的女儿的相关事件（跨存档 / 跨局泄漏）
     cache.character_data.clear()
-    cache.npc_id_got.clear()
     # 时钟回到开局：建角色时读到的游戏时间都是开局时刻
     clock = kernel_state.first_clock()
     kernel_state.reset_clock(clock)
     with working.based_on(core.state()) as buffer:
+        roster.clear_active()
         character_handle.init_character_tem()
         cache.character_data[0] = game_type.Character()
         character_handle.init_character_list()
@@ -420,13 +407,13 @@ class Character_FirstNPC:
         info_draw = draw.LeftDraw()
         info_draw.text = _(" 当前初始干员有：")
         info_draw.text += _("\n   基础:")
-        npc_id_got_list = sorted(cache.npc_id_got)
+        npc_id_got_list = list(roster.active_sorted())
         for character_id in npc_id_got_list:
             npc_character_data = cache.character_data[character_id]
             if npc_character_data.adv in constant.first_NPC_adv_set:
                 info_draw.text += f" ●{npc_character_data.name}"
         info_draw.text += _("\n   自选:")
-        for character_id in cache.npc_id_got:
+        for character_id in roster.active():
             npc_character_data = cache.character_data[character_id]
             if npc_character_data.adv not in constant.first_NPC_adv_set:
                 info_draw.text += f" ●{npc_character_data.name}"
@@ -461,7 +448,7 @@ class Character_FirstNPC:
         if cache.debug_mode:
             self.npc_select_now = 999
         else:
-            self.npc_select_now = 9 - len(cache.npc_id_got)
+            self.npc_select_now = 9 - roster.count()
         if self.npc_select_now:
             info_last_draw.text = _(" 当前剩余可选干员数量 = {0}").format(
                 self.npc_select_now
@@ -471,7 +458,7 @@ class Character_FirstNPC:
         else:
             info_last_draw.text = _(" 已选择全部初始干员")
 
-        work_people_now, people_max = work.people_now(), len(cache.npc_id_got)
+        work_people_now, people_max = work.people_now(), roster.count()
         info_last_draw.text += _("， 当前工作中干员/总干员：{0}/{1}").format(
             work_people_now, people_max
         )
@@ -532,11 +519,11 @@ class Character_FirstNPC:
             if cache.debug_mode:
                 self.npc_select_now = 999
             else:
-                self.npc_select_now = 9 - len(cache.npc_id_got)
+                self.npc_select_now = 9 - roster.count()
             now_npc_draw.text = ""
             now_npc_draw.text += _(" 有口上的角色会注明文本文件的大小\n")
             now_npc_draw.text += _("\n 当前已选干员：")
-            for character_id in cache.npc_id_got:
+            for character_id in roster.active():
                 npc_character_data = cache.character_data[character_id]
                 if npc_character_data.adv not in constant.first_NPC_adv_set:
                     now_npc_draw.text += f" ●{npc_character_data.name}"
@@ -836,8 +823,8 @@ class Character_FirstNPC:
     def select_all(self) -> None:
         """一键全选"""
         for adv_id in cache.npc_tem_data.keys():
-            if adv_id not in cache.npc_id_got:
-                cache.npc_id_got.add(adv_id)
+            if not roster.has(adv_id):
+                roster.add(adv_id)
 
     def random_select(self) -> None:
         """随机选择"""
@@ -846,12 +833,12 @@ class Character_FirstNPC:
         not_got_npc = [
             adv_id
             for adv_id in cache.npc_tem_data.keys()
-            if adv_id not in cache.npc_id_got
+            if not roster.has(adv_id)
         ]
         # 随机选择三个，然后加到列表中
         random_npc = random.sample(not_got_npc, 3)
         for npc_id in random_npc:
-            cache.npc_id_got.add(npc_id)
+            roster.add(npc_id)
 
     def change_show_character_attributes_flag(self) -> None:
         """切换显示干员属性标记"""
@@ -948,13 +935,13 @@ class Character_FirstNPC:
         # 获取当前已选择的NPC
         now_select_npc_ld_list = [
             character_id
-            for character_id in cache.npc_id_got
+            for character_id in roster.active()
             if cache.character_data[character_id].adv
             not in constant.first_NPC_adv_set
         ]
         # 从列表中移除
         for character_id in now_select_npc_ld_list:
-            cache.npc_id_got.remove(character_id)
+            roster.remove(character_id)
         # 重置过滤器
         self.age_filter_flag = 0
         self.chest_filter_flag = 0
@@ -1061,7 +1048,7 @@ class SelectFirstNPCButton:
         if target_data.text_color:
             now_style = target_data.name
         # 如果是已选择的干员，使用金色
-        elif self.NPC_id in cache.npc_id_got:
+        elif roster.has(self.NPC_id):
             now_style = "gold_enrod"
         # 否则使用标准颜色
         else:
@@ -1069,7 +1056,7 @@ class SelectFirstNPCButton:
 
         name_draw: draw.LeftDraw | draw.LeftButton
         name_draw = draw.LeftDraw()
-        if self.NPC_id in cache.npc_id_got:
+        if roster.has(self.NPC_id):
             if target_data.adv in constant.first_NPC_adv_set:
                 button_text += _("(基础)")
                 # 查看属性模式下基础干员也可点击查看属性
@@ -1115,12 +1102,12 @@ class SelectFirstNPCButton:
         if SelectFirstNPCButton.show_attributes_mode:
             draw_first_npc_attributes(self.NPC_id)
             return
-        if self.NPC_id in cache.npc_id_got:
-            cache.npc_id_got.remove(self.NPC_id)
+        if roster.has(self.NPC_id):
+            roster.remove(self.NPC_id)
         elif cache.debug_mode:
-            cache.npc_id_got.add(self.NPC_id)
-        elif 9 - len(cache.npc_id_got):
-            cache.npc_id_got.add(self.NPC_id)
+            roster.add(self.NPC_id)
+        elif 9 - roster.count():
+            roster.add(self.NPC_id)
 
     def draw(self) -> None:
         """绘制对象"""

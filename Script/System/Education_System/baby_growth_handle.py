@@ -18,8 +18,8 @@ from types import FunctionType
 
 from Script.Config import game_config
 from Script.Core import cache_control, game_type, get_text
-from Script.System.Education_System import education_constant, growth_handle
-from Script.Modules.domains import abilities
+from Script.System.Education_System import education_constant
+from Script.Modules.domains import abilities, growth, pregnancy
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -41,8 +41,7 @@ def get_prenatal_point(mother_id: int) -> float:
     """
     if mother_id not in cache.character_data:
         return 0.0
-    pregnancy_data = cache.character_data[mother_id].pregnancy
-    return float(getattr(pregnancy_data, "prenatal_point", 0.0))
+    return float(pregnancy.of(mother_id).prenatal_point)
 
 
 def add_prenatal_point(
@@ -58,10 +57,12 @@ def add_prenatal_point(
     """
     if mother_id not in cache.character_data:
         return 0.0
-    pregnancy_data = cache.character_data[mother_id].pregnancy
-    now_point = float(getattr(pregnancy_data, "prenatal_point", 0.0))
-    now_point = min(education_constant.PRENATAL_POINT_MAX, now_point + value)
-    pregnancy_data.prenatal_point = now_point
+    with pregnancy.editing(mother_id) as preg:
+        now_point = min(
+            education_constant.PRENATAL_POINT_MAX,
+            float(preg.prenatal_point) + value,
+        )
+        preg.prenatal_point = now_point
     return now_point
 
 
@@ -75,7 +76,7 @@ def clear_prenatal_point(mother_id: int) -> None:
     """
     if mother_id not in cache.character_data:
         return
-    cache.character_data[mother_id].pregnancy.prenatal_point = 0.0
+    pregnancy.update(mother_id, prenatal_point=0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -142,8 +143,9 @@ def settle_prenatal_to_child(mother_id: int, child_id: int) -> str:
     prenatal_point = get_prenatal_point(mother_id)
     if prenatal_point <= 0 or child_id not in cache.character_data:
         return ""
-    growth_data = growth_handle.get_child_growth(child_id)
-    growth_data.prenatal_point = prenatal_point
+    with growth.editing(child_id) as growth_data:
+        assert growth_data is not None
+        growth_data.prenatal_point = prenatal_point
     juel_value = get_prenatal_juel_value(prenatal_point)
     child_data: game_type.Character = cache.character_data[child_id]
     if juel_value > 0:
@@ -175,7 +177,7 @@ def get_child_prenatal_juel(child_id: int) -> int:
     """
     if child_id not in cache.character_data:
         return 0
-    growth_data = cache.character_data[child_id].child_growth
+    growth_data = growth.of(child_id)
     if growth_data is None:
         return 0
     return get_prenatal_juel_value(growth_data.prenatal_point)
@@ -191,7 +193,7 @@ def get_child_prenatal_count(child_id: int) -> int:
     """
     if child_id not in cache.character_data:
         return 0
-    growth_data = cache.character_data[child_id].child_growth
+    growth_data = growth.of(child_id)
     if growth_data is None:
         return 0
     return int(

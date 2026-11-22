@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -596,7 +596,7 @@ def handle_player_have_other_lover(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    for chara_id in cache.npc_id_got:
+    for chara_id in roster.active():
         if chara_id == 0:
             continue
         if chara_id == character_id:
@@ -630,7 +630,7 @@ def handle_player_have_other_lover_except_target(character_id: int) -> int:
     int -- 权重
     """
     pl_character_data = cache.character_data[0]
-    for chara_id in cache.npc_id_got:
+    for chara_id in roster.active():
         if chara_id == 0:
             continue
         if chara_id == pl_character_data.target_character_id:
@@ -663,7 +663,7 @@ def handle_player_have_other_pet(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    for chara_id in cache.npc_id_got:
+    for chara_id in roster.active():
         if chara_id == 0:
             continue
         if chara_id == character_id:
@@ -697,7 +697,7 @@ def handle_player_have_other_pet_except_target(character_id: int) -> int:
     int -- 权重
     """
     pl_character_data = cache.character_data[0]
-    for chara_id in cache.npc_id_got:
+    for chara_id in roster.active():
         if chara_id == 0:
             continue
         if chara_id == pl_character_data.target_character_id:

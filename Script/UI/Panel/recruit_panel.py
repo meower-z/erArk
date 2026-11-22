@@ -9,13 +9,13 @@ from Script.Design import attr_calculation, basement, handle_ability
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import diplomacy, flags, location, recruit, visitor
-from Script.Modules.domains import work
+from Script.Modules.domains import diplomacy, facility, flags, location
+from Script.Modules.domains import recruit, roster, visitor, work
 from Script.Modules.save_load import reset
 
 import random
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities, facility
+from Script.Modules.domains import abilities
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -53,7 +53,7 @@ def can_recruit() -> bool:
     Return arguments:
     bool -- 可以招募时为 True
     """
-    if len(cache.npc_id_got) >= facility.people_max():
+    if roster.count() >= facility.people_max():
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.style = "gold_enrod"
@@ -81,7 +81,7 @@ def recruit_new_chara() -> bool:
     now_draw.style = "gold_enrod"
     now_draw.text = ""
 
-    if len(cache.npc_id_got) >= facility.people_max():
+    if roster.count() >= facility.people_max():
         now_draw.text += _("\n\n   ※ 空余宿舍不足，无法招募 ※\n\n")
         now_draw.draw()
         return False
@@ -127,7 +127,7 @@ def find_recruitable_npc() -> list[int]:
         if chara_id == 0:
             continue
         # 跳过已有的
-        if chara_id in cache.npc_id_got:
+        if roster.has(chara_id):
             continue
         # 跳过已在待确认招募列表中的
         if chara_id in pending:
@@ -152,7 +152,7 @@ def find_recruitable_npc() -> list[int]:
             continue
         # 如果设置了禁止，则跳过禁止干员
         if normal_config.system_setting.base_setting[7]:
-            if chara_id in cache.forbidden_npc_id:
+            if roster.is_forbidden(chara_id):
                 continue
         recruitable_npc_id_list.append(chara_id)
 

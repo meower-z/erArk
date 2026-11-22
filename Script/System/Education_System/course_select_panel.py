@@ -13,15 +13,15 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.System.Education_System import (
-    education_constant,
-    schedule_handle,
-    growth_handle,
-    schedule_template_handle,
-    student_select,
-)
+from Script.Modules.domains import growth
+from Script.System.Education_System import education_constant, schedule_handle
+from Script.System.Education_System import growth_handle
+from Script.System.Education_System import schedule_template_handle
+from Script.System.Education_System import student_select
 from Script.System.Education_System.class_schedule_panel import (
     get_period_time_text,
+)
+from Script.System.Education_System.class_schedule_panel import (
     get_teacher_absent_mark,
 )
 from Script.UI.Moudle import draw
@@ -340,7 +340,7 @@ class Course_Select_Panel:
                         character_id, slot
                     )
                 )
-                growth_data = cache.character_data[character_id].child_growth
+                growth_data = growth.of(character_id)
                 override_mark = ""
                 if (
                     growth_data is not None

@@ -15,7 +15,14 @@
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text
-from Script.Modules.domains import country, facility, official, power, warehouse
+from Script.Modules.domains import (
+    country,
+    facility,
+    official,
+    power,
+    roster,
+    warehouse,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -81,7 +88,7 @@ def get_all_office_work() -> float:
     Return arguments:
     float -- 总工作量，异常时为0
     """
-    return sum(facility.levels().values()) * 10 + len(cache.npc_id_got)
+    return sum(facility.levels().values()) * 10 + roster.count()
 
 
 def get_ri_value(type_text: str) -> float:
@@ -106,7 +113,7 @@ def get_ri_value(type_text: str) -> float:
     if type_name == RI_TYPE_POWER:
         return float(power.storage())
     if type_name == RI_TYPE_PEOPLE:
-        return float(len(cache.npc_id_got))
+        return float(roster.count())
     return 0.0
 
 

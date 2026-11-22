@@ -19,7 +19,7 @@ from uuid import UUID
 
 from Script.Core import cache_control, game_type
 from Script.Kernel import core
-from Script.Modules.domains import work
+from Script.Modules.domains import roster, work
 from Script.Modules.gameplay_resolution import working
 
 INCOME = "base.income_today"
@@ -397,14 +397,14 @@ def remap_traders(old_to_new: Mapping[int, int]) -> None:
 def trade_operator_ids() -> list[int]:
     """
     交易员名单：岗位名册 work.roster(TRADER_WORK) 里的角色。
-    按已招募干员 cache.npc_id_got 此刻的遍历顺序排列
+    按已招募干员 roster.active() 此刻的遍历顺序排列
     Return arguments:
-    list -- 角色id，已不在 npc_id_got 里的交易员按名册的顺序排在最后
+    list -- 角色id，已不在 roster.active() 里的交易员按名册的顺序排在最后
     """
-    cache = cache_control.cache
     traders = work.roster(TRADER_WORK)
-    ordered = [cid for cid in cache.npc_id_got if cid in traders]
-    return ordered + [cid for cid in traders if cid not in cache.npc_id_got]
+    active = roster.active()
+    ordered = [cid for cid in active if cid in traders]
+    return ordered + [cid for cid in traders if cid not in active]
 
 
 def auto_trade(rid: int) -> dict[str, bool | int]:

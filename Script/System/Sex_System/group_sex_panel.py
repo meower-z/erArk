@@ -12,7 +12,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle, virgin_break_gate
-from Script.Modules.domains import abilities, flags, modes
+from Script.Modules.domains import abilities, flags, modes, roster
 
 panel_info_data: dict[str, object] = {}
 
@@ -909,7 +909,7 @@ class Edit_Group_Sex_Temple_Panel:
         select_state: dict[str, int | str] = {}
 
         while 1:
-            npc_id_got_list = sorted(cache.npc_id_got)
+            npc_id_got_list = list(roster.active_sorted())
             # 课堂模式下的必修名单：点名必修的人豁免前置修习
             must_attend_set = (
                 sex_class_handle.get_must_attend_set()

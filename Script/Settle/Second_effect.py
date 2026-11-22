@@ -16,8 +16,8 @@ from Script.Settle.common_default import (
     base_chara_state_common_settle,
 )
 from Script.Design import game_time
-from Script.Modules.domains import abilities, action_info, flags, fridge, needs
-from Script.Modules.domains import player_collection, pregnancy
+from Script.Modules.domains import abilities, action_info, flags, fridge
+from Script.Modules.domains import growth, needs, player_collection, pregnancy
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -4167,23 +4167,23 @@ def handle_show_off_study(
     )
 
     character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
-    if growth_data is None or not growth_data.show_off_ability:
-        return
-    # 炫耀是亲子互动而非学习行为，所以只加好感与心情，不给习得
-    base_chara_favorability_and_trust_common_settle(
-        0,
-        30,
-        True,
-        0,
-        abilities.ability(character_id)[32],
-        change_data,
-        character_data.cid,
-    )
-    base_chara_state_common_settle(
-        character_id, 30, 13, change_data_to_target_change=change_data
-    )
-    growth_data.show_off_ability = {}
+    with growth.editing(character_id, create=False) as growth_data:
+        if growth_data is None or not growth_data.show_off_ability:
+            return
+        # 炫耀是亲子互动而非学习行为，所以只加好感与心情，不给习得
+        base_chara_favorability_and_trust_common_settle(
+            0,
+            30,
+            True,
+            0,
+            abilities.ability(character_id)[32],
+            change_data,
+            character_data.cid,
+        )
+        base_chara_state_common_settle(
+            character_id, 30, 13, change_data_to_target_change=change_data
+        )
+        growth_data.show_off_ability = {}
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -4201,12 +4201,11 @@ def handle_caught_skip_class(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    growth_data = character_data.child_growth
-    if growth_data is None or not growth_data.skip_class_flag:
-        return
-    growth_data.skip_class_flag = False
-    growth_data.skip_caught_day = game_time.now().toordinal()
+    with growth.editing(character_id, create=False) as growth_data:
+        if growth_data is None or not growth_data.skip_class_flag:
+            return
+        growth_data.skip_class_flag = False
+        growth_data.skip_caught_day = game_time.now().toordinal()
     # 心虚与害怕，数值取一节课的量级（45分钟），与翘课本身给的抑郁回落大致相抵
     base_chara_state_common_settle(
         character_id, 45, 19, change_data=change_data
