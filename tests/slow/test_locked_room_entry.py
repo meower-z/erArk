@@ -28,8 +28,9 @@ class LockedRoomEntryTest(SlowTestCase):
 
         self.walk(ROOM)
         self.instruct(constant.Instruct.DOOR_LOCK_INNER)
-        room = self.world.scene(ROOM)
-        self.assertEqual(room.close_flag, 1)
+        room = self.world.scene(ROOM).scene_path
+        scene_state = kernel_data.domain("scene_state")
+        self.assertEqual(scene_state.close_flag(room), 1)
         operator = identity.of(self.npc("杜宾"))
         self.world.player.press("召集到自己当前位置", "杜宾", "返回")
         self.instruct(constant.Instruct.ALL_NPC_POSITION)
@@ -43,15 +44,18 @@ class LockedRoomEntryTest(SlowTestCase):
             ),
             f"杜宾在 {activity.position(operator.cid)}",
         )
-        self.assertEqual(room.close_flag, 1)
+        self.assertEqual(scene_state.close_flag(room), 1)
 
     def test_doctor_walks_into_own_locked_rooms(self) -> None:
         """门锁着、博士在走廊：博士办公室和博士房间走得进去，会议室走不进去"""
+        scene_state = kernel_data.domain("scene_state")
         for path, enters in ((DR_OFFICE, True), (DR_ROOM, True), (ROOM, False)):
             self.walk(CORRIDOR)
             # 博士离开房间时游戏会解开门锁；这里布置的是之后屋里有人把门锁上
             scene = self.world.scene(path)
-            scene.close_flag = scene.close_type
+            kernel_data.put(
+                scene_state.set_close_flag, scene.scene_path, scene.close_type
+            )
             self.walk(path)
             self.assertEqual(
                 activity.position(0),

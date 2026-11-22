@@ -71,6 +71,6 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 - `test_settle_effects` 开头把 `character_behavior.judge_character_status` 全局桩成了空函数，原函数存在 `_real_judge_character_status`，要走真实的听课结算时临时换回来（Plan 32）。
 - 带 `Weight|0` 的 CVP 不能交给 `handle_premise.handle_premise` 直接求值：`handle_comprehensive_value_premise` 没有 Weight 分支，会抛 `UnboundLocalError`（口上的 `get_weight_from_premise_dict` 在它之前就把这类前提截走了）；`high_` 前提已注册、返回的是权重值，要证明它被跳过只能用记录桩（Plan 32）。
 - 真实存档不一定有养成数据与事件履历（2026-09-15 本机的 `save/0`、`save/11` 就没有）：读档迁移类断言在真实存档上只能验「没有残留」，改名本身靠构造的履历验（`test_save_compat` 的写法）。
-- `Scene.character_list` 是 set，迭代顺序按哈希槽位而不是 cid（`{0, 190, 201}` 迭代成 0、201、190）：从场景名单里取人当玩家的交互对象、或按名单顺序断言时，别假设按 cid 排序，取完断言交互对象确是她（Plan 32 重建复现脚本时踩到）。
+- 场景内角色列表由 `scene_state.occupants(path)` 按角色 id 升序返回，从场景里取角色当交互对象或按顺序断言时可依赖升序结果，但仍建议核对目标 cid 与预期一致。
 - 用真实循环让孩子翘课、挂上 flag 时，玩家别和她在同一个场景：她自己结算时就会当场派 623（翘课被抓），flag 清掉、记下被抓日期（Plan 32 重建复现脚本时踩到）。
 - `test_behavior_loop` 与 `test_save_compat` 的真实存档段要仓库根目录的 `save/` 里有存档。存档不入库，换机器、换目录后没有时 `test_behavior_loop` 整份 `skip()`，`test_save_compat` 打印「跳过」、只跳过真实存档那一段；先判目录再调 `save_handle.judge_save_file_exist`，它经 `get_save_dir_path` 会顺手建出 `save` 目录。

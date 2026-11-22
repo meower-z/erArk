@@ -14,7 +14,8 @@
         world.vehicle.vehicles.5                       载具 5 的 [拥有数, 外勤中数]
         world.library.book_borrow_dict.12              书 12 的借阅者
         world.medical.medical_patients_today.13.state  门诊病人 13 的状态
-    scene.<场景路径>.occupants / close_flag 场景里的角色id（排序）与关门状态
+    scene.<场景路径>.occupants / close_flag 场景里的角色id列表（升序，取自 scene_state.occupants）与关门状态（取自
+    scene_state.close_flag）
     log.talk / log.event                    这一步里交去显示的口上id（含随后被显示判断挡下的）、触发的事件id（ActionLog
     记下，只记id，不记文本）
 角色与世界的字段按对象的属性、字典的键逐层展开到叶子：叶子是布尔、数、字符串、时间、UUID、枚举，或每一项都是叶子的列表、集合（集合排序成列表）；
@@ -78,15 +79,12 @@ WORLD_AREAS: dict[str, str] = {}
 
 CACHE_AREAS = {
     "game_round": "clock",
-    "recipe_data": "cooking",
 }
 """ 游戏缓存字段所属的区域；没列出的字段以字段名为区域，如 world.country.<键> """
 
 SKIPPED_CACHE_FIELDS = {
     "character_data": "按 chara.<id> 单独记",
-    "scene_data": "按 scene.<场景路径> 单独记",
     "rhodes_island": "按 WORLD_AREAS 拆开记",
-    "map_data": "地图配置，读入后不变",
     "daily_intsruce": "玩家当天的指令记录（文本）",
     "input_cache": "界面：输入历史",
 }
@@ -365,7 +363,9 @@ def capture(
         游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 除外，罗德岛的字段按 WORLD_AREAS 分区），有人的场景里的角色，
         关着门的场景的关门状态，口上与事件的id。memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同。
     """
+    from Script.Core import constant
     from Script.Design import game_time
+    from Script.Modules.domains import scene_state
     from tests import chara_key_projection
     from tests.kernel_data import project_state
 
@@ -403,12 +403,12 @@ def capture(
         flatten(
             f"world.{area}.{field}", getattr(cache.rhodes_island, field), state
         )
-    for scene in cache.scene_data.values():
-        prefix = f"scene.{scene.scene_path.replace(os.sep, '/')}."
-        if scene.character_list:
-            state[prefix + "occupants"] = canonical(scene.character_list)
-        if scene.close_flag:
-            state[prefix + "close_flag"] = scene.close_flag
+    for path in constant.scene_data:
+        prefix = f"scene.{path.replace(os.sep, '/')}."
+        if occupants := scene_state.occupants(path):
+            state[prefix + "occupants"] = canonical(occupants)
+        if close_flag := scene_state.close_flag(path):
+            state[prefix + "close_flag"] = close_flag
     if log is not None:
         state.update(log.take())
     return state

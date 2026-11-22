@@ -3,7 +3,7 @@
 只读：读档只用 input_load_save，绝不 establish_save；行为循环是自建的带轮数上限的副本，
 不 inline 调用 init_character_behavior()（其结尾的成就结算可能写文件）。"""
 
-from _bootstrap import ROOT, SCENE_EDU_ENTRY, auto_schedule, cache, check
+from _bootstrap import ROOT, SCENE_EDU_ENTRY, auto_schedule, check
 from _bootstrap import child_growth, class_ai, constant, datetime, education
 from _bootstrap import education_constant, finish, game_time, growth_handle
 from _bootstrap import handle_premise, make_character, map_handle, move_to, os
@@ -496,7 +496,7 @@ if l4_id != -1 and l4_room:
     l4_dorm = chara_life.dormitory(l4_id)
     l4_home = (
         map_handle.get_map_system_path_for_str(l4_dorm)
-        if l4_dorm in cache.scene_data
+        if l4_dorm in constant.scene_data
         else list(SCENE_EDU_ENTRY)
     )
     set_time(

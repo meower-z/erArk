@@ -200,6 +200,8 @@ class NoNestedResolutionTest(SlowTestCase):
         Return arguments:
         int -- 她的角色id
         """
+        from Script.Modules.domains import scene_state
+
         from Script.Modules.domains import relations
         from Script.Core import constant
         from Script.Design import map_handle
@@ -207,8 +209,9 @@ class NoNestedResolutionTest(SlowTestCase):
         partner_id = self.npc(PARTNER_NAME)
         room_key = next(
             key
-            for key, scene in sorted(self.cache.scene_data.items())
-            if scene.close_type == 1 and not scene.character_list
+            for key, scene in sorted(constant.scene_data.items())
+            if scene.close_type == 1
+            and not scene_state.occupants(scene.scene_path)
         )
         self.room = map_handle.get_map_system_path_for_str(room_key)
         self.world.move(0, self.room)

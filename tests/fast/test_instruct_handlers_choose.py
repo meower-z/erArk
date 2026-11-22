@@ -21,7 +21,7 @@ from tests.fast.base import FastTestCase
 from tests.fast.test_npc_pick_leaves_cache import changed, pickled
 from tests import kernel_data
 from tests.chara_activity import aim
-from Script.Modules.domains import activity
+from Script.Modules.domains import activity, scene_state
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
@@ -119,12 +119,14 @@ class InstructHandlersChooseTest(FastTestCase):
         无
         """
         scene = self.world.scene(activity.position(self.player.cid))
-        scene.close_flag = 0
+        kernel_data.put(scene_state.set_close_flag, scene.scene_path, 0)
         act = self.pick(constant.Instruct.DOOR_LOCK_INNER)
         assert act is not None
-        self.assertEqual(scene.close_flag, 0)
+        self.assertEqual(scene_state.close_flag(scene.scene_path), 0)
         self.start(act)
-        self.assertEqual(scene.close_flag, scene.close_type)
+        self.assertEqual(
+            scene_state.close_flag(scene.scene_path), scene.close_type
+        )
 
     def test_apologize_calms_at_start(self) -> None:
         """

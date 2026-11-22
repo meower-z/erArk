@@ -52,8 +52,6 @@ class PanelSubMenusReadOnly(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
         aim(self.player.cid, NPC)
-        if not self.cache.recipe_data:
-            cooking.init_recipes()
         kernel_data.put(inventory.set_item, 0, DRUG, 0)
         view.now_panel_id = constant.Panel.IN_SCENE
         self.answers: list[str] = []
@@ -296,7 +294,7 @@ class PanelSubMenusReadOnly(FastTestCase):
         """
         recipe_id = next(
             rid
-            for rid, recipe in self.cache.recipe_data.items()
+            for rid, recipe in game_config.config_recipes.items()
             if cooking.has_cook_question_library(rid)
             and recipe.type not in {3, 8}
         )

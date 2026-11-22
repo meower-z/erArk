@@ -32,11 +32,10 @@ from typing import Any
 from unittest import mock
 
 from Script.Config import game_config
-from Script.Core import cache_control, game_type
 from Script.Design import attr_calculation, character, clothing, game_time
 from Script.Design import settle_behavior
 from Script.Kernel import core
-from Script.Core import constant
+from Script.Core import constant, game_type
 from Script.Modules.domains import body_manage, flags, inventory
 from Script.Modules.domains import player_collection, status, wardrobe
 from Script.Modules.gameplay_resolution import working
@@ -62,7 +61,7 @@ def _cloth_of_part(part: int) -> int:
 
 def _food(quality: int) -> game_type.Food:
     """按编号最小的菜谱做一份食物，品质为 quality"""
-    recipes = cache_control.cache.recipe_data or cooking.init_recipes()
+    recipes = game_config.config_recipes
     food = cooking.create_food("0", min(recipes))
     food.quality = quality
     return food

@@ -222,14 +222,14 @@ class BuildSameForAnyListingOrderTest(SlowTestCase):
             tuple -- (场景路径列表, 地图路径列表, [(地点标签, 场景路径列表)])
             """
             with listing_order(reverse), mock.patch.object(
-                self.cache, "scene_data", {}
-            ), mock.patch.object(self.cache, "map_data", {}), mock.patch.object(
+                constant, "scene_data", {}
+            ), mock.patch.object(constant, "map_data", {}), mock.patch.object(
                 constant, "place_data", {}
             ):
                 map_config.load_dir_now(map_config.map_data_path)
                 return (
-                    list(self.cache.scene_data),
-                    list(self.cache.map_data),
+                    list(constant.scene_data),
+                    list(constant.map_data),
                     [
                         (tag, list(paths))
                         for tag, paths in constant.place_data.items()

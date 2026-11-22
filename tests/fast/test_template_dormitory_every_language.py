@@ -45,6 +45,7 @@ from Script.Kernel import core
 from Script.Modules.domains import chara_life, identity, roster
 from Script.Modules.gameplay_resolution import working
 from Script.System.Dormitory_System import common
+from Script.Core import constant
 
 cache = cache_control.cache
 with working.based_on(core.state()):
@@ -59,7 +60,7 @@ with working.based_on(core.state()):
       "dormitory": {
           str(chara_id): [
               chara_life.dormitory(chara_id),
-              chara_life.dormitory(chara_id) in cache.scene_data,
+              chara_life.dormitory(chara_id) in constant.scene_data,
           ]
           for chara_id in sorted(roster.active())
       },
@@ -114,7 +115,7 @@ class TemplateDormitoryEveryLanguageTest(FastTestCase):
         """
         断言每个子进程实际生效的语言等于传入的语言代码。断言中文下至少有一名
         模板 Dormitory 不是「无」的干员。断言中文下每名此类干员的宿舍都是
-        cache.scene_data 的键。断言英文和韩文下的分房结果与中文下相同。
+        constant.scene_data 的键。断言英文和韩文下的分房结果与中文下相同。
         Keyword arguments:
         无
         Return arguments:

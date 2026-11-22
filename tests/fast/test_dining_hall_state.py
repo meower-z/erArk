@@ -18,6 +18,7 @@ from Script.Modules.domains import activity, inventory, kitchen, roster
 from Script.Modules.gameplay_resolution import intent, npc_starters, working
 from Script.System.Cooking_System import cooking
 from tests.fast.base import FastTestCase
+from Script.Config import game_config
 
 
 def _food(name: str, recipe: int) -> game_type.Food:
@@ -50,7 +51,6 @@ class DiningHallStateTest(FastTestCase):
         self.world.chara(1, "干员1")
         self.world.chara(2, "干员2")
         roster.set_active({1, 2})
-        cooking.init_recipes()
         kitchen.stock("1", _food("昨天的", 1))
         cooking.init_food_shop_data(new_day_flag=True)
         foods = [
@@ -58,7 +58,7 @@ class DiningHallStateTest(FastTestCase):
         ]
         self.assertEqual(len(foods), 6)
         self.assertEqual(
-            {self.cache.recipe_data[f.recipe].type for f in foods}, {5}
+            {game_config.config_recipes[f.recipe].type for f in foods}, {5}
         )
 
     def test_npc_buys_food(self) -> None:

@@ -34,6 +34,7 @@ from Script.Modules.domains import (
     h_state,
     history,
 )
+from Script.Modules.domains import scene_state
 
 NPC = 1
 """ 玩家的交互对象 """
@@ -153,7 +154,7 @@ class InstructSubMenuTest(FastTestCase):
     def test_close_door(self) -> None:
         """关门：关不上的地方回答否时取消；回答关门时门在行动开始时关上，记下问过"""
         scene = self.world.scene(activity.position(self.player.cid))
-        scene.close_flag = 0
+        kernel_data.put(scene_state.set_close_flag, scene.scene_path, 0)
         hypnosis = self.instruct(constant.Instruct.HYPNOSIS_ONE)
         scene.close_type = 0
         self.assert_backs_out(hypnosis, NO)
@@ -162,7 +163,7 @@ class InstructSubMenuTest(FastTestCase):
         )
         scene.close_type = 1
         self.assert_commits(hypnosis, YES)
-        self.assertEqual(scene.close_flag, 1)
+        self.assertEqual(scene_state.close_flag(scene.scene_path), 1)
         self.assertTrue(action_info.get(self.player.cid, "ask_close_door_flag"))
 
     def test_bondage(self) -> None:

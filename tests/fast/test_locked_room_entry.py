@@ -14,7 +14,7 @@ from Script.Config import game_config
 from Script.Design import map_handle
 from tests.fast.base import FastTestCase
 from tests import kernel_data
-from Script.Modules.domains import flags, relations
+from Script.Modules.domains import flags, relations, scene_state
 
 ROOM = ["中枢", "会议室"]
 OTHER_ROOM = ["中枢", "茶水间"]
@@ -56,7 +56,9 @@ class LockedRoomEntryTest(FastTestCase):
         无
         """
         scene = self.world.scene(path)
-        scene.close_flag = scene.close_type
+        kernel_data.put(
+            scene_state.set_close_flag, scene.scene_path, scene.close_type
+        )
 
     def access(self, path: list, cid: int) -> str:
         """

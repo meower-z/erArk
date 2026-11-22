@@ -45,11 +45,9 @@ class EatSeasonedFoodTest(FastTestCase):
         self.npc = self.world.chara(NPC, "干员")
         ca.talent(self.npc)[SEMEN_TASTE] = 1
         aim(self.player.cid, NPC)
-        if not self.cache.recipe_data:
-            cooking.init_recipes()
         recipe_id = next(
             rid
-            for rid, recipe in self.cache.recipe_data.items()
+            for rid, recipe in game_config.config_recipes.items()
             if rid != -1
             and game_config.config_recipes.get(rid) is not None
             and game_config.config_recipes[rid].alcohol == 0

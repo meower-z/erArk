@@ -262,7 +262,9 @@ class PickDraftHTest(SlowTestCase):
         from tests import world
 
         self.cache.debug_mode = True
-        here = self.world.scene(activity.position(0)).character_list
+        here = kernel_data.domain("scene_state").occupants(
+            self.world.scene(activity.position(0)).scene_path
+        )
         guest = min(
             c
             for c in kernel_data.domain("roster").active()

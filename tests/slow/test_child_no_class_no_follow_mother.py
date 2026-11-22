@@ -62,10 +62,13 @@ class ChildStagesOfflineTest(SlowTestCase):
         Return arguments:
         list -- 场景路径字符串列表
         """
+        from Script.Core import constant
+        from Script.Modules.domains import scene_state
+
         return [
             path
-            for path, scene in self.cache.scene_data.items()
-            if character_id in scene.character_list
+            for path, scene in constant.scene_data.items()
+            if character_id in scene_state.occupants(scene.scene_path)
         ]
 
     def test_child_offline_until_trainee(self) -> None:
@@ -259,7 +262,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         if activity.position(self.mother.cid) == activity.position(daughter_id):
             other_scene = next(
                 path
-                for path in self.cache.scene_data
+                for path in constant.scene_data
                 if path
                 != map_handle.get_map_system_path_str_for_list(
                     activity.position(daughter_id)
