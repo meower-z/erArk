@@ -105,15 +105,11 @@ def _invite_target() -> int:
 def _sev(cache: game_type.Cache, declared_warning: bool) -> str:
     """
     参数: cache -- 全局缓存; declared_warning -- 该检查项在不变式文档中声明的severity是否为warning
-    返回值: str -- 需拼在失败信息最前面的前缀，declared_warning为True或cache.debug_mode为True时为"[warning] "，否则空串
+    返回值: str -- 需拼在失败信息最前面的前缀，declared_warning为True或modes.debug()为True时为"[warning] "，否则空串
     功能: 统一处理"[warning]"消息前缀规则，同时实现"debug模式下全部条目整体降级为提示"的全局约定，
     因为debug面板可以绕开配套流程直改facility_open/be_bagged/imprisonment等flag
     """
-    return (
-        "[warning] "
-        if declared_warning or getattr(cache, "debug_mode", False)
-        else ""
-    )
+    return "[warning] " if declared_warning or modes.debug() else ""
 
 
 # ------------------------------- ROSTER-01 ~ ROSTER-33 -------------------------------
@@ -1578,7 +1574,7 @@ def check_ongoing_commission_id_valid_and_not_overdue() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能: 委托完成判定在每个非时停玩家回合的行为树里先于NPC结算跑一次，回合结束时留下的委托必须严格
-    满足end_time > game_time(> 而非 >=，恰好到点的委托按完成条件本应已结算)；逾期判定排除debug_mode与time_stop_mode。
+    满足end_time > game_time(> 而非 >=，恰好到点的委托按完成条件本应已结算)。逾期判定排除debug模式与时停模式。
     id有效性依赖game_config.config_commission，若为空(独立环境未加载配置)则降级跳过该子句，仅保留结构与逾期判定
     """
     cache = cache_control.cache
@@ -1596,7 +1592,7 @@ def check_ongoing_commission_id_valid_and_not_overdue() -> list[CheckFailure]:
                 )
             )
         end_time = r.end
-        if not cache.debug_mode and not modes.time_stop():
+        if not modes.debug() and not modes.time_stop():
             if not (end_time > game_time.now()):
                 overdue = game_time.now() - end_time
                 members = list(r.team)

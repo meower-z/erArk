@@ -11,7 +11,7 @@ from Script.Design import handle_talent, map_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.Modules.domains import abilities, action_info, activity, identity
-from Script.Modules.domains import scene_state
+from Script.Modules.domains import modes, scene_state
 from Script.Modules.domains import entertainment, flags, h_state, needs
 from Script.Modules.domains import player_ability, relations, status
 
@@ -528,7 +528,7 @@ def calculation_instuct_judege(
                     calculation_text += _("+催眠(+0,理智不足)")
 
     # debug模式修正
-    if cache.debug_mode:
+    if modes.debug():
         judge += 99999
         calculation_text += _("+debug模式(+99999)")
 

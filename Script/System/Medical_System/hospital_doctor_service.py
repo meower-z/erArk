@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from Script.Config import game_config
-from Script.Core import game_type
 from Script.Design import handle_ability
 from Script.System.Medical_System import medical_constant, medical_core
 from Script.Design import game_time
@@ -48,7 +47,6 @@ class SurgeryPrecheckResult:
 
 def _acquire_hospital_patient_for_doctor(
     doctor_character: identity.Identity | None,
-    rhodes_island: game_type.Rhodes_Island | None,
     *,
     require_surgery: bool = False,
 ) -> medical_patient.MedicalPatient | None:
@@ -56,14 +54,13 @@ def _acquire_hospital_patient_for_doctor(
 
     参数:
         doctor_character (Optional[identity.Identity]): 申请病人的医生角色，若为空直接失败。
-        rhodes_island (Optional[game_type.Rhodes_Island]): 医疗部归属的罗德岛基座。
         require_surgery (bool): 是否仅筛选需要手术的病人。
     返回:
         Optional[medical_patient.MedicalPatient]: 成功分配到的病人，否则为 None。
     """
 
-    # 医生或基地不存在时无法分配病人。
-    if doctor_character is None or rhodes_island is None:
+    # 无医生对象时无法分配病人。
+    if doctor_character is None:
         return None
 
     # 读取当前住院病人列表。
@@ -127,13 +124,12 @@ def _acquire_hospital_patient_for_doctor(
 def evaluate_surgery_preconditions(
     patient: medical_patient.MedicalPatient | None,
     doctor_character: identity.Identity | None,
-    rhodes_island: game_type.Rhodes_Island | None,
 ) -> SurgeryPrecheckResult:
     """判断指定医生是否可以为病人执行手术并给出资源需求。"""
     from Script.System.Medical_System import medical_service
 
-    # 基地、医生或病人不存在时直接返回失败
-    if patient is None or doctor_character is None or rhodes_island is None:
+    # 医生或病人不存在时直接返回失败
+    if patient is None or doctor_character is None:
         return SurgeryPrecheckResult(False, "no_context")
 
     # 不需要手术或手术被阻塞时无法执行
@@ -204,20 +200,18 @@ def evaluate_surgery_preconditions(
 
 def consume_surgery_resources(
     patient: medical_patient.MedicalPatient | None,
-    rhodes_island: game_type.Rhodes_Island | None,
 ) -> bool:
     """直接扣除病人执行手术所需的药品资源。
 
     参数:
         patient (Optional[medical_patient.MedicalPatient]): 需要执行手术的住院病人对象。
-        rhodes_island (Optional[game_type.Rhodes_Island]): 当前所属的罗德岛基地数据。
     返回:
         bool: 药品资源扣除是否完成，True 表示已成功扣除。
     """
     from Script.System.Medical_System import medical_service
 
     # 校验上下文是否完整，缺失任意一方时无法扣除药品。
-    if patient is None or rhodes_island is None:
+    if patient is None:
         return False
 
     # 读取病情对应的配置对象，缺失配置视为无法执行手术。
@@ -264,9 +258,7 @@ def consume_surgery_resources(
     # 写入统计计数并清除阻塞标记，方便后续正常执行手术。
     if consumed_total:
         # --- 将手术阶段的药剂明细纳入当日统计，支持后续日志明细展示 ---
-        medical_core._bump_daily_counter(
-            rhodes_island, "medicine_consumed", resource_usage
-        )
+        medical_core._bump_daily_counter("medicine_consumed", resource_usage)
 
     patient.surgery_blocked = False
     patient.surgery_blocked_resource = None
@@ -275,20 +267,15 @@ def consume_surgery_resources(
 
 def get_surgery_candidate_patient_ids(
     doctor_character: identity.Identity,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> list[medical_patient.MedicalPatient]:
     """
     返回指定医生角色所有可以进行手术的住院病人ID列表。
 
     参数:
         doctor_character (identity.Identity): 指定医生角色对象。
-        target_base (Optional[game_type.Rhodes_Island]): 指定基地实例，默认读取全局缓存。
     返回:
         List[medical_patient.MedicalPatient]: 符合条件的住院病人列表。
     """
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return []
 
     # 获取住院患者列表
     hospitalized = medical.state().hospitalized or {}
@@ -315,9 +302,7 @@ def get_surgery_candidate_patient_ids(
             continue
 
         # 进行完整的手术前置条件检查
-        precheck = evaluate_surgery_preconditions(
-            patient, doctor_character, rhodes_island
-        )
+        precheck = evaluate_surgery_preconditions(patient, doctor_character)
         if not precheck.can_execute:
             continue
         result.append(patient)
@@ -326,27 +311,22 @@ def get_surgery_candidate_patient_ids(
 
 def conduct_ward_round(
     doctor_character: identity.Identity | None,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
     """执行住院部查房流程。
 
     参数:
         doctor_character (Optional[identity.Identity]): 前来查房的医生角色。
-        target_base (Optional[game_type.Rhodes_Island]): 指定查房所在的基地实例。
     返回:
         Dict[str, object]: 查房结果，包含是否处理成功及对应病人信息。
     """
     from Script.System.Medical_System import medical_service
 
-    # 获取执行查房的基地。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if doctor_character is None or rhodes_island is None:
+    if doctor_character is None:
         return {"handled": False, "patient": None, "result": "no_doctor"}
 
     # 尝试为医生分配一个无需手术的住院病人。
     patient = _acquire_hospital_patient_for_doctor(
-        doctor_character, rhodes_island, require_surgery=False
+        doctor_character, require_surgery=False
     )
     if patient is None:
         chara_life.medical_patient_id.set(doctor_character.cid, 0)
@@ -356,12 +336,11 @@ def conduct_ward_round(
         from Script.System.Medical_System import medical_service
 
         return medical_service.try_consume_medicine(
-            target_patient, is_hospitalized=True, target_base=rhodes_island
+            target_patient, is_hospitalized=True
         )
 
     # 执行单名病人的巡诊逻辑。
     outcome = medical_service.process_single_hospitalized_patient(
-        rhodes_island,
         patient,
         _consume,
         doctor=doctor_character,
@@ -379,15 +358,12 @@ def conduct_ward_round(
 def attempt_surgery(
     patient_id: int,
     doctor_character: identity.Identity | None,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> bool:
     """按病人 ID 结算一次手术结果。
 
     参数:
         patient_id (int): 住院病人的唯一编号。
         doctor_character (Optional[identity.Identity]): 尝试手术的医生角色。
-        target_base (Optional[game_type.Rhodes_Island]): 指定基地上下文，默认读取全局缓存。
     返回:
         bool: 手术是否顺利完成。
     """
@@ -396,31 +372,22 @@ def attempt_surgery(
     if doctor_character is None:
         return False
 
-    # 定位当前基地。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return False
-
     # 查找病人并确认其仍在住院区。
-    patient, hospitalized = medical_core._locate_patient(
-        patient_id, rhodes_island
-    )
+    patient, hospitalized = medical_core._locate_patient(patient_id)
     if patient is None or not hospitalized:
         return False
 
     # 直接进入手术结算流程，由调用方确保前置条件已经满足。
-    return _attempt_surgery_on_patient(rhodes_island, patient, doctor_character)
+    return _attempt_surgery_on_patient(patient, doctor_character)
 
 
 def _attempt_surgery_on_patient(
-    rhodes_island: game_type.Rhodes_Island,
     patient: medical_patient.MedicalPatient,
     doctor: identity.Identity,
 ) -> bool:
     """结算住院病人的手术结果并更新病人状态。
 
     参数:
-        rhodes_island (game_type.Rhodes_Island): 执行手术的罗德岛基地实例。
         patient (medical_patient.MedicalPatient): 正在接受手术的住院病人对象。
         doctor (identity.Identity): 执刀的医生角色数据。
     返回:
@@ -469,10 +436,10 @@ def _attempt_surgery_on_patient(
 
     # 写入手术收入，零值情况下跳过扣费流程。
     if income_value > 0:
-        medical_core._apply_income_to_rhodes(rhodes_island, income_value)
+        medical_core._apply_income_to_rhodes(income_value)
 
     # 记录手术次数，为日报统计提供数据来源。
-    medical_core._bump_daily_counter(rhodes_island, "surgeries_performed", 1)
+    medical_core._bump_daily_counter("surgeries_performed", 1)
 
     # 病情已经低于零时直接触发出院流程并记录手术。
     if new_severity < 0:
@@ -483,12 +450,9 @@ def _attempt_surgery_on_patient(
                 * income_multiplier
             )
         )
-        medical_service.discharge_patient(
-            rhodes_island, patient, bonus_income=discharge_bonus
-        )
+        medical_service.discharge_patient(patient, bonus_income=discharge_bonus)
         patient.need_surgery = False
         _record_surgery_attempt(
-            rhodes_island,
             patient,
             doctor,
             status="success",
@@ -518,7 +482,6 @@ def _attempt_surgery_on_patient(
 
     # 最后写入手术记录，为统计界面提供明细信息。
     _record_surgery_attempt(
-        rhodes_island,
         patient,
         doctor,
         status="success",
@@ -533,7 +496,6 @@ def _attempt_surgery_on_patient(
 
 
 def _record_surgery_attempt(
-    rhodes_island: game_type.Rhodes_Island,
     patient: medical_patient.MedicalPatient,
     doctor: identity.Identity,
     *,
@@ -543,7 +505,6 @@ def _record_surgery_attempt(
     """记录一条手术执行结果。
 
     参数:
-        rhodes_island (game_type.Rhodes_Island): 发生手术的基地实例。
         patient (medical_patient.MedicalPatient): 进行手术的住院病人。
         doctor (identity.Identity): 执刀医生角色对象。
         status (str): 手术结果标签，例如 success、resource_shortage。

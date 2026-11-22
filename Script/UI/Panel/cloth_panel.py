@@ -7,8 +7,8 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.tk_ui import drawn_see, player_pick
-from Script.Modules.domains import abilities, activity, dirty, player_ability
-from Script.Modules.domains import wardrobe, identity
+from Script.Modules.domains import abilities, activity, dirty, modes
+from Script.Modules.domains import player_ability, wardrobe, identity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -86,7 +86,7 @@ class SeeCharacterClothPanel:
             # 当该类型里有衣服存在的时候才显示
             if len(cloth.cloth_wear[clothing_type]):
                 # 正常情况下不显示胸部和内裤的服装,debug或该部位可以显示则显示
-                if clothing_type in {6, 9} and not cache.debug_mode:
+                if clothing_type in {6, 9} and not modes.debug():
                     if not (
                         player_ability.get(0, "visual")
                         and abilities.talent(0)[307]
@@ -185,7 +185,7 @@ class SeeCharacterClothPanel:
             if clothing_type in {6, 9} and not len(
                 cloth.cloth_wear[clothing_type]
             ):
-                if not cache.debug_mode:
+                if not modes.debug():
                     if not cloth.cloth_see[clothing_type]:
                         continue
                 now_text += _("  [{0}]: 真空").format(type_name)
@@ -481,7 +481,7 @@ class SwitchCharacterClothPanel:
             # 只在有衣服时显示
             if len(cloth.cloth_wear[clothing_type]):
                 # 处理胸部和内裤的特殊显示逻辑
-                if clothing_type in {6, 9} and not cache.debug_mode:
+                if clothing_type in {6, 9} and not modes.debug():
                     seen[clothing_type] = (
                         bool(
                             player_ability.get(0, "visual")
@@ -560,7 +560,7 @@ class SwitchCharacterClothPanel:
             if clothing_type in {6, 9} and not len(
                 cloth.cloth_wear[clothing_type]
             ):
-                if not cache.debug_mode:
+                if not modes.debug():
                     if not cloth.cloth_see[clothing_type]:
                         continue
                 vac_draw = draw.NormalDraw()

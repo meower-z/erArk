@@ -15,7 +15,7 @@ from Script.Core import (
 from Script.Design import map_handle, attr_text, character_move, handle_premise
 from Script.Config import game_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import activity, identity, scene_state
+from Script.Modules.domains import activity, bookmarks, identity, scene_state
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -815,7 +815,7 @@ class CollectionSceneNamePanel:
         self.return_list = []
         draw_list = []
 
-        scene_id_list = cache.collect_position_list
+        scene_id_list = bookmarks.places()
         if len(scene_id_list):
             self.end_index = len(scene_id_list) - 1
             for collect_position in scene_id_list:
@@ -901,6 +901,6 @@ class CollectionSceneNamePanel:
         collect_flag -- 是否收藏当前地点
         """
         if collect_flag:
-            cache.collect_position_list.append(activity.position(0))
+            bookmarks.add(activity.position(0))
         else:
-            cache.collect_position_list.remove(activity.position(0))
+            bookmarks.remove(activity.position(0))

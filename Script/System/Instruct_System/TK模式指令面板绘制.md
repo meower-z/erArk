@@ -491,7 +491,7 @@ if filter_judge:
         filter_judge = False
 
 # 步骤4：Debug模式强制通过
-if cache.debug_mode:
+if modes.debug():
     filter_judge = True
 
 return filter_judge, now_premise_data

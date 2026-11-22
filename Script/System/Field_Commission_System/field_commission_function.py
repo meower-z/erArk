@@ -7,7 +7,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
 from Script.Modules.domains import abilities, achievement, activity, commission
 from Script.Modules.domains import country, flags, location, recruit, relations
-from Script.Modules.domains import roster, warehouse, identity
+from Script.Modules.domains import roster, warehouse, identity, modes
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -447,7 +447,7 @@ def judge_field_commission_finish() -> None:
             game_time.judge_date_big_or_small(
                 game_time.now(), now_commission.end
             )
-            or cache.debug_mode
+            or modes.debug()
         ):
             # 获取派遣人员列表
             send_npc_list = list(now_commission.team)

@@ -12,7 +12,7 @@ import math
 from collections.abc import Callable
 
 from Script.Config import config_def, game_config
-from Script.Core import cache_control, game_type
+from Script.Core import game_type
 from Script.Modules.domains import (
     economy,
     facility,
@@ -44,49 +44,39 @@ def edits[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
 
 
 def _bump_daily_counter(
-    rhodes_island: game_type.Rhodes_Island | None,
     key: str,
     value: object,
 ) -> None:
     """更新医疗日度统计表中的计数。
 
     参数:
-        rhodes_island (Optional[game_type.Rhodes_Island]): 目标基地缓存对象，None 时直接返回。
         key (str): 统计字段名称，例如 "hospitalized_today"。
         value (object): 本次需要累加的数值或药品消耗映射。
     返回:
-        None: 直接在基地对象的计数字典上写入变更。
+        None: 直接在医疗日度统计对象上写入变更。
     """
 
-    # 无可用基地或统计对象时不做处理。
-    if rhodes_island is None:
-        return
-
     # 获取显性统计结构，若缺失则自动初始化。
-    counters = _obtain_daily_counters(rhodes_island)
-    if counters is None:
-        return
+    counters = _obtain_daily_counters()
 
-    # 在目标字段累加增量并写回基对象，保持运行期数据一致。
+    # 在目标字段累加增量，保持运行期数据一致。
     counters.bump(key, value)
 
 
 @edits
 def _apply_income_to_rhodes(
-    rhodes_island: game_type.Rhodes_Island | None,
     income_value: int,
 ) -> None:
     """为罗德岛医疗系统入账指定收入。
 
     参数:
-        rhodes_island (Optional[game_type.Rhodes_Island]): 目标基地缓存对象。
         income_value (int): 本次入账的龙门币数值，仅当大于 0 时生效。
     返回:
         None: 无返回值。医疗部的今日与累计收入、龙门币库存加上收入，今日总收入 base.income_today 也加上收入。
     """
 
-    # 收入不合法或没有目标基地时直接退出。
-    if rhodes_island is None or income_value <= 0:
+    # 收入不合法时直接退出。
+    if income_value <= 0:
         return
     # 更新医疗收入字段并累计到全局收益。
     medical.state().income_today += income_value
@@ -96,59 +86,30 @@ def _apply_income_to_rhodes(
     warehouse.set(1, int(warehouse.stock().get(1, 0) or 0) + income_value)
 
 
-def _get_rhodes_island(
-    target_base: game_type.Rhodes_Island | None,
-) -> game_type.Rhodes_Island | None:
-    """返回调用环境可用的罗德岛基地对象。
+def _obtain_daily_counters() -> medical_constant.MedicalDailyCounters:
+    """返回医疗域的当日统计结构。
 
-    参数:
-        target_base (Optional[game_type.Rhodes_Island]): 若已显式传入则直接返回该对象。
     返回:
-        Optional[game_type.Rhodes_Island]: 实际可用的基地实例，若不存在则为 None。
+        medical_constant.MedicalDailyCounters:
+            规范化后的统计对象。
     """
-
-    # 若调用方已提供目标基地则直接返回。
-    if target_base is not None:
-        return target_base
-    # 否则从缓存中获取默认的罗德岛实例。
-    cache_obj = getattr(cache_control, "cache", None)
-    return getattr(cache_obj, "rhodes_island", None)
-
-
-def _obtain_daily_counters(
-    rhodes_island: game_type.Rhodes_Island | None,
-) -> medical_constant.MedicalDailyCounters | None:
-    """返回罗德岛对象上的医疗当日统计结构。
-
-    参数:
-        rhodes_island (Optional[game_type.Rhodes_Island]): 当前需要读写的基地实例。
-    返回:
-        Optional[medical_constant.MedicalDailyCounters]:
-            规范化后的统计对象，若基地不存在则返回 None。
-    """
-
-    # 缺少基地对象时无法提供统计结构。
-    if rhodes_island is None:
-        return None
 
     # 读取现有统计字段并在必要时转化为结构体实例。
     raw_value = medical.state().daily_counters
     counters = medical_constant.MedicalDailyCounters.from_mapping(raw_value)
 
-    # 将规范化结果回写至基地对象，确保后续访问保持一致。
+    # 将规范化结果回写至医疗域状态，确保后续访问保持一致。
     medical.state().daily_counters = counters
     return counters
 
 
 def _locate_patient(
     patient_id: int,
-    rhodes_island: game_type.Rhodes_Island,
 ) -> tuple[medical_patient.MedicalPatient | None, bool]:
     """在门诊和住院列表中查找病人，返回病人对象与是否住院标记。
 
     参数:
         patient_id (int): 目标病人的唯一编号。
-        rhodes_island (game_type.Rhodes_Island): 当前罗德岛缓存对象。
     返回:
         Tuple[Optional[medical_patient.MedicalPatient], bool]:
             找到的病人对象以及是否处于住院列表的布尔标记。
@@ -167,11 +128,9 @@ def _locate_patient(
     return None, False
 
 
-def _get_medical_facility_level(rhodes_island: game_type.Rhodes_Island) -> int:
+def _get_medical_facility_level() -> int:
     """读取医疗部设施等级，缺省返回 0。
 
-    参数:
-        rhodes_island (game_type.Rhodes_Island): 当前基地对象。
     返回:
         int: 医疗部设施等级，缺省为 0。
     """
@@ -246,19 +205,15 @@ def _calculate_patient_refresh_count(
     return max(int(math.floor(refresh_value)), 0)
 
 
-def _calculate_medical_bed_limit(rhodes_island: game_type.Rhodes_Island) -> int:
+def _calculate_medical_bed_limit() -> int:
     """计算当前医疗部床位上限（基础值 + 兜底当前在院人数）。
 
-    参数:
-        rhodes_island (game_type.Rhodes_Island): 当前基地对象。
     返回:
         int: 计算后的床位上限，至少等于当前在院人数。
     """
 
     # 根据设施等级查找当前医院等级配置。
-    level_config = _pick_hospital_level_config(
-        _get_medical_facility_level(rhodes_island)
-    )
+    level_config = _pick_hospital_level_config(_get_medical_facility_level())
     base_limit = int(level_config.bed_limit) if level_config else 0
     # 每使用一个模块则提供2个额外床位。
     module_count = int(medical.state().bed_modules or 0) * 3
@@ -304,11 +259,9 @@ def medical_level(cid: int) -> int:
     return abilities.ability(cid).get(medical_constant.MEDICAL_ABILITY_ID, 0)
 
 
-def _ensure_runtime_dict(rhodes_island: game_type.Rhodes_Island) -> None:
+def _ensure_runtime_dict() -> None:
     """确保医疗运行期字段存在且类型正确。
 
-    参数:
-        rhodes_island (game_type.Rhodes_Island): 目标基地对象。
     返回:
         None: 若字段缺失或类型不符，则按默认值修正。
     """
@@ -457,12 +410,12 @@ def resolve_price_income_multiplier(price_ratio: float) -> float:
 
 
 def _migrate_legacy_income(rhodes_island: game_type.Rhodes_Island) -> None:
-    """兼容旧版存档中医疗收入字段。
+    """导入旧存档中的医疗收入字段。
 
     参数:
-        rhodes_island (game_type.Rhodes_Island): 目标基地对象。
+        rhodes_island (game_type.Rhodes_Island): 读档载入的旧存档罗德岛对象。
     返回:
-        None: 将旧字段的数值迁移至新的收入字段。
+        None: 将旧存档的医疗收入写入医疗域状态，无返回值。
     """
 
     # 读取旧字段数值并写入新字段。

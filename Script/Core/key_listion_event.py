@@ -1,14 +1,10 @@
 """Tk 窗口的鼠标与键盘事件监听，包含输入历史的上下翻查"""
 
 from tkinter import Event
-from Script.Core import main_frame, py_cmd, game_type, cache_control
+from Script.Core import main_frame, py_cmd
 from Script.UI.Moudle import view
 
 wframe = main_frame.root
-
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 def _set_history_order(history_index: int) -> None:
@@ -18,7 +14,7 @@ def _set_history_order(history_index: int) -> None:
     history_index -- 历史命令索引
     """
     view.input_position = history_index
-    main_frame.set_order(cache.input_cache[history_index])
+    main_frame.set_order(view.input_cache[history_index])
 
 
 def _get_previous_distinct_index(history_index: int) -> int:
@@ -29,11 +25,11 @@ def _get_previous_distinct_index(history_index: int) -> int:
     Return arguments:
     int -- 上一条不同命令索引，若不存在则返回-1
     """
-    current_order = cache.input_cache[history_index]
+    current_order = view.input_cache[history_index]
     previous_index = history_index - 1
     while (
         previous_index >= 0
-        and cache.input_cache[previous_index] == current_order
+        and view.input_cache[previous_index] == current_order
     ):
         previous_index -= 1
     return previous_index
@@ -47,14 +43,14 @@ def _get_next_distinct_index(history_index: int) -> int:
     Return arguments:
     int -- 下一条不同命令索引，若不存在则返回-1
     """
-    current_order = cache.input_cache[history_index]
+    current_order = view.input_cache[history_index]
     next_index = history_index + 1
     while (
-        next_index < len(cache.input_cache)
-        and cache.input_cache[next_index] == current_order
+        next_index < len(view.input_cache)
+        and view.input_cache[next_index] == current_order
     ):
         next_index += 1
-    if next_index >= len(cache.input_cache):
+    if next_index >= len(view.input_cache):
         return -1
     return next_index
 
@@ -116,18 +112,18 @@ def key_up(event: Event) -> None:
     Keyword arguments:
     event -- 键盘事件
     """
-    if len(cache.input_cache) == 0:
+    if len(view.input_cache) == 0:
         return
 
     if not view.input_cache_browsing:
         view.input_cache_draft = main_frame.get_order()
         view.input_cache_browsing = True
-        view.input_position = len(cache.input_cache)
+        view.input_position = len(view.input_cache)
 
-    if view.input_position > len(cache.input_cache):
-        view.input_position = len(cache.input_cache)
+    if view.input_position > len(view.input_cache):
+        view.input_position = len(view.input_cache)
 
-    if view.input_position == len(cache.input_cache):
+    if view.input_position == len(view.input_cache):
         view.input_position -= 1
         _set_history_order(view.input_position)
     elif view.input_position > 0:
@@ -143,20 +139,20 @@ def key_down(event: Event) -> None:
     Keyword arguments:
     event -- 键盘事件
     """
-    if len(cache.input_cache) == 0:
+    if len(view.input_cache) == 0:
         return
 
     if not view.input_cache_browsing:
         return
 
-    if view.input_position < len(cache.input_cache) - 1:
+    if view.input_position < len(view.input_cache) - 1:
         next_index = _get_next_distinct_index(view.input_position)
         if next_index >= 0:
             view.input_position = next_index
             _set_history_order(next_index)
             return
 
-    if view.input_position == len(cache.input_cache) - 1:
+    if view.input_position == len(view.input_cache) - 1:
         view.input_position = 0
         view.input_cache_browsing = False
         main_frame.set_order(view.input_cache_draft)

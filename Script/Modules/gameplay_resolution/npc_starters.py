@@ -223,7 +223,6 @@ def _surgery_patient(who: int, patient_id: int) -> object | None:
 
     for patient in medical_service.get_surgery_candidate_patient_ids(
         doctor_character=identity.of(who),
-        target_base=cache.rhodes_island,
     ):
         if patient.patient_id == patient_id:
             return patient
@@ -246,9 +245,7 @@ def schedule_surgery(who: int, data: intent.Intent) -> None:
     with medical.editing():
         patient = _surgery_patient(who, int(str(_args(data)["patient_id"])))
         assert isinstance(patient, medical_patient.MedicalPatient)
-        if not medical_service.consume_surgery_resources(
-            patient, cache.rhodes_island
-        ):
+        if not medical_service.consume_surgery_resources(patient):
             return
         patient.assigned_hospital_doctor_id = who
         patient.last_surgery_result = "scheduled"

@@ -10,7 +10,7 @@ from Script.Core import flow_handle, py_cmd, io_init
 from Script.Design import handle_panel, character, character_handle
 from Script.Design import attr_calculation, basement, game_time
 from Script.Kernel import core
-from Script.Modules.domains import abilities, country, physical_exam
+from Script.Modules.domains import abilities, country, physical_exam, modes
 from Script.Modules.domains import player_ability, playthrough, prison, roster
 from Script.Modules.domains import npc_template, visitor, warehouse, work
 from Script.Modules.gameplay_resolution import working
@@ -51,8 +51,7 @@ def creator_character_panel() -> None:
             confirm_game_info_panel()
             if input_name_panel():
                 character.init_attr(0)
-                cache.rhodes_island = basement.get_base_zero()
-                # game_start 还会再重置医疗部；这一次让随机数与病人编号的消耗和 get_base_zero 自己重置时一样
+                # game_start 还会再重置医疗部，这里先初始化一次以保持开局流程中的随机数与病人编号消耗
                 medical_service.init_medical_department_data()
                 first_bonus_and_setting_updata()
                 character_handle.first_NPC_work()
@@ -309,7 +308,7 @@ class Character_Debug:
         # debug按钮
         if normal_config.config_normal.debug:
             now_draw_list.append(line_feed_draw)
-            if cache.debug_mode:
+            if modes.debug():
                 button_text = _("【关闭debug模式】")
             else:
                 button_text = _("【开启debug模式】")
@@ -337,7 +336,7 @@ class Character_Debug:
 
     def change(self) -> None:
         """改变"""
-        cache.debug_mode = not cache.debug_mode
+        modes.set_debug(not modes.debug())
 
 
 class Character_FirstNPC:
@@ -444,7 +443,7 @@ class Character_FirstNPC:
         now_draw_list.append(line_feed_draw)
 
         info_last_draw = draw.LeftDraw()
-        if cache.debug_mode:
+        if modes.debug():
             self.npc_select_now = 999
         else:
             self.npc_select_now = 9 - roster.count()
@@ -452,7 +451,7 @@ class Character_FirstNPC:
             info_last_draw.text = _(" 当前剩余可选干员数量 = {0}").format(
                 self.npc_select_now
             )
-            if cache.debug_mode:
+            if modes.debug():
                 info_last_draw.text += _("  (debug模式下可选999个干员)")
         else:
             info_last_draw.text = _(" 已选择全部初始干员")
@@ -515,7 +514,7 @@ class Character_FirstNPC:
             line = draw.LineDraw("-", self.width)
             line.draw()
             now_npc_draw = draw.NormalDraw()
-            if cache.debug_mode:
+            if modes.debug():
                 self.npc_select_now = 999
             else:
                 self.npc_select_now = 9 - roster.count()
@@ -532,7 +531,7 @@ class Character_FirstNPC:
             now_npc_draw.draw()
 
             # 绘制各按钮
-            if cache.debug_mode:
+            if modes.debug():
                 button_text = _(" [一键全选] ")
                 button_draw = draw.CenterButton(
                     button_text,
@@ -1100,7 +1099,7 @@ class SelectFirstNPCButton:
             return
         if roster.has(self.NPC_id):
             roster.remove(self.NPC_id)
-        elif cache.debug_mode:
+        elif modes.debug():
             roster.add(self.NPC_id)
         elif 9 - roster.count():
             roster.add(self.NPC_id)
@@ -1134,7 +1133,7 @@ class Character_Bonus:
 
         # 提供的点数
         bonus_all += playthrough.game_round() * 20
-        if cache.debug_mode:
+        if modes.debug():
             bonus_all += 999
         self.bonus_now = bonus_all
 
@@ -1199,7 +1198,7 @@ class Character_Bonus:
         )
         info_draw.text += _(" 当前剩余奖励点数 =")
         info_draw.text += _(" {0} = [周目数 * 20]").format(self.bonus_now)
-        if cache.debug_mode:
+        if modes.debug():
             info_draw.text += _(" + [debug(999)]")
         info_draw.text += f"{bonus_use_text}\n"
         now_draw_list.append(info_draw)

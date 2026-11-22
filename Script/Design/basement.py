@@ -22,15 +22,6 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def get_base_zero() -> game_type.Rhodes_Island:
-    """
-    基地情况结构体，设为空。医疗部数据不在罗德岛对象上，新游戏与新周目另调 medical_service.init_medical_department_data
-    """
-    base_data = game_type.Rhodes_Island()
-
-    return base_data
-
-
 def get_base_updata() -> None:
     """
     先调用 facility.open_by_level 按各设施的当前等级开放够条件的待开放设施。随后按设施当前等级开放招募线与生产线。
@@ -381,7 +372,6 @@ def update_work_people() -> None:
         hospital_doctors=hospital_doctors,
         clinic_power=clinic_power_total,
         hospital_power=hospital_power_total,
-        target_base=cache.rhodes_island,
     )
 
 

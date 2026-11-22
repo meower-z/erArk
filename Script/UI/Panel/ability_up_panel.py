@@ -26,7 +26,7 @@ from Script.Design import (
     handle_ability,
     second_behavior,
 )
-from Script.Modules.domains import abilities, facility, identity
+from Script.Modules.domains import abilities, facility, identity, modes
 
 panel_info_data: dict[str, object] = {}
 
@@ -612,7 +612,7 @@ class Characterabi_show_Text:
                                 can_up = True
                     except Exception:
                         # 保守回退为可升级，以免隐藏按钮（除非 debug 模式）
-                        if cache.debug_mode:
+                        if modes.debug():
                             can_up = True
                 # 降级判断：如果记录了降级数据且等级大于0，判断使用全部可用宝珠能否满足降级需求
                 if (
@@ -665,7 +665,7 @@ class Characterabi_show_Text:
                         if total_value >= need_juel_all_value:
                             can_down = True
                     except Exception:
-                        if cache.debug_mode:
+                        if modes.debug():
                             can_down = True
                 return can_up, can_down
 
@@ -704,7 +704,7 @@ class Characterabi_show_Text:
             if extra == 0:
                 judge = 0
             # debug 模式下强制允许
-            if cache.debug_mode:
+            if modes.debug():
                 judge = 1
             can_up = bool(judge)
             # 常规非刻印能力通常不支持直接降级
@@ -803,7 +803,7 @@ class Characterabi_cmd_Text:
                 judge2 = 0
 
             # debug模式下无需判断
-            if cache.debug_mode:
+            if modes.debug():
                 judge = 1
                 judge2 = 1
 

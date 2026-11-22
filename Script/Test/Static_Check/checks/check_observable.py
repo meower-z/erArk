@@ -217,12 +217,7 @@ def check_observable_01() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     pl = _pl(cache)
-    if (
-        pl is None
-        or getattr(cache, "debug_mode", False)
-        or modes.time_stop()
-        or modes.group_sex()
-    ):
+    if pl is None or modes.debug() or modes.time_stop() or modes.group_sex():
         return []
     if flags.get(0, "is_h") or flags.get(0, "hidden_sex_mode") != 0:
         return []
@@ -264,7 +259,7 @@ def check_observable_02() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     pl = _pl(cache)
-    if pl is None or getattr(cache, "debug_mode", False) or modes.time_stop():
+    if pl is None or modes.debug() or modes.time_stop():
         return []
     hs = _hs(pl)
     if hs is None:
@@ -333,7 +328,7 @@ def check_observable_03() -> list[CheckFailure]:
     功能: 检查完全脱离 H 的角色 body_item[14] 未仍处于装备状态；健康存档应在 H 重置时移除 H 装备，所以恒不命中。
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     bad = []
     for cid, chara in _iter_live(cache):
@@ -364,7 +359,7 @@ def check_observable_04() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     pl = _pl(cache)
-    if pl is None or getattr(cache, "debug_mode", False):
+    if pl is None or modes.debug():
         return []
     talent = abilities.talent(pl.cid)
     bad = []
@@ -397,7 +392,7 @@ def check_observable_05() -> list[CheckFailure]:
     cache = cache_control.cache
     pl = _pl(cache)
     data = _character_data(cache)
-    if pl is None or data is None or getattr(cache, "debug_mode", False):
+    if pl is None or data is None or modes.debug():
         return []
     target_id = activity.target(pl.cid)
     if (
@@ -440,7 +435,7 @@ def check_observable_06() -> list[CheckFailure]:
     功能: 检查同一角色的两种 H 分流模式不会同时大于零；健康存档的入口与结束链应保持模式互斥，因此恒不命中。
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     bad = []
     details = []
@@ -479,11 +474,7 @@ def check_observable_07() -> list[CheckFailure]:
     健康存档的助手结算应只写当前监狱长，因此恒不命中。
     """
     cache = cache_control.cache
-    if (
-        cache is None
-        or getattr(cache, "debug_mode", False)
-        or modes.time_stop()
-    ):
+    if cache is None or modes.debug() or modes.time_stop():
         return []
     settings = prison.settings()
     warden = work.warden()
@@ -527,11 +518,7 @@ def check_observable_08() -> list[CheckFailure]:
     功能: 报出 unconscious_h=2 而醉酒值（needs.of(cid)["drunk"]）<=0 的角色。debug 模式与时停中不检查。
     """
     cache = cache_control.cache
-    if (
-        cache is None
-        or getattr(cache, "debug_mode", False)
-        or modes.time_stop()
-    ):
+    if cache is None or modes.debug() or modes.time_stop():
         return []
     bad = []
     details = []
@@ -562,12 +549,7 @@ def check_observable_09() -> list[CheckFailure]:
     功能: 校验玩家单一阴茎不会在普通 H 中同时记录插入多名 NPC；健康存档换位与拔出链会清旧对象，所以恒不命中。
     """
     cache = cache_control.cache
-    if (
-        cache is None
-        or getattr(cache, "debug_mode", False)
-        or modes.time_stop()
-        or modes.group_sex()
-    ):
+    if cache is None or modes.debug() or modes.time_stop() or modes.group_sex():
         return []
     bad = []
     for cid, chara in _iter_npcs(cache):
@@ -613,12 +595,7 @@ def check_observable_12() -> list[CheckFailure]:
     cache = cache_control.cache
     pl = _pl(cache)
     data = _character_data(cache)
-    if (
-        pl is None
-        or data is None
-        or getattr(cache, "debug_mode", False)
-        or modes.time_stop()
-    ):
+    if pl is None or data is None or modes.debug() or modes.time_stop():
         return []
     assistant_id = relations.assistant_character_id(0)
     got = roster.active()
@@ -740,11 +717,7 @@ def check_observable_16() -> list[CheckFailure]:
     健康存档只会在带目标设施前提的状态机中启动行为，移动又会替换行为，因此恒不命中。
     """
     cache = cache_control.cache
-    if (
-        cache is None
-        or getattr(cache, "debug_mode", False)
-        or modes.time_stop()
-    ):
+    if cache is None or modes.debug() or modes.time_stop():
         return []
     bad = []
     details = []
@@ -788,11 +761,7 @@ def check_observable_17() -> list[CheckFailure]:
     健康存档的寻路提交会同步填写该字段，抵达或取消时会退出移动行为，因此恒不命中。
     """
     cache = cache_control.cache
-    if (
-        cache is None
-        or getattr(cache, "debug_mode", False)
-        or modes.time_stop()
-    ):
+    if cache is None or modes.debug() or modes.time_stop():
         return []
     bad = []
     details = []

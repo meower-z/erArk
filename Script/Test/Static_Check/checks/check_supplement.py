@@ -24,21 +24,15 @@ from Script.Modules.domains import (
 from Script.Modules.domains import warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 
-from typing import TYPE_CHECKING
 from Script.Modules.domains import chara_life
 from Script.Modules.domains import identity
-
-if TYPE_CHECKING:
-    from Script.Core import game_type
 
 # 场景路径列表 -> map_handle路径字符串；内部用os.sep拼接，禁止自己写分隔符
 P = map_handle.get_map_system_path_str_for_list
 
 
-def _all_current_effect_cids(ri: game_type.Rhodes_Island) -> list[int]:
+def _all_current_effect_cids() -> list[int]:
     """
-    参数:
-        ri: cache.rhodes_island 罗德岛数据对象
     返回值:
         List[int]: 全部设施在其当前等级下对应的效果cid列表，单个设施数据缺失时静默跳过该设施
     功能:
@@ -118,11 +112,7 @@ def check_facility_open_monotonic_coverage() -> list[CheckFailure]:
         配置降级/mod可合法保留历史开放项。级别为warning：刷新同样只在打开面板时发生，跨版本读档到首次
         刷新前可合法不一致
     """
-    cache = cache_control.cache
-    ri = getattr(cache, "rhodes_island", None)
-    if ri is None:
-        return []
-    effect_cids = _all_current_effect_cids(ri)
+    effect_cids = _all_current_effect_cids()
     if not effect_cids:
         return []
     facility_open = facility.opens()
@@ -244,10 +234,6 @@ def check_used_extra_warehouse_capacity_module_non_negative() -> (
         装配线结算每产出一个模块，模块数加1，容量随之多200。负数没有玩法语义，会把容量往下扣，
         可能在基础容量仍足够大时绕过NUM-26的warehouse.capacity()>=0检查。使用type(v) is int以拒绝bool
     """
-    cache = cache_control.cache
-    ri = getattr(cache, "rhodes_island", None)
-    if ri is None:
-        return []
     used = warehouse.extra_modules()
     if type(used) is not int or used < 0:
         return [

@@ -10,7 +10,7 @@ from __future__ import annotations
 from types import FunctionType
 
 from Script.Config import game_config
-from Script.Core import game_type, get_text
+from Script.Core import get_text
 from Script.System.Medical_System import (
     medical_constant,
     medical_core,
@@ -49,20 +49,14 @@ def _clear_player_session_state(
 
 def _acquire_patient_for_player(
     doctor_character: identity.Identity | None,
-    rhodes_island: game_type.Rhodes_Island | None,
 ) -> medical_patient.MedicalPatient | None:
     """根据当前优先策略为玩家诊疗会话选定病人。
 
     参数:
         doctor_character (Optional[identity.Identity]): 玩家当前操控的医生。
-        rhodes_island (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         Optional[medical_patient.MedicalPatient]: 分配到的病人对象，若无则返回 None。
     """
-
-    # 没有基地上下文时无法为玩家选择病人。
-    if rhodes_island is None:
-        return None
 
     # 若玩家已有锁定病人则优先返回该对象。
     current_id = int(medical.state().player_patient_id or 0)
@@ -88,28 +82,20 @@ def _acquire_patient_for_player(
     if not candidates:
         return None
 
-    return medical_service.select_triage_candidate(candidates, rhodes_island)
+    return medical_service.select_triage_candidate(candidates)
 
 
 def start_player_diagnose_session(
     doctor_character: identity.Identity | None = None,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> medical_patient.MedicalPatient | None:
     """
     初始化玩家诊疗会话。
 
     参数:
         doctor_character (Optional[identity.Identity]): 玩家当前操控的医生角色。
-        target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         Optional[medical_patient.MedicalPatient]: 分配到的病人对象，若无则返回 None。
     """
-
-    # 确定会话关联的基地对象。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return None
 
     # 玩家医生为空时默认使用主角（ID 0）。
     if doctor_character is None:
@@ -119,7 +105,7 @@ def start_player_diagnose_session(
         return None
 
     # 按当前优先策略分配待诊病人。
-    patient = _acquire_patient_for_player(doctor_character, rhodes_island)
+    patient = _acquire_patient_for_player(doctor_character)
     if patient is None:
         return None
 
@@ -150,14 +136,8 @@ def abort_player_diagnose_session(
     doctor_character: identity.Identity | None = None,
     *,
     patient: medical_patient.MedicalPatient | None = None,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> None:
     """终止玩家诊疗会话并恢复病人原始状态。"""
-
-    # 获取基地对象，若缺失则直接退出。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return
 
     # 若未显式指定病人，则回退到当前锁定的对象。
     if patient is None:
@@ -196,14 +176,8 @@ def commit_player_diagnose_session(
     doctor_character: identity.Identity | None = None,
     *,
     patient: medical_patient.MedicalPatient | None = None,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
     """完成玩家诊疗流程并返回结算摘要"""
-
-    # 校验基地上下文
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return {"success": False, "reason": "no_base"}
 
     # 缺省使用玩家作为执行医生
     if doctor_character is None:
@@ -240,9 +214,7 @@ def commit_player_diagnose_session(
 
     # 调用常规诊疗推进，并记录诊疗收入变化。
     income_before = float(medical.state().income_today or 0.0)
-    medical_service.advance_diagnose(
-        patient.patient_id, doctor_character, target_base=rhodes_island
-    )
+    medical_service.advance_diagnose(patient.patient_id, doctor_character)
     income_after = float(medical.state().income_today or 0.0)
 
     # 记录病人id
@@ -254,9 +226,7 @@ def commit_player_diagnose_session(
     )
 
     # 计算诊疗收益
-    diagnose_income = medical_service.estimate_patient_diagnose_income(
-        patient, target_base=rhodes_island
-    )
+    diagnose_income = medical_service.estimate_patient_diagnose_income(patient)
 
     # 计算药费收益
     income_delta = int(round(income_after - income_before))
@@ -279,14 +249,8 @@ def execute_player_diagnose_checks(
     selections: list[dict[str, int]],
     *,
     patient: medical_patient.MedicalPatient | None = None,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
     """执行玩家选择的检查条目并记录结果。"""
-
-    # 验证基地上下文。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return {"success": False, "reason": "no_base"}
 
     # 若未指定病人则沿用当前会话对象。
     if patient is None:
@@ -476,14 +440,11 @@ def build_player_check_catalog(
 
 def estimate_patient_treatment_summary(
     patient: medical_patient.MedicalPatient | None,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
     """估算诊疗收益与资源需求摘要。
 
     参数:
         patient (Optional[medical_patient.MedicalPatient]): 待评估的病人对象。
-        target_base (Optional[game_type.Rhodes_Island]): 指定罗德岛基座，用于读取倍率与库存。
     返回:
         Dict[str, object]: 汇总后的收益、倍率与资源需求数据。
     """
@@ -492,8 +453,7 @@ def estimate_patient_treatment_summary(
     if patient is None:
         return {"success": False, "reason": "no_patient"}
 
-    # 解析罗德岛对象并获取病情配置
-    rhodes_island = medical_core._get_rhodes_island(target_base)
+    # 获取病情配置
     severity_config = game_config.config_medical_severity.get(
         patient.severity_level
     )
@@ -501,15 +461,11 @@ def estimate_patient_treatment_summary(
         return {"success": False, "reason": "no_severity_config"}
 
     # 计算诊疗收益
-    diagnose_income = medical_service.estimate_patient_diagnose_income(
-        patient, target_base=rhodes_island
-    )
+    diagnose_income = medical_service.estimate_patient_diagnose_income(patient)
 
     # 计算潜在药费收益与资源需求摘要
     # 收费系数
-    price_ratio = medical_service.get_medical_price_ratio(
-        target_base=rhodes_island
-    )
+    price_ratio = medical_service.get_medical_price_ratio()
     # 收入倍率
     income_multiplier = medical_core.resolve_price_income_multiplier(
         price_ratio

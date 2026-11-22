@@ -16,7 +16,7 @@ from Script.UI.Panel import dirty_panel
 
 import random
 from Script.Modules.domains import abilities, achievement, activity, flags
-from Script.Modules.domains import h_state, identity, scene_state
+from Script.Modules.domains import h_state, identity, modes, scene_state
 
 panel_info_data: dict[str, object] = {}
 
@@ -499,7 +499,7 @@ class Select_Hidden_Sex_Mode_Panel:
                     ):
                         can_use = True
                 # debug模式下不限制
-                if cache.debug_mode:
+                if modes.debug():
                     can_use = True
                 if can_use:
                     button_draw = draw.LeftButton(
@@ -656,7 +656,7 @@ class Select_Hidden_Sex_Mode_Panel:
             # 基础要求不满足时全部位不可选，并显示原因
             cant_text += base_cant_text
             # debug模式下不限制
-            if cache.debug_mode:
+            if modes.debug():
                 cant_text = ""
             if cant_text == "":
                 button_draw = draw.LeftButton(

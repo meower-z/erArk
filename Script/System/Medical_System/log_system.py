@@ -9,23 +9,19 @@ from __future__ import annotations
 from typing import Any, Mapping
 from types import FunctionType
 
-from Script.Core import game_type, get_text
+from Script.Core import get_text
 from Script.Config import game_config
 from Script.UI.Moudle import draw
-from Script.System.Medical_System import medical_constant, medical_core
+from Script.System.Medical_System import medical_constant
 from Script.Modules.domains import medical
 
 _: FunctionType = get_text._
 """ 翻译函数 """
 
 
-def _ensure_storage(
-    rhodes_island: game_type.Rhodes_Island,
-) -> list[dict[str, Any]]:
-    """确保基地对象上存在医疗日志存储列表。
+def _ensure_storage() -> list[dict[str, Any]]:
+    """确保医疗域状态中存在医疗日志存储列表。
 
-    参数:
-        rhodes_island (game_type.Rhodes_Island): 目标基地对象。
     返回:
         List[Dict[str, Any]]: 可写的日志存储列表引用。
     """
@@ -189,16 +185,14 @@ def _format_medical_report_entry(
 
     # 合并日常消耗与药品累计器中的剩余需求，确保展示的消耗量覆盖全部待扣资源
     accumulator_map: dict[int, float] = {}
-    rhodes_island = medical_core._get_rhodes_island(None)
-    if rhodes_island is not None:
-        accumulator_source = medical.state().accumulator
-        if isinstance(accumulator_source, Mapping):
-            for resource_id, pending_units in accumulator_source.items():
-                try:
-                    normalized_id = int(resource_id)
-                    accumulator_map[normalized_id] = float(pending_units or 0.0)
-                except (TypeError, ValueError):
-                    continue
+    accumulator_source = medical.state().accumulator
+    if isinstance(accumulator_source, Mapping):
+        for resource_id, pending_units in accumulator_source.items():
+            try:
+                normalized_id = int(resource_id)
+                accumulator_map[normalized_id] = float(pending_units or 0.0)
+            except (TypeError, ValueError):
+                continue
 
     combined_consumption_map: dict[int, float] = dict(medicine_consumption_map)
     for resource_id, pending_units in accumulator_map.items():
@@ -381,22 +375,14 @@ def render_medical_reports(
 
 def append_medical_report(
     report: dict[str, Any],
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, Any]:
     """追加一条医疗经营日志记录并返回规范化后的数据。
 
     参数:
         report (Dict[str, Any]): 待写入的日志内容，允许包含 time、lines 等字段。
-        target_base (Optional[game_type.Rhodes_Island]): 指定写入的基地，缺省时自动解析。
     返回:
         Dict[str, Any]: 归一化后的日志条目，附带时间字符串。
     """
-
-    # 解析日志写入目标的基地对象
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return {"success": False, "reason": "no_base"}
 
     # 复制一份日志字典并补全时间戳/文本字段
     from Script.Design import game_time
@@ -417,7 +403,7 @@ def append_medical_report(
         entry.setdefault("text", str(entry.get("text", "")))
 
     # 获取日志存储容器，在容量超限时截断旧记录
-    storage = _ensure_storage(rhodes_island)
+    storage = _ensure_storage()
     storage.append(entry)
     if len(storage) > medical_constant.MAX_RECENT_REPORTS:
         del storage[0 : len(storage) - medical_constant.MAX_RECENT_REPORTS]
@@ -427,22 +413,14 @@ def append_medical_report(
 
 def get_recent_medical_reports(
     limit: int = 3,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> list[dict[str, Any]]:
     """按时间倒序返回最近的医疗经营日志列表。
 
     参数:
         limit (int): 返回的日志数量上限，<=0 表示返回全部。
-        target_base (Optional[game_type.Rhodes_Island]): 指定基地，缺省读取全局缓存。
     返回:
         List[Dict[str, Any]]: 倒序排列的日志列表，最新记录在最前。
     """
-
-    # 若找不到基地对象，则返回空列表
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return []
 
     # 复制日志列表，避免修改原始数据
     storage = list(medical.state().recent_reports or [])

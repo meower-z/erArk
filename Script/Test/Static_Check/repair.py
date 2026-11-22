@@ -9,7 +9,7 @@
   语义模糊的检查宁可不修（检查级去重保证不修也只记一条日志）。
 - 每条修复必须留痕：修了什么对象的什么字段、修复前值与修复后值，逐条写入static_check_error.log。
 - 修复绝不让载入失败：每条修复规则独立try/except，修不动就跳过保留原样；入口函数永不向调用方抛异常。
-- cache.debug_mode开启时全部跳过（与相应检查的debug豁免一致，debug面板改出的值视为有意为之）。
+- debug模式（mode.debug）开启时全部跳过（与相应检查的debug豁免一致，debug面板改出的值视为有意为之）。
 """
 
 from __future__ import annotations
@@ -546,11 +546,11 @@ def apply_all_repairs(cache: game_type.Cache) -> list[dict]:
     返回值:
         List[dict]: 全部实际发生的修复记录（供门面返回；游戏侧无需使用返回值）
     功能:
-        debug_mode开启时整体跳过修复，而静态检查仍照常运行。否则逐条执行注册表中的修复策略并写入留痕；
+        debug模式（mode.debug）开启时整体跳过修复，而静态检查仍照常运行。否则逐条执行注册表中的修复策略并写入留痕。
         每条修复独立隔离，单条失败只记录检查器自身异常，不影响其余修复。本函数的总兜底与就绪守卫由门面负责
     """
     all_records: list[dict] = []
-    if getattr(cache, "debug_mode", False):
+    if modes.debug():
         return all_records
     for __, (__, repair_func) in _repair_registry.items():
         try:

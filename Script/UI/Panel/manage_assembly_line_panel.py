@@ -214,9 +214,7 @@ def settle_assembly_line(
         # 结算模块数量，重新计算床位上限
         with medical.editing() as m:
             m.bed_modules += hospital_bed_modules
-            m.bed_limit = medical_core._calculate_medical_bed_limit(
-                cache.rhodes_island
-            )
+            m.bed_limit = medical_core._calculate_medical_bed_limit()
         # 绘制信息
         hospital_bed_modules_text = _(
             "○由于生产了{0}个住院病房扩展模块，罗德岛住院部床位数量提升了{1}个！\n"

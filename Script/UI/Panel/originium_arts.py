@@ -15,7 +15,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, dirty, hypnosis, player_ability
 from Script.Modules.domains import player_collection, roster, status, warehouse
-from Script.Modules.domains import relations, identity
+from Script.Modules.domains import relations, identity, modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -113,7 +113,7 @@ class Originium_Arts_Panel:
                 button3_draw.draw()
                 return_list.append(button3_draw.return_text)
 
-            if cache.debug_mode:
+            if modes.debug():
                 button4_text = _("[004]自我强化(未实装)")
                 button4_draw = draw.LeftButton(
                     _(button4_text),
@@ -201,7 +201,7 @@ class Originium_Arts_Panel:
             button11_draw.draw()
             return_list.append(button11_draw.return_text)
 
-            if cache.debug_mode or handle_premise.handle_time_over_a_year(0):
+            if modes.debug() or handle_premise.handle_time_over_a_year(0):
                 button12_text = _("[012]Re:败者食尘")
                 button12_draw = draw.LeftButton(
                     _(button12_text),
@@ -768,7 +768,7 @@ class Down_Negative_Talent_Panel:
             info_text = _(
                 "\n要降低[{0}]的哪个刻印呢？(需要消耗该角色已收藏至藏品馆的5条内裤，当前共{1}条，优先消耗重复款式)\n\n"
             ).format(name, panties_count)
-            if cache.debug_mode:
+            if modes.debug():
                 info_text += _("当前为debug模式，不需要消耗内裤\n\n")
             info_draw.text = info_text
             info_draw.draw()
@@ -808,9 +808,9 @@ class Down_Negative_Talent_Panel:
         panties = list(
             player_collection.get("npc_panties").get(self.chara_id, ())
         )
-        if len(panties) >= 5 or cache.debug_mode:
+        if len(panties) >= 5 or modes.debug():
             # debug模式下不消耗内裤
-            if not cache.debug_mode:
+            if not modes.debug():
                 # 先统计每种内裤的数量
                 pan_counts: dict[str, int] = {}
                 for pan in panties:

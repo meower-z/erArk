@@ -31,7 +31,7 @@
 
 ## BEHAV：行为与时钟
 
-角色行为（Behavior）、全局时钟、结算主循环的状态标记。
+角色行为（Behavior）、全局时钟与模式开关。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
@@ -53,7 +53,6 @@
 | BEHAV-18 | 行为历史队列有界且条目可比 | last_behavior_id_list是长度在[1,5]的list，且每个元素要么是0要么是字符串 |
 | BEHAV-19 | 时停中玩家必须处于时停无意识态 | time_stop_mode为真时，0号玩家的sp_flag.unconscious_h必须等于3(时停语义) |
 | BEHAV-20 | 群交模式必须有玩家在H中 | cache.group_sex_mode为真时，0号玩家的sp_flag.is_h必须为真 |
-| BEHAV-21 | 完成集合里只能是存在的角色id | cache.over_behavior_character(结算完成集合)是set，且其中每个元素都是int且指向角色身份表（identity.characters）中存在的角色 |
 | BEHAV-22 | 行为起时落在四季月上 | 每个被调度角色(排除哨兵值)的behavior.start_time月份属于四季月{3,6,9,12} |
 
 ## BODY：服装与身体
@@ -155,7 +154,7 @@ H 状态、群交模式、逆推、隐奸。
 
 ## ISLAND：罗德岛经营
 
-`cache.rhodes_island` 及其派生结构：岗位集合、设施等级与开放表、资源仓储、生产线、宿舍管理、图书、派对、动力区、外勤委托。
+罗德岛基建域数据（GameState 中各基地全局键）及其派生结构：岗位集合、设施等级与开放表、资源仓储、生产线、宿舍管理、图书、派对、动力区、外勤委托。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
@@ -308,7 +307,7 @@ H 状态、群交模式、逆推、隐奸。
 | PLACE-11 | 房间容量档位枚举合法 | room_area只能是0/1/2/3（对应满员判定的10/50/100/9999四档） |
 | PLACE-12 | 移动路径字段必须是现有场景 | behavior.move_src/move_target/move_final_target 只要非空，就必须拼成 constant.scene_data 的合法键 |
 | PLACE-13 | 移动历史长度与内容合法 | action_info.past_move_position_list最多10条，每条都必须是合法场景路径 |
-| PLACE-14 | 收藏地点必须是合法场景 | cache.collect_position_list 的每一项都是场景路径列表且存在于 constant.scene_data，否则地图收藏面板点一下就会跳进不存在的场景 |
+| PLACE-14 | 收藏地点必须是合法场景 | 收藏地点（map.bookmarks）的每一项都是场景路径列表且存在于 constant.scene_data，否则地图收藏面板点一下就会跳进不存在的场景 |
 | PLACE-15 | 宿舍字段必须是合法场景或哨兵值 | LIVE 域内角色的 dormitory（场景路径字符串）只允许是 constant.scene_data 的键，或未分配哨兵 ""/"无" |
 | PLACE-16 | 交互对象id必须存在 | 每个角色的交互对象id（activity.target）必须存在于角色身份表（identity.characters） |
 | PLACE-17 | H状态角色的交互对象必须同场 | LIVE域内处于sp_flag.is_h的角色，其交互对象必须存在且与自己position相同 |

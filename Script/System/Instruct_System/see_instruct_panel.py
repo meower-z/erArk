@@ -14,7 +14,7 @@ from Script.Core import (
 )
 from Script.Design import handle_premise, talk, child_stage_gate
 from Script.Config import config_def, game_config, normal_config
-from Script.Modules.domains import activity, history
+from Script.Modules.domains import activity, history, modes
 from Script.Modules.domains import identity
 
 cache: game_type.Cache = cache_control.cache
@@ -103,7 +103,7 @@ def judge_single_instruct_filter(
         if not premise_judge:
             filter_judge = False
     # 如果是debug模式，则强制通过
-    if cache.debug_mode:
+    if modes.debug():
         filter_judge = True
     # 交互对象处于幼年阶段时过滤H类指令，debug模式下也一样
     if child_stage_gate.blocks_instruct(instruct_id):

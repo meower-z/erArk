@@ -20,7 +20,7 @@ from Script.Config import normal_config, game_config
 from Script.Modules.tk_ui import player_pick
 
 from typing import TYPE_CHECKING, NoReturn
-from Script.Modules.domains import abilities, activity, identity
+from Script.Modules.domains import abilities, activity, identity, modes
 
 if TYPE_CHECKING:
     from typing import Any
@@ -1617,7 +1617,7 @@ class GomokuPanel:
             low_button.draw()
             return_list.append(low_button.return_text)
 
-            if target_ability_lv >= 4 or cache.debug_mode:
+            if target_ability_lv >= 4 or modes.debug():
                 medium_button = draw.CenterButton(
                     _("[中难度，计算速度中等]"),
                     _("中难度"),
@@ -1638,7 +1638,7 @@ class GomokuPanel:
                 info_draw.width = self.width // 3
                 info_draw.draw()
 
-            if target_ability_lv >= 6 or cache.debug_mode:
+            if target_ability_lv >= 6 or modes.debug():
                 high_button = draw.CenterButton(
                     _("[高难度，计算速度慢]"),
                     _("高难度"),

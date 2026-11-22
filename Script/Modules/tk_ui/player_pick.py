@@ -16,14 +16,11 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import NoReturn, cast
 
-from Script.Core import cache_control, constant, game_type, py_cmd
+from Script.Core import constant, py_cmd
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import draft, edits, intent, working
 from Script.Modules.tk_ui import drawn_see
 from Script.UI.Moudle import view
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 PRE_GAME_PANELS = (constant.Panel.TITLE, constant.Panel.CREATOR_CHARACTER)
 """ 不在游戏里的面板：由 start_flow 的主流程显示，不经内核 """
@@ -60,12 +57,6 @@ def back() -> NoReturn:
     """取消整个行动，回到选择循环的场景面板：不定下行动，不空闲，时间不走"""
     raise Back
 
-
-UI_STATE: frozenset[str] = frozenset({"input_cache", "collect_position_list"})
-""" 玩家选行动时可以直接写的缓存属性（输入记录、收藏地点）；其余缓存在选行动时只读 """
-
-META_STATE: frozenset[str] = frozenset({"debug_mode"})
-""" 玩家选行动时也直接写的 debug 模式开关 """
 
 UNDRAFTED = frozenset(
     {
@@ -156,7 +147,7 @@ def drafting(origin: str) -> Iterator[None]:
     if not _in_pick or draft.active():
         yield
         return
-    session = draft.Session(UI_STATE | META_STATE)
+    session = draft.Session(())
     buffer = working.open_pick()
     try:
         drawn_see.keep()

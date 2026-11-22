@@ -6,7 +6,7 @@
 来源: final_invariants_mind.md（M-xx + MS-xx 不变式清单）。
 
 约定与踩坑说明（写在此处，避免散落在各检查函数注释里重复）：
-1. `cache.debug_mode` 下debug面板可越过前提直接改素质、催眠深度/子项、角色扮演列表、熟睡值等，
+1. `mode.debug` 开启时debug面板可越过前提直接改素质、催眠深度/子项、角色扮演列表、熟睡值等，
    凡这些字段参与、且检查内容为"值来自合法结算路径"的不变式，都在检查体前加debug豁免；
    纯粹的存档结构/schema式检查（如MIND-22/28/29）不受debug模式影响，不加豁免。
 2. `roster.active()` 不保证是 `identity.table()` 的子集，一律用 `_iter_npcs()` 做存在性保护。
@@ -271,11 +271,7 @@ def check_time_stop_requires_talent_316() -> list[CheckFailure]:
         属明确调试例外，故加debug豁免
     """
     cache = cache_control.cache
-    if (
-        cache is None
-        or getattr(cache, "debug_mode", False)
-        or not modes.time_stop()
-    ):
+    if cache is None or modes.debug() or not modes.time_stop():
         return []
     pl = _pl()
     if pl is None:
@@ -306,7 +302,7 @@ def check_time_stop_carry_free_fields_zero() -> list[CheckFailure]:
         carry_chara_id_in_time_stop已废弃，现行搬运用action_info.carry_chara_id(见MIND-07)
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     pl = _pl()
     if pl is None:
@@ -428,7 +424,7 @@ def check_hypnosis_degree_bound() -> list[CheckFailure]:
         debug面板直接赋值hypnosis_degree无任何钳位，加debug豁免
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -462,7 +458,7 @@ def check_hypnosis_type_degree_threshold() -> list[CheckFailure]:
         保留是为了挡mod/旧存档/未来剧情旁路，加debug豁免
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     thresholds = {4: 50, 5: 100, 6: 200, 7: 200}
     failures = []
@@ -502,7 +498,7 @@ def check_hypnosis_talent_degree_order() -> list[CheckFailure]:
         深度回填前先重建角色，talent不在回填之列会随之归零。唯一违反点是debug面板独立编辑素质与深度
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -541,7 +537,7 @@ def check_hypnosis_talent_requires_pl_prereq() -> list[CheckFailure]:
         以CSV为准。多周目会重建NPC素质，不构成合法反例，加debug豁免
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     pl = _pl()
     failures = []
@@ -583,7 +579,7 @@ def check_pl_talent_chain_consistency() -> list[CheckFailure]:
         已持有项不会自造缺口，仅debug能造缺口
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     pl = _pl()
     if pl is None:
@@ -620,24 +616,24 @@ def check_hypnosis_behavior_mode_exclusive() -> list[CheckFailure]:
         H中AI逻辑(锁死不动 vs 主动逆推)互相打架。唯一违反点是debug面板逐项设置不执行清理，加debug豁免
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
         h = hypnosis_domain.view(cid)
-        modes = [
+        on = [
             bool(getattr(h, "blockhead", False)),
             bool(getattr(h, "active_h", False)),
             bool(getattr(h, "roleplay", None)),
         ]
-        if sum(modes) > 1:
+        if sum(on) > 1:
             failures.append(
                 make_failure(
                     "MIND-13",
                     "三种催眠行为模式互斥",
                     (
-                        f"[warning] 角色id={cid}({_name(chara)})同时命中多个催眠行为模式: blockhead={modes[0]} "
-                        f"active_h={modes[1]} roleplay非空={modes[2]}，"
+                        f"[warning] 角色id={cid}({_name(chara)})同时命中多个催眠行为模式: blockhead={on[0]} "
+                        f"active_h={on[1]} roleplay非空={on[2]}，"
                         f"unconscious_h={_u(chara)} behavior_id={_behavior_id(chara)}"
                     ),
                     [cid],
@@ -658,7 +654,7 @@ def check_body_control_unconscious_needs_mode() -> list[CheckFailure]:
         故只做u==6⇒模式非空这一半
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -700,7 +696,7 @@ def check_mind_control_unconscious_needs_roleplay() -> list[CheckFailure]:
         时停开关、睡眠猥亵、睡奸反复覆写，三者都不动roleplay，双向等价会被打穿
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -736,7 +732,7 @@ def check_roleplay_list_shape() -> list[CheckFailure]:
         config_roleplay在独立脚本环境下可能未加载，缺表时降级跳过；debug面板append无校验，加debug豁免
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     try:
         from Script.Config import game_config
@@ -795,7 +791,7 @@ def check_body_mind_control_sub_item_requires_talent_73() -> list[CheckFailure]:
         命中时应向游戏侧提bug，不要放宽本式；加debug豁免
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -966,7 +962,7 @@ def check_pl_hypnosis_type_valid() -> list[CheckFailure]:
         处于0。类型2(空气)的前置是333而非332，以CSV为准
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     pl = _pl()
     if pl is None:
@@ -1072,7 +1068,7 @@ def check_sleep_point_bound() -> list[CheckFailure]:
         debug面板可以直接改熟睡值，所以debug模式下不检查。失败信息附带body.needs里的疲劳tired。
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
+    if cache is None or modes.debug():
         return []
     failures = []
     for cid, chara in _iter_pl_and_npcs():

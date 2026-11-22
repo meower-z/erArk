@@ -235,7 +235,6 @@ def new_game_minimal_init() -> None:
         character_handle,
         character,
         attr_calculation,
-        basement,
     )
     from Script.System.Cooking_System import cooking
     from Script.System.Medical_System import medical_service
@@ -244,8 +243,6 @@ def new_game_minimal_init() -> None:
     from Script.Modules.domains import identity, physical_exam, playthrough
     from Script.Modules.domains import npc_template, roster, warehouse
 
-    cache = cache_control.cache
-
     # 1. 创建玩家角色
     identity.put(identity.Identity(0))
     # 初始化玩家基础属性
@@ -253,8 +250,7 @@ def new_game_minimal_init() -> None:
     character.init_attr(0)
 
     # 2. 基础基地与设定
-    cache.rhodes_island = basement.get_base_zero()
-    medical_service.init_medical_department_data(cache.rhodes_island)
+    medical_service.init_medical_department_data()
 
     # 初始奖励 / 世界设定 (等同 first_bonus_and_setting_updata 的核心)
     for cid in game_config.config_first_bonus:

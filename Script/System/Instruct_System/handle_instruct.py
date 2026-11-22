@@ -37,7 +37,7 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import h_state, needs, player_collection, roster
 from Script.Modules.domains import relations, scene_state
-from Script.Modules.domains import identity
+from Script.Modules.domains import identity, modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -721,13 +721,13 @@ def handle_owner_abl_up() -> None:
 @add_instruct(constant.Instruct.DEBUG_MODE_ON)
 def debug_mode() -> None:
     """处理开启DEBUG模式指令"""
-    cache.debug_mode = True
+    modes.set_debug(True)
 
 
 @add_instruct(constant.Instruct.DEBUG_MODE_OFF)
 def debug_mode_off() -> None:
     """处理关闭DEBUG模式指令"""
-    cache.debug_mode = False
+    modes.set_debug(False)
 
 
 @add_instruct(constant.Instruct.DEBUG_ADJUST)
@@ -1171,7 +1171,7 @@ def _start_follow(who: int, chosen: intent.Intent) -> None:
     now_draw.text = _("\n{0}进入智能跟随模式\n").format(target_data.name)
 
     # 去掉其他NPC的跟随
-    if not cache.debug_mode:
+    if not modes.debug():
         for npc_id in roster.active():
             if npc_id not in {
                 0,

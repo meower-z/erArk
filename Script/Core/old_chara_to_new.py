@@ -380,36 +380,34 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                                 for oid in serve_data[0]
                             ]
 
-    # 5.5 rhodes_island中的角色引用
-    if "rhodes_island" in loaded_dict:
+    # 5.5 基建各领域模块中的角色引用
+    # 招募线的主招聘专员、待确认招募、借书人与外交官
+    recruit.remap(old_to_new_id)
+    library.remap(old_to_new_id)
+    diplomacy.remap(old_to_new_id)
+    power.remap_operators(old_to_new_id)
+    production.remap(old_to_new_id)
+    # 换工程部与体检数据里的角色id，正在进行的体检除外
+    maintenance.remap(old_to_new_id)
+    physical_exam.remap(old_to_new_id)
 
-        # 招募线的主招聘专员、待确认招募、借书人与外交官
-        recruit.remap(old_to_new_id)
-        library.remap(old_to_new_id)
-        diplomacy.remap(old_to_new_id)
-        power.remap_operators(old_to_new_id)
-        production.remap(old_to_new_id)
-        # 换工程部与体检数据里的角色id，正在进行的体检除外
-        maintenance.remap(old_to_new_id)
-        physical_exam.remap(old_to_new_id)
+    # 冰箱两个表里的角色id
+    fridge.remap(old_to_new_id)
 
-        # 冰箱两个表里的角色id
-        fridge.remap(old_to_new_id)
+    # 医疗部的门诊、住院医生名单与分科配置
+    medical.remap_doctors(old_to_new_id)
 
-        # 医疗部的门诊、住院医生名单与分科配置
-        medical.remap_doctors(old_to_new_id)
+    economy.remap_traders(old_to_new_id)
 
-        economy.remap_traders(old_to_new_id)
+    # 访客、邀请目标与外勤委托的队伍里的角色id
+    _remap_visitor_and_commission(old_to_new_id)
 
-        # 访客、邀请目标与外勤委托的队伍里的角色id
-        _remap_visitor_and_commission(old_to_new_id)
+    # 关押区囚犯名册
+    prison.remap(old_to_new_id)
 
-        # 关押区囚犯名册
-        prison.remap(old_to_new_id)
-
-        # 岗位名册与监狱长
-        work.set_warden(normalize_single_character_id(work.warden(), 0))
-        work.remap(old_to_new_id)
+    # 岗位名册与监狱长
+    work.set_warden(normalize_single_character_id(work.warden(), 0))
+    work.remap(old_to_new_id)
 
     # 5.6 关系数据中的角色引用
     for _char_id, character in new_character_data.items():
@@ -439,15 +437,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
         loaded_dict["forbidden_npc_id"] = {
             old_to_new_id.get(oid, oid) for oid in old_forbidden
         }
-
-    # old_character_id
-    if (
-        "old_character_id" in loaded_dict
-        and loaded_dict["old_character_id"] != 0
-    ):
-        loaded_dict["old_character_id"] = old_to_new_id.get(
-            loaded_dict["old_character_id"], loaded_dict["old_character_id"]
-        )
 
     # 5.8 achievement中的角色ID引用
     if "achievement" in loaded_dict:
@@ -842,33 +831,31 @@ def migrate_character_replacement(
     for domain in (flags, action_info, player_ability, player_collection):
         domain.remap(all_cids, old_to_new_id_map)
 
-    # ========== 8. 更新rhodes_island中的角色引用 ==========
-    if "rhodes_island" in loaded_dict:
+    # ========== 8. 更新基建各领域模块中的角色引用 ==========
+    # 招募线的主招聘专员、待确认招募、借书人与外交官
+    recruit.remap(old_to_new_id_map)
+    library.remap(old_to_new_id_map)
+    diplomacy.remap(old_to_new_id_map)
+    power.remap_operators(old_to_new_id_map)
+    work.set_warden(normalize_single_character_id(work.warden(), 0))
+    work.remap(old_to_new_id_map)
+    production.remap(old_to_new_id_map)
+    maintenance.remap(old_to_new_id_map)
+    physical_exam.remap(old_to_new_id_map)
 
-        # 招募线的主招聘专员、待确认招募、借书人与外交官
-        recruit.remap(old_to_new_id_map)
-        library.remap(old_to_new_id_map)
-        diplomacy.remap(old_to_new_id_map)
-        power.remap_operators(old_to_new_id_map)
-        work.set_warden(normalize_single_character_id(work.warden(), 0))
-        work.remap(old_to_new_id_map)
-        production.remap(old_to_new_id_map)
-        maintenance.remap(old_to_new_id_map)
-        physical_exam.remap(old_to_new_id_map)
+    # 冰箱两个表里的角色id
+    fridge.remap(old_to_new_id_map)
 
-        # 冰箱两个表里的角色id
-        fridge.remap(old_to_new_id_map)
+    # 医疗部的门诊、住院医生名单与分科配置
+    medical.remap_doctors(old_to_new_id_map)
 
-        # 医疗部的门诊、住院医生名单与分科配置
-        medical.remap_doctors(old_to_new_id_map)
+    economy.remap_traders(old_to_new_id_map)
 
-        economy.remap_traders(old_to_new_id_map)
+    # 访客、邀请目标与外勤委托的队伍里的角色id
+    _remap_visitor_and_commission(old_to_new_id_map)
 
-        # 访客、邀请目标与外勤委托的队伍里的角色id
-        _remap_visitor_and_commission(old_to_new_id_map)
-
-        # 关押区囚犯名册
-        prison.remap(old_to_new_id_map)
+    # 关押区囚犯名册
+    prison.remap(old_to_new_id_map)
 
     # ========== 9. 更新其他cache级别的角色ID引用 ==========
     # forbidden_npc_id
@@ -877,15 +864,6 @@ def migrate_character_replacement(
         loaded_dict["forbidden_npc_id"] = set()
         for oid in old_forbidden:
             loaded_dict["forbidden_npc_id"].add(old_to_new_id_map.get(oid, oid))
-
-    # old_character_id
-    if (
-        "old_character_id" in loaded_dict
-        and loaded_dict["old_character_id"] != 0
-    ):
-        loaded_dict["old_character_id"] = old_to_new_id_map.get(
-            loaded_dict["old_character_id"], loaded_dict["old_character_id"]
-        )
 
     # ========== 10. 更新achievement中的角色ID引用 ==========
     if "achievement" in loaded_dict:
@@ -1695,9 +1673,6 @@ def _clear_young_child_reference(
         if borrower_id in young_child_id_set:
             library.set_holder(book_id, library.FREE)
             count += 1
-    if loaded_dict.get("old_character_id") in young_child_id_set:
-        loaded_dict["old_character_id"] = 0
-        count += 1
     return count
 
 

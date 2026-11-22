@@ -1548,22 +1548,10 @@ class Cache:
 
     def __init__(self) -> None:
         """初始化游戏缓存数据对象"""
-        self.input_cache: list[str] = []
-        """ 玩家指令输入记录（最大20）"""
-        self.collect_position_list: list = []
-        """ 收藏地点合集 """
         # self.clothing_type_data: dict = {}
         # """ 存储服装类型数据 """
-        self.old_character_id: int = 0
-        """ 离开场景面板前在场景中查看的角色id """
         # self.wear_item_type_data: dict = {}
         # """ 可穿戴道具类型数据 """
-        self.over_behavior_character: set = set()
-        """ 本次update中已结束结算的npc """
-        self.debug_mode: bool = False
-        """ debug模式 """
-        self.rhodes_island: Rhodes_Island = Rhodes_Island()
-        """ 罗德岛相关属性 """
         # self.system_setting: Dict[int, int] = {}
         # """ 系统设定，见System_Setting.csv """
 

@@ -11,7 +11,7 @@ from typing import Any
 from types import FunctionType
 
 from Script.Config import game_config
-from Script.Core import constant, game_type, get_text
+from Script.Core import constant, get_text
 from Script.Design import handle_ability, handle_premise
 from Script.System.Medical_System import (
     hospital_doctor_service,
@@ -64,20 +64,14 @@ def get_specialization_categories() -> list[dict[str, Any]]:
     return [dict(item) for item in _get_specialization_categories()]
 
 
-def _get_role_doctor_ids(
-    rhodes_island: game_type.Rhodes_Island | None, role_key: str
-) -> list[int]:
+def _get_role_doctor_ids(role_key: str) -> list[int]:
     """根据角色类型返回对应医生 ID 列表。
 
     参数:
-        rhodes_island (Optional[game_type.Rhodes_Island]): 目标基地对象。
         role_key (str): 角色键，区分门诊与住院医生。
     返回:
         List[int]: 当前角色下的医生编号集合。
     """
-    # 无基地对象时直接返回空列表。
-    if rhodes_island is None:
-        return []
     # 根据不同角色类型返回对应的医生编号集合。
     if role_key == medical_constant.SPECIALIZATION_ROLE_CLINIC:
         return list(medical.state().clinic_doctor_ids or [])
@@ -86,19 +80,12 @@ def _get_role_doctor_ids(
     return []
 
 
-def _ensure_specialization_structure(
-    rhodes_island: game_type.Rhodes_Island | None,
-) -> None:
+def _ensure_specialization_structure() -> None:
     """对基地内的医生分科数据结构进行规范化。
 
-    参数:
-        rhodes_island (game_type.Rhodes_Island): 目标基地对象。
     返回:
         None: 若结构缺失或异常将被重建，确保后续访问安全。
     """
-    # 无基地对象时不需要执行规范化。
-    if rhodes_island is None:
-        return
 
     # 读取所有合法的分科分类键。
     categories = _get_specialization_categories()
@@ -109,10 +96,7 @@ def _ensure_specialization_structure(
     normalized: dict[str, dict[str, list[int]]] = {}
     for role_key in medical_constant.SPECIALIZATION_ROLES:
         # 过滤出当前角色拥有的医生编号。
-        doctor_ids = set(
-            int(value)
-            for value in _get_role_doctor_ids(rhodes_island, role_key)
-        )
+        doctor_ids = set(int(value) for value in _get_role_doctor_ids(role_key))
         role_bucket = raw_spec.get(role_key)
         assigned_tracker: dict[int, str] = {}
         # 记录旧结构中已经登记的分科结果，便于沿用。
@@ -147,21 +131,19 @@ def _ensure_specialization_structure(
 
 
 def _resolve_doctor_specialization(
-    rhodes_island: game_type.Rhodes_Island,
     role_key: str,
     doctor_id: int,
 ) -> str:
     """计算指定医生在给定角色下的分科键。
 
     参数:
-        rhodes_island (game_type.Rhodes_Island): 当前基地对象。
         role_key (str): 门诊或住院角色键。
         doctor_id (int): 医生角色 ID。
     返回:
         str: 匹配到的分科键，默认为全科。
     """
     # 确保分科结构初始化后再读取。
-    _ensure_specialization_structure(rhodes_island)
+    _ensure_specialization_structure()
     role_bucket = medical.state().doctor_specializations.get(role_key, {})
     for category_key, doctor_list in role_bucket.items():
         if doctor_id in doctor_list:
@@ -282,8 +264,6 @@ def assign_doctor_specialization(
     role_key: str,
     doctor_id: int,
     category_key: str,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, Any]:
     """为指定医生设置分科信息。
 
@@ -291,20 +271,14 @@ def assign_doctor_specialization(
         role_key (str): 医生角色键。
         doctor_id (int): 目标医生编号。
         category_key (str): 欲分配的分科键。
-        target_base (Optional[game_type.Rhodes_Island]): 指定基地实例，默认读取全局缓存。
     返回:
         Dict[str, Any]: 包含成功标记、角色、分科信息等内容的返回字典。
     """
-    # 定位要修改医生分科信息的基地。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if (
-        rhodes_island is None
-        or role_key not in medical_constant.SPECIALIZATION_ROLES
-    ):
+    if role_key not in medical_constant.SPECIALIZATION_ROLES:
         return {"success": False, "reason": "invalid_role"}
 
     # 仅允许修改已登记在该角色下的医生。
-    doctor_ids = _get_role_doctor_ids(rhodes_island, role_key)
+    doctor_ids = _get_role_doctor_ids(role_key)
     if doctor_id not in doctor_ids:
         return {"success": False, "reason": "doctor_not_in_role"}
 
@@ -318,7 +292,7 @@ def assign_doctor_specialization(
     )
 
     # 重新构建分科结构并将目标医生移动到指定分类。
-    _ensure_specialization_structure(rhodes_island)
+    _ensure_specialization_structure()
     role_bucket = medical.state().doctor_specializations.setdefault(
         role_key, {}
     )
@@ -333,7 +307,7 @@ def assign_doctor_specialization(
     )
 
     # 完成后再次规范化，确保结构一致。
-    _ensure_specialization_structure(rhodes_island)
+    _ensure_specialization_structure()
 
     # 返回带有分科名称的结果字典供 UI 反馈。
     category_name = next(
@@ -355,45 +329,33 @@ def assign_doctor_specialization(
 
 def list_role_doctors(
     role_key: str,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> list[int]:
     """获取指定角色下的医生 ID 列表。
 
     参数:
         role_key (str): 门诊或住院角色键。
-        target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         List[int]: 已登记的医生编号列表。
     """
-    # 从环境中获取目标基地对象。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    return _get_role_doctor_ids(rhodes_island, role_key)
+    return _get_role_doctor_ids(role_key)
 
 
 def get_doctor_specialization_overview(
     role_key: str,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> list[dict[str, Any]]:
     """汇总指定角色下各分科的医生与能力信息。
 
     参数:
         role_key (str): 门诊或住院角色键。
-        target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         List[Dict[str, Any]]: 每项包含分科名称、医生列表及能力统计。
     """
-    # 获取目标基地并验证角色合法性。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if (
-        rhodes_island is None
-        or role_key not in medical_constant.SPECIALIZATION_ROLES
-    ):
+    # 验证角色键合法性。
+    if role_key not in medical_constant.SPECIALIZATION_ROLES:
         return []
 
     # 准备好分科结构以便遍历。
-    _ensure_specialization_structure(rhodes_island)
+    _ensure_specialization_structure()
     categories = _get_specialization_categories()
     role_bucket = medical.state().doctor_specializations.get(role_key, {})
     character_table = identity.table()
@@ -454,7 +416,6 @@ def get_doctor_specialization_overview(
 
 
 def _resolve_specialization_bonus(
-    rhodes_island: game_type.Rhodes_Island,
     role_key: str,
     doctor_character: identity.Identity | None,
     patient: medical_patient.MedicalPatient | None,
@@ -462,7 +423,6 @@ def _resolve_specialization_bonus(
     """根据医生与病人信息计算分科加成。
 
     参数:
-        rhodes_island (game_type.Rhodes_Island): 目标基地对象。
         role_key (str): 医生角色键。
         doctor_character (Optional[identity.Identity]): 实际医生对象。
         patient (Optional[medical_patient.MedicalPatient]): 当前诊治的病人。
@@ -470,12 +430,12 @@ def _resolve_specialization_bonus(
         Tuple[str, bool, float]: 分别为分科键、是否匹配、加成倍数。
     """
     # 缺少必要对象时直接返回无加成结果。
-    if rhodes_island is None or doctor_character is None or patient is None:
+    if doctor_character is None or patient is None:
         return (medical_constant.SPECIALIZATION_GENERAL_KEY, True, 1.0)
 
     # 查找医生在当前角色下的分科。
     specialization_key = _resolve_doctor_specialization(
-        rhodes_island, role_key, doctor_character.cid
+        role_key, doctor_character.cid
     )
     if specialization_key == medical_constant.SPECIALIZATION_GENERAL_KEY:
         return (specialization_key, True, 1.0)
@@ -499,14 +459,11 @@ def _resolve_specialization_bonus(
 
 def acquire_patient_for_doctor(
     doctor_character: identity.Identity | None,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> medical_patient.MedicalPatient | None:
     """为门诊医生选取待诊病人。
 
     参数:
         doctor_character (Optional[identity.Identity]): 待分配的医生对象。
-        target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         Optional[medical_patient.MedicalPatient]: 分配到的病人对象，若无则为 None。
     """
@@ -514,10 +471,7 @@ def acquire_patient_for_doctor(
     if doctor_character is None:
         return None
 
-    # --- 获取诊疗所在的基地与当日病人表 ---
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return None
+    # --- 获取当日病人表 ---
     patient_table = medical.state().today
     if not patient_table:
         return None
@@ -525,7 +479,6 @@ def acquire_patient_for_doctor(
     # --- 解析医生 ID 与分科信息，用于后续筛选 ---
     doctor_id = int(getattr(doctor_character, "cid", 0) or 0)
     specialization_key = _resolve_doctor_specialization(
-        rhodes_island,
         medical_constant.SPECIALIZATION_ROLE_CLINIC,
         doctor_id,
     )
@@ -549,9 +502,7 @@ def acquire_patient_for_doctor(
         return None
 
     # --- 按既定分诊策略选出最终病人并写回绑定 ---
-    patient = clinic_patient_management.select_triage_candidate(
-        candidates, rhodes_island
-    )
+    patient = clinic_patient_management.select_triage_candidate(candidates)
     if patient is None:
         return None
     _bind_doctor_to_patient(patient, doctor_character)
@@ -561,15 +512,12 @@ def acquire_patient_for_doctor(
 def prepare_doctor_medical_behavior(
     doctor_character: identity.Identity | None,
     behavior_id: str | None,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> medical_patient.MedicalPatient | None:
     """为指定行为预先准备医生与病人的绑定关系。
 
     参数:
         doctor_character (Optional[identity.Identity]): 执行行为的医生对象。
         behavior_id (Optional[str]): 当前即将执行的行为 ID。
-        target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         Optional[medical_patient.MedicalPatient]: 准备好的病人对象，若无则为 None。
     """
@@ -577,25 +525,18 @@ def prepare_doctor_medical_behavior(
     if doctor_character is None or not behavior_id:
         return None
 
-    # 获取行为执行所在的基地。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return None
-
     # 根据行为类型路由到不同的病人获取流程。
     if behavior_id == constant.Behavior.CURE_PATIENT:
-        return acquire_patient_for_doctor(
-            doctor_character, target_base=rhodes_island
-        )
+        return acquire_patient_for_doctor(doctor_character)
     if behavior_id == getattr(constant.Behavior, "WARD_ROUND", "ward_round"):
         return hospital_doctor_service._acquire_hospital_patient_for_doctor(
-            doctor_character, rhodes_island, require_surgery=False
+            doctor_character, require_surgery=False
         )
     if behavior_id == getattr(
         constant.Behavior, "PERFORM_SURGERY", "perform_surgery"
     ):
         return hospital_doctor_service._acquire_hospital_patient_for_doctor(
-            doctor_character, rhodes_island, require_surgery=True
+            doctor_character, require_surgery=True
         )
     return None
 
@@ -606,7 +547,6 @@ def update_doctor_assignments(
     *,
     clinic_power: float | None = None,
     hospital_power: float | None = None,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> None:
     """同步医生名单与能力值，床位刷新需另行调用。
 
@@ -615,14 +555,9 @@ def update_doctor_assignments(
         hospital_doctors (Optional[List[int]]): 住院医生 ID 列表。
         clinic_power (Optional[float]): 门诊医生医疗能力总和，可由外部预计算传入。
         hospital_power (Optional[float]): 住院医生医疗能力总和。
-        target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
-        None: 直接修改基地缓存字段。
+        None: 直接写入医疗域状态，无返回值。
     """
-    # 校验并获取目标基地。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return
 
     # 若传入新的门诊医生列表，则刷新缓存并计算能力值。
     if clinic_doctors is not None:
@@ -659,19 +594,16 @@ def update_doctor_assignments(
         )
 
     # 仅保持分科结构有效性，床位上限在外部统一刷新。
-    _ensure_specialization_structure(rhodes_island)
+    _ensure_specialization_structure()
 
 
 def _is_medical_doctor_candidate(
     character_id: int,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> bool:
     """判断指定角色是否可以被纳入医生候选。
 
     参数:
         character_id (int): 干员 ID。
-        target_base (Optional[game_type.Rhodes_Island]): 目标基地对象。
     返回:
         bool: True 表示符合医生候选条件。
     """
@@ -680,11 +612,6 @@ def _is_medical_doctor_candidate(
         return False
 
     if not identity.exists(character_id):
-        return False
-
-    # 无基地上下文时不处理。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
         return False
 
     # 仅允许空岗、门诊或住院岗位的干员。

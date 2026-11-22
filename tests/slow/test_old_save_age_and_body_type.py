@@ -107,7 +107,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         from Script.Config import game_config
         from Script.Modules.domains.commission import start
 
-        cache = self.cache
         static_id_list = [
             c for c in identity.table() if c and relations.father_id(c)
         ]

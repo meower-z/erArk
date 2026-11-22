@@ -1236,7 +1236,6 @@ def handle_have_patient_need_surgery_and_can_do(character_id: int) -> int:
     available_patients_list = (
         hospital_doctor_service.get_surgery_candidate_patient_ids(
             doctor_character=character_data,
-            target_base=cache.rhodes_island,
         )
     )
     return len(available_patients_list)

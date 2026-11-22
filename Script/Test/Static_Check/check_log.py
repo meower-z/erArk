@@ -31,6 +31,7 @@ from .check_registry import CheckFailure, get_all_checks
 
 from typing import TYPE_CHECKING
 from Script.Modules.domains import identity
+from Script.UI.Moudle import view
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -169,21 +170,14 @@ def _init_if_needed() -> None:
         _seen_check_ids = _load_seen_state()
 
 
-def _build_recent_input_text(cache: game_type.Cache) -> str:
+def _build_recent_input_text() -> str:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         str: 最近输入指令的可读文本
     功能:
-        取cache.input_cache末尾最多10条原始输入，拼接为日志展示用文本
+        取view.input_cache末尾最多10条原始输入，拼接为日志展示用文本
     """
-    recent_inputs = (
-        list(cache.input_cache[-10:])
-        if getattr(cache, "input_cache", None)
-        else []
-    )
-    return str(recent_inputs)
+    return str(list(view.input_cache[-10:]))
 
 
 def _build_recent_behavior_text(cache: game_type.Cache) -> str:
@@ -279,7 +273,7 @@ def _build_entry_header_lines(
         f"{len(get_all_checks())}"
     )
     lines.append(
-        f"最近输入(input_cache 末尾10条): {_build_recent_input_text(cache)}"
+        f"最近输入(input_cache 末尾10条): {_build_recent_input_text()}"
     )
     lines.append(
         f"最近行为指令(pl_pre_behavior_instruce, id+名称): {_build_recent_behavior_text(cache)}"

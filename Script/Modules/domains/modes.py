@@ -1,8 +1,9 @@
 """
-全局模式开关：全局键 mode.time_stop、mode.group_sex 与 mode.sex_class
-================================================================
-mode.time_stop 是时间停止模式，mode.group_sex 是群交模式，mode.sex_class 是性技实操课（课堂H）模式。
-开课时须同时开群交模式，群交模板与它的读取点才生效；mode.sex_class 只用于口上差分、前提区分与结算差分。
+全局模式开关：全局键 mode.time_stop、mode.group_sex、mode.sex_class 与 mode.debug
+===============================================================================
+mode.time_stop 是时间停止模式，mode.group_sex 是群交模式，mode.sex_class 是性技实操课（课堂H）模式，
+mode.debug 是 debug 模式。
+开课时须同时开群交模式，群交模板与它的读取点才生效。mode.sex_class 用于口上差分、前提区分与结算差分。
 没有某一项时读到 False。写入整值替换一个键，值没变时不写。
 """
 
@@ -18,6 +19,8 @@ GROUP_SEX = "mode.group_sex"
 """ 群交模式的全局键 """
 SEX_CLASS = "mode.sex_class"
 """ 性技实操课模式的全局键 """
+DEBUG = "mode.debug"
+""" debug 模式的全局键 """
 PICKLED = {
     "time_stop_mode": TIME_STOP,
     "group_sex_mode": GROUP_SEX,
@@ -25,7 +28,7 @@ PICKLED = {
 }
 """ 存档缓存（版本 12 之前）里的属性名到全局键 """
 
-for _key in PICKLED.values():
+for _key in (*PICKLED.values(), DEBUG):
     working.register(_key, False)
 
 
@@ -76,11 +79,31 @@ def set_sex_class(on: bool) -> None:
     _set(SEX_CLASS, on)
 
 
+def debug(game: core.GameState | None = None) -> bool:
+    """
+    debug 模式是否开着
+    Keyword arguments:
+    game -- 给出时只读这个 GameState，没有时读当前缓冲区
+    Return arguments:
+    bool -- 开着时为 True
+    """
+    return cast(bool, working.get(None, DEBUG, game))
+
+
+def set_debug(on: bool) -> None:
+    """
+    开关 debug 模式，写进当前缓冲区
+    Keyword arguments:
+    on -- 开为 True
+    """
+    _set(DEBUG, on)
+
+
 def adopt_old_save(loaded_dict: dict[str, Any], version: int) -> int:
     """
-    读档时调用。从存档缓存里删掉 PICKLED 的三个开关，写进当前缓冲区
+    读档时调用。从存档缓存里取出 PICKLED 的三个开关与 debug_mode，写进当前缓冲区
     Keyword arguments:
-    loaded_dict -- 存档缓存的属性表
+    loaded_dict -- 存档缓存的属性表，原地修改
     version -- 存档的版本，旧存档为 0
     Return arguments:
     int -- 补上或换掉的项数，计法同 save_handle.update_dict_with_default
@@ -89,4 +112,9 @@ def adopt_old_save(loaded_dict: dict[str, Any], version: int) -> int:
     found, count = pickled.take(loaded_dict, default, version)
     for name, value in found.items():
         _set(PICKLED[name], value)
-    return count
+    debug_found, debug_count = pickled.take(
+        loaded_dict, {"debug_mode": False}, version
+    )
+    if debug_found:
+        _set(DEBUG, debug_found["debug_mode"])
+    return count + debug_count

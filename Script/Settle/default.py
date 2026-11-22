@@ -1152,9 +1152,8 @@ def handle_first_a_sex(
 
     # 判定是否为道具性交
     item_flag = False
-    if cache.input_cache and cache.input_cache[-1] == str(
-        constant.Instruct.VIBRATOR_INSERTION_ANAL
-    ):
+    inputs = history.inputs()
+    if inputs and inputs[-1] == str(constant.Instruct.VIBRATOR_INSERTION_ANAL):
         item_flag = True
 
     # 获取玩家最近一条非中断H指令的中文名，避免中断指令覆盖真实破处体位
@@ -1209,11 +1208,6 @@ def handle_first_u_sex(
     if not add_time:
         return
     target_data: identity.Identity = identity.of(activity.target(character_id))
-
-    # 判定是否为道具性交，已废弃
-    # item_flag = False
-    # if cache.input_cache[len(cache.input_cache) - 1] == str(constant.Instruct.URINE_COLLECTOR_ON):
-    #     item_flag = True
 
     # 获取玩家最近一条非中断H指令的中文名，避免中断指令覆盖真实破处体位
     behavior_id = get_last_valid_sex_behavior_id()
@@ -1528,7 +1522,7 @@ def handle_hypnosis_one(
         activity.target(character_id)
     )
     # debug下催眠增加到999
-    if cache.debug_mode:
+    if modes.debug():
         hypnosis_degree_grow = 999
     new_hypnosis_degree = (
         hypnosis.degree(activity.target(character_id)) + hypnosis_degree_grow
@@ -1627,7 +1621,7 @@ def handle_hypnosis_all(
             target_id
         )
         # debug下催眠增加到999
-        if cache.debug_mode:
+        if modes.debug():
             hypnosis_degree_grow = 999
         new_hypnosis_degree = hypnosis.degree(target_id) + hypnosis_degree_grow
         # 赋予到角色数据
@@ -7018,9 +7012,7 @@ def handle_perform_surgery(
     patient_id = chara_life.surgery_patient_id(doctor_data.cid)
 
     # 执行手术
-    medical_service.attempt_surgery(
-        patient_id, doctor_data, target_base=cache.rhodes_island
-    )
+    medical_service.attempt_surgery(patient_id, doctor_data)
 
     # 获取大量习得
     base_chara_state_common_settle(
@@ -7219,7 +7211,7 @@ def handle_recruit_add_just(
     # 获得加成
     now_add_lust = adjust * 2 * random.uniform(0.8, 1.2)
     # debug下直接拉满
-    if cache.debug_mode:
+    if modes.debug():
         now_add_lust += 100
 
     # 如果是玩家在招募或玩家与招募者在同一位置的话，显示招募进度的增加情况
@@ -7302,7 +7294,7 @@ def handle_invite_visitor_add_adjust(
     # 获得加成 #
     now_add_lust = adjust * 2 * random.uniform(0.8, 1.2)
     # debug下直接拉满
-    if cache.debug_mode:
+    if modes.debug():
         now_add_lust += 100
 
     # 如果是玩家在邀请或玩家与邀请者在同一位置的话，显示进度的增加情况
@@ -8631,7 +8623,7 @@ def handle_read_add_adjust(
         # 如果阅读进度大于等于100，则结算读完的奖励
         if (
             chara_life.read_book_progress(character_id)[book_id] >= 100
-            or cache.debug_mode
+            or modes.debug()
         ):
             chara_life.read_book_progress.set_item(character_id, book_id, 100)
             # 如果是技能书籍，则增加对应技能的经验

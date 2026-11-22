@@ -90,7 +90,7 @@ def run_load_repair() -> list[dict]:
     功能:
         总开关由调用方判断。cache未就绪时直接跳过；就绪后惰性导入repair模块并执行全部修复。
         本层不是纯转发：repair导入期会执行修复注册，不同函数注册同一id会抛ValueError，因此必须把导入推迟到载入时并兜住异常，
-        不得阻断游戏启动。debug_mode下修复整体跳过而检查照常运行；任何异常都只尝试留痕，不向调用方抛出
+        不得阻断游戏启动。debug模式（mode.debug）下修复整体跳过而检查照常运行。任何异常都只尝试留痕，不向调用方抛出
     """
     try:
         cache = cache_control.cache

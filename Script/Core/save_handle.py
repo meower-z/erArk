@@ -37,6 +37,7 @@ from Script.Modules.domains import prison, production, recruit, roster, status
 from Script.Modules.domains import tallies, visitor, wardrobe, warehouse
 from Script.Modules.domains import chara_life, chara_profile, identity
 from Script.Modules.domains import npc_template, relations, scene_state
+from Script.Modules.domains import bookmarks
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -647,21 +648,19 @@ def input_load_save(save_id: str) -> None:
 
 def install_save(save_id: str, version: int) -> None:
     """
-    读档的 Reset 步骤：解开文件 "1" 后调 npc_template.lift，版本 0 补默认值，23 个 adopt 搬罗德岛属性（18 计数）。
-    ID 迁移后 flags、action_info、player_ability、player_collection 搬四项。修编号后 abilities（计数）与 inventory、
-    wardrobe、body_manage、status 搬入。替换先调 chara_key.lift，重建前搬 relations、chara_life、chara_profile。
-    重建后 adopt_pickled、npc_template（存局内模板并删 6/7 号素质，计数）、activity（计数）、pregnancy、growth 搬入。
-    再由 h_meters、h_state、dirty、hypnosis、first_record、roster 与周目等七模块计数，最后收尾会话。
+    读档的 Reset 步骤：解开文件 "1" 后调 npc_template.lift，版本 0 补默认值，24 个 adopt（含 bookmarks，19 计数）搬
+    罗德岛属性与收藏地点。ID 迁移后 flags、action_info、player_ability、player_collection 搬四项。修编号后 abilities
+    （计数）与 inventory、wardrobe、body_manage、status 搬入。替换先调 chara_key.lift，重建前搬 relations、chara_life、
+    chara_profile。重建后 adopt_pickled、npc_template（存局内模板并删 6/7 号素质，计数）、activity（计数）、pregnancy、
+    growth 搬入。h_meters 等六模块与周目等七模块（含 modes 搬 debug_mode、history 搬 input_cache）计数，最后收尾会话。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
     """
-    from Script.Design import basement
     from Script.System.Medical_System import medical_service
 
     # 创建一个新的类实例，这个实例会包含所有的默认键值
     new_cache = game_type.Cache()
-    new_cache.rhodes_island = basement.get_base_zero()
     update_count = 0
 
     # 从存档中加载字典
@@ -683,7 +682,7 @@ def install_save(save_id: str, version: int) -> None:
         update_count += domain.adopt_old_save(loaded_dict, version)
     for domain in (entertainment, tallies, fridge, prison, education):
         update_count += domain.adopt_old_save(loaded_dict, version)
-    for domain in (maintenance, physical_exam):
+    for domain in (maintenance, physical_exam, bookmarks):
         update_count += domain.adopt_old_save(loaded_dict, version)
 
     draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
@@ -921,6 +920,7 @@ def install_save(save_id: str, version: int) -> None:
 
     # 读档导入完成后移除临时的 character_data，角色对象不进缓存
     del loaded_dict["character_data"]
+    loaded_dict.pop("rhodes_island")
     cache.__dict__.update(loaded_dict)
 
     # 鼠标状态是界面的临时状态，读档后从头开始：读档前留下的 w_frame_up 为0时，

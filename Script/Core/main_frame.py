@@ -46,17 +46,12 @@ from tkinter import (
 )
 from Script.Core import (
     text_handle,
-    game_type,
-    cache_control,
     perf_hook,
 )
 from Script.Config import normal_config, game_config
 from Script.Core import era_image
 from typing import TYPE_CHECKING
 from Script.UI.Moudle import view
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 def close_window() -> None:
@@ -465,14 +460,14 @@ def send_input(*args: object) -> None:
     # 下一次 order_deal 入口 push 的上膛标记会重新开门。
     input_armed = False
     order = get_order()
-    if len(cache.input_cache) >= 21:
+    if len(view.input_cache) >= 21:
         if not (order) == "":
-            del cache.input_cache[0]
-            cache.input_cache.append(order)
+            del view.input_cache[0]
+            view.input_cache.append(order)
             view.input_position = 0
     else:
         if not (order) == "":
-            cache.input_cache.append(order)
+            view.input_cache.append(order)
             view.input_position = 0
     view.input_cache_draft = ""
     view.input_cache_browsing = False

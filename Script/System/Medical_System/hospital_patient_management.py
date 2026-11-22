@@ -11,35 +11,24 @@ import math
 from collections.abc import Callable
 
 from Script.Config import config_def, game_config
-from Script.Core import game_type
 from Script.System.Medical_System import medical_constant, medical_core
 from Script.Modules.domains import medical, medical_patient, warehouse, identity
 
 
 def try_hospitalize(
     patient_id: int,
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> bool:
     """尝试将病人转入住院列表。
 
     参数:
         patient_id (int): 等待转住院的病人唯一编号。
-        target_base (game_type.Rhodes_Island | None): 指定罗德岛基座，缺省时使用全局缓存。
     返回:
         bool: 是否成功将病人移动至住院列表。
     """
     from Script.System.Medical_System import medical_service
 
-    # 定位当前处理的基地对象。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
-        return False
-
     # 查找病人并确认尚未在住院列表。
-    patient, already_hospitalized = medical_core._locate_patient(
-        patient_id, rhodes_island
-    )
+    patient, already_hospitalized = medical_core._locate_patient(patient_id)
     if patient is None or already_hospitalized:
         return False
 
@@ -60,12 +49,8 @@ def try_hospitalize(
         return False
 
     # 从门诊列表移除并加入住院表，同时重置相关字段。
-    outpatient_table = medical_service.get_patient_table(
-        target_base=rhodes_island, hospitalized=False
-    )
-    hospital_table = medical_service.get_patient_table(
-        target_base=rhodes_island, hospitalized=True
-    )
+    outpatient_table = medical_service.get_patient_table(hospitalized=False)
+    hospital_table = medical_service.get_patient_table(hospitalized=True)
     outpatient_table.pop(patient.patient_id, None)
     hospital_table[patient.patient_id] = patient
     medical_service.set_patient_state(
@@ -78,31 +63,23 @@ def try_hospitalize(
     refresh_patient_hospital_needs(
         patient, severity_config, reset_progress=True
     )
-    medical_core._bump_daily_counter(rhodes_island, "hospitalized_today", 1)
+    medical_core._bump_daily_counter("hospitalized_today", 1)
     return True
 
 
-def process_hospitalized_patients(
-    *,
-    target_base: game_type.Rhodes_Island | None = None,
-) -> None:
+def process_hospitalized_patients() -> None:
     """每日结算住院病人：扣药并判定出院。
 
-    参数:
-        target_base (game_type.Rhodes_Island | None): 指定需要处理的基地实例。
     返回:
         None
     """
 
-    # 若基地不存在或无住院病人则直接返回。
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None or not medical.state().hospitalized:
+    # 若无住院病人则直接返回。
+    if not medical.state().hospitalized:
         return
 
     def _consume(patient: medical_patient.MedicalPatient) -> bool:
-        return try_consume_medicine(
-            patient, is_hospitalized=True, target_base=rhodes_island
-        )
+        return try_consume_medicine(patient, is_hospitalized=True)
 
     # 复制病人 ID 避免遍历过程中修改集合。
     patient_ids = list(medical.state().hospitalized.keys())
@@ -110,11 +87,10 @@ def process_hospitalized_patients(
         patient = medical.state().hospitalized.get(patient_id)
         if patient is None:
             continue
-        process_single_hospitalized_patient(rhodes_island, patient, _consume)
+        process_single_hospitalized_patient(patient, _consume)
 
 
 def process_single_hospitalized_patient(
-    rhodes_island: game_type.Rhodes_Island,
     patient: medical_patient.MedicalPatient | None,
     consume_medicine: Callable[[medical_patient.MedicalPatient], bool],
     *,
@@ -123,7 +99,6 @@ def process_single_hospitalized_patient(
     """对单名住院病人执行一次巡诊流程。
 
     参数:
-        rhodes_island (game_type.Rhodes_Island): 巡诊所在的基地实例。
         patient (Optional[medical_patient.MedicalPatient]): 目标病人，若 None 则直接跳过。
         consume_medicine (Callable[[medical_patient.MedicalPatient], bool]): 用于扣药的回调。
         doctor (Optional[identity.Identity]): 记录巡诊医生信息的角色对象。
@@ -150,7 +125,7 @@ def process_single_hospitalized_patient(
         patient.severity_level
     )
     if severity_config is None:
-        discharge_patient(rhodes_island, patient, bonus_income=0)
+        discharge_patient(patient, bonus_income=0)
         result.update(
             {"handled": True, "discharged": True, "result": "missing_config"}
         )
@@ -179,9 +154,7 @@ def process_single_hospitalized_patient(
     consumed_units = dict(getattr(patient, "last_consumed_units", {}) or {})
     consumed_total = sum(int(value) for value in consumed_units.values())
     if consumed_total:
-        medical_core._bump_daily_counter(
-            rhodes_island, "medicine_consumed", consumed_units
-        )
+        medical_core._bump_daily_counter("medicine_consumed", consumed_units)
 
     result.update(
         {
@@ -193,15 +166,11 @@ def process_single_hospitalized_patient(
     )
 
     # 记录诊疗完成次数，便于与后续用药完成分开统计。
-    medical_core._bump_daily_counter(
-        rhodes_island, "diagnose_completed_hospital", 1
-    )
+    medical_core._bump_daily_counter("diagnose_completed_hospital", 1)
 
     if success:
         # 仅在用药成功时统计完成治疗的住院病人。
-        medical_core._bump_daily_counter(
-            rhodes_island, "medicine_completed_hospital", 1
-        )
+        medical_core._bump_daily_counter("medicine_completed_hospital", 1)
         new_severity = severity_before - 1
         if new_severity < 0:
             discharge_bonus = int(
@@ -211,9 +180,7 @@ def process_single_hospitalized_patient(
                     * income_multiplier
                 )
             )
-            discharge_patient(
-                rhodes_island, patient, bonus_income=discharge_bonus
-            )
+            discharge_patient(patient, bonus_income=discharge_bonus)
             result.update(
                 {
                     "discharged": True,
@@ -232,9 +199,7 @@ def process_single_hospitalized_patient(
                         * income_multiplier
                     )
                 )
-                discharge_patient(
-                    rhodes_island, patient, bonus_income=discharge_bonus
-                )
+                discharge_patient(patient, bonus_income=discharge_bonus)
                 result.update(
                     {
                         "discharged": True,
@@ -257,9 +222,7 @@ def process_single_hospitalized_patient(
                     }
                 )
     else:
-        medical_core._bump_daily_counter(
-            rhodes_island, "hospital_waiting_medicine", 1
-        )
+        medical_core._bump_daily_counter("hospital_waiting_medicine", 1)
         base_income = int(
             round(
                 float(severity_config.hospital_base_income)
@@ -268,7 +231,7 @@ def process_single_hospitalized_patient(
             )
         )
         if base_income > 0:
-            medical_core._apply_income_to_rhodes(rhodes_island, base_income)
+            medical_core._apply_income_to_rhodes(base_income)
         result.update(
             {"result": "pending", "severity_after": patient.severity_level}
         )
@@ -284,24 +247,18 @@ def try_consume_medicine(
     patient: medical_patient.MedicalPatient | None,
     *,
     is_hospitalized: bool = False,
-    target_base: game_type.Rhodes_Island | None = None,
 ) -> bool:
     """尝试为病人扣除药物并结算药费。
 
     参数:
         patient (medical_patient.MedicalPatient): 等待扣药的病人对象。
         is_hospitalized (bool): 标记病人是否在住院区，用于决定倍率与计数。
-        target_base (game_type.Rhodes_Island | None): 指定基地实例，缺省读取全局缓存。
     返回:
         bool: 药物是否全部满足需求。
     """
 
-    # 无病人或基地对象时，无法扣药。
+    # 无病人对象时无法扣药。
     if patient is None:
-        return False
-
-    rhodes_island = medical_core._get_rhodes_island(target_base)
-    if rhodes_island is None:
         return False
 
     severity_config = game_config.config_medical_severity.get(
@@ -433,7 +390,7 @@ def try_consume_medicine(
             continue
         total_income += income_value
 
-    medical_core._apply_income_to_rhodes(rhodes_island, total_income)
+    medical_core._apply_income_to_rhodes(total_income)
 
     if overall_success:
         patient.medicine_recorded = {}
@@ -442,9 +399,7 @@ def try_consume_medicine(
     # --- 将门诊病人的药剂消耗以明细形式写入当日统计 ---
     consumed_total_units = sum(int(value) for value in consumed_units.values())
     if not is_hospitalized and consumed_total_units:
-        medical_core._bump_daily_counter(
-            rhodes_island, "medicine_consumed", consumed_units
-        )
+        medical_core._bump_daily_counter("medicine_consumed", consumed_units)
 
     patient.last_consumed_units = consumed_units
 
@@ -535,7 +490,6 @@ def resolve_surgery_requirements(
 
 
 def discharge_patient(
-    rhodes_island: game_type.Rhodes_Island,
     patient: medical_patient.MedicalPatient,
     *,
     bonus_income: int,
@@ -543,7 +497,6 @@ def discharge_patient(
     """处理病人出院并入账奖励。
 
     参数:
-        rhodes_island (game_type.Rhodes_Island): 出院所在的基地实例。
         patient (medical_patient.MedicalPatient): 即将出院的病人。
         bonus_income (int): 出院奖励的货币收益。
     返回:
@@ -552,14 +505,12 @@ def discharge_patient(
     from Script.System.Medical_System import medical_service
 
     # 将病人从住院表移除并标记出院状态。
-    hospital_table = medical_service.get_patient_table(
-        target_base=rhodes_island, hospitalized=True
-    )
+    hospital_table = medical_service.get_patient_table(hospitalized=True)
     hospital_table.pop(patient.patient_id, None)
     medical_service.set_patient_state(
         patient, medical_constant.MedicalPatientState.DISCHARGED
     )
     # 记录出院奖励与治疗加权量。
     medical.state().weekly_weighted_treatment += patient.severity_level
-    medical_core._bump_daily_counter(rhodes_island, "discharged_today", 1)
-    medical_core._apply_income_to_rhodes(rhodes_island, bonus_income)
+    medical_core._bump_daily_counter("discharged_today", 1)
+    medical_core._apply_income_to_rhodes(bonus_income)

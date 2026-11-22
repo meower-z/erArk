@@ -926,9 +926,6 @@ class MedicalPlayerDiagnosePanel:
             Dict[int, float]: 资源 ID 到库存数量的映射副本。
         """
 
-        rhodes_island = getattr(cache, "rhodes_island", None)
-        if rhodes_island is None:
-            return {}
         snapshot: dict[int, float] = {}
         for resource_id, value in warehouse.stock().items():
             try:

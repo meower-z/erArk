@@ -18,7 +18,7 @@ from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking, cook_question_panel
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import inventory
+from Script.Modules.domains import inventory, modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -241,7 +241,7 @@ class Make_food_Panel:
                 if seasoning_cid > 100:
                     if (
                         not inventory.items(0)[seasoning_cid]
-                        and not cache.debug_mode
+                        and not modes.debug()
                     ):
                         continue
                 # 基础的按钮格式
