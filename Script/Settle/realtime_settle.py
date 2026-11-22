@@ -24,10 +24,10 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, action_info, entertainment
-from Script.Modules.domains import facility, flags, modes, needs
-from Script.Modules.domains import player_ability, playthrough, pregnancy
-from Script.Modules.domains import prison
+from Script.Modules.domains import abilities, action_info, dirty, entertainment
+from Script.Modules.domains import facility, flags, h_meters, h_state, modes
+from Script.Modules.domains import needs, player_ability, playthrough
+from Script.Modules.domains import pregnancy, prison
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -185,16 +185,15 @@ def character_aotu_change_value(
             # 上次射精时间距离现在超过30分钟则射精值减少
             last_time = action_info.get(character_id, "last_eaj_add_time")
             if (game_time.now() - last_time) > datetime.timedelta(minutes=30):
-                new_eja = max(
-                    now_character_data.eja_point - true_add_time * 10, 0
-                )
-                now_character_data.eja_point = new_eja
+                h_meters.add(character_id, "eja", -true_add_time * 10, min=0)
 
         # 玩家缓慢恢复精液量
         add_semen: num.Num = Fraction(true_add_time, 20)
-        now_character_data.semen_point = min(
-            now_character_data.semen_point + add_semen,
-            now_character_data.semen_point_max,
+        h_meters.add(
+            character_id,
+            "semen",
+            add_semen,
+            max=h_meters.of(character_id)["semen_max"],
         )
 
         # 结算玩家源石技艺的理智值消耗
@@ -209,13 +208,13 @@ def character_aotu_change_value(
     # 结算干员
     else:
         # 结算精液流动
-        if len(now_character_data.dirty.semen_flow):
+        if dirty.has_semen_flow(character_id):
             settle_semen_flow(character_id, true_add_time)
 
         # 结算精液消化吸收
-        if now_character_data.dirty.body_semen[8][1] > 0:
+        if dirty.body_semen_amount(character_id, 8) > 0:
             semen_absorb(character_id, true_add_time, 8)
-        if now_character_data.dirty.body_semen[15][1] > 0:
+        if dirty.body_semen_amount(character_id, 15) > 0:
             semen_absorb(character_id, true_add_time, 15)
 
         # 结算乳汁量，仅结算有泌乳素质的
@@ -319,13 +318,12 @@ def settle_semen_flow(character_id: int, true_add_time: int) -> None:
     character_id -- 角色id\n
     true_add_time -- 实际行动时间\n
     """
-    now_character_data: game_type.Character = cache.character_data[character_id]
     # 每个目标每分钟最多流入 2 ml
     flow_semen_max = true_add_time * 2
 
     new_flow_list = []
     # 遍历每个部位的精液流动
-    for all_flow_dict in now_character_data.dirty.semen_flow:
+    for all_flow_dict in dirty.view(character_id).semen_flow:
         # 如果all_flow_dict没有键"targets"，则跳过
         if "targets" not in all_flow_dict:
             continue
@@ -370,7 +368,8 @@ def settle_semen_flow(character_id: int, true_add_time: int) -> None:
         if len(all_flow_dict["targets"]):
             new_flow_list.append(all_flow_dict)
     # 更新流动的源头列表
-    now_character_data.dirty.semen_flow = new_flow_list
+    with dirty.editing(character_id) as d:
+        d.semen_flow = new_flow_list
 
 
 def semen_absorb(character_id: int, true_add_time: int, body_part: int) -> None:
@@ -381,8 +380,7 @@ def semen_absorb(character_id: int, true_add_time: int, body_part: int) -> None:
     true_add_time -- 实际行动时间\n
     body_part -- 身体部位id\n
     """
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    now_body_semen = now_character_data.dirty.body_semen[body_part][1]
+    now_body_semen = dirty.body_semen_amount(character_id, body_part)
     # 如果当前部位没有精液则返回
     if now_body_semen <= 0:
         return
@@ -392,21 +390,20 @@ def semen_absorb(character_id: int, true_add_time: int, body_part: int) -> None:
         * true_add_time,
         now_body_semen,
     )
-    # 从角色身体中吸收精液
-    now_character_data.dirty.body_semen[body_part][1] -= absorb_ml
-    # 更新吸收精液量
-    now_character_data.dirty.absorbed_total_semen += absorb_ml
-    # 根据吸收的精液量来减少饥饿度
-    needs.add(character_id, "hunger", -absorb_ml, min=0)
-    # 如果现存量小于3ml，则清零
-    if now_character_data.dirty.body_semen[body_part][1] < 3:
-        now_character_data.dirty.body_semen[body_part][1] = 0
-    # 计算新的等级量
-    new_lv = attr_calculation.get_semen_now_level(
-        now_character_data.dirty.body_semen[body_part][1], body_part, 0
-    )
-    # 更新等级
-    now_character_data.dirty.body_semen[body_part][2] = new_lv
+    with dirty.editing(character_id) as d:
+        # 从角色身体中吸收精液
+        d.body_semen[body_part][1] -= absorb_ml
+        # 更新吸收精液量
+        d.absorbed_total_semen += absorb_ml
+        # 根据吸收的精液量来减少饥饿度
+        needs.add(character_id, "hunger", -absorb_ml, min=0)
+        # 如果现存量小于3ml，则清零
+        if d.body_semen[body_part][1] < 3:
+            d.body_semen[body_part][1] = 0
+        # 更新等级
+        d.body_semen[body_part][2] = attr_calculation.get_semen_now_level(
+            d.body_semen[body_part][1], body_part, 0
+        )
 
 
 def change_character_persistent_state(character_id: int) -> None:
@@ -415,33 +412,13 @@ def change_character_persistent_state(character_id: int) -> None:
     Keyword arguments:\n
     character_id -- 角色id\n
     """
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    # 因为睡眠时间很长，会导致持续状态的时间超过了当前时间，所以改为使用当前时间
-    # start_time = now_character_data.behavior.start_time
-    # now_time = game_time.get_sub_date(minute=now_character_data.behavior.duration, old_date=start_time)
     now_time = game_time.now()
-
-    # H下结算全部持续状态
-    if flags.get(character_id, "is_h"):
-        # 结算H状态的持续时间
-        for i in range(len(now_character_data.h_state.body_item)):
-            if now_character_data.h_state.body_item[i][1]:
-                end_time = now_character_data.h_state.body_item[i][2]
-                if end_time is not None and game_time.judge_date_big_or_small(
-                    now_time, end_time
-                ):
-                    now_character_data.h_state.body_item[i][1] = False
-                    now_character_data.h_state.body_item[i][2] = None
-    # 非H下结算部分药物
-    else:
-        for i in [8, 9]:
-            if now_character_data.h_state.body_item[i][1]:
-                end_time = now_character_data.h_state.body_item[i][2]
-                if end_time is not None and game_time.judge_date_big_or_small(
-                    now_time, end_time
-                ):
-                    now_character_data.h_state.body_item[i][1] = False
-                    now_character_data.h_state.body_item[i][2] = None
+    ids = None if flags.get(character_id, "is_h") else (8, 9)
+    for item_id, end_time in h_state.active_body_items(character_id, ids):
+        if end_time is not None and game_time.judge_date_big_or_small(
+            now_time, end_time
+        ):
+            h_state.set_body_item(character_id, item_id, False, None)
 
 
 def settle_tired(character_id: int, true_add_time: int) -> None:
@@ -790,7 +767,7 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
                 constant.Behavior.REST,
                 constant.Behavior.SLEEP,
             }
-            or sleeper_data.h_state.body_item[9][1] == 1
+            or h_state.body_item_on(sleeper_id, 9)
             or drunk_sex_common.get_drunk_level(sleeper_id)[0] >= 3
         ):
             continue
@@ -848,7 +825,6 @@ def settle_conscious_continuous(character_id: int, true_add_time: int) -> None:
         _common_default.base_chara_state_common_settle, exact=True
     )
     map_handle = _map_handle
-    now_char = cache.character_data[character_id]
     now_char_ability = abilities.ability(character_id)
     # 场景内的角色总数（只计算一次，后续判定复用）
     scene_chara_count = len(
@@ -968,7 +944,7 @@ def settle_conscious_continuous(character_id: int, true_add_time: int) -> None:
         )
     # 灌肠苦痛增加
     if handle_premise.handle_enema(character_id):
-        extra = now_char.dirty.enema_capacity
+        extra = dirty.enema_capacity(character_id)
         base_chara_state_common_settle(
             character_id,
             add_time=true_add_time * 5,
@@ -980,7 +956,7 @@ def settle_conscious_continuous(character_id: int, true_add_time: int) -> None:
         )
     # 捆绑时欲情、羞耻、苦痛
     if handle_premise.handle_self_now_bondage(character_id):
-        bond_id = now_char.h_state.bondage
+        bond_id = h_state.get(character_id, "bondage")
         data = game_config.config_bondage[bond_id]
         adjust = Fraction(data.level, 2)
         for sid in (12, 16, 17):

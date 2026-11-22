@@ -56,13 +56,13 @@ assert map_handle.get_map_system_path_str_for_list(SCENE) in cache.scene_data
 | 字段 | 置零函数 | 坑 |
 | --- | --- | --- |
 | 服装、状态值、身体管理 | `tests.chara_data.seed(cid, {})` | 这三项存在内核状态里，不在角色对象上。读写用 `wardrobe`、`status`、`body_manage` 模块。第二个参数是要穿的衣服（服装类型到衣服id），`{}` 时不穿 |
-| `dirty` | **`get_zero_dirty()`** | 不是 `get_dirty_zero`；另有 `get_dirty_reset()` 是别的语义 |
+| `dirty` | 无需在 `Character` 上置零：默认状态由 `dirty.view(cid)` 直接提供；修改在 `kernel_data.writing()` 里经 `dirty.editing(cid)` / `dirty.set(cid, ...)` 写进 GameState（`body.dirty`） | `Character` 上没有 `dirty` 字段；洗浴重置调 `dirty.reset(cid)` |
 | `talent` | `get_talent_zero({})`，交回的表在 `kernel_data.writing()` 里经 `abilities.talent(cid).replace(...)` 写进 GameState（`Character` 上没有这个字段） | **要传一个 dict 进去** |
 | `ability` | `get_ability_zero({})`，经 `abilities.ability(cid).replace(...)` 写入，写法同 `talent` | 同上 |
 | `juel` | `get_juel_zero({})`，经 `abilities.juel(cid).replace(...)` 写入，写法同 `talent` | 同上 |
 | `experience` | `get_experience_zero({})`，经 `abilities.experience(cid).replace(...)` 写入，写法同 `talent` | 同上 |
 | `second_behavior` | `get_second_behavior_zero({})` | 同上 |
-| `h_state` | `get_h_state_reset(cd.h_state)` | **只有 reset 版**，要把旧对象传进去 |
+| `h_state` | 无需在 `Character` 上置零：默认状态由 `h_state.view(cid)` 直接提供；修改在 `kernel_data.writing()` 里经 `h_state.editing(cid)` / `h_state.set(cid, ...)` 写进 GameState（`h.state`） | `Character` 上没有 `h_state` 字段；H 结束重置调 `h_state.reset(cid)` |
 | `favorability` | 手写 `{0: 0}` | 好感/信赖类前提直接取 `[0]`；口上里的 `favorability_ge_3` 会走到 |
 | `talent[121]` | 在 `kernel_data.writing()` 里手写 `abilities.talent(cid)[121] = 1` | 罩杯素质 121~125 至少要有一个为 1：胸部成长/乳汁上限之类的代码用 `for tid in [121..125]: if talent[tid]: ...; break` 找罩杯，一个都没有时循环变量不赋值 → `UnboundLocalError`（报错在 `chest_grow`/`milk_max` 处） |
 | `race` | 手写 `cd.race = <种族id>` | 默认 0=博士；生育方式、种族限定判定都查 `game_config.config_race[cd.race]`，测卵生/多胎要显式给对应种族 |
@@ -396,7 +396,7 @@ handle_npc_ai.judge_interrupt_character_behavior = patched
 | 前提函数 | `Script/Design/handle_premise/`（按主题分模块） |
 | 结算效果实现 | `Script/Settle/default.py`（`@add_settle_behavior_effect(效果id)`） |
 | 读档 API | `Script/Core/save_handle.py`（`input_load_save(save_id)`） |
-| 置零/初始化函数 | `Script/Design/attr_calculation.py`（`get_*_zero` / `get_zero_dirty` / `get_*_reset`，签名不规律，用 `inspect.signature` 查） |
+| 置零/初始化函数 | `Script/Design/attr_calculation.py`（`get_*_zero`，签名不规律，用 `inspect.signature` 查）；已迁入内核的 `dirty`/`h_state`/`hypnosis`/`first_record` 改用 `Script/Modules/domains/` 对应模块的 `view`/`editing`/`reset` |
 | 前提常量与分组 | `Script/Core/constant_promise.py` |
 | 结算器常量与分号段 | `Script/Core/constant_effect.py`（`BehaviorEffect` 按分类分号段，新号要落在本类段末） |
 | 本 skill 的两个模板 | `unit_test_template.py`（模式A，可直接跑）、`harness_template.py`（模式B） |

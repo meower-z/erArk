@@ -11,11 +11,10 @@ from Script.Design import handle_talent, map_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.Modules.domains import abilities, action_info, entertainment, flags
-from Script.Modules.domains import needs, player_ability, status
+from Script.Modules.domains import h_state, needs, player_ability, status
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
-
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()
@@ -270,7 +269,7 @@ def calculation_instuct_judege(
             judge += 100
             calculation_text += _("+性无知(+100)")
         # 爱情旅馆修正
-        if target_data.h_state.h_in_love_hotel:
+        if h_state.get(target_data.cid, "h_in_love_hotel"):
             if entertainment.hotel_room() == 1:
                 judge += 25
                 calculation_text += _("+标间(+25)")
@@ -372,7 +371,7 @@ def calculation_instuct_judege(
         _("U性交"),
         _("W性交"),
     } and handle_premise.handle_dr_have_sex_position(character_id):
-        now_position = character_data.h_state.current_sex_position
+        now_position = h_state.get(character_id, "current_sex_position")
         # 如果当前姿势是自己喜欢的体位，则增加额外快感
         favorite_position_id = handle_talent.settle_favorite_sex_position(
             target_character_id
@@ -429,10 +428,11 @@ def calculation_instuct_judege(
     # 性交的避孕相关修正
     if instruct_name in {_("性交"), _("W性交")}:
         # 妊娠合意、避孕套、避孕中出合意+事前避孕药、性无知，以上可直接通过
+        has_pill = talent[13] and h_state.body_item_on(target_character_id, 11)
         if (
             talent[14]
-            or character_data.h_state.body_item[13][1]
-            or (talent[13] and target_data.h_state.body_item[11][1])
+            or h_state.body_item_on(character_id, 13)
+            or has_pill
             or talent[222]
         ):
             pass
@@ -545,8 +545,8 @@ def calculation_instuct_judege(
 
         # 问过玩家的戴套提示只显示一次：选择时 ask_judge 问过，开始时在这里记下
         if _asks_condom(character_data, target_data, instruct_name):
-            target_data.h_state.condom_info_show_flag = False
-        condom_flag = bool(character_data.h_state.body_item[13][1])
+            h_state.set(target_data.cid, condom_info_show_flag=False)
+        condom_flag = h_state.body_item_on(character_data.cid, 13)
 
         # 正常直接判定，并输出文本
         if judge_data_type != "V":
@@ -641,8 +641,8 @@ def _asks_condom(
     """
     return (
         instruct_name in {_("性交"), _("W性交")}
-        and not character_data.h_state.body_item[13][1]
-        and bool(target_data.h_state.condom_info_show_flag)
+        and not h_state.body_item_on(character_data.cid, 13)
+        and bool(h_state.get(target_data.cid, "condom_info_show_flag"))
     )
 
 
@@ -690,7 +690,7 @@ def ask_text(
                 "{0}已经做好了随时都可以怀孕的准备，是否不戴套？\n"
             ).format(target_data.name)
         # 避孕中出合意+事前避孕药
-        elif talent[13] and target_data.h_state.body_item[11][1]:
+        elif talent[13] and h_state.body_item_on(target_character_id, 11):
             text += _(
                 "{0}已经吃过事前避孕药了，所以内射也不会怀孕，是否不戴套？\n"
             ).format(target_data.name)

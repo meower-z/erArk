@@ -9,7 +9,9 @@ from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities, flags, growth, status
+from Script.Modules.domains import abilities
+from Script.Modules.domains import first_record as first_record_domain, flags
+from Script.Modules.domains import growth, h_state, status
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -92,7 +94,6 @@ def character_get_second_behavior(
                 second_behavior_id
             )
         # ——履历记录：二段行为类统一分发（一处覆盖全部来源，dict去重使重复置1零成本）——
-        first_record = character_data.first_record
         # (1) 部位绝顶行为则记录初次强/超强绝顶（超强同时回填空缺的强绝顶记录）
         orgasm_settle_module = _get_orgasm_settle()
         part_str, degree = orgasm_settle_module.get_orgasm_part_and_degree(
@@ -100,28 +101,25 @@ def character_get_second_behavior(
         )
         if part_str is not None and degree >= 2:
             state_id = orgasm_settle_module.orgasm_part_to_state_id[part_str]
-            if state_id not in first_record.first_strong_orgasm_dict:
-                first_record.first_strong_orgasm_dict[state_id] = [
-                    game_time.now(),
-                    list(character_data.position),
-                ]
-            if (
-                degree == 3
-                and state_id not in first_record.first_super_orgasm_dict
-            ):
-                first_record.first_super_orgasm_dict[state_id] = [
-                    game_time.now(),
-                    list(character_data.position),
-                ]
+            with first_record_domain.editing(character_id) as fr:
+                if state_id not in fr.first_strong_orgasm_dict:
+                    fr.first_strong_orgasm_dict[state_id] = [
+                        game_time.now(),
+                        list(character_data.position),
+                    ]
+                if degree == 3 and state_id not in fr.first_super_orgasm_dict:
+                    fr.first_super_orgasm_dict[state_id] = [
+                        game_time.now(),
+                        list(character_data.position),
+                    ]
         # (2) 刻印升级行为则记录刻印首达等级（id格式{类型}_mark_{等级}，与部位绝顶id格式互斥）
-        elif (
-            "_mark_" in second_behavior_id
-            and second_behavior_id not in first_record.first_mark_dict
-        ):
-            first_record.first_mark_dict[second_behavior_id] = [
-                game_time.now(),
-                list(character_data.position),
-            ]
+        elif "_mark_" in second_behavior_id:
+            with first_record_domain.editing(character_id) as fr:
+                if second_behavior_id not in fr.first_mark_dict:
+                    fr.first_mark_dict[second_behavior_id] = [
+                        game_time.now(),
+                        list(character_data.position),
+                    ]
         # (3) 固定二段行为id到特殊履历的白名单映射（受精/喷乳绝顶/放尿绝顶）
         elif (
             second_behavior_id
@@ -407,14 +405,15 @@ def judge_character_first_meet(character_id: int) -> None:
     ):
         # 优先输出初见，次要输出每日招呼
         if (
-            character_data.first_record.first_meet
+            first_record_domain.get(character_id, "first_meet")
             and character_data.position == pl_character_data.position
         ):
             character_get_second_behavior(character_id, "first_meet")
-            character_data.first_record.first_meet = 0
-            character_data.first_record.day_first_meet = 0
+            first_record_domain.set(
+                character_id, first_meet=0, day_first_meet=0
+            )
         elif (
-            character_data.first_record.day_first_meet
+            first_record_domain.get(character_id, "day_first_meet")
             and character_data.position == pl_character_data.position
         ):
             # 如果是要早安问候的助理，则不每日招呼
@@ -424,7 +423,7 @@ def judge_character_first_meet(character_id: int) -> None:
                 pass
             else:
                 character_get_second_behavior(character_id, "day_hello")
-            character_data.first_record.day_first_meet = 0
+            first_record_domain.set(character_id, day_first_meet=0)
             # 判断上交内裤与袜子
             if handle_premise.handle_wear_pan(
                 character_id
@@ -508,45 +507,48 @@ def insert_position_effect(
     character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data: game_type.Character = cache.character_data[0]
     # 当前不在H中，当前有阴茎插入，则重置插入
-    if (
-        not handle_premise.handle_self_is_h(character_id)
-        and character_data.h_state.insert_position != -1
-    ):
+    insert_pos = h_state.get(character_id, "insert_position")
+    if not handle_premise.handle_self_is_h(character_id) and insert_pos != -1:
         # 重置插入位置
-        character_data.h_state.insert_position = -1
-        character_data.h_state.insert_position_change_save = -1
+        h_state.set(
+            character_id,
+            insert_position=-1,
+            insert_position_change_save=-1,
+        )
+        insert_pos = -1
     # 当前有阴茎插入、当前位置为玩家位置
     if (
-        character_data.h_state.insert_position != -1
+        insert_pos != -1
         and character_data.position == pl_character_data.position
     ):
         # 非群交模式
         if handle_premise.handle_group_sex_mode_off(character_id):
             # 如果不等于，则说明是本次指令改变了插入位置，因此不触发二段结算
             if (
-                character_data.h_state.insert_position_change_save
-                != character_data.h_state.insert_position
+                h_state.get(character_id, "insert_position_change_save")
+                != insert_pos
             ):
-                character_data.h_state.insert_position_change_save = (
-                    character_data.h_state.insert_position
+                h_state.set(
+                    character_id, insert_position_change_save=insert_pos
                 )
             else:
                 # 区分是身体还是服装
-                if character_data.h_state.insert_position < 20:
-                    second_behavior_id = f"penis_in_body_{character_data.h_state.insert_position}"
+                if insert_pos < 20:
+                    second_behavior_id = f"penis_in_body_{insert_pos}"
                 else:
-                    second_behavior_id = f"penis_in_cloth_{character_data.h_state.insert_position - 20}"
+                    second_behavior_id = f"penis_in_cloth_{insert_pos - 20}"
                     # 如果是下衣，则进一步区分是裙子还是裤子
-                    if character_data.h_state.insert_position == 28:
+                    if insert_pos == 28:
                         if handle_premise.handle_wear_skirt(character_id):
                             second_behavior_id += "_skirt"
                         else:
                             second_behavior_id += "_trousers"
                 character_get_second_behavior(character_id, second_behavior_id)
         # 如果玩家当前有性交姿势数据
-        if pl_character_data.h_state.current_sex_position != -1:
+        pl_sex_pos = h_state.get(0, "current_sex_position")
+        if pl_sex_pos != -1:
             # 自己增加对应姿势的经验
-            exp_id = 140 + pl_character_data.h_state.current_sex_position
+            exp_id = 140 + pl_sex_pos
             base_chara_experience_common_settle(
                 character_id, exp_id, change_data=change_data
             )
@@ -667,12 +669,11 @@ def mark_effect(
     # 或检测单次H中总绝顶次数，5次快乐1,20次快乐2,50次快乐3
     single_happy_count = 0
     all_happy_count = 0
+    orgasm_count = h_state.view(character_id).orgasm_count
     for state_id in game_config.config_character_state:
         if game_config.config_character_state[state_id].type == 0:
-            single_happy_count += character_data.h_state.orgasm_count[state_id][
-                0
-            ]
-            all_happy_count += character_data.h_state.orgasm_count[state_id][1]
+            single_happy_count += orgasm_count[state_id][0]
+            all_happy_count += orgasm_count[state_id][1]
     # print(f"debug happy_count = {happy_count}")
     if ability[13] <= 0 and (single_happy_count >= 2 or all_happy_count >= 5):
         ability[13] = 1
@@ -798,11 +799,10 @@ def mark_effect(
     # 无觉刻印检测无意识下的绝顶，前3级同快乐，后3级仅检测无意识绝顶经验
     if handle_premise.handle_unconscious_flag_ge_1(character_id):
         all_happy_count = 0
+        orgasm_count = h_state.view(character_id).orgasm_count
         for state_id in game_config.config_character_state:
             if game_config.config_character_state[state_id].type == 0:
-                single_happy_count += character_data.h_state.orgasm_count[
-                    state_id
-                ][0]
+                single_happy_count += orgasm_count[state_id][0]
         all_happy_count = abilities.experience(character_id)[78]
         # print(f"debug happy_count = {happy_count}")
         if ability[19] <= 0 and (
@@ -940,26 +940,25 @@ def item_effect(character_id: int) -> None:
         # elif pl_character_data.target_character_id == character_id and character_data.sp_flag.is_h:
         #     return
 
-        for i in range(len(character_data.h_state.body_item)):
-            if character_data.h_state.body_item[i][1]:
-                # 事前避孕药的结算仅在每日问候的时候出现一起，其他时候不出现
-                if i == 11 and character_data.second_behavior["day_hello"] != 0:
+        for i, _end in h_state.active_body_items(character_id):
+            # 事前避孕药的结算仅在每日问候的时候出现一起，其他时候不出现
+            if i == 11 and character_data.second_behavior["day_hello"] != 0:
+                continue
+            body_item_data = game_config.config_body_item[i]
+            # 如果是猥亵型装备且当前不在H中，则判断该道具是否在开启中
+            if (
+                body_item_data.type == 2
+                and not handle_premise.handle_self_is_h(character_id)
+            ):
+                # 如果没有开启，则跳过
+                if handle_premise.handle_self_now_sex_toy_off(character_id):
                     continue
-                body_item_data = game_config.config_body_item[i]
-                # 如果是猥亵型装备且当前不在H中，则判断该道具是否在开启中
-                if (
-                    body_item_data.type == 2
-                    and not handle_premise.handle_self_is_h(character_id)
-                ):
-                    # 如果没有开启，则跳过
-                    if handle_premise.handle_self_now_sex_toy_off(character_id):
-                        continue
-                    # 如果与玩家不在同一场景，则将该道具置为关闭状态然后跳过
-                    if not handle_premise.handle_in_player_scene(character_id):
-                        flags.set(character_id, sex_toy_level=0)
-                        continue
-                second_behavior_id = body_item_data.behavior_id
-                character_get_second_behavior(character_id, second_behavior_id)
+                # 如果与玩家不在同一场景，则将该道具置为关闭状态然后跳过
+                if not handle_premise.handle_in_player_scene(character_id):
+                    flags.set(character_id, sex_toy_level=0)
+                    continue
+            second_behavior_id = body_item_data.behavior_id
+            character_get_second_behavior(character_id, second_behavior_id)
 
         # 绳子捆绑
         if handle_premise.handle_self_now_bondage(character_id):

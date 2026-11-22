@@ -6,8 +6,8 @@ from Script.Design import map_handle, clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, flags, needs, player_ability
-from Script.Modules.domains import pregnancy, status
+from Script.Modules.domains import abilities, dirty, flags, h_state, needs
+from Script.Modules.domains import player_ability, pregnancy, status
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -21,7 +21,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def get_v_and_w_semen_count(character_id: int) -> int:
+def get_v_and_w_semen_count(character_id: int) -> num.Num:
     """
     获取角色的小穴和子宫精液总量
     Keyword arguments:
@@ -29,11 +29,9 @@ def get_v_and_w_semen_count(character_id: int) -> int:
     Return arguments:
     int -- 精液总量
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    all_semen_count = (
-        character_data.dirty.body_semen[6][1]
-        + character_data.dirty.body_semen[7][1]
-    )
+    all_semen_count = dirty.body_semen_amount(
+        character_id, 6
+    ) + dirty.body_semen_amount(character_id, 7)
     return all_semen_count
 
 
@@ -48,11 +46,8 @@ def get_inserted_character_id() -> int:
     # 获取玩家的交互对象id
     target_id: int = pl_character_data.target_character_id
     # 检查玩家的交互对象是否存在且其阴茎插入数据符合条件（不为 -1）
-    if target_id != 0:
-        target_character = cache.character_data[target_id]
-        # 如果交互对象符合条件，则返回该角色id
-        if target_character.h_state.insert_position != -1:
-            return target_id
+    if target_id != 0 and h_state.get(target_id, "insert_position") != -1:
+        return target_id
 
     # 如果交互对象不符合条件，遍历场景内其他角色（排除玩家和交互对象）
     scene_path_str = map_handle.get_map_system_path_str_for_list(
@@ -63,9 +58,8 @@ def get_inserted_character_id() -> int:
         # 排除玩家和已检测的交互对象
         if character_id == 0 or character_id == target_id:
             continue
-        now_character_data = cache.character_data[character_id]
         # 如果该角色的阴茎插入数据不为 -1，则返回该角色id
-        if now_character_data.h_state.insert_position != -1:
+        if h_state.get(character_id, "insert_position") != -1:
             return character_id
 
     # 如果没有找到符合条件的角色则返回0
@@ -137,7 +131,8 @@ class SeeCharacterBodyPanel:
                 visual_flag = 1
 
         # 遍历全部位并输出结果（缺的部位在绘制用的副本里补上）
-        body_semen = dict(target_character_data.dirty.body_semen)
+        target_dirty = dirty.view(target_character_data.cid)
+        body_semen = dict(target_dirty.body_semen)
         for i in range(len(game_config.config_body_part)):
             body_part_data = game_config.config_body_part[i]
             part_name = body_part_data.name
@@ -363,8 +358,8 @@ class SeeCharacterBodyPanel:
                 all_part_text_list.append(now_part_text)
 
         # 灌肠文本
-        if target_character_data.dirty.a_clean:
-            text_index = f"灌肠{str(target_character_data.dirty.a_clean)}"
+        if target_dirty.a_clean:
+            text_index = f"灌肠{str(target_dirty.a_clean)}"
             # 是否显示完整污浊文本
             if normal_config.system_setting.draw_setting[10]:
                 enemas_text = game_config.ui_text_data["dirty_full"][text_index]
@@ -374,10 +369,8 @@ class SeeCharacterBodyPanel:
             else:
                 enemas_text = game_config.ui_text_data["dirty"][text_index]
                 all_part_text_list.append(f" <{enemas_text}>")
-        if target_character_data.dirty.enema_capacity:
-            text_index = (
-                f"灌肠液量{str(target_character_data.dirty.enema_capacity)}"
-            )
+        if target_dirty.enema_capacity:
+            text_index = f"灌肠液量{str(target_dirty.enema_capacity)}"
             # 是否显示完整污浊文本
             if normal_config.system_setting.draw_setting[10]:
                 enema_capacity_text = game_config.ui_text_data["dirty_full"][
@@ -426,15 +419,18 @@ class SeeCharacterBodyPanel:
             all_part_text_list.append(now_text)
 
         # 阴茎位置文本，因为是直接调用ui文本，所以不需要调用翻译组件，下同
-        if target_character_data.h_state.insert_position != -1:
+        target_hs = h_state.view(target_character_data.cid)
+        if target_hs.insert_position != -1:
             insert_text = " "
             # 显示阴茎位置的文本
-            now_position_index = target_character_data.h_state.insert_position
+            now_position_index = target_hs.insert_position
             position_text_cid = f"阴茎位置{str(now_position_index)}"
             insert_position_text = game_config.ui_text_data["h_state"][
                 position_text_cid
             ]
-            sex_position_index = character_data.h_state.current_sex_position
+            sex_position_index = h_state.get(
+                character_data.cid, "current_sex_position"
+            )
             # 如果是阴茎位置为阴道、子宫、后穴、尿道，且博士有体位数据，则显示性交姿势
             if now_position_index in {6, 7, 8, 9} and sex_position_index != -1:
                 sex_position_text_cid = f"体位{str(sex_position_index)}"
@@ -446,8 +442,8 @@ class SeeCharacterBodyPanel:
             all_part_text_list.append(insert_text)
 
         # 绳子捆绑文本
-        if target_character_data.h_state.bondage:
-            bondage_id = target_character_data.h_state.bondage
+        if target_hs.bondage:
+            bondage_id = target_hs.bondage
             bondage_name = game_config.config_bondage[bondage_id].name
             bondage_text = _(" 被绳子捆成了{0}").format(bondage_name)
             all_part_text_list.append(bondage_text)
@@ -465,7 +461,7 @@ class SeeCharacterBodyPanel:
         else:
             sex_toy_lv_text = _("(强)")
         # 身体道具数据
-        body_item_dict = target_character_data.h_state.body_item
+        body_item_dict = target_hs.body_item
         for i in range(len(body_item_dict)):
             # print("status_type :",status_type)
             if body_item_dict[i][1]:

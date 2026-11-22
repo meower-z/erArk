@@ -4,7 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design import game_time
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, first_record
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -21,15 +21,8 @@ def handle_first_kiss_in_today(character_id: int) -> int:
     返回:
         int: 权重
     """
-    character_data = cache.character_data[character_id]
-    if (
-        game_time.count_day_for_datetime(
-            character_data.first_record.first_kiss_time, game_time.now()
-        )
-        == 0
-    ):
-        return 1
-    return 0
+    t = first_record.get(character_id, "first_kiss_time")
+    return 1 if game_time.count_day_for_datetime(t, game_time.now()) == 0 else 0
 
 
 @add_premise(constant_promise.Premise.FIRST_KISS_BEFORE_TODAY)
@@ -60,9 +53,9 @@ def handle_first_sex_in_today(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     # 玩家的童贞记录仍为平铺字段，NPC的V破处记录在first_part_sex_dict[6]
     if character_id == 0:
-        first_time = character_data.first_record.first_sex_time
+        first_time = first_record.get(character_data.cid, "first_sex_time")
     else:
-        record = character_data.first_record.first_part_sex_dict.get(6, None)
+        record = first_record.part_sex(character_data.cid, 6)
         if record is None:
             return 0
         first_time = record["time"]
@@ -98,7 +91,7 @@ def handle_first_a_sex_in_today(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     # A破处记录在first_part_sex_dict[8]
-    record = character_data.first_record.first_part_sex_dict.get(8, None)
+    record = first_record.part_sex(character_data.cid, 8)
     if record is None:
         return 0
     if game_time.count_day_for_datetime(record["time"], game_time.now()) == 0:
@@ -133,7 +126,7 @@ def handle_first_u_sex_in_today(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     # U破处记录在first_part_sex_dict[9]
-    record = character_data.first_record.first_part_sex_dict.get(9, None)
+    record = first_record.part_sex(character_data.cid, 9)
     if record is None:
         return 0
     if game_time.count_day_for_datetime(record["time"], game_time.now()) == 0:
@@ -168,7 +161,7 @@ def handle_first_w_sex_in_today(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     # W破处记录在first_part_sex_dict[7]
-    record = character_data.first_record.first_part_sex_dict.get(7, None)
+    record = first_record.part_sex(character_data.cid, 7)
     if record is None:
         return 0
     if game_time.count_day_for_datetime(record["time"], game_time.now()) == 0:
@@ -203,7 +196,7 @@ def handle_first_m_sex_in_today(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     # 口交初体验记录在first_part_sex_dict[2]
-    record = character_data.first_record.first_part_sex_dict.get(2, None)
+    record = first_record.part_sex(character_data.cid, 2)
     if record is None:
         return 0
     if game_time.count_day_for_datetime(record["time"], game_time.now()) == 0:

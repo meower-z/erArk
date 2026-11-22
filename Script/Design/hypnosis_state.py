@@ -1,7 +1,7 @@
 """清理角色的催眠行为模式与催眠子状态"""
 
 from Script.Core import cache_control, game_type
-from Script.Modules.domains import flags
+from Script.Modules.domains import flags, h_state, hypnosis
 
 cache: game_type.Cache = cache_control.cache
 """游戏缓存数据"""
@@ -15,15 +15,12 @@ def clear_hypnosis_behavior_mode(target_character_id: int) -> None:
     Return arguments:
     None
     """
-    target_character_data: game_type.Character = cache.character_data[
-        target_character_id
-    ]
-    target_character_data.hypnosis.blockhead = False
     # 逆推模式下由催眠驱动的NPC主动标志随模式一并清理，普通H中玩家指定的主动状态不受影响
-    if target_character_data.hypnosis.active_h:
-        target_character_data.h_state.npc_active_h = False
-    target_character_data.hypnosis.active_h = False
-    target_character_data.hypnosis.roleplay = []
+    if hypnosis.of(target_character_id)["active_h"]:
+        h_state.set(target_character_id, npc_active_h=False)
+    hypnosis.set(
+        target_character_id, blockhead=False, active_h=False, roleplay=()
+    )
     # 无意识标志1~3为睡眠/醉酒/时停等非催眠域状态，仅催眠域内的4~7才随模式清理复位
     if flags.get(target_character_id, "unconscious_h") in {4, 5, 6, 7}:
         flags.set(target_character_id, unconscious_h=0)
@@ -37,10 +34,9 @@ def clear_hypnosis_sub_states(target_character_id: int) -> None:
     Return arguments:
     None
     """
-    target_character_data: game_type.Character = cache.character_data[
-        target_character_id
-    ]
-
     clear_hypnosis_behavior_mode(target_character_id)
-    target_character_data.hypnosis.increase_body_sensitivity = False
-    target_character_data.hypnosis.pain_as_pleasure = False
+    hypnosis.set(
+        target_character_id,
+        increase_body_sensitivity=False,
+        pain_as_pleasure=False,
+    )

@@ -18,8 +18,8 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import abilities, achievement, action_info
-from Script.Modules.domains import body_manage, player_collection, pregnancy
-from Script.Modules.domains import roster
+from Script.Modules.domains import body_manage, dirty, first_record, hypnosis
+from Script.Modules.domains import player_collection, pregnancy, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -683,10 +683,8 @@ class Physical_Check_And_Manage_Panel:
                 judge_result = True
         elif body_manage_second_behavior_id == "ask_not_wash_semen":
             # V与W总被射入精液
-            now_value_1 = (
-                target_character_data.dirty.body_semen[6][3]
-                + target_character_data.dirty.body_semen[7][3]
-            )
+            bs = dirty.view(target_character_data.cid).body_semen
+            now_value_1 = bs[6][3] + bs[7][3]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("V与W总被射入精液{0}ml/{1}ml").format(
                 now_value_1, require_value_1
@@ -749,7 +747,7 @@ class Physical_Check_And_Manage_Panel:
         if now_value_2 >= require_value_2:
             judge_result = True
         # 催眠程度
-        now_value_3 = target_character_data.hypnosis.hypnosis_degree
+        now_value_3 = hypnosis.degree(target_character_data.cid)
         require_value_3 = body_manage_data.need_value_3
         require_text += _(" 或 催眠程度{0}%/{1}%").format(
             now_value_3, require_value_3
@@ -1228,16 +1226,15 @@ class Physical_Check_And_Manage_Panel:
                 )
                 break
         # 如果有催眠相关的素质
+        target_hyp_deg = hypnosis.degree(target_character_data.cid)
         if now_hypnosis_flag:
             report_text += _("{0}（{1}%）\n").format(
                 hypnosis_talent_text,
-                target_character_data.hypnosis.hypnosis_degree,
+                target_hyp_deg,
             )
         # 否则显示催眠程度
         else:
-            report_text += _("{0}%\n").format(
-                target_character_data.hypnosis.hypnosis_degree
-            )
+            report_text += _("{0}%\n").format(target_hyp_deg)
         # 各指令的遍历
         for cmd_id in cmd_ablility_dict:
             if cmd_id not in self.done_check_behavior_id_set:
@@ -1277,12 +1274,13 @@ class Physical_Check_And_Manage_Panel:
         report_text += _("\n性爱履历：\n")
 
         # 初吻
+        target_fr = first_record.view(target_character_data.cid)
         now_text = ""
         if abilities.talent(target_character_id)[4]:
             now_text += _("保有初吻")
-        elif target_character_data.first_record.first_kiss_id != -1:
-            kiss_id = target_character_data.first_record.first_kiss_id
-            kiss_time = target_character_data.first_record.first_kiss_time
+        elif target_fr.first_kiss_id != -1:
+            kiss_id = target_fr.first_kiss_id
+            kiss_time = target_fr.first_kiss_time
             now_text += _(
                 "于{kiss_time}在{kiss_palce}，向{character_name}博士"
             ).format(
@@ -1292,10 +1290,10 @@ class Physical_Check_And_Manage_Panel:
                 + str(kiss_time.day)
                 + _("日"),
                 kiss_palce=attr_text.get_scene_path_text(
-                    target_character_data.first_record.first_kiss_place
+                    target_fr.first_kiss_place
                 ),
             )
-            if target_character_data.first_record.first_kiss_body_part == 1:
+            if target_fr.first_kiss_body_part == 1:
                 now_text += _("的阴茎")
             now_text += _("献上了初吻")
         report_text += f" {base_ability_dict[11]}{now_text}\n"
@@ -1305,9 +1303,7 @@ class Physical_Check_And_Manage_Panel:
         if abilities.talent(target_character_id)[0]:
             now_text += _("保有处女")
         else:
-            record = target_character_data.first_record.first_part_sex_dict.get(
-                6, None
-            )
+            record = target_fr.first_part_sex_dict.get(6, None)
             if record is not None and record["id"] != -1:
                 now_text += _(
                     "于{time}在{palce}，被{character_name}博士以{posture}夺走了处女"
@@ -1324,9 +1320,7 @@ class Physical_Check_And_Manage_Panel:
         if abilities.talent(target_character_id)[1]:
             now_text += _("保有后庭处女")
         else:
-            record = target_character_data.first_record.first_part_sex_dict.get(
-                8, None
-            )
+            record = target_fr.first_part_sex_dict.get(8, None)
             if record is not None and record["id"] != -1:
                 now_text += _(
                     "于{time}在{palce}，被{character_name}博士以{posture}夺走了A处女"

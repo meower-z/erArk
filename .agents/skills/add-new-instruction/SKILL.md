@@ -77,18 +77,18 @@ description: 为 erArk 新增一个玩家指令及其行为、前提、结算、
 ### 第八步：数据结构与存档兼容（如有新数据）
 
 挂载位置按生命周期选择：
-- **勿放 `BODY_H_STATE`**（H 结束时 `get_h_state_reset` 整体重建，数据会丢）
-- 角色身上的可见状态 → `DIRTY`（`get_dirty_reset` 原地重置，重置范围逐字段显式列出：新字段需随洗澡等污浊重置清空的，要在该函数中显式加入；否则可存续）
+- **勿放 `BODY_H_STATE`**（`h.state`，H 结束时 `h_state.reset` 只保留少数持久项，其余清空；若确需加字段，必须同步加入 `Script/Modules/domains/h_state.py` 的 `_encode`/`_decode`，否则写入时丢失）
+- 角色身上的可见状态 → `DIRTY`（`body.dirty`，`dirty.reset` 逐字段显式清零：新字段需随洗澡等污浊重置清空的，要在 `Script/Modules/domains/dirty.py` 的 `reset` 中显式加入，并且**必须同步加入 `_encode`/`_decode`**，否则写入或存档时会静默丢失）
 - 玩家持久收集 → `PLAYER_COLLECTION`；瞬时标记 → `SPECIAL_FLAG`
 
-新增字段必须在 `Script/Core/save_handle.py:175` 附近的逐角色回填段加 `hasattr` 兜底，数据访问函数内也做兜底回填。
+新增字段若留在旧对象结构体上，必须在 `Script/Core/save_handle.py` 附近的逐角色回填段加 `hasattr` 兜底；若加入已迁入内核的领域（如 `body.dirty`、`h.state`），必须在对应领域模块的 `_encode`/`_decode` 中显式编解码并补单元测试。
 
-清零/去除时机常用挂点："下次H开始" → `default.py` 的 `handle_h_flag_to_1` 首次进H分支；"换衣/脱衣" → `clothing.py` 四个换装函数 + `default_cloth.py` 两个入柜结算；"洗澡/污浊重置" → 在 `attr_calculation.get_dirty_reset` 中显式清空。
+清零/去除时机常用挂点："下次H开始" → `default.py` 的 `handle_h_flag_to_1` 首次进H分支；"换衣/脱衣" → `clothing.py` 四个换装函数 + `default_cloth.py` 两个入柜结算；"洗澡/污浊重置" → 在 `Script/Modules/domains/dirty.py` 的 `reset` 中显式清空。
 
 ### 第九步：构建与验证
 
 1. `python buildconfig.py` **必跑**（漏跑启动 KeyError）；新翻译词条再跑 `buildpo.py` + `buildmo.py`。
-2. 单元测试脚本要点：**先** `cache_control.cache = game_type.Cache()` **再** import 其他模块；`normal_config.init_normal_config()` + `game_config.init()`；角色 fixture 用 `attr_calculation.get_dirty_reset` / `get_cloth_wear_zero` / `get_talent_zero` 初始化。
+2. 单元测试脚本要点：**先** `cache_control.cache = game_type.Cache()` **再** import 其他模块；`normal_config.init_normal_config()` + `game_config.init()`；角色 fixture 用 `attr_calculation.get_cloth_wear_zero` 等初始化旧对象容器，内核领域（`abilities`/`dirty`/`h_state`）在 `kernel_data.writing()` 中直接读写。
 3. 注册断言：`constant.handle_instruct_data` / `instruct_premise_data` / `handle_premise_data` / `game_config.config_behavior` / `config_behavior_effect_data` 包含新增项。
 4. 游戏内测试可开 debug 模式（config.ini `debug=1`，跳过全部前提）。
 

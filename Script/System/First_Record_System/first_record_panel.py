@@ -9,6 +9,7 @@ from Script.Core import cache_control, game_type, get_text, num
 from Script.Config import game_config, normal_config
 from Script.Design import attr_text, game_time
 from Script.UI.Panel import character_info_head, hypnosis_panel
+from Script.Modules.domains import dirty, first_record as first_record_domain
 from Script.Modules.domains import playthrough
 
 if TYPE_CHECKING:
@@ -420,18 +421,18 @@ def _build_fluid_text(character_id: int) -> str:
     Return arguments:
     str -- 分组文本
     """
-    character_data = cache.character_data[character_id]
     now_text = ""
     # 全身累计被射精液量
+    dirty_view = dirty.view(character_id)
     semen_count = 0
     for body_part in game_config.config_body_part:
-        semen_count += character_data.dirty.body_semen[body_part][3]
+        semen_count += dirty_view.body_semen[body_part][3]
     if semen_count:
         now_text += _("  全身总共被射上过{0}ml精液\n").format(semen_count)
         # 各身体部位的累计被射精液量（只列非零部位）
         now_text += _(" 【各部位累计被射精液量】\n")
         for part_cid in game_config.config_body_part:
-            part_semen = character_data.dirty.body_semen[part_cid][3]
+            part_semen = dirty_view.body_semen[part_cid][3]
             part_name = game_config.config_body_part[part_cid].name
             # 口腔行：累计被射入口腔的精液即喝下的精液，以喝过量的形式显示
             if part_cid == 2:
@@ -442,7 +443,7 @@ def _build_fluid_text(character_id: int) -> str:
                 continue
             # 胃部行：累计被射精量即食道直入胃的精液量，其后以逗号接肠胃吸收的精液量
             if part_cid == 15:
-                absorbed_semen = character_data.dirty.absorbed_total_semen
+                absorbed_semen = dirty_view.absorbed_total_semen
                 if part_semen or absorbed_semen:
                     stomach_text_list = []
                     if part_semen:
@@ -527,15 +528,12 @@ class FirstRecordText:
         self.return_list: list[str] = []
         """ 当前面板监听的按钮列表 """
 
-        character_data = cache.character_data[character_id]
         type_line = draw.LittleTitleLineDraw(_("性行为履历"), width, ":")
         self.draw_list.append(type_line)
 
         # 单周目显示：只渲染当前查看的一个周目，默认为当前周目
         # 可查看的周目列表：各历史周目升序 + 当前周目
-        first_record_history = getattr(
-            character_data, "first_record_history", {}
-        )
+        first_record_history = first_record_domain.history(self.character_id)
         cur = playthrough.game_round()
         available_round_list = [*sorted(first_record_history), cur]
         # 当前查看的周目（无效选择时回退为当前周目）
@@ -543,7 +541,7 @@ class FirstRecordText:
         now_round = _selected_round if in_rounds else cur
         is_current = now_round == cur
         first_record = (
-            character_data.first_record
+            first_record_domain.view(self.character_id)
             if is_current
             else first_record_history[now_round]
         )

@@ -23,7 +23,9 @@ from typing import TypeGuard
 from Script.Core import cache_control, num
 from Script.Design import map_handle
 from Script.Modules.domains import abilities, achievement, action_info, flags
-from Script.Modules.domains import modes, needs, player_ability, roster
+from Script.Modules.domains import h_state as h_state_domain
+from Script.Modules.domains import hypnosis as hypnosis_domain, modes, needs
+from Script.Modules.domains import player_ability, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -359,7 +361,7 @@ def check_time_stop_no_residual_release_flag() -> list[CheckFailure]:
     for cid, chara in _iter_npcs():
         if getattr(chara, "dead", False):
             continue
-        h_state = getattr(chara, "h_state", None)
+        h_state = h_state_domain.view(cid)
         if getattr(h_state, "time_stop_release", False):
             count = getattr(h_state, "time_stop_orgasm_count", {})
             nonzero = (
@@ -452,9 +454,7 @@ def check_hypnosis_degree_bound() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_npcs():
-        degree = getattr(
-            getattr(chara, "hypnosis", None), "hypnosis_degree", None
-        )
+        degree = hypnosis_domain.degree(cid)
         if _num(degree) and 0 <= degree <= 200:
             continue
         talents = {tid: _talent_get(chara, tid) for tid in (331, 332, 333, 334)}
@@ -492,7 +492,7 @@ def check_hypnosis_type_degree_threshold() -> list[CheckFailure]:
         u = _u(chara)
         if u not in thresholds:
             continue
-        degree = getattr(getattr(chara, "hypnosis", None), "hypnosis_degree", 0)
+        degree = hypnosis_domain.degree(cid)
         if _num(degree) and degree >= thresholds[u]:
             continue
         pl = _pl()
@@ -528,7 +528,7 @@ def check_hypnosis_talent_degree_order() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_npcs():
-        d = getattr(getattr(chara, "hypnosis", None), "hypnosis_degree", 0)
+        d = hypnosis_domain.degree(cid)
         if not _num(d):
             d = 0
         talents = {tid: _talent_get(chara, tid) for tid in (71, 72, 73)}
@@ -646,7 +646,7 @@ def check_hypnosis_behavior_mode_exclusive() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_npcs():
-        h = getattr(chara, "hypnosis", None)
+        h = hypnosis_domain.view(cid)
         modes = [
             bool(getattr(h, "blockhead", False)),
             bool(getattr(h, "active_h", False)),
@@ -686,10 +686,10 @@ def check_body_control_unconscious_needs_mode() -> list[CheckFailure]:
     for cid, chara in _iter_npcs():
         if _u(chara) != 6:
             continue
-        h = getattr(chara, "hypnosis", None)
+        h = hypnosis_domain.view(cid)
         if getattr(h, "blockhead", False) or getattr(h, "active_h", False):
             continue
-        h_state = getattr(chara, "h_state", None)
+        h_state = h_state_domain.view(cid)
         failures.append(
             make_failure(
                 "MIND-14",
@@ -728,7 +728,7 @@ def check_mind_control_unconscious_needs_roleplay() -> list[CheckFailure]:
     for cid, chara in _iter_npcs():
         if _u(chara) != 7:
             continue
-        h = getattr(chara, "hypnosis", None)
+        h = hypnosis_domain.view(cid)
         if getattr(h, "roleplay", None):
             continue
         failures.append(
@@ -769,7 +769,7 @@ def check_roleplay_list_shape() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_npcs():
-        rp = getattr(getattr(chara, "hypnosis", None), "roleplay", None)
+        rp: object = hypnosis_domain.view(cid).roleplay
         if not isinstance(rp, list):
             failures.append(
                 make_failure(
@@ -821,7 +821,7 @@ def check_body_mind_control_sub_item_requires_talent_73() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_npcs():
-        h = getattr(chara, "hypnosis", None)
+        h = hypnosis_domain.view(cid)
         sub_items = {
             "increase_body_sensitivity": bool(
                 getattr(h, "increase_body_sensitivity", False)
@@ -1136,8 +1136,8 @@ def check_sleep_unconscious_needs_sleep_or_pretend() -> list[CheckFailure]:
     for cid, chara in _iter_npcs():
         if _u(chara) != 1:
             continue
-        if _behavior_id(chara) == "sleep" or getattr(
-            getattr(chara, "h_state", None), "pretend_sleep", False
+        if _behavior_id(chara) == "sleep" or h_state_domain.get(
+            cid, "pretend_sleep"
         ):
             continue
         failures.append(
@@ -1147,7 +1147,7 @@ def check_sleep_unconscious_needs_sleep_or_pretend() -> list[CheckFailure]:
                 (
                     f"角色id={cid}({_name(chara)})unconscious_h=1但既不在sleep行为中也未装睡: "
                     f"behavior_id={_behavior_id(chara)} "
-                    f"pretend_sleep={getattr(getattr(chara, 'h_state', None), 'pretend_sleep', '?')} "
+                    f"pretend_sleep={h_state_domain.get(cid, 'pretend_sleep')} "
                     f"sleep_h_awake={flags.get(cid, 'sleep_h_awake')} "
                     f"sleep_point={num.shown(needs.of(cid)['sleep'])} state={getattr(chara, 'state', '?')}"
                 ),
@@ -1171,7 +1171,7 @@ def check_time_stop_orgasm_count_shape() -> list[CheckFailure]:
     cache = cache_control.cache
     failures = []
     for cid, chara in _iter_npcs():
-        h_state = getattr(chara, "h_state", None)
+        h_state = h_state_domain.view(cid)
         d = getattr(h_state, "time_stop_orgasm_count", None)
         ok = isinstance(d, dict) and all(
             type(k) is int and _num(v) and v >= 0 for k, v in d.items()
@@ -1251,7 +1251,7 @@ def check_pretend_sleep_should_be_unreachable() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_npcs():
-        h_state = getattr(chara, "h_state", None)
+        h_state = h_state_domain.view(cid)
         if not getattr(h_state, "pretend_sleep", False):
             continue
         failures.append(

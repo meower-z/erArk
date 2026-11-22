@@ -13,8 +13,8 @@ from Script.Design import (
 from Script.Core import cache_control, constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities, flags, inventory, kitchen, needs
-from Script.Modules.domains import status
+from Script.Modules.domains import abilities, dirty, flags, h_state, inventory
+from Script.Modules.domains import kitchen, needs, status
 
 _: FunctionType = get_text._
 window_width: int = normal_config.config_normal.text_width
@@ -43,10 +43,10 @@ def handle_item_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    for i in range(len(character_data.h_state.body_item)):
-        character_data.h_state.body_item[i][1] = False
-        character_data.h_state.body_item[i][2] = None
+    with h_state.editing(character_id) as hs:
+        for entry in hs.body_item.values():
+            entry[1] = False
+            entry[2] = None
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -93,12 +93,12 @@ def handle_item_off_except_pill(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    for i in range(len(character_data.h_state.body_item)):
-        if i in {8, 9, 10, 11, 12}:
-            continue
-        character_data.h_state.body_item[i][1] = False
-        character_data.h_state.body_item[i][2] = None
+    with h_state.editing(character_id) as hs:
+        for i, entry in hs.body_item.items():
+            if i in {8, 9, 10, 11, 12}:
+                continue
+            entry[1] = False
+            entry[2] = None
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -146,12 +146,9 @@ def handle_target_b_item_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
+    target_id = character_data.target_character_id
     for i in [0, 4]:
-        target_data.h_state.body_item[i][1] = False
-        target_data.h_state.body_item[i][2] = None
+        h_state.set_body_item(target_id, i, False, None)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -174,12 +171,9 @@ def handle_target_a_item_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
+    target_id = character_data.target_character_id
     for i in [3, 7]:
-        target_data.h_state.body_item[i][1] = False
-        target_data.h_state.body_item[i][2] = None
+        h_state.set_body_item(target_id, i, False, None)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -202,10 +196,7 @@ def handle_target_vibrator_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[2][1] = True
+    h_state.set_body_item(character_data.target_character_id, 2, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -228,10 +219,7 @@ def handle_target_vibrator_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[2][1] = False
+    h_state.set_body_item(character_data.target_character_id, 2, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -254,10 +242,7 @@ def handle_target_anal_vibrator_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[3][1] = True
+    h_state.set_body_item(character_data.target_character_id, 3, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -280,10 +265,7 @@ def handle_target_anal_vibrator_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[3][1] = False
+    h_state.set_body_item(character_data.target_character_id, 3, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -306,10 +288,7 @@ def handle_target_nipple_clamp_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[0][1] = True
+    h_state.set_body_item(character_data.target_character_id, 0, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -332,10 +311,7 @@ def handle_target_nipple_clamp_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[0][1] = False
+    h_state.set_body_item(character_data.target_character_id, 0, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -358,10 +334,7 @@ def handle_target_clit_clamp_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[1][1] = True
+    h_state.set_body_item(character_data.target_character_id, 1, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -384,10 +357,7 @@ def handle_target_clit_clamp_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[1][1] = False
+    h_state.set_body_item(character_data.target_character_id, 1, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -410,10 +380,7 @@ def handle_target_anal_beads_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[7][1] = True
+    h_state.set_body_item(character_data.target_character_id, 7, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -436,10 +403,7 @@ def handle_target_anal_beads_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[7][1] = False
+    h_state.set_body_item(character_data.target_character_id, 7, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -462,10 +426,7 @@ def handle_target_milking_machine_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[4][1] = True
+    h_state.set_body_item(character_data.target_character_id, 4, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -488,10 +449,7 @@ def handle_target_milking_machine_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[4][1] = False
+    h_state.set_body_item(character_data.target_character_id, 4, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -514,10 +472,7 @@ def handle_target_urine_collector_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[5][1] = True
+    h_state.set_body_item(character_data.target_character_id, 5, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -540,10 +495,7 @@ def handle_target_urine_collector_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[5][1] = False
+    h_state.set_body_item(character_data.target_character_id, 5, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -566,10 +518,7 @@ def handle_target_patch_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[6][1] = True
+    h_state.set_body_item(character_data.target_character_id, 6, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -592,10 +541,7 @@ def handle_target_patch_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[6][1] = False
+    h_state.set_body_item(character_data.target_character_id, 6, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -618,10 +564,7 @@ def handle_target_gag_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[14][1] = True
+    h_state.set_body_item(character_data.target_character_id, 14, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -644,10 +587,7 @@ def handle_target_gag_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[14][1] = False
+    h_state.set_body_item(character_data.target_character_id, 14, False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1659,7 +1599,7 @@ def handle_target_enema(
     # 根据A扩张和当前灌肠液量来判定苦痛程度
     ability_lv = abilities.ability(target_data.cid)[10]
     ability_adjust = handle_ability.get_ability_adjust(ability_lv)
-    enema_capacity = target_data.dirty.enema_capacity
+    enema_capacity = dirty.enema_capacity(target_data.cid)
     enema_capacity_adjust = 2 ** (enema_capacity + 1)
     extra_adjust = enema_capacity_adjust / ability_adjust
     base_chara_state_common_settle(
@@ -1673,9 +1613,11 @@ def handle_target_enema(
     )
 
     # A灌肠
-    target_data.dirty.a_clean = 1
-    target_data.dirty.enema_capacity += 1
-    target_data.dirty.enema_capacity = min(6, target_data.dirty.enema_capacity)
+    dirty.set(
+        target_data.cid,
+        a_clean=1,
+        enema_capacity=min(6, enema_capacity + 1),
+    )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1720,28 +1662,30 @@ def handle_target_enema_end(
     target_change.status_data[8] += now_add_lust
 
     # A灌肠结束
-    if target_data.dirty.a_clean == 1:
-        target_data.dirty.a_clean = 2
-    elif target_data.dirty.a_clean == 3:
-        target_data.dirty.a_clean = 4
+    a_clean = dirty.get(target_data.cid, "a_clean")
+    if a_clean == 1:
+        dirty.set(target_data.cid, a_clean=2, enema_capacity=0)
+    elif a_clean == 3:
+        dirty.set(target_data.cid, a_clean=4, enema_capacity=0)
         # 清空肠内精液量的90%
-        now_semen_data = character_data.dirty.body_semen[8]
-        semen_num = now_semen_data[1] * 0.9
-        if semen_num > 1:
-            now_semen_data[1] -= num.exact(semen_num)
-            now_semen_data[2] = attr_calculation.get_semen_now_level(
-                now_semen_data[1], 8, 0
-            )
-            # 绘制提示信息
-            info_text = _("{0}的后穴喷出了{1}ml的精液\n").format(
-                target_data.name, int(semen_num)
-            )
-            info_draw = draw.NormalDraw()
-            info_draw.text = info_text
-            info_draw.width = width
-            info_draw.draw()
-    # 清空灌肠液量
-    target_data.dirty.enema_capacity = 0
+        with dirty.editing(character_id) as d:
+            now_semen_data = d.body_semen[8]
+            semen_num = now_semen_data[1] * 0.9
+            if semen_num > 1:
+                now_semen_data[1] -= num.exact(semen_num)
+                now_semen_data[2] = attr_calculation.get_semen_now_level(
+                    now_semen_data[1], 8, 0
+                )
+                # 绘制提示信息
+                info_text = _("{0}的后穴喷出了{1}ml的精液\n").format(
+                    target_data.name, int(semen_num)
+                )
+                info_draw = draw.NormalDraw()
+                info_draw.text = info_text
+                info_draw.width = width
+                info_draw.draw()
+    else:
+        dirty.set(target_data.cid, enema_capacity=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1787,12 +1731,8 @@ def handle_target_diuretics_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
     end_time = now_time + datetime.timedelta(hours=4)
-    target_data.h_state.body_item[8][1] = True
-    target_data.h_state.body_item[8][2] = end_time
+    h_state.set_body_item(character_data.target_character_id, 8, True, end_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1815,12 +1755,11 @@ def handle_target_add_tired_tosleep(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    needs.set(target_data.cid, tired=160, sleep=100)
-    target_data.h_state.body_item[9][1] = True
-    target_data.h_state.body_item[9][2] = now_time + datetime.timedelta(hours=8)
+    target_id = character_data.target_character_id
+    needs.set(target_id, tired=160, sleep=100)
+    h_state.set_body_item(
+        target_id, 9, True, now_time + datetime.timedelta(hours=8)
+    )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1843,10 +1782,7 @@ def handle_target_add_pregnancy_chance(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[10][1] = True
+    h_state.set_body_item(character_data.target_character_id, 10, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1869,12 +1805,11 @@ def handle_target_no_pregnancy_next_day(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[11][1] = True
-    target_data.h_state.body_item[11][2] = now_time + datetime.timedelta(
-        days=30
+    h_state.set_body_item(
+        character_data.target_character_id,
+        11,
+        True,
+        now_time + datetime.timedelta(days=30),
     )
 
 
@@ -1898,10 +1833,7 @@ def handle_target_no_pregnancy_from_last_h(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.body_item[12][1] = True
+    h_state.set_body_item(character_data.target_character_id, 12, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1923,8 +1855,7 @@ def handle_wear_condom(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.h_state.body_item[13][1] = True
+    h_state.set_body_item(character_id, 13, True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1946,8 +1877,7 @@ def handle_take_condom_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.h_state.body_item[13][1] = False
+    h_state.set_body_item(character_id, 13, False)
 
 
 @settle_behavior.add_settle_behavior_effect(

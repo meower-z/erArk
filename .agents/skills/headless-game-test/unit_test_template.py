@@ -165,13 +165,7 @@ def new_chara(
     cd.name = name
     cd.adv = adv
     cd.sex = 1
-    cd.dirty = (
-        attr_calculation.get_zero_dirty()
-    )  # 注意是 get_zero_dirty，不是 get_dirty_zero
     cd.second_behavior = attr_calculation.get_second_behavior_zero({})
-    cd.h_state = attr_calculation.get_h_state_reset(
-        cd.h_state
-    )  # 只有 reset 版，要把旧对象传进去
     cd.favorability = {0: 0}  # 好感/信赖类前提会直接取 [0]
     cd.position = list(SCENE)
     cd.race = race

@@ -14,7 +14,6 @@ from Script.Core import (
     game_type,
     get_text,
     io_init,
-    num,
     old_chara_to_new,
 )
 from Script.Config import normal_config, game_config, character_config
@@ -26,8 +25,10 @@ from typing import TYPE_CHECKING
 from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info
 from Script.Modules.domains import body_manage, commission, country, diplomacy
-from Script.Modules.domains import dormitory, education, entertainment, facility
-from Script.Modules.domains import flags, fridge, growth, history, inventory
+from Script.Modules.domains import dirty, dormitory, education, entertainment
+from Script.Modules.domains import facility, first_record, flags, fridge
+from Script.Modules.domains import growth, h_meters, h_state, history, hypnosis
+from Script.Modules.domains import inventory
 from Script.Modules.domains import kitchen, library, location, maintenance
 from Script.Modules.domains import medical, modes, needs, official
 from Script.Modules.domains import physical_exam, plan, player_ability
@@ -892,6 +893,9 @@ def install_save(save_id: str, version: int) -> None:
     upgrade.adopt_pickled(loaded_dict)
     pregnancy.adopt_old_save(loaded_dict, version)
     growth.adopt_old_save(loaded_dict, version)
+    for chara_domain in (h_meters, h_state, dirty, hypnosis, first_record):
+        update_count += chara_domain.adopt_old_save(loaded_dict)
+    update_count += h_meters.adopt_world(loaded_dict, version)
     young_child_session: old_chara_to_new.YoungChildSession = {}
     update_count += old_chara_to_new.migrate_age_and_body_type(
         loaded_dict, young_child_session
@@ -967,29 +971,12 @@ def install_save(save_id: str, version: int) -> None:
     old_chara_to_new.end_young_child_session(young_child_session)
 
 
-CHARACTER_NUM_FIELDS = ("eja_point", "semen_point")
-""" exact_stats 换成精确值的角色属性名：射精槽与精液槽 """
-
-
 def exact_stats() -> None:
     """
     读档的 Reset 步骤：装好的缓存里随时间结算的数值是 float 时换成精确值（num.exact），int 与 Fraction 不动。
-    数值有角色的 CHARACTER_NUM_FIELDS、污浊的累计吸收精液量、身体各部位的当前精液量与精液流通的剩余量。
-    body.needs、player.ability 与状态值在读档导入时已换成精确值。
+    body.needs、body.status、h.meters、body.dirty 与 player.ability 在读档导入时已全部换成精确值。
     """
-    for character in cache.character_data.values():
-        for name in CHARACTER_NUM_FIELDS:
-            setattr(character, name, num.exact(getattr(character, name)))
-        dirty = character.dirty
-        dirty.absorbed_total_semen = num.exact(dirty.absorbed_total_semen)
-        for part in dirty.body_semen.values():
-            part[1] = num.exact(part[1])
-        for flow in dirty.semen_flow:
-            for target in flow.get("targets", ()):
-                if "remaining_volume" in target:
-                    target["remaining_volume"] = num.exact(
-                        target["remaining_volume"]
-                    )
+    return
 
 
 def repair_installed() -> None:

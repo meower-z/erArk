@@ -13,6 +13,7 @@ from Script.Modules.domains import (
     commission,
     economy,
     facility,
+    hypnosis,
     maintenance,
     needs,
     prison,
@@ -755,7 +756,7 @@ class Manage_Basement_Panel:
                         if key == _("最大气力"):
                             return needs.of(nid)["mana_max"]
                         if key == _("催眠深度"):
-                            return c.hypnosis.hypnosis_degree
+                            return hypnosis.degree(nid)
                         if key == _("工作"):
                             return c.work.work_type
                         if key == _("装备"):
@@ -895,9 +896,7 @@ class Manage_Basement_Panel:
                         elif current_category == _("【好感信赖】"):
                             favor = character_data.favorability.get(0, 0)
                             trust = character_data.trust
-                            hypnosis_val = (
-                                character_data.hypnosis.hypnosis_degree
-                            )
+                            hypnosis_val = hypnosis.degree(character_data.cid)
 
                             # 判定现在位置
                             from Script.Design import map_handle

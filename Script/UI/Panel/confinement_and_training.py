@@ -15,10 +15,11 @@ from Script.Design import map_handle, virgin_break_gate
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 import random
+from Script.Modules.domains import abilities, body_manage, dirty, facility
+from Script.Modules.domains import flags, h_state, inventory, needs, prison
+from Script.Modules.domains import work
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, body_manage, facility, flags
-from Script.Modules.domains import inventory, needs, prison, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -339,9 +340,7 @@ def start_training_preparation(target_character_id: int) -> None:
     )
     # 清洗
     if prison.cleaning():
-        target_character_data.dirty = attr_calculation.get_dirty_reset(
-            target_character_data.dirty
-        )
+        dirty.reset(target_character_data.cid)
     # 润滑
     if prison.lubrication() and handle_premise.handle_have_body_lubricant(0):
         default.handle_use_body_lubricant(
@@ -378,7 +377,7 @@ def start_training_preparation(target_character_id: int) -> None:
                 inventory.add_item(0, item_id, -1)
             # 其他道具
             else:
-                target_character_data.h_state.body_item[i][1] = True
+                h_state.set_body_item(target_character_data.cid, i, True)
                 # 消耗类道具
                 if i in {8, 9, 10, 11, 12}:
                     # 数量减少

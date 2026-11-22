@@ -27,8 +27,8 @@ import datetime
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import achievement, action_info, flags, history
-from Script.Modules.domains import modes, roster
+from Script.Modules.domains import achievement, action_info, flags, h_state
+from Script.Modules.domains import history, modes, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -659,8 +659,8 @@ def check_active_body_item_not_expired() -> list[CheckFailure]:
         chara = character_data.get(cid)
         if chara is None:
             continue
-        h_state = getattr(chara, "h_state", None)
-        body_item = getattr(h_state, "body_item", None)
+        hs = h_state.view(cid)
+        body_item = getattr(hs, "body_item", None)
         if not isinstance(body_item, dict):
             continue
         is_h = flags.get(cid, "is_h")

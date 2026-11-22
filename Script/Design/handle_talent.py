@@ -8,7 +8,8 @@ from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, pregnancy
+from Script.Modules.domains import abilities, dirty, first_record, hypnosis
+from Script.Modules.domains import pregnancy
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -33,11 +34,12 @@ def record_fall_talent_time(character_id: int, talent_id: int) -> None:
     if talent_id not in {201, 202, 203, 204, 211, 212, 213, 214}:
         return
     character_data = cache.character_data[character_id]
-    if talent_id not in character_data.first_record.fall_talent_time_dict:
-        character_data.first_record.fall_talent_time_dict[talent_id] = [
-            game_time.now(),
-            list(character_data.position),
-        ]
+    with first_record.editing(character_id) as fr:
+        if talent_id not in fr.fall_talent_time_dict:
+            fr.fall_talent_time_dict[talent_id] = [
+                game_time.now(),
+                list(character_data.position),
+            ]
 
 
 def gain_talent(
@@ -227,7 +229,8 @@ def npc_gain_hypnosis_talent(character_id: int) -> None:
     from Script.Design import second_behavior
 
     character_data = cache.character_data[character_id]
-    if character_data.hypnosis.hypnosis_degree < 1:
+    hyp_deg = hypnosis.of(character_id)["hypnosis_degree"]
+    if hyp_deg < 1:
         return
 
     for cid in game_config.config_hypnosis_talent_of_npc:
@@ -239,7 +242,7 @@ def npc_gain_hypnosis_talent(character_id: int) -> None:
         if not abilities.talent(0)[now_data.need_talent_id]:
             continue
 
-        if character_data.hypnosis.hypnosis_degree >= now_data.hypnosis_degree:
+        if hyp_deg >= now_data.hypnosis_degree:
             abilities.talent(character_id)[now_data.hypnosis_talent_id] = 1
             talent_name = game_config.config_talent[
                 now_data.hypnosis_talent_id
@@ -271,13 +274,9 @@ def npc_gain_and_lost_cumflation(character_id: int) -> None:
     character_data = cache.character_data[character_id]
 
     # 计算腹部精液总量
-    abdomen_all_semen = 0
+    abdomen_all_semen: num.Num = 0
     for i in [6, 7, 8, 15]:
-        # 如果没有第[i]个，则补上
-        if len(character_data.dirty.body_semen) <= i:
-            part_name = game_config.config_body_part[i].name
-            character_data.dirty.body_semen[i] = [part_name, 0, 0, 0]
-        abdomen_all_semen += character_data.dirty.body_semen[i][1]
+        abdomen_all_semen += dirty.body_semen_amount(character_id, i)
 
     # 判断是否获得或失去精液膨腹
     now_draw_text = ""

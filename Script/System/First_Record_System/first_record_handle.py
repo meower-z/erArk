@@ -5,7 +5,8 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import abilities, flags, modes
+from Script.Modules.domains import abilities, first_record, flags, h_state
+from Script.Modules.domains import modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -63,13 +64,14 @@ def record_first_special_record(
     if special_cid not in game_config.config_first_record_special:
         return
     character_data = cache.character_data[character_id]
-    if special_cid in character_data.first_record.first_special_record_dict:
-        return
-    character_data.first_record.first_special_record_dict[special_cid] = [
-        game_time.now(),
-        list(character_data.position),
-        special_data,
-    ]
+    with first_record.editing(character_id) as fr:
+        if special_cid in fr.first_special_record_dict:
+            return
+        fr.first_special_record_dict[special_cid] = [
+            game_time.now(),
+            list(character_data.position),
+            special_data,
+        ]
 
 
 def get_semen_source_text(character_id: int) -> str:
@@ -140,12 +142,13 @@ def record_first_h_mode(
     extra_data -- 附加数据文本
     """
     character_data = cache.character_data[character_id]
-    if mode_key not in character_data.first_record.first_h_mode_dict:
-        character_data.first_record.first_h_mode_dict[mode_key] = [
-            game_time.now(),
-            list(character_data.position),
-            extra_data,
-        ]
+    with first_record.editing(character_id) as fr:
+        if mode_key not in fr.first_h_mode_dict:
+            fr.first_h_mode_dict[mode_key] = [
+                game_time.now(),
+                list(character_data.position),
+                extra_data,
+            ]
 
 
 def check_first_h_mode(character_id: int) -> None:
@@ -193,5 +196,5 @@ def check_first_h_mode(character_id: int) -> None:
         )
         record_first_h_mode(character_id, "hidden_sex", mode_name)
     # 装睡H
-    if character_data.h_state.pretend_sleep:
+    if h_state.get(character_id, "pretend_sleep"):
         record_first_h_mode(character_id, "pretend_sleep")

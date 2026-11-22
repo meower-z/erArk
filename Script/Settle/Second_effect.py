@@ -17,7 +17,15 @@ from Script.Settle.common_default import (
 )
 from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, flags, fridge, growth
-from Script.Modules.domains import needs, player_collection, pregnancy, status
+from Script.Modules.domains import h_meters, h_state, needs, player_collection
+from Script.Modules.domains import pregnancy, status
+
+
+def _bump_orgasm_count(character_id: int, part_id: int) -> None:
+    with h_state.editing(character_id) as hs:
+        hs.orgasm_count[part_id][0] += 1
+        hs.orgasm_count[part_id][1] += 1
+
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -117,8 +125,7 @@ def handle_add_1_nclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[0][0] += 1
-        character_data.h_state.orgasm_count[0][1] += 1
+        _bump_orgasm_count(character_id, 0)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -144,8 +151,7 @@ def handle_add_1_bclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[1][0] += 1
-        character_data.h_state.orgasm_count[1][1] += 1
+        _bump_orgasm_count(character_id, 1)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -171,8 +177,7 @@ def handle_add_1_cclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[2][0] += 1
-        character_data.h_state.orgasm_count[2][1] += 1
+        _bump_orgasm_count(character_id, 2)
 
 
 # @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_PClimax_EXPERIENCE)
@@ -224,8 +229,7 @@ def handle_add_1_vclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[4][0] += 1
-        character_data.h_state.orgasm_count[4][1] += 1
+        _bump_orgasm_count(character_id, 4)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -251,8 +255,7 @@ def handle_add_1_aclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[5][0] += 1
-        character_data.h_state.orgasm_count[5][1] += 1
+        _bump_orgasm_count(character_id, 5)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -278,8 +281,7 @@ def handle_add_1_uclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[6][0] += 1
-        character_data.h_state.orgasm_count[6][1] += 1
+        _bump_orgasm_count(character_id, 6)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -305,8 +307,7 @@ def handle_add_1_wclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[7][0] += 1
-        character_data.h_state.orgasm_count[7][1] += 1
+        _bump_orgasm_count(character_id, 7)
 
 
 """
@@ -354,8 +355,7 @@ def handle_add_1_cumming_experience(
     base_chara_experience_common_settle(
         character_id, 21, 1, change_data=change_data
     )
-    character_data.h_state.orgasm_count[3][0] += 1
-    character_data.h_state.orgasm_count[3][1] += 1
+    _bump_orgasm_count(character_id, 3)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -780,12 +780,10 @@ def handle_add_small_p_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[0]
-
-    now_add_lust = 100 + character_data.eja_point * 0.4
+    now_add_lust = 100 + h_meters.of(0)["eja"] * 0.4
     # now_add_lust *= adjust
     now_add_lust = int(now_add_lust)
-    character_data.eja_point += now_add_lust
+    h_meters.add(0, "eja", now_add_lust)
     change_data.eja_point += now_add_lust
     action_info.set(0, "last_eaj_add_time", game_time.now())
 
@@ -1524,12 +1522,11 @@ def handle_add_middle_v_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_add_lust = 300 + character_data.eja_point * 0.4
+    now_add_lust = 300 + h_meters.of(character_id)["eja"] * 0.4
     # adjust = handle_ability.get_ability_adjust(character_data.ability[3])
     # now_add_lust *= adjust
     now_add_lust = int(now_add_lust)
-    character_data.eja_point += now_add_lust
+    h_meters.add(character_id, "eja", now_add_lust)
     change_data.eja_point += now_add_lust
     action_info.set(character_id, "last_eaj_add_time", game_time.now())
 
@@ -2044,12 +2041,11 @@ def handle_add_large_p_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_add_lust = 1000 + character_data.eja_point * 0.4
+    now_add_lust = 1000 + h_meters.of(character_id)["eja"] * 0.4
     # adjust = handle_ability.get_ability_adjust(character_data.ability[3])
     # now_add_lust *= adjust
     now_add_lust = int(now_add_lust)
-    character_data.eja_point += now_add_lust
+    h_meters.add(character_id, "eja", now_add_lust)
     change_data.eja_point += now_add_lust
     action_info.set(character_id, "last_eaj_add_time", game_time.now())
 
@@ -3117,7 +3113,7 @@ def handle_add_urinate(
     if character_data.dead:
         return
 
-    if character_data.h_state.body_item[8][1]:
+    if h_state.body_item_on(character_id, 8):
         if needs.of(character_id)["urine"] >= 30:
             needs.set(character_id, urine=240)
 
@@ -3161,7 +3157,7 @@ def handle_milking_machine(
     if character_data.dead:
         return
 
-    if character_data.h_state.body_item[4][1]:
+    if h_state.body_item_on(character_id, 4):
 
         now_milk = num.whole(
             min(
@@ -3217,7 +3213,7 @@ def handle_urine_collector(
     if character_data.dead:
         return
 
-    if character_data.h_state.body_item[5][1]:
+    if h_state.body_item_on(character_id, 5):
 
         now_urine = num.whole(
             min(
@@ -3272,7 +3268,7 @@ def handle_b_orgasm_to_milk(
         character_data.behavior.milk_ml += eject_milk
 
         # 如果已经装上搾乳机了，则收集至搾乳机中
-        if character_data.h_state.body_item[4][1]:
+        if h_state.body_item_on(character_id, 4):
             fridge.add(fridge.MILK, character_id, eject_milk)
             player_collection.add_total("milk_total", character_id, eject_milk)
             now_text = _(
@@ -3317,7 +3313,7 @@ def handle_u_orgasm_to_pee(
         needs.set(character_id, urine=int(240 * 0.4))
 
         # 如果已经装上采尿器了，则收集至采尿器中
-        if character_data.h_state.body_item[5][1]:
+        if h_state.body_item_on(character_id, 5):
             fridge.add(fridge.URINE, character_id, eject_urine)
             player_collection.add_total(
                 "urine_total", character_id, eject_urine
@@ -3357,7 +3353,7 @@ def handle_extra_orgasm(
         return
 
     # 额外高潮次数
-    all_extra_count = character_data.h_state.extra_orgasm_count
+    all_extra_count = h_state.get(character_id, "extra_orgasm_count")
     # 如果有额外高潮次数，则进行苦痛和恐怖结算
     if all_extra_count > 0:
         # 额外高潮次数的苦痛和恐怖
@@ -3390,7 +3386,7 @@ def handle_extra_orgasm(
         now_draw.width = window_width
         now_draw.draw()
         # 额外高潮次数清零
-        character_data.h_state.extra_orgasm_count = 0
+        h_state.set(character_id, extra_orgasm_count=0)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -3413,7 +3409,7 @@ def handle_plural_orgasm(
         return
 
     # 多重高潮次数
-    plural_orgasm_count = len(character_data.h_state.plural_orgasm_set) - 1
+    plural_orgasm_count = len(h_state.view(character_id).plural_orgasm_set) - 1
     # 如果有多重高潮次数，则进行结算
     if plural_orgasm_count > 0:
         base_value = 1000 * plural_orgasm_count
@@ -3436,7 +3432,8 @@ def handle_plural_orgasm(
         )
 
         # 多重绝顶数据清零
-        character_data.h_state.plural_orgasm_set = set()
+        with h_state.editing(character_id) as hs:
+            hs.plural_orgasm_set = set()
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -3669,11 +3666,8 @@ def handle_penis_in_t_reset(
     if character_data.dead:
         return
 
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.h_state.insert_position = -1
-    character_data.h_state.insert_position = -1
+    h_state.set(character_data.target_character_id, insert_position=-1)
+    h_state.set(character_id, insert_position=-1)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -4025,8 +4019,7 @@ def handle_add_1_mclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[21][0] += 1
-        character_data.h_state.orgasm_count[21][1] += 1
+        _bump_orgasm_count(character_id, 21)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -4052,8 +4045,7 @@ def handle_add_1_fclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[22][0] += 1
-        character_data.h_state.orgasm_count[22][1] += 1
+        _bump_orgasm_count(character_id, 22)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -4079,8 +4071,7 @@ def handle_add_1_hclimax_experience(
         character_id, 20, 1, change_data=change_data
     )
     if flags.get(character_id, "is_h") == 1:
-        character_data.h_state.orgasm_count[23][0] += 1
-        character_data.h_state.orgasm_count[23][1] += 1
+        _bump_orgasm_count(character_id, 23)
 
 
 @settle_behavior.add_settle_second_behavior_effect(

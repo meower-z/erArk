@@ -17,7 +17,8 @@ from Script.Design import (
 )
 from Script.Config import normal_config
 from Script.UI.Moudle import panel, draw
-from Script.Modules.domains import abilities, action_info, body_manage, flags
+from Script.Modules.domains import abilities, action_info, body_manage, dirty
+from Script.Modules.domains import first_record, flags, h_meters, h_state
 from Script.Modules.domains import inventory, needs, player_ability
 from Script.Modules.domains import player_collection, pregnancy, roster, status
 from Script.Modules.domains import wardrobe
@@ -67,15 +68,11 @@ def init_attr(character_id: int) -> None:
     character_data.second_behavior = attr_calculation.get_second_behavior_zero(
         character_data.second_behavior
     )
-    character_data.dirty = attr_calculation.get_dirty_reset(
-        character_data.dirty
-    )
+    dirty.clear(character_id)
     items = attr_calculation.get_item_zero(dict(inventory.items(character_id)))
     inventory.replace_items(character_id, items)
-    character_data.h_state = attr_calculation.get_h_state_reset(
-        character_data.h_state
-    )
-    character_data.first_record = attr_calculation.get_first_record_zero()
+    h_state.clear(character_id)
+    first_record.clear(character_id)
     action_info.init_zero(character_id)
     character_data.event = attr_calculation.get_event_zero()
     character_data.work = attr_calculation.get_work_zero()
@@ -93,11 +90,15 @@ def init_attr(character_id: int) -> None:
     if character_id == 0:
         attr_calculation.get_Dr_talent_zero(talent)
         needs.set(character_id, hit_max=1000, mana_max=1000)
-        character_data.eja_point = 0
-        character_data.eja_point_max = 1000
+        h_meters.set(
+            character_id,
+            eja=0,
+            eja_max=1000,
+            semen=100,
+            semen_max=100,
+        )
         needs.set(character_id, sanity=100, sanity_max=100)
-        character_data.semen_point = 100
-        character_data.semen_point_max = 100
+        h_meters.set(character_id, semen=100, semen_max=100)
         player_ability.reset(0)
         player_collection.init_zero(0)
         wardrobe.put(character_id, attr_calculation.get_cloth_zero())

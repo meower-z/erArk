@@ -15,8 +15,8 @@ from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
-from Script.Modules.domains import abilities, action_info, flags, modes, needs
-from Script.Modules.domains import roster, status, work
+from Script.Modules.domains import abilities, action_info, flags, h_meters
+from Script.Modules.domains import hypnosis, modes, needs, roster, status, work
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -27,7 +27,6 @@ width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 _: FunctionType = get_text._
 """ 翻译api """
-
 ValueNum = TypeVar("ValueNum", int, float)
 """ 被综合数值结算改动的属性值：好感、能力等为整数，信赖为浮点数 """
 SettleParams = ParamSpec("SettleParams")
@@ -293,7 +292,8 @@ def handle_settle_behavior(
                 + text_handle.number_to_symbol_string(seen)
                 + "</mp_point>"
             )
-        seen = shown_change(now_character_data.eja_point, change_data.eja_point)
+        eja = h_meters.of(now_character_data.cid)["eja"]
+        seen = shown_change(eja, change_data.eja_point)
         if seen:
             now_text += (
                 "\n  <semen>"
@@ -419,7 +419,7 @@ def handle_settle_behavior(
                     ):
                         unconscious_color = (
                             hypnosis_panel.get_hypnosis_degree_color(
-                                target_data.hypnosis.hypnosis_degree
+                                hypnosis.of(target_data.cid)["hypnosis_degree"]
                             )
                         )
                     # 非催眠颜色
@@ -484,7 +484,7 @@ def handle_settle_behavior(
                     judge = 1
                 if target_change.hypnosis_degree:
                     hypnosis_color = hypnosis_panel.get_hypnosis_degree_color(
-                        target_data.hypnosis.hypnosis_degree
+                        hypnosis.of(target_data.cid)["hypnosis_degree"]
                     )
                     now_text += (
                         f"\n  <{hypnosis_color}>"

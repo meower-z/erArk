@@ -6,6 +6,7 @@ from Script.Design import attr_calculation, clothing, handle_premise
 from Script.Design import map_handle, settle_behavior
 from Script.Core import cache_control, constant_effect, game_type, get_text
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import dirty
 from Script.UI.Moudle import draw
 from Script.Modules.domains import flags, wardrobe
 
@@ -625,7 +626,6 @@ def handle_wear_to_shower_locker(
     """
     if not add_time:
         return
-    character_data = cache.character_data[character_id]
 
     for clothing_type in game_config.config_clothing_type:
         if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
@@ -650,18 +650,16 @@ def handle_wear_to_shower_locker(
                     )
         # 避免对应type没有数据，所以先补充一个空列表再交换
         cloth_text = game_config.config_clothing_type[clothing_type].name
-        empty_list = [cloth_text, 0, 0, 0]
-        if clothing_type not in character_data.dirty.cloth_semen:
-            character_data.dirty.cloth_semen[clothing_type] = empty_list
-        if clothing_type not in character_data.dirty.cloth_locker_semen:
-            character_data.dirty.cloth_locker_semen[clothing_type] = empty_list
-    (
-        character_data.dirty.cloth_locker_semen,
-        character_data.dirty.cloth_semen,
-    ) = (
-        character_data.dirty.cloth_semen,
-        character_data.dirty.cloth_locker_semen,
-    )
+        with dirty.editing(character_id) as d:
+            if clothing_type not in d.cloth_semen:
+                d.cloth_semen[clothing_type] = [cloth_text, 0, 0, 0]
+            if clothing_type not in d.cloth_locker_semen:
+                d.cloth_locker_semen[clothing_type] = [cloth_text, 0, 0, 0]
+    with dirty.editing(character_id) as d:
+        d.cloth_locker_semen, d.cloth_semen = (
+            d.cloth_semen,
+            d.cloth_locker_semen,
+        )
     # 衣物离开身体时去除服装部位上的避孕套装饰
     from Script.System.Item_System import condom_handle
 
@@ -738,52 +736,48 @@ def handle_foot_cloth_to_shower_locker(
     """
     if not add_time:
         return
-    character_data = cache.character_data[character_id]
 
-    # 衣柜精液表先补齐全部服装部位：非空时须覆盖全部部位，穿回衣柜衣服的结算按全部部位下标读取它
-    for clothing_type in game_config.config_clothing_type:
-        if clothing_type not in character_data.dirty.cloth_locker_semen:
+    with dirty.editing(character_id) as d:
+        # 衣柜精液表先补齐全部服装部位：非空时须覆盖全部部位，穿回衣柜衣服的结算按全部部位下标读取它
+        for clothing_type in game_config.config_clothing_type:
+            if clothing_type not in d.cloth_locker_semen:
+                cloth_text = game_config.config_clothing_type[
+                    clothing_type
+                ].name
+                d.cloth_locker_semen[clothing_type] = [cloth_text, 0, 0, 0]
+
+        for clothing_type in {10, 11}:
+            if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
+                tem_list = (
+                    wardrobe.of(character_id).cloth_wear[clothing_type].copy()
+                )
+                for cloth_id in tem_list:
+                    # 不转移首饰和必须穿着的衣服
+                    if game_config.config_clothing_tem[
+                        cloth_id
+                    ].tag != 6 and cloth_id not in clothing.chara_special_wear_cloth(
+                        character_id
+                    ):
+                        wardrobe.remove(
+                            character_id, "cloth_wear", clothing_type, cloth_id
+                        )
+                        wardrobe.append(
+                            character_id,
+                            "cloth_locker_in_shower",
+                            clothing_type,
+                            cloth_id,
+                        )
+            # 避免对应type没有数据，所以先补充一个空列表再交换
             cloth_text = game_config.config_clothing_type[clothing_type].name
-            character_data.dirty.cloth_locker_semen[clothing_type] = [
-                cloth_text,
-                0,
-                0,
-                0,
-            ]
-
-    for clothing_type in {10, 11}:
-        if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
-            tem_list = (
-                wardrobe.of(character_id).cloth_wear[clothing_type].copy()
+            if clothing_type not in d.cloth_semen:
+                d.cloth_semen[clothing_type] = [cloth_text, 0, 0, 0]
+            (
+                d.cloth_semen[clothing_type],
+                d.cloth_locker_semen[clothing_type],
+            ) = (
+                d.cloth_locker_semen[clothing_type],
+                d.cloth_semen[clothing_type],
             )
-            for cloth_id in tem_list:
-                # 不转移首饰和必须穿着的衣服
-                if game_config.config_clothing_tem[
-                    cloth_id
-                ].tag != 6 and cloth_id not in clothing.chara_special_wear_cloth(
-                    character_id
-                ):
-                    wardrobe.remove(
-                        character_id, "cloth_wear", clothing_type, cloth_id
-                    )
-                    wardrobe.append(
-                        character_id,
-                        "cloth_locker_in_shower",
-                        clothing_type,
-                        cloth_id,
-                    )
-        # 避免对应type没有数据，所以先补充一个空列表再交换
-        cloth_text = game_config.config_clothing_type[clothing_type].name
-        empty_list = [cloth_text, 0, 0, 0]
-        if clothing_type not in character_data.dirty.cloth_semen:
-            character_data.dirty.cloth_semen[clothing_type] = empty_list
-        (
-            character_data.dirty.cloth_semen[clothing_type],
-            character_data.dirty.cloth_locker_semen[clothing_type],
-        ) = (
-            character_data.dirty.cloth_locker_semen[clothing_type],
-            character_data.dirty.cloth_semen[clothing_type],
-        )
     # 袜子和鞋子离开身体时去除对应部位上的避孕套装饰
     from Script.System.Item_System import condom_handle
 
@@ -852,8 +846,6 @@ def handle_wear_to_dormitory_locker(
     if handle_premise.handle_imprisonment_1(character_id):
         return
 
-    character_data = cache.character_data[character_id]
-
     # 宿舍衣柜里已经有衣服时跳过，避免洗完澡（效果647）存进来的白天衣服被浴帽浴巾污染
     for clothing_type in game_config.config_clothing_type:
         if len(
@@ -864,45 +856,42 @@ def handle_wear_to_dormitory_locker(
     # 提前取得必穿项列表（该函数会把缺失的必穿项补回身上，只需调用一次）
     special_cloth_list = clothing.chara_special_wear_cloth(character_id)
 
-    # 遍历所有服装部位，把身上的衣服转移到宿舍衣柜里
-    for clothing_type in game_config.config_clothing_type:
-        if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
-            tem_list = (
-                wardrobe.of(character_id).cloth_wear[clothing_type].copy()
-            )
-            for cloth_id in tem_list:
-                # 必穿项（抑制戒指、监测环、镣铐、戒指、项圈）留在身上，全局只保持一份
-                if cloth_id in special_cloth_list:
-                    continue
-                # 首饰留在身上，与大浴场衣柜的handle_wear_to_shower_locker()保持一致；
-                # 若把首饰转进宿舍衣柜，起床时会被get_cloth_from_dormitory_locker()的角色模板过滤永久删除
-                if game_config.config_clothing_tem[cloth_id].tag == 6:
-                    continue
-                wardrobe.remove(
-                    character_id, "cloth_wear", clothing_type, cloth_id
+    with dirty.editing(character_id) as d:
+        # 遍历所有服装部位，把身上的衣服转移到宿舍衣柜里
+        for clothing_type in game_config.config_clothing_type:
+            if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
+                tem_list = (
+                    wardrobe.of(character_id).cloth_wear[clothing_type].copy()
                 )
-                wardrobe.append(
-                    character_id,
-                    "cloth_locker_in_dormitory",
-                    clothing_type,
-                    cloth_id,
-                )
-        # 避免对应type没有数据，所以先补充一个空列表再交换
-        cloth_text = game_config.config_clothing_type[clothing_type].name
-        empty_list = [cloth_text, 0, 0, 0]
-        if clothing_type not in character_data.dirty.cloth_semen:
-            character_data.dirty.cloth_semen[clothing_type] = empty_list
-        if clothing_type not in character_data.dirty.cloth_locker_semen:
-            character_data.dirty.cloth_locker_semen[clothing_type] = empty_list
+                for cloth_id in tem_list:
+                    # 必穿项（抑制戒指、监测环、镣铐、戒指、项圈）留在身上，全局只保持一份
+                    if cloth_id in special_cloth_list:
+                        continue
+                    # 首饰留在身上，与大浴场衣柜的handle_wear_to_shower_locker()保持一致；
+                    # 若把首饰转进宿舍衣柜，起床时会被get_cloth_from_dormitory_locker()的角色模板过滤永久删除
+                    if game_config.config_clothing_tem[cloth_id].tag == 6:
+                        continue
+                    wardrobe.remove(
+                        character_id, "cloth_wear", clothing_type, cloth_id
+                    )
+                    wardrobe.append(
+                        character_id,
+                        "cloth_locker_in_dormitory",
+                        clothing_type,
+                        cloth_id,
+                    )
+            # 避免对应type没有数据，所以先补充一个空列表再交换
+            cloth_text = game_config.config_clothing_type[clothing_type].name
+            if clothing_type not in d.cloth_semen:
+                d.cloth_semen[clothing_type] = [cloth_text, 0, 0, 0]
+            if clothing_type not in d.cloth_locker_semen:
+                d.cloth_locker_semen[clothing_type] = [cloth_text, 0, 0, 0]
 
-    # 把身上衣服的精液数据一并交换到衣柜衣服的精液数据上
-    (
-        character_data.dirty.cloth_locker_semen,
-        character_data.dirty.cloth_semen,
-    ) = (
-        character_data.dirty.cloth_semen,
-        character_data.dirty.cloth_locker_semen,
-    )
+        # 把身上衣服的精液数据一并交换到衣柜衣服的精液数据上
+        d.cloth_locker_semen, d.cloth_semen = (
+            d.cloth_semen,
+            d.cloth_locker_semen,
+        )
     # 衣物离开身体时去除服装部位上的避孕套装饰
     from Script.System.Item_System import condom_handle
 

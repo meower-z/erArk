@@ -19,8 +19,11 @@ from typing import TypeGuard
 from Script.Core import cache_control, num
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import facility, flags, needs, player_ability
-from Script.Modules.domains import playthrough, status, warehouse
+from Script.Modules.domains import facility, flags, h_meters
+from Script.Modules.domains import h_state as h_state_domain
+from Script.Modules.domains import hypnosis as hypnosis_domain, needs
+from Script.Modules.domains import player_ability, playthrough, status
+from Script.Modules.domains import warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 from Script.Modules.domains import abilities
 
@@ -708,8 +711,7 @@ def check_num_17_trust_hypnosis_finite() -> list[CheckFailure]:
     failures = []
     for cid, chara in cache.character_data.items():
         trust = getattr(chara, "trust", None)
-        hypnosis = getattr(chara, "hypnosis", None)
-        hypnosis_degree = getattr(hypnosis, "hypnosis_degree", None)
+        hypnosis_degree = hypnosis_domain.degree(cid)
         if not (
             _is_finite_number(trust) and _is_finite_number(hypnosis_degree)
         ):
@@ -780,24 +782,21 @@ def check_num_19_player_only_max_fields() -> list[CheckFailure]:
     chara = cache.character_data.get(0)
     if chara is None:
         return []
-    values = {
-        f: getattr(chara, f) for f in ("eja_point_max", "semen_point_max")
-    }
-    values["sanity_point_max"] = needs.of(0)["sanity_max"]
-    ok = (
-        all(type(v) is int and v > 0 for v in values.values())
-        and type(values["sanity_point_max"]) is int
-        and values["sanity_point_max"] <= 9999
-    )
-    if ok:
+    meters = h_meters.of(0)
+    s_max = needs.of(0)["sanity_max"]
+    e_max, sm_max = meters["eja_max"], meters["semen_max"]
+    if (
+        all(type(v) is int and v > 0 for v in (e_max, sm_max, s_max))
+        and s_max <= 9999
+    ):
         return []
     return [
         make_failure(
             "NUM-19",
             "玩家专属槽位上限为正整数",
-            f"玩家cid=0 sanity_point_max={values['sanity_point_max']!r} eja_point_max={values['eja_point_max']!r} "
-            f"semen_point_max={values['semen_point_max']!r} sanity_point={num.shown(needs.of(0)['sanity'])} "
-            f"eja_point={getattr(chara, 'eja_point', '?')} semen_point={getattr(chara, 'semen_point', '?')}",
+            f"玩家cid=0 sanity_point_max={s_max!r} eja_point_max={e_max!r} "
+            f"semen_point_max={sm_max!r} sanity_point={num.shown(needs.of(0)['sanity'])} "
+            f"eja_point={meters['eja']} semen_point={meters['semen']}",
             [0],
         )
     ]
@@ -932,17 +931,17 @@ def check_num_23_eja_point_non_negative() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        eja = getattr(chara, "eja_point", None)
+        meters = h_meters.of(cid)
+        eja = meters["eja"]
         if not ((_exact(eja) or type(eja) is float) and eja >= 0):
-            h_state = getattr(chara, "h_state", None)
             failures.append(
                 make_failure(
                     "NUM-23",
                     "射精槽非负且不设上限",
                     (
                         f"角色cid={cid} name={_chara_name(chara)} eja_point={eja!r} "
-                        f"eja_point_max={getattr(chara, 'eja_point_max', '?')} "
-                        f"endure_not_shot_count={getattr(h_state, 'endure_not_shot_count', '?')} "
+                        f"eja_point_max={meters['eja_max']} "
+                        f"endure_not_shot_count={h_state_domain.get(cid, 'endure_not_shot_count')} "
                         f"is_h={flags.get(cid, 'is_h')}"
                     ),
                     [cid],
@@ -968,9 +967,10 @@ def check_num_24_semen_point_range() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        semen = getattr(chara, "semen_point", None)
-        semen_max = getattr(chara, "semen_point_max", None)
-        tem_extra = getattr(chara, "tem_extra_semen_point", None)
+        meters = h_meters.of(cid)
+        semen = meters["semen"]
+        semen_max = meters["semen_max"]
+        tem_extra = meters["extra_semen"]
         ok = (
             _exact(semen)
             and type(tem_extra) is int

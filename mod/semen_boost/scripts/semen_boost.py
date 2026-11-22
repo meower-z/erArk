@@ -185,7 +185,8 @@ def modded_common_ejaculation() -> tuple[str, int]:
         semen_count:  射精量
     """
     from Script.Design import handle_premise, handle_ability
-    from Script.Modules.domains import action_info, tallies
+    from Script.Modules.domains import action_info, dirty, h_meters, h_state
+    from Script.Modules.domains import tallies
 
     character_data = cache.character_data[0]
 
@@ -208,18 +209,15 @@ def modded_common_ejaculation() -> tuple[str, int]:
     # 现在使用 _mod_semen_config（基础值为原版两倍）
 
     # 基础射精值，小中多射精区分
+    endure_cnt = h_state.get(0, "endure_not_shot_count")
     semen_count: float
     if character_data.second_behavior["p_orgasm_strong"] == 1:
         base_amount = _mod_semen_config[2].base_semen_amount
-        semen_count = int(base_amount * random_weight) * (
-            character_data.h_state.endure_not_shot_count + 1
-        )
+        semen_count = int(base_amount * random_weight) * (endure_cnt + 1)
         semen_text = _("超大量射精，射出了")
     elif character_data.second_behavior["p_orgasm_normal"] == 1:
         base_amount = _mod_semen_config[1].base_semen_amount
-        semen_count = int(base_amount * random_weight) * (
-            character_data.h_state.endure_not_shot_count + 1
-        )
+        semen_count = int(base_amount * random_weight) * (endure_cnt + 1)
         semen_text = _("大量射精，射出了")
     else:
         base_amount = _mod_semen_config[0].base_semen_amount
@@ -227,7 +225,7 @@ def modded_common_ejaculation() -> tuple[str, int]:
         semen_text = _("射精，射出了")
 
     # ===== 修改点3：调用乘以十的新增函数 =====
-    semen_count = multiply_by_ten(semen_count)
+    semen_count = multiply_by_ten(int(semen_count))
     extra_text += _("（Mod强化+）")
 
     # 如果有交互对象，则根据交互对象的榨精能力等级来调整射精量
@@ -250,7 +248,7 @@ def modded_common_ejaculation() -> tuple[str, int]:
     # 如果使用了精液精力剂，则本次射精量翻倍
     if handle_premise.handle_self_semen_energy_agent(0):
         semen_count *= 2
-        character_data.h_state.used_semen_energy_agent = False
+        h_state.set(0, used_semen_energy_agent=False)
         extra_text += _("（精力剂+）")
 
     # 如果施加了香薰疗愈-射精状态，则射精量翻倍
@@ -279,21 +277,29 @@ def modded_common_ejaculation() -> tuple[str, int]:
     # 组合射精文本
     semen_text += str(semen_count) + _("ml精液") + extra_text
 
-    character_data.h_state.orgasm_level[3] += 1  # 更新射精次数
-    character_data.h_state.just_shoot = 1  # 更新刚射精状态
-    character_data.dirty.penis_dirty_dict["semen"] = (
-        True  # 更新阴茎精液污浊状态
-    )
+    with h_state.editing(0) as hs:
+        hs.orgasm_level[3] += 1  # 更新射精次数
+        hs.just_shoot = 1  # 更新刚射精状态
+        hs.endure_not_shot_count = 0  # 清零忍住不射次数
+    with dirty.editing(0) as d:
+        d.penis_dirty_dict["semen"] = True  # 更新阴茎精液污浊状态
     tallies.add(tallies.SEMEN, semen_count)  # 更新总精液量
-    character_data.h_state.endure_not_shot_count = 0  # 清零忍住不射次数
 
     # 优先扣除临时额外精液值，不够的再扣除基础精液值
-    if character_data.tem_extra_semen_point > semen_count:
-        character_data.tem_extra_semen_point -= semen_count
+    meters = h_meters.of(0)
+    extra = meters["extra_semen"]
+    if extra > semen_count:
+        h_meters.set(
+            0,
+            extra_semen=extra - semen_count,
+            semen=max(0, meters["semen"]),
+        )
     else:
-        remaining = semen_count - character_data.tem_extra_semen_point
-        character_data.tem_extra_semen_point = 0
-        character_data.semen_point -= remaining
-    character_data.semen_point = max(0, character_data.semen_point)
+        remaining = semen_count - extra
+        h_meters.set(
+            0,
+            semen=max(0, meters["semen"] - remaining),
+            extra_semen=0,
+        )
 
     return semen_text, semen_count

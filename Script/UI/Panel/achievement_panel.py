@@ -10,8 +10,9 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities, achievement, commission, flags
-from Script.Modules.domains import inventory, needs, player_collection
+from Script.Modules.domains import abilities, achievement, commission, dirty
+from Script.Modules.domains import flags, h_state, inventory, needs
+from Script.Modules.domains import player_collection
 from Script.Modules.domains import playthrough, prison, roster, warehouse
 
 if TYPE_CHECKING:
@@ -694,21 +695,17 @@ def settle_semen_shoot() -> list[int]:
     return_list: list[int] = []
     pl_character_data: game_type.Character = cache.character_data[0]
     target_character_id = pl_character_data.target_character_id
-    target_character_data: game_type.Character = cache.character_data[
-        target_character_id
-    ]
     # 射精次数
-    if 3 not in pl_character_data.h_state.orgasm_count:
-        pl_character_data.h_state.orgasm_count[3] = [0, 0]
-    now_semen_shoot_count = pl_character_data.h_state.orgasm_count[3][0]
+    now_semen_shoot_count = h_state.view(0).orgasm_count.get(3, [0, 0])[0]
     all_semen_shoot_count = abilities.experience(0)[21]
     # 对方身上精液量
+    target_dirty = dirty.view(target_character_id)
     inner_all_semen = 0
     cloth_all_semen = 0
     for i in [6, 7, 8, 9]:
-        inner_all_semen += target_character_data.dirty.body_semen[i][1]
+        inner_all_semen += target_dirty.body_semen[i][1]
     for i in game_config.config_clothing_type:
-        cloth_all_semen += target_character_data.dirty.cloth_semen[i][1]
+        cloth_all_semen += target_dirty.cloth_semen[i][1]
     # 构建成就结算列表
     achievement_checks = [
         # (判断值, 成就ID)

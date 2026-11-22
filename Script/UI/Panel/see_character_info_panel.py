@@ -15,16 +15,14 @@ from Script.UI.Panel import body_info_panel, character_info_head
 from Script.System.First_Record_System import first_record_panel
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, player_collection, roster, status
-from Script.Modules.domains import visitor
+from Script.Modules.domains import abilities, h_state, player_collection
+from Script.Modules.domains import roster, status, visitor
 
 panel_info_data: dict[str, object] = {}
-
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
-
 line_feed = draw.NormalDraw()
 line_feed.text = "\n"
 line_feed.width = 1
@@ -435,9 +433,10 @@ class SeeCharacterStatusPanel:
 
         # 高潮积累着色：该部位待结算的绝顶次数越多，部位名颜色越深(亮粉→深粉→红→紫 对应 1/2/3/4+次)
         # 寸止(orgasm_edge_count)与时停(time_stop_orgasm_count)本质是同一种"快感越过阈值但未结算"的积累，一并计入
-        edge_count = character_data.h_state.orgasm_edge_count.get(
+        hs = h_state.view(character_data.cid)
+        edge_count = hs.orgasm_edge_count.get(
             status_id, 0
-        ) + character_data.h_state.time_stop_orgasm_count.get(status_id, 0)
+        ) + hs.time_stop_orgasm_count.get(status_id, 0)
         edge_style = ""
         part_tooltip = game_config.config_character_state[status_id].info
         if edge_count >= 4:
