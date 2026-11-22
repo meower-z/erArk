@@ -23,7 +23,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info, flags
-from Script.Modules.domains import history, needs, player_ability
+from Script.Modules.domains import history, needs, player_ability, wardrobe
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -33,7 +33,6 @@ _: FunctionType = get_text._
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
 
@@ -548,26 +547,26 @@ def settle_unconscious_semen_and_cloth(character_id: int) -> None:
         )
     for cloth_part in character_data.dirty.cloth_semen_in_unconscious:
         # 如果自己身上没穿着该部位的衣服，则跳过
-        if len(character_data.cloth.cloth_wear[cloth_part]) == 0:
+        if len(wardrobe.of(character_id).cloth_wear[cloth_part]) == 0:
             continue
         second_behavior_id = "in_unconscious_cum_on_cloth_" + str(cloth_part)
         second_behavior.character_get_second_behavior(
             character_id, second_behavior_id
         )
     # 触发角色的服装失窃行为
-    if character_data.cloth.stolen_panties_in_unconscious:
+    if wardrobe.of(character_id).stolen_panties_in_unconscious:
         second_behavior.character_get_second_behavior(
             character_id, "in_unconscious_stolen_panty"
         )
-    if character_data.cloth.stolen_socks_in_unconscious:
+    if wardrobe.of(character_id).stolen_socks_in_unconscious:
         second_behavior.character_get_second_behavior(
             character_id, "in_unconscious_stolen_socks"
         )
     # 数据清零
     character_data.dirty.body_semen_in_unconscious = []
     character_data.dirty.cloth_semen_in_unconscious = []
-    character_data.cloth.stolen_panties_in_unconscious = False
-    character_data.cloth.stolen_socks_in_unconscious = False
+    wardrobe.set(character_id, "stolen_panties_in_unconscious", False)
+    wardrobe.set(character_id, "stolen_socks_in_unconscious", False)
 
 
 def evaluate_npc_body_part_prefs(character_id: int) -> int:

@@ -25,14 +25,15 @@ import json
 from typing import TYPE_CHECKING
 from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info
-from Script.Modules.domains import commission, country, diplomacy, dormitory
-from Script.Modules.domains import education, entertainment, facility, flags
-from Script.Modules.domains import fridge, growth, history, kitchen, library
-from Script.Modules.domains import location, maintenance, medical, modes, needs
-from Script.Modules.domains import official, physical_exam, plan
-from Script.Modules.domains import player_ability, player_collection
-from Script.Modules.domains import playthrough, pregnancy, prison, production
-from Script.Modules.domains import recruit, roster, tallies, visitor, warehouse
+from Script.Modules.domains import body_manage, commission, country, diplomacy
+from Script.Modules.domains import dormitory, education, entertainment, facility
+from Script.Modules.domains import flags, fridge, growth, history, inventory
+from Script.Modules.domains import kitchen, library, location, maintenance
+from Script.Modules.domains import medical, modes, needs, official
+from Script.Modules.domains import physical_exam, plan, player_ability
+from Script.Modules.domains import player_collection, playthrough, pregnancy
+from Script.Modules.domains import prison, production, recruit, roster, status
+from Script.Modules.domains import tallies, visitor, wardrobe, warehouse
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -659,8 +660,8 @@ def install_save(save_id: str, version: int) -> None:
     """
     读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
     版本 0 先补齐生理需求与供电策略属性。随后二十三个 adopt 函数搬走罗德岛对象的属性，其中十八个的条数计入跨版本更新。
-    修正编号后、角色替换前，abilities.adopt_old_save 把角色的四张表搬进 GameState。它去掉的素质项数也计入跨版本更新。
-    ID 迁移后四个角色域搬走标记、行动记录与玩家数据，重建角色后 adopt_pickled 搬走角色的数值属性。
+    ID 迁移后四个角色域搬走标记、行动记录与玩家数据。修正编号后、角色替换前，五个模块的 adopt_old_save
+    搬走角色的四张表与道具等五项，去掉的素质项数计入跨版本更新。重建角色后 adopt_pickled 搬走角色的数值属性。
     补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
     Keyword arguments:
     save_id -- 存档id
@@ -728,6 +729,8 @@ def install_save(save_id: str, version: int) -> None:
     # 修正编号错误的角色数据
     update_count += old_chara_to_new.fix_wrong_character(loaded_dict)
     update_count += abilities.adopt_old_save(loaded_dict)
+    for domain in (inventory, wardrobe, body_manage, status):
+        domain.adopt_old_save(loaded_dict)
 
     # ========== 角色替换迁移（新旧角色ID映射） ==========
     # 用于将旧角色的数据迁移到新角色，例如：1478号梅捷缇克缇 → 4056号缇缇
@@ -971,15 +974,12 @@ CHARACTER_NUM_FIELDS = ("eja_point", "semen_point")
 def exact_stats() -> None:
     """
     读档的 Reset 步骤：装好的缓存里随时间结算的数值是 float 时换成精确值（num.exact），int 与 Fraction 不动。
-    数值有角色的 CHARACTER_NUM_FIELDS、状态值、污浊的累计吸收精液量、身体各部位的当前精液量与
-    精液流通的剩余量。body.needs 与 player.ability 在读档导入时已换成精确值。
+    数值有角色的 CHARACTER_NUM_FIELDS、污浊的累计吸收精液量、身体各部位的当前精液量与精液流通的剩余量。
+    body.needs、player.ability 与状态值在读档导入时已换成精确值。
     """
     for character in cache.character_data.values():
         for name in CHARACTER_NUM_FIELDS:
             setattr(character, name, num.exact(getattr(character, name)))
-        status_data = character.status_data
-        for status_id, value in status_data.items():
-            status_data[status_id] = num.exact(value)
         dirty = character.dirty
         dirty.absorbed_total_semen = num.exact(dirty.absorbed_total_semen)
         for part in dirty.body_semen.values():

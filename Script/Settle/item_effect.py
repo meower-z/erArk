@@ -13,7 +13,8 @@ from Script.Design import (
 from Script.Core import cache_control, constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities, flags, kitchen, needs
+from Script.Modules.domains import abilities, flags, inventory, kitchen, needs
+from Script.Modules.domains import status
 
 _: FunctionType = get_text._
 window_width: int = normal_config.config_normal.text_width
@@ -875,8 +876,7 @@ def handle_use_body_lubricant(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[100] -= 1
+    inventory.add_item(character_id, 100, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -903,8 +903,7 @@ def handle_use_philter(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[103] -= 1
+    inventory.add_item(character_id, 103, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -931,8 +930,7 @@ def handle_use_enemas(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[104] -= 1
+    inventory.add_item(character_id, 104, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -959,8 +957,7 @@ def handle_use_diuretics_once(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[105] -= 1
+    inventory.add_item(character_id, 105, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -987,8 +984,7 @@ def handle_use_diuretics_persistent(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[106] -= 1
+    inventory.add_item(character_id, 106, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1015,8 +1011,7 @@ def handle_use_sleeping_pills(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[107] -= 1
+    inventory.add_item(character_id, 107, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1043,8 +1038,7 @@ def handle_use_ovulation_promoting_drugs(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[108] -= 1
+    inventory.add_item(character_id, 108, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1071,8 +1065,7 @@ def handle_use_contraceptive_before(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[101] -= 1
+    inventory.add_item(character_id, 101, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1099,8 +1092,7 @@ def handle_use_contraceptive_after(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[102] -= 1
+    inventory.add_item(character_id, 102, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1122,8 +1114,7 @@ def handle_use_ring(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[201] -= 1
+    inventory.add_item(character_id, 201, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1145,8 +1136,7 @@ def handle_use_collar(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[202] -= 1
+    inventory.add_item(character_id, 202, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1168,8 +1158,7 @@ def handle_use_bag(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[151] -= 1
+    inventory.add_item(character_id, 151, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1196,8 +1185,7 @@ def handle_use_condom(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[120] -= 1
+    inventory.add_item(character_id, 120, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1224,8 +1212,7 @@ def handle_use_urethral_swab(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[139] -= 1
+    inventory.add_item(character_id, 139, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1252,8 +1239,7 @@ def handle_use_safe_candles(
         character_id
     ) and handle_premise.handle_love_hotel_room_v3(character_id):
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.item[136] -= 1
+    inventory.add_item(character_id, 136, -1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1280,8 +1266,8 @@ def handle_delete_food(
         return
     if character_data.behavior.target_food is not None:
         food: game_type.Food = character_data.behavior.target_food
-        if food.uid in character_data.food_bag:
-            del character_data.food_bag[food.uid]
+        if food.uid in inventory.foods(character_id):
+            inventory.drop_food(character_id, food.uid)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1401,7 +1387,7 @@ def handle_npc_make_food_to_bag(
     new_food = cooking.cook(
         food_list, recipes_id, character_id_ability[43], character_data.name
     )
-    character_data.food_bag[new_food.uid] = new_food
+    inventory.put_food(character_id, new_food)
     character_data.behavior.target_food = new_food
 
 
@@ -1456,7 +1442,7 @@ def handle_assistant_make_food_to_bag(
         ability[43],
         character_data.name,
     )
-    character_data.food_bag[new_food.uid] = new_food
+    inventory.put_food(character_id, new_food)
     character_data.behavior.target_food = new_food
     # 如果第二食谱不为空，则从中随机选择一个食谱
     if non_main_cookable_recipes_list:
@@ -1471,7 +1457,7 @@ def handle_assistant_make_food_to_bag(
         ability[43],
         character_data.name,
     )
-    character_data.food_bag[new_food.uid] = new_food
+    inventory.put_food(character_id, new_food)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1496,9 +1482,9 @@ def handle_delete_all_food(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    for food_id in character_data.food_bag.copy():
-        food: game_type.Food = character_data.food_bag[food_id]
-        del character_data.food_bag[food.uid]
+    for food_id in inventory.foods(character_id).copy():
+        food: game_type.Food = inventory.foods(character_id)[food_id]
+        inventory.drop_food(character_id, food.uid)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1523,9 +1509,9 @@ def handle_delete_last_food(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    if character_data.food_bag:
-        last_food_id = list(character_data.food_bag.keys())[-1]
-        del character_data.food_bag[last_food_id]
+    if inventory.foods(character_id):
+        last_food_id = list(inventory.foods(character_id).keys())[-1]
+        inventory.drop_food(character_id, last_food_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1553,12 +1539,11 @@ def handle_target_add_huge_lubrication(
     ]
     if target_data.dead:
         return
-    target_data.status_data.setdefault(8, 0)
-    now_lust = target_data.status_data[8]
+    status.setdefault(target_data.cid, 8, 0)
+    now_lust = status.of(target_data.cid)[8]
     now_lust_multiple = 10000 - int(now_lust * 0.1)
     now_add_lust = now_lust_multiple
-    target_data.status_data[8] += now_add_lust
-    target_data.status_data[8] = min(99999, target_data.status_data[8])
+    status.add(target_data.cid, 8, now_add_lust, max=99999)
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
@@ -1596,12 +1581,11 @@ def handle_target_add_huge_desire_and_submit(
         return
 
     # 欲情
-    target_data.status_data.setdefault(12, 0)
-    now_lust = target_data.status_data[12]
+    status.setdefault(target_data.cid, 12, 0)
+    now_lust = status.of(target_data.cid)[12]
     now_lust_multiple = 10000 - int(now_lust * 0.016)
     now_add_lust = now_lust_multiple
-    target_data.status_data[12] += now_add_lust
-    target_data.status_data[12] = min(99999, target_data.status_data[12])
+    status.add(target_data.cid, 12, now_add_lust, max=99999)
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
@@ -1612,12 +1596,11 @@ def handle_target_add_huge_desire_and_submit(
     target_change.status_data[12] += now_add_lust
 
     # 屈服
-    target_data.status_data.setdefault(15, 0)
-    now_lust = target_data.status_data[15]
+    status.setdefault(target_data.cid, 15, 0)
+    now_lust = status.of(target_data.cid)[15]
     now_lust_multiple = 10000 - int(now_lust * 0.016)
     now_add_lust = now_lust_multiple
-    target_data.status_data[15] += now_add_lust
-    target_data.status_data[15] = min(99999, target_data.status_data[15])
+    status.add(target_data.cid, 15, now_add_lust, max=99999)
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
@@ -1659,12 +1642,11 @@ def handle_target_enema(
         return
 
     # 增加润滑
-    target_data.status_data.setdefault(8, 0)
-    now_lust = target_data.status_data[8]
+    status.setdefault(target_data.cid, 8, 0)
+    now_lust = status.of(target_data.cid)[8]
     now_lust_multiple = 2500 - int(now_lust * 0.04)
     now_add_lust = now_lust_multiple
-    target_data.status_data[8] += now_add_lust
-    target_data.status_data[8] = min(99999, target_data.status_data[8])
+    status.add(target_data.cid, 8, now_add_lust, max=99999)
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
@@ -1723,12 +1705,11 @@ def handle_target_enema_end(
         return
 
     # 增加润滑
-    target_data.status_data.setdefault(8, 0)
-    now_lust = target_data.status_data[8]
+    status.setdefault(target_data.cid, 8, 0)
+    now_lust = status.of(target_data.cid)[8]
     now_lust_multiple = 2500 - int(now_lust * 0.04)
     now_add_lust = now_lust_multiple
-    target_data.status_data[8] += now_add_lust
-    target_data.status_data[8] = min(99999, target_data.status_data[8])
+    status.add(target_data.cid, 8, now_add_lust, max=99999)
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )

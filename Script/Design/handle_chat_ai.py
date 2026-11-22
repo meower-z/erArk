@@ -17,7 +17,7 @@ from google.genai import types as genai_types
 import os
 import re
 from typing import Any, Callable, Iterable, TypedDict
-from Script.Modules.domains import abilities, flags, needs
+from Script.Modules.domains import abilities, flags, needs, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -430,8 +430,10 @@ def build_user_prompt(
     cloth_text = ""
     if tem_send_data_flags[101]:
         for clothing_type in game_config.config_clothing_type:
-            if len(npc_character_data.cloth.cloth_wear[clothing_type]):
-                for cloth_id in npc_character_data.cloth.cloth_wear[
+            if len(
+                wardrobe.of(npc_character_data.cid).cloth_wear[clothing_type]
+            ):
+                for cloth_id in wardrobe.of(npc_character_data.cid).cloth_wear[
                     clothing_type
                 ]:
                     cloth_data = game_config.config_clothing_tem[cloth_id]
@@ -715,7 +717,6 @@ def text_ai(
         system_promote += _(
             "第六行及以后：text:str，用于返回你生成的场景描述文本，只在该行出现一次text:。\n"
         )
-        # print(f"system_promote = {system_promote}")
 
     # 开始调用AI
 
@@ -832,7 +833,6 @@ def text_ai(
     # 处理直接对话模式下的返回格式
     if direct_mode:
         # 解析AI返回的格式化文本
-        # print(f"ai_gererate_text = {ai_gererate_text}")
         lines = ai_gererate_text.split("\n")
         result: DirectModeResult = {
             "time": 5,  # 默认值
@@ -958,7 +958,6 @@ def process_stream_response(
             if chunk_text is None or not chunk_text:
                 continue
             ai_generate_text += chunk_text
-            # print(f"chunk_text = {chunk_text}", flush=True)
 
             # 如果chunk仅为单独换行，则绘制换行并跳过当前循环
             if chunk_text.strip() == "\n":

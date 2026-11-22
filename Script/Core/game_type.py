@@ -1563,16 +1563,10 @@ class Character:
         """ 角色口上大小，单位kb """
         self.text_color: str = ""
         """ 角色对话文本颜色 """
-        # self.item: Set = set()
-        # """ 旧：角色拥有的道具id集合 """
-        self.item: dict[int, int] = {}
-        """ 角色拥有的道具 道具序号:数量"""
         # self.height: Height = Height()
         # """ 角色的身高数据 """
         # self.measurements: Measurements = Measurements()
         # """ 角色的三围数据 """
-        self.cloth: CLOTH = CLOTH()
-        """ 角色的衣服数据 """
         self.behavior: Behavior = Behavior()
         """ 角色当前行为状态数据 """
         self.second_behavior: dict[str, int] = {}
@@ -1597,8 +1591,6 @@ class Character:
         """ 角色生日数据 """
         # self.chest_tem: int = 0
         # """ 角色罩杯模板 """
-        self.status_data: dict[int, Num] = {}
-        """ 角色状态数据 状态id:状态数值 """
         # self.social_contact: Dict[int, Set] = {}
         # """ 角色社交关系数据 关系类型:角色id集合 """
         # self.social_contact_data: Dict[int, int] = {}
@@ -1607,8 +1599,6 @@ class Character:
         """ 角色好感度数据 角色id:好感度 """
         self.trust: float = 0
         """ 角色信赖度数据 """
-        self.food_bag: dict[UUID, Food] = {}
-        """ 角色持有的食物数据 """
         self.target_character_id: int = 0
         """ 角色当前交互对象id """
         self.adv: int = 0
@@ -1631,8 +1621,6 @@ class Character:
         """ 角色的个人设置 """
         self.assistant_services: dict[int, int] = {}
         """ 角色作为助理的情况 """
-        self.body_manage: dict[int, int] = {}
-        """ 角色的身体管理，见Body_Manage_Requirement.csv """
         self.first_record: FIRST_RECORD = FIRST_RECORD()
         """ 角色初次状态记录 """
         self.first_record_history: dict = {}

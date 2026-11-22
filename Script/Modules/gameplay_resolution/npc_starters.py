@@ -16,6 +16,7 @@ from Script.Modules.domains import economy, kitchen
 from Script.Modules.domains import maintenance as engineering
 from Script.Modules.gameplay_resolution import intent, starts
 from Script.Modules.domains import medical, medical_patient, physical_exam
+from Script.Modules.domains import inventory
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -172,20 +173,19 @@ def buy_food(who: int, data: intent.Intent) -> None:
     shop, uid = int(str(args["shop"])), str(args["food_uid"])
     if shop == -1:
         food = kitchen.take(str(args["recipe_id"]), uid)
-        key = food.uid
     else:
         taken = economy.take(shop, str(args["recipe_id"]), uid)
         assert taken is not None
-        key, food = taken.uid, taken
+        food = taken
     character_data = cache.character_data[who]
-    character_data.food_bag[key] = food
+    inventory.put_food(who, food)
     character_data.behavior.target_food = food
 
 
 @starts.check("eat_bag_food")
 def bag_food_still_there(who: int, data: intent.Intent) -> core.Action | None:
     """背包里已没有选中的食物时等1分钟"""
-    bag = cache.character_data[who].food_bag
+    bag = inventory.foods(who)
     if _find(bag, _args(data)["food_uid"]) is not None:
         return None
     return _wait_one_minute(who)
@@ -195,7 +195,7 @@ def bag_food_still_there(who: int, data: intent.Intent) -> core.Action | None:
 def eat_bag_food(who: int, data: intent.Intent) -> None:
     """背包里选中的食物作为行为的目标食物"""
     character_data = cache.character_data[who]
-    found = _find(character_data.food_bag, _args(data)["food_uid"])
+    found = _find(inventory.foods(who), _args(data)["food_uid"])
     assert found is not None
     character_data.behavior.target_food = found[1]
 

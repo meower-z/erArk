@@ -3,6 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import body_manage
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -19,8 +20,7 @@ def handle_ask_give_pan_everyday(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[1]
+    return body_manage.of(character_id)[1]
 
 
 @add_premise(constant_promise.Premise.ASK_GIVE_SOCKS_EVERYDAY)
@@ -32,8 +32,7 @@ def handle_ask_give_socks_everyday(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[2]
+    return body_manage.of(character_id)[2]
 
 
 @add_premise(constant_promise.Premise.ASK_NOT_WEAR_CORSET)
@@ -45,8 +44,7 @@ def handle_ask_not_wear_corset(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[3]
+    return body_manage.of(character_id)[3]
 
 
 @add_premise(constant_promise.Premise.ASK_NOT_WEAR_CLOTH_IN_SLEEP)
@@ -58,8 +56,7 @@ def handle_ask_not_wear_cloth_in_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[4]
+    return body_manage.of(character_id)[4]
 
 
 @add_premise(constant_promise.Premise.ASK_WEAR_DIFFERENT_SOCKS_EVERYDAY)
@@ -71,8 +68,7 @@ def handle_ask_wear_different_socks_everyday(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[5]
+    return body_manage.of(character_id)[5]
 
 
 @add_premise(constant_promise.Premise.ASK_EQUP_NIPPLE_CLAMP_IN_DAY)
@@ -84,8 +80,7 @@ def handle_ask_equp_nipple_clamp_in_day(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[11]
+    return body_manage.of(character_id)[11]
 
 
 @add_premise(constant_promise.Premise.ASK_EQUP_CLIT_CLAMP_IN_DAY)
@@ -97,8 +92,7 @@ def handle_ask_equp_clit_clamp_in_day(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[12]
+    return body_manage.of(character_id)[12]
 
 
 @add_premise(constant_promise.Premise.ASK_EQUP_V_VIBRATOR_IN_DAY)
@@ -110,8 +104,7 @@ def handle_ask_equp_v_bibrator_in_day(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[13]
+    return body_manage.of(character_id)[13]
 
 
 @add_premise(constant_promise.Premise.ASK_EQUP_A_VIBRATOR_IN_DAY)
@@ -123,8 +116,7 @@ def handle_ask_equp_a_bibrator_in_day(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[14]
+    return body_manage.of(character_id)[14]
 
 
 @add_premise(constant_promise.Premise.ASK_EQUP_NIPPLE_CLAMP_IN_SLEEP)
@@ -136,8 +128,7 @@ def handle_ask_equp_nipple_clamp_in_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[15]
+    return body_manage.of(character_id)[15]
 
 
 @add_premise(constant_promise.Premise.ASK_EQUP_CLIT_CLAMP_IN_SLEEP)
@@ -149,8 +140,7 @@ def handle_ask_equp_clit_clamp_in_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[16]
+    return body_manage.of(character_id)[16]
 
 
 @add_premise(constant_promise.Premise.ASK_EQUP_V_VIBRATOR_IN_SLEEP)
@@ -162,8 +152,7 @@ def handle_ask_equp_v_bibrator_in_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[17]
+    return body_manage.of(character_id)[17]
 
 
 @add_premise(constant_promise.Premise.ASK_EQUP_A_VIBRATOR_IN_SLEEP)
@@ -175,8 +164,7 @@ def handle_ask_equp_a_bibrator_in_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[18]
+    return body_manage.of(character_id)[18]
 
 
 @add_premise(constant_promise.Premise.ASK_NOT_WASH_SEMEN)
@@ -188,8 +176,7 @@ def handle_ask_not_wash_semen(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[21]
+    return body_manage.of(character_id)[21]
 
 
 @add_premise(constant_promise.Premise.ASK_MASTURBATION_BEFORE_SLEEP)
@@ -201,8 +188,7 @@ def handle_ask_masturbation_before_sleep(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[22]
+    return body_manage.of(character_id)[22]
 
 
 @add_premise(constant_promise.Premise.ASK_NOT_MASTURBATION)
@@ -214,8 +200,7 @@ def handle_ask_not_masturbation(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[23]
+    return body_manage.of(character_id)[23]
 
 
 @add_premise(constant_promise.Premise.NOT_ASK_NOT_MASTURBATION)
@@ -239,8 +224,7 @@ def handle_ask_not_lock_door_bedore_sleeping(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[24]
+    return body_manage.of(character_id)[24]
 
 
 @add_premise(constant_promise.Premise.ASK_NOT_ACTIVE_H_FOR_PLAYER)
@@ -252,8 +236,7 @@ def handle_ask_not_active_h_for_player(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[25]
+    return body_manage.of(character_id)[25]
 
 
 @add_premise(constant_promise.Premise.NOT_ASK_NOT_ACTIVE_H_FOR_PLAYER)
@@ -277,8 +260,7 @@ def handle_ask_not_take_bath(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[26]
+    return body_manage.of(character_id)[26]
 
 
 @add_premise(constant_promise.Premise.NOT_ASK_NOT_TAKE_BATH)
@@ -302,8 +284,7 @@ def handle_ask_not_wash_cloth(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[27]
+    return body_manage.of(character_id)[27]
 
 
 @add_premise(constant_promise.Premise.NOT_ASK_NOT_WASH_CLOTH)
@@ -339,9 +320,11 @@ def handle_ask_one_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     for i in range(30, 40):
-        if i in character_data.body_manage and character_data.body_manage[i]:
+        if (
+            i in body_manage.of(character_id)
+            and body_manage.of(character_id)[i]
+        ):
             return 1
     return 0
 
@@ -355,10 +338,12 @@ def handle_ask_ge_3_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     count = 0
     for i in range(30, 40):
-        if i in character_data.body_manage and character_data.body_manage[i]:
+        if (
+            i in body_manage.of(character_id)
+            and body_manage.of(character_id)[i]
+        ):
             count += 1
     if count >= 3:
         return 1
@@ -374,8 +359,7 @@ def handle_ask_sucking_and_swallowing_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[31]
+    return body_manage.of(character_id)[31]
 
 
 @add_premise(constant_promise.Premise.ASK_ARMPIT_CLAMPING_EXERCISES)
@@ -387,8 +371,7 @@ def handle_ask_armpit_clamping_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[32]
+    return body_manage.of(character_id)[32]
 
 
 @add_premise(constant_promise.Premise.ASK_BREAST_CLAMPING_EXERCISES)
@@ -400,8 +383,7 @@ def handle_ask_breast_clamping_exercise(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[33]
+    return body_manage.of(character_id)[33]
 
 
 @add_premise(constant_promise.Premise.ASK_HANDS_FLEXIBILITY_EXERCISES)
@@ -413,8 +395,7 @@ def handle_ask_hands_flexibility_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[34]
+    return body_manage.of(character_id)[34]
 
 
 @add_premise(constant_promise.Premise.ASK_FOOTS_FLEXIBILITY_EXERCISES)
@@ -426,8 +407,7 @@ def handle_ask_foots_flexibility_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[35]
+    return body_manage.of(character_id)[35]
 
 
 @add_premise(constant_promise.Premise.ASK_VAGINA_FIRMNESS_EXERCISES)
@@ -439,8 +419,7 @@ def handle_ask_vagina_firmness_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[36]
+    return body_manage.of(character_id)[36]
 
 
 @add_premise(constant_promise.Premise.ASK_INTESTINE_FIRMNESS_EXERCISES)
@@ -452,8 +431,7 @@ def handle_ask_intestine_firmness_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[37]
+    return body_manage.of(character_id)[37]
 
 
 @add_premise(constant_promise.Premise.ASK_TAIL_FLEXIBILITY_EXERCISES)
@@ -465,8 +443,7 @@ def handle_ask_tail_flexibility_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[38]
+    return body_manage.of(character_id)[38]
 
 
 @add_premise(constant_promise.Premise.ASK_TENTACLE_FLEXIBILITY_EXERCISES)
@@ -478,5 +455,4 @@ def handle_ask_tentacle_flexibility_exercises(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.body_manage[39]
+    return body_manage.of(character_id)[39]

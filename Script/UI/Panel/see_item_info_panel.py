@@ -15,7 +15,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import needs, player_ability, warehouse
+from Script.Modules.domains import inventory, needs, player_ability, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -52,7 +52,7 @@ def use_drug(item_id: int) -> None:
         now_draw.draw()
         return
     # 道具数量减少1
-    pl_character_data.item[item_id] -= 1
+    inventory.add_item(0, item_id, -1)
     # 药剂效果
     # 理智恢复剂
     if item_id <= 3:
@@ -95,7 +95,7 @@ def use_drug(item_id: int) -> None:
             now_draw_text = _("\n{0}当前没有醉酒，不需要使用\n\n").format(
                 pl_character_data.name, item_data.name
             )
-            pl_character_data.item[item_id] += 1
+            inventory.add_item(0, item_id, 1)
         else:
             # 药的效果随醉酒程度递减
             now_drunk_value = needs.of(pl_character_data.cid)["drunk"]
@@ -154,7 +154,7 @@ def auto_use_sanity_drug() -> None:
     use_flag = False
     for item_id in range(4):
         # 如果持有该药剂
-        if pl_character_data.item[item_id] > 0:
+        if inventory.items(0)[item_id] > 0:
             # 使用该药剂
             use_drug(item_id)
             use_flag = True
@@ -197,7 +197,7 @@ class SeeCharacterItemBagPanel:
         item_list_Key = []
         self.item_list = [i for i in game_config.config_item]
         for item_id in self.item_list:
-            if self.character_data.item[item_id] >= 1:
+            if inventory.items(self.character_data.cid)[item_id] >= 1:
                 if game_config.config_item[item_id].type == "Drug":
                     item_list_Drug.append(item_id)
                 elif game_config.config_item[item_id].type == "Machine":
@@ -327,7 +327,6 @@ class ItemNameDraw:
         """ 按钮返回值 """
         item_tada = game_config.config_item[self.item_id]
         item_name = item_tada.name
-        character_data = cache.character_data[0]
         flag_consumables = item_tada.type in ["Drug", "H_Drug", "Consumables"]
         # 消耗品和药剂使用标记初始化
         self.use_drug_flag = False
@@ -339,10 +338,10 @@ class ItemNameDraw:
                 if flag_consumables:
                     self.draw_text += (
                         _("(持有数量:")
-                        + str(character_data.item[self.item_id])
+                        + str(inventory.items(0)[self.item_id])
                         + ")"
                     )
-                    if character_data.item[self.item_id] <= 0:
+                    if inventory.items(0)[self.item_id] <= 0:
                         self.is_button = False
                 # 药剂和消耗品使用标记
                 if item_tada.type == "Drug":
@@ -422,7 +421,7 @@ class ItemNameDraw:
             return
 
         # 道具数量减少1
-        pl_character_data.item[self.item_id] -= 1
+        inventory.add_item(0, self.item_id, -1)
         # 根据道具id获取道具效果
         # sanity_point_add = game_config.config_item[self.text].effect
         # 消耗品效果

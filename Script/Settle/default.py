@@ -28,12 +28,12 @@ from Script.Settle.common_default import base_chara_climix_common_settle
 from Script.Settle.common_default import base_chara_experience_common_settle
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import abilities, achievement, action_info
-from Script.Modules.domains import facility, flags, fridge, growth, history
+from Script.Modules.domains import abilities, achievement, action_info, facility
+from Script.Modules.domains import flags, fridge, growth, history, inventory
 from Script.Modules.domains import maintenance, medical, modes, needs, official
 from Script.Modules.domains import physical_exam, player_ability
-from Script.Modules.domains import player_collection, pregnancy, prison
-from Script.Modules.domains import recruit, roster, visitor, warehouse
+from Script.Modules.domains import player_collection, pregnancy, prison, recruit
+from Script.Modules.domains import roster, status, visitor, wardrobe, warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -1096,10 +1096,10 @@ def handle_first_sex(
         # 处子血胖次
         pan_id = None
         now_draw = draw.NormalDraw()
-        if len(target_data.cloth.cloth_wear[9]):
-            pan_id = target_data.cloth.cloth_wear[9][-1]
-        elif len(target_data.cloth.cloth_off[9]):
-            pan_id = target_data.cloth.cloth_off[9][-1]
+        if len(wardrobe.of(target_data.cid).cloth_wear[9]):
+            pan_id = wardrobe.of(target_data.cid).cloth_wear[9][-1]
+        elif len(wardrobe.of(target_data.cid).cloth_off[9]):
+            pan_id = wardrobe.of(target_data.cid).cloth_off[9][-1]
         # BUG 这一块疑似有BUG，但是未能确定来源，所以先多加个限制条件
         elif panties_tem := player_collection.get("npc_panties_tem").get(
             character_data.target_character_id
@@ -1107,7 +1107,7 @@ def handle_first_sex(
             pan_id = panties_tem[-1]
         if pan_id is not None:
             pan_name = game_config.config_clothing_tem[pan_id].name
-            target_data.cloth.cloth_wear[9] = []
+            wardrobe.set_part(target_data.cid, "cloth_wear", 9, [])
             now_draw.text = _(
                 "\n获得了{0}穿着的{1}(沾有处子血)，已自动存入收藏品列表，可在藏物馆查看\n\n"
             ).format(target_data.name, pan_name)
@@ -2893,11 +2893,11 @@ def handle_set_target_food_from_bag_last(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    if len(character_data.food_bag) == 0:
+    if len(inventory.foods(character_id)) == 0:
         return
     # 获取背包最后一个食物
-    last_key = list(character_data.food_bag.keys())[-1]
-    now_food = character_data.food_bag[last_key]
+    last_key = list(inventory.foods(character_id).keys())[-1]
+    now_food = inventory.foods(character_id)[last_key]
     character_data.behavior.target_food = now_food
 
 
@@ -3727,7 +3727,7 @@ def handle_target_add_small_p_feel(
     ]
     if target_data.dead:
         return
-    target_data.status_data.setdefault(3, 0)
+    status.setdefault(target_data.cid, 3, 0)
     now_lust_multiple = 30
     now_add_lust: float = add_time + now_lust_multiple
     adjust = handle_ability.get_ability_adjust(
@@ -5003,7 +5003,7 @@ def handle_self_h_state_reset(
     for state_id in game_config.config_character_state:
         if game_config.config_character_state[state_id].type == 0:
             now_data = attr_calculation.get_status_level(
-                num.whole(character_data.status_data[state_id])
+                num.whole(status.of(character_id)[state_id])
             )
             character_data.h_state.orgasm_level[state_id] = now_data
     # 清零H相关二段状态
@@ -5083,11 +5083,11 @@ def handle_update_orgasm_level(
     for state_id in game_config.config_character_state:
         if game_config.config_character_state[state_id].type == 0:
             now_data = attr_calculation.get_status_level(
-                num.whole(character_data.status_data[state_id])
+                num.whole(status.of(character_id)[state_id])
             )
             character_data.h_state.orgasm_level[state_id] = now_data
             now_data = attr_calculation.get_status_level(
-                num.whole(target_data.status_data[state_id])
+                num.whole(status.of(target_data.cid)[state_id])
             )
             target_data.h_state.orgasm_level[state_id] = now_data
 
@@ -5121,7 +5121,7 @@ def handle_scene_all_characters_update_orgasm_level(
         for state_id in game_config.config_character_state:
             if game_config.config_character_state[state_id].type == 0:
                 now_data = attr_calculation.get_status_level(
-                    num.whole(now_character_data.status_data[state_id])
+                    num.whole(status.of(chara_id)[state_id])
                 )
                 now_character_data.h_state.orgasm_level[state_id] = now_data
 
@@ -5212,7 +5212,7 @@ def handle_chara_off_line(
     # 归零快感状态
     for state_id in game_config.config_character_state:
         if game_config.config_character_state[state_id].type == 0:
-            character_data.status_data[state_id] = 0
+            status.set(character_id, state_id, 0)
     # 清零跟随数据
     flags.set(character_id, is_follow=0)
     # 从当前干员列表中移除
@@ -7679,9 +7679,9 @@ def handle_urethral_swab_add_adjust(
         if target_data.dead:
             return
         # 润滑调整
-        target_data.status_data.setdefault(8, 0)
+        status.setdefault(target_data.cid, 8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            num.whole(target_data.status_data[8])
+            num.whole(status.of(target_data.cid)[8])
         )
 
         # 扩长等级相对于插入等级的调整，棉棒默认为无影响
@@ -7737,9 +7737,9 @@ def handle_urethral_finger_insertion_add_adjust(
         if target_data.dead:
             return
         # 润滑调整
-        target_data.status_data.setdefault(8, 0)
+        status.setdefault(target_data.cid, 8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            num.whole(target_data.status_data[8])
+            num.whole(status.of(target_data.cid)[8])
         )
 
         # 扩长等级相对于插入等级的调整，手指为-2级扩张
@@ -8642,7 +8642,7 @@ def handle_give_gift_add_adjust(
     gift_data = game_config.config_gift_items[gift_id]
     # 礼物持有数量-1
     item_id = gift_data.item_id
-    character_data.item[item_id] -= 1
+    inventory.add_item(character_id, item_id, -1)
     achievement.add("gift_count", 1)
 
     # 好感礼物
@@ -8741,7 +8741,7 @@ def handle_give_gift_add_adjust(
     # 阴茎倒模
     elif gift_data.type == 13:
         # 对方获得阴茎倒模
-        target_data.item[175] += 1
+        inventory.add_item(target_data.cid, 175, 1)
         # 增加好感与羞耻
         base_chara_favorability_and_trust_common_settle(
             character_id, 100, True, change_data=change_data
@@ -9282,9 +9282,9 @@ def handle_skip_class_add_just(
         growth_data.skip_class_flag = True
         growth_data.skip_class_day = start_time.toordinal()
     # 翘课换来的那点轻松：抑郁小幅回落。不给任何学习收益，这是翘课的代价
-    if 19 in character_data.status_data:
-        character_data.status_data[19] = max(
-            0, character_data.status_data[19] - add_time
+    if 19 in status.of(character_id):
+        status.set(
+            character_id, 19, max(0, status.of(character_id)[19] - add_time)
         )
 
 
@@ -9968,8 +9968,8 @@ def handle_sing_add_adjust(
                 )
 
             # 好意变化#
-            target_data.status_data.setdefault(11, 0)
-            now_lust = target_data.status_data[11]
+            status.setdefault(target_data.cid, 11, 0)
+            now_lust = status.of(target_data.cid)[11]
             now_lust_multiple = 30
             now_add_lust: float = add_time + now_lust_multiple
             if good_flag:
@@ -9978,10 +9978,7 @@ def handle_sing_add_adjust(
             else:
                 now_add_lust *= adjust - 1
             now_add_lust = int(now_add_lust)
-            target_data.status_data[11] += now_add_lust
-            target_data.status_data[11] = min(
-                99999, target_data.status_data[11]
-            )
+            status.add(target_data.cid, 11, now_add_lust, max=99999)
             change_data.target_change.setdefault(
                 target_data.cid, game_type.TargetChange()
             )
@@ -9992,7 +9989,7 @@ def handle_sing_add_adjust(
             # 恐怖、抑郁、反感变化
             if not good_flag:
                 for i in {18, 19, 20}:
-                    now_lust = target_data.status_data[i]
+                    now_lust = status.of(target_data.cid)[i]
                     now_lust_multiple = 100
                     now_add_lust = add_time + now_lust_multiple
                     if good_flag:
@@ -10001,10 +9998,7 @@ def handle_sing_add_adjust(
                         now_add_lust *= 5 - adjust
                         now_add_lust += now_lust / 10
                     now_add_lust = int(now_add_lust)
-                    target_data.status_data[i] += now_add_lust
-                    target_data.status_data[i] = min(
-                        99999, target_data.status_data[i]
-                    )
+                    status.add(target_data.cid, i, now_add_lust, max=99999)
                     change_data.target_change.setdefault(
                         target_data.cid, game_type.TargetChange()
                     )
@@ -10120,8 +10114,8 @@ def handle_play_instrument_add_adjust(
                 )
 
             # 好意变化#
-            target_data.status_data.setdefault(11, 0)
-            now_lust = target_data.status_data[11]
+            status.setdefault(target_data.cid, 11, 0)
+            now_lust = status.of(target_data.cid)[11]
             now_lust_multiple = 30
             now_add_lust: float = add_time + now_lust_multiple
             if good_flag:
@@ -10130,10 +10124,7 @@ def handle_play_instrument_add_adjust(
             else:
                 now_add_lust *= adjust - 1
             now_add_lust = int(now_add_lust)
-            target_data.status_data[11] += now_add_lust
-            target_data.status_data[11] = min(
-                99999, target_data.status_data[11]
-            )
+            status.add(target_data.cid, 11, now_add_lust, max=99999)
             change_data.target_change.setdefault(
                 target_data.cid, game_type.TargetChange()
             )
@@ -10144,7 +10135,7 @@ def handle_play_instrument_add_adjust(
             # 恐怖、抑郁、反感变化
             if not good_flag:
                 for i in {18, 19, 20}:
-                    now_lust = target_data.status_data[i]
+                    now_lust = status.of(target_data.cid)[i]
                     now_lust_multiple = 150
                     now_add_lust = add_time + now_lust_multiple
                     if good_flag:
@@ -10153,10 +10144,7 @@ def handle_play_instrument_add_adjust(
                         now_add_lust *= 5 - adjust
                         now_add_lust += now_lust / 8
                     now_add_lust = int(now_add_lust)
-                    target_data.status_data[i] += now_add_lust
-                    target_data.status_data[i] = min(
-                        99999, target_data.status_data[i]
-                    )
+                    status.add(target_data.cid, i, now_add_lust, max=99999)
                     change_data.target_change.setdefault(
                         target_data.cid, game_type.TargetChange()
                     )
@@ -10356,8 +10344,8 @@ def handle_tech_add_p_adjust(
         feel_adjust = handle_ability.get_ability_adjust(ability[3])
         adjust = math.sqrt(abi_adjust * feel_adjust)
         # P快变化#
-        target_data.status_data.setdefault(3, 0)
-        now_lust = target_data.status_data[3]
+        status.setdefault(target_data.cid, 3, 0)
+        now_lust = status.of(target_data.cid)[3]
         now_lust_multiple = 50
         now_add_lust: float = add_time + now_lust_multiple
         now_add_lust *= adjust
@@ -10370,15 +10358,14 @@ def handle_tech_add_p_adjust(
         # target_change.status_data[3] += now_add_lust
         action_info.set(target_data.cid, "last_eaj_add_time", now_time)
         # 欲情变化#
-        target_data.status_data.setdefault(12, 0)
-        now_lust = target_data.status_data[12]
+        status.setdefault(target_data.cid, 12, 0)
+        now_lust = status.of(target_data.cid)[12]
         now_lust_multiple = 50
         now_add_lust = add_time + now_lust_multiple
         now_add_lust *= adjust
         now_add_lust += now_lust / 6
         now_add_lust = int(now_add_lust)
-        target_data.status_data[12] += now_add_lust
-        target_data.status_data[12] = min(99999, target_data.status_data[12])
+        status.add(target_data.cid, 12, now_add_lust, max=99999)
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
         )
@@ -10731,8 +10718,8 @@ def handle_tech_add_pl_p_adjust(
         ability.setdefault(19, 0)
         adjust = handle_ability.get_ability_adjust(ability[30])
         # P快变化#
-        character_data.status_data.setdefault(3, 0)
-        now_lust = character_data.status_data[3]
+        status.setdefault(character_id, 3, 0)
+        now_lust = status.of(character_id)[3]
         now_lust_multiple = 50
         now_add_lust: float = add_time + now_lust_multiple
         now_add_lust *= adjust
@@ -10775,9 +10762,9 @@ def handle_target_lubrication_adjust_add_pain(
         if target_data.dead:
             return
         # 获取调整值#
-        target_data.status_data.setdefault(8, 0)
+        status.setdefault(target_data.cid, 8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            num.whole(target_data.status_data[8])
+            num.whole(status.of(target_data.cid)[8])
         )
         base_chara_state_common_settle(
             character_data.target_character_id,
@@ -10821,9 +10808,9 @@ def handle_target_v_adjust_add_pain(
         if target_data.dead:
             return
         # 润滑调整
-        target_data.status_data.setdefault(8, 0)
+        status.setdefault(target_data.cid, 8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            num.whole(target_data.status_data[8])
+            num.whole(status.of(target_data.cid)[8])
         )
         # 腰技的调整
         waist_tech = abilities.ability(character_id)[76]
@@ -10882,9 +10869,9 @@ def handle_target_a_adjust_add_pain(
         if target_data.dead:
             return
         # 润滑调整
-        target_data.status_data.setdefault(8, 0)
+        status.setdefault(target_data.cid, 8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            num.whole(target_data.status_data[8])
+            num.whole(status.of(target_data.cid)[8])
         )
         # 腰技的调整
         waist_tech = abilities.ability(character_id)[76]
@@ -10943,9 +10930,9 @@ def handle_target_u_adjust_add_pain(
         if target_data.dead:
             return
         # 润滑调整
-        target_data.status_data.setdefault(8, 0)
+        status.setdefault(target_data.cid, 8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            num.whole(target_data.status_data[8])
+            num.whole(status.of(target_data.cid)[8])
         )
         # 腰技的调整
         waist_tech = abilities.ability(character_id)[76]
@@ -11005,9 +10992,9 @@ def handle_target_w_adjust_add_pain(
         if target_data.dead:
             return
         # 润滑调整
-        target_data.status_data.setdefault(8, 0)
+        status.setdefault(target_data.cid, 8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            num.whole(target_data.status_data[8])
+            num.whole(status.of(target_data.cid)[8])
         )
         # 腰技的调整
         waist_tech = abilities.ability(character_id)[76]
@@ -11402,8 +11389,8 @@ def handle_finger_tech_add_pl_p_adjust(
         adjust_2 = handle_ability.get_ability_adjust(ability[70])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
-        character_data.status_data.setdefault(3, 0)
-        now_lust = character_data.status_data[3]
+        status.setdefault(character_id, 3, 0)
+        now_lust = status.of(character_id)[3]
         now_lust_multiple = 50
         now_add_lust: float = add_time + now_lust_multiple
         now_add_lust *= adjust
@@ -11452,8 +11439,8 @@ def handle_tongue_tech_add_pl_p_adjust(
         adjust_2 = handle_ability.get_ability_adjust(ability[71])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
-        character_data.status_data.setdefault(3, 0)
-        now_lust = character_data.status_data[3]
+        status.setdefault(character_id, 3, 0)
+        now_lust = status.of(character_id)[3]
         now_lust_multiple = 50
         now_add_lust: float = add_time + now_lust_multiple
         now_add_lust *= adjust
@@ -11502,8 +11489,8 @@ def handle_feet_tech_add_pl_p_adjust(
         adjust_2 = handle_ability.get_ability_adjust(ability[72])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
-        character_data.status_data.setdefault(3, 0)
-        now_lust = character_data.status_data[3]
+        status.setdefault(character_id, 3, 0)
+        now_lust = status.of(character_id)[3]
         now_lust_multiple = 50
         now_add_lust: float = add_time + now_lust_multiple
         now_add_lust *= adjust
@@ -11552,8 +11539,8 @@ def handle_breast_tech_add_pl_p_adjust(
         adjust_2 = handle_ability.get_ability_adjust(ability[73])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
-        character_data.status_data.setdefault(3, 0)
-        now_lust = character_data.status_data[3]
+        status.setdefault(character_id, 3, 0)
+        now_lust = status.of(character_id)[3]
         now_lust_multiple = 50
         now_add_lust: float = add_time + now_lust_multiple
         now_add_lust *= adjust
@@ -11602,8 +11589,8 @@ def handle_vagina_tech_add_pl_p_adjust(
         adjust_2 = handle_ability.get_ability_adjust(ability[74])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
-        character_data.status_data.setdefault(3, 0)
-        now_lust = character_data.status_data[3]
+        status.setdefault(character_id, 3, 0)
+        now_lust = status.of(character_id)[3]
         now_lust_multiple = 50
         now_add_lust: float = add_time + now_lust_multiple
         now_add_lust *= adjust
@@ -11652,8 +11639,8 @@ def handle_anus_tech_add_pl_p_adjust(
         adjust_2 = handle_ability.get_ability_adjust(ability[75])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
-        character_data.status_data.setdefault(3, 0)
-        now_lust = character_data.status_data[3]
+        status.setdefault(character_id, 3, 0)
+        now_lust = status.of(character_id)[3]
         now_lust_multiple = 50
         now_add_lust: float = add_time + now_lust_multiple
         now_add_lust *= adjust
@@ -11746,8 +11733,8 @@ def handle_high_obscenity_failed_adjust(
         )
         target_change = change_data.target_change[target_data.cid]
         # 加反感
-        target_data.status_data.setdefault(20, 0)
-        now_lust = target_data.status_data[20]
+        status.setdefault(target_data.cid, 20, 0)
+        now_lust = status.of(target_data.cid)[20]
         now_lust_multiple: float = 10000
         now_add_lust: float = add_time + now_lust_multiple
         adjust = handle_ability.get_ability_adjust(
@@ -11756,8 +11743,7 @@ def handle_high_obscenity_failed_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 2
         now_add_lust = int(now_add_lust)
-        target_data.status_data[20] += now_add_lust
-        target_data.status_data[20] = min(99999, target_data.status_data[20])
+        status.add(target_data.cid, 20, now_add_lust, max=99999)
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
         )
@@ -11819,8 +11805,8 @@ def handle_do_h_failed_adjust(
         )
         target_change = change_data.target_change[target_data.cid]
         # 加反感
-        target_data.status_data.setdefault(20, 0)
-        now_lust = target_data.status_data[20]
+        status.setdefault(target_data.cid, 20, 0)
+        now_lust = status.of(target_data.cid)[20]
         now_lust_multiple: float = 20000
         now_add_lust: float = add_time + now_lust_multiple
         adjust = handle_ability.get_ability_adjust(
@@ -11829,8 +11815,7 @@ def handle_do_h_failed_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 2
         now_add_lust = int(now_add_lust)
-        target_data.status_data[20] += now_add_lust
-        target_data.status_data[20] = min(99999, target_data.status_data[20])
+        status.add(target_data.cid, 20, now_add_lust, max=99999)
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
         )

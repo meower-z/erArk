@@ -19,6 +19,7 @@ from typing import NoReturn, cast
 from Script.Core import cache_control, constant, game_type, py_cmd
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import draft, edits, intent, working
+from Script.Modules.tk_ui import drawn_see
 from Script.UI.Moudle import view
 
 cache: game_type.Cache = cache_control.cache
@@ -146,6 +147,7 @@ def _with_draft(
 def drafting(origin: str) -> Iterator[None]:
     """
     玩家选择里的一段代码读写缓存的副本（draft.Session）：
+    开草稿时先把 H 服装面板记下的可见性写进草稿（drawn_see.keep）；
     正常结束时有改动就定下一个 0 分钟的 Edit（抛出 Chosen）；定下行动时草稿随那个行动走；
     取消或出错时丢掉草稿。不在选行动中时只运行这段代码，已在草稿里时并进外层的草稿
     Keyword arguments:
@@ -157,6 +159,7 @@ def drafting(origin: str) -> Iterator[None]:
     session = draft.Session(UI_STATE | META_STATE)
     buffer = working.open_pick()
     try:
+        drawn_see.keep()
         yield
     except Chosen as chosen:
         effects = working.close_pick(buffer)

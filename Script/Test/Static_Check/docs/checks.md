@@ -229,11 +229,11 @@ H 状态、群交模式、逆推、隐奸。
 
 ## NUM：数值范围
 
-角色对象上的数值字典（status_data/favorability）与 GameState 里的能力、经验、宝珠、素质表的键集与取值范围，以及基地资源等全局数值。
+角色对象上的数值字典 favorability、角色的状态值与 GameState 里的能力、经验、宝珠、素质表的键集与取值范围，以及基地资源等全局数值。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| NUM-01 | 数值容器字段存在且为dict | 两个数值字典字段(status_data/favorability)在每个角色对象上都存在且 类型为dict |
+| NUM-01 | 数值容器字段存在且为dict | 数值字典字段favorability在每个角色对象上都存在且 类型为dict |
 | NUM-02 | 能力字典键集覆盖配表且键为纯int | config_ability的每个id都在角色的能力表中存在（配表⊆角色，方向不可颠倒——补零与迁移只补不删， 角色⊆配表或键集相等的方向会在每份升级存档上每回合误报），且能力表的键类型均为精确int （避免Python集合里True==1、1.0==1造成的伪装键） |
 | NUM-03 | 能力值必须是Ability_Lv_Adjust的合法键 | 角色的能力表的每个值都是config_ability_lv_adjust中的合法键（配表键仅0-10） |
 | NUM-04 | 能力等级不超过8（事件白名单除外） | 角色的能力表的值不超过8（自动升级循环硬停在8） |
@@ -244,9 +244,9 @@ H 状态、群交模式、逆推、隐奸。
 | NUM-09 | 宝珠字典键集覆盖配表且键为纯int | config_juel的每个id都在角色的宝珠表中存在（配表⊆角色），键类型均为精确int |
 | NUM-10 | 宝珠为非负整数 | 角色的宝珠表的每个值都是非负整数 |
 | NUM-11 | 素质字典键集覆盖配表且值为int | config_talent的每个id都在角色的素质表中存在（配表⊆角色），键与值类型均为精确int（排除bool） |
-| NUM-12 | 状态值字典键集覆盖配表且键为纯int | config_character_state的每个id都在chara.status_data中存在（配表⊆角色），键类型均为精确int |
-| NUM-13 | 状态值为非负整数 | chara.status_data的每个值都是非负整数 |
-| NUM-14 | 状态值不超过99999 | chara.status_data的每个值不超过99999 |
+| NUM-12 | 状态值字典键集覆盖配表且键为纯int | config_character_state的每个id都在角色的状态值（status.of(cid)）中存在（配表⊆角色），键类型均为精确int |
+| NUM-13 | 状态值为非负的整数或分数 | 角色的状态值（status.of(cid)）都是非负的int或Fraction |
+| NUM-14 | 状态值不超过99999 | 角色的状态值都不超过99999 |
 | NUM-15 | 好感键有效且必含玩家 | 本域唯一方向为"角色⊆全局"的键集检查：校验chara.favorability的每个目标id都必须是cache.character_data 中现存角色，且必须含键0（玩家）——能力升级需求F<n>与事件通道均裸取/裸写favorability[0] |
 | NUM-16 | 好感值为整数 | 只检查chara.favorability值的类型为int，不设上下界 |
 | NUM-17 | 信赖与催眠程度为有限实数 | chara.trust与chara.hypnosis.hypnosis_degree都是类型合法(int/float)且有限(非NaN/inf)的实数 |

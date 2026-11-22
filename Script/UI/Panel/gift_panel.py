@@ -8,7 +8,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import game_time, handle_premise
 from Script.Modules.domains import pregnancy
 from Script.System.Pregnancy_System import pregnancy_constant
-from Script.Modules.domains import abilities, action_info, flags
+from Script.Modules.domains import abilities, action_info, flags, inventory
 
 panel_info_data: dict[str, object] = {}
 
@@ -258,7 +258,6 @@ class Gift_Panel:
         参数：无
         返回值：无
         """
-        character_data: game_type.Character = cache.character_data[0]
         title_text = _("赠送礼物")
         title_draw = draw.TitleLineDraw(title_text, self.width)
         while 1:
@@ -302,7 +301,7 @@ class Gift_Panel:
                     gift_text = (
                         f"[{gift_id_text}]{item_data.name}：{item_data.info}"
                     )
-                if character_data.item[item_id] <= 0:
+                if inventory.items(0)[item_id] <= 0:
                     gift_text += _("(未拥有)")
                     cant_flag = True
 

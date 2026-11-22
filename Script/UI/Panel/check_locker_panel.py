@@ -13,7 +13,7 @@ from Script.Modules.gameplay_resolution import edits
 from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import ejaculation_panel
-from Script.Modules.domains import roster
+from Script.Modules.domains import roster, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -78,9 +78,9 @@ class Check_locker_Panel:
                                 clothing_type
                             ) in game_config.config_clothing_type:
                                 if len(
-                                    character_data.cloth.cloth_locker_in_dormitory[
-                                        clothing_type
-                                    ]
+                                    wardrobe.of(
+                                        character_data.cid
+                                    ).cloth_locker_in_dormitory[clothing_type]
                                 ):
                                     npc_id_list.append(npc_id)
                                     break
@@ -93,9 +93,9 @@ class Check_locker_Panel:
                         character_data = cache.character_data[npc_id]
                         for clothing_type in game_config.config_clothing_type:
                             if len(
-                                character_data.cloth.cloth_locker_in_shower[
-                                    clothing_type
-                                ]
+                                wardrobe.of(
+                                    character_data.cid
+                                ).cloth_locker_in_shower[clothing_type]
                             ):
                                 npc_id_list.append(npc_id)
                                 break
@@ -172,11 +172,10 @@ class Check_locker_Panel:
         show_text = "\n"
         for npc_id in npc_id_list:
             character_data = cache.character_data[npc_id]
-            now_locker = clothing.get_cloth_locker_by_type(
-                npc_id,
-                clothing.get_cloth_locker_type_by_scene(map_data.scene_tag),
+            locker_type = clothing.get_cloth_locker_type_by_scene(
+                map_data.scene_tag
             )
-
+            now_locker = clothing.get_cloth_locker_by_type(npc_id, locker_type)
             if len(now_locker[9]):
                 from Script.Modules.domains import player_collection
 
@@ -192,7 +191,7 @@ class Check_locker_Panel:
                         character_data.name, pan_name
                     )
                     count += 1
-                now_locker[9] = []
+                clothing.empty_cloth_locker_part(npc_id, locker_type, 9)
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.text = show_text + _(
@@ -208,11 +207,10 @@ class Check_locker_Panel:
         show_text = "\n"
         for npc_id in npc_id_list:
             character_data = cache.character_data[npc_id]
-            now_locker = clothing.get_cloth_locker_by_type(
-                npc_id,
-                clothing.get_cloth_locker_type_by_scene(map_data.scene_tag),
+            locker_type = clothing.get_cloth_locker_type_by_scene(
+                map_data.scene_tag
             )
-
+            now_locker = clothing.get_cloth_locker_by_type(npc_id, locker_type)
             if len(now_locker[10]):
                 from Script.Modules.domains import player_collection
 
@@ -228,7 +226,7 @@ class Check_locker_Panel:
                         character_data.name, socks_name
                     )
                     count += 1
-                now_locker[10] = []
+                clothing.empty_cloth_locker_part(npc_id, locker_type, 10)
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.text = show_text + _(
@@ -284,13 +282,14 @@ class FindDraw:
         map_data = cache.scene_data[map_path_str]
 
         # 获取当前衣柜是哪个衣柜
+        self.locker_type = clothing.get_cloth_locker_type_by_scene(
+            map_data.scene_tag
+        )
         self.now_locker = clothing.get_cloth_locker_by_type(
-            self.npc_id,
-            clothing.get_cloth_locker_type_by_scene(map_data.scene_tag),
+            self.npc_id, self.locker_type
         )
 
         name_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
-        # print("text :",text)
         if is_button:
             if num_button:
                 index_text = text_handle.id_index(button_id)
@@ -313,9 +312,7 @@ class FindDraw:
 
     def check_cloth(self) -> None:
         """点击后进入衣服操作子界面"""
-        # title_draw = draw.TitleLineDraw(self.text, window_width)
         return_list: list[str] = []
-        # title_draw.draw()
         cloth_show_draw = draw.NormalDraw()
         while 1:
             return_list.clear()
@@ -449,6 +446,7 @@ class FindDraw:
         player_collection.append_list_map(
             "npc_panties_tem", self.npc_id, pan_id
         )
+        clothing.empty_cloth_locker_part(self.npc_id, self.locker_type, 9)
         self.now_locker[9] = []
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
@@ -470,6 +468,7 @@ class FindDraw:
         player_collection.append_list_map(
             "npc_socks_tem", self.npc_id, socks_id
         )
+        clothing.empty_cloth_locker_part(self.npc_id, self.locker_type, 10)
         self.now_locker[10] = []
         now_draw = draw.WaitDraw()
         now_draw.width = window_width

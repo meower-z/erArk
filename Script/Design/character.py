@@ -17,9 +17,10 @@ from Script.Design import (
 )
 from Script.Config import normal_config
 from Script.UI.Moudle import panel, draw
-from Script.Modules.domains import abilities, action_info, flags, needs
-from Script.Modules.domains import player_ability, player_collection, pregnancy
-from Script.Modules.domains import roster
+from Script.Modules.domains import abilities, action_info, body_manage, flags
+from Script.Modules.domains import inventory, needs, player_ability
+from Script.Modules.domains import player_collection, pregnancy, roster, status
+from Script.Modules.domains import wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -59,8 +60,9 @@ def init_attr(character_id: int) -> None:
         (abilities.juel(character_id), attr_calculation.get_juel_zero),
     ):
         table.replace(zero(table.copy()))
-    character_data.status_data = attr_calculation.get_status_zero(
-        character_data.status_data
+    status.replace(
+        character_id,
+        attr_calculation.get_status_zero(dict(status.of(character_id))),
     )
     character_data.second_behavior = attr_calculation.get_second_behavior_zero(
         character_data.second_behavior
@@ -68,7 +70,8 @@ def init_attr(character_id: int) -> None:
     character_data.dirty = attr_calculation.get_dirty_reset(
         character_data.dirty
     )
-    character_data.item = attr_calculation.get_item_zero(character_data.item)
+    items = attr_calculation.get_item_zero(dict(inventory.items(character_id)))
+    inventory.replace_items(character_id, items)
     character_data.h_state = attr_calculation.get_h_state_reset(
         character_data.h_state
     )
@@ -83,7 +86,7 @@ def init_attr(character_id: int) -> None:
     character_data.assistant_services = (
         attr_calculation.get_assistant_services_zero()
     )
-    character_data.body_manage = attr_calculation.get_body_manage_zero()
+    body_manage.replace(character_id, attr_calculation.get_body_manage_zero())
     # character_data.relationship = attr_calculation.get_relationship_zero(character_data.relationship)
 
     # 主角的初始处理，HP和MP的最大值默认为1000，EP最大值默认为1000，初始化信物，困倦程度归零
@@ -97,7 +100,7 @@ def init_attr(character_id: int) -> None:
         character_data.semen_point_max = 100
         player_ability.reset(0)
         player_collection.init_zero(0)
-        character_data.cloth = attr_calculation.get_cloth_zero()
+        wardrobe.put(character_id, attr_calculation.get_cloth_zero())
         character_data.favorability = {0: 0}
         character_data.dormitory = map_handle.get_map_system_path_str_for_list(
             ["中枢", "博士房间"]

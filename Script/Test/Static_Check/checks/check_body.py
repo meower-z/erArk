@@ -16,7 +16,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import game_time
-from Script.Modules.domains import abilities, needs, pregnancy
+from Script.Modules.domains import abilities, needs, pregnancy, wardrobe
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -95,18 +95,16 @@ def _name(chara: object) -> str:
     return str(getattr(chara, "name", "?"))
 
 
-def _cloth_locs(chara: object) -> list[tuple[str, dict]] | None:
+def _cloth_locs(cid: int) -> list[tuple[str, dict]] | None:
     """
     参数:
-        chara: 角色对象
+        cid: 角色id
     返回值:
-        Optional[List[Tuple[str, dict]]]: 四个服装容器的 (容器名, 字典) 列表；cloth结构缺失时返回None
+        Optional[List[Tuple[str, dict]]]: 角色服装（wardrobe.of）四个容器的 (容器名, 字典) 列表。有容器不是字典时为None
     功能:
         统一取出穿着/脱下/大浴场衣柜/宿舍衣柜四个容器，供各服装检查复用
     """
-    cloth = getattr(chara, "cloth", None)
-    if cloth is None:
-        return None
+    cloth = wardrobe.of(cid)
     locs = []
     for attr_name in (
         "cloth_wear",
@@ -194,17 +192,7 @@ def check_cloth_container_keys() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_charas():
-        cloth = getattr(chara, "cloth", None)
-        if cloth is None:
-            failures.append(
-                make_failure(
-                    "BODY-01",
-                    "服装四容器的部位键完整",
-                    f"角色id={cid}({_name(chara)})缺少cloth结构",
-                    [cid],
-                )
-            )
-            continue
+        cloth = wardrobe.of(cid)
         for attr_name in (
             "cloth_wear",
             "cloth_off",
@@ -259,7 +247,7 @@ def check_cloth_id_validity() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_charas():
-        locs = _cloth_locs(chara)
+        locs = _cloth_locs(cid)
         if locs is None:
             continue  # 形状问题由BODY-01负责报告
         for attr_name, d in locs:
@@ -306,7 +294,7 @@ def check_cloth_slot_duplicates() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        locs = _cloth_locs(chara)
+        locs = _cloth_locs(cid)
         if locs is None:
             continue
         for attr_name, d in locs:
@@ -342,7 +330,7 @@ def check_wear_off_disjoint() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        locs = _cloth_locs(chara)
+        locs = _cloth_locs(cid)
         if locs is None:
             continue
         loc_dict = dict(locs)
@@ -403,7 +391,7 @@ def check_exclusive_cloth_owner() -> list[CheckFailure]:
         adv = getattr(chara, "adv", 0)
         if cid == 0 or not isinstance(adv, int) or adv <= 0:
             continue
-        locs = _cloth_locs(chara)
+        locs = _cloth_locs(cid)
         if locs is None:
             continue
         for attr_name, d in locs:
@@ -441,9 +429,7 @@ def check_cloth_see_shape() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        cloth = getattr(chara, "cloth", None)
-        if cloth is None:
-            continue
+        cloth = wardrobe.of(cid)
         see = getattr(cloth, "cloth_see", None)
         ok = (
             isinstance(see, dict)
@@ -475,9 +461,7 @@ def check_equipment_condition_bound() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        cloth = getattr(chara, "cloth", None)
-        if cloth is None:
-            continue
+        cloth = wardrobe.of(cid)
         val = getattr(cloth, "equipment_condition", 0)
         if not _num(val) or not (-4 <= val <= 2):
             failures.append(
@@ -509,8 +493,8 @@ def check_condom_decoration() -> list[CheckFailure]:
     failures = []
     for cid, chara in _iter_charas():
         dirty = getattr(chara, "dirty", None)
-        cloth = getattr(chara, "cloth", None)
-        if dirty is None or cloth is None:
+        cloth = wardrobe.of(cid)
+        if dirty is None:
             continue
         deco = getattr(dirty, "condom_decoration", None)
         if deco is None:
@@ -1453,8 +1437,8 @@ def check_semen_flow_source_container() -> list[CheckFailure]:
     hits = []
     for cid, chara in _iter_charas():
         dirty = getattr(chara, "dirty", None)
-        cloth = getattr(chara, "cloth", None)
-        if dirty is None or cloth is None:
+        cloth = wardrobe.of(cid)
+        if dirty is None:
             continue
         flow = getattr(dirty, "semen_flow", None)
         wear = getattr(cloth, "cloth_wear", None)
@@ -1582,7 +1566,7 @@ def check_clothing_tem_list() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_charas():
-        lst = getattr(getattr(chara, "cloth", None), "clothing_tem", None)
+        lst: object = wardrobe.of(cid).clothing_tem
         if lst is None:
             continue
         if not isinstance(lst, list) or any(

@@ -16,8 +16,8 @@ from Script.Settle.common_default import (
     base_chara_state_common_settle,
 )
 from Script.Design import game_time
-from Script.Modules.domains import abilities, action_info, flags, fridge
-from Script.Modules.domains import growth, needs, player_collection, pregnancy
+from Script.Modules.domains import abilities, action_info, flags, fridge, growth
+from Script.Modules.domains import needs, player_collection, pregnancy, status
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -2760,8 +2760,7 @@ def handle_down_small_pain(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_add_lust = -50 - character_data.status_data[17] / 10
+    now_add_lust = -50 - status.of(character_id)[17] / 10
     now_add_lust = int(now_add_lust)
 
     base_chara_state_common_settle(
@@ -2791,8 +2790,7 @@ def handle_down_small_disgust(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_add_lust = -50 - character_data.status_data[20] / 10
+    now_add_lust = -50 - status.of(character_id)[20] / 10
     now_add_lust = int(now_add_lust)
 
     base_chara_state_common_settle(
@@ -2821,8 +2819,7 @@ def handle_down_middle_pain(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_add_lust = -500 - character_data.status_data[17] / 5
+    now_add_lust = -500 - status.of(character_id)[17] / 5
     now_add_lust = int(now_add_lust)
 
     base_chara_state_common_settle(
@@ -2851,8 +2848,7 @@ def handle_down_middle_disgust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_add_lust = -500 - character_data.status_data[20] / 5
+    now_add_lust = -500 - status.of(character_id)[20] / 5
     now_add_lust = int(now_add_lust)
 
     base_chara_state_common_settle(
@@ -2881,8 +2877,7 @@ def handle_down_large_pain(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_add_lust = -2000 - character_data.status_data[17] / 3
+    now_add_lust = -2000 - status.of(character_id)[17] / 3
     now_add_lust = int(now_add_lust)
 
     base_chara_state_common_settle(
@@ -2911,8 +2906,7 @@ def handle_down_large_disgust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_add_lust = -2000 - character_data.status_data[20] / 3
+    now_add_lust = -2000 - status.of(character_id)[20] / 3
     now_add_lust = int(now_add_lust)
 
     base_chara_state_common_settle(
@@ -2941,18 +2935,17 @@ def handle_add_large_pain_first_sex(
     """
 
     ability = abilities.ability(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
 
     now_add_lust: float = 4000
     # 润滑修正
     adjust = attr_calculation.get_pain_adjust(
-        num.whole(character_data.status_data[8])
+        num.whole(status.of(character_id)[8])
     )
     now_add_lust *= adjust
     # print("润滑修正", now_add_lust)
     # 欲情修正
     adjust = attr_calculation.get_pain_adjust(
-        num.whole(character_data.status_data[12])
+        num.whole(status.of(character_id)[12])
     )
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
@@ -2990,17 +2983,16 @@ def handle_add_large_pain_first_a_sex(
     """
 
     ability = abilities.ability(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
 
     now_add_lust: float = 2000
     # 润滑修正
     adjust = attr_calculation.get_pain_adjust(
-        num.whole(character_data.status_data[8])
+        num.whole(status.of(character_id)[8])
     )
     now_add_lust *= adjust
     # 欲情修正
     adjust = attr_calculation.get_pain_adjust(
-        num.whole(character_data.status_data[12])
+        num.whole(status.of(character_id)[12])
     )
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
@@ -3035,17 +3027,16 @@ def handle_add_large_pain_first_u_sex(
     """
 
     ability = abilities.ability(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
 
     now_add_lust: float = 4000
     # 润滑修正
     adjust = attr_calculation.get_pain_adjust(
-        num.whole(character_data.status_data[8])
+        num.whole(status.of(character_id)[8])
     )
     now_add_lust *= adjust
     # 欲情修正
     adjust = attr_calculation.get_pain_adjust(
-        num.whole(character_data.status_data[12])
+        num.whole(status.of(character_id)[12])
     )
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
@@ -3080,17 +3071,16 @@ def handle_add_large_pain_first_w_sex(
     """
 
     ability = abilities.ability(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
 
     now_add_lust: float = 3000
     # 润滑修正
     adjust = attr_calculation.get_pain_adjust(
-        num.whole(character_data.status_data[8])
+        num.whole(status.of(character_id)[8])
     )
     now_add_lust *= adjust
     # 欲情修正
     adjust = attr_calculation.get_pain_adjust(
-        num.whole(character_data.status_data[12])
+        num.whole(status.of(character_id)[12])
     )
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust

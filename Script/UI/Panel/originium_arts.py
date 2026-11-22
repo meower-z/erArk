@@ -14,7 +14,7 @@ from Script.Design import handle_talent, handle_premise
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, player_ability, player_collection
-from Script.Modules.domains import roster, warehouse
+from Script.Modules.domains import roster, status, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -839,11 +839,11 @@ class Down_Negative_Talent_Panel:
             ability[ability_id] -= 1
             # 也降低刻印对应的主状态值
             if ability_id == 15:
-                character_data.status_data[17] = 0
+                status.set(character_data.cid, 17, 0)
             elif ability_id == 17:
-                character_data.status_data[18] = 0
+                status.set(character_data.cid, 18, 0)
             elif ability_id == 18:
-                character_data.status_data[20] = 0
+                status.set(character_data.cid, 20, 0)
             info_text = _("  随着一阵火焰，5条内裤化为一缕青烟，消散在空中\n")
             info_text += _(
                 "  {0}感觉心里轻松了很多，对{1}的印象有些改观了，{2}下降到了{3}级\n"

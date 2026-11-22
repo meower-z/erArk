@@ -8,7 +8,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel, ejaculation_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, achievement
+from Script.Modules.domains import abilities, achievement, status
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -131,7 +131,7 @@ def orgasm_judge(
             # un_count_data -- 不计数的本次临时高潮数
             # extra_add -- 额外高潮次数
             now_data = attr_calculation.get_status_level(
-                character_data.status_data[orgasm]
+                status.of(character_id)[orgasm]
             )
             pre_data = character_data.h_state.orgasm_level[orgasm]
             un_count_data = 0

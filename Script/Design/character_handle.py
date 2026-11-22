@@ -19,7 +19,7 @@ from Script.Design import (
 from Script.Config import game_config, character_config, normal_config
 from Script.Modules.domains import abilities, facility, flags, needs
 from Script.Modules.domains import player_collection, playthrough, roster
-from Script.Modules.domains import tallies, visitor
+from Script.Modules.domains import tallies, visitor, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -88,15 +88,13 @@ def init_character(
     # if character_tem.Chest:
     #     now_character.chest_tem = character_tem.Chest
     # 生成衣服
-    now_character.cloth = attr_calculation.get_cloth_zero()
-    now_character.cloth.cloth_wear = attr_calculation.get_cloth_wear_zero()
+    cloth = attr_calculation.get_cloth_zero()
+    cloth.cloth_wear = attr_calculation.get_cloth_wear_zero()
     for cloth_id in character_tem.Cloth:
         type = game_config.config_clothing_tem[cloth_id].clothing_type
-        now_character.cloth.clothing_tem.append(cloth_id)
-        now_character.cloth.cloth_wear[type].append(cloth_id)
-        # if type in [6,9] and len(now_character.cloth.cloth_wear[type]):
-        #     print(f"debug {character_tem.Name} cloth_wear = {now_character.cloth.cloth_wear}")
-    # print(f"debug {character_tem.Name} cloth_wear = {now_character.cloth.cloth_wear}")
+        cloth.clothing_tem.append(cloth_id)
+        cloth.cloth_wear[type].append(cloth_id)
+    wardrobe.put(now_character.cid, cloth)
     # 生成藏品
     if collect_reset and 0 in cache.character_data:
         player_collection.set_npc_entries(character_id)

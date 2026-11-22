@@ -13,6 +13,7 @@ from Script.Config import game_config
 from Script.Modules.domains import maintenance
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import action_info, entertainment, flags, location
+from Script.Modules.domains import wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -4793,10 +4794,7 @@ def handle_scene_someone_wear_pan(character_id: int) -> int:
         # 跳过玩家自己
         if chara_id == 0 or chara_id == character_id:
             continue
-        other_character_data: game_type.Character = cache.character_data[
-            chara_id
-        ]
-        if len(other_character_data.cloth.cloth_wear[9]):
+        if len(wardrobe.of(chara_id).cloth_wear[9]):
             return 1
     return 0
 
@@ -4820,9 +4818,6 @@ def handle_scene_someone_wear_socks(character_id: int) -> int:
         # 跳过玩家自己
         if chara_id == 0 or chara_id == character_id:
             continue
-        other_character_data: game_type.Character = cache.character_data[
-            chara_id
-        ]
-        if len(other_character_data.cloth.cloth_wear[10]):
+        if len(wardrobe.of(chara_id).cloth_wear[10]):
             return 1
     return 0

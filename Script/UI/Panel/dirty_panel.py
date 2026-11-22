@@ -7,7 +7,7 @@ from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, flags, needs, player_ability
-from Script.Modules.domains import pregnancy
+from Script.Modules.domains import pregnancy, status
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -112,7 +112,6 @@ class SeeCharacterBodyPanel:
         # print("game_config.config_character_state_type_data :",game_config.config_character_state_type_data)
 
         type_line = draw.LittleTitleLineDraw(_("身体"), width, ":")
-        # print("type_data.name :",type_data.name)
 
         # 全部位文本
         all_part_text_list = []
@@ -159,9 +158,9 @@ class SeeCharacterBodyPanel:
                 continue
 
             # 爱液文本
-            if i == 6 and target_character_data.status_data[8]:
+            if i == 6 and status.of(target_character_data.cid)[8]:
                 level = attr_calculation.get_status_level(
-                    target_character_data.status_data[8]
+                    status.of(target_character_data.cid)[8]
                 )
                 if level <= 2:
                     text_index = "爱液1"

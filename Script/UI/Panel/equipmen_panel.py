@@ -12,7 +12,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_ability, handle_premise, basement
 from Script.Modules.domains import abilities, achievement, commission
-from Script.Modules.domains import maintenance, physical_exam, roster
+from Script.Modules.domains import maintenance, physical_exam, roster, wardrobe
 import random
 from Script.UI.Panel import achievement_panel
 
@@ -64,7 +64,7 @@ def show_damaged_equipment() -> None:
         damaged_count = 0
         for npc_id in roster.active():
             npc_data = cache.character_data[npc_id]
-            condition_val = npc_data.cloth.equipment_condition
+            condition_val = wardrobe.of(npc_id).equipment_condition
             if condition_val < 0:
                 condition_name = get_equipment_condition_name(condition_val)
                 now_text += (
@@ -100,7 +100,7 @@ def show_maintained_equipment() -> None:
         maintained_count = 0
         for npc_id in roster.active():
             npc_data = cache.character_data[npc_id]
-            condition_val = npc_data.cloth.equipment_condition
+            condition_val = wardrobe.of(npc_id).equipment_condition
             if condition_val > 0:
                 condition_name = get_equipment_condition_name(condition_val)
                 now_text += (
@@ -155,10 +155,10 @@ def settle_equipment_damage_in_commission(commision_id: int) -> str:
                 break
         # 如果损坏等级大于0，则进行装备损坏
         if damage_lv > 0:
-            send_npc_data.cloth.equipment_condition = damage_lv * -1
+            wardrobe.set(send_npc_id, "equipment_condition", damage_lv * -1)
             # 获取装备损坏情况
             equipment_condition = get_equipment_condition_name(
-                send_npc_data.cloth.equipment_condition
+                wardrobe.of(send_npc_id).equipment_condition
             )
             # 绘制装备损坏信息
             equipment_damage_text += _(
@@ -192,7 +192,7 @@ def smith_maintain_equipment_once(
         target_id = repairing[smith_chara_id]
         npc_data = cache.character_data[target_id]
         # 如果该角色装备未损坏或在保养中，则跳过维修
-        if npc_data.cloth.equipment_condition >= 0:
+        if wardrobe.of(npc_data.cid).equipment_condition >= 0:
             # 保养
             maintain_flag, maintain_text = maintain_equipment(
                 smith_chara_id, target_id
@@ -269,7 +269,7 @@ def repair_equipment(
             if npc_id == 0:
                 continue
             npc_data = cache.character_data[npc_id]
-            cond = npc_data.cloth.equipment_condition
+            cond = wardrobe.of(npc_data.cid).equipment_condition
             if cond < 0:
                 repair_list.append((npc_id, cond))
         if repair_list:
@@ -287,24 +287,20 @@ def repair_equipment(
         # 如果工作是铁匠，则记录维修角色
         if handle_premise.handle_work_is_blacksmith(smith_chara_id):
             maintenance.set_repair(smith_chara_id, target_chara_id)
-        npc_data.cloth.equipment_condition = min(
-            npc_data.cloth.equipment_condition + maintain_value, 0
+        condition = min(
+            wardrobe.of(npc_data.cid).equipment_condition + maintain_value, 0
         )
+        wardrobe.set(npc_data.cid, "equipment_condition", condition)
         repair_flag = True
-        new_condition_text = get_equipment_condition_name(
-            npc_data.cloth.equipment_condition
-        )
+        new_condition_text = get_equipment_condition_name(condition)
         repair_text = _("{0}维修了{1}的装备，当前情况：{2} ({3})\n").format(
             smith_chara_data.name,
             npc_data.name,
             new_condition_text,
-            round(npc_data.cloth.equipment_condition, 1),
+            round(condition, 1),
         )
         # 如果维修后装备已无损坏，则清除维修记录
-        if (
-            smith_chara_id in maintenance.repairs()
-            and npc_data.cloth.equipment_condition >= 0
-        ):
+        if smith_chara_id in maintenance.repairs() and condition >= 0:
             maintenance.drop_repair(smith_chara_id)
             # 结算成就
             achievement.add("equipment_repair_count", 1)
@@ -357,7 +353,7 @@ def maintain_equipment(
         maintain_list = []
         for npc_id in candidate_ids:
             npc_data = cache.character_data[npc_id]
-            cond = npc_data.cloth.equipment_condition
+            cond = wardrobe.of(npc_data.cid).equipment_condition
             if cond < maintain_enable:
                 maintain_list.append((npc_id, cond))
         if maintain_list:
@@ -370,23 +366,23 @@ def maintain_equipment(
         # 如果工作是铁匠，则记录维修角色
         if handle_premise.handle_work_is_blacksmith(smith_chara_id):
             maintenance.set_repair(smith_chara_id, target_chara_id)
-        npc_data.cloth.equipment_condition = min(
-            npc_data.cloth.equipment_condition + maintain_value, maintain_enable
+        condition = min(
+            wardrobe.of(npc_data.cid).equipment_condition + maintain_value,
+            maintain_enable,
         )
+        wardrobe.set(npc_data.cid, "equipment_condition", condition)
         maintain_flag = True
-        new_condition_text = get_equipment_condition_name(
-            npc_data.cloth.equipment_condition
-        )
+        new_condition_text = get_equipment_condition_name(condition)
         maintain_text = _("{0}保养了{1}的装备，当前情况：{2} ({3})\n").format(
             smith_chara_data.name,
             npc_data.name,
             new_condition_text,
-            round(npc_data.cloth.equipment_condition, 1),
+            round(condition, 1),
         )
         # 如果保养后装备已达到保养目标，则清除保养记录
         if (
             smith_chara_id in maintenance.repairs()
-            and npc_data.cloth.equipment_condition >= maintain_enable
+            and condition >= maintain_enable
         ):
             maintenance.drop_repair(smith_chara_id)
             # 结算成就

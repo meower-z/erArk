@@ -14,6 +14,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import see_item_info_panel
 from Script.Modules.domains import achievement, facility, warehouse
+from Script.Modules.domains import inventory
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -154,9 +155,6 @@ class HItemShopPanel:
             line_feed.draw()
             line_feed.draw()
 
-            # 商店里显示全部道具
-            # item_list = [i for i in game_config.config_item if i not in character_data.item]
-
             # 遍历输出每个类型的面板
             for i in range(len(item_list_all)):
                 # 输出类别文字
@@ -221,13 +219,11 @@ class BuyItemByItemNameDraw:
         self.now_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
         item_config = game_config.config_item[self.text]
         index_text = text_handle.id_index(button_id)
-        # print("debug self.text = ",self.text,"  self.character_data.item, = ",self.character_data.item)
-        # print("debug self.text in self.character_data.item",self.text in self.character_data.item)
 
         # 判断是否是消耗品、是否已达99个堆叠上限，是否已拥有
         flag_consumables = item_config.type in ["Drug", "H_Drug", "Consumables"]
-        flag_not_max = self.character_data.item[self.text] < 99
-        flag_have = self.character_data.item[self.text] > 0
+        flag_not_max = inventory.items(self.character_data.cid)[self.text] < 99
+        flag_have = inventory.items(self.character_data.cid)[self.text] > 0
 
         # 可购买：1消耗品且数量小于99，2非消耗品且未持有
         if (flag_consumables and flag_not_max) or (
@@ -239,10 +235,10 @@ class BuyItemByItemNameDraw:
             if flag_consumables:
                 button_text += (
                     _("(持有：")
-                    + str(self.character_data.item[self.text])
+                    + str(inventory.items(self.character_data.cid)[self.text])
                     + ")"
                 )
-                if self.character_data.item[self.text] > 0:
+                if inventory.items(self.character_data.cid)[self.text] > 0:
                     draw_style = "dark_green"
             else:
                 button_text += _("(未持有)")
@@ -263,7 +259,7 @@ class BuyItemByItemNameDraw:
             if flag_consumables:
                 name_draw.text += (
                     _("(持有：")
-                    + str(self.character_data.item[self.text])
+                    + str(inventory.items(self.character_data.cid)[self.text])
                     + ")"
                 )
                 if not flag_not_max:
@@ -352,7 +348,8 @@ class BuyItemByItemNameDraw:
             # 检查 now_number 是否为大于0的正整数
             if isinstance(now_number, int) and now_number > 0:
                 now_number = min(
-                    now_number, 99 - self.character_data.item[self.text]
+                    now_number,
+                    99 - inventory.items(self.character_data.cid)[self.text],
                 )
                 break
             else:
@@ -372,9 +369,8 @@ class BuyItemByItemNameDraw:
         item_config = game_config.config_item[self.text]
         now_price = item_config.price * number
         if warehouse.amount(4) >= now_price or cache.debug_mode:
-            self.character_data.item[self.text] += number
-            self.character_data.item[self.text] = min(
-                self.character_data.item[self.text], 99
+            inventory.add_item(
+                self.character_data.cid, self.text, number, max=99
             )
             warehouse.add(4, -now_price)
             now_text = _("{0}花费了{1}粉红凭证，购买了{2}个{3}").format(
@@ -385,7 +381,7 @@ class BuyItemByItemNameDraw:
             )
             # 结算成就
             achievement.append("buy_item_count_list", self.text)
-        elif self.character_data.item[self.text] == 99:
+        elif inventory.items(self.character_data.cid)[self.text] == 99:
             now_text = _("已达到最高堆叠上限")
         else:
             now_text = _("你没有足够的粉色凭证")

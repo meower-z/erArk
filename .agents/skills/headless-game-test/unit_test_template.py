@@ -91,8 +91,8 @@ from Script.Core import (
 from Script.UI.Moudle import draw  # noqa: E402
 
 from Script.Modules.save_load import kernel_state
-from Script.Modules.domains import abilities
-from tests import kernel_data
+from Script.Modules.domains import abilities, status
+from tests import chara_data, kernel_data
 
 character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
@@ -165,25 +165,13 @@ def new_chara(
     cd.name = name
     cd.adv = adv
     cd.sex = 1
-    # 服装：cloth_wear / 两个衣柜都要单独置零
-    cd.cloth = attr_calculation.get_cloth_zero()
-    cd.cloth.cloth_locker_in_dormitory = (
-        attr_calculation.get_cloth_locker_in_dormitory_zero()
-    )
-    cd.cloth.cloth_locker_in_shower = (
-        attr_calculation.get_shower_cloth_locker_zero()
-    )
     cd.dirty = (
         attr_calculation.get_zero_dirty()
     )  # 注意是 get_zero_dirty，不是 get_dirty_zero
-    cd.status_data = attr_calculation.get_status_zero(
-        {}
-    )  # 字段叫 status_data，函数叫 get_status_zero
     cd.second_behavior = attr_calculation.get_second_behavior_zero({})
     cd.h_state = attr_calculation.get_h_state_reset(
         cd.h_state
     )  # 只有 reset 版，要把旧对象传进去
-    cd.body_manage = attr_calculation.get_body_manage_zero()  # 无参
     cd.favorability = {0: 0}  # 好感/信赖类前提会直接取 [0]
     cd.position = list(SCENE)
     cd.race = race
@@ -197,6 +185,8 @@ def new_chara(
         abilities.experience(cid).replace(experience)
         # 罩杯素质 121~125 至少一个为 1，否则胸部成长/乳汁上限处 UnboundLocalError
         talent[121] = 1
+    # 服装（含两个衣柜）、状态值与身体管理存在内核状态里，由 chara_data.seed 置零
+    chara_data.seed(cid, {})
     return cd
 
 
@@ -232,13 +222,14 @@ print("  sleep 效果链:", chain)
 target = new_chara(101, "样例干员")
 pl.target_character_id = 101
 change = game_type.CharacterStatusChange()
-constant.settle_behavior_effect_data[62](
-    0, 1, change, game_time.now()
+# 结算器写内核状态。一步之外调用时，kernel_data.written 在调用结束后把写入套用到内核状态上
+kernel_data.written(
+    constant.settle_behavior_effect_data[62], 0, 1, change, game_time.now()
 )  # 交互对象增加少量反感
 check(
     "结算器确实改动了数值",
-    target.status_data.get(20, 0) > 0,
-    f"disgust={target.status_data.get(20, 0)}",
+    status.of(101).get(20, 0) > 0,
+    f"disgust={status.of(101).get(20, 0)}",
 )
 
 # 5.4 前提函数：直接调 handle_premise.handle_xxx(cid)

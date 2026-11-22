@@ -1,15 +1,15 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 数值范围域检查
-覆盖 NUM-01…NUM-30，校验角色对象上的 status_data、favorability 与 GameState 里的能力、经验、宝珠、素质表
-的键集完整性、当前值/上限值的合法范围，以及基地资源、仓库容量等全局数值。检查均为一次快照内的纯读取，无历史依赖。
+覆盖 NUM-01…NUM-30，校验角色对象上的 favorability、角色的状态值（status.of）与 GameState 里的能力、经验、宝珠、
+素质表的键集完整性、当前值/上限值的合法范围，以及基地资源、仓库容量等全局数值。检查均为一次快照内的纯读取，无历史依赖。
 
 执行顺序说明：NUM-01（字段存在且为dict）概念上必须先于其余检查，但框架按注册顺序、每个检查项独立try/except调用，
 不存在"NUM-01失败则跳过后续检查"的机制。读角色对象上数值字典、性别、上限等结构的检查先用getattr/.get
-加默认值或_dict_field_ok复核，结构不满足前置条件时报出或跳过。能力、经验、宝珠与素质表经abilities读，没有时读到空表。
+加默认值或_dict_field_ok复核，结构不满足前置条件时报出或跳过。状态值经status读，能力、经验、宝珠与素质表经abilities读。
 
-配表访问一律走 Script.Config.game_config，检查函数只在真正执行时才引用配表字典（模块顶层不做config_xxx是否
-存在的强校验），一旦某个配表字段本身缺失，对应检查退化为跳过（返回空列表），不影响其余检查项。
+配表访问一律走 Script.Config.game_config，检查函数只在执行时才引用配表字典（模块顶层不校验config_xxx是否存在）。
+某个配表字段本身缺失时，对应检查退化为跳过（返回空列表），不影响其余检查项。
 """
 
 import math
@@ -20,7 +20,7 @@ from Script.Core import cache_control, num
 from Script.Config import game_config
 from Script.Design import game_time
 from Script.Modules.domains import facility, flags, needs, player_ability
-from Script.Modules.domains import playthrough, warehouse
+from Script.Modules.domains import playthrough, status, warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 from Script.Modules.domains import abilities
 
@@ -36,8 +36,8 @@ def _exact(value: object) -> TypeGuard[int | Fraction]:
     return type(value) is int or type(value) is Fraction
 
 
-# NUM-01 检查的角色对象上的数值容器字段。能力、经验、宝珠与素质表在 GameState 里，不在此列
-_NUMERIC_DICT_FIELDS = ("status_data", "favorability")
+# NUM-01 检查的角色对象上的数值容器字段。状态值与能力、经验、宝珠、素质表在 GameState 里，不在此列
+_NUMERIC_DICT_FIELDS = ("favorability",)
 
 
 def _is_finite_number(v: object) -> bool:
@@ -88,10 +88,10 @@ def check_num_01_numeric_dict_fields_exist() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验两个数值字典字段(status_data/favorability)在每个角色对象上都存在且类型为dict。存档走pickle反序列化，
+        校验数值字典字段favorability在每个角色对象上都存在且类型为dict。存档走pickle反序列化，
         pickle不执行__init__，旧存档缺失的实例属性没有类属性兜底，getattr(..., None)会返回None，本检查旨在捕获
-        这类"旧存档字段缺失"而非单纯的类型损坏。NUM-12…NUM-16读这两个字段前用_dict_field_ok复核，跳过字段坏的角色。
-        能力、经验、宝珠与素质表在GameState里，不归本检查。
+        这类"旧存档字段缺失"而非单纯的类型损坏。读这个字段的检查先用_dict_field_ok复核，跳过字段坏的角色。
+        状态值与能力、经验、宝珠、素质表在GameState里，不归本检查。
     """
     cache = cache_control.cache
     failures = []
@@ -510,9 +510,9 @@ def check_num_12_status_data_dict_keys() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验config_character_state的每个id都在chara.status_data中存在（配表⊆角色），键类型均为精确int。
-        刻印升级判定、二段行为判定、AI判定都按状态id裸下标。多余键是合法残留，仅记录。
-        若config_character_state配表不存在，退化为跳过。
+        校验config_character_state的每个id都在角色的状态值（status.of）里（配表⊆角色），键类型均为精确int。
+        多余的键不算失败，有失败时一并写进说明。
+        config_character_state配表不存在时跳过。
     """
     cache = cache_control.cache
     config_state = getattr(game_config, "config_character_state", None)
@@ -521,9 +521,7 @@ def check_num_12_status_data_dict_keys() -> list[CheckFailure]:
     config_keys = set(config_state)
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "status_data"):
-            continue
-        status_data = chara.status_data
+        status_data = status.of(cid)
         missing = config_keys - set(status_data)
         bad_key_type = not all(type(k) is int for k in status_data)
         if missing or bad_key_type:
@@ -548,18 +546,15 @@ def check_num_13_status_data_non_negative() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.status_data的每个值都是非负的int或Fraction。通用状态结算写入后max(0, ...)，全库其余直写
-        路径也逐行钳制且均为非负。带cache.debug_mode守卫。
+        校验角色的状态值（status.of）都是非负的int或Fraction。cache.debug_mode为真时跳过。
     """
     cache = cache_control.cache
     if cache.debug_mode:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "status_data"):
-            continue
         bad = {
-            k: v for k, v in chara.status_data.items() if not _exact(v) or v < 0
+            k: v for k, v in status.of(cid).items() if not _exact(v) or v < 0
         }
         if bad:
             failures.append(
@@ -582,9 +577,8 @@ def check_num_14_status_data_upper_bound() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.status_data的每个值不超过99999。通用结算min(99999, ...)钳制，100000是等级表的哨兵阈值而非
-        可保存的状态值。全库最大的状态事件效果远低于此值，越界属于罕见旁路，故为warning而非error。
-        带cache.debug_mode守卫。
+        校验角色的状态值（status.of）不超过99999。越界报warning，不报error。
+        cache.debug_mode为真时跳过。
     """
     cache = cache_control.cache
     if cache.debug_mode:
@@ -598,11 +592,9 @@ def check_num_14_status_data_upper_bound() -> list[CheckFailure]:
     )
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "status_data"):
-            continue
         over = {
             k: v
-            for k, v in chara.status_data.items()
+            for k, v in status.of(cid).items()
             if type(v) in (int, float, Fraction) and v > 99999
         }
         if over:

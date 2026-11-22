@@ -16,7 +16,7 @@ from Script.Design import basement, handle_premise, map_handle
 from Script.System.Dormitory_System import common
 from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
-from Script.Modules.domains import dormitory, facility, roster, work
+from Script.Modules.domains import dormitory, facility, inventory, roster, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -739,9 +739,8 @@ class Manage_Dormitory_Panel:
                 dormitory.set_manager(other_layer, 0)
                 # 重置玩家的该楼层钥匙
                 key_item_id = 300 + other_layer
-                pl_character_data = cache.character_data[0]
-                if pl_character_data.item[key_item_id] > 0:
-                    pl_character_data.item[key_item_id] = 0
+                if inventory.items(0)[key_item_id] > 0:
+                    inventory.set_item(0, key_item_id, 0)
                     info_draw = draw.NormalDraw()
                     info_draw.width = self.width
                     info_draw.text = _(
@@ -792,9 +791,8 @@ class Manage_Dormitory_Panel:
         basement.update_work_people()
         # 重置玩家的该楼层钥匙
         key_item_id = 300 + layer
-        pl_character_data = cache.character_data[0]
-        if pl_character_data.item[key_item_id] > 0:
-            pl_character_data.item[key_item_id] = 0
+        if inventory.items(0)[key_item_id] > 0:
+            inventory.set_item(0, key_item_id, 0)
             info_draw = draw.NormalDraw()
             info_draw.width = self.width
             info_draw.text = _(

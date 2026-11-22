@@ -82,6 +82,8 @@ import Script.Settle  # 结算器靠装饰器注册，MinimalWorld 不导入它
 from Script.Config import game_config
 from Script.Core import constant, game_type
 from Script.Design import attr_calculation, game_time, handle_premise
+from Script.Modules.domains import status
+from tests import kernel_data
 
 pl = world.chara(0, "博士")
 
@@ -102,13 +104,13 @@ check(
 target = world.chara(101, "样例干员")
 pl.target_character_id = 101
 change = game_type.CharacterStatusChange()
-constant.settle_behavior_effect_data[62](
-    0, 1, change, game_time.now()
-)  # 交互对象增加少量反感
+kernel_data.written(
+    constant.settle_behavior_effect_data[62], 0, 1, change, game_time.now()
+)  # 交互对象的反感增加。一步之外由 kernel_data.written 在调用结束后套用结算器的写入
 check(
     "结算器改动了交互对象的反感",
-    target.status_data.get(20, 0) > 0,
-    f"disgust={target.status_data.get(20, 0)}",
+    status.of(101).get(20, 0) > 0,
+    f"disgust={status.of(101).get(20, 0)}",
 )
 
 # ==== 3. 前提函数：handle_premise.handle_xxx(cid) ====

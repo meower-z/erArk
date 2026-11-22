@@ -13,14 +13,13 @@ import random
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info, flags
-from Script.Modules.domains import modes, pregnancy, tallies
+from Script.Modules.domains import modes, pregnancy, tallies, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
@@ -277,18 +276,18 @@ def update_semen_dirty(
         now_semen_data = character_data.dirty.body_semen[part_cid]
     elif part_type == 1:
         # 检查该部位是否有服装
-        if not len(character_data.cloth.cloth_wear[part_cid]):
+        if not len(wardrobe.of(character_id).cloth_wear[part_cid]):
             return
         # 更新服装部位被射精污浊数据
         now_semen_data = character_data.dirty.cloth_semen[part_cid]
     elif part_type == 2:
         # 检查该部位是否有服装
-        if not len(character_data.cloth.cloth_locker_in_shower[part_cid]):
+        if not len(wardrobe.of(character_id).cloth_locker_in_shower[part_cid]):
             return
         now_semen_data = character_data.dirty.cloth_locker_semen[part_cid]
     else:
         # 宿舍衣柜（部位类型3）：检查该部位是否有服装
-        if not len(character_data.cloth.cloth_locker_in_dormitory[part_cid]):
+        if not wardrobe.of(character_id).cloth_locker_in_dormitory[part_cid]:
             return
         now_semen_data = character_data.dirty.cloth_locker_semen[part_cid]
 
@@ -763,7 +762,6 @@ class Ejaculation_Panel:
                 for body_part_cid in game_config.config_body_part:
                     part_name = game_config.config_body_part[body_part_cid].name
                     draw_text = f"[{body_part_cid}]{part_name}"
-                    # print("debug draw_text = ",draw_text)
                     body_count += 1
                     show_flag: bool | int = self.part_can_choose(body_part_cid)
                     if show_flag:
@@ -783,13 +781,14 @@ class Ejaculation_Panel:
 
                 # 绘制服装部位按钮
                 cloth_count = 0
+                target_worn = wardrobe.of(target_data.cid).cloth_wear
                 for clothing_type in game_config.config_clothing_type:
                     cloth_name = game_config.config_clothing_type[
                         clothing_type
                     ].name
                     draw_text = f"[{clothing_type}]{cloth_name}"
                     cloth_count += 1
-                    show_flag = len(target_data.cloth.cloth_wear[clothing_type])
+                    show_flag = len(target_worn[clothing_type])
                     if show_flag:
                         name_draw = draw.CenterButton(
                             draw_text,

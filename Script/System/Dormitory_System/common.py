@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
-from Script.Modules.domains import facility, roster, visitor
+from Script.Modules.domains import facility, inventory, roster, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -362,8 +362,7 @@ def check_have_target_dormitory_layer_key(
         return False
     # 构造目标层钥匙的道具ID，格式为 300 + 层号
     target_key_item_id = 300 + target_layer
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.item.get(target_key_item_id, 0) > 0:
+    if inventory.items(character_id).get(target_key_item_id, 0) > 0:
         return True
     return False
 

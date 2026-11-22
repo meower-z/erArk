@@ -17,15 +17,14 @@ from Script.Config import game_config, normal_config
 import random
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, facility, flags, needs, prison
-from Script.Modules.domains import work
+from Script.Modules.domains import abilities, body_manage, facility, flags
+from Script.Modules.domains import inventory, needs, prison, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
@@ -220,7 +219,7 @@ def chara_become_prisoner(character_id: int) -> None:
     flags.set(character_id, imprisonment=True)
     flags.set(character_id, escaping=False)
     # 重置身体管理
-    character_data.body_manage = attr_calculation.get_body_manage_zero()
+    body_manage.replace(character_id, attr_calculation.get_body_manage_zero())
     # 加入囚犯数据
     prison.imprison(character_id, game_time.now(), 0)
     # 服装结算
@@ -363,7 +362,7 @@ def start_training_preparation(target_character_id: int) -> None:
         # 已开启
         if prison.tool(i):
             item_id = h_item_shop_panel.get_item_id_from_body_item_list(i)
-            item_num = cache.character_data[0].item[item_id]
+            item_num = inventory.items(0)[item_id]
             # 如果没有道具，则跳过
             if item_num <= 0:
                 continue
@@ -376,14 +375,14 @@ def start_training_preparation(target_character_id: int) -> None:
                     change_data=game_type.CharacterStatusChange(),
                     now_time=game_time.now(),
                 )
-                cache.character_data[0].item[item_id] -= 1
+                inventory.add_item(0, item_id, -1)
             # 其他道具
             else:
                 target_character_data.h_state.body_item[i][1] = True
                 # 消耗类道具
                 if i in {8, 9, 10, 11, 12}:
                     # 数量减少
-                    cache.character_data[0].item[item_id] -= 1
+                    inventory.add_item(0, item_id, -1)
                     # 利尿剂
                     if i == 8:
                         default.handle_target_diuretics_on(
@@ -807,7 +806,7 @@ class Confinement_And_Training_Manage_Panel:
             for i in range(len(body_item_list)):
                 # 持有道具数量
                 item_id = h_item_shop_panel.get_item_id_from_body_item_list(i)
-                item_num = cache.character_data[0].item[item_id]
+                item_num = inventory.items(0)[item_id]
                 name_draw_text = f"[{(str(i)).rjust(2, '0')}]"
                 len_add = 40 - len(body_item_list[i])  # 排版用的空格数量
                 if i in {2, 3}:

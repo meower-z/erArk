@@ -10,11 +10,14 @@ gameplay_resolution 的工作集：旧的命令式代码经它读写 GameState �
 在别处写入报 RuntimeError，干员选行动时也一样。
 角色在 GameState.characters 里时，这个角色的键存在角色数据里。不在时，键存在全局键 roster.offstage 里这个角色的一项下。
 角色加入或离开花名册时，flush 把这个角色的数据搬过去。
+缓冲区换成效果时比较 roster.offstage 的角色顺序，并只对本缓冲区停放、搬动或遗忘的角色用 same 比较新旧值。
+两者只差键的顺序或值的类型时，也写入新值。
 """
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from fractions import Fraction
 from typing import cast
 
 from Script.Core import cache_control
@@ -47,6 +50,31 @@ def register(key: str, default: core.JSON, fold: Fold | None = None) -> None:
     if key in _keys or key == OFFSTAGE:
         raise RuntimeError(f"{key} is registered twice")
     _keys[key] = _Key(default, fold)
+
+
+_ATOMS = frozenset((int, bool, float, str, Fraction, type(None)))
+""" same 里不用再往下比的值的类型 """
+
+
+def same(a: object, b: object) -> bool:
+    """
+    两个 JSON 值是否相同。映射要键、键的顺序与各项都相同。元组与列表要长度与各项都相同，元组和列表之间不区分。
+    其余值要类型与值都相同
+    Keyword arguments:
+    a -- 值
+    b -- 值
+    Return arguments:
+    bool -- 相同时为 True
+    """
+    if a is b:
+        return True
+    if type(a) is type(b) and type(a) in _ATOMS:
+        return a == b
+    if isinstance(a, Mapping) and isinstance(b, Mapping):
+        return list(a) == list(b) and all(same(a[k], b[k]) for k in a)
+    if isinstance(a, tuple | list) and isinstance(b, tuple | list):
+        return len(a) == len(b) and all(map(same, a, b))
+    return type(a) is type(b) and a == b
 
 
 def fold_all(key: str, old: core.JSON, ops: Sequence[core.JSON]) -> core.JSON:
@@ -204,7 +232,11 @@ class _Buffer:
                 out.append(core.StateChange(who, key, hit.raw, hit.value))
             else:
                 out.append(core.Change(who, key, "ops", tuple(hit.ops)))
-        if offstage != (raw_offstage or {}):
+        raw = cast(Mapping[str, core.JSON], raw_offstage or {})
+        touched = {*parked, *moved, *self.forgotten}
+        if list(offstage) != list(raw) or not all(
+            same(offstage.get(who), raw.get(who)) for who in touched
+        ):
             out.append(core.StateChange(None, OFFSTAGE, raw_offstage, offstage))
         return (*rewritten, *out)
 
