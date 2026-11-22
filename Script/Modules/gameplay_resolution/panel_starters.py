@@ -1,9 +1,9 @@
 """
 gameplay_resolution 的界面面板选出的种类开始函数
-==========================================
+================================================
 各种类用 starts.starter(kind) 登记；本文件在 LOAD_ORDER 里。
 面板经 tk_ui.player_pick.choose 定下这些种类时只读不写：要改的数据记在 Intent 的 args 与 fields 里，
-行动开始时（begin 写好行为、状态与交互对象之后）由这里的函数照着写进缓存。
+行动开始时（begin 写好行为、状态与交互对象之后）由这里的函数照着写进游戏状态。
 带id的种类在开始前用 starts.check 再查一次：同一分钟里更早的开始拿走了这个id时，退回 1 分钟的等待。
 """
 
@@ -12,7 +12,7 @@ from typing import cast
 from uuid import UUID
 
 from Script.Config import game_config
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import constant, get_text
 from Script.Design import (
     clothing,
     game_time,
@@ -41,9 +41,6 @@ from Script.UI.Panel import (
 )
 from Script.Modules.domains import kitchen, needs, warehouse
 from Script.Modules.domains import inventory, wardrobe, relations
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 _: FunctionType = get_text._
 """ 翻译api """

@@ -1,13 +1,7 @@
 """载具管理界面面板，以及基地载具数据的更新与损坏回收结算"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.save_load import reset
@@ -15,8 +9,6 @@ from Script.Modules.domains import commission, warehouse
 import random
 from Script.Modules.domains import facility
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

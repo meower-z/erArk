@@ -16,14 +16,7 @@
 from collections.abc import Mapping
 from types import FunctionType
 
-from Script.Core import (
-    cache_control,
-    flow_handle,
-    game_type,
-    get_text,
-    py_cmd,
-    text_handle,
-)
+from Script.Core import flow_handle, get_text, py_cmd, text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import talk
 from Script.System.Official_Event_System import official_event_handle
@@ -32,8 +25,6 @@ from Script.UI.Moudle import draw
 from Script.Modules.domains import activity
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()
@@ -225,7 +216,7 @@ def choose_official_event_option(width: int = 0) -> dict | None:
     处理公务时的选择：待决断队列里的事件逐条出队，为第一条有可选选项的事件选定选项，选项在处理公务开始时才结算
 
     出队在先：无效项已由 pop_official_event 静默丢弃，弹出的每一条都保证主体与配置都还在。
-       出队与履历写在选择的草稿里，随处理公务的行动生效
+       出队与履历写入选择缓冲区，随处理公务的行动生效
     Keyword arguments:
     width -- 绘制宽度，默认取窗体宽度
     Return arguments:

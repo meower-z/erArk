@@ -10,7 +10,7 @@ gameplay_resolution 的干员状态机选出的种类开始函数
 from collections.abc import Mapping
 from uuid import UUID
 
-from Script.Core import cache_control, constant, game_type
+from Script.Core import constant, game_type
 from Script.Kernel import core
 from Script.Modules.domains import activity, economy, kitchen
 from Script.Modules.domains import maintenance as engineering
@@ -18,9 +18,6 @@ from Script.Modules.gameplay_resolution import intent, starts
 from Script.Modules.domains import medical, medical_patient, physical_exam
 from Script.Modules.domains import inventory, chara_life
 from Script.Modules.domains import identity
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 def _args(data: intent.Intent) -> Mapping[str, core.JSON]:

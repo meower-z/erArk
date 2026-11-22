@@ -1,6 +1,6 @@
 """
 gameplay_resolution 的计划队列与打断：旧结算代码和内核之间的桥
-================================================================
+==============================================================
 结算途中要让某个角色接着做的行动，不在当场开始，而是作为意图（intent.Intent）排进这个角色的队列
 （全局键 plan.queue，经 domains.plan 读写，随存档保存）。
 - plan_next 排一个行动；要求打断时，角色当前的行动在这一步结束，他马上来选。
@@ -9,7 +9,7 @@ gameplay_resolution 的计划队列与打断：旧结算代码和内核之间的
   行动开始时（starts.behave 的 begin）用 pop 弹出队首。
 - 每一步唯一一次 ApplyEffects 之前，输入钩子 drain 补上这一步里排下的打断，以及在场角色的加入与移除，
   所以排下的打断总在同一步生效，不管事件或开始函数交回了什么。
-除了角色自己的开始与行为结束（actions.wrap_up），别的代码不写角色缓存里的行为，而是经这里排行动或打断。
+除了角色自己的开始与行为结束（actions.wrap_up），别的代码不写角色的当前行为，而是经这里排行动或打断。
 """
 
 from collections.abc import Mapping, Sequence
@@ -37,6 +37,28 @@ def forget() -> None:
     global acting
     _pending.clear()
     acting = None
+
+
+def mark() -> int:
+    """
+    记录待提交打断列表的当前位置，供 take_since 使用
+    Return arguments:
+    int -- 当前待提交的打断条数
+    """
+    return len(_pending)
+
+
+def take_since(position: int) -> list[str]:
+    """
+    移除并返回 mark() 返回 position 之后排下的打断，按排下顺序给出角色键
+    Keyword arguments:
+    position -- mark() 返回的位置
+    Return arguments:
+    list -- 角色键列表，按排下顺序
+    """
+    added = _pending[position:]
+    del _pending[position:]
+    return [item.who for item in added]
 
 
 @core.output_hook(core.reset)
@@ -67,7 +89,7 @@ def _queue(who: int, game: core.GameState | None = None) -> list[Queued]:
 
 def _json(value: object) -> core.JSON:
     """
-    检查并换成 JSON 原生的值，元组换成列表：开始时照着写进缓存的值和选行动时给的一样是列表
+    检查并换成 JSON 原生的值，元组换成列表：开始时写入游戏状态的值和选行动时给的一样是列表
     （core.JSON 里没有列表，内核冻结 action_data 时才换成元组）
     Keyword arguments:
     value -- 值
@@ -276,7 +298,7 @@ def drain(effects: core.Effects) -> tuple[core.Effects]:
 
 def roster_changes(effects: core.Effects = ()) -> core.Effects:
     """
-    缓存里在场的角色（actions.roster）与 state().characters 比出的加入与移除，effects 里已有的不再给
+    在场名单（actions.roster）与 state().characters 比出的加入与移除，effects 里已有的不再给
     Keyword arguments:
     effects -- 这一步已有的效果
     Return arguments:

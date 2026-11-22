@@ -6,7 +6,6 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, TypeGuard
 
-from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Modules.domains import education, growth as growth_domain, pregnancy
 from Script.System.Education_System import education_constant
@@ -34,16 +33,14 @@ _NAMES = {
 }
 
 
-def _characters(cache: game_type.Cache) -> identity.Table:
-    """参数: cache(缓存对象)；返回值: dict；功能: 只读取角色表，缺失或类型错误时跳过。"""
+def _characters() -> identity.Table:
+    """返回值: identity.Table；功能: 只读取角色身份表。"""
     return identity.table()
 
 
-def _growths(
-    cache: game_type.Cache,
-) -> Iterator[tuple[int, game_type.CHILD_GROWTH]]:
-    """参数: cache(缓存对象)；返回值: 迭代器(cid,养成对象)；功能: 遍历已有养成数据，绝不惰性创建。"""
-    for cid in _characters(cache):
+def _growths() -> Iterator[tuple[int, game_type.CHILD_GROWTH]]:
+    """返回值: 迭代器(cid, 养成对象)；功能: 遍历已有养成数据，绝不惰性创建。"""
+    for cid in _characters():
         growth = growth_domain.of(cid)
         if growth is not None:
             yield cid, growth
@@ -128,9 +125,8 @@ def _cells(
 @register_check("EDU-01", _NAMES["EDU-01"])
 def check_edu_01() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 照料值须为有限非负数。"""
-    cache = cache_control.cache
     failures = []
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         value = getattr(growth, "care_point", None)
         if not _finite(value) or value < 0:
             failures.append(
@@ -142,9 +138,8 @@ def check_edu_01() -> list[CheckFailure]:
 @register_check("EDU-02", _NAMES["EDU-02"])
 def check_edu_02() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 性格倾向须为dict，键为0–3，值有限，允许负值与缺键。"""
-    cache = cache_control.cache
     failures = []
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         points = getattr(growth, "personality_point", None)
         if not isinstance(points, dict):
             failures.append(
@@ -168,9 +163,8 @@ def check_edu_02() -> list[CheckFailure]:
 @register_check("EDU-03", _NAMES["EDU-03"])
 def check_edu_03() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 检查全角色妊娠与已有养成记录的胎教值及常量上限。"""
-    cache = cache_control.cache
     failures = []
-    for cid in _characters(cache):
+    for cid in _characters():
         for field, data in (
             ("pregnancy", pregnancy.of(cid)),
             ("child_growth", growth_domain.of(cid)),
@@ -197,9 +191,8 @@ def check_edu_03() -> list[CheckFailure]:
 @register_check("EDU-04", _NAMES["EDU-04"])
 def check_edu_04() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 出勤、缺课和翘课累计为非负整数，翘课不超过缺课。"""
-    cache = cache_control.cache
     failures = []
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         for key in ("attend_class_count", "absent_count", "skip_count"):
             value = getattr(growth, key, None)
             if not _int_range(value, 0):
@@ -225,9 +218,8 @@ def check_edu_04() -> list[CheckFailure]:
 @register_check("EDU-05", _NAMES["EDU-05"])
 def check_edu_05() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 学期出勤、缺课基线须为非负整数且不超过对应累计。"""
-    cache = cache_control.cache
     failures = []
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         for key, counter in (
             ("semester_base_attend", "attend_class_count"),
             ("semester_base_absent", "absent_count"),
@@ -253,9 +245,8 @@ def check_edu_05() -> list[CheckFailure]:
 @register_check("EDU-06", _NAMES["EDU-06"])
 def check_edu_06() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 学期号为空列表或[整数年,季月]，不要求等于当前学期。"""
-    cache = cache_control.cache
     failures = []
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         value = getattr(growth, "semester_id", None)
         if not (
             isinstance(value, list)
@@ -284,9 +275,8 @@ def check_edu_06() -> list[CheckFailure]:
 @register_check("EDU-07", _NAMES["EDU-07"])
 def check_edu_07() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 校验成绩单年份、季月、出缺勤与整数百分比，超出历史上限只警示。"""
-    cache = cache_control.cache
     failures = []
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         history = getattr(growth, "report_card_history", None)
         if not isinstance(history, list):
             failures.append(
@@ -369,9 +359,8 @@ def check_edu_08() -> list[CheckFailure]:
 @register_check("EDU-09", _NAMES["EDU-09"])
 def check_edu_09() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 个人课表按课型检查场景名、娱乐配置id或岗位配置id。"""
-    cache = cache_control.cache
     failures: list[CheckFailure] = []
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         for key, cell in _cells(
             getattr(growth, "selected_course", None),
             "EDU-09",
@@ -437,7 +426,6 @@ def _check_slots(
 @register_check("EDU-10", _NAMES["EDU-10"])
 def check_edu_10() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 校验模板slot和角色覆盖表，空模板合法。"""
-    cache = cache_control.cache
     failures: list[CheckFailure] = []
     templates = education.templates()
     for key, template in templates.items():
@@ -448,7 +436,7 @@ def check_edu_10() -> list[CheckFailure]:
                 f"child_schedule_template[{key!r}].slot",
                 failures,
             )
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         _check_slots(
             getattr(growth, "schedule_override", None),
             cid,
@@ -461,10 +449,9 @@ def check_edu_10() -> list[CheckFailure]:
 @register_check("EDU-11", _NAMES["EDU-11"])
 def check_edu_11() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 角色模板引用须为0或当前模板表内的键。"""
-    cache = cache_control.cache
     templates = education.templates()
     failures = []
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         value = getattr(growth, "schedule_template_id", None)
         if type(value) is not int or (value != 0 and value not in templates):
             failures.append(
@@ -482,9 +469,8 @@ def check_edu_11() -> list[CheckFailure]:
 @register_check("EDU-12", _NAMES["EDU-12"])
 def check_edu_12() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 出缺勤去重标记须为空列表或[正整数日期序数,0–8节次]。"""
-    cache = cache_control.cache
     failures = []
-    for cid, growth in _growths(cache):
+    for cid, growth in _growths():
         for key in ("last_attend_period", "last_absent_period"):
             value = getattr(growth, key, None)
             if not (

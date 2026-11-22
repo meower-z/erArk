@@ -4,7 +4,7 @@ import random
 import uuid
 from types import FunctionType
 from Script.Core.game_type import Food
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
 from Script.Modules.domains import abilities, achievement, economy, flags
@@ -13,8 +13,6 @@ from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
 from Script.Modules.domains import relations
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

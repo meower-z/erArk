@@ -11,7 +11,6 @@
   - `Script/UI/Moudle/draw.py` - 绘制系统
   - `Script/UI/Moudle/panel.py` - 面板系统
   - `Script/Design/handle_premise.py` - 前提条件处理
-  - `Script/Core/cache_control.py` - 缓存控制
   - `Script/Config/game_config.py` - 游戏配置
 
 ### 使用该系统的模块

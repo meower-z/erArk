@@ -1,14 +1,10 @@
 """状态触发事件：按行为建立事件预索引，处理角色的事件触发"""
 
 import random
-from Script.Core import cache_control, game_type
 from Script.UI.Panel import draw_event_text_panel
 from Script.Config import game_config
 from Script.Modules.domains import activity, history
 from Script.Modules.domains import identity
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 _handle_premise = None
 """ handle_premise 模块的延迟导入缓存（规避循环导入，同时消除每次事件判定重复导入的开销） """

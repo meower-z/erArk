@@ -2,13 +2,7 @@
 
 from types import FunctionType
 from Script.UI.Moudle import draw
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.Config import normal_config
 from Script.Design import character_handle, handle_premise, talk, map_handle
 import random
@@ -26,8 +20,6 @@ from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

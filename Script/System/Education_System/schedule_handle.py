@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, constant, get_text
+from Script.Core import game_type, constant, get_text
 from Script.Config import game_config
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
@@ -23,8 +23,6 @@ from Script.Modules.domains import flags, growth, roster, identity, scene_state
 if TYPE_CHECKING:
     import datetime
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

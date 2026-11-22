@@ -1,13 +1,10 @@
 """服装相关的前提处理函数"""
 
-from Script.Core import cache_control, constant_promise, game_type
+from Script.Core import constant_promise
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import activity, wardrobe
 from Script.Modules.domains import identity
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_HAT)

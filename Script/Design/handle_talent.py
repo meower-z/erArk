@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Design import attr_calculation, handle_premise
 from Script.System.First_Record_System import first_record_handle
-from Script.Core import cache_control, game_type, get_text, num
+from Script.Core import get_text, num
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.UI.Panel import achievement_panel
@@ -20,8 +20,6 @@ from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 line_feed = draw.NormalDraw()
 """ 换行绘制对象 """

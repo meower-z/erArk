@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from Script.UI.Moudle import draw
-from Script.Core import cache_control, constant, game_type, get_text, num
+from Script.Core import constant, get_text, num
 from Script.Core import text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
@@ -13,8 +13,6 @@ from Script.Modules.domains import chara_profile, flags, h_meters, h_state
 from Script.Modules.domains import hypnosis, inventory, needs, relations
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

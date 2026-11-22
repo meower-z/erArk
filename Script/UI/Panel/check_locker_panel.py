@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from types import FunctionType
 from typing import cast
 
-from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import constant, flow_handle, game_type
 from Script.Core import get_text, py_cmd, text_handle
 from Script.Design import attr_text, clothing, handle_premise, map_handle
 from Script.Modules.domains import activity, dirty, identity
@@ -16,8 +16,6 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import ejaculation_panel
 from Script.Modules.domains import roster, wardrobe, chara_life
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

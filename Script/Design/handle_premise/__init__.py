@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from collections.abc import Callable, Collection, Iterable
-from Script.Core import cache_control, constant, get_text, num
+from Script.Core import constant, get_text, num
 from Script.Core import constant_promise
 from Script.Design import attr_calculation, character, instuct_judege
 from Script.Config import game_config
@@ -41,8 +41,6 @@ from Script.Modules.domains import physical_exam, roster, status, chara_profile
 from Script.Modules.domains import relations
 from Script.Modules.domains import identity
 
-cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

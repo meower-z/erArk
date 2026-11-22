@@ -1,22 +1,13 @@
 """精细模式烹饪的答题流程：抽题与选项顺序用只影响显示的随机数（player_pick.ui_random）"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    py_cmd,
-    text_handle,
-)
+from Script.Core import get_text, flow_handle, py_cmd, text_handle
 from Script.Design import attr_calculation
 from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
 from Script.Modules.tk_ui import player_pick
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width

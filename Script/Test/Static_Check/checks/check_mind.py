@@ -20,7 +20,7 @@ from __future__ import annotations
 from fractions import Fraction
 from typing import TypeGuard
 
-from Script.Core import cache_control, constant, num
+from Script.Core import constant, num
 from Script.Design import map_handle
 from Script.Modules.domains import abilities, achievement, action_info, activity
 from Script.Modules.domains import flags, h_state as h_state_domain
@@ -159,8 +159,7 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
         时停开着而玩家unconscious_h不是3，意味着有非指令路径改写了玩家意识状态。
         玩家半没有NPC半(MIND-02)已知的"时停中上线"例外，两者严重级别不同，故分列为error
     """
-    cache = cache_control.cache
-    if cache is None or not modes.time_stop():
+    if not modes.time_stop():
         return []
     pl = _pl()
     if pl is None:
@@ -193,8 +192,7 @@ def check_time_stop_npc_unconscious() -> list[CheckFailure]:
         8个调用点里nation_diplomacy_panel.py/navigation_panel.py/character_handle.py没有补写3，
         故聚合上报并标为warning，不逐角色刷屏
     """
-    cache = cache_control.cache
-    if cache is None or not modes.time_stop():
+    if not modes.time_stop():
         return []
     hits = []
     for cid, chara in _iter_npcs():
@@ -236,8 +234,7 @@ def check_time_stop_off_no_residual() -> list[CheckFailure]:
         残留的3会让角色被判为"完全无意识"永不行动，且可被玩家无限使用时停奸
         （InstructConfig.csv:5214前提仅T_UNCONSCIOUS_FLAG_3）
     """
-    cache = cache_control.cache
-    if cache is None or modes.time_stop():
+    if modes.time_stop():
         return []
     hits = []
     pl = _pl()
@@ -270,8 +267,7 @@ def check_time_stop_requires_talent_316() -> list[CheckFailure]:
         时停开着而玩家没有316，说明状态来自读档迁移/mod/debug。debug面板可在时停开启后删掉316，
         属明确调试例外，故加debug豁免
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug() or not modes.time_stop():
+    if modes.debug() or not modes.time_stop():
         return []
     pl = _pl()
     if pl is None:
@@ -301,8 +297,7 @@ def check_time_stop_carry_free_fields_zero() -> list[CheckFailure]:
         两字段在当前版本正常玩法中写不出非零值，非零只可能来自旧存档/debug/mod，加debug豁免。
         carry_chara_id_in_time_stop已废弃，现行搬运用action_info.carry_chara_id(见MIND-07)
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     pl = _pl()
     if pl is None:
@@ -335,8 +330,7 @@ def check_time_stop_no_residual_release_flag() -> list[CheckFailure]:
         死亡角色在character_behavior.py直接return，标记会永久残留，必须豁免；
         效果527的循环显式跳过玩家(chara_id==0则continue)，故本式不覆盖玩家
     """
-    cache = cache_control.cache
-    if cache is None or not modes.time_stop():
+    if not modes.time_stop():
         return []
     hits = []
     for cid, chara in _iter_npcs():
@@ -423,8 +417,7 @@ def check_hypnosis_degree_bound() -> list[CheckFailure]:
         新周目可按比例继承NPC催眠深度而玩家源石技艺可选择完全不继承，"NPC深度高于当前玩家上限"是合法快照。
         debug面板直接赋值hypnosis_degree无任何钳位，加debug豁免
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -457,8 +450,7 @@ def check_hypnosis_type_degree_threshold() -> list[CheckFailure]:
         这是近乎空真的纵深防御——对应通用效果在Behavior_Effect.csv零引用，也没有Python直接调用点，
         保留是为了挡mod/旧存档/未来剧情旁路，加debug豁免
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     thresholds = {4: 50, 5: 100, 6: 200, 7: 200}
     failures = []
@@ -497,8 +489,7 @@ def check_hypnosis_talent_degree_order() -> list[CheckFailure]:
         有素质而深度不足，说明深度被回退或素质被越级授予。已核实新周目继承不构成合法反例——
         深度回填前先重建角色，talent不在回填之列会随之归零。唯一违反点是debug面板独立编辑素质与深度
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -536,8 +527,7 @@ def check_hypnosis_talent_requires_pl_prereq() -> list[CheckFailure]:
         干员有素质而玩家没有对应能力，说明素质来路不正。注意72的前置是332而73的前置是334(不是333)，
         以CSV为准。多周目会重建NPC素质，不构成合法反例，加debug豁免
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     pl = _pl()
     failures = []
@@ -578,8 +568,7 @@ def check_pl_talent_chain_consistency() -> list[CheckFailure]:
         (Talent_Of_Arts.csv)不存在跳级持有。正常购买界面校验need_id，新周目继承源石技艺时整体复制
         已持有项不会自造缺口，仅debug能造缺口
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     pl = _pl()
     if pl is None:
@@ -615,8 +604,7 @@ def check_hypnosis_behavior_mode_exclusive() -> list[CheckFailure]:
         三个开启入口在写入前都调用clear_hypnosis_behavior_mode清理其余模式，两个同时为真会让
         H中AI逻辑(锁死不动 vs 主动逆推)互相打架。唯一违反点是debug面板逐项设置不执行清理，加debug豁免
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -653,8 +641,7 @@ def check_body_control_unconscious_needs_mode() -> list[CheckFailure]:
         方向已核实且不得写反：反方向(模式为真⇒u==6)会被时停开关、H结束整体重置h_state等合法路径打穿，
         故只做u==6⇒模式非空这一半
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -695,8 +682,7 @@ def check_mind_control_unconscious_needs_roleplay() -> list[CheckFailure]:
         只做单向(非空⇔7中的7⇒非空这一半)——心控效果会持续到玩家主动解除，而unconscious_h会被
         时停开关、睡眠猥亵、睡奸反复覆写，三者都不动roleplay，双向等价会被打穿
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -731,8 +717,7 @@ def check_roleplay_list_shape() -> list[CheckFailure]:
         MIND-13/MIND-15捕获，却会让角色信息面板与角色扮演前提读出无效项进而KeyError。
         config_roleplay在独立脚本环境下可能未加载，缺表时降级跳过；debug面板append无校验，加debug豁免
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     try:
         from Script.Config import game_config
@@ -790,8 +775,7 @@ def check_body_mind_control_sub_item_requires_talent_73() -> list[CheckFailure]:
         授予一个素质后就break，于是干员首次达到200%时可能只拿到71却已能从面板开启子项。
         命中时应向游戏侧提bug，不要放宽本式；加debug豁免
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     failures = []
     for cid, chara in _iter_npcs():
@@ -961,8 +945,7 @@ def check_pl_hypnosis_type_valid() -> list[CheckFailure]:
         手动选择)是字段默认值，必须豁免素质检查——CSV里类型0也写talent_id=331，但没有331的新玩家合法地
         处于0。类型2(空气)的前置是333而非332，以CSV为准
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     pl = _pl()
     if pl is None:
@@ -1067,8 +1050,7 @@ def check_sleep_point_bound() -> list[CheckFailure]:
         校验玩家与已登场干员的熟睡值（needs.of(cid)["sleep"]）是非bool数值且落在[0,100]内。
         debug面板可以直接改熟睡值，所以debug模式下不检查。失败信息附带body.needs里的疲劳tired。
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     failures = []
     for cid, chara in _iter_pl_and_npcs():
@@ -1137,7 +1119,6 @@ def check_time_stop_orgasm_count_shape() -> list[CheckFailure]:
         当前代码下不可失败——键来自config_character_state的int主键，值来自orgasm_settle.py的
         += climax_count(两个非负int之和)，旧存档由setdefault补齐，归入迁移组，按warning处理
     """
-    cache = cache_control.cache
     failures = []
     for cid, chara in _iter_npcs():
         h_state = h_state_domain.view(cid)
@@ -1153,7 +1134,7 @@ def check_time_stop_orgasm_count_shape() -> list[CheckFailure]:
                     (
                         f"[warning] 角色id={cid}({_name(chara)})的h_state.time_stop_orgasm_count结构非法: {d!r}，"
                         f"time_stop_release={getattr(h_state, 'time_stop_release', '?')} "
-                        f"time_stop_mode={modes.time_stop() if cache is not None else '?'}"
+                        f"time_stop_mode={modes.time_stop()}"
                     ),
                     [cid],
                 )

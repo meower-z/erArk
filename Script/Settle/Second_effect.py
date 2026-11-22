@@ -7,7 +7,7 @@ from Script.Design import (
     handle_premise,
     handle_ability,
 )
-from Script.Core import cache_control, constant_effect, game_type, get_text, num
+from Script.Core import constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
 from Script.Settle.common_default import (
@@ -38,8 +38,6 @@ _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 # @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.S_orgasm_small)

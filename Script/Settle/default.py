@@ -9,7 +9,7 @@ from Script.Design import basement, settle_behavior, map_handle
 from Script.Design import attr_calculation, game_time, handle_npc_ai_in_h
 from Script.Design import handle_premise, hypnosis_state, clothing
 from Script.Design import handle_ability, second_behavior, character_move
-from Script.Core import cache_control, constant, constant_effect, game_type
+from Script.Core import constant, constant_effect, game_type
 from Script.Core import get_text, num
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
@@ -49,8 +49,6 @@ _: FunctionType = get_text._
 """ 翻译api """
 window_width = normal_config.config_normal.text_width
 """ 窗体宽度 """
-cache = cache_control.cache
-""" 游戏缓存数据 """
 width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 

@@ -2,13 +2,11 @@
 
 from fractions import Fraction
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, num
+from Script.Core import game_type, get_text, num
 from Script.Config import game_config
 from Script.Design import instuct_judege, handle_premise
 from Script.Modules.domains import activity, needs
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

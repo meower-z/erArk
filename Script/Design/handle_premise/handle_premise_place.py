@@ -1,13 +1,7 @@
 """地点相关的前提处理函数"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    constant,
-    constant_promise,
-    game_type,
-    get_text,
-)
+from Script.Core import constant, constant_promise, get_text
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Modules.domains import bookmarks, maintenance, identity, modes
@@ -16,8 +10,6 @@ from Script.Modules.domains import action_info, activity, chara_life
 from Script.Modules.domains import entertainment, flags, location, relations
 from Script.Modules.domains import scene_state, wardrobe
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

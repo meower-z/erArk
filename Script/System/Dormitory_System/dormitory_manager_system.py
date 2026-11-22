@@ -7,7 +7,7 @@ import random
 from types import FunctionType
 from typing import TYPE_CHECKING
 
-from Script.Core import cache_control, game_type, get_text, constant
+from Script.Core import get_text, constant
 from Script.Design import handle_state_machine, map_handle, handle_premise
 from Script.Modules.domains import abilities, activity, dormitory, inventory
 from Script.System.Dormitory_System import common
@@ -17,8 +17,6 @@ from Script.Modules.domains import identity
 if TYPE_CHECKING:
     from Script.Modules.npc_action_choice import choice
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

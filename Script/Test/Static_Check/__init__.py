@@ -6,13 +6,13 @@ run_turn_check() 在每次主场景等待输入前执行检查，run_load_repair
 run_all_checks() 只运行全部检查并返回失败列表；LOG_PATH 供游戏侧提示玩家提交日志。
 
 分层约定：检查层只读当前全局状态且可重复执行；日志层刻意保留跨回合、跨进程的检查级去重记忆；
-修复层会写入 cache，并把实际修改逐条留痕。总开关由游戏侧挂钩先行判断，本模块保留状态就绪守卫与绝不抛异常的兜底。
+修复层经领域模块写内核状态，并把实际修改逐条留痕。
+总开关由游戏侧挂钩先行判断，本模块保留状态就绪守卫与绝不抛异常的兜底。
 领域检查由 checks/ 子包中的模块通过 check_registry.register_check 装饰器注册，本框架不感知具体检查内容。
 """
 
 import traceback
 
-from Script.Core import cache_control
 
 from . import check_log
 from .check_log import LOG_PATH  # noqa: F401  供游戏侧提示文案引用
@@ -67,14 +67,13 @@ def run_turn_check() -> bool:
         返回True表示本轮新增日志，供游戏侧决定是否绘制提示。任何异常都只尝试留痕，不向调用方抛出
     """
     try:
-        cache = cache_control.cache
         if not identity.table():
             return False
         if not identity.exists(0):
             return False
         failures = run_all_checks()
         if failures:
-            return check_log.write_error_log(failures, cache)
+            return check_log.write_error_log(failures)
         return False
     except Exception as e:
         check_log.write_self_error_log(e)
@@ -93,14 +92,13 @@ def run_load_repair() -> list[dict]:
         不得阻断游戏启动。debug模式（mode.debug）下修复整体跳过而检查照常运行。任何异常都只尝试留痕，不向调用方抛出
     """
     try:
-        cache = cache_control.cache
         if not identity.table():
             return []
         if not identity.exists(0):
             return []
         from . import repair
 
-        return repair.apply_all_repairs(cache)
+        return repair.apply_all_repairs()
     except Exception as e:
         check_log.write_self_error_log(e)
         return []

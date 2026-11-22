@@ -158,7 +158,7 @@ class LoadIsResetTest(SlowTestCase):
             (pick_guard.fingerprint(), listing(self.folder)), before
         )
         self.assertEqual(self.resets, [])
-        self.assertIs(core.state(), before[0][1])
+        self.assertIs(core.state(), before[0][0])
 
     def test_load_swaps_whole_state(self) -> None:
         """确认读取：内核状态是存档时的，Reset 看到的时钟是存档的，选择里没有行动开始，回到主界面"""

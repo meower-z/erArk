@@ -17,16 +17,6 @@ from Script.Modules.domains import scene_state
 
 if TYPE_CHECKING:
     from typing import Any
-    from Script.Core import game_type
-
-# 快照时排除的Cache顶层字段名单
-# 这些字段要么是静态配置数据（游戏启动后不再随玩家操作变化，快照价值低且体积巨大），
-# 要么是纯渲染/绘制用的中间缓存（不反映游戏逻辑状态，只会让快照膨胀并干扰阅读）
-EXCLUDED_TOP_LEVEL_FIELDS = {
-    "random_npc_list",  # 旧存档读档后会留在cache上的随机npc数据，Cache本身不声明它
-}
-# 字段名前缀黑名单：以这些前缀开头的字段均为渲染缓存中间数据，一并排除
-EXCLUDED_FIELD_PREFIXES = ("text_",)
 
 # 递归转换时的最大深度，超过后直接使用repr兜底，防止极端嵌套结构导致快照过大或递归过深
 MAX_DEPTH = 15
@@ -34,20 +24,6 @@ MAX_DEPTH = 15
 # 单次快照最多转储的涉事角色数量：首次检查时若存在大范围失败（如某检查对上百个角色逐一命中），
 # 涉事角色并集可达数百人，全部转储仍会让单份快照膨胀到数MB。超出上限的角色只记id不转储数据
 MAX_SNAPSHOT_CHARACTERS = 30
-
-
-def _is_excluded_top_level_field(field_name: str) -> bool:
-    """
-    参数:
-        field_name (str): Cache对象的顶层字段名
-    返回值:
-        bool: 是否应当在快照中排除该字段
-    功能:
-        判断某个Cache顶层字段是否命中排除名单或排除前缀，命中则该字段不进入快照
-    """
-    if field_name in EXCLUDED_TOP_LEVEL_FIELDS:
-        return True
-    return field_name.startswith(EXCLUDED_FIELD_PREFIXES)
 
 
 def _to_json_safe(value: object, depth: int, visited: set) -> Any:
@@ -141,29 +117,20 @@ def _scene_snapshot() -> dict[str, dict[str, Any]]:
 
 
 def build_snapshot(
-    cache: game_type.Cache,
     involved_character_ids: list[int] | set[int] | None = None,
 ) -> dict:
     """
     参数:
-        cache: 当前游戏缓存对象
         involved_character_ids (list[int] | set[int] | None): 涉事角色id集合，为None时全量转储角色身份表
     返回值:
         dict: 当前全局状态的JSON可序列化快照
     功能:
-        将传入cache的顶层字段转为JSON可序列化数据（排除EXCLUDED_TOP_LEVEL_FIELDS与text_前缀字段）。
-        角色身份表写入identity.characters键：传入involved_character_ids时仅保留涉事角色与玩家（最多
-        MAX_SNAPSHOT_CHARACTERS人），并附identity.characters_omitted说明，未传入时全量保留。
-        随后从内核状态补充 scene_data 节，只记有角色或门锁非 0 的场景（character_list 与 close_flag），失败时写占位文本
+        将角色身份表写入 identity.characters 键：传入 involved_character_ids 时仅保留涉事角色与玩家
+        （最多 MAX_SNAPSHOT_CHARACTERS 人），并附 identity.characters_omitted 说明，未传入时全量保留。
+        随后从内核状态补充 scene_data 节，只记有角色或门锁非 0 的场景（character_list 与 close_flag），
+        失败时写占位文本
     """
-    snapshot = {}
-    for field_name, field_value in vars(cache).items():
-        if _is_excluded_top_level_field(field_name):
-            continue
-        try:
-            snapshot[field_name] = _to_json_safe(field_value, 0, set())
-        except Exception as e:
-            snapshot[field_name] = f"<字段快照失败: {e}>"
+    snapshot: dict[str, Any] = {}
     from Script.Modules.domains import identity
 
     table = identity.table()
@@ -203,19 +170,16 @@ def _json_default_fallback(obj: object) -> str:
 
 
 def dump_snapshot_json(
-    cache: game_type.Cache,
     involved_character_ids: list[int] | set[int] | None = None,
 ) -> str:
     """
-    参数:
-        cache: 当前游戏缓存对象
         involved_character_ids (list[int] | set[int] | None): 涉事角色id集合，为None时全量转储角色身份表
     返回值:
         str: 当前全局状态快照的JSON字符串（ensure_ascii=False，保留中文可读性）
     功能:
         调用build_snapshot获取快照字典，并序列化为紧凑的单行JSON字符串，供写入日志文件
     """
-    snapshot = build_snapshot(cache, involved_character_ids)
+    snapshot = build_snapshot(involved_character_ids)
     try:
         return json.dumps(
             snapshot, ensure_ascii=False, default=_json_default_fallback

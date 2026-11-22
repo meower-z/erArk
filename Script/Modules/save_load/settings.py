@@ -1,11 +1,12 @@
 """
 save_load 的全局设置
 ====================
-系统设置（System_Setting，不含本存档的难度与生殖方式）与文本生成 AI 设置（Ai_Setting）都是全局的，存在游戏根目录的
-settings.json，不随存档。
+系统设置（System_Setting，不含本存档的难度与生殖方式）与文本生成 AI 设置（Ai_Setting）都是全局的，
+存在游戏根目录的 settings.json，不随存档。
 玩家在面板上要长期保留的选择（指令过滤、场景面板的子面板开关、做饭的模式与份数）是 System_Setting 的字段。
 文本生成 AI 设置在有非默认改动或文件已有 "ai_setting" 段时写入 settings.json 的 "ai_setting" 键。
-未改动的默认 AI 设置（含读档补齐的 0 值选项）不写入文件。其中的 API 密钥随 AI 设置写进 settings.json，不进入存档。
+未改动的默认 AI 设置（含读档补齐的 0 值选项）不写入文件。
+其中的 API 密钥随 AI 设置写进 settings.json，不进入存档。
 字体大小与 DPI 存在游戏根目录的 config.ini，也是全局的，不归本模块管。
 install 把这两个全局对象装到 normal_config.system_setting 与 normal_config.ai_setting。
 settings.json 已有 "ai_setting" 段时，install 同时把缺失的 AI 选项补为 0。读设置的代码从这两个属性读取。
@@ -13,7 +14,7 @@ kernel.Reset 的输出钩子在每次换 GameState（读档、新游戏、改时
 旧版本游戏的存档里的系统设置与面板选择何时成为全局设置，见 adopt。
 全局 AI 设置仍为未改动的默认值且文件还没有 "ai_setting" 段时，adopt_ai 从旧版本游戏的存档里准备一份 AI 设置。
 对未改动的默认 AI 设置补齐 0 值选项时，adopt_ai 返回 0，读档不弹出更新提示。
-读档的 Reset 换掉内核状态后，kernel_state._reset_keeping_cache 调用 commit_pending_ai 使其生效并按需写盘。
+读档的 Reset 换掉内核状态后，kernel_state._reset 调用 commit_pending_ai 使其生效并按需写盘。
 若 Reset 未换掉内核状态，它调用 drop_pending_ai 丢弃暂存的 AI 设置。
 当 settings.json 已有 "ai_setting" 段、玩家改过 AI 设置，或已收下含非默认值的存档 AI 设置时，
 后续读档不覆盖全局 AI 设置。
@@ -71,7 +72,7 @@ _has_preferences = False
 _has_ai = False
 """ 全局 AI 设置已归属本地：装好时 settings.json 有 "ai_setting" 键，或 save 时 _owns_ai() 为真 """
 _pending_ai: game_type.Ai_Setting | None = None
-""" 读档由 adopt_ai 准备的待生效 AI 设置，由 _reset_keeping_cache 在换态后提交或未换态时丢弃 """
+""" 读档由 adopt_ai 准备的待生效 AI 设置，由 kernel_state._reset 在换态后提交或未换态时丢弃 """
 
 
 def _dump(setting: game_type.System_Setting) -> dict[str, Any]:

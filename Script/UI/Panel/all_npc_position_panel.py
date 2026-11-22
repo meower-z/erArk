@@ -1,14 +1,7 @@
 """查看全干员所在位置并可移动到其位置的面板"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-    py_cmd,
-)
+from Script.Core import get_text, flow_handle, constant, py_cmd
 from Script.Design import map_handle, handle_premise
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
@@ -21,8 +14,6 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import identity, modes
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

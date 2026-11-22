@@ -18,15 +18,13 @@
    玩家隔两天再看「同一份」成绩单会得到不一样的内容。
 """
 
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import get_text
 from Script.Config import game_config
 from Script.Design import game_time, attr_calculation
 from Script.Modules.domains import growth, identity
 from Script.System.Education_System import education_constant, growth_handle
 from Script.Modules.domains import abilities, chara_life
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _ = get_text._
 """ 翻译api """
 

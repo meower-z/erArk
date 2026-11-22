@@ -1,15 +1,7 @@
 """成人用品商店界面面板与购买道具的按钮对象"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    text_handle,
-    get_text,
-    flow_handle,
-    py_cmd,
-    constant,
-)
+from Script.Core import text_handle, get_text, flow_handle, py_cmd, constant
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import see_item_info_panel
@@ -17,8 +9,6 @@ from Script.Modules.domains import achievement, facility, warehouse, modes
 from Script.Modules.domains import inventory, chara_profile
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width

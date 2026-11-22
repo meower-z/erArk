@@ -75,7 +75,6 @@ sys.path.insert(0, os.getcwd())  # 当前目录即被测 checkout 的根目录
 from tests.world import MinimalWorld
 
 world = MinimalWorld.load()
-cache = world.cache
 wait_texts = world.wait_texts  # WaitDraw 文本，断言「某段提示是否画出」时读它
 
 import Script.Settle  # 结算器靠装饰器注册，MinimalWorld 不导入它

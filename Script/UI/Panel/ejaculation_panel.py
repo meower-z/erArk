@@ -1,7 +1,7 @@
 """射精：忍住射精的判断、射精量与部位污浊的结算、精液流动，以及射精面板"""
 
 from types import FunctionType
-from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import constant, flow_handle
 from Script.Core import get_text, num, py_cmd
 from Script.Design import attr_calculation, handle_ability, handle_premise
 from Script.Design import map_handle
@@ -23,8 +23,6 @@ from Script.Modules.domains import first_record, flags, h_meters, h_state
 from Script.Modules.domains import modes, pregnancy, tallies, wardrobe
 from Script.Modules.domains import identity, scene_state
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 import datetime
 from types import FunctionType
-from Script.Core import cache_control, constant, game_path_config, game_type
+from Script.Core import constant, game_path_config, game_type
 from Script.Core import get_text
 from Script.Config import character_config, game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
@@ -24,10 +24,9 @@ from Script.Modules.domains import chara_key, chara_life, chara_profile
 from Script.Modules.domains import identity, relations
 from Script.Modules.domains.chara_key import CharaKey
 from Script.Modules.save_load import upgrade
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 game_path = game_path_config.game_path
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -511,7 +510,7 @@ def migrate_character_replacement(
         # ========== 1. 创建新角色基础数据 ==========
         # 搬进 GameState 的属性（如 dormitory、nick_name）在这里按旧属性名写在新角色对象上。
         # 读档随后的 adopt_old_save 把它们写进 GameState
-        new_character: Any = game_type.Character()
+        new_character: Any = LegacyObject()
 
         # 从新模板写入身份，生日沿用旧角色
         identity.put(
@@ -1026,9 +1025,7 @@ def fix_wrong_character(loaded_dict: dict[str, Any]) -> int:
                             source_cid, now_tem_chara, False, False
                         )
                         # 重新赋值角色数据
-                        loaded_dict["character_data"][
-                            key
-                        ] = game_type.Character()
+                        loaded_dict["character_data"][key] = LegacyObject()
                     update_count += 1
                     break
 
@@ -1225,7 +1222,7 @@ def update_new_character(loaded_dict: dict[str, Any]) -> int:
         character_handle.init_character(
             new_character_cid, now_npc_data, False, False
         )
-        loaded_dict["character_data"][new_character_cid] = game_type.Character()
+        loaded_dict["character_data"][new_character_cid] = LegacyObject()
         update_count += 1
 
     return update_count
@@ -1921,7 +1918,7 @@ def _find_young_child_session(
 
 def end_young_child_session(session: YoungChildSession) -> None:
     """
-    存档载入缓存后，有101/102阶段的孩子参与的会话各按自己的结束结算收尾，奖励类结算不调用
+    存档载入内核状态后，有101/102阶段的孩子参与的会话各按自己的结束结算收尾，奖励类结算不调用
     Keyword arguments:
     session -- migrate_age_and_body_type 填入的会话信息（见 _find_young_child_session）
     Return arguments:
@@ -1930,8 +1927,9 @@ def end_young_child_session(session: YoungChildSession) -> None:
     阴茎位置归零、关闭群交模式；
           时停按「解除时停」：清零时停搬运与自由活动对象、关闭时停；
           单人H按「结束H」：另一方H状态归零（BOTH_H_STATE_RESET 对其一侧）、开门；
-          最后孩子一侧H状态归零、穿回衣服。结算读写游戏缓存，所以在读档覆盖缓存之后调用；
-          体力气力上限奖励、寸止解放与时停绝顶解放是对这次会话的结算，不调用。各方的交互对象已在转换时换成不指向孩子的值
+          最后孩子一侧H状态归零、穿回衣服。结算经领域模块读写内核状态，所以在读档导入完成后调用；
+          体力气力上限奖励、寸止解放与时停绝顶解放是对这次会话的结算，不调用。
+          各方的交互对象已在转换时换成不指向孩子的值
     """
     from Script.Settle import default, default_cloth
 
@@ -1983,17 +1981,18 @@ def migrate_age_and_body_type(
     loaded_dict: dict[str, Any], session: YoungChildSession | None = None
 ) -> int:
     """
-    读档时整理成长阶段、体型、见学与上课、行为表与娱乐表里已没有的编号、101/102阶段的H与身体状态和离线、外表年龄药相关的数据；对整理过的存档再读一次，这些数据不变
+    读档时整理成长阶段、体型、见学与上课、行为表与娱乐表里已没有的编号、101/102阶段的H与身体状态和离线、
+    外表年龄药相关的数据；对整理过的存档再读一次，这些数据不变
     Keyword arguments:
-    loaded_dict -- 存档数据（角色数据须已经过 update_character_config_data）
-    session -- 传入 dict 时填入有孩子参与的会话（见 _find_young_child_session），读档覆盖缓存后交给
+    loaded_dict -- 旧存档数据（角色数据须已经过 update_character_config_data）
+    session -- 传入 dict 时填入有孩子参与的会话（见 _find_young_child_session），读档导入完成后交给
     end_young_child_session
     Return arguments:
     int -- 改动的项数
     功能: 静态干员的素质见 _migrate_static_talent，女儿的成长阶段与体型不变；
           见学、表里没有的行为与娱乐编号、101/102阶段的上课状态、101/102阶段的H与身体状态、离线、外表年龄药见
-          _clear_child_activity、_clear_young_child_h_state、_clear_young_child_egg_index、_take_young_child_off_line、
-          _clear_age_drug_item；
+          _clear_child_activity、_clear_young_child_h_state、_clear_young_child_egg_index、
+          _take_young_child_off_line、_clear_age_drug_item；
           最后清掉世界设定1的开关
     """
     count = 0

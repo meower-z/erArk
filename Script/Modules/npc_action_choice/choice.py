@@ -1,23 +1,22 @@
 """
 npc_action_choice 选出的行动：状态机交回的计划
 ==============================================
-状态机只读缓存。它把选出的行为（行为id、分钟数、状态、交互对象、自己身上的标记）、要去的场景、
+状态机只读游戏状态。它把选出的行为（行为id、分钟数、状态、交互对象、自己身上的标记）、要去的场景、
 要显示的文字、行动的种类与种类的参数记在 Plan 里交回；Plan.action 把它变成一个内核行动，
-行动数据是 gameplay_resolution 的 Intent，只含 JSON 值。行动开始时由 gameplay_resolution 的 starts 照着写进缓存。
+行动数据是 gameplay_resolution 的 Intent，只含 JSON 值。
+行动开始时由 gameplay_resolution 的 starts 照着写进游戏状态。
 """
 
 from typing import Any, cast
 
 from Script.Config import normal_config
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import constant, get_text
 from Script.Design import character_move, map_handle
 from Script.Kernel import core
 from Script.Modules.domains import action_info, flags, chara_key
 from Script.Modules.gameplay_resolution import intent
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _ = get_text._
 """ 翻译api """
 
@@ -137,7 +136,7 @@ class Plan:
 
     def get(self, path: str) -> Any:
         """
-        读角色数据的 path：本计划已记下的值优先，否则读缓存
+        读角色数据的 path：本计划已记下的值优先，否则经领域模块与身份表读当前状态
         Keyword arguments:
         path -- 属性路径
         Return arguments:

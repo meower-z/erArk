@@ -2,19 +2,12 @@
 
 from types import FunctionType
 from Script.UI.Moudle import draw, view
-from Script.Core import (
-    get_text,
-    cache_control,
-    game_type,
-    text_handle,
-)
+from Script.Core import get_text, text_handle
 from Script.Design import handle_premise, cross_section_image, character_image
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import activity
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

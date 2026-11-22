@@ -11,7 +11,7 @@ import datetime
 from types import FunctionType
 from typing import Protocol
 
-from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import constant, flow_handle
 from Script.Core import get_text, text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, basement
@@ -20,8 +20,6 @@ from Script.UI.Moudle import draw, view
 from Script.Modules.domains import abilities, flags, roster, chara_life
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 line_feed = draw.NormalDraw()
 line_feed.text = "\n"

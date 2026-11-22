@@ -4,15 +4,7 @@ import datetime
 from dataclasses import replace
 from typing import Any, cast
 from types import FunctionType, MappingProxyType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-    py_cmd,
-    num,
-)
+from Script.Core import get_text, flow_handle, constant, py_cmd, num
 from Script.Design import (
     basement,
     character_handle,
@@ -41,8 +33,6 @@ from Script.Modules.domains import flags, needs, pregnancy, relations, warehouse
 from Script.Modules.domains import facility, h_meters, hypnosis, recruit, status
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

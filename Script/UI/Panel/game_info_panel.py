@@ -3,11 +3,9 @@
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Design import game_time, handle_premise
-from Script.Core import get_text, cache_control, game_type
+from Script.Core import get_text
 from Script.Config import game_config
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

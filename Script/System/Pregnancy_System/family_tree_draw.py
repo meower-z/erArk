@@ -1,13 +1,11 @@
 """生育谱系图：查询角色的父母与孩子，构建、排版并分页家族谱系图"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, text_handle
+from Script.Core import get_text, text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import relations
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

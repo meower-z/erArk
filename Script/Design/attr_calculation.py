@@ -6,11 +6,7 @@
 import datetime
 import random
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-)
+from Script.Core import get_text, game_type
 from Script.Core.num import Num
 from Script.Design import game_time
 from Script.Config import game_config
@@ -19,8 +15,6 @@ from Script.Modules.domains import npc_template, relations
 
 _: FunctionType = get_text._
 """ 翻译api """
-cache: game_type.Cache = cache_control.cache
-""" 游戏内缓存数据 """
 
 
 def get_system_setting_zero() -> game_type.System_Setting:

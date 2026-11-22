@@ -1,13 +1,7 @@
 """外勤委托界面的面板对象与委托的绘制对象"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
+from Script.Core import game_type, get_text, flow_handle, constant
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
@@ -19,8 +13,6 @@ from Script.Modules.domains import abilities, commission, facility, flags, modes
 from Script.Modules.domains import location, roster, chara_life, chara_profile
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

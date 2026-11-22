@@ -212,7 +212,7 @@ def talent(cid: int, game: core.GameState | None = None) -> Table:
 
 def clear(cid: int) -> None:
     """
-    把角色的四张表都换成空表，在当前缓冲区记操作。新建 game_type.Character 的地方用它让四张表也从空开始
+    把角色的四张表都换成空表，在当前缓冲区记操作。建角色时用它让四张表从空开始
     Keyword arguments:
     cid -- 角色id
     """

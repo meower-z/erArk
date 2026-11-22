@@ -3,13 +3,7 @@
 from __future__ import annotations
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    constant,
-    flow_handle,
-    game_type,
-    get_text,
-)
+from Script.Core import constant, flow_handle, get_text
 from Script.Design import attr_calculation, basement, game_time, handle_ability
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
@@ -21,8 +15,6 @@ from Script.Modules.domains import abilities, achievement, maintenance, identity
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

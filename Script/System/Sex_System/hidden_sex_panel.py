@@ -3,13 +3,7 @@
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw, view
-from Script.Core import (
-    cache_control,
-    get_text,
-    game_type,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, handle_ability, map_handle
 from Script.UI.Panel import dirty_panel
@@ -20,8 +14,6 @@ from Script.Modules.domains import h_state, identity, modes, scene_state
 
 panel_info_data: dict[str, object] = {}
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -123,7 +115,7 @@ def get_nearby_conscious_unfallen_characters(character_id: int) -> list[int]:
     # 获取角色当前位置对应的场景路径字符串
     position = activity.position(character_id)
     scene_path = map_handle.get_map_system_path_str_for_list(position)
-    # 从缓存中取出该场景数据
+    # 从场景状态读取当前场景中的在场角色并筛选
 
     result: list[int] = []
     # 遍历场景中所有角色
@@ -545,7 +537,7 @@ class Select_Hidden_Sex_Mode_Panel:
                 return
 
         # 从被发现面板跳转过来（结算途中）时当场判定邀请；玩家选择时只定下行动，邀请在行动开始时判定，
-        #    没过的换成邀请隐奸失败（它的开始代码提示失败），这里写下的模式随草稿一起作废
+        #    没过的换成邀请隐奸失败（它的开始代码提示失败），这里写下的模式随选择写入一起丢弃
         if (
             self.sex_be_discovered_flag
             and not instuct_judege.calculation_instuct_judege(

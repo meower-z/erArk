@@ -16,7 +16,7 @@ from Script.Design import (
     handle_npc_ai,
     basement,
 )
-from Script.Core import get_text, cache_control, game_type, constant
+from Script.Core import get_text, game_type, constant
 from Script.Modules.domains import abilities, action_info, activity, economy
 from Script.Modules.domains import h_state, kitchen, maintenance, modes
 from Script.Modules.domains import production, body_manage, inventory
@@ -26,8 +26,6 @@ from Script.UI.Moudle import draw
 if TYPE_CHECKING:
     from Script.Modules.npc_action_choice import choice
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

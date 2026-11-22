@@ -6,9 +6,9 @@ tk_ui 的玩家选择
 面板栈一路展开到钩子，面板不再往下跑；下一次玩家选行动时面板从头重画。
 一轮面板跑完而回到了标题或建角色面板时抛出 LeftGame，穿过 core.step() 回到 start_flow 的主流程。
 测试把 chooser 换成脚本。
-玩家选择时写的是草稿（drafting）：一个面板（handle_panel.add_panel 登记，UNDRAFTED 之外）、
-一次指令或场景里的内嵌子面板读写的是缓存的副本，
-结束时的差别随定下的行动走，没有定下行动时随一个 0 分钟的 Edit 走；取消（back）时什么也不留下。
+玩家选择里的面板（handle_panel.add_panel 登记，UNDRAFTED 之外）、一次指令或场景里的内嵌子面板运行在
+草稿块（drafting）中，经选择缓冲区暂存 GameState 写入并记录计划打断；
+退出时写入与打断随定下的行动走，没有定下行动时随一个 0 分钟的 Edit 走；取消（back）时什么也不留下。
 """
 
 import random
@@ -18,7 +18,12 @@ from typing import NoReturn, cast
 
 from Script.Core import constant, py_cmd
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import draft, edits, intent, working
+from Script.Modules.gameplay_resolution import (
+    edits,
+    intent,
+    plan_queue,
+    working,
+)
 from Script.Modules.tk_ui import drawn_see
 from Script.UI.Moudle import view
 
@@ -66,7 +71,7 @@ UNDRAFTED = frozenset(
         constant.Panel.SAVE,
     }
 )
-""" 一轮不开草稿的面板：场景面板每次选择都读全部角色，标题与建角色不在游戏里，存读档换掉整个缓存 """
+""" 不开选择缓冲区的面板：场景面板只读并由子面板处理，标题与建角色不在游戏里，存读档换掉整个 GameState """
 
 ui_random = random.Random()
 """ 只影响显示的随机数（例如列表的显示顺序）：不动游戏的随机数状态 """
@@ -91,23 +96,30 @@ def picking() -> Iterator[None]:
         _in_pick = False
 
 
-def _with_draft(
+def _carrying(
     act: core.Action,
-    changes: list[draft.Change],
     interrupts: list[str],
     effects: tuple[core.JSON, ...],
 ) -> core.Action:
-    """定下的行动带上选择的草稿、打断与写入：Edit 接在同名项后，有行为id的意图放进同名项，其余报 TypeError"""
-    if not changes and not interrupts and not effects:
+    """
+    让定下的行动带上选择期间的打断与写入：Edit 追加到自身列表中，带 behavior_id 的意图直接挂上这两项，
+    其余行动抛 TypeError
+    Keyword arguments:
+    act -- 定下的行动
+    interrupts -- 选择期间排下的打断角色键列表
+    effects -- 选择期间暂存的 GameState 写入
+    Return arguments:
+    Action -- 带上打断与写入的行动
+    """
+    if not interrupts and not effects:
         return act
     data = act.action_data
     if not isinstance(data, Mapping):
-        raise TypeError(f"{act.action_id} cannot carry a draft")
-    drafted: dict[str, core.JSON]
+        raise TypeError(f"{act.action_id} cannot carry pick writes")
+    carried: dict[str, core.JSON]
     if act.action_id == edits.EDIT:
-        drafted = {
+        carried = {
             **data,
-            "draft": (*cast(Sequence[core.JSON], data["draft"]), *changes),
             "interrupts": (
                 *cast(Sequence[str], data["interrupts"]),
                 *interrupts,
@@ -118,17 +130,17 @@ def _with_draft(
             ),
         }
     elif "behavior_id" in data:
-        drafted = {**data, "draft": tuple(changes)}
+        carried = dict(data)
         if interrupts:
-            drafted["interrupts"] = tuple(interrupts)
+            carried["interrupts"] = tuple(interrupts)
         if effects:
-            drafted["effects"] = effects
+            carried["effects"] = effects
     else:
-        raise TypeError(f"{act.action_id} cannot carry a draft")
+        raise TypeError(f"{act.action_id} cannot carry pick writes")
     return core.Action(
         act.who,
         act.action_id,
-        cast(core.JSON, drafted),
+        cast(core.JSON, carried),
         act.start,
         act.duration,
     )
@@ -137,49 +149,43 @@ def _with_draft(
 @contextmanager
 def drafting(origin: str) -> Iterator[None]:
     """
-    玩家选择里的一段代码读写缓存的副本（draft.Session）：
-    开草稿时先把 H 服装面板记下的可见性写进草稿（drawn_see.keep）；
-    正常结束时有改动就定下一个 0 分钟的 Edit（抛出 Chosen）；定下行动时草稿随那个行动走；
-    取消或出错时丢掉草稿。不在选行动中时只运行这段代码，已在草稿里时并进外层的草稿
+    玩家选择中的草稿上下文：打开选择缓冲区（working.open_pick）并记下当前待打断位置（plan_queue.mark），
+    进入后先调 drawn_see.keep。正常退出且有写入或打断时定下 0 分钟 Edit（抛 Chosen）；
+    块内定下行动时把写入与打断附到该行动上；遇到 Back 或异常时丢弃两者。
+    不在玩家选择中时直接运行块，外层已有选择缓冲区时并入外层
     Keyword arguments:
-    origin -- 草稿来自哪里（面板或指令），记进 Edit
+    origin -- 写入来源标识（面板或指令），记入生成的 Edit
     """
-    if not _in_pick or draft.active():
+    if not _in_pick or working.picking():
         yield
         return
-    session = draft.Session(())
+    mark = plan_queue.mark()
     buffer = working.open_pick()
     try:
         drawn_see.keep()
         yield
     except Chosen as chosen:
         effects = working.close_pick(buffer)
-        if not draft.active():
-            raise
-        changes, interrupts = session.close()
-        drafted = _with_draft(chosen.action, changes, interrupts, effects)
-        raise Chosen(drafted) from None
+        interrupts = plan_queue.take_since(mark)
+        raise Chosen(_carrying(chosen.action, interrupts, effects)) from None
     except BaseException:
         working.close_pick(buffer)
-        if draft.active():
-            session.drop()
+        plan_queue.take_since(mark)
         raise
     effects = working.close_pick(buffer)
-    if not draft.active():
-        return
-    changes, interrupts = session.close()
-    if changes or interrupts or effects:
-        raise Chosen(edits.edit_action(origin, changes, interrupts, effects))
+    interrupts = plan_queue.take_since(mark)
+    if interrupts or effects:
+        raise Chosen(edits.edit_action(origin, interrupts, effects))
 
 
 def commit_edit(name: str, args: Mapping[str, core.JSON]) -> NoReturn:
     """
-    定下一个具名编辑（edits.edit 登记的效果代码），抛出 Chosen；在草稿里时草稿一起带上
+    定下一个具名编辑（edits.edit 登记的效果代码），抛出 Chosen；在选择草稿里时选择写入与打断一起带上
     Keyword arguments:
     name -- 具名编辑的名字
     args -- 参数
     """
-    raise Chosen(edits.edit_action(name, [], name=name, args=args))
+    raise Chosen(edits.edit_action(name, name=name, args=args))
 
 
 def _round() -> None:

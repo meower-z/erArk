@@ -43,7 +43,7 @@ from __future__ import annotations
 
 import random
 from Script.Config import game_config
-from Script.Core import cache_control, game_type, constant
+from Script.Core import constant
 from Script.Design import attr_calculation, game_time, map_handle
 from Script.System.Education_System import education_constant, schedule_handle
 from typing import TYPE_CHECKING
@@ -61,9 +61,6 @@ from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 
 if TYPE_CHECKING:
     import datetime
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 def get_negative_status_level_sum(character_id: int) -> int:
@@ -615,7 +612,7 @@ def judge_skip_class_today(
     判断角色此刻是否处于「今天已翘课」的状态（Plan 31 §3.6：翘课 flag 认日期）
     Keyword arguments:
     character_id -- 角色id
-    now_time -- 参照时刻，None 时取角色的行为开始时刻，再退到 cache.game_time
+    now_time -- 参照时刻，None 时取角色的行为开始时刻，再退到 game_time.now()
     Return arguments:
     bool -- 挂着翘课 flag、且 flag 是在参照时刻那一天挂上的为True
     功能: flag 只在挂上的那一天有效。
@@ -721,8 +718,8 @@ def judge_student_join_class(
 
 def get_student_leave_time(character_id: int) -> datetime.datetime | None:
     """
-    取学生当前行为应当提前结束的时刻（handle_npc_ai.judge_student_leave_truncate 调用，Plan 25 §3.1；
-    Plan 32 §3.7 L4 起排在实时结算之前）
+    取学生当前行为应当提前结束的时刻（handle_npc_ai.judge_student_leave_truncate 调用，
+    排在实时结算之前）
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -731,26 +728,26 @@ def get_student_leave_time(character_id: int) -> datetime.datetime | None:
             A 待赴实操课：之后开始的某一节是自己要上的实操课（必修或选修）、人不在那间教室
                → 截到开课前 PRE_ARRIVE_MINUTE（口径 62 提前退场，上课中也截）；
                人已在那间教室的不截，开课时玩家把场景里能参加的学生一并拉进课堂
-            B 马上开课：之后开始的某一节有课（已停课、上不成的个人式课都算没课，Plan 27 / 28）、开课前 UPCOMING_MINUTE
-            那一刻本节没课、今天没翘课
+            B 马上开课：之后开始的某一节有课（已停课、上不成的个人式课都算没课）、
+            开课前 UPCOMING_MINUTE 那一刻本节没课、今天没翘课
                → 人不在上课地点：截到开课前 UPCOMING_MINUTE（与教师「20 分钟内有下一节先去教室」同口径）
-               → 人已在上课地点：截到开课那一刻（Plan 32 §3.7 L3）。
+               → 人已在上课地点：截到开课那一刻。
                不必动身，但要在开课那一刻重新决策——个人式课（体育 / 兴趣 / 实习）没有拉人的一方，
                   716 只能由她自己发呆时派出，此前整段豁免，她在上课地点做 120
                   分钟的同类娱乐（兴趣课「看电影」「排演舞剧」）时整节没有决策，
                   出勤、缺课都不记；教室课在开课那一刻照常听课 / 自习，或被教师 303 拉进来
                开课前 UPCOMING_MINUTE 那一刻本节还有课的仍不截：那节课由截到节末的时长自然结束
-               今天已翘课的（judge_skip_class_today，Plan 31 §3.5）：之后开始的某一节有课 → 截到开课那一刻，
+               今天已翘课的（judge_skip_class_today）：之后开始的某一节有课 → 截到开课那一刻，
                不要求上课地点、也不看离开时本节有没有课，
                让她在开课那一刻重新决策、当场判翘课（714 记这一节的缺课）；
                此前整段豁免，空节里抽到的长娱乐会盖过下一节、缺课整节漏记
-          截短时长而不是「现在就结束」：行为循环里 NPC 按各自的行为时刻推进，cache.game_time 是玩家这一步的结束时刻，
-             玩家一步走 45 分钟时，「现在」早已越过开课时刻，拿它判会整个错过；
-             截到应离开的那一刻，NPC 就在那一刻重新决策。
+          截短时长而不是「现在就结束」：行为循环里 NPC 按各自的行为时刻推进，
+             game_time.now() 是当前步骤的时钟，玩家一步走 45 分钟时，「现在」早已越过开课时刻，
+             拿它判会整个错过；截到应离开的那一刻，NPC 就在那一刻重新决策。
           只截工作 / 娱乐类行为（行为 tag 含「工作」或「娱乐」），需求类（吃饭、如厕、休息、淋浴）不动；
           上课行的门槛 normal_all 不成立时不截——截了 AI 也派不出上课行。
-          截出来的结束时刻严格晚于开始时刻（NPC 至少走一分钟），重新决策出的新行为开始于离开时刻，不会被再截一次，
-          行为循环必然收敛。
+          截出来的结束时刻严格晚于开始时刻（NPC 至少走一分钟），重新决策出的新行为开始于离开时刻，
+          不会被再截一次，行为循环必然收敛。
           截短不回退收益：NPC 的结算发生在行为开始时，被截短的那节课已按整节结算过，也不记缺课（口径 66）
     """
     import datetime

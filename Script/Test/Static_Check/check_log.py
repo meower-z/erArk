@@ -29,12 +29,8 @@ from Script.Modules.domains import history, playthrough
 from . import snapshot as snapshot_module
 from .check_registry import CheckFailure, get_all_checks
 
-from typing import TYPE_CHECKING
 from Script.Modules.domains import identity
 from Script.UI.Moudle import view
-
-if TYPE_CHECKING:
-    from Script.Core import game_type
 
 # 日志文件路径：与error.log同一约定，使用相对于游戏进程工作目录（即仓库根目录）的相对路径
 LOG_PATH = os.path.join("static_check_error.log")
@@ -180,10 +176,8 @@ def _build_recent_input_text() -> str:
     return str(list(view.input_cache[-10:]))
 
 
-def _build_recent_behavior_text(cache: game_type.Cache) -> str:
+def _build_recent_behavior_text() -> str:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         str: 最近行为指令（id+中文名）的可读文本
     功能:
@@ -201,12 +195,8 @@ def _build_recent_behavior_text(cache: game_type.Cache) -> str:
     return "，".join(text_list)
 
 
-def _build_involved_character_text(
-    cache: game_type.Cache, involved_character_ids: list[int]
-) -> str:
+def _build_involved_character_text(involved_character_ids: list[int]) -> str:
     """
-    参数:
-        cache: 当前游戏缓存对象
         involved_character_ids (List[int]): 涉及的角色id列表
     返回值:
         str: "id(角色名)"形式拼接的可读文本
@@ -252,12 +242,8 @@ def _log_size_exceeded() -> bool:
     return False
 
 
-def _build_entry_header_lines(
-    cache: game_type.Cache, now_text: str
-) -> list[str]:
+def _build_entry_header_lines(now_text: str) -> list[str]:
     """
-    参数:
-        cache: 当前游戏缓存对象
         now_text (str): 本条记录的现实时间ISO文本
     返回值:
         List[str]: 条目头部各行（分隔线、时间与游戏状态、最近输入、最近行为指令）
@@ -276,20 +262,18 @@ def _build_entry_header_lines(
         f"最近输入(input_cache 末尾10条): {_build_recent_input_text()}"
     )
     lines.append(
-        f"最近行为指令(pl_pre_behavior_instruce, id+名称): {_build_recent_behavior_text(cache)}"
+        f"最近行为指令(pl_pre_behavior_instruce, id+名称): {_build_recent_behavior_text()}"
     )
     return lines
 
 
 def write_error_log(
     failures: list[CheckFailure],
-    cache: game_type.Cache,
     context: dict | None = None,
 ) -> bool:
     """
     参数:
         failures (List[CheckFailure]): 待写入日志的静态检查失败列表，为空时不写入
-        cache: 当前游戏缓存对象
         context (dict): 随日志一并写入的上下文包（context packet），默认为None时不输出上下文行
     返回值:
         bool: 本次是否真正向日志追加了新条目（供调用方决定是否向玩家绘制提示）
@@ -320,7 +304,7 @@ def write_error_log(
         return False
 
     now_text = datetime.datetime.now().isoformat()
-    lines = _build_entry_header_lines(cache, now_text)
+    lines = _build_entry_header_lines(now_text)
     if context:
         try:
             context_text = json.dumps(context, ensure_ascii=False, default=repr)
@@ -333,14 +317,14 @@ def write_error_log(
     involved_ids = set()
     for failure in new_failures.values():
         involved_text = _build_involved_character_text(
-            cache, failure.involved_character_ids
+            failure.involved_character_ids
         )
         lines.append(
             f"  - [{failure.check_id}] {failure.check_name}: {failure.message} (涉及角色: {involved_text})"
         )
         involved_ids.update(failure.involved_character_ids)
     lines.append("快照(仅涉事角色与玩家):")
-    lines.append(snapshot_module.dump_snapshot_json(cache, involved_ids))
+    lines.append(snapshot_module.dump_snapshot_json(involved_ids))
 
     with open(LOG_PATH, "a", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -350,14 +334,11 @@ def write_error_log(
     return True
 
 
-def write_repair_log(
-    repair_records: list[dict], cache: game_type.Cache
-) -> None:
+def write_repair_log(repair_records: list[dict]) -> None:
     """
     参数:
         repair_records (List[dict]): 修复记录列表，每条含check_id、target(修复对象描述)、field(字段路径)、
                                      old_value(修复前值)、new_value(修复后值)
-        cache: 当前游戏缓存对象
     返回值:
         None
     功能:
@@ -370,7 +351,7 @@ def write_repair_log(
     if _log_size_exceeded():
         return
     now_text = datetime.datetime.now().isoformat()
-    lines = _build_entry_header_lines(cache, now_text)
+    lines = _build_entry_header_lines(now_text)
     lines.append(
         f"载入存档自动修复 {len(repair_records)} 项（旧值→新值均已留痕）:"
     )

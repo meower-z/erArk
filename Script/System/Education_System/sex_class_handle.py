@@ -18,7 +18,7 @@
 import datetime
 import random
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, constant
+from Script.Core import game_type, get_text, constant
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
 from Script.Modules.domains import abilities, activity, chara_life, education
@@ -27,8 +27,6 @@ from Script.Modules.domains import roster, identity, scene_state
 from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 from Script.Config import game_config
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -1068,20 +1066,19 @@ def settle_attend(
     给一名到场学生记一次出勤，并累计一次实操课
     Keyword arguments:
     student_id -- 学生的角色id
-    now_time -- 参照时刻，None 时取学生的行为开始时刻（722 晚到的人用）；开课时传 cache.game_time
+    now_time -- 参照时刻，None 时取学生的行为开始时刻（722 晚到的人用）；开课时传 game_time.now()
     Return arguments:
     无
-    功能: 这一节已记了缺课（开课时体力不足、休完才到场）的不记（Plan 30，同一节只落一种记录）。
-          「这一节」按正在进行的那节实操课判（get_attend_judge_time，Plan 31 §3.7）：玩家提前几分钟开讲预约的课时，
+    功能: 这一节已记了缺课（开课时体力不足、休完才到场）的不记（同一节只落一种记录）。
+          「这一节」按正在进行的那节实操课判（get_attend_judge_time）：玩家提前几分钟开讲预约的课时，
              参照时刻还在上一节，上一节缺过课的学生出勤会记不上，而她进了 H 不再进 AI，这一节也不会再记缺课。
-          记出勤的同时累计实操课次数 sex_class_count（养成数值 25，Plan 31 §3.14 L12）：口上里「第一次来
-          / 老学生」读它，
+          记出勤的同时累计实操课次数 sex_class_count（养成数值 25）：口上里「第一次来 / 老学生」读它，
              不读含全部课型的累计听课节数；这一节已缺课、不记出勤的也不记它。
-          记出勤时一并写「这一节已结算」标记 last_attend_period（按上面那一节，节次外的当场课不写，Plan 32 §3.8 L7）：
+          记出勤时一并写「这一节已结算」标记 last_attend_period（按上面那一节，节次外的当场课不写）：
              实操课本节内提前下课、或玩家课中与学生做 H 后放回，体力落在 1~30% 的学生本节内再派 721，
              缺课判定看到这一节已出勤就不再记；
              同一节里 557 / 512 也不再给她结算这一节的常规课。
-             这里不读它去重：同一节下课后重开，每次开课单独记一次（Plan 27 L2，按设计保留）
+             这里不读它去重：同一节下课后重开，每次开课单独记一次（按设计保留）
     """
     # 只给「女儿 ∪ 学生岗」记：凭 H 模式实行值到场的成年非学生干员不是学生，
     #    给她们惰性创建养成数据只会让全岛的存档一起变大（与 semester_handle 的约定一致）

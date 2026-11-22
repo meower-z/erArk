@@ -1,7 +1,7 @@
 """显示角色身体污秽状况的面板，以及精液量与插入对象的查询"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, rich_text, num
+from Script.Core import get_text, rich_text, num
 from Script.Design import map_handle, clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
@@ -17,8 +17,6 @@ from Script.Modules.domains import (
 from Script.Modules.domains import player_ability, pregnancy, status, identity
 from Script.Modules.domains import scene_state
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

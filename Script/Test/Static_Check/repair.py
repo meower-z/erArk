@@ -27,16 +27,13 @@ from Script.Modules.domains import chara_life, identity
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from Script.Core import game_type
 
-_repair_registry: dict[
-    str, tuple[str, Callable[[game_type.Cache], list[dict]]]
-] = {}
+_repair_registry: dict[str, tuple[str, Callable[[], list[dict]]]] = {}
 
 
 def register_repair(check_id: str, repair_name: str) -> Callable[
-    [Callable[[game_type.Cache], list[dict]]],
-    Callable[[game_type.Cache], list[dict]],
+    [Callable[[], list[dict]]],
+    Callable[[], list[dict]],
 ]:
     """
     参数:
@@ -51,8 +48,8 @@ def register_repair(check_id: str, repair_name: str) -> Callable[
     """
 
     def decorator(
-        func: Callable[[game_type.Cache], list[dict]],
-    ) -> Callable[[game_type.Cache], list[dict]]:
+        func: Callable[[], list[dict]],
+    ) -> Callable[[], list[dict]]:
         registered = _repair_registry.get(check_id)
         if registered is not None:
             old_func = registered[1]
@@ -105,10 +102,8 @@ def _chara_label(cid: int | None, chara: object) -> str:
 
 
 @register_repair("NUM-27", "疲劳/饥饿/熟睡/醉酒越界拉回")
-def repair_fatigue_family_range(cache: game_type.Cache) -> list[dict]:
+def repair_fatigue_family_range() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -140,10 +135,8 @@ def repair_fatigue_family_range(cache: game_type.Cache) -> list[dict]:
 
 
 @register_repair("SUPP-05", "愤怒值下界钳制")
-def repair_angry_point_lower_bound(cache: game_type.Cache) -> list[dict]:
+def repair_angry_point_lower_bound() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -190,10 +183,8 @@ def _iter_cloth_containers(
 
 
 @register_repair("BODY-02", "非法服装id清除与错位归正")
-def repair_cloth_id_validity(cache: game_type.Cache) -> list[dict]:
+def repair_cloth_id_validity() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -249,10 +240,8 @@ def repair_cloth_id_validity(cache: game_type.Cache) -> list[dict]:
 
 
 @register_repair("BODY-03", "同槽位重复服装去重")
-def repair_cloth_slot_duplicates(cache: game_type.Cache) -> list[dict]:
+def repair_cloth_slot_duplicates() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -279,10 +268,8 @@ def repair_cloth_slot_duplicates(cache: game_type.Cache) -> list[dict]:
 
 
 @register_repair("BODY-35", "个人服装模板列表无效项清除")
-def repair_clothing_tem_list(cache: game_type.Cache) -> list[dict]:
+def repair_clothing_tem_list() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -314,10 +301,8 @@ def repair_clothing_tem_list(cache: game_type.Cache) -> list[dict]:
 
 
 @register_repair("ISLAND-09", "岗位集合按在编名单重算")
-def repair_work_npc_set(cache: game_type.Cache) -> list[dict]:
+def repair_work_npc_set() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -348,10 +333,8 @@ def repair_work_npc_set(cache: game_type.Cache) -> list[dict]:
 
 
 @register_repair("ISLAND-28", "主供能调控员非法槽位清空")
-def repair_main_power_operator_slots(cache: game_type.Cache) -> list[dict]:
+def repair_main_power_operator_slots() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -386,12 +369,8 @@ def repair_main_power_operator_slots(cache: game_type.Cache) -> list[dict]:
 
 
 @register_repair("PLACE-28", "登记宿舍与当前宿舍相同时清空")
-def repair_permanent_dormitory_equal_to_dormitory(
-    cache: game_type.Cache,
-) -> list[dict]:
+def repair_permanent_dormitory_equal_to_dormitory() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -417,10 +396,8 @@ def repair_permanent_dormitory_equal_to_dormitory(
 
 
 @register_repair("ISLAND-29", "监狱长悬空引用修正")
-def repair_warden_reference(cache: game_type.Cache) -> list[dict]:
+def repair_warden_reference() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -442,14 +419,12 @@ def repair_warden_reference(cache: game_type.Cache) -> list[dict]:
 
 
 @register_repair("HGROUP-12", "「群交自慰」残留标记归零")
-def repair_masturebate_stale_group_flag(cache: game_type.Cache) -> list[dict]:
+def repair_masturebate_stale_group_flag() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
-        与HGROUP-12同条件、保守口径：非H(sp_flag.is_h为假)且非群交模式(cache.group_sex_mode为假)但
+        与HGROUP-12同条件、保守口径：非H(sp_flag.is_h为假)且非群交模式(modes.group_sex()为假)但
         sp_flag.masturebate==3的角色，直接把该标记归0。条件即检查断言本身，只兜住已确认的存量残留形态
         （群交中有人从无意识恢复时先关group_sex_mode再清理其余角色，清理函数不清masturebate），不覆盖
         仍在H/群交中的角色——那些角色下次H/群交正常结束时会经效果407自然清零。
@@ -475,10 +450,8 @@ def repair_masturebate_stale_group_flag(cache: game_type.Cache) -> list[dict]:
 
 
 @register_repair("ISLAND-20", "普通宿舍超员住户重新分配")
-def repair_overcrowded_dormitory_room(cache: game_type.Cache) -> list[dict]:
+def repair_overcrowded_dormitory_room() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 修复记录列表
     功能:
@@ -539,10 +512,8 @@ def repair_overcrowded_dormitory_room(cache: game_type.Cache) -> list[dict]:
     return records
 
 
-def apply_all_repairs(cache: game_type.Cache) -> list[dict]:
+def apply_all_repairs() -> list[dict]:
     """
-    参数:
-        cache: 当前游戏缓存对象
     返回值:
         List[dict]: 全部实际发生的修复记录（供门面返回；游戏侧无需使用返回值）
     功能:
@@ -554,9 +525,9 @@ def apply_all_repairs(cache: game_type.Cache) -> list[dict]:
         return all_records
     for __, (__, repair_func) in _repair_registry.items():
         try:
-            all_records.extend(repair_func(cache))
+            all_records.extend(repair_func())
         except Exception as e:
             check_log.write_self_error_log(e)
     if all_records:
-        check_log.write_repair_log(all_records, cache)
+        check_log.write_repair_log(all_records)
     return all_records

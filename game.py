@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 """
-游戏入口：作为主程序运行时构建数据，初始化缓存、配置、Mod、角色与时间，
+游戏入口：作为主程序运行时构建数据，初始化配置、Mod、角色模板、地图与内核时钟，
 再以 Tk 窗口启动游戏
 """
 
@@ -14,15 +14,12 @@ if __name__ == "__main__":
 
     import auto_build_config
     from Script.Config import normal_config
-    from Script.Core import game_type, cache_control
 
     logging.basicConfig(
         format="等级：%(levelname)s，函数名：%(funcName)s，信息为：%(message)s",
         level=logging.WARNING,
     )
 
-    # 初始化游戏缓存数据
-    cache_control.cache = game_type.Cache()
     # 初始化游戏基础配置数据
     normal_config.init_normal_config()
 

@@ -28,7 +28,7 @@ final_invariants_h_group.md（H-xx + HS-xx 不变式清单）。
 
 from __future__ import annotations
 
-from Script.Core import cache_control, num
+from Script.Core import num
 from Script.Design import game_time
 from Script.Modules.domains import (
     abilities,
@@ -46,7 +46,6 @@ from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
     from types import ModuleType
-    from Script.Core import game_type
     from Script.Config import config_def
     from typing import Any
 
@@ -64,34 +63,31 @@ except Exception:  # pragma: no cover - 独立运行环境下Config包本身也�
 # ---------------------------------------------------------------------------
 
 
-def _pl(cache: game_type.Cache) -> identity.Identity | None:
+def _pl() -> identity.Identity | None:
     """
-    参数: cache 全局缓存对象
     返回值: 玩家角色对象(cid=0)，cache未初始化或0号角色不存在时返回None
     功能: 统一获取玩家角色对象
     """
     return identity.get(0)
 
 
-def _npcs(cache: game_type.Cache) -> set[int]:
+def _npcs() -> set[int]:
     """
-    参数: cache 全局缓存对象
     返回值: Set[int] 已获得的非玩家角色id集合，即npc_id_got - {0}
     功能: 提供不变式清单约定的NPCS集合，供各检查复用，避免每个检查函数各自求一遍差集
     """
-    got = roster.active() if cache is not None else None
+    got = roster.active()
     if not got:
         return set()
     return set(got) - {0}
 
 
-def _all(cache: game_type.Cache) -> set[int]:
+def _all() -> set[int]:
     """
-    参数: cache 全局缓存对象
     返回值: Set[int] 已获得的全部角色id集合(含玩家)，即npc_id_got | {0}
     功能: 提供不变式清单约定的ALL集合，供各检查复用
     """
-    got = roster.active() if cache is not None else None
+    got = roster.active()
     base = set(got) if got else set()
     return base | {0}
 
@@ -125,9 +121,8 @@ def _behavior_id(chara: identity.Identity | None) -> str | None:
     return getattr(b, "behavior_id", None) if b is not None else None
 
 
-def _pre_instr(cache: game_type.Cache) -> list:
+def _pre_instr() -> list:
     """
-    参数: cache 全局缓存对象
     返回值: list 最近3条玩家行为指令(id)，字段缺失或非list时返回空列表
     功能: 防御式获取cache.pl_pre_behavior_instruce末尾3条，用于失败上下文定位"上一条玩家指令"
     """
@@ -182,15 +177,14 @@ def check_hgroup_01() -> list[CheckFailure]:
         校验cache.group_sex_mode为真时玩家必然带is_h标记：所有真正开启群交的效果链都同时给玩家挂462；
         若同时命中HGROUP-02，还存在群交模式与同场景在H的NPC人数不一致；本条不推断具体退出路径
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     if not modes.group_sex():
         return []
     if flags.get(pl.cid, "is_h"):
         return []
-    npcs = _npcs(cache)
+    npcs = _npcs()
     same_scene_h = [
         cid
         for cid in npcs
@@ -198,7 +192,7 @@ def check_hgroup_01() -> list[CheckFailure]:
     ]
     msg = (
         f"mode.group_sex=True但玩家(cid=0,{_name(pl)})sp_flag.is_h=False；behavior_id={_behavior_id(pl)} "
-        f"state={activity.state(pl.cid)} 最近指令={_pre_instr(cache)} "
+        f"state={activity.state(pl.cid)} 最近指令={_pre_instr()} "
         f"group_sex_body_template_dict={h_state.view(0).group_sex_body_template_dict!r} "
         f"同场景在H角色id={same_scene_h}；"
         f"请同时查看HGROUP-02，确认同场景在H的NPC人数是否满足当前模式要求"
@@ -218,13 +212,12 @@ def check_hgroup_02() -> list[CheckFailure]:
         模式开启而人数不足时报告当前状态，不把人数不足归因于某条效果链；两种模式下0名均不合法。
         时停守卫必需：时停回合玩家可离场且NPC不结算，按玩家当前场景计数会合法得到0
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     if not modes.group_sex() or modes.time_stop():
         return []
-    npcs = _npcs(cache)
+    npcs = _npcs()
     in_h = []
     for cid in npcs:
         c = identity.get(cid)
@@ -247,7 +240,7 @@ def check_hgroup_02() -> list[CheckFailure]:
         f"[warning] mode.group_sex=True但同场景在H的NPC数={len(in_h)}<{minimum}；"
         f"sex_class_mode={sex_class_mode!r}；明细={detail}；"
         f"group_sex_body_template_dict={h_state.view(0).group_sex_body_template_dict!r} "
-        f"behavior_id={_behavior_id(pl)} 最近指令={_pre_instr(cache)}"
+        f"behavior_id={_behavior_id(pl)} 最近指令={_pre_instr()}"
     )
     return [
         make_failure(
@@ -270,8 +263,7 @@ def check_hgroup_03() -> list[CheckFailure]:
         校验群交模式关闭时玩家A/B两套群交模板均已清空。群交结束会重置场景内全员h_state(含模板)，
         模式已关而模板非空说明某条退出路径漏了清理
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None or modes.group_sex():
         return []
     tpls = _tpl_dict(pl)
@@ -295,7 +287,7 @@ def check_hgroup_03() -> list[CheckFailure]:
                     (
                         f"mode.group_sex=False但玩家模板{k}未清空：单槽残留={dirty_slots} 侍奉={serve!r}；"
                         f"完整模板={tpls!r} "
-                        f"behavior_id={_behavior_id(pl)} 最近指令={_pre_instr(cache)} "
+                        f"behavior_id={_behavior_id(pl)} 最近指令={_pre_instr()} "
                         f"group_sex_lock_flag={h_state.get(0, 'group_sex_lock_flag')} "
                         f"all_group_sex_temple_run={h_state.get(0, 'all_group_sex_temple_run')}"
                     ),
@@ -316,8 +308,7 @@ def check_hgroup_04() -> list[CheckFailure]:
         校验玩家群交模板字典恰含A/B两键，每套为[单槽字典,侍奉项]，单槽字典恰含5个部位键、每个单槽
         是长度2的列表，侍奉项是[list,state_id]。恒真型结构哨兵，成本极低，主要捕获旧存档迁移残留
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     tpls: object = h_state.view(0).group_sex_body_template_dict
@@ -380,8 +371,7 @@ def check_hgroup_05() -> list[CheckFailure]:
         reset_unfinish_select只遍历A、B仅在all_group_sex_temple_run为真时才遍历，未启用的B可能长期
         留存半填槽
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     tpls = _tpl_dict(pl)
@@ -439,8 +429,7 @@ def check_hgroup_06() -> list[CheckFailure]:
         校验同一模板内penis槽与侍奉槽不能同时被占用。三条写入路径都维持互斥；六九式不是例外——
         它落在"侍奉"分组，走先清penis的分支，特例代码之后也没再动penis
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     tpls = _tpl_dict(pl)
@@ -486,8 +475,7 @@ def check_hgroup_07() -> list[CheckFailure]:
         绝不加回len(ids)<=4：4人上限只是UI约束，自动记录路径group_sex_settle对同一侍奉指令的
         新对象只做append且没有任何上限，5人以上群交可合法得到长度5
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     tpls = _tpl_dict(pl)
@@ -542,8 +530,7 @@ def check_hgroup_08() -> list[CheckFailure]:
         模板会被直接用于生成结算目标，残留已退场角色会让settle_behavior对不在场角色结算H行为。
         已知可命中的真泄漏：NPC离场清理只清is_h，不清模板，群交成员被弄出场景会留下陈旧id
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     tpls = _tpl_dict(pl)
@@ -629,8 +616,7 @@ def check_hgroup_09() -> list[CheckFailure]:
         mouth→口、L_hand/R_hand→手、penis→插入、anal→肛、侍奉槽→侍奉；mouth额外放行六九式(sixty_nine)，
         因其tag先命中"侍奉"被分类为侍奉组，但特例代码把它写进mouth槽。config表未载入(独立脚本环境)时降级为跳过
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     g, cb = _group_sex_body_part_groups()
@@ -710,8 +696,7 @@ def check_hgroup_10() -> list[CheckFailure]:
         校验三个群交全局开关只从玩家身上读写：玩家npc_ai_type_in_group_sex只能是0..3，两个flag必须是
         bool，NPC身上必须保持默认值。属于串写哨兵，正常游戏中恒真——若将来真给NPC侧加了写入，本条会先报
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     h = h_state.view(0)
@@ -740,7 +725,7 @@ def check_hgroup_10() -> list[CheckFailure]:
                 [0],
             )
         )
-    npcs = _npcs(cache)
+    npcs = _npcs()
     for cid in npcs:
         c = identity.get(cid)
         if c is None:
@@ -783,8 +768,7 @@ def check_hgroup_11() -> list[CheckFailure]:
         校验群交模板虽挂在所有角色h_state上，但业务上只读写玩家(cid=0)的模板；NPC模板出现非空槽
         即为串写或旧状态未清。串写哨兵，成本低，唯一潜在写入者是旧存档迁移
     """
-    cache = cache_control.cache
-    npcs = _npcs(cache)
+    npcs = _npcs()
     failures = []
     for cid in npcs:
         c = identity.get(cid)
@@ -828,11 +812,10 @@ def check_hgroup_12() -> list[CheckFailure]:
         全在群交AI内且前置is_h==False或群交模式关则return。已知可命中的真泄漏：群交中有人从无意识
         恢复时先关group_sex_mode再清理其余角色，但清理函数不清masturebate⇒关群交后3值残留
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
-    all_ids = _all(cache)
+    all_ids = _all()
     time_stop = modes.time_stop()
     failures = []
     for cid in all_ids:
@@ -888,8 +871,7 @@ def check_hgroup_13() -> list[CheckFailure]:
         校验玩家sp_flag.go_to_join_group_sex恒为False：该标记是给"被邀请、正从远处赶来"的NPC用的，
         置位点只有群交邀请面板与SELF_JOIN_GROUP_SEX_ON，都作用在被邀请的NPC上，玩家自己永远不该带
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     if flags.get(pl.cid, "go_to_join_group_sex"):
@@ -899,7 +881,7 @@ def check_hgroup_13() -> list[CheckFailure]:
                 "玩家不得带有「前往参与群交」标记",
                 (
                     f"玩家(cid=0)sp_flag.go_to_join_group_sex=True；behavior_id={_behavior_id(pl)} "
-                    f"mode.group_sex={modes.group_sex()} 最近指令={_pre_instr(cache)}"
+                    f"mode.group_sex={modes.group_sex()} 最近指令={_pre_instr()}"
                 ),
                 [0],
             )
@@ -920,12 +902,11 @@ def check_hgroup_14() -> list[CheckFailure]:
         的受邀NPC不在场景内，会带着该标记残留而group_sex_mode已为False——"提前结束群交"是常见操作，
         故频次高、定为warning
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     time_stop = modes.time_stop()
-    npcs = _npcs(cache)
+    npcs = _npcs()
     failures = []
     for cid in npcs:
         c = identity.get(cid)
@@ -981,12 +962,11 @@ def check_hgroup_15() -> list[CheckFailure]:
         残留而玩家已归0。不得把"隐奸NPC必须等于activity.target(0)"加回来：切换交互对象是无H
         守卫的自由UI动作
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     m = flags.get(pl.cid, "hidden_sex_mode")
-    npcs = _npcs(cache)
+    npcs = _npcs()
     hidden = []
     for cid in npcs:
         c = identity.get(cid)
@@ -1006,7 +986,7 @@ def check_hgroup_15() -> list[CheckFailure]:
         return (
             f"pl.hidden_sex_mode={m} 明细={detail} pl.position={activity.position(pl.cid)} "
             f"hidden_sex_discovery_dregree={h_state.get(0, 'hidden_sex_discovery_dregree')} "
-            f"behavior_id={_behavior_id(pl)} 最近指令={_pre_instr(cache)}；"
+            f"behavior_id={_behavior_id(pl)} 最近指令={_pre_instr()}；"
             "可观察后果：玩家模式为3/4（男隐/双隐）且场内无任何隐奸对象时，"
             "指令面板对每个指令类型执行continue；当前对象非隐奸对象时整类指令被跳过"
         )
@@ -1088,14 +1068,13 @@ def check_hgroup_16() -> list[CheckFailure]:
         可用，其效果链带462⇒玩家重新is_h=True而隐奸模式仍是1/2，命中时先看exhibitionism_sex_mode
         是否非0来区分
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     m = flags.get(pl.cid, "hidden_sex_mode")
     if m <= 0:
         return []
-    npcs = _npcs(cache)
+    npcs = _npcs()
     failures = []
     for cid in npcs:
         c = identity.get(cid)
@@ -1112,7 +1091,7 @@ def check_hgroup_16() -> list[CheckFailure]:
                         f"隐奸模式={m}下NPC cid={cid}({_name(c)})"
                         f"hidden_sex_mode={flags.get(c.cid, 'hidden_sex_mode')}"
                         f"但is_h=False；behavior_id={_behavior_id(c)} "
-                        f"最近指令={_pre_instr(cache)}"
+                        f"最近指令={_pre_instr()}"
                     ),
                     [cid],
                 )
@@ -1128,7 +1107,7 @@ def check_hgroup_16() -> list[CheckFailure]:
                     f"exhibitionism_sex_mode={exhib}(若非0，疑为切换对象后走"
                     f"ask_exhibitionism_sex重新进H，属已知可达误报路径，非本条描述的泄漏)；"
                     f"behavior_id={_behavior_id(pl)} target_character_id={activity.target(pl.cid)} "
-                    f"最近指令={_pre_instr(cache)}"
+                    f"最近指令={_pre_instr()}"
                 ),
                 [0],
             )
@@ -1148,13 +1127,12 @@ def check_hgroup_17() -> list[CheckFailure]:
         后从隐奸转群交先由settle_discovered清玩家隐奸、再由效果473清双方。有意只查玩家侧：NPC侧残留
         已由HGROUP-15的对称性覆盖，避免同一已知bug报两条
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     m = flags.get(pl.cid, "hidden_sex_mode")
     if m > 0 and modes.group_sex():
-        npcs = _npcs(cache)
+        npcs = _npcs()
         scene_hidden = {
             cid: flags.get(cid, "hidden_sex_mode")
             for cid in npcs
@@ -1166,7 +1144,7 @@ def check_hgroup_17() -> list[CheckFailure]:
                 "隐奸与群交互斥（玩家侧）",
                 (
                     f"玩家同时hidden_sex_mode={m}>0且mode.group_sex=True；behavior_id={_behavior_id(pl)} "
-                    f"最近指令={_pre_instr(cache)} 场景各角色hidden_sex_mode={scene_hidden}"
+                    f"最近指令={_pre_instr()} 场景各角色hidden_sex_mode={scene_hidden}"
                 ),
                 [0],
             )
@@ -1185,8 +1163,7 @@ def check_hgroup_18() -> list[CheckFailure]:
         校验隐蔽值只对角色0结算并被夹在[0,100]，NPC身上出现非0值即为错误写入。唯一写入点显式
         min/max夹紧，字段名的拼写dregree与真实定义一致，不要"顺手修正"
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     failures = []
@@ -1208,7 +1185,7 @@ def check_hgroup_18() -> list[CheckFailure]:
                 [0],
             )
         )
-    npcs = _npcs(cache)
+    npcs = _npcs()
     for cid in npcs:
         c = identity.get(cid)
         if c is None:
@@ -1245,12 +1222,11 @@ def check_hgroup_19() -> list[CheckFailure]:
         NPC"的对称状态，与隐奸不同，露出侧"双方is_h"是真命题。"至多一对"的依据是ask_exhibitionism_sex
         前提含EXHIBITIONISM_SEX_MODE_0(玩家自己)，无法在露出中再邀请第二人
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     e = flags.get(pl.cid, "exhibitionism_sex_mode")
-    npcs = _npcs(cache)
+    npcs = _npcs()
     ex = []
     for cid in npcs:
         c = identity.get(cid)
@@ -1341,8 +1317,7 @@ def check_hgroup_20() -> list[CheckFailure]:
         群交邀请不可见；被发现后转群交的效果链带476先清双方露出再开群交。有意只查玩家侧：NPC侧残留
         由HGROUP-19的对称性覆盖
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     e = flags.get(pl.cid, "exhibitionism_sex_mode")
@@ -1353,7 +1328,7 @@ def check_hgroup_20() -> list[CheckFailure]:
                 "露出与群交互斥（玩家侧）",
                 (
                     f"玩家同时mode.group_sex=True且exhibitionism_sex_mode={e}>0；behavior_id={_behavior_id(pl)} "
-                    f"最近指令={_pre_instr(cache)}"
+                    f"最近指令={_pre_instr()}"
                 ),
                 [0],
             )
@@ -1372,8 +1347,7 @@ def check_hgroup_21() -> list[CheckFailure]:
         校验hidden_sex_mode与exhibitionism_sex_mode都只能是0..4。近乎恒真的哨兵，只能抓存档损坏/
         mod写入/迁移越界；成本极低故保留
     """
-    cache = cache_control.cache
-    all_ids = _all(cache)
+    all_ids = _all()
     failures = []
     for cid in all_ids:
         c = identity.get(cid)
@@ -1420,11 +1394,10 @@ def check_hgroup_22() -> list[CheckFailure]:
         玩家可在时停中带着在H的NPC离场，而NPC自愈循环被跳过；非时停时该路径同样可发生，但NPC循环会
         在快照前清干净
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None or modes.time_stop():
         return []
-    npcs = _npcs(cache)
+    npcs = _npcs()
     failures = []
     for cid in npcs:
         c = identity.get(cid)
@@ -1464,8 +1437,7 @@ def check_hgroup_23() -> list[CheckFailure]:
         NPC在H中被弄出玩家场景时，离场清理把NPC的交互对象改成它自己再转END_H，玩家的is_h
         无人清理
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     if not (
@@ -1475,7 +1447,7 @@ def check_hgroup_23() -> list[CheckFailure]:
         and not modes.time_stop()
     ):
         return []
-    npcs = _npcs(cache)
+    npcs = _npcs()
     same_scene_h = []
     scene_list = []
     for cid in npcs:
@@ -1501,7 +1473,7 @@ def check_hgroup_23() -> list[CheckFailure]:
                 f"behavior_id={_behavior_id(pl)} "
                 f"exhibitionism_sex_mode={flags.get(pl.cid, "exhibitionism_sex_mode")} "
                 f"unconscious_h={flags.get(pl.cid, "unconscious_h")} "
-                f"target_character_id线索={tinfo} 同场景NPC列表={scene_list} 最近指令={_pre_instr(cache)}"
+                f"target_character_id线索={tinfo} 同场景NPC列表={scene_list} 最近指令={_pre_instr()}"
             ),
             [0],
         )
@@ -1520,11 +1492,10 @@ def check_hgroup_24() -> list[CheckFailure]:
         (非时停时)同场景的角色身上。target绑定已拆除。已知可命中的真泄漏：离场清理只清is_h不重建
         h_state，npc_active_h可能残留在已退场角色身上
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
-    all_ids = _all(cache)
+    all_ids = _all()
     time_stop = modes.time_stop()
     failures = []
     for cid in all_ids:
@@ -1571,8 +1542,7 @@ def check_hgroup_25() -> list[CheckFailure]:
         校验每次开启某个催眠行为模式前都会先clear_hypnosis_behavior_mode复位全部模式，木头人与逆推
         不可能同时为真。普通H结束不动hypnosis结构，也造不出二者同真
     """
-    cache = cache_control.cache
-    all_ids = _all(cache)
+    all_ids = _all()
     failures = []
     for cid in all_ids:
         c = identity.get(cid)
@@ -1606,8 +1576,7 @@ def check_hgroup_26() -> list[CheckFailure]:
         校验unconscious_h取值只能是0..7([0否,1睡眠,2醉酒,3时停,4平然,5空气,6体控,7心控])。恒真型
         哨兵，主要防debug面板与存档迁移写入越界值
     """
-    cache = cache_control.cache
-    all_ids = _all(cache)
+    all_ids = _all()
     failures = []
     for cid in all_ids:
         c = identity.get(cid)
@@ -1643,8 +1612,7 @@ def check_hgroup_27() -> list[CheckFailure]:
         本条是其余条目时停守卫的根状态验证：先确认时停标记本身没断链，才能放心把位置类误报归因于时停。
         迭代范围必须正好是cache.npc_id_got | {0}，与写入侧的集合一致
     """
-    cache = cache_control.cache
-    all_ids = _all(cache)
+    all_ids = _all()
     ts = modes.time_stop()
     pl_behavior_id = _behavior_id(identity.get(0))
     failures = []
@@ -1697,8 +1665,7 @@ def check_hgroup_28() -> list[CheckFailure]:
         先核对cache.time_stop_mode再判定，故失败上下文附带该值供triage，不在检查体内加时停豁免
         (原始不变式给出的检查体本身未加该豁免)
     """
-    cache = cache_control.cache
-    all_ids = _all(cache)
+    all_ids = _all()
     failures = []
     for cid in all_ids:
         c = identity.get(cid)
@@ -1739,8 +1706,7 @@ def check_hgroup_29() -> list[CheckFailure]:
         值3(群交自慰)是完全独立的写入链，不检查npc_masturebate_for_player，真正的二选一只在
         StateMachine/default.py的if/else上，对应值1/2
     """
-    cache = cache_control.cache
-    all_ids = _all(cache)
+    all_ids = _all()
     failures = []
     for cid in all_ids:
         c = identity.get(cid)
@@ -1777,8 +1743,7 @@ def check_hgroup_30() -> list[CheckFailure]:
         是0..2。所有NPC这三个仅博士持有的数据必须保持默认值-1/-1/0。相关效果函数无视传入的
         character_id、硬编码写入角色0的h_state，本条作为回归探针防止误写到其他角色
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None:
         return []
     h = h_state.view(0)
@@ -1823,7 +1788,7 @@ def check_hgroup_30() -> list[CheckFailure]:
                 [0],
             )
         )
-    npcs = _npcs(cache)
+    npcs = _npcs()
     for cid in npcs:
         c = identity.get(cid)
         if c is None:
@@ -1872,8 +1837,7 @@ def check_hgroup_31() -> list[CheckFailure]:
         的，纳入本条会在群交期间必然误报，其生命周期由HGROUP-13/14单独负责。副作用提示：时停回合全员
         unconscious_h==3，本条在时停回合自动静默，无需额外守卫
     """
-    cache = cache_control.cache
-    all_ids = _all(cache)
+    all_ids = _all()
     failures = []
     for cid in all_ids:
         c = identity.get(cid)

@@ -5,13 +5,7 @@
 import random
 from types import FunctionType
 from uuid import UUID
-from Script.Core import (
-    get_text,
-    game_type,
-    cache_control,
-    constant,
-    flow_handle,
-)
+from Script.Core import get_text, game_type, constant, flow_handle
 from Script.UI.Moudle import panel, draw, view
 from Script.Design import attr_calculation, handle_premise
 from Script.Modules.tk_ui import player_pick
@@ -22,8 +16,6 @@ _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"

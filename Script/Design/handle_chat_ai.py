@@ -1,13 +1,7 @@
 """文本生成AI：判断是否启用、构造提示词、调用接口生成文本、流式输出、保存对话记录与直接对话模式"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    constant,
-    flow_handle,
-)
+from Script.Core import get_text, constant, flow_handle
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, attr_calculation, game_time, attr_text
@@ -21,8 +15,6 @@ from Script.Modules.domains import abilities, activity, chara_life, identity
 from Script.Modules.domains import chara_profile, flags, hypnosis, needs
 from Script.Modules.domains import relations, wardrobe
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

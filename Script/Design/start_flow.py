@@ -1,11 +1,8 @@
 # -*- coding: UTF-8 -*-
 """游戏主流程：唯一的循环，标题与建角色面板在这里显示，进了游戏就一步一步推进内核"""
 
-from Script.Core import py_cmd, constant, cache_control, game_type
+from Script.Core import py_cmd, constant
 from Script.UI.Moudle import view
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 def start_frame() -> None:

@@ -1,7 +1,7 @@
 """角色服装、脱衣服及穿脱切换相关的面板"""
 
 from types import FunctionType
-from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import constant, flow_handle
 from Script.Core import get_text, py_cmd, rich_text, text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
@@ -10,8 +10,6 @@ from Script.Modules.tk_ui import drawn_see, player_pick
 from Script.Modules.domains import abilities, activity, dirty, modes
 from Script.Modules.domains import player_ability, wardrobe, identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

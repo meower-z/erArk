@@ -2,7 +2,7 @@
 
 import random
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import game_type, get_text
 from Script.Design import attr_calculation, handle_premise, second_behavior
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
@@ -11,8 +11,6 @@ from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, activity, identity
 from Script.Modules.domains import first_record, h_meters, h_state, status
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 _: FunctionType = get_text._

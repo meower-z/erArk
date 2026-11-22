@@ -17,13 +17,11 @@
 from types import FunctionType
 
 from Script.Config import game_config
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import get_text
 from Script.System.Education_System import education_constant
 from Script.Modules.domains import abilities, growth, pregnancy
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

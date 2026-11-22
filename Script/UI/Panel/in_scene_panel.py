@@ -11,14 +11,7 @@ from Script.UI.Panel import (
     chara_image_list_panel,
     character_info_head,
 )
-from Script.Core import (
-    get_text,
-    cache_control,
-    game_type,
-    flow_handle,
-    constant,
-    py_cmd,
-)
+from Script.Core import get_text, game_type, flow_handle, constant, py_cmd
 from Script.Design import (
     attr_text,
     character_behavior,
@@ -30,8 +23,6 @@ from Script.Modules.domains import activity, modes
 import logging, time
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

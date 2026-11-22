@@ -14,7 +14,6 @@ import math
 from fractions import Fraction
 from typing import TypeGuard
 
-from Script.Core import cache_control
 from Script.Design import game_time
 from Script.Modules.domains import (
     abilities,
@@ -904,8 +903,7 @@ def check_player_no_semen_flow() -> list[CheckFailure]:
         校验玩家(cid 0)的semen_flow恒为空列表——流通构造与实时结算的玩家分支都不处理流通表，
         玩家身上出现流通项说明写错了对象
     """
-    cache = cache_control.cache
-    if cache is None or not identity.exists(0):
+    if not identity.exists(0):
         return []
     flow: object = dirty_domain.view(0).semen_flow
     if isinstance(flow, list) and flow == []:
@@ -1142,8 +1140,7 @@ def check_pregnancy_belly_talent() -> list[CheckFailure]:
         校验素质26孕肚成立当且仅当角色处于21妊娠或22临盆（进入妊娠时授予、分娩时移除）。
         debug面板可单独改素质造成失步，debug模式下跳过，故为warning
     """
-    cache = cache_control.cache
-    if cache is not None and modes.debug():
+    if modes.debug():
         return []
     failures = []
     for cid, chara in _iter_charas():
@@ -1399,8 +1396,7 @@ def check_mechanical_pregnancy() -> list[CheckFailure]:
         （受精入口对无模组机械体显式拦截并清零受精率，无正常产生路径）。
         素质171可能被通用素质开关授予后又关掉，构成合法误报，且debug存档常见，故为warning且debug模式跳过
     """
-    cache = cache_control.cache
-    if cache is not None and modes.debug():
+    if modes.debug():
         return []
     failures = []
     for cid, chara in _iter_charas():

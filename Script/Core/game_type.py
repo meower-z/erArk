@@ -1,9 +1,9 @@
-"""游戏运行中使用的各类数据结构体定义(角色、地图、存档缓存、结算变化等)"""
+"""游戏运行中使用的各类数据结构体定义（角色模板、地图、结算变化、设置等）"""
 
 from Script.Core.num import Num
 import uuid
 from uuid import UUID
-from typing import TYPE_CHECKING, Any
+from typing import Any
 import datetime
 
 
@@ -1428,37 +1428,6 @@ class Scene:
         """ 场景图片 """
 
 
-class Rhodes_Island:
-    """罗德岛相关属性"""
-
-    def __init__(self) -> None:
-        """初始化罗德岛相关属性对象"""
-
-        # 控制中枢
-
-        # 仓储区
-
-        # 生活娱乐区
-
-        # 医疗部
-
-        # 训练场
-
-        # 贸易区
-
-        # 访客区
-
-        # 教育区
-
-        # 疗养庭院
-
-        # 大浴场
-
-        # 甲板
-
-        # 关押区
-
-
 class Country:
     """大地图国家数据"""
 
@@ -1522,38 +1491,6 @@ class Ai_Setting:
         """ 是否开启ai聊天翻译功能，0不开启，1仅翻译地文，2翻译地文和口上 """
         self.send_data_flags: dict[int, bool] = {}
         """ 记录向AI发送哪些数据 """
-
-
-class Character:
-    """旧存档里的角色对象，供版本 24 之前的存档反序列化与读档时临时占位，各领域随后将其属性导入 GameState"""
-
-
-class Cache:
-    """游戏缓存数据结构体"""
-
-    if not TYPE_CHECKING:
-
-        def __getattr__(self, name: str) -> Any:
-            """
-            实例上没有的属性：玩家选择的草稿里，游戏缓存（cache_control.cache）交给 draft.fetch 复制原物；
-            其余情况与以 __ 开头的名字报 AttributeError
-            Keyword arguments:
-            name -- 属性名
-            """
-            if name.startswith("__"):
-                raise AttributeError(name)
-            from Script.Modules.gameplay_resolution import draft
-
-            return draft.fetch(self, name)
-
-    def __init__(self) -> None:
-        """初始化游戏缓存数据对象"""
-        # self.clothing_type_data: dict = {}
-        # """ 存储服装类型数据 """
-        # self.wear_item_type_data: dict = {}
-        # """ 可穿戴道具类型数据 """
-        # self.system_setting: Dict[int, int] = {}
-        # """ 系统设定，见System_Setting.csv """
 
 
 class TargetChange:

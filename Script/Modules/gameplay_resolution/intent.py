@@ -1,9 +1,9 @@
 """
 gameplay_resolution 的行动意图（Intent）
-=======================================
+========================================
 一个角色选出的行动在内核里是 core.Action：action_id 是行动的种类 gameplay_resolution.<kind>，
 duration 是流逝的分钟数，action_data 是这里的 Intent，只含 JSON 值。
-选行动只读不写；Intent 记下开始时要做的事，行动开始时（starts.behave）照着写进缓存。
+选行动只读不写；Intent 记下开始时要做的事，行动开始时（starts.behave）照着写进游戏状态。
 behavior_action 是造这种 Action 的唯一入口。
 """
 
@@ -50,12 +50,10 @@ class Intent(TypedDict):
     """ 来自计划队列：开始时弹出队首 """
     judge: NotRequired[str]
     """ 玩家指令的判定名（instuct_judege.calculation_instuct_judege 的 instruct_name），开始门检查 """
-    draft: NotRequired[list[core.JSON]]
-    """ 选择时写下的草稿（draft.Change 的列表），开始时在 begin 之前写入；判定没过时不写 """
     interrupts: NotRequired[list[str]]
     """ 选择时排下打断的角色键，开始时在 begin 之前重新排上；判定没过时不排 """
     effects: NotRequired[list[core.JSON]]
-    """ 选择时写 GameState 数据的写入（working.close_pick 交回的），开始时在草稿之前放进这一步。判定没过时不放 """
+    """ 选择时对 GameState 的写入（working.close_pick 交回），开始时在 begin 前放进本步；判定未过时不放 """
 
 
 def behavior_action(

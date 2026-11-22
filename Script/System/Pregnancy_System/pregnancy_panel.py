@@ -2,14 +2,7 @@
 
 import datetime
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-    py_cmd,
-)
+from Script.Core import get_text, flow_handle, constant, py_cmd
 from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
 from Script.Design import game_time
@@ -19,8 +12,6 @@ from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
 from Script.Modules.domains import abilities, pregnancy, roster, relations
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

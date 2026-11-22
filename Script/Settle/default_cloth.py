@@ -4,7 +4,7 @@ import datetime
 from types import FunctionType
 from Script.Design import attr_calculation, clothing, handle_premise
 from Script.Design import map_handle, settle_behavior
-from Script.Core import cache_control, constant_effect, game_type, get_text
+from Script.Core import constant_effect, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import activity, dirty, identity, scene_state
 from Script.UI.Moudle import draw
@@ -14,8 +14,6 @@ _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -672,7 +670,7 @@ def handle_shower_locker_to_wear(
     """
     if not add_time:
         return
-    # 从缓存中获取角色数据
+    # 读取角色洗浴衣柜中的衣物并逐项穿回
 
     # 遍历游戏配置中的所有服装类型
     for clothing_type in game_config.config_clothing_type:
@@ -790,7 +788,7 @@ def handle_shower_locker_to_dormitory_locker(
     """
     if not add_time:
         return
-    # 从缓存中获取角色数据
+    # 将洗浴衣柜中的衣物转存至宿舍衣柜并清空洗浴衣柜
 
     # 同居助理的宿舍地址即博士房间，所以她在博士房间洗澡后，衣服同样转进这份宿舍衣柜，
     # 次日在博士房间起床时再由效果649穿回，与普通角色完全一致

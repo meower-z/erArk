@@ -2,7 +2,7 @@
 
 import datetime
 from types import FunctionType
-from Script.Core import cache_control, constant, constant_promise, game_type
+from Script.Core import constant, constant_promise
 from Script.Core import get_text
 from Script.Design import map_handle, game_time, attr_calculation
 from Script.Design import child_stage_gate
@@ -16,8 +16,6 @@ from Script.Modules.domains import player_ability, player_collection, pregnancy
 from Script.Modules.domains import npc_template, relations, status, visitor
 from Script.Modules.domains import identity, scene_state
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -1384,7 +1382,7 @@ def handle_self_have_public_course(character_id: int) -> int:
 def handle_self_birthday_today(character_id: int) -> int:
     """
     校验今天是自己的生日：出生日的月、日与今天相同（Plan 31 §3.14 L13，通用 3「今天是{Name}的生日」用）
-    读 pregnancy.born_time，与 cache.game_time 比月、日；出生日在游戏日历上，每年都有这一天。
+    读 pregnancy.born_time，与 game_time.now() 比月、日；出生日在游戏日历上，每年都有这一天。
        born_time 还是缺省值（公元 1 年）的角色不是在岛上出生的，没有可认的出生日，按不成立判。只读
     Keyword arguments:
     character_id -- 角色id

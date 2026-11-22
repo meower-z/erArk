@@ -5,21 +5,17 @@
 import datetime
 from types import FunctionType
 from Script.Core import (
-    cache_control,
     get_text,
     save_handle,
     text_handle,
     constant,
     flow_handle,
-    game_type,
     py_cmd,
 )
 from Script.Config import normal_config
-from Script.Modules.save_load import index, kernel_state
+from Script.Modules.save_load import index
 from Script.UI.Moudle import panel, draw, view
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 window_width = normal_config.config_normal.text_width
@@ -297,10 +293,10 @@ class SaveInfoDraw:
             elif yrn == back_draw.return_text:
                 return
         # 在游戏里读档成功时，读档中止玩家这次选行动，不回到这里。在标题画面读档成功时回到这里，存档列表随之退出
-        # 存档被拒绝（kernel_state.SaveRefused）时回到这里，显示原因，留在存档列表
+        # 存档被拒绝（index.SaveRefused）时回到这里，显示原因，留在存档列表
         try:
             save_handle.input_load_save(str(self.text))
-        except kernel_state.SaveRefused as refused:
+        except index.SaveRefused as refused:
             refused_draw = draw.WaitDraw()
             refused_draw.text = _("\n读档被拒绝：{reason}\n").format(
                 reason=refused

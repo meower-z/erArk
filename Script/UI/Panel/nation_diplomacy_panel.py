@@ -1,7 +1,7 @@
 """势力外交界面面板，以及外交方针与各国感染率的结算"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, flow_handle
+from Script.Core import game_type, get_text, flow_handle
 from Script.Core import constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
@@ -14,8 +14,6 @@ from Script.Modules.domains import flags, location, medical, roster, chara_life
 from Script.Modules.domains import relations
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

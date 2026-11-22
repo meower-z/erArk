@@ -5,7 +5,7 @@
 
 import random
 from types import FunctionType
-from Script.Core import get_text, constant, game_type, cache_control
+from Script.Core import get_text, constant
 from Script.Core import flow_handle, py_cmd, io_init
 from Script.Design import handle_panel, character, character_handle
 from Script.Design import attr_calculation, basement, game_time
@@ -21,8 +21,6 @@ from Script.Modules.domains.playthrough import FIRST_BONUS, WORLD
 from Script.Modules.domains import chara_key, chara_profile, relations
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 width = normal_config.config_normal.text_width
@@ -1322,7 +1320,7 @@ class World_Setting:
     世界设定面板
     Keyword arguments:
     width -- 最大宽度
-    settings -- 面板选择写入的世界设定（设定id -> 是否选择），默认是缓存里的
+    settings -- 面板选择写入的世界设定（设定id -> 是否选择），默认取 playthrough.settings(WORLD)
     """
 
     def __init__(

@@ -5,14 +5,7 @@ from __future__ import annotations
 import time
 from typing import Protocol
 
-from Script.Core import (
-    text_handle,
-    io_init,
-    py_cmd,
-    flow_handle,
-    cache_control,
-    game_type,
-)
+from Script.Core import text_handle, io_init, py_cmd, flow_handle
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
@@ -23,8 +16,6 @@ if TYPE_CHECKING:
 
 bar_list = set(game_config.config_bar_data.keys())
 chara_list = set(game_config.config_image_data.keys())
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """

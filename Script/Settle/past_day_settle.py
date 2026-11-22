@@ -2,12 +2,7 @@
 
 import random
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_path_config,
-    game_type,
-    get_text,
-)
+from Script.Core import game_path_config, get_text
 from Script.Design import (
     game_time,
     handle_premise,
@@ -22,8 +17,6 @@ from Script.Modules.domains import pregnancy, roster, tallies, relations
 from Script.Modules.domains import identity
 
 game_path = game_path_config.game_path
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width

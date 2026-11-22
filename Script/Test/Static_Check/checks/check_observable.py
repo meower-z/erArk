@@ -2,12 +2,12 @@
 """
 静态检查系统 - 可观察矛盾检查
 
-本模块实现 OBS 组的14条不变量检查（OBS-01 ~ OBS-09、OBS-12、OBS-13、OBS-16 ~ OBS-18），覆盖玩家可直接从指令面板、
-角色标签、身体面板、位置面板与助理设置中观察到的状态矛盾。
+本模块实现 OBS 组的14条不变量检查（OBS-01 ~ OBS-09、OBS-12、OBS-13、OBS-16 ~ OBS-18），
+覆盖玩家可直接从指令面板、角色标签、身体面板、位置面板与助理设置中观察到的状态矛盾。
 
 全流水线实现总则：
 1. 禁止调用 Script/Design/handle_premise 中的正式前提函数。这些函数可能升级旧档结构、补写指令过滤键，
-   或通过 setdefault 修改存档。本模块直读 cache 的字段，经领域模块的读函数读 GameState 里的数据。
+   或通过 setdefault 修改存档。本模块经领域模块的读函数读 GameState 里的数据。
    地图路径与睡眠等级用已确认无副作用的派生函数算出。
 2. 每回合执行，角色检查保持单层 O(N) 遍历；配置表和场景路径等共享查表放在循环外。
 3. 每条检查的文档字符串都说明健康存档为何恒不命中；无法给出该理由的候选不进入本模块。
@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from Script.Core import cache_control, constant, num
+from Script.Core import constant, num
 from Script.Design import attr_calculation, map_handle
 from Script.Modules.domains import (
     abilities,
@@ -65,33 +65,30 @@ _BATH_BEHAVIOR_TAGS = {
 }
 
 
-def _character_data(cache: game_type.Cache) -> identity.Table | None:
+def _character_data() -> identity.Table | None:
     """
-    参数: cache 全局缓存对象
-    返回值: identity.Table | None 角色身份表只读视图，cache 为 None 时返回 None
-    功能: 统一读取角色身份表（identity.table()），在 cache 未初始化时返回 None。
+    返回值: identity.Table | None 角色身份表只读视图
+    功能: 统一读取角色身份表（identity.table()）。
     """
-    return identity.table() if cache is not None else None
+    return identity.table()
 
 
-def _pl(cache: game_type.Cache) -> identity.Identity | None:
+def _pl() -> identity.Identity | None:
     """
-    参数: cache 全局缓存对象
     返回值: 玩家角色对象；角色字典未初始化或缺少 cid=0 时返回 None
     功能: 统一取得玩家对象。
     """
-    data = _character_data(cache)
+    data = _character_data()
     return data.get(0) if data is not None else None
 
 
-def _iter_npcs(cache: game_type.Cache) -> Iterator[tuple[int, object]]:
+def _iter_npcs() -> Iterator[tuple[int, object]]:
     """
-    参数: cache 全局缓存对象
     返回值: Iterator[Tuple[int, object]]，依次产出已获得且存在的非玩家角色
     功能: 以 npc_id_got 为域做单层遍历，并保护角色字典中的悬空 id。
     """
-    data = _character_data(cache)
-    got = roster.active() if cache is not None else None
+    data = _character_data()
+    got = roster.active()
     if data is None or not got:
         return
     for cid in got:
@@ -99,16 +96,15 @@ def _iter_npcs(cache: game_type.Cache) -> Iterator[tuple[int, object]]:
             yield cid, data[cid]
 
 
-def _iter_live(cache: game_type.Cache) -> Iterator[tuple[int, object]]:
+def _iter_live() -> Iterator[tuple[int, object]]:
     """
-    参数: cache 全局缓存对象
     返回值: Iterator[Tuple[int, object]]，依次产出玩家和已获得 NPC
     功能: 为检查域是 npc_id_got∪{0} 的条目提供统一遍历。
     """
-    pl = _pl(cache)
+    pl = _pl()
     if pl is not None:
         yield 0, pl
-    yield from _iter_npcs(cache)
+    yield from _iter_npcs()
 
 
 def _name(chara: object) -> str:
@@ -141,13 +137,12 @@ def _fully_out_of_h(chara: object) -> bool:
     )
 
 
-def _scene(cache: game_type.Cache, position: object) -> game_type.Scene | None:
+def _scene(position: object) -> game_type.Scene | None:
     """
-    参数: cache 全局缓存对象；position 期望为字符串列表
     返回值: 对应场景对象；路径或场景结构异常时返回 None
     功能: 使用游戏路径助手防御式解析角色当前位置。
     """
-    scene_data = constant.scene_data if cache is not None else None
+    scene_data = constant.scene_data
     if (
         not isinstance(scene_data, dict)
         or not isinstance(position, list)
@@ -215,14 +210,13 @@ def check_observable_01() -> list[CheckFailure]:
     功能: 玩家完全退出普通H且不在隐奸/群交/时停时，同场 NPC 的 is_h 应已由结束链清零；
     健康存档的结束链对象一致，因此恒不命中。
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None or modes.debug() or modes.time_stop() or modes.group_sex():
         return []
     if flags.get(0, "is_h") or flags.get(0, "hidden_sex_mode") != 0:
         return []
     bad = []
-    for cid, _chara in _iter_npcs(cache):
+    for cid, _chara in _iter_npcs():
         if activity.position(cid) == activity.position(pl.cid) and flags.get(
             cid, "is_h"
         ):
@@ -257,8 +251,7 @@ def check_observable_02() -> list[CheckFailure]:
     返回值: List[CheckFailure]，玩家体位与场内插入状态一致时为空
     功能: 校验玩家独占体位字段与场内 NPC 插入位置相互支撑；健康存档的体位切换与拔出链同步维护两侧字段，因此恒不命中。
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None or modes.debug() or modes.time_stop():
         return []
     hs = _hs(pl)
@@ -268,7 +261,7 @@ def check_observable_02() -> list[CheckFailure]:
     womb_position = getattr(hs, "current_womb_sex_position", None)
     insertions = []
     h_in_scene = []
-    for cid, chara in _iter_npcs(cache):
+    for cid, chara in _iter_npcs():
         if activity.position(cid) != activity.position(pl.cid):
             continue
         pos = getattr(_hs(chara), "insert_position", None)
@@ -327,11 +320,10 @@ def check_observable_03() -> list[CheckFailure]:
     返回值: List[CheckFailure]，没有非H口球残留时为空
     功能: 检查完全脱离 H 的角色 body_item[14] 未仍处于装备状态；健康存档应在 H 重置时移除 H 装备，所以恒不命中。
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     bad = []
-    for cid, chara in _iter_live(cache):
+    for cid, chara in _iter_live():
         if not _fully_out_of_h(chara):
             continue
         items = getattr(_hs(chara), "body_item", None)
@@ -357,8 +349,7 @@ def check_observable_04() -> list[CheckFailure]:
     返回值: List[CheckFailure]，技艺开关均有基础素质支撑时为空
     功能: 校验透视/信息素开关与其关闭指令所需基础素质一致；健康存档只能经持有素质的开启指令置位，所以恒不命中。
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
+    pl = _pl()
     if pl is None or modes.debug():
         return []
     talent = abilities.talent(pl.cid)
@@ -389,9 +380,8 @@ def check_observable_05() -> list[CheckFailure]:
     功能: 校验指令面板轴心 target 与场景名册一致；
     交互对象是玩家自己或玩家正装袋搬运的角色时不报，debug 模式下也不报。
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
-    data = _character_data(cache)
+    pl = _pl()
+    data = _character_data()
     if pl is None or data is None or modes.debug():
         return []
     target_id = activity.target(pl.cid)
@@ -403,7 +393,7 @@ def check_observable_05() -> list[CheckFailure]:
         or target_id == flags.get(0, "bagging_chara_id")
     ):
         return []
-    scene = _scene(cache, activity.position(pl.cid))
+    scene = _scene(activity.position(pl.cid))
     roster = (
         scene_state.occupants(scene.scene_path) if scene is not None else None
     )
@@ -434,12 +424,11 @@ def check_observable_06() -> list[CheckFailure]:
     返回值: List[CheckFailure]，隐奸与露出模式互斥时为空
     功能: 检查同一角色的两种 H 分流模式不会同时大于零；健康存档的入口与结束链应保持模式互斥，因此恒不命中。
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug():
+    if modes.debug():
         return []
     bad = []
     details = []
-    for cid, chara in _iter_live(cache):
+    for cid, chara in _iter_live():
         hidden = flags.get(cid, "hidden_sex_mode")
         exhibitionism = flags.get(cid, "exhibitionism_sex_mode")
         if (
@@ -473,8 +462,7 @@ def check_observable_07() -> list[CheckFailure]:
     功能: 校验群交调教现场有非零监狱长，且 sex_assist 只落在该监狱长身上；
     健康存档的助手结算应只写当前监狱长，因此恒不命中。
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug() or modes.time_stop():
+    if modes.debug() or modes.time_stop():
         return []
     settings = prison.settings()
     warden = work.warden()
@@ -489,7 +477,7 @@ def check_observable_07() -> list[CheckFailure]:
             "群交现场已开启调教助手设置但没有监狱长(work.warden()=0)，结算会把玩家当助手"
         )
         bad_ids.append(0)
-    data = _character_data(cache)
+    data = _character_data()
     for cid, chara in data.items() if data is not None else ():
         if getattr(_hs(chara), "sex_assist", False) is True and (
             warden == 0 or cid != warden
@@ -517,12 +505,11 @@ def check_observable_08() -> list[CheckFailure]:
     返回值: List[CheckFailure]，醉酒型无意识 H（unconscious_h=2）的角色的醉酒值都大于 0 时为空
     功能: 报出 unconscious_h=2 而醉酒值（needs.of(cid)["drunk"]）<=0 的角色。debug 模式与时停中不检查。
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug() or modes.time_stop():
+    if modes.debug() or modes.time_stop():
         return []
     bad = []
     details = []
-    for cid, chara in _iter_live(cache):
+    for cid, chara in _iter_live():
         drunk_point = needs.of(cid)["drunk"]
         if flags.get(cid, "unconscious_h") == 2 and drunk_point <= 0:
             bad.append(cid)
@@ -548,11 +535,10 @@ def check_observable_09() -> list[CheckFailure]:
     返回值: List[CheckFailure]，非群交快照中至多一名 NPC 有插入位置时为空
     功能: 校验玩家单一阴茎不会在普通 H 中同时记录插入多名 NPC；健康存档换位与拔出链会清旧对象，所以恒不命中。
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug() or modes.time_stop() or modes.group_sex():
+    if modes.debug() or modes.time_stop() or modes.group_sex():
         return []
     bad = []
-    for cid, chara in _iter_npcs(cache):
+    for cid, chara in _iter_npcs():
         pos = getattr(_hs(chara), "insert_position", -1)
         if isinstance(pos, int) and not isinstance(pos, bool) and pos != -1:
             bad.append(cid)
@@ -592,9 +578,8 @@ def check_observable_12() -> list[CheckFailure]:
     功能: 检查服务2开启后，非疲劳、非困倦、无生理意图、非H的空闲在线助理不会丢失跟随；
     健康存档的服务承诺应维持 is_follow=1，因此恒不命中。
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
-    data = _character_data(cache)
+    pl = _pl()
+    data = _character_data()
     if pl is None or data is None or modes.debug() or modes.time_stop():
         return []
     assistant_id = relations.assistant_character_id(0)
@@ -672,9 +657,8 @@ def check_observable_13() -> list[CheckFailure]:
     返回值: List[CheckFailure]，只有当前助理持有已实装服务位时为空
     功能: 全量检查非玩家、非当前助理角色的已实装服务位均归零；健康存档在替换或取消助理时会清旧服务，因此恒不命中。
     """
-    cache = cache_control.cache
-    pl = _pl(cache)
-    data = _character_data(cache)
+    pl = _pl()
+    data = _character_data()
     if pl is None or data is None:
         return []
     assistant_id = relations.assistant_character_id(0)
@@ -716,12 +700,11 @@ def check_observable_16() -> list[CheckFailure]:
     功能: 校验 NPC 当前洗浴/游泳行为与场景标签匹配；
     健康存档只会在带目标设施前提的状态机中启动行为，移动又会替换行为，因此恒不命中。
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug() or modes.time_stop():
+    if modes.debug() or modes.time_stop():
         return []
     bad = []
     details = []
-    for cid, chara in _iter_npcs(cache):
+    for cid, chara in _iter_npcs():
         behavior_id = activity.behavior(cid).behavior_id
         expected = (
             _BATH_BEHAVIOR_TAGS.get(behavior_id)
@@ -730,7 +713,7 @@ def check_observable_16() -> list[CheckFailure]:
         )
         if expected is None:
             continue
-        scene = _scene(cache, activity.position(cid))
+        scene = _scene(activity.position(cid))
         tags = getattr(scene, "scene_tag", None) if scene is not None else None
         if not isinstance(tags, (list, set, tuple)):
             continue
@@ -760,12 +743,11 @@ def check_observable_17() -> list[CheckFailure]:
     功能: 检查位置面板可见的移动行为拥有最终目的地；
     健康存档的寻路提交会同步填写该字段，抵达或取消时会退出移动行为，因此恒不命中。
     """
-    cache = cache_control.cache
-    if cache is None or modes.debug() or modes.time_stop():
+    if modes.debug() or modes.time_stop():
         return []
     bad = []
     details = []
-    for cid, chara in _iter_npcs(cache):
+    for cid, chara in _iter_npcs():
         behavior = activity.behavior(cid)
         if (
             getattr(behavior, "behavior_id", None) == constant.Behavior.MOVE
@@ -799,8 +781,7 @@ def check_observable_18() -> list[CheckFailure]:
     功能: 防止 realtime_settle 以非法绳缚键直接索引 config_bondage 崩溃；
     健康存档只由绳缚面板写配置表中的合法键，因此恒不命中。
     """
-    cache = cache_control.cache
-    data = _character_data(cache)
+    data = _character_data()
     bondage_config = (
         getattr(game_config, "config_bondage", None)
         if game_config is not None

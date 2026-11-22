@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import datetime
 
-from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import game_time
 from Script.Modules.domains import (
@@ -35,17 +34,11 @@ from Script.Modules.domains import (
 from Script.Modules.domains import history, modes, roster
 from ..check_registry import CheckFailure, register_check, make_failure
 
-from typing import TYPE_CHECKING
 from Script.Modules.domains import identity
 
-if TYPE_CHECKING:
-    from Script.Core import game_type
 
-
-def _live_ids(cache: game_type.Cache) -> set:
+def _live_ids() -> set:
     """
-    参数:
-        cache -- 全局缓存对象
     返回值:
         set -- 只遍历确实存在的角色id集合
     功能:
@@ -110,11 +103,10 @@ def check_character_dict_key_matches_cid() -> list[CheckFailure]:
         校验身份表（identity.table()）的键与对应 Identity 的 cid 一致。
         调度器按 0 与在编名单里的 id 查找角色身份，键与 cid 不一致会让按 id 定位的结算写错角色
     """
-    cache = cache_control.cache
     character_data = identity.table()
     npc_id_got = roster.active()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None:
             continue
@@ -259,10 +251,9 @@ def check_behavior_core_field_types() -> list[CheckFailure]:
         behavior对象，老存档里behavior_id可能还是int，类型损坏必须先于时间运算被识别。本条失败时，
         BEHAV-10/11/12/22对同一角色跳过判定，避免时间比较抛异常被框架记成"检查器自身异常"而丢掉本该有的诊断
     """
-    cache = cache_control.cache
     character_data = identity.table()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None or _behavior_type_ok(chara):
             continue
@@ -296,13 +287,12 @@ def check_behavior_id_registered() -> list[CheckFailure]:
         生产代码的直接下标必KeyError。旧存档携带已删除行为id会触发——那属于应当迁移处理的真问题，不加豁免。
         若config_behavior配表本身未加载(空)，视为独立跑本模块之类的场景，降级为跳过本条
     """
-    cache = cache_control.cache
     config_behavior = getattr(game_config, "config_behavior", None)
     if not config_behavior:
         return []
     character_data = identity.table()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None:
             continue
@@ -335,10 +325,9 @@ def check_behavior_duration_non_negative_int() -> list[CheckFailure]:
         未被钳制(助理同居睡眠duration = min_to_wake_time - 10没有下限)。不设上界：1440是经验值而非程序约束，
         睡眠时长由运行时算出；0是合法值(Behavior()默认、H中add_time==0的分支)
     """
-    cache = cache_control.cache
     character_data = identity.table()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None:
             continue
@@ -372,11 +361,10 @@ def check_behavior_start_time_not_sentinel() -> list[CheckFailure]:
         玩家起时，钩子处仍见哨兵即意味着该角色被跳过。新开局不会误伤：角色初始化与新上线访客都会显式写入起时。
         字段类型损坏(BEHAV-07已报告)的角色本条跳过判定，避免时间比较异常
     """
-    cache = cache_control.cache
     character_data = identity.table()
     sentinel = datetime.datetime(1, 1, 1)
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None or not _behavior_type_ok(chara):
             continue
@@ -411,13 +399,12 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
         时停模式下整条跳过(不能只跳过玩家)：装袋释放/投监两条路径会在时停期间把NPC的start_time写成回退前的
         推进后时刻，随后主循环回退全局时钟，该NPC合法领先
     """
-    cache = cache_control.cache
     if modes.time_stop():
         return []
     character_data = identity.table()
     game_t = game_time.now()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None or not _behavior_type_ok(chara):
             continue
@@ -459,14 +446,13 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
         start_time==game_time-5走到钩子，此时END==game_time恰好是合法边界。H中角色豁免、时停整条跳过；
         duration<=0被过滤：完成分支会把behavior重置为duration=0，属于合法终态
     """
-    cache = cache_control.cache
     if modes.time_stop():
         return []
     character_data = identity.table()
     game_t = game_time.now()
     group_sex_mode = modes.group_sex()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None or not _behavior_type_ok(chara):
             continue
@@ -523,10 +509,9 @@ def check_move_behavior_has_executable_path() -> list[CheckFailure]:
         judge_same_position_npc_follow提交move时完全不写state，跟随者会带着state==0通过钩子。
         duration>0对H角色豁免：寻路失败时非H角色会被重置后重跑，H角色可能被H捷径保留
     """
-    cache = cache_control.cache
     character_data = identity.table()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None:
             continue
@@ -601,10 +586,9 @@ def check_interacting_character_end_info_valid() -> list[CheckFailure]:
         要么是哨兵-1，要么指向身份表（identity.characters）中存在的角色。旧存档id重映射可能让这个字段失效，
         报出的悬空id是迁移缺陷信号，不加豁免。与CORE-02不重复：CORE-02查的是activity.target
     """
-    cache = cache_control.cache
     character_data = identity.table()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None:
             continue
@@ -645,12 +629,11 @@ def check_active_body_item_not_expired() -> list[CheckFailure]:
         时停模式下只查玩家：NPC本轮完全未结算持续状态。比较用严格>：生产用judge_date_big_or_small判到期，
         相等返回2(真)，即item[2]<=game_time才算过期
     """
-    cache = cache_control.cache
     character_data = identity.table()
     time_stop = modes.time_stop()
     game_t = game_time.now()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         if time_stop and cid != 0:
             continue
         chara = character_data.get(cid)
@@ -703,11 +686,10 @@ def check_second_behavior_values_and_pending_ids() -> list[CheckFailure]:
         不要求钩子处所有值都为0(可以在结算之外置1，残留的1是合法中间态)。只查取值类型，不查键类型：
         旧存档可能带int键。配表未加载时，待结算id合法性部分降级为跳过
     """
-    cache = cache_control.cache
     character_data = identity.table()
     config_effect = getattr(game_config, "config_behavior_effect_data", None)
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None:
             continue
@@ -769,10 +751,9 @@ def check_last_behavior_id_list_bounded() -> list[CheckFailure]:
         缩短1项，会连续多个合法回合告警。不加x in game_config.config_behavior成员校验(旧存档必然噪声)；
         不并入全局键 log.instructions 的 recent(它没有任何读档裁剪路径)
     """
-    cache = cache_control.cache
     character_data = identity.table()
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None:
             continue
@@ -812,7 +793,6 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
         的双向一致性，时停期间角色上线有多个入口，只有装袋释放/投监两条显式补写3，其他入口直接重置sp_flag，
         NPC侧差异只适合另做告警
     """
-    cache = cache_control.cache
     if not modes.time_stop():
         return []
     character_data = identity.table()
@@ -823,7 +803,7 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
     if u == 3:
         return []
     unconscious_npcs = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         other = character_data.get(cid)
         if other is not None and flags.get(cid, "unconscious_h") == 3:
             unconscious_npcs.append(cid)
@@ -858,7 +838,6 @@ def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
         结算效果，能结束群交的行为是否都挂了该效果并无逐条保证，可能存在合法但暂时不同步的窗口。隐奸把玩家
         is_h清零的路径用的是hidden_sex_mode而非group_sex_mode，不构成本条反例
     """
-    cache = cache_control.cache
     if not modes.group_sex():
         return []
     character_data = identity.table()
@@ -868,7 +847,7 @@ def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
     if flags.get(0, "is_h"):
         return []
     h_npcs = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         other = character_data.get(cid)
         if other is not None and flags.get(cid, "is_h"):
             h_npcs.append(cid)
@@ -899,11 +878,10 @@ def check_behavior_start_time_seasonal_month() -> list[CheckFailure]:
         以免与BEHAV-10双重报警。级别为warning：保留的价值在于旧存档迁移会原样复制整个behavior对象，是唯一可能
         带进历史月份的通道，读档后、任何一次结算之前的窗口内触发属于迁移问题而非运行期缺陷
     """
-    cache = cache_control.cache
     character_data = identity.table()
     sentinel = datetime.datetime(1, 1, 1)
     failures = []
-    for cid in _live_ids(cache):
+    for cid in _live_ids():
         chara = character_data.get(cid)
         if chara is None or not _behavior_type_ok(chara):
             continue

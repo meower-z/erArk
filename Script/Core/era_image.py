@@ -5,14 +5,12 @@ import threading
 import time
 from PIL.ImageTk import PhotoImage
 from PIL import Image
-from Script.Core import game_type, cache_control, image_path_index
+from Script.Core import image_path_index
 
 image_path_data: dict[str, str] = {}  # 图片路径数据
 image_data_index_by_chara: dict[str, list[str]] = {}
 image_text_data: dict[str, str] = {}
 image_lock = 0
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 image_dir_path = os.path.join("image")
 
 _font_scaling = None

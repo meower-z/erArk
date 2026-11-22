@@ -11,17 +11,11 @@ import ephem
 from types import FunctionType
 from typing import overload
 from dateutil import relativedelta
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-)
+from Script.Core import get_text
 from Script.Config import game_config
 from Script.Kernel import core
 from Script.Modules.domains import activity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 gatech = ephem.Observer()

@@ -5,13 +5,11 @@ import re
 from types import FunctionType
 from collections import defaultdict
 
-from Script.Core import cache_control, game_type, constant, get_text
+from Script.Core import constant, get_text
 from Script.Config import game_config
 from Script.Modules.domains import facility, inventory, roster, visitor
 from Script.Modules.domains import chara_life, identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

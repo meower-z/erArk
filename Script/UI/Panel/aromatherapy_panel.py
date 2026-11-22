@@ -1,13 +1,7 @@
 """香薰疗愈面板与香薰疗愈次数的结算"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
@@ -15,8 +9,6 @@ from Script.Modules.domains import abilities, activity, facility, flags, tallies
 from Script.Modules.domains import warehouse
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

@@ -4,13 +4,11 @@
 
 from types import FunctionType
 from Script.Core import (
-    cache_control,
     text_handle,
     get_text,
     flow_handle,
     constant,
     py_cmd,
-    game_type,
     num,
 )
 from Script.UI.Moudle import panel, draw, view
@@ -25,8 +23,6 @@ from Script.Modules.domains import (
 from Script.Modules.domains import warehouse
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

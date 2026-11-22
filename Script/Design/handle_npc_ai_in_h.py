@@ -5,13 +5,7 @@ from __future__ import annotations
 import datetime
 import random
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_path_config,
-    game_type,
-    constant,
-    get_text,
-)
+from Script.Core import game_path_config, game_type, constant, get_text
 from Script.Design import (
     handle_premise,
     attr_calculation,
@@ -28,8 +22,6 @@ from Script.Modules.domains import needs, player_ability, wardrobe
 from Script.Modules.domains import identity, scene_state
 
 game_path = game_path_config.game_path
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width
@@ -350,7 +342,7 @@ def handle_unconscious_h_response(
     from Script.Modules.gameplay_resolution import plan_queue
     from Script.Settle import default, default_cloth
 
-    # 从缓存中获取自己角色数据与目标角色数据
+    # 先结束目标的无意识与H状态，再按监禁、实行值与陷落程度裁决后续分支
 
     # 停止对方的无意识状态与H状态
     flags.set(target_character_id, unconscious_h=0)
@@ -523,7 +515,7 @@ def settle_unconscious_semen_and_cloth(character_id: int) -> None:
     """
     from Script.Design import second_behavior
 
-    # 从缓存中获取角色数据
+    # 读取角色脏污视图
     d_view = dirty.view(character_id)
     # 对数据进行去重
     body_unconscious = list(set(d_view.body_semen_in_unconscious))

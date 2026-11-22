@@ -1,12 +1,10 @@
 """能力相关的前提处理函数"""
 
 from types import FunctionType
-from Script.Core import cache_control, constant_promise, game_type, get_text
+from Script.Core import constant_promise, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import abilities, activity, identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

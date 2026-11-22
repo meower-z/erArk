@@ -1,7 +1,7 @@
 """助理面板，以及助理候选、选择与替换的处理"""
 
 from types import FunctionType
-from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import constant, flow_handle
 from Script.Core import get_text, py_cmd
 from Script.Design import attr_calculation, handle_premise, map_handle
 from Script.Design import second_behavior
@@ -14,8 +14,6 @@ from Script.Config import game_config, normal_config
 import random
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

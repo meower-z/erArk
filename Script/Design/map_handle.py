@@ -2,15 +2,13 @@
 
 import os
 import json
-from Script.Core import cache_control, game_type, get_text, constant
+from Script.Core import game_type, get_text, constant
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from types import FunctionType
 from Script.Modules.domains import activity, chara_life, facility, flags
 from Script.Modules.domains import relations, identity, scene_state
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 scene_path_edge_path = os.path.join("data", "ScenePath")
 """ 寻路路径配置文件路径 """
 # 值是 [本次移动到的位置, 移动耗时] 两项列表，两项类型不同，故不写元素类型

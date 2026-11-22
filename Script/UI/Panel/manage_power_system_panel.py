@@ -5,13 +5,7 @@
 from types import FunctionType
 
 # 依赖模块，与生产线面板保持一致的导入方式
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    flow_handle,
-    constant,
-)
+from Script.Core import get_text, flow_handle, constant
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Moudle import draw, panel, view
@@ -23,7 +17,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-cache: game_type.Cache = cache_control.cache
 _: FunctionType = get_text._
 window_width: int = normal_config.config_normal.text_width
 line_feed = draw.NormalDraw()

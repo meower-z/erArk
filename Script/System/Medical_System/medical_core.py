@@ -12,7 +12,6 @@ import math
 from collections.abc import Callable
 
 from Script.Config import config_def, game_config
-from Script.Core import game_type
 from Script.Modules.domains import (
     economy,
     facility,
@@ -24,6 +23,7 @@ from Script.Modules.domains import (
 from Script.System.Medical_System import medical_constant
 from Script.Modules.domains import abilities, country
 from Script.Modules.domains import identity
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 
 def edits[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
@@ -409,11 +409,12 @@ def resolve_price_income_multiplier(price_ratio: float) -> float:
     return config[1]
 
 
-def _migrate_legacy_income(rhodes_island: game_type.Rhodes_Island) -> None:
-    """导入旧存档中的医疗收入字段。
+def _migrate_legacy_income(rhodes_island: LegacyObject) -> None:
+    """
+    导入旧存档中的医疗收入字段。
 
     参数:
-        rhodes_island (game_type.Rhodes_Island): 读档载入的旧存档罗德岛对象。
+        rhodes_island (LegacyObject): 读档载入的旧存档罗德岛对象。
     返回:
         None: 将旧存档的医疗收入写入医疗域状态，无返回值。
     """

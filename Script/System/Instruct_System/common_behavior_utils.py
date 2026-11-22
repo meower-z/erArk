@@ -1,11 +1,8 @@
 # -*- coding: UTF-8 -*-
 """获取玩家最近一条非中断H指令的behavior_id"""
 
-from Script.Core import cache_control, constant
+from Script.Core import constant
 from Script.Modules.domains import history
-
-cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 def get_last_valid_sex_behavior_id() -> str:

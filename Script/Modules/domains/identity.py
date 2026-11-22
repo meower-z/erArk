@@ -12,9 +12,9 @@ import datetime
 from collections.abc import Iterable, Iterator, Mapping
 from typing import Any, cast
 
-from Script.Core import game_type
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
+from Script.Modules.save_load.legacy_pickle import LegacyObject
 
 KEY = "identity.characters"
 """ 角色身份表在全局数据里的键 """
@@ -292,17 +292,15 @@ def adopt_old_save(loaded_dict: dict[str, Any]) -> None:
     读档时最先调用，导入旧存档的角色身份或补齐占位字典。
     loaded_dict 含字典型 character_data（版本 24 之前的存档）时，从各角色对象移除 PICKLED_TYPES 中的属性，
     并按 character_data 的键和顺序整表写入当前缓冲区。缺失或类型不符的字段取 Identity 默认值。
-    loaded_dict 不含字典型 character_data 时，保留文件 "2" 的身份表，
+    loaded_dict 不含字典型 character_data 时，保留内核状态中的身份表，
     并把 loaded_dict["character_data"] 设为按身份表顺序排列的空旧角色对象字典。
     两种情况下，调用后 loaded_dict["character_data"] 与身份表的键和顺序一致。
     Keyword arguments:
-    loaded_dict -- 存档缓存的属性表
+    loaded_dict -- 旧存档的属性表
     """
     characters = loaded_dict.get("character_data")
     if not isinstance(characters, dict):
-        loaded_dict["character_data"] = {
-            cid: game_type.Character() for cid in ids()
-        }
+        loaded_dict["character_data"] = {cid: LegacyObject() for cid in ids()}
         return
     replace_all(
         _pickled(cid, chara.__dict__) for cid, chara in characters.items()

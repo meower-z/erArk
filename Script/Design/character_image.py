@@ -4,13 +4,12 @@
 
 import itertools
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, era_image
+from Script.Core import get_text, era_image
 from Script.Config import game_config
 from Script.Design import handle_premise
 from Script.Modules.domains import relations
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache  # 游戏缓存数据
 _: FunctionType = get_text._  # 翻译api
 
 

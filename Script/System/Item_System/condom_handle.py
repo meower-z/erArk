@@ -1,11 +1,7 @@
 """避孕套的存量池与装饰：存量池的增减与清空、装饰的挂上与取回，以及饮用与挤出的结算"""
 
-from Script.Core import cache_control, game_type
 from Script.Modules.domains import dirty, flags, h_meters, h_state
 from Script.Modules.domains import player_collection
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 def get_used_condoms() -> list[int]:

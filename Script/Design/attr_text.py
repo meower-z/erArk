@@ -1,18 +1,11 @@
 """场景地址、地图地址、数值与年龄素质的显示文本"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-)
+from Script.Core import get_text
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Modules.domains import abilities
 from Script.Core import constant
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 _: FunctionType = get_text._
 """ 翻译api """

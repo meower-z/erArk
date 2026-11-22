@@ -23,14 +23,12 @@ import random
 from types import FunctionType
 from collections.abc import Callable
 
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import constant, game_type, get_text
 from Script.Config import game_config
 from Script.System.Official_Event_System import ri_value
 from Script.Design import game_time
 from Script.Modules.domains import activity, growth, official, identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

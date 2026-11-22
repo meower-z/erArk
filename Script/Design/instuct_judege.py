@@ -4,7 +4,7 @@
 
 import datetime
 from types import FunctionType
-from Script.Core import cache_control, flow_handle, game_type, get_text, num
+from Script.Core import flow_handle, get_text, num
 from Script.Core import text_handle
 from Script.Design import attr_calculation, handle_ability, handle_premise
 from Script.Design import handle_talent, map_handle
@@ -15,8 +15,6 @@ from Script.Modules.domains import modes, scene_state
 from Script.Modules.domains import entertainment, flags, h_state, needs
 from Script.Modules.domains import player_ability, relations, status
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

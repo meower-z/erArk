@@ -1,9 +1,11 @@
 """
 save_load 的 Reset 步骤
-======================
-换掉整个 GameState（读档、新周目、新游戏）时要做的修补、初始化与投影，按 STEPS 的顺序在 kernel.Reset 的输入钩子里运行。
+=======================
+换掉整个 GameState（读档、新周目、新游戏）时要做的修补、初始化与投影，
+按 STEPS 的顺序在 kernel.Reset 的输入钩子里运行。
 这时 core.state() 与 game_time.now() 已是换入的 GameState 与它的时钟。
-每一步只在 why["cause"] 属于它的 causes 时运行，可以写缓存，返回交给下一步的 GameState。
+每一步只在 why["cause"] 属于它的 causes 时运行，经 working 缓冲区写游戏状态，
+返回交给下一步的 GameState。
 读档时另跑一次各模块用 repair 登记的旧存档修补（面板打开时只读，旧存档的修补放在这里）。
 本模块排在 LOAD_ORDER 的最后，它的输入钩子最先运行。本模块不登记行动、事件或规则。
 """
@@ -23,7 +25,8 @@ _repairs: list[Repair] = []
 
 def repair(fn: Repair) -> Repair:
     """
-    装饰器：登记一个旧存档修补，读档时（装好缓存之后）每次 Reset 运行一次；它只写缓存
+    装饰器：登记一个旧存档修补，读档时（完成存档导入与投影之后）每次 Reset 运行一次，
+    经 working 缓冲区写游戏状态
     Keyword arguments:
     fn -- 修补函数
     Return arguments:
@@ -42,13 +45,13 @@ class ResetStep:
     causes: frozenset[str]
     """ 运行这一步的 why["cause"] """
     run: Step
-    """ 这一步：读换入的 GameState 与 why，可以写缓存，返回下一步的 GameState """
+    """ 这一步：读换入的 GameState 与 why，可经 working 写游戏状态，返回下一步的 GameState """
 
 
 def _install_save(
     new: core.GameState, why: Mapping[str, core.JSON]
 ) -> core.GameState:
-    """存档的缓存装进游戏缓存"""
+    """调用 save_handle.install_save 导入存档数据并执行读档迁移"""
     from Script.Core import save_handle
 
     version = why.get("version", 0)

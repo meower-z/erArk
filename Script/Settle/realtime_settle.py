@@ -6,14 +6,7 @@ import functools
 from fractions import Fraction
 from types import FunctionType
 from typing import TYPE_CHECKING
-from Script.Core import (
-    cache_control,
-    game_path_config,
-    game_type,
-    constant,
-    get_text,
-    num,
-)
+from Script.Core import game_path_config, constant, get_text, num
 from Script.Design import (
     basement,
     game_time,
@@ -34,8 +27,6 @@ if TYPE_CHECKING:
     from Script.Kernel import core
 
 game_path = game_path_config.game_path
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width

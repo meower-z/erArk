@@ -14,14 +14,10 @@
    遍历的 roster.active() 是 set，直接用会让每次排课结果都不同。
 """
 
-from Script.Core import cache_control, game_type
 from Script.Design import game_time
 from Script.System.Education_System import education_constant, schedule_handle
 from Script.Modules.domains import abilities
 from Script.Modules.domains import identity
-
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 
 
 def get_auto_subject_list() -> list[int]:

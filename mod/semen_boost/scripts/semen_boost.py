@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from typing import Protocol
 
     from Script.Config import game_config
-    from Script.Core.cache_control import cache
     from Script.Core.get_text import _
 
     # mod 系统注入的 get_mod_asset：素材别名 -> 实际路径，找不到时为 None
@@ -37,10 +36,8 @@ if TYPE_CHECKING:
 
 else:
     # globals() 返回 Mod 加载器用 exec 运行本脚本时传入的字典。
-    # 本分支在运行时把 cache、game_config、_ 和 get_mod_asset 绑定为该字典中的同名值。
+    # 本分支在运行时把 game_config、_ 和 get_mod_asset 绑定为该字典中的同名值。
     # 该字典缺少某个名字时，suppress(KeyError) 让这个名字保持未绑定。
-    with suppress(KeyError):
-        cache = globals()["cache"]
     with suppress(KeyError):
         game_config = globals()["game_config"]
     with suppress(KeyError):
@@ -50,7 +47,6 @@ else:
 
 
 # ===== 以下变量由mod系统自动注入 =====
-# cache - 游戏缓存数据
 # game_config - 游戏配置
 # game_type - 游戏类型定义
 # _ - 翻译函数

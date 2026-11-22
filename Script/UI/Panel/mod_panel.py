@@ -5,13 +5,12 @@ Mod管理面板
 """
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, flow_handle, py_cmd
+from Script.Core import get_text, flow_handle, py_cmd
 from Script.Core.mod_manager import get_mod_manager, ModInfo
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
 
 _: FunctionType = get_text._
-cache: game_type.Cache = cache_control.cache
 config_normal = normal_config.config_normal
 
 

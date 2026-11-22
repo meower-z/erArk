@@ -3,12 +3,11 @@
 工程部与体检的数据存进存档再读回
 ================================
 开新游戏（SlowTestCase.setUp），存档目录换成临时目录。给工程部与体检的十二项数据都写上值，再存档、读档。
-每项读回的值、类型与先后都与存档前相同。再存一次，文件 "2" 里这十二个键与上一次存的相同。
+每项读回的值、类型与先后都与存档前相同。再存一次，save.json 里这十二个键与上一次存的相同。
 """
 
 import importlib
 import json
-import os
 import tempfile
 from typing import Any
 from unittest import mock
@@ -97,7 +96,7 @@ class MaintenanceExamSaveTest(SlowTestCase):
 
     def stored(self) -> dict[str, object]:
         """
-        存档文件 "2" 里工程部与体检的十二个键
+        存档文件 save.json 里工程部与体检的十二个键
         Return arguments:
         dict -- 键到存下的 JSON 值，文件里没有的键为 None
         """
@@ -111,12 +110,13 @@ class MaintenanceExamSaveTest(SlowTestCase):
             *px.ID_LISTS,
             px.WEEK_DAYS,
         }
-        with open(os.path.join(self.folder, SLOT, "2"), encoding="utf-8") as f:
+        index = game("Script.Modules.save_load.index")
+        with open(index.file(SLOT, index.SAVE_FILE), encoding="utf-8") as f:
             data = json.load(f)["data"]
         return {key: data.get(key) for key in sorted(keys)}
 
     def test_save_and_load_keep_values(self) -> None:
-        """存档再读档，十二项的值、类型与先后不变。再存一次，文件 "2" 里这十二个键不变"""
+        """存档再读档，十二项的值、类型与先后不变。再存一次，save.json 里这十二个键不变"""
         save_handle = game("Script.Core.save_handle")
         kernel_data.written(self.fill)
         before = self.values()

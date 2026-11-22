@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from types import FunctionType
 from typing import cast
-from Script.Core import cache_control, flow_handle, game_type, get_text
+from Script.Core import flow_handle, get_text
 from Script.Core.num import Num
 from Script.UI.Moudle import draw, panel
 from Script.UI.Panel import see_character_info_panel
@@ -18,8 +18,6 @@ from Script.Modules.domains import playthrough, roster, chara_life, relations
 from Script.Modules.domains import identity
 from Script.Core import constant
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 width = normal_config.config_normal.text_width
@@ -971,7 +969,7 @@ def _inherit_rate(type_id: int, count: int) -> int:
 def setup(inherit: Mapping[str, core.JSON]) -> None:
     """
     新周目的 Reset 步骤：按继承选择重建玩家与干员数据，重置游戏数据，等玩家「醒来」。
-    此时 game_time.now() 已是新周目的开局时刻，缓存还是结束的周目的
+    此时 game_time.now() 已是新周目的开局时刻，新状态尚未写入角色与世界数据
     Keyword arguments:
     inherit -- 继承选择，键见 New_Round_Handle.choices
     """
@@ -1214,7 +1212,6 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     }
 
     # 开始重置
-    cache_control.cache = cache
     medical_service.init_medical_department_data()
     playthrough.reset_difficulty_and_birth()
     info_draw_text += _("游戏数据重置完毕\n")

@@ -6,12 +6,7 @@
 import math
 import random
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_path_config,
-    game_type,
-    get_text,
-)
+from Script.Core import game_path_config, get_text
 from Script.Design import (
     character_handle,
     child_stage_gate,
@@ -33,8 +28,6 @@ from Script.Modules.domains import pregnancy, relations, roster, work
 from Script.Modules.domains import identity
 
 game_path = game_path_config.game_path
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width
@@ -1119,8 +1112,8 @@ def get_suspected_abnormal_daughter_list() -> list:
 
 def remove_abnormal_daughter(character_id: int) -> bool:
     """
-    把一名疑似误入本存档的女儿从缓存里移除，用 working.forget 丢掉她停放的数据，并清掉别处对她的引用。
-    只移除 judge_suspected_abnormal_daughter 判定为真的角色
+    把一名疑似误入本存档的女儿从在编名册与身份表里移除，用 working.forget 丢掉她停放的数据，
+    并清掉别处对她的引用。只移除 judge_suspected_abnormal_daughter 判定为真的角色
     Keyword arguments:
     character_id -- 要移除的角色id
     Return arguments:

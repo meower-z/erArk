@@ -2,7 +2,7 @@
 
 from types import FunctionType
 import random
-from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import constant, flow_handle
 from Script.Core import get_text
 from Script.Design import handle_ability, handle_premise, handle_talent
 from Script.Design import hypnosis_state, map_handle
@@ -17,8 +17,6 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import identity, scene_state
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()

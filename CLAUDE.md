@@ -49,7 +49,7 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 
 ### Script Directory Layout
 - **`Script/Config`** - Config loading (`game_config.py`, `map_config.py`, `character_config.py`, `normal_config.py`) and the generated `config_def.py`
-- **`Script/Core`** - Engine layer: cache (`cache_control.py`), save (`save_handle.py`), IO (`io_init.py`), flow handling (`flow_handle.py`), mod manager (`mod_manager.py`), game data types (`game_type.py`)
+- **`Script/Core`** - Engine layer: save (`save_handle.py`), IO (`io_init.py`), flow handling (`flow_handle.py`), mod manager (`mod_manager.py`), game data types (`game_type.py`)
 - **`Script/Design`** - Main game logic: behavior loop, NPC AI, map/navigation, talk, settlement dispatch (`settle_behavior.py`), etc.
   - **`Script/Design/handle_premise/`** - The premise (condition) system is a package, split by topic into ~20 modules (`handle_premise_H.py`, `handle_premise_place.py`, `handle_premise_ability.py`, `handle_premise_talent.py`, ...) with the main entry in `__init__.py`
 - **`Script/Settle`** - Settlement modules: `default.py`, `common_default.py` (universal settlement), `Second_effect.py` (second-stage effects), `default_cloth.py`, `item_effect.py`, `realtime_settle.py`, `past_day_settle.py`, `sleep_settle.py`
@@ -84,7 +84,7 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 
 #### Save System
 - **Save Management**: `Script/Core/save_handle.py`
-- **Cache Control**: `Script/Core/cache_control.py` manages game state
+- **Kernel Save Modules**: `Script/Modules/save_load/` (`index.py`, `kernel_state.py`, `legacy_pickle.py`, `upgrade.py`, `reset.py`, `settings.py`, `autosave.py`) manages single-file `save.json` saves, read-only legacy saves, and `GameState` resets
 
 #### Mod System
 - **Manager**: `Script/Core/mod_manager.py` (`ModInfo` / `ModManager`); `init_mod_system()` is called from `game.py` at startup (failures only warn, never abort)

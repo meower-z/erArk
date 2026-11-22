@@ -3,12 +3,7 @@
 import datetime
 import random
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    constant,
-    game_type,
-    get_text,
-)
+from Script.Core import constant, game_type, get_text
 from Script.Design import (
     attr_calculation,
     map_handle,
@@ -24,8 +19,6 @@ from Script.Modules.domains import tallies, visitor, wardrobe, chara_key
 from Script.Modules.domains import chara_life, npc_template, relations
 from Script.Modules.domains import identity
 
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 

@@ -7,13 +7,7 @@
 """
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_path_config,
-    game_type,
-    constant,
-    get_text,
-)
+from Script.Core import game_path_config, game_type, constant, get_text
 from Script.Design import (
     settle_behavior,
     game_time,
@@ -40,8 +34,6 @@ from Script.Modules.domains import modes, plan, roster
 from Script.Modules.domains import identity
 
 game_path = game_path_config.game_path
-cache: game_type.Cache = cache_control.cache
-""" 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 window_width: int = normal_config.config_normal.text_width
@@ -54,7 +46,7 @@ line_feed.width = 1
 
 def settle_start(character_id: int, minutes: int) -> None:
     """
-    行动开始时的结算（缓存里已换上新的行为）。
+    行动开始时的结算（activity.behavior 已换上新的行为）。
     干员：结算状态与事件；目睹H的反应已结算过时跳过一次（移动照样结算）。
     玩家：记下指令文本；发呆时不结算。否则移动时同场景的干员跟随、全员重置目击玩家H，行动前的前置结算，
     结算状态与事件，睡觉刷新，H状态、猥亵与无意识；时停中累计时停时长
