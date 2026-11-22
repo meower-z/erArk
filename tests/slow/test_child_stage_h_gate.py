@@ -101,7 +101,7 @@ class ChildStageHGateTest(SlowTestCase):
         """debug模式下交互对象是102：抽查的H类指令在指令面板的过滤中仍不成立"""
         from Script.System.Instruct_System import see_instruct_panel
 
-        self.cache.debug_mode = True
+        kernel_data.put(kernel_data.domain("modes").set_debug, True)
         aim(0, self.make_child(102, "杜宾"))
         listed = {
             "Tk面板": [

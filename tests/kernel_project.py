@@ -4,7 +4,8 @@
 ============
 tests/kernel_data.project_state 调用 project_rest。
 本模块把 GameState 里的一些全局键与角色的活动按旧缓存的属性名记进快照。
-project_world_misc 记世界设定、周目、国家、模式、吵醒名单、成就、事件与指令记录、计划队列与寻路，共 14 个全局键。
+project_world_misc 记本周目设定、周目、国家、模式、收藏地点、吵醒名单、成就、事件与指令记录、计划、名册与射精位置，
+共 20 个全局键。
 指令记录只记最近行为，每日记录不在快照里。
 project_world_misc 还经 chara_data.project 记下各角色的道具、食物背包、服装、身体管理与状态值。
 project_base_tallies 记基地的派对排期、旅馆房间档次、计数与冰箱，共 4 个全局键。
@@ -114,14 +115,14 @@ def set_world_setting(cid: int, value: Any) -> None:
 
 
 def mode(name: str) -> bool:
-    """读一项模式开关（time_stop / group_sex / sex_class）"""
+    """读一项模式开关（time_stop / group_sex / sex_class / debug）"""
     return bool(getattr(domain("modes"), name)())
 
 
 def project_world_misc(state: dict[str, object]) -> None:
     """
-    快照里按旧缓存的属性名记下 GameState 里的本周目设定、周目数、势力与国家、模式开关、
-    被吵醒的角色、成就、事件与最近行为记录、计划队列、寻路与睡觉存档标记。
+    快照里按旧缓存的属性名记下 GameState 里的本周目设定、周目数、势力与国家、模式开关、收藏地点、
+    被吵醒的角色、成就、事件与最近行为记录、计划、名册与全局射精位置，以及各角色的妊娠与养成状态。
     随后经 chara_data.project 记下各角色的道具、食物背包、服装、身体管理与状态值
     Keyword arguments:
     state -- 快照，原地补上
@@ -129,6 +130,7 @@ def project_world_misc(state: dict[str, object]) -> None:
     from Script.Core import game_type
     from Script.Modules.domains import (
         achievement,
+        bookmarks,
         country,
         growth,
         h_meters,
@@ -160,6 +162,8 @@ def project_world_misc(state: dict[str, object]) -> None:
         "time_stop_mode": modes.time_stop(),
         "group_sex_mode": modes.group_sex(),
         "sex_class_mode": modes.sex_class(),
+        "debug_mode": modes.debug(),
+        "collect_position_list": bookmarks.places(),
         "noise_woken": needs.noise_woken(),
         "achievement": achievement.view(),
         "taiggered_event_record": history.triggered_ids(),

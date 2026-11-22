@@ -243,7 +243,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         book_id = min(game_config.config_book)
         kd.set_book_holders({book_id: child_id})
         kd.put(chara_life.borrow_book_id_set.set, child.cid, {book_id})
-        cache.old_character_id = child_id
         # 玩家与她在单人H中（双方都在H、玩家所在房间关着门，她脱了一件衣服），母亲正对她做着别的行为；
         #    她身上有快感、催眠、待触发事件与必须结算的二段行为
         kd.put(h_state.set, 0, insert_position=2)
@@ -403,7 +402,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 for path, scene in constant.scene_data.items()
             },
             "data": dict(core.state().data),
-            "old_character_id": self.cache.old_character_id,
         }
         for cid, chara in identity.table().items():
             growth = growth_mod.of(cid)
@@ -820,7 +818,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
     def _assert_no_child_reference(self, id_dict: dict) -> None:
         """检查其他结构里没有对102孩子的引用，与她并列的母亲的条目保留"""
         life = importlib.import_module("Script.Modules.domains.chara_life")
-        cache = self.cache
         child_id = id_dict["d102"]
         mother_id = id_dict["mother"]
         from Script.Modules.domains import action_info as ai, commission
@@ -885,10 +882,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             (
                 library.holders()[id_dict["book"]],
                 life.borrow_book_id_set(child_id),
-                cache.old_character_id,
             ),
-            (-1, set(), 0),
-            "孩子借的书还回去，场景面板记着的角色不是她",
+            (-1, set()),
+            "孩子借的书还回去",
         )
 
     def _assert_h_session_ended(self, id_dict: dict) -> None:

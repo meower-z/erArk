@@ -36,7 +36,7 @@ from Script.Design import attr_calculation, character, clothing, game_time
 from Script.Design import settle_behavior
 from Script.Kernel import core
 from Script.Core import constant, game_type
-from Script.Modules.domains import body_manage, flags, inventory
+from Script.Modules.domains import body_manage, flags, inventory, modes
 from Script.Modules.domains import player_collection, status, wardrobe
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.tk_ui import player_pick
@@ -106,14 +106,14 @@ class CharaInventoryBodyStateTest(FastTestCase):
         """有 98 个道具 100 时再买 5 个，数量为 99。handle_use_body_lubricant 用掉一个后为 98"""
         lubricant = 100
         kernel_data.put(inventory.set_item, 0, lubricant, 98)
-        self.cache.debug_mode = True
+        kernel_data.put(modes.set_debug, True)
         try:
             button = h_item_shop_panel.BuyItemByItemNameDraw(
                 lubricant, 60, True, True, 0
             )
             kernel_data.written(button.buy_item, 5)
         finally:
-            self.cache.debug_mode = False
+            kernel_data.put(modes.set_debug, False)
         self.assertEqual(inventory.items(0)[lubricant], 99)
         change = game_type.CharacterStatusChange()
         kernel_data.written(

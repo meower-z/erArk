@@ -150,12 +150,14 @@ class WorldMiscStateTest(FastTestCase):
             "time_stop_mode": True,
             "group_sex_mode": False,
             "sex_class_mode": False,
+            "debug_mode": False,
             "noise_woken": {1: 0},
             "achievement": old_ach,
             "taiggered_event_record": {"ev_b", "ev_a"},
             "today_taiggered_event_record": {"ev_a"},
             "pl_pre_behavior_instruce": ["wait"],
             "daily_intsruce": ["line1"],
+            "input_cache": ["3", "确定"],
             "plan_queue": {
                 1: [("Behavior", {"behavior_id": "wait", "minutes": 5})]
             },
@@ -186,10 +188,11 @@ class WorldMiscStateTest(FastTestCase):
         self.assertEqual(history.today_ids(), {"ev_a"})
         self.assertEqual(history.recent(), ["wait"])
         self.assertEqual(history.daily(), "line1")
+        self.assertEqual(history.inputs(), ["3", "确定"])
         self.assertEqual(plan.route(), [["中枢", "走廊"], ["中枢", "会议室"]])
         self.assertTrue(plan.sleep_save())
 
-        # 版本 12 缓存里没有这 18 个字段：不改写已有状态，计数为 0
+        # 版本 12 缓存里没有这 20 个字段：不改写已有状态，计数为 0
         v12_loaded: dict[str, Any] = {}
         with (
             mock.patch.object(draw, "NormalDraw", Quiet),
@@ -223,7 +226,7 @@ class WorldMiscStateTest(FastTestCase):
             c_needs = needs.adopt_old_save(broken, 0)
             c_plan = plan.adopt_old_save(broken, 0)
         self.assertEqual(c_country, 1)
-        self.assertEqual(c_modes, 3)
+        self.assertEqual(c_modes, 4)
         self.assertEqual(c_needs, 1)
         self.assertEqual(c_plan, 3)
         self.assertFalse(modes.time_stop())

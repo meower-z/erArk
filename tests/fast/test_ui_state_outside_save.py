@@ -89,7 +89,7 @@ class UiStateOutsideSaveTest(FastTestCase):
 
     def test_older_build_save(self) -> None:
         """
-        旧版本的存档带着界面状态与面板选择，鼠标状态是 game_type 里旧的类的对象：读档后缓存与罗德岛对象上没有它们，
+        旧存档带着界面状态与面板选择，鼠标状态是 game_type 里旧的类的对象：读档后缓存上没有这些字段与罗德岛对象，
         存档里的面板选择成为全局的（还没有 settings.json），界面状态不变
         """
         save_handle.establish_save(FIRST)
@@ -99,6 +99,7 @@ class UiStateOutsideSaveTest(FastTestCase):
         older.instruct_type_filter = {0: True, 1: False}
         older.scene_panel_show = [False, True, True, True, True]
         older.is_collection = True
+        older.rhodes_island = game_type.Rhodes_Island()
         older.rhodes_island.makefood_sort_type = 3
         older.rhodes_island.makefood_make_count = {0: 5, 1: 1, 2: 1}
         older.rhodes_island.reader_now = 7
@@ -131,11 +132,7 @@ class UiStateOutsideSaveTest(FastTestCase):
             & vars(self.cache).keys(),
             set(),
         )
-        self.assertEqual(
-            {"makefood_sort_type", "makefood_make_count", "reader_now"}
-            & vars(self.cache.rhodes_island).keys(),
-            set(),
-        )
+        self.assertNotIn("rhodes_island", vars(self.cache))
 
 
 class HiddenSexToggleOffAfterLoadTest(FastTestCase):

@@ -9,7 +9,8 @@
         chara.12.talent.20                    角色 12 的素质 20
         chara.12.behavior.behavior_id         角色 12 的行为id
         chara.12.pregnancy.fertilization_time 角色 12 的受精时间
-    world.<区域>.<键>[...]                  游戏缓存里的世界状态（区域见 WORLD_AREAS 与 SKIPPED_CACHE_FIELDS），如
+    world.<区域>.<键>[...]                  游戏缓存与 GameState 里的世界状态
+                                            （区域见 CACHE_AREAS 与 SKIPPED_CACHE_FIELDS），如
         world.commission.ongoing_field_commissions.9   进行中的委托 9
         world.vehicle.vehicles.5                       载具 5 的 [拥有数, 外勤中数]
         world.library.book_borrow_dict.12              书 12 的借阅者
@@ -74,9 +75,6 @@ SKIPPED_CHARACTER_FIELDS = {
 }
 """ 不记的角色字段（名字里 chara.<id>. 之后的部分）: 理由 """
 
-WORLD_AREAS: dict[str, str] = {}
-""" 罗德岛对象（cache.rhodes_island）上的字段到所属区域。没列出的字段归 world.base """
-
 CACHE_AREAS = {
     "game_round": "clock",
 }
@@ -84,9 +82,7 @@ CACHE_AREAS = {
 
 SKIPPED_CACHE_FIELDS = {
     "character_data": "按 chara.<id> 单独记",
-    "rhodes_island": "按 WORLD_AREAS 拆开记",
     "daily_intsruce": "玩家当天的指令记录（文本）",
-    "input_cache": "界面：输入历史",
 }
 """ 不记的游戏缓存字段: 理由 """
 
@@ -360,7 +356,7 @@ def capture(
     功能描述:
         时钟，每个角色的全部字段（SKIPPED_CHARACTER_FIELDS 除外），
         GameState 里的生理需求与供电策略（按它们在缓存里时的名字），
-        游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 除外，罗德岛的字段按 WORLD_AREAS 分区），有人的场景里的角色，
+        游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 除外，按 CACHE_AREAS 分区），有人的场景里的角色，
         关着门的场景的关门状态，口上与事件的id。memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同。
     """
     from Script.Core import constant
@@ -397,11 +393,6 @@ def capture(
             f"world.{CACHE_AREAS.get(field, field)}.{field}",
             getattr(cache, field),
             state,
-        )
-    for field in sorted(vars(cache.rhodes_island)):
-        area = WORLD_AREAS.get(field, "base")
-        flatten(
-            f"world.{area}.{field}", getattr(cache.rhodes_island, field), state
         )
     for path in constant.scene_data:
         prefix = f"scene.{path.replace(os.sep, '/')}."

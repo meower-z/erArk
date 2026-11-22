@@ -119,15 +119,8 @@ class ZeroMinutePanelsTest(SlowTestCase):
 
     def parts(self) -> dict[str, bytes]:
         """序列化缓存中除顶层界面状态与全局设置外的全部顶层属性"""
-        skip = {
-            path
-            for path in self.player_pick.UI_STATE | self.player_pick.META_STATE
-            if "." not in path
-        }
         out: dict[str, bytes] = {}
         for name, value in vars(self.cache).items():
-            if name in skip:
-                continue
             out[name] = pickle.dumps(value)
         return out
 

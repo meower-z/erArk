@@ -3,10 +3,10 @@
 缓存文件不写读档时重新算出的字段
 ================================
 save_handle.write_save_data 写出的缓存文件（文件 "1"）里没有地图和菜谱。
-文件里的罗德岛数据没有仓库容量、干员人数上限、访客上限和床位上限。
+文件里也没有罗德岛对象。
 旧格式缓存文件带着 npc_tem_data，其中配置键为 None，局内生成模板为原对象。
 save_handle.load_save 读回后保持原来的键序，把配置键的 None 换回配置的模板对象，并保留局内生成模板。
-直接 pickle 整个缓存的旧存档，读回后不带地图、菜谱和这四个上限。
+直接 pickle 整个缓存的旧存档，读回后不带地图、菜谱，罗德岛对象上没有仓库容量、干员人数上限与床位上限。
 读档结束时报的更新条数，与读到的缓存带着全部字段时相同。
 """
 
@@ -40,7 +40,7 @@ class SaveLeavesOutTest(FastTestCase):
     """缓存文件不写读档时重新算出的字段"""
 
     def setUp(self) -> None:
-        """复原小世界，把存档目录换成临时目录，备好一个局内生成模板，把 REBUILT 中的三个上限设成非 0 的值"""
+        """复原小世界，把存档目录换成临时目录，备好一个局内生成模板"""
         super().setUp()
         folder = self.enterContext(tempfile.TemporaryDirectory())
         self.enterContext(mock.patch.object(index, "SAVE_DIR", folder))
@@ -48,8 +48,6 @@ class SaveLeavesOutTest(FastTestCase):
         child.Name = "孩子"
         child.AdvNpc = CHILD
         self.child = child
-        for value, name in enumerate(REBUILT, start=7):
-            setattr(self.cache.rhodes_island, name, value)
 
     def raw(self) -> game_type.Cache:
         """
@@ -93,11 +91,11 @@ class SaveLeavesOutTest(FastTestCase):
         return next(text for text in texts if "完成了更新" in text)
 
     def test_file_leaves_out_rebuilt_fields(self) -> None:
-        """写出的缓存文件里没有 map_data、recipe_data 与 REBUILT 中的三个上限"""
+        """写出的缓存文件里没有 map_data、recipe_data 与罗德岛对象"""
         save_handle.write_save_data(SLOT, index.CACHE_FILE, self.cache)
         raw = self.raw()
         self.assertFalse({"map_data", "recipe_data"} & vars(raw).keys())
-        self.assertFalse(set(REBUILT) & vars(raw.rhodes_island).keys())
+        self.assertNotIn("rhodes_island", vars(raw))
 
     def test_load_puts_config_templates_back(self) -> None:
         """旧格式缓存文件经 load_save 读回后，npc_tem_data 保持键序，配置键换回配置的模板对象，局内生成模板不变"""
@@ -114,19 +112,25 @@ class SaveLeavesOutTest(FastTestCase):
         self.assertEqual(loaded[CHILD].Name, "孩子")
 
     def test_old_save_loads_without_rebuilt_fields(self) -> None:
-        """直接 pickle 整个缓存的旧存档，读回后没有地图、菜谱和四个上限"""
+        """直接 pickle 整个缓存的旧存档，读回后没有地图、菜谱，罗德岛对象上没有 REBUILT 的三个上限"""
+        old = pickle.loads(pickle.dumps(self.cache))
+        old.rhodes_island = game_type.Rhodes_Island()
+        for value, name in enumerate(REBUILT, start=7):
+            setattr(old.rhodes_island, name, value)
         os.makedirs(index.path(SLOT))
         file_path = os.path.join(index.path(SLOT), index.CACHE_FILE)
         with open(file_path, "wb") as f:
-            pickle.dump(self.cache, f)
+            pickle.dump(old, f)
         loaded = save_handle.load_save(SLOT)
         self.assertFalse({"map_data", "recipe_data"} & vars(loaded).keys())
-        self.assertFalse(set(REBUILT) & vars(loaded.rhodes_island).keys())
+        island = vars(loaded)["rhodes_island"]
+        self.assertFalse(set(REBUILT) & vars(island).keys())
 
     def test_load_message_counts_no_left_out_field(self) -> None:
         """读档结束时报的更新条数，与读到的缓存带着全部字段时相同，缓存文件不写的字段不算作跨版本更新"""
         self.world.chara(0, "博士")
         whole = pickle.loads(pickle.dumps(self.cache))
+        whole.rhodes_island = game_type.Rhodes_Island()
         save_handle.write_save_data(SLOT, index.CACHE_FILE, self.cache)
         left_out = self.load_message()
         with mock.patch.object(save_handle, "load_save", lambda save_id: whole):

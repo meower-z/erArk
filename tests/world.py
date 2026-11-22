@@ -326,7 +326,7 @@ class MinimalWorld:
         cache = self.cache
         kernel_data.reset_clock(start_time(), {})
         kernel_data.written(playthrough.reset_difficulty_and_birth)
-        cache.rhodes_island = kernel_data.new_island()
+        kernel_data.reset_medical()
         kernel_data.written(basement.get_base_updata)
         for clothing_type, cloth_ids in STANDARD_OUTFIT.items():
             for cloth_id in cloth_ids:

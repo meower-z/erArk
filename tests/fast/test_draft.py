@@ -34,7 +34,6 @@ from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
 
-KEEP = player_pick.UI_STATE | player_pick.META_STATE
 ITEMS = "draft_items"
 """ 缓存上测试用条目表的属性名 """
 
@@ -112,7 +111,7 @@ class DiffApplyTest(DraftCase):
     def test_diff_then_apply_reproduces_copy(self) -> None:
         """草稿内修改条目 quality、向 notes 追加一项、删去条目 0 并改动干员背包。apply 后原物与副本 pickle 相等"""
         items()[1].notes = []
-        session = draft.Session(KEEP)
+        session = draft.Session(())
         items()[1].quality = 5
         kernel_data.put(inventory.set_item, 1, 99, 1)
         notes: list[str] = items()[1].notes
@@ -132,7 +131,7 @@ class DiffApplyTest(DraftCase):
         """草稿里给嵌套字典加了一项（值是字典）、删了另一项：apply 之后原物与副本 pickle 相等"""
         nested: dict[Any, Any] = {0: {1: [0, "理论教室一"]}}
         items()[1].notes = nested
-        session = draft.Session(KEEP)
+        session = draft.Session(())
         selected: dict[Any, Any] = items()[1].notes
         selected[1] = {2: [1, "实践教室一"]}
         del selected[0]
@@ -145,7 +144,7 @@ class DiffApplyTest(DraftCase):
 
     def test_apply_refuses_stale_draft(self) -> None:
         """草稿之后原值变了：apply 报错"""
-        session = draft.Session(KEEP)
+        session = draft.Session(())
         items()[1].quality = 5
         changes, _ = session.close()
         items()[1].quality = 6
@@ -191,7 +190,7 @@ class CacheAttributeTest(DraftCase):
         """草稿里读写过的属性：关闭后缓存的每个顶层属性都是打开前的那个对象，没有 LazyDict 留下"""
         cache = cache_control.cache
         before = dict(vars(cache))
-        session = draft.Session(KEEP)
+        session = draft.Session(())
         self.assertNotIn(ITEMS, vars(cache))
         self.assertFalse(hasattr(cache, "no_such_name"))
         self.assertEqual(getattr(cache, "no_such_name", 5), 5)
@@ -284,9 +283,11 @@ class ResetInSessionTest(DraftCase):
         super().setUp()
         self.world.chara(0, "博士")
         self.broken = False
+        vars(self.cache)["round_mark"] = 0
+        self.addCleanup(vars(self.cache).pop, "round_mark", None)
 
         def setup(inherit: object) -> None:
-            self.cache.old_character_id += 1
+            vars(self.cache)["round_mark"] += 1
             if self.broken:
                 raise RuntimeError("setup")
 
@@ -298,31 +299,29 @@ class ResetInSessionTest(DraftCase):
 
     def test_failed_reset_in_session_restores_originals(self) -> None:
         """
-        草稿内修改条目名后新周目出错时，缓存恢复为原物，条目名与 old_character_id 保持不变，条目表仍为原 dict。
+        草稿内修改条目名后新周目出错时，缓存恢复为原物，条目名与 round_mark 保持不变，条目表仍为原 dict。
         草稿在失败后关闭
         """
         before = dict(vars(cache_control.cache))
-        old_id = self.cache.old_character_id
-        draft.Session(KEEP)
+        draft.Session(())
         items()[0].name = "草稿"
         self.broken = True
         with self.assertRaises(RuntimeError):
             kernel_state.new_round({})
         self.assertFalse(draft.active())
-        self.assertEqual(self.cache.old_character_id, old_id)
+        self.assertEqual(vars(self.cache)["round_mark"], 0)
         self.assertEqual(items()[0].name, "博士")
         self.assertIs(type(items()), dict)
         self.assertEqual(set(vars(cache_control.cache)), set(before))
 
     def test_reset_in_session_runs_on_originals(self) -> None:
-        """草稿内修改条目名后新周目成功时，old_character_id 加一，草稿中的条目名不写入缓存。草稿在换入后关闭"""
-        old_id = self.cache.old_character_id
-        draft.Session(KEEP)
+        """草稿内修改条目名后新周目成功时，round_mark 加一，草稿中的条目名不写入缓存。草稿在换入后关闭"""
+        draft.Session(())
         items()[0].name = "草稿"
         with mock.patch.object(actions, "project", lambda new: new):
             kernel_state.new_round({})
         self.assertFalse(draft.active())
-        self.assertEqual(self.cache.old_character_id, old_id + 1)
+        self.assertEqual(vars(self.cache)["round_mark"], 1)
         self.assertEqual(items()[0].name, "博士")
 
 

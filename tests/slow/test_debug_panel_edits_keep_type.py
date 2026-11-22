@@ -43,7 +43,6 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
         normal_config.config_normal.debug = True
         self.instruct(constant.Instruct.DEBUG_MODE_ON)
         self.instruct(constant.Instruct.DEBUG_ADJUST)
-        self.ri = self.cache.rhodes_island
 
     def use_panel(self, *steps: tuple) -> None:
         """

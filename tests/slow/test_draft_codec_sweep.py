@@ -100,15 +100,11 @@ class DraftCodecSweepTest(SlowTestCase):
         draft = importlib.import_module(
             "Script.Modules.gameplay_resolution.draft"
         )
-        player_pick = importlib.import_module(
-            "Script.Modules.tk_ui.player_pick"
-        )
         if not os.path.isdir(os.path.join("save", USER_SAVE_ID)):
             self.skipTest("用户存档 99 没装在 save/99")
         save_handle.input_load_save(USER_SAVE_ID)
         view.now_panel_id = constant.Panel.IN_SCENE
-        keep = player_pick.UI_STATE | player_pick.META_STATE
-        session = draft.Session(keep)
+        session = draft.Session(())
         copies: dict[str, object] = {}
         changed: dict[str, list[str]] = {}
         try:

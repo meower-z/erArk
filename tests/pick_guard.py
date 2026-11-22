@@ -2,14 +2,13 @@
 """
 选行动只读的检查：缓存与内核状态的指纹，和记下每一轮选择是否写了东西的包装
 ==========================================================================
-- fingerprint()：游戏缓存去掉 player_pick.UI_STATE 与 META_STATE 里的路径后的 pickle，加上 core.state()、
+- fingerprint()：游戏缓存的 pickle，加上 core.state()、
   随机数状态、计划队列里待交给内核的打断数与自动存档的请求。
 - watch()：包住一轮选择（player_pick.chooser 或交给 tests.world.act 的操作），每轮记下面板id、
   是否抛出 Chosen、这一轮里（Chosen 抛出之前）指纹是否变了，以及这一轮里为写打开的文件。
 """
 
 import builtins
-import copy
 import os
 import pickle
 import random
@@ -31,20 +30,11 @@ type Fingerprint = tuple[bytes, core.GameState, object, int, bool]
 
 def fingerprint() -> Fingerprint:
     """
-    缓存除界面状态与全局设置外的全部内容、内核状态、随机数状态、待交给内核的打断数与自动存档的请求
+    游戏缓存的全部内容、内核状态、随机数状态、待交给内核的打断数与自动存档的请求
     Return arguments:
     Fingerprint -- (缓存的 pickle, core.state(), random.getstate(), 打断数, 自动存档请求)
     """
     data = dict(vars(cache_control.cache))
-    for path in sorted(player_pick.UI_STATE | player_pick.META_STATE):
-        head, _, rest = path.partition(".")
-        if not rest:
-            data.pop(head, None)
-            continue
-        if head in data:
-            part = copy.copy(data[head])
-            vars(part).pop(rest, None)
-            data[head] = part
     return (
         pickle.dumps(sorted(data.items())),
         core.state(),
