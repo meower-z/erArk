@@ -42,6 +42,20 @@ jobs:
       - name: Install window manager
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends openbox
 
+      - name: Download save 99 fixture
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        shell: bash
+        env:
+          ARCHIVE: ${{ runner.temp }}/save99.tar.gz
+        run: |
+          curl -fsSL --retry 3 --retry-delay 2 -o "$ARCHIVE" https://raw.githubusercontent.com/meower-z/erArk/3e7c263eade7e909d28c1f3499760f28249227e7/save99.tar.gz
+          echo "d207f104cfabbe37ff322b1ba9465c13a5496556b1485c57cbbcfe55edb4f7b0  $ARCHIVE" | sha256sum -c -
+          mkdir -p save/99
+          tar -xzf "$ARCHIVE" -C save/99
+          test -f save/99/0
+          test -f save/99/1
+          rm "$ARCHIVE"
+
       - name: Fast suite
         if: ${{ !cancelled() && steps.deps.outcome == 'success' && (github.event_name != 'workflow_dispatch' || inputs.test_path == '') }}
         timeout-minutes: 15
