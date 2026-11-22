@@ -18,7 +18,9 @@ from collections.abc import Callable, Mapping
 from typing import cast
 
 from tests import kernel_data
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 LOCKER_ROOM = ["大浴场", "更衣室"]
 """ 大浴场的更衣室（浴场衣柜） """
@@ -184,7 +186,7 @@ class PickDraftWorldTest(SlowTestCase):
         from Script.Core import constant
 
         self.fill_locker()
-        target = self.cache.character_data[0].target_character_id
+        target = activity.target(0)
         self.world.player.press("的衣柜", "返回", "返回")
         start, end, changed = self.run_pick(
             self.show(constant.Panel.CHECK_LOCKER)
@@ -192,9 +194,7 @@ class PickDraftWorldTest(SlowTestCase):
         self.assertEqual(self.player_starts(), [])
         self.assertEqual(end, start)
         self.assertFalse(changed)
-        self.assertEqual(
-            self.cache.character_data[0].target_character_id, target
-        )
+        self.assertEqual(activity.target(0), target)
 
     def test_food_bag_judges_at_start(self) -> None:
         """给交互对象吃特殊调味的饭：选择时不判定，开始时判定一次，被拒时开始的是拒绝食用"""
@@ -208,9 +208,8 @@ class PickDraftWorldTest(SlowTestCase):
         from Script.Modules.tk_ui import player_pick
         from Script.System.Cooking_System import cooking, food_bag_panel
 
-        player = self.cache.character_data[0]
-        self.world.move(self.chara_id, player.position)
-        player.target_character_id = self.chara_id
+        self.world.move(self.chara_id, activity.position(0))
+        aim(0, self.chara_id)
         if not self.cache.recipe_data:
             cooking.init_recipes()
         recipe_id = next(
@@ -268,9 +267,8 @@ class PickDraftWorldTest(SlowTestCase):
         from Script.Modules.tk_ui import player_pick
         from Script.System.Cooking_System import cooking, food_bag_panel
 
-        player = self.cache.character_data[0]
-        self.world.move(self.chara_id, player.position)
-        player.target_character_id = self.chara_id
+        self.world.move(self.chara_id, activity.position(0))
+        aim(0, self.chara_id)
         if not self.cache.recipe_data:
             cooking.init_recipes()
         recipe_id = next(

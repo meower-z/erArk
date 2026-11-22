@@ -7,8 +7,9 @@ from Script.Core import get_text
 from Script.Config import game_config, normal_config
 from Script.Design import map_handle, game_time
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, action_info, entertainment, fridge
-from Script.Modules.domains import inventory, playthrough, warehouse
+from Script.Modules.domains import abilities, action_info, activity
+from Script.Modules.domains import entertainment, fridge, inventory, playthrough
+from Script.Modules.domains import warehouse
 
 panel_info_data: dict[str, object] = {}
 
@@ -49,7 +50,6 @@ class Close_Door_Panel:
         bool | None -- 关门为真，不关为假；当前地点已问过（移动前不问第二次）时为 None
         """
 
-        character_data: game_type.Character = cache.character_data[0]
         if action_info.get(0, "ask_close_door_flag"):
             return None
 
@@ -60,9 +60,8 @@ class Close_Door_Panel:
             return_list: list[str] = []
             title_draw.draw()
 
-            now_position = character_data.position
             now_scene_str = map_handle.get_map_system_path_str_for_list(
-                now_position
+                activity.position(0)
             )
             now_scene_data = cache.scene_data[now_scene_str]
             now_draw_list: list[draw.Drawable] = []

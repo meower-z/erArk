@@ -88,7 +88,7 @@ cache = world.cache
 from Script.Core import io_init, save_handle
 from Script.Design import character_behavior, game_time, handle_npc_ai
 from Script.Kernel import core
-from Script.Modules.domains import flags, modes, needs
+from Script.Modules.domains import activity, flags, modes, needs
 from Script.System.Field_Commission_System import field_commission_function
 from Script.System.Instruct_System import handle_instruct
 from tests.world import act
@@ -148,8 +148,9 @@ def describe(cid):
     )
     n = needs.of(cid)
     return (
-        f"{cd.name}(id{cid}) 位置={cd.position} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
-        f" start={cd.behavior.start_time} state={cd.state} tired={n['tired']} sleep={n['sleep']}"
+        f"{cd.name}(id{cid}) 位置={activity.position(cid)} bhv={activity.behavior(cid).behavior_id}"
+        f" dur={activity.behavior(cid).duration}"
+        f" start={activity.behavior(cid).start_time} state={activity.state(cid)} tired={n['tired']} sleep={n['sleep']}"
         f" hp={n['hit']}/{n['hit_max']} mp={n['mana']}/{n['mana_max']}"
         f" sp_flag(sleep={flags.get(cid, 'sleep')} unconscious_h={flags.get(cid, 'unconscious_h')}"
         f" is_h={flags.get(cid, 'is_h')} is_follow={flags.get(cid, 'is_follow')})"
@@ -162,9 +163,10 @@ print("game_time:", game_time.now())
 for _cid in [0, *sorted(WATCH)]:
     print(" ", describe(_cid))
 
-# 按需制造前置条件，例如把玩家搬到观察角色所在场景、压低熟睡度：
-# map_handle.character_move_scene(pl.position, cache.character_data[next(iter(WATCH))].position, 0)
-# from tests import kernel_data; kernel_data.set_needs(next(iter(WATCH)), sleep=20)
+# 按需制造前置条件，例如把玩家搬到观察角色所在场景、压低熟睡度（一步之外的写入经 kernel_data 套用到内核状态）：
+# from Script.Design import map_handle; from tests import kernel_data
+# kernel_data.written(map_handle.character_move_scene, activity.position(0), activity.position(next(iter(WATCH))), 0)
+# kernel_data.set_needs(next(iter(WATCH)), sleep=20)
 
 # ==== 2. 随机 ====
 random.seed(1)

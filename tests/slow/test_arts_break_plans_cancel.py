@@ -14,7 +14,9 @@ import importlib
 from unittest import mock
 
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 ROOM = ["中枢", "会议室"]
 PRIMARY_HYPNOSIS = 331
@@ -69,9 +71,7 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         from Script.Modules.domains import hypnosis
         from tests import kernel_data
 
-        pl = self.cache.character_data[0]
         operator_id = self.npc(name)
-        operator = self.cache.character_data[operator_id]
         kernel_data.put(
             hypnosis.set,
             operator_id,
@@ -84,10 +84,10 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         self.instruct(constant.Instruct.ALL_NPC_POSITION)
         self.show_panel()
         self.assertTrue(
-            self.wait_until(lambda: operator.position == ROOM, 60),
-            f"{name} 在 {operator.position}",
+            self.wait_until(lambda: activity.position(operator_id) == ROOM, 60),
+            f"{name} 在 {activity.position(operator_id)}",
         )
-        pl.target_character_id = operator_id
+        aim(0, operator_id)
         self.world.player.press("平然")
         self.instruct(constant.Instruct.CHANGE_HYPNOSIS_MODE)
         self.show_panel()

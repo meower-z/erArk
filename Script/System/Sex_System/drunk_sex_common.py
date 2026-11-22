@@ -5,7 +5,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, num
 from Script.Config import game_config
 from Script.Design import instuct_judege, handle_premise
-from Script.Modules.domains import needs
+from Script.Modules.domains import activity, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -183,7 +183,6 @@ def taste_wine(character_id: int) -> None:
     import random
     from Script.System.Cooking_System import cooking
 
-    character_data = cache.character_data[character_id]
     # 获取角色当前醉酒值和醉酒等级
     drunk_value = needs.of(character_id)["drunk"]
     get_drunk_level(character_id)
@@ -226,5 +225,5 @@ def taste_wine(character_id: int) -> None:
         "", int(selected_wine_recips.cid), 1, ""
     )
     # 将行动的食物对象设置为该酒
-    character_data.behavior.target_food = new_wine_food
+    activity.update_behavior(character_id, target_food=new_wine_food)
     add_drunk_point(character_id, new_wine_food, taste_wine_flag=True)

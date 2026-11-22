@@ -14,7 +14,7 @@ from types import SimpleNamespace
 
 from Script.Core import game_type
 from Script.Kernel import core
-from Script.Modules.domains import inventory, kitchen, roster
+from Script.Modules.domains import activity, inventory, kitchen, roster
 from Script.Modules.gameplay_resolution import intent, npc_starters, working
 from Script.System.Cooking_System import cooking
 from tests.fast.base import FastTestCase
@@ -72,7 +72,7 @@ class DiningHallStateTest(FastTestCase):
         npc_starters.buy_food(1, data)
         bag = inventory.foods(1)
         self.assertEqual(vars(bag[food.uid]), vars(food))
-        target = self.cache.character_data[1].behavior.target_food
+        target = activity.behavior(1).target_food
         self.assertEqual(vars(target), vars(bag[food.uid]))
         self.assertEqual(kitchen.shelves(), {"7": {}})
 

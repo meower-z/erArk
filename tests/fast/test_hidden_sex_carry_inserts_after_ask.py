@@ -21,6 +21,7 @@ from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Sex_System import hidden_sex_panel
 from tests import kernel_data
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = update
@@ -43,7 +44,7 @@ class HiddenSexCarryInsertsAfterAskTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
-        self.player.target_character_id = NPC
+        aim(self.player.cid, NPC)
         core.reset_state(kernel_data.reprojected(core.state()))
 
     def test_carry_insert_queued_when_ask_starts(self) -> None:

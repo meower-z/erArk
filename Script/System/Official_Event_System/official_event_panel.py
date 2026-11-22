@@ -29,6 +29,7 @@ from Script.Design import talk
 from Script.System.Official_Event_System import official_event_handle
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw
+from Script.Modules.domains import activity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -46,8 +47,8 @@ def get_code_text(raw_text: str, character_id: int, partner_id: int) -> str:
     """
     把事件文本里的口上代码转成可显示的文本
 
-    转换期间把主体的交互对象指向本次事件的互动对象，使文本里的交互对象代码
-       指向对的人（无互动对象时为博士）；转完立刻还原
+    转换期间主体的交互对象读作 partner_id（activity.target_as，不写状态），使文本里的交互对象代码
+    指向本次事件的互动对象（无互动对象时为博士）
     Keyword arguments:
     raw_text -- 原始文本
     character_id -- 主体角色id（无主体为0，即博士）
@@ -59,13 +60,8 @@ def get_code_text(raw_text: str, character_id: int, partner_id: int) -> str:
         return ""
     if character_id not in cache.character_data:
         return raw_text
-    character_data: game_type.Character = cache.character_data[character_id]
-    old_target_id = character_data.target_character_id
-    character_data.target_character_id = partner_id
-    try:
+    with activity.target_as(character_id, partner_id):
         return talk.code_text_to_draw_text(raw_text, character_id)
-    finally:
-        character_data.target_character_id = old_target_id
 
 
 def get_event_title(queue_data: dict) -> str:

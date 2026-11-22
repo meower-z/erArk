@@ -15,7 +15,13 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, pregnancy, roster, relations
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    pregnancy,
+    relations,
+    roster,
+)
 
 panel_info_data: dict[str, object] = {}
 
@@ -42,25 +48,23 @@ def move_to_inpatient_department_for_born(mother_character_id: int) -> list:
     Return arguments:
     list -- 事件所在的住院区场景路径
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
-    mom_character_data: game_type.Character = cache.character_data[
-        mother_character_id
-    ]
     mom_scene_str = map_handle.get_map_system_path_str_for_list(
-        mom_character_data.position
+        activity.position(mother_character_id)
     )
     if "Inpatient_Department" in cache.scene_data[mom_scene_str].scene_tag:
-        target_scene_path = list(mom_character_data.position)
+        target_scene_path = list(activity.position(mother_character_id))
     else:
         target_scene_path = map_handle.get_map_system_path_for_str(
             random.choice(constant.place_data["Inpatient_Department"])
         )
         map_handle.character_move_scene(
-            mom_character_data.position, target_scene_path, mother_character_id
+            activity.position(mother_character_id),
+            target_scene_path,
+            mother_character_id,
         )
-    if pl_character_data.position != target_scene_path:
+    if activity.position(0) != target_scene_path:
         map_handle.character_move_scene(
-            pl_character_data.position, target_scene_path, 0
+            activity.position(0), target_scene_path, 0
         )
     return target_scene_path
 

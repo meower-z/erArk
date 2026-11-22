@@ -15,7 +15,9 @@ from Script.Kernel import core
 from Script.Settle import past_day_settle, realtime_settle
 from Script.UI.Panel import character_info_head
 from tests import kernel_data, world
-from Script.Modules.domains import action_info, flags, chara_life, relations
+from tests.chara_activity import aim, behave, doing, scene_of, stand, status
+from Script.Modules.domains import action_info, activity, chara_life, flags
+from Script.Modules.domains import relations
 
 E = education_constant
 
@@ -126,7 +128,7 @@ if len(teacher_list) < 2:
         cd = cache.character_data[cid]
         if (
             cid in all_daughter_list
-            or cd.dead
+            or activity.dead(cd.cid)
             or handle_premise.handle_self_is_player_daughter(cid)
             or not handle_premise.handle_normal_2(cid)
             or chara_life.work_type(cd.cid) in (E.TEACHER_WORK_TYPE,)
@@ -154,9 +156,8 @@ for cid in daughter_list + teacher_list:
     kernel_data.put(flags.set, cd.cid, imprisonment=False)
     clear_need(cid)
     kernel_data.put(flags.set, cd.cid, is_follow=0)
-    cd.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-    cd.behavior.duration = 0
-    cd.state = constant.CharacterStatus.STATUS_ARDER
+    behave(cd.cid, constant.Behavior.SHARE_BLANKLY, duration=0)
+    status(cd.cid, constant.CharacterStatus.STATUS_ARDER)
 education.clear_class_schedule()
 filled, skipped = auto_schedule.auto_fill_class_schedule()
 check("一键排课", filled > 0, (filled, skipped))
@@ -217,7 +218,7 @@ for index, minute in enumerate((40, 45, 45, 45, 45, 45)):
         cd = cache.character_data[cid]
         tip = character_info_head.get_now_class_tip(cid)
         if (
-            cd.behavior.behavior_id
+            doing(cd.cid)
             in (
                 constant.Behavior.ATTENT_CLASS,
                 constant.Behavior.SELF_STUDY,
@@ -236,22 +237,21 @@ for index, minute in enumerate((40, 45, 45, 45, 45, 45)):
             continue
         teaching_count += 1
         cd = cache.character_data[cid]
-        if (
-            cd.behavior.behavior_id == constant.Behavior.TEACH
-            and class_ai.judge_in_scene(cid, teaching["classroom"])
+        if doing(cd.cid) == constant.Behavior.TEACH and class_ai.judge_in_scene(
+            cid, teaching["classroom"]
         ):
             right_room_count += 1
         else:
-            now_scene = map_handle.get_map_system_path_str_for_list(cd.position)
+            now_scene = scene_of(cd.cid)
             print(
                 f"    教师 {cid}{cd.name} 应在{teaching['classroom']}，实际在 {now_scene} 做 "
-                f"{cd.behavior.behavior_id}（{cd.behavior.start_time} +{cd.behavior.duration}）"
+                f"{doing(cd.cid)}（{activity.behavior(cd.cid).start_time} +{activity.behavior(cd.cid).duration}）"
             )
     teacher_log.append((right_room_count, teaching_count))
     stuck_text = ""
     if stuck:
         stuck_text = " 未收敛：" + "、".join(
-            f"{cid}{cache.character_data[cid].name}({cache.character_data[cid].behavior.behavior_id})"
+            f"{cid}{cache.character_data[cid].name}({doing(cid)})"
             for cid in stuck[:6]
         )
     print(
@@ -334,9 +334,9 @@ print(
 for cid in must_list:
     cd = cache.character_data[cid]
     print(
-        f"    {cid}{cd.name} 在 {map_handle.get_map_system_path_str_for_list(cd.position)} 做 "
-        f"{cd.behavior.behavior_id}（{cd.behavior.start_time} +{cd.behavior.duration}）"
-        f" 目标 {cd.behavior.move_final_target} 最近 {cd.last_behavior_id_list[-5:]}"
+        f"    {cid}{cd.name} 在 {scene_of(cd.cid)} 做 "
+        f"{doing(cd.cid)}（{activity.behavior(cd.cid).start_time} +{activity.behavior(cd.cid).duration}）"
+        f" 目标 {activity.behavior(cd.cid).move_final_target} 最近 {activity.last_behaviors(cd.cid)[-5:]}"
     )
 check(
     "两轮都收敛（打断规则没有让 NPC 来回抖动）",
@@ -408,12 +408,11 @@ def l4_true_add_spy(
     """
     result = _orig_true_add(character_id, now_time, since)
     if character_id == l4_id:
-        cd = cache.character_data[character_id]
         L4_RT_LOG.append(
             (
-                cd.behavior.behavior_id,
-                cd.behavior.start_time,
-                cd.behavior.duration,
+                doing(character_id),
+                activity.behavior(character_id).start_time,
+                activity.behavior(character_id).duration,
                 result,
             )
         )
@@ -430,7 +429,6 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
     tuple -- (内核步数, 她是否跟上了时钟, 她的实时结算记录)
     功能: 交回自己的交互对象，否则交互对象不在场会提前结束她的行为
     """
-    cd = cache.character_data[l4_id]
     growth_data = child_growth(l4_id)
     growth_data.selected_course = {}
     growth_data.skip_class_flag = False
@@ -445,13 +443,14 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
     move_to(l4_id, l4_home)
     kernel_data.put(flags.set, l4_id, is_h=False)
     kernel_data.put(flags.set, l4_id, is_follow=0)
-    cd.behavior.behavior_id = constant.Behavior.PLAY_HOUSE
-    cd.behavior.start_time = step_start
-    cd.behavior.duration = minute
-    cd.behavior.move_target = []
-    cd.behavior.move_final_target = []
-    cd.state = constant.CharacterStatus.STATUS_ARDER
-    cd.target_character_id = l4_id
+    stand(
+        l4_id,
+        constant.Behavior.PLAY_HOUSE,
+        start_time=step_start,
+        duration=minute,
+    )
+    status(l4_id, constant.CharacterStatus.STATUS_ARDER)
+    aim(l4_id, l4_id)
     kernel_data.put(action_info.set, l4_id, "wake_time", step_start)
     clear_need(l4_id)
     world.set_clock(step_start)

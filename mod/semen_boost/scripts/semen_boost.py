@@ -15,7 +15,7 @@ import csv
 import random
 from contextlib import suppress
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, activity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -188,8 +188,6 @@ def modded_common_ejaculation() -> tuple[str, int]:
     from Script.Modules.domains import action_info, dirty, h_meters, h_state
     from Script.Modules.domains import tallies
 
-    character_data = cache.character_data[0]
-
     # 乘以一个随机数补正
     random_weight = random.uniform(0.8, 1.2)
 
@@ -211,11 +209,11 @@ def modded_common_ejaculation() -> tuple[str, int]:
     # 基础射精值，小中多射精区分
     endure_cnt = h_state.get(0, "endure_not_shot_count")
     semen_count: float
-    if character_data.second_behavior["p_orgasm_strong"] == 1:
+    if activity.second_behavior(0, "p_orgasm_strong") == 1:
         base_amount = _mod_semen_config[2].base_semen_amount
         semen_count = int(base_amount * random_weight) * (endure_cnt + 1)
         semen_text = _("超大量射精，射出了")
-    elif character_data.second_behavior["p_orgasm_normal"] == 1:
+    elif activity.second_behavior(0, "p_orgasm_normal") == 1:
         base_amount = _mod_semen_config[1].base_semen_amount
         semen_count = int(base_amount * random_weight) * (endure_cnt + 1)
         semen_text = _("大量射精，射出了")
@@ -229,8 +227,8 @@ def modded_common_ejaculation() -> tuple[str, int]:
     extra_text += _("（Mod强化+）")
 
     # 如果有交互对象，则根据交互对象的榨精能力等级来调整射精量
-    if character_data.target_character_id > 0:
-        target_data = cache.character_data[character_data.target_character_id]
+    if activity.target(0) > 0:
+        target_data = cache.character_data[activity.target(0)]
         squeeze_adjust = handle_ability.get_ability_adjust(
             abilities.ability(target_data.cid)[77]
         )

@@ -26,10 +26,10 @@ from Script.UI.Panel import achievement_panel
 from Script.System.Pregnancy_System import born_event_panel
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import dirty, h_state, hypnosis
+from Script.Modules.domains import activity, dirty, h_state, hypnosis
 from Script.Modules.gameplay_resolution import working
-from Script.Modules.domains import abilities, growth, pregnancy, roster, work
-from Script.Modules.domains import chara_life, relations
+from Script.Modules.domains import abilities, chara_life, growth
+from Script.Modules.domains import pregnancy, relations, roster, work
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -1133,10 +1133,9 @@ def remove_abnormal_daughter(character_id: int) -> bool:
     # 安全护栏：只移除疑似误入的女儿，绝不动在册的亲生女儿
     if not judge_suspected_abnormal_daughter(character_id):
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
     # 从所在场景的角色列表里移除
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     if (
         scene_path_str in cache.scene_data
@@ -1154,8 +1153,8 @@ def remove_abnormal_daughter(character_id: int) -> bool:
         if character_id in child_id_list:
             child_id_list.remove(character_id)
             relations.child_id_list.set(other_data.cid, child_id_list)
-        if other_data.target_character_id == character_id:
-            other_data.target_character_id = other_data.cid
+        if activity.target(other_data.cid) == character_id:
+            activity.set_target(other_data.cid, other_data.cid)
     # 清掉公务事件队列里指向她的项（clean 会丢弃主体已不在角色表里的项）
     official_event_handle.clean_official_event_queue()
     return True

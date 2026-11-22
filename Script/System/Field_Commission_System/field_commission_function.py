@@ -5,9 +5,9 @@ from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
-from Script.Modules.domains import abilities, achievement, commission, country
-from Script.Modules.domains import flags, location, recruit, roster, warehouse
-from Script.Modules.domains import relations
+from Script.Modules.domains import abilities, achievement, activity, commission
+from Script.Modules.domains import country, flags, location, recruit, relations
+from Script.Modules.domains import roster, warehouse
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -109,10 +109,7 @@ def get_commission_demand_and_reward(
             # 需要有空房间
             empty_room = confinement_and_training.get_unused_prison_dormitory()
             if empty_room != "":
-                character_data: game_type.Character = cache.character_data[
-                    fugitive_id
-                ]
-                character_data.position = ["关押", f"{empty_room}"]
+                activity.set_position(fugitive_id, ["关押", f"{empty_room}"])
                 confinement_and_training.chara_become_prisoner(fugitive_id)
                 default.handle_chara_on_line(
                     fugitive_id,

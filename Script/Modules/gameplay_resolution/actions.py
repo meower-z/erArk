@@ -2,7 +2,8 @@
 gameplay_resolution 的行为收尾与按缓存投影出的 GameState
 ======================================================
 游戏数据仍在旧缓存 cache 里。内核的 GameState 给每个角色记下当前的行动：action_id 是行动的种类，
-action_data 是意图（intent.Intent），开始分钟与时长同缓存里的行为。内核时钟是游戏日历上的分钟数（game_time.minutes）。
+action_data 是意图（intent.Intent），开始分钟与时长同角色的当前行为（activity.behavior）。
+内核时钟是游戏日历上的分钟数（game_time.minutes）。
 一个行为的一生是三步，玩家与干员一样：
 - PickNextAction：只读，交回一个行动（队首、玩家的选择或状态机）。
 - StartAction：开始门（start_gate）、开始前的复查（starts.recheck）、时停（time_stop，最里层），
@@ -25,6 +26,7 @@ from Script.Kernel import core
 from Script.Modules.gameplay_resolution import time_hooks
 from Script.Modules.gameplay_resolution import intent
 from Script.Modules.domains import modes, roster as roster_domain
+from Script.Modules.domains import activity
 
 PLAYER = "0"
 """ 玩家在 GameState.characters 里的键 """
@@ -108,9 +110,9 @@ def wrap_up(act: core.Action) -> core.Effects:
 
 def _target_left_when(game: core.GameState) -> str | None:
     """
-    TargetLeft 的触发：干员的行为还在进行，它的交互对象已不在它所在的场景；在这一分钟时钟的结算之后
+    TargetLeft 的触发：干员的行为还在进行，它的交互对象已不在它所在的场景。只在这一分钟时钟的结算之后成立
     Keyword arguments:
-    game -- 当前的 GameState
+    game -- 当前的 GameState，交给 character_behavior.target_left
     Return arguments:
     str | None -- 名单顺序里第一个该提前结束的干员的键
     """
@@ -124,7 +126,7 @@ def _target_left_when(game: core.GameState) -> str | None:
             who != PLAYER
             and core.has_end(act)
             and act.start + act.duration > game.clock
-            and character_behavior.target_left(int(who))
+            and character_behavior.target_left(int(who), game)
         ):
             return who
     return None
@@ -142,11 +144,11 @@ def target_left(who: str) -> core.Effects:
     return (core.Interrupt(who),)
 
 
-def _intent_of(behavior: game_type.Behavior) -> intent.Intent:
+def _intent_of(behavior: activity.Behavior) -> intent.Intent:
     """
-    缓存里的行为写成意图（新游戏、没有内核状态的旧存档）
+    角色的当前行为写成意图（新游戏、没有内核状态的旧存档）
     Keyword arguments:
-    behavior -- 缓存里的行为
+    behavior -- 读出的当前行为
     Return arguments:
     Intent -- 行为id与分钟数
     """
@@ -157,8 +159,8 @@ def _intent_of(behavior: game_type.Behavior) -> intent.Intent:
 
 def state_from_cache(clock: int | None = None) -> core.GameState:
     """
-    由缓存在 clock 这一分钟投影出新的 GameState（新游戏、新周目、没有文件 "2" 的旧存档）
-    名单上每个角色（玩家与 roster.active() 里的干员）的行动取缓存里行为的开始时间与分钟数，
+    由在编名单与角色的当前行为在 clock 这一分钟投影出新的 GameState（新游戏、新周目、没有文件 "2" 的旧存档）
+    名单上每个角色（玩家与 roster.active() 里的干员）的行动取 activity.behavior 的开始时间与分钟数，
     开始时间没设过时从 clock 开始。干员的行动是 Behavior，到时由 wrap_up 收尾；
     玩家的是同样起止的 kernel.Idle，到时不收尾，直接选下一个行动。
     全局数据的 ticked 是 clock，settled_day 是 clock 所在的游戏日
@@ -171,7 +173,7 @@ def state_from_cache(clock: int | None = None) -> core.GameState:
         clock = minutes(game_time.now())
     characters: dict[str, core.Character] = {}
     for who in roster():
-        behavior = cache.character_data[int(who)].behavior
+        behavior = activity.behavior(int(who))
         start = clock
         if behavior.start_time.year > 1:
             start = minutes(behavior.start_time)
@@ -207,8 +209,8 @@ def _idle(act: core.Action) -> core.Action:
 
 def drifted() -> list[int]:
     """
-    行为还在进行（有结束函数且还没结束）的角色里，缓存里行为的开始或分钟数与内核里的行动不一致的角色。
-    行为已结束、等着收尾或选下一个行动的角色不比：收尾换掉了缓存里的行为，打断改短了内核里的行动
+    行为还在进行（有结束函数且还没结束）的角色里，activity.behavior 的开始或分钟数与 GameState 里的行动不一致的角色。
+    行为已结束、等着收尾或选下一个行动的角色不比：收尾换掉了 activity.behavior，打断改短了 GameState 里的行动
     Return arguments:
     list -- 角色id
     """
@@ -218,7 +220,7 @@ def drifted() -> list[int]:
         act = c.action
         if not core.has_end(act) or act.start + act.duration <= game.clock:
             continue
-        behavior = cache.character_data[int(who)].behavior
+        behavior = activity.behavior(int(who))
         if (
             minutes(behavior.start_time) != act.start
             or behavior.duration != act.duration

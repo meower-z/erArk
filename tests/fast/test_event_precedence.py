@@ -22,12 +22,13 @@ from unittest import mock
 from Script.Design import attr_calculation, character_behavior, game_time
 from Script.Design import handle_premise
 from Script.Kernel import core
-from Script.Modules.domains import flags, modes, needs
+from Script.Modules.domains import activity, flags, modes, needs
 from Script.Modules.gameplay_resolution import actions, events, time_hooks
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
 from tests import kernel_data
+from tests.chara_activity import aim
 
 type Trigger = Callable[[core.GameState], object]
 
@@ -41,7 +42,7 @@ NOON = MIDNIGHT + 12 * 60
 
 def state(clock: int, ticked: int, settled_day: int) -> core.GameState:
     """
-    玩家与干员1各做一个 10 小时的 Behavior 的 GameState。两人的 body.needs 取调用时内核状态里的值
+    玩家与干员1各做一个 10 小时的 Behavior 的 GameState。两人的 body.needs 与 activity 的十个键取调用时内核状态里的值
     Keyword arguments:
     clock -- 时钟
     ticked -- 上一次 Tick 结算到的时钟
@@ -54,6 +55,10 @@ def state(clock: int, ticked: int, settled_day: int) -> core.GameState:
             core.Action(who, actions.behave.name, None, clock - 1, 600),
             MappingProxyType(
                 {
+                    **{
+                        key: working.get(who, key, core.state())
+                        for key in activity.KEYS
+                    },
                     needs.KEY: cast(
                         core.JSON, needs.of(int(who), core.state())
                     ),
@@ -94,7 +99,7 @@ class PrecedenceTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(1, "干员")
-        self.player.target_character_id = 1
+        aim(self.player.cid, 1)
         kernel_data.set_needs(self.player.cid, hit=100)
         kernel_data.set_needs(self.npc.cid, hit=100)
         kernel_data.put(flags.set, self.npc.cid, is_h=True)
@@ -142,7 +147,7 @@ class PrecedenceTest(FastTestCase):
         self.arts_due = True
         self.enterContext(
             mock.patch.object(
-                character_behavior, "target_left", lambda cid: True
+                character_behavior, "target_left", lambda cid, game: True
             )
         )
         cases: tuple[tuple[Trigger, object], ...] = (

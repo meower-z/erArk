@@ -21,6 +21,7 @@ from Script.System.Instruct_System import handle_instruct
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests.world import play
+from Script.Modules.domains import activity
 
 NPC = 1
 """ 被打断的干员 """
@@ -33,7 +34,6 @@ class PlanQueueAnswersHeadTest(FastTestCase):
         """博士先做排给他的行动；干员被打断后马上开始排给他的行动"""
         self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
-        player = self.cache.character_data[0]
         kernel_data.written(
             plan_queue.plan_next, NPC, constant.Behavior.SLEEP, 60
         )
@@ -49,7 +49,7 @@ class PlanQueueAnswersHeadTest(FastTestCase):
             Return arguments:
             无
             """
-            behavior = player.behavior
+            behavior = activity.behavior(0)
             player_starts.append(
                 (behavior.behavior_id, core.state().clock, behavior.duration)
             )
@@ -69,7 +69,7 @@ class PlanQueueAnswersHeadTest(FastTestCase):
             if character_id == 0:
                 loop()
                 return 1
-            behavior = self.cache.character_data[character_id].behavior
+            behavior = activity.behavior(character_id)
             if behavior.behavior_id == constant.Behavior.SHARE_BLANKLY:
                 return 1
             npc_starts.append(

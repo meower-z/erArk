@@ -236,7 +236,7 @@ def new_game_minimal_init() -> None:
     建角色写的 GameState 数据记进调用方用 working.based_on 开的缓冲区。
     """
     log("执行新建游戏最小初始化...")
-    from Script.Core import cache_control, game_type, io_init
+    from Script.Core import cache_control, constant as cst, game_type, io_init
     from Script.Design import (
         character_handle,
         character,
@@ -320,14 +320,14 @@ def new_game_minimal_init() -> None:
         log(f"io_init.init_style 忽略异常: {e}")
 
     # 7. 初始行为（玩家与 NPC）：开始时间没设过，内核从开局时刻开始各角色的行动
-    from Script.Core import constant as cst
+    from Script.Modules.domains import activity
 
     for cid in roster.active():
-        ch = cache.character_data.get(cid)
-        if not ch:
+        if cid not in cache.character_data:
             continue
-        ch.behavior.behavior_id = cst.Behavior.SHARE_BLANKLY
-        ch.behavior.duration = 5
+        activity.update_behavior(
+            cid, behavior_id=cst.Behavior.SHARE_BLANKLY, duration=5
+        )
 
     log("新建游戏最小初始化完成.")
 

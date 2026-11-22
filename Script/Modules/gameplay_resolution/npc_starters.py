@@ -12,7 +12,7 @@ from uuid import UUID
 
 from Script.Core import cache_control, constant, game_type
 from Script.Kernel import core
-from Script.Modules.domains import economy, kitchen
+from Script.Modules.domains import activity, economy, kitchen
 from Script.Modules.domains import maintenance as engineering
 from Script.Modules.gameplay_resolution import intent, starts
 from Script.Modules.domains import medical, medical_patient, physical_exam
@@ -177,9 +177,8 @@ def buy_food(who: int, data: intent.Intent) -> None:
         taken = economy.take(shop, str(args["recipe_id"]), uid)
         assert taken is not None
         food = taken
-    character_data = cache.character_data[who]
     inventory.put_food(who, food)
-    character_data.behavior.target_food = food
+    activity.update_behavior(who, target_food=food)
 
 
 @starts.check("eat_bag_food")
@@ -194,10 +193,9 @@ def bag_food_still_there(who: int, data: intent.Intent) -> core.Action | None:
 @starts.starter("eat_bag_food")
 def eat_bag_food(who: int, data: intent.Intent) -> None:
     """背包里选中的食物作为行为的目标食物"""
-    character_data = cache.character_data[who]
     found = _find(inventory.foods(who), _args(data)["food_uid"])
     assert found is not None
-    character_data.behavior.target_food = found[1]
+    activity.update_behavior(who, target_food=found[1])
 
 
 @starts.starter("hunger_zero")

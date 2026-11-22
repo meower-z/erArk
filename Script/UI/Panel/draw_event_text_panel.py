@@ -4,6 +4,7 @@ from Script.Core import cache_control, game_type
 from Script.Design import talk
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
+from Script.Modules.domains import activity
 
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
@@ -41,11 +42,10 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
         """ 绘制文本的样式 """
         self.tooltip: str = ""
         """ 绘制文本的悬停提示 """
-        player_data: game_type.Character = cache.character_data[0]
         character_data: game_type.Character = cache.character_data[character_id]
-        if player_data.position not in [
-            character_data.position,
-            character_data.behavior.move_target,
+        if activity.position(0) not in [
+            activity.position(character_data.cid),
+            activity.behavior(character_data.cid).move_target,
         ]:
             return
 
@@ -55,15 +55,17 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
         event_data = game_config.config_event[self.event_id]
 
         # 如果玩家身上有角色diy事件标记
-        if character_data.event.chara_diy_event_flag:
+        if activity.event(character_data.cid).chara_diy_event_flag:
             # 更新事件id
-            self.event_id = character_data.event.event_id
+            self.event_id = activity.event(character_data.cid).event_id
             event_data = game_config.config_event[self.event_id]
             # 如果文本中没有两个|，则不是diy事件，不触发
             if event_data.text.count("|") < 2:
                 return
             # 清除角色的diy事件标记
-            character_data.event.chara_diy_event_flag = False
+            activity.update_event(
+                character_data.cid, chara_diy_event_flag=False
+            )
             # 触发diy事件标记
             self.diy_event_flag = True
 
@@ -94,7 +96,7 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
         if event_data.adv_id not in {"", "0", 0}:
             character_data = cache.character_data[character_id]
             target_character_data: game_type.Character = cache.character_data[
-                character_data.target_character_id
+                activity.target(character_data.cid)
             ]
             text_color = character_data.text_color
             tar_text_color = target_character_data.text_color

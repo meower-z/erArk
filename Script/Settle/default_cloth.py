@@ -6,7 +6,7 @@ from Script.Design import attr_calculation, clothing, handle_premise
 from Script.Design import map_handle, settle_behavior
 from Script.Core import cache_control, constant_effect, game_type, get_text
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import dirty
+from Script.Modules.domains import activity, dirty
 from Script.UI.Moudle import draw
 from Script.Modules.domains import flags, wardrobe
 
@@ -84,9 +84,8 @@ def handle_target_bra_see(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_bra_see(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -131,9 +130,8 @@ def handle_target_pan_see(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_pan_see(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -202,9 +200,8 @@ def handle_scene_all_characters_bra_pan_see(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -233,8 +230,7 @@ def handle_get_t_pan(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    clothing.pl_get_chara_pan(character_data.target_character_id)
+    clothing.pl_get_chara_pan(activity.target(character_id))
     # 绘制一个空白的等待信息
     now_draw = draw.WaitDraw()
     now_draw.width = window_width
@@ -261,8 +257,7 @@ def handle_get_t_sock(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    clothing.pl_get_chara_socks(character_data.target_character_id)
+    clothing.pl_get_chara_socks(activity.target(character_id))
     # 绘制一个空白的等待信息
     now_draw = draw.WaitDraw()
     now_draw.width = window_width
@@ -289,9 +284,8 @@ def handle_get_scene_t_pan(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历当前角色列表
@@ -325,9 +319,8 @@ def handle_get_scene_t_socks(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历当前角色列表
@@ -404,9 +397,8 @@ def handle_t_cloth_back(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_cloth_back(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -429,9 +421,8 @@ def handle_scene_all_characters_cloth_back(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历当前角色列表
@@ -1011,13 +1002,12 @@ def handle_target_up_and_bra_to_tem(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    cloth = wardrobe.of(character_data.target_character_id)
+    cloth = wardrobe.of(activity.target(character_id))
 
     for i in [5, 6]:
         if len(cloth.cloth_wear[i]):
             cloth.cloth_off[i], cloth.cloth_wear[i] = cloth.cloth_wear[i], []
-    wardrobe.put(character_data.target_character_id, cloth)
+    wardrobe.put(activity.target(character_id), cloth)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1039,10 +1029,9 @@ def handle_target_down_and_pan_to_tem(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    cloth = wardrobe.of(character_data.target_character_id)
+    cloth = wardrobe.of(activity.target(character_id))
 
     for i in [8, 9]:
         if len(cloth.cloth_wear[i]):
             cloth.cloth_off[i], cloth.cloth_wear[i] = cloth.cloth_wear[i], []
-    wardrobe.put(character_data.target_character_id, cloth)
+    wardrobe.put(activity.target(character_id), cloth)

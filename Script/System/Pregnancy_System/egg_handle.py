@@ -8,7 +8,7 @@ from Script.Design import second_behavior, talk
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
-from Script.Modules.domains import abilities, entertainment, flags
+from Script.Modules.domains import abilities, activity, entertainment, flags
 from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import roster, chara_life
 
@@ -392,9 +392,8 @@ def find_identifiable_egg_owner_in_scene(character_id: int) -> int:
     """
     from Script.Design import map_handle
 
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -415,9 +414,8 @@ def nursery_worker_on_duty_in_scene(character_id: int) -> bool:
     """
     from Script.Design import map_handle, handle_premise
 
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:

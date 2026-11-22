@@ -16,6 +16,8 @@ from unittest import mock
 from tests import kernel_data
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from typing import Any
@@ -54,7 +56,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         self.summon(AMIYA_ID, ())
         for item_id in TOOL_ITEM_LIST:
             kernel_data.put(inventory.set_item, self.pl.cid, item_id, 1)
-        self.pl.target_character_id = AMIYA_ID
+        aim(self.pl.cid, AMIYA_ID)
         self.instruct(constant.Instruct.ASK_GROUP_SEX)
         self.assertTrue(
             handle_premise.handle_group_sex_mode_on(0), "进入了群交"
@@ -78,7 +80,9 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         self.show_panel()
         self.world.player.check_done()
         arrived = self.wait_until(
-            lambda: chara.position == self.pl.position, 120
+            lambda: activity.position(chara_id)
+            == activity.position(self.pl.cid),
+            120,
         )
         self.assertTrue(arrived, f"{chara.name} 走到了博士身边")
         # 好感与信赖的上限，日常互动能攒到，够邀请群交的判定

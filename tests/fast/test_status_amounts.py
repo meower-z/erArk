@@ -14,6 +14,7 @@ from Script.Settle import realtime_settle
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
+from tests.chara_activity import aim
 
 
 class StatusAmountsTest(FastTestCase):
@@ -24,7 +25,7 @@ class StatusAmountsTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(1, "干员")
-        self.player.target_character_id = 1
+        aim(self.player.cid, 1)
 
     def test_action_effect_writes_whole_amounts(self) -> None:
         """少量S快结算 7 分钟：状态值与记录的量是整数"""

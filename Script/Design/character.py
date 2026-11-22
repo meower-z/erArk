@@ -17,7 +17,13 @@ from Script.Design import (
 )
 from Script.Config import normal_config
 from Script.UI.Moudle import panel, draw
-from Script.Modules.domains import abilities, action_info, body_manage, dirty
+from Script.Modules.domains import (
+    abilities,
+    action_info,
+    activity,
+    body_manage,
+    dirty,
+)
 from Script.Modules.domains import first_record, flags, h_meters, h_state
 from Script.Modules.domains import inventory, needs, player_ability
 from Script.Modules.domains import player_collection, pregnancy, roster, status
@@ -46,7 +52,6 @@ def init_attr(character_id: int) -> None:
     # print("进入第二步的init_attr")
     # print("进入第二步的character_id :",character_id)
     talent = abilities.talent(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     # character_data.birthday = attr_calculation.get_rand_npc_birthday(character_data.age)
     # character_data.height = attr_calculation.get_height(character_data.sex, character_data.age)
     # character_data.weight = attr_calculation.get_weight(bmi, character_data.height.now_height)
@@ -66,16 +71,12 @@ def init_attr(character_id: int) -> None:
         character_id,
         attr_calculation.get_status_zero(dict(status.of(character_id))),
     )
-    character_data.second_behavior = attr_calculation.get_second_behavior_zero(
-        character_data.second_behavior
-    )
     dirty.clear(character_id)
     items = attr_calculation.get_item_zero(dict(inventory.items(character_id)))
     inventory.replace_items(character_id, items)
     h_state.clear(character_id)
     first_record.clear(character_id)
     action_info.init_zero(character_id)
-    character_data.event = attr_calculation.get_event_zero()
     chara_key.reset(character_id, (*chara_life.WORK, *chara_life.ENTERTAINMENT))
     pregnancy.put(character_id, attr_calculation.get_pregnancy_zero())
     flags.reset(character_id)
@@ -237,10 +238,9 @@ def judge_character_time_over_24(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    start_time: datetime.datetime = character_data.behavior.start_time
+    start_time: datetime.datetime = activity.behavior(character_id).start_time
     end_time = game_time.get_sub_date(
-        minute=character_data.behavior.duration, old_date=start_time
+        minute=activity.behavior(character_id).duration, old_date=start_time
     )
 
     if end_time.day != start_time.day:

@@ -12,7 +12,9 @@ import importlib
 from unittest import mock
 
 from tests import kernel_data
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 INSERTED = 3
 """ H中的插入位置；归位后是 -1 """
@@ -26,10 +28,9 @@ class UnconsciousHRefusalEndsHTest(SlowTestCase):
         super().setUp()
         npcs = sorted(i for i in kernel_data.domain("roster").active() if i)
         self.a_id, self.b_id = npcs[0], npcs[1]
-        player = self.cache.character_data[0]
         for cid in (self.a_id, self.b_id):
-            self.world.move(cid, player.position)
-        player.target_character_id = self.a_id
+            self.world.move(cid, activity.position(0))
+        aim(0, self.a_id)
 
     def in_h(self, cid: int, unconscious: int) -> None:
         """

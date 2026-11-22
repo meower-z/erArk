@@ -19,7 +19,13 @@ from Script.System.Pregnancy_System import pregnancy_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import abilities, action_info, first_record, flags
+from Script.Modules.domains import (
+    abilities,
+    action_info,
+    activity,
+    first_record,
+    flags,
+)
 from Script.Modules.domains import h_meters, h_state, needs, plan
 from Script.Modules.domains import player_ability, roster, status, relations
 
@@ -228,11 +234,10 @@ def refresh_temp_semen_max() -> None:
     刷新临时最大精液量\n
     """
     talent = abilities.talent(0)
-    character_data: game_type.Character = cache.character_data[0]
     meters = h_meters.of(0)
     now_semen = num.whole(meters["semen"])
     # 需要睡眠时长至少大于等于6h
-    if now_semen and character_data.behavior.duration >= 360:
+    if now_semen and activity.behavior(0).duration >= 360:
         # 最大额外精液量为正常上限的4倍
         limit = meters["semen_max"] * 4
         new_extra = min(meters["extra_semen"] + now_semen // 2, limit)

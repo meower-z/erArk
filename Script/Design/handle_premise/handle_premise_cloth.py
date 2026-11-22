@@ -3,7 +3,7 @@
 from Script.Core import cache_control, constant_promise, game_type
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import wardrobe
+from Script.Modules.domains import activity, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -18,9 +18,8 @@ def handle_t_wear_hat(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[0]):
         return 1
@@ -48,9 +47,8 @@ def handle_t_wear_glass(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[1]):
         return 1
@@ -78,9 +76,8 @@ def handle_t_wear_in_ear(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[2]):
         return 1
@@ -108,9 +105,8 @@ def handle_t_wear_in_neck(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[3]):
         return 1
@@ -138,9 +134,8 @@ def handle_t_wear_in_mouse(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[4]):
         return 1
@@ -196,8 +191,7 @@ def handle_t_wear_in_up(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_wear_in_up(character_data.target_character_id):
+    if handle_wear_in_up(activity.target(character_id)):
         return 1
     return 0
 
@@ -211,8 +205,7 @@ def handle_t_not_wear_in_up(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_wear_in_up(character_data.target_character_id):
+    if handle_wear_in_up(activity.target(character_id)):
         return 0
     return 1
 
@@ -253,8 +246,7 @@ def handle_t_wear_bra(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_wear_bra(character_data.target_character_id)
+    return handle_wear_bra(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_WEAR_BRA)
@@ -266,8 +258,7 @@ def handle_t_not_wear_bra(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_wear_bra(character_data.target_character_id)
+    return not handle_wear_bra(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_GLOVES)
@@ -279,9 +270,8 @@ def handle_t_wear_gloves(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[7]):
         return 1
@@ -309,9 +299,8 @@ def handle_t_wear_in_down(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[8]):
         return 1
@@ -355,9 +344,8 @@ def handle_t_wear_skirt(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[8]):
         cloth_id = wardrobe.of(target_data.cid).cloth_wear[8][0]
@@ -375,9 +363,8 @@ def handle_t_wear_trousers(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[8]):
         cloth_id = wardrobe.of(target_data.cid).cloth_wear[8][0]
@@ -422,9 +409,8 @@ def handle_t_wear_pan(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[9]):
         return 1
@@ -481,8 +467,7 @@ def handle_t_wear_socks(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_wear_socks(character_data.target_character_id)
+    return handle_wear_socks(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_WEAR_SOCKS)
@@ -494,8 +479,7 @@ def handle_t_not_wear_socks(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_wear_socks(character_data.target_character_id)
+    return not handle_wear_socks(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.NOT_WEAR_SHOES)
@@ -522,9 +506,8 @@ def handle_t_wear_shoes(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[11]):
         return 1
@@ -552,9 +535,8 @@ def handle_t_take_weapon(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[12]):
         return 1
@@ -582,9 +564,8 @@ def handle_t_not_take_extras(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if len(wardrobe.of(target_data.cid).cloth_wear[13]):
         return 0
@@ -761,10 +742,7 @@ def handle_t_equipment_damaged_ge_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_equipment_damaged_ge_2(
-        character_data.target_character_id
-    )
+    return handle_self_equipment_damaged_ge_2(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_EQUIPMENT_DAMAGED_GE_3)
@@ -790,10 +768,7 @@ def handle_t_equipment_damaged_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_equipment_damaged_ge_3(
-        character_data.target_character_id
-    )
+    return handle_self_equipment_damaged_ge_3(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_EQUIPMENT_MAINTANCE_GE_2)
@@ -819,7 +794,4 @@ def handle_t_equipment_maintenance_ge_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_equipment_maintenance_ge_2(
-        character_data.target_character_id
-    )
+    return handle_self_equipment_maintenance_ge_2(activity.target(character_id))

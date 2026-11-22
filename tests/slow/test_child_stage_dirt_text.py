@@ -11,6 +11,7 @@
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
 
 BABY = 101
 """ 婴儿素质：差分文本表里没有她的行 """
@@ -58,7 +59,7 @@ class ChildStageDirtTextTest(SlowTestCase):
                 clothing_type,
                 [],
             )
-        self.cache.character_data[0].target_character_id = self.target_id
+        aim(0, self.target_id)
         normal_config.system_setting.draw_setting[FULL_DIRTY_SETTING] = 1
 
     def panel_text(self, talent_id: int, semen_level: int) -> str:

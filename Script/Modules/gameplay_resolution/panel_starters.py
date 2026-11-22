@@ -21,7 +21,13 @@ from Script.Design import (
     map_handle,
 )
 from Script.Kernel import core
-from Script.Modules.domains import achievement, action_info, economy, flags
+from Script.Modules.domains import (
+    achievement,
+    action_info,
+    activity,
+    economy,
+    flags,
+)
 from Script.Modules.domains import player_ability, tallies
 from Script.Modules.gameplay_resolution import intent, plan_queue, starts
 from Script.System.Cooking_System import cooking
@@ -113,9 +119,8 @@ def start_buy_food(who: int, chosen: intent.Intent) -> None:
         taken = economy.take(cast(int | str, restaurant), cid, uid)
         assert taken is not None
         food = taken
-    character_data = cache.character_data[who]
     inventory.put_food(who, food)
-    character_data.behavior.target_food = food
+    activity.update_behavior(who, target_food=food)
 
 
 @starts.check("eat_food")
@@ -126,11 +131,10 @@ def check_eat_food(who: int, chosen: intent.Intent) -> core.Action | None:
     其余在高级性骚扰实行值够时换成低级性骚扰（肛），不够时换成拒绝食用
     """
     args = _args(chosen)
-    character_data = cache.character_data[who]
     food = inventory.foods(who).get(UUID(str(args["food_uid"])))
     if food is None:
         return _wait_one_minute(who)
-    target_id = character_data.target_character_id
+    target_id = activity.target(who)
     if not drunk_sex_common.judge_accept_alcohol_food(target_id, food):
         refused = (
             constant.Behavior.REFUSE_DRINK,
@@ -166,9 +170,8 @@ def start_eat_food(who: int, chosen: intent.Intent) -> None:
     吃下加了精液的特殊调味食物时结算成就
     """
     args = _args(chosen)
-    character_data = cache.character_data[who]
     food = inventory.foods(who)[UUID(str(args["food_uid"]))]
-    character_data.behavior.target_food = food
+    activity.update_behavior(who, target_food=food)
     if args.get("angry"):
         needs.add(who, "angry", 40)
         flags.set(who, angry_with_player=True)
@@ -194,10 +197,11 @@ def start_make_food(who: int, chosen: intent.Intent) -> None:
         int(cast(int, args["quality"])),
         int(cast(int, args["seasoning"])),
     )
-    character_data = cache.character_data[who]
-    character_data.behavior.make_food_count = len(made)
+    activity.update_behavior(who, make_food_count=len(made))
     if made:
-        character_data.behavior.target_food = inventory.foods(who)[made[-1]]
+        activity.update_behavior(
+            who, target_food=inventory.foods(who)[made[-1]]
+        )
     if len(made) < count:
         now_draw = draw.NormalDraw()
         now_draw.text = _(
@@ -227,7 +231,7 @@ def start_aromatherapy(who: int, chosen: intent.Intent) -> None:
     调香：消耗资源与今天的调香次数，对方带上调香效果并停下等待同样的时间，结算成就
     """
     recipe_id = int(cast(int, _args(chosen)["recipe_id"]))
-    target_id = cache.character_data[who].target_character_id
+    target_id = activity.target(who)
     formula = game_config.config_aromatherapy_recipes[recipe_id].formula
     for need_text in formula.split("&"):
         need_type, need_value = (int(v) for v in need_text.split("|"))
@@ -249,10 +253,9 @@ def start_aromatherapy(who: int, chosen: intent.Intent) -> None:
 @starts.starter("sleep")
 def start_sleep(who: int, chosen: intent.Intent) -> None:
     """睡觉：关门，记下睡觉与醒来的时间，关闭透视，助理随之进入晚安问候或要睡觉状态"""
-    character_data = cache.character_data[who]
     if _args(chosen).get("close_door"):
         scene_path = map_handle.get_map_system_path_str_for_list(
-            character_data.position
+            activity.position(who)
         )
         scene_data = cache.scene_data[scene_path]
         scene_data.close_flag = scene_data.close_type
@@ -309,7 +312,7 @@ def start_undress(who: int, chosen: intent.Intent) -> None:
     """
     给对方脱衣：0 脱到只穿内衣，1 脱到只剩袜子手套，2 脱光，3 收走内裤；之后的结算同脱衣
     """
-    target_id = cache.character_data[who].target_character_id
+    target_id = activity.target(who)
     choice = int(cast(int, _args(chosen)["choice"]))
     cloth = wardrobe.of(target_id)
     if choice == 0:
@@ -336,5 +339,5 @@ def start_undress(who: int, chosen: intent.Intent) -> None:
 def start_prepare_training(who: int, chosen: intent.Intent) -> None:
     """调教前准备：三人到调教室，监狱长做好准备，交互对象与监狱长随玩家等待"""
     confinement_and_training.start_training_preparation(
-        chosen.get("target", cache.character_data[who].target_character_id)
+        chosen.get("target", activity.target(who))
     )

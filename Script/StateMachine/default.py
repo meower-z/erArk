@@ -17,7 +17,13 @@ from Script.Design import (
     basement,
 )
 from Script.Core import get_text, cache_control, game_type, constant
-from Script.Modules.domains import abilities, action_info, economy, h_state
+from Script.Modules.domains import (
+    abilities,
+    action_info,
+    activity,
+    economy,
+    h_state,
+)
 from Script.Modules.domains import kitchen, maintenance, modes, production
 from Script.UI.Moudle import draw
 from Script.Modules.domains import body_manage, inventory, chara_life, relations
@@ -45,25 +51,28 @@ def general_movement_module(
     target_scene -- 寻路目标场景(在地图系统下的绝对坐标)\n
     show_info_flag -- 是否显示移动信息，默认为True
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.target_character_id = character_id
+    activity.set_target(character_id, character_id)
     target_scene_str = map_handle.get_map_system_path_str_for_list(target_scene)
     move_path, move_time = _movement_leg(character_id, target_scene)
     # 寻路正常时
     if move_time > 0:
-        character_data.behavior.move_final_target = target_scene
-        character_data.behavior.behavior_id = constant.Behavior.MOVE
-        character_data.behavior.move_target = move_path
-        character_data.behavior.duration = move_time
-        character_data.state = constant.CharacterStatus.STATUS_MOVE
+        activity.update_behavior(
+            character_id,
+            move_final_target=target_scene,
+            behavior_id=constant.Behavior.MOVE,
+            move_target=move_path,
+            duration=move_time,
+        )
+        activity.set_state(character_id, constant.CharacterStatus.STATUS_MOVE)
         if show_info_flag:
             _draw_move_intent(character_id, target_scene_str)
         return True
     # 寻路失败时
     else:
-        character_data.behavior.behavior_id = constant.Behavior.WAIT
-        character_data.behavior.duration = 1
-        character_data.state = constant.CharacterStatus.STATUS_WAIT
+        activity.update_behavior(
+            character_id, behavior_id=constant.Behavior.WAIT, duration=1
+        )
+        activity.set_state(character_id, constant.CharacterStatus.STATUS_WAIT)
         return False
 
 
@@ -106,7 +115,7 @@ def _draw_move_intent(character_id: int, target_scene_str: str) -> None:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     if (
-        character_data.position == cache.character_data[0].position
+        activity.position(character_id) == activity.position(0)
         and normal_config.system_setting.draw_setting[8] == 1
     ):
         now_scene_data = cache.scene_data[target_scene_str]
@@ -231,7 +240,6 @@ def character_sleep(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     plan.set("target_character_id", character_id)
     plan.set("behavior.behavior_id", constant.Behavior.SLEEP)
     plan.set("behavior.duration", 480)
@@ -245,7 +253,7 @@ def character_sleep(character_id: int) -> choice.Plan:
         min_to_wake_time = int(
             (
                 action_info.get(0, "wake_time")
-                - character_data.behavior.start_time
+                - activity.behavior(character_id).start_time
             ).seconds
             / 60
         )
@@ -295,10 +303,9 @@ def character_move_to_rand_scene(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_list = list(cache.scene_data.keys())
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_list.remove(now_scene_str)
     target_scene = map_handle.get_map_system_path_for_str(
@@ -349,7 +356,7 @@ def character_move_to_toilet(character_id: int) -> choice.Plan:
     character_data: game_type.Character = cache.character_data[character_id]
     plan.set("target_character_id", character_id)
     # 当前大区块
-    now_position = character_data.position[0]
+    now_position = activity.position(character_id)[0]
     # 是否已找到目标地点
     find_flag = False
     # 是否已选择另一个厕所
@@ -1310,7 +1317,6 @@ def character_move_to_rest_room(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     special_rest_room_list = []
     # 首先检测角色所属的势力与出身地是否有专属休息室
     chara_nation = relations.nation(character_id)
@@ -1330,7 +1336,7 @@ def character_move_to_rest_room(character_id: int) -> choice.Plan:
         )
     # 不使用专属休息室的话，检索当前角色所在的大场景里有没有休息室
     else:
-        now_position = character_data.position[0]
+        now_position = activity.position(character_id)[0]
         for place in constant.place_data["Rest_Room"]:
             if place.split(os.sep)[0] == now_position:
                 if (
@@ -1359,10 +1365,9 @@ def character_move_to_restaurant(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
 
     # 检索当前角色所在的大场景里有没有餐馆，没有的话再随机选择其他区块
-    now_position = character_data.position[0]
+    now_position = activity.position(character_id)[0]
     for place in constant.place_data["Restaurant"]:
         if place.split(os.sep)[0] == now_position:
             to_rest_room = map_handle.get_map_system_path_for_str(place)
@@ -1528,10 +1533,9 @@ def character_move_to_bath_room(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
 
     # 检索当前角色所在的大场景里有没有淋浴室，没有的话再随机选择其他区块
-    now_position = character_data.position[0]
+    now_position = activity.position(character_id)[0]
     for place in constant.place_data["Bathroom"]:
         if place.split(os.sep)[0] == now_position:
             to_bath_room = map_handle.get_map_system_path_for_str(place)
@@ -1578,7 +1582,7 @@ def character_move_to_player(character_id: int) -> choice.Plan:
     """
     plan = handle_state_machine.new_plan(character_id)
     plan.set("target_character_id", character_id)
-    to_dr = cache.character_data[0].position
+    to_dr = activity.position(0)
     _move_type, _path, move_path, _move_time = character_move.character_move(
         character_id, to_dr
     )
@@ -1615,21 +1619,17 @@ def character_continue_move(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
-    # print(f"\n\ndebug 判断 {character_data.name} 继续移动")
+    final = activity.behavior(character_id).move_final_target
     # 仅在有最终目标的情况下进行判断
-    if character_data.behavior.move_final_target != []:
+    if final != []:
 
         # 如果还没有抵达最终目标地点
-        if character_data.position != character_data.behavior.move_final_target:
-            # print(f"debug {character_data.name} 还没有抵达最终目标地点:{character_data.behavior.move_final_target}")
+        if activity.position(character_id) != final:
 
             # 基础数据计算
-            to_dr = cache.character_data[0].position
+            to_dr = activity.position(0)
             _move_type, _path, move_path, move_time = (
-                character_move.character_move(
-                    character_id, character_data.behavior.move_final_target
-                )
+                character_move.character_move(character_id, final)
             )
             move_flag = True  # true的话就是移动
             wait_flag = False  # true的话就是等待
@@ -1639,13 +1639,12 @@ def character_continue_move(character_id: int) -> choice.Plan:
                 wait_flag = True
 
             # 如果是向玩家移动的话
-            if move_flag and character_data.behavior.move_final_target == to_dr:
+            if move_flag and final == to_dr:
                 # 进行私密跟随判断
                 move_flag, wait_flag, outcome = (
                     character_move.private_move_outcome(character_id, move_path)
                 )
                 _settle_private_move(plan, outcome)
-                # print(f"debug {character_data.name} 向玩家移动，move_flag = {move_flag}, wait_flag = {wait_flag}")
 
             if move_flag:
                 plan.set("state", constant.CharacterStatus.STATUS_MOVE)
@@ -2205,7 +2204,6 @@ def character_work_nursery_care(character_id: int) -> choice.Plan:
     plan = handle_state_machine.new_plan(character_id)
     from Script.System.Pregnancy_System import egg_handle
 
-    character_data: game_type.Character = cache.character_data[character_id]
     # 优先级1：为在场角色（含自己）鉴定卵
     owner_id = egg_handle.find_identifiable_egg_owner_in_scene(character_id)
     if owner_id != -1:
@@ -2221,7 +2219,7 @@ def character_work_nursery_care(character_id: int) -> choice.Plan:
     if egg_handle.any_hatching_eggs_exist():
         action_list.append("hatch")
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data = cache.scene_data[scene_path_str]
     baby_id_list = [
@@ -2435,7 +2433,7 @@ def character_pee(character_id: int) -> choice.Plan:
     if (
         handle_premise.handle_urinate_ge_125(character_id)
         and handle_premise.handle_not_in_toilet(character_id)
-        and character_data.position == cache.character_data[0].position
+        and activity.position(character_id) == activity.position(0)
     ):
         plan.draw(
             _(
@@ -2596,7 +2594,7 @@ def character_help_buy_food(character_id: int) -> choice.Plan:
     plan.set("state", constant.CharacterStatus.STATUS_WAIT)
 
     # 如果和玩家位于同一地点，则输出提示信息
-    if character_data.position == cache.character_data[0].position:
+    if activity.position(character_id) == activity.position(0):
         plan.draw(_("{0}打算去买饭\n").format(character_data.name), wait=False)
     return plan
 
@@ -2617,7 +2615,7 @@ def character_help_make_food(character_id: int) -> choice.Plan:
     plan.set("state", constant.CharacterStatus.STATUS_WAIT)
 
     # 如果和玩家位于同一地点，则输出提示信息
-    if character_data.position == cache.character_data[0].position:
+    if activity.position(character_id) == activity.position(0):
         plan.draw(_("{0}打算去做饭\n").format(character_data.name), wait=False)
     return plan
 
@@ -2640,7 +2638,6 @@ def character_morning_salutation_flag_1(character_id: int) -> choice.Plan:
     plan.set("behavior.duration", 1)
     plan.set("state", constant.CharacterStatus.STATUS_WAIT)
     return plan
-    # print(f"{character_data.name}进入要早安问候状态")
 
 
 @handle_state_machine.add_state_machine(
@@ -2661,7 +2658,6 @@ def character_night_salutation_flag_1(character_id: int) -> choice.Plan:
     plan.set("behavior.duration", 1)
     plan.set("state", constant.CharacterStatus.STATUS_WAIT)
     return plan
-    # print(f"debug {character_data.name} 进入要晚安问候状态，time = {cache.game_time}")
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.START_MILK)
@@ -2856,7 +2852,6 @@ def character_wait_for_health_check(character_id: int) -> choice.Plan:
     plan.set("behavior.duration", 1)
     plan.set("state", constant.CharacterStatus.STATUS_WAIT)
     return plan
-    # print(f"{character_data.name}进入等待体检状态")
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WEAR_TO_LOCKER)
@@ -2872,7 +2867,7 @@ def character_wear_to_locker(character_id: int) -> choice.Plan:
     plan.set("behavior.behavior_id", constant.Behavior.WEAR_TO_LOCKER)
     plan.set("state", constant.CharacterStatus.STATUS_WEAR_TO_LOCKER)
     plan.set("behavior.duration", 10)
-    if character_data.position == cache.character_data[0].position:
+    if activity.position(character_id) == activity.position(0):
         plan.draw(_("{0}脱成全裸了\n").format(character_data.name), wait=False)
     return plan
 
@@ -2890,7 +2885,7 @@ def character_locker_to_wear(character_id: int) -> choice.Plan:
     plan.set("behavior.behavior_id", constant.Behavior.LOCKER_TO_WEAR)
     plan.set("state", constant.CharacterStatus.STATUS_LOCKER_TO_WEAR)
     plan.set("behavior.duration", 10)
-    if character_data.position == cache.character_data[0].position:
+    if activity.position(character_id) == activity.position(0):
         plan.draw(_("{0}穿上了衣服\n").format(character_data.name), wait=False)
     # 如果有浴场或游泳娱乐flag则置0
     if plan.get("sp_flag.bathhouse_entertainment"):
@@ -2944,7 +2939,7 @@ def character_get_shower_cloth_and_clean_locker(
     plan.set("behavior.behavior_id", constant.Behavior.PUT_SHOWER_CLOTH)
     plan.set("state", constant.CharacterStatus.STATUS_PUT_SHOWER_CLOTH)
     plan.set("behavior.duration", 10)
-    if character_data.position == cache.character_data[0].position:
+    if activity.position(character_id) == activity.position(0):
         plan.draw(
             _("{0}换上了浴帽和浴巾\n").format(character_data.name), wait=False
         )
@@ -3310,7 +3305,6 @@ def pull_students(character_id: int) -> None:
     """
     from Script.Modules.gameplay_resolution import plan_queue
 
-    character_data: game_type.Character = cache.character_data[character_id]
     # 把本节来上这间教室的学生变为听课状态
     # 只拉自己的学生（本节个人课表指向这间教室的人），不再把场景里所有学生岗都拉过来：
     #    路过的孩子不该被顺手记一节课。
@@ -3319,7 +3313,7 @@ def pull_students(character_id: int) -> None:
     from Script.System.Education_System import class_ai
 
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -3327,14 +3321,16 @@ def pull_students(character_id: int) -> None:
         if chara_id == character_id:
             continue
         if not class_ai.judge_student_join_class(
-            chara_id, scene_data.scene_name, character_data.behavior.start_time
+            chara_id,
+            scene_data.scene_name,
+            activity.behavior(character_id).start_time,
         ):
             continue
         # 让对方变成听课状态：打断后她在同一分钟开始听课，开始时刻与教师对齐，节次判定才对得上
         plan_queue.plan_next(
             chara_id,
             constant.Behavior.ATTENT_CLASS,
-            character_data.behavior.duration,
+            activity.behavior(character_id).duration,
             state=constant.CharacterStatus.STATUS_ATTENT_CLASS,
             interrupt=True,
         )
@@ -3402,10 +3398,9 @@ def character_education_skip_class(character_id: int) -> choice.Plan:
     plan = handle_state_machine.new_plan(character_id)
     from Script.System.Education_System import education_constant
 
-    character_data: game_type.Character = cache.character_data[character_id]
     plan.set("target_character_id", character_id)
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     now_scene_tag: str | list[str] = ""
     if now_scene_str in cache.scene_data:
@@ -3543,9 +3538,8 @@ def character_education_wait_next_period(character_id: int) -> choice.Plan:
 
     from Script.Design import game_time
 
-    character_data: game_type.Character = cache.character_data[character_id]
     plan.set("target_character_id", character_id)
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     duration = 30
     for hour, minute in game_time.CLASS_PERIOD_START:
         start_time = now_time.replace(
@@ -3700,14 +3694,13 @@ def character_work_maintenance_2(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     plan.set("target_character_id", character_id)
     plan.set("behavior.behavior_id", constant.Behavior.MAINTENANCE_FACILITIES)
     need_time = 5
     plan.set("state", constant.CharacterStatus.STATUS_MAINTENANCE_FACILITIES)
     # 获取当前位置
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     # 检查是否在损坏设施数据中
     damage = maintenance.damage()
@@ -3971,7 +3964,6 @@ def character_night_salutation_flag_2(character_id: int) -> choice.Plan:
     plan.set("behavior.duration", 1)
     plan.set("state", constant.CharacterStatus.STATUS_WAIT)
     return plan
-    # print(f"debug {character_data.name} 进入要晚安问候状态，time = {cache.game_time}")
 
 
 @handle_state_machine.add_state_machine(
@@ -4111,13 +4103,12 @@ def character_work_massage(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    character_data: game_type.Character = cache.character_data[character_id]
     plan.set("behavior.duration", 30)
     plan.set("behavior.behavior_id", constant.Behavior.MASSAGE)
     plan.set("state", constant.CharacterStatus.STATUS_MASSAGE)
 
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 场景角色数大于等于2时进行检测

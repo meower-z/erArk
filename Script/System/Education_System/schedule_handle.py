@@ -17,8 +17,8 @@ from Script.Config import game_config
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
 from typing import TYPE_CHECKING
-from Script.Modules.domains import education, facility, flags, growth, roster
-from Script.Modules.domains import chara_life
+from Script.Modules.domains import activity, chara_life, education, facility
+from Script.Modules.domains import flags, growth, roster
 
 if TYPE_CHECKING:
     import datetime
@@ -308,8 +308,7 @@ def get_upcoming_teaching(
     # 教师反查只认教师岗（Plan 31 §3.10），与 get_now_teaching 同口径
     if not judge_schedule_teacher(character_id):
         return None
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     for period, (hour, minute) in enumerate(game_time.CLASS_PERIOD_START):
         start_time = now_time.replace(
             hour=hour, minute=minute, second=0, microsecond=0
@@ -439,9 +438,10 @@ def get_period_left_minute(
     功能: 节次首尾相接没有课间，走班的人一迟到，照满45分钟上就会压进下一节，一节节滚下去越迟越多；
           把授课 / 听课 / 自习 / 个人式课的时长截到本节结束，下一节就能按时换教室
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     now_time = (
-        from_time or character_data.behavior.start_time or game_time.now()
+        from_time
+        or activity.behavior(character_id).start_time
+        or game_time.now()
     )
     period = game_time.get_class_period_by_time(now_time)
     if period == -1:
@@ -467,8 +467,7 @@ def get_now_course(character_id: int) -> dict | None:
     period = game_time.get_class_period(character_id)
     if period == -1:
         return None
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     return get_course_at(character_id, now_time, period)
 
 
@@ -490,8 +489,7 @@ def get_upcoming_course(
     """
     import datetime
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     for period, (hour, minute) in enumerate(game_time.CLASS_PERIOD_START):
         start_time = now_time.replace(
             hour=hour, minute=minute, second=0, microsecond=0
@@ -590,8 +588,7 @@ def get_now_teaching(character_id: int) -> dict | None:
     period = game_time.get_class_period(character_id)
     if period == -1:
         return None
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     cell = get_teacher_cell(character_id, now_time.weekday(), period)
     if cell is None:
         return None
@@ -600,7 +597,7 @@ def get_now_teaching(character_id: int) -> dict | None:
     #    此刻的手动授课与那节课无关，不能把那门性技当成本节科目（Plan 26 §3.7）
     if character_id == 0:
         now_scene_str = map_handle.get_map_system_path_str_for_list(
-            character_data.position
+            activity.position(character_id)
         )
         if (
             now_scene_str not in cache.scene_data
@@ -672,9 +669,8 @@ def get_intern_mentor(character_id: int, work_type_id: int) -> int:
     Return arguments:
     int -- 导师的角色id，无人在岗则为-1
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     if scene_path_str not in cache.scene_data:
         return -1
@@ -848,7 +844,7 @@ _BEHAVIOR_NAME_BY_CID: dict[int, str] = {}
 def get_behavior_name_by_cid(behavior_cid: int) -> str:
     """
     按行为cid反查它的en_name
-    Entertainment.csv 的 behavior_id 列存的是行为cid，而 Character.behavior.behavior_id 存的是
+    Entertainment.csv 的 behavior_id 列存的是行为cid，而 activity.behavior(cid).behavior_id 存的是
        en_name 字符串，两者之间需要这一层转换
     Keyword arguments:
     behavior_cid -- 行为cid

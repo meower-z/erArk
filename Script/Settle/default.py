@@ -29,7 +29,13 @@ from Script.Settle.common_default import base_chara_climix_common_settle
 from Script.Settle.common_default import base_chara_experience_common_settle
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import abilities, achievement, action_info, dirty
+from Script.Modules.domains import (
+    abilities,
+    achievement,
+    action_info,
+    activity,
+    dirty,
+)
 from Script.Modules.domains import facility, first_record, flags, fridge, growth
 from Script.Modules.domains import h_meters, h_state, history, hypnosis
 from Script.Modules.domains import inventory, maintenance, medical, modes, needs
@@ -87,8 +93,7 @@ def handle_add_small_hit_point(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     add_hit_point = add_time * (10 + needs.of(character_id)["hit_max"] * 0.005)
     now_add_hit_point = add_hit_point
@@ -122,8 +127,7 @@ def handle_add_small_mana_point(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     add_mana_point = add_time * (20 + needs.of(character_id)["hit_max"] * 0.01)
     add_mana_point = int(add_mana_point)
@@ -538,9 +542,8 @@ def handle_sub_target_medium_hit_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data = cache.character_data[character_id]
     base_chara_hp_mp_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         hp_value=-1,
         degree=1,
@@ -565,9 +568,8 @@ def handle_sub_target_medium_mana_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data = cache.character_data[character_id]
     base_chara_hp_mp_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         mp_value=-1,
         degree=1,
@@ -592,9 +594,8 @@ def handle_sub_target_large_hit_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data = cache.character_data[character_id]
     base_chara_hp_mp_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         hp_value=-1,
         degree=2,
@@ -619,9 +620,8 @@ def handle_sub_target_large_mana_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data = cache.character_data[character_id]
     base_chara_hp_mp_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         mp_value=-1,
         degree=2,
@@ -726,9 +726,8 @@ def handle_target_mood_to_good(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_mood_to_good(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -749,9 +748,8 @@ def handle_target_mood_to_normal(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_mood_to_normal(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -772,9 +770,8 @@ def handle_target_mood_to_bad(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_mood_to_bad(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -795,9 +792,8 @@ def handle_target_mood_to_angry(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_mood_to_angry(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -818,9 +814,8 @@ def handle_scene_all_characters_desire_point_zero(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -848,8 +843,7 @@ def handle_add_both_small_hit_point(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     add_hit_point = add_time * (10 + needs.of(character_id)["hit_max"] * 0.005)
     now_add_hit_point = add_hit_point
@@ -863,9 +857,9 @@ def handle_add_both_small_hit_point(
     if needs.of(character_id)["hit"] >= needs.of(character_id)["hit_max"]:
         needs.set(character_id, hit=needs.of(character_id)["hit_max"])
     # 交互对象也同样#
-    if character_data.target_character_id != character_id:
+    if activity.target(character_id) != character_id:
         target_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
+            activity.target(character_id)
         ]
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
@@ -910,8 +904,7 @@ def handle_add_both_small_mana_point(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     add_mana_point = add_time * (20 + needs.of(character_id)["hit_max"] * 0.01)
     add_mana_point = int(add_mana_point)
@@ -920,9 +913,9 @@ def handle_add_both_small_mana_point(
     if needs.of(character_id)["mana"] > needs.of(character_id)["mana_max"]:
         needs.set(character_id, mana=needs.of(character_id)["mana_max"])
     # 交互对象也同样#
-    if character_data.target_character_id != character_id:
+    if activity.target(character_id) != character_id:
         target_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
+            activity.target(character_id)
         ]
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
@@ -966,16 +959,18 @@ def handle_move_to_target_scene(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
-    if len(character_data.behavior.move_target):
+    if len(activity.behavior(character_id).move_target):
         # 如果NPC移动提示未屏蔽，且该NPC和玩家位于同一地点，则输出提示信息
         if (
             normal_config.system_setting.draw_setting[8] == 1
             and character_id > 0
-            and character_data.position == cache.character_data[0].position
+            and activity.position(character_id) == activity.position(0)
         ):
-            target_position_name = character_data.behavior.move_target[-1]
+            target_position_name = activity.behavior(character_id).move_target[
+                -1
+            ]
             if target_position_name == "0":
                 target_position_name = _("入口")
             draw_text = _("{0}向{1}移动了\n").format(
@@ -986,8 +981,8 @@ def handle_move_to_target_scene(
             now_draw.width = width
             now_draw.draw()
         map_handle.character_move_scene(
-            character_data.position,
-            character_data.behavior.move_target,
+            activity.position(character_id),
+            activity.behavior(character_id).move_target,
             character_id,
         )
 
@@ -1011,9 +1006,8 @@ def handle_first_kiss(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     # target_data.social_contact_data.setdefault(character_id, 0)
 
@@ -1023,7 +1017,7 @@ def handle_first_kiss(
             character_id,
             first_kiss_id=target_data.cid,
             first_kiss_time=game_time.now(),
-            first_kiss_place=character_data.position,
+            first_kiss_place=activity.position(character_id),
         )
         # 初吻的二段结算
         second_behavior.character_get_second_behavior(
@@ -1035,7 +1029,7 @@ def handle_first_kiss(
             target_data.cid,
             first_kiss_id=character_id,
             first_kiss_time=game_time.now(),
-            first_kiss_place=target_data.position,
+            first_kiss_place=activity.position(target_data.cid),
         )
         # 初吻的二段结算
         second_behavior.character_get_second_behavior(
@@ -1062,9 +1056,8 @@ def handle_first_sex(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
     item_flag = False
@@ -1080,7 +1073,7 @@ def handle_first_sex(
             character_id,
             first_sex_id=target_data.cid,
             first_sex_time=game_time.now(),
-            first_sex_place=character_data.position,
+            first_sex_place=activity.position(character_id),
             first_sex_posture=instruct_name,
         )
     if abilities.talent(target_data.cid)[0] == 1:
@@ -1090,7 +1083,7 @@ def handle_first_sex(
             fr.first_part_sex_dict[6] = {
                 "id": character_id,
                 "time": game_time.now(),
-                "place": list(target_data.position),
+                "place": list(activity.position(target_data.cid)),
                 "posture": instruct_name,
                 "item": 1 if item_flag else -1,
             }
@@ -1115,7 +1108,7 @@ def handle_first_sex(
             pan_id = wardrobe.of(target_data.cid).cloth_off[9][-1]
         # BUG 这一块疑似有BUG，但是未能确定来源，所以先多加个限制条件
         elif panties_tem := player_collection.get("npc_panties_tem").get(
-            character_data.target_character_id
+            activity.target(character_id)
         ):
             pan_id = panties_tem[-1]
         if pan_id is not None:
@@ -1126,7 +1119,7 @@ def handle_first_sex(
             ).format(target_data.name, pan_name)
             now_draw.draw()
             player_collection.set_first_panty(
-                character_data.target_character_id,
+                activity.target(character_id),
                 _("{0}(沾有处子血)").format(pan_name),
             )
         else:
@@ -1134,7 +1127,7 @@ def handle_first_sex(
                 "\n{0}的处子血滴了下去，被你谨慎地用试管接了一滴，已自动存入收藏品列表，可在藏物馆查看\n\n"
             ).format(target_data.name)
             player_collection.set_first_panty(
-                character_data.target_character_id,
+                activity.target(character_id),
                 _("一滴{0}的处子血").format(target_data.name),
             )
             now_draw.draw()
@@ -1159,9 +1152,8 @@ def handle_first_a_sex(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
     # 判定是否为道具性交
@@ -1182,7 +1174,7 @@ def handle_first_a_sex(
             character_id,
             first_sex_id=target_data.cid,
             first_sex_time=game_time.now(),
-            first_sex_place=character_data.position,
+            first_sex_place=activity.position(character_id),
             first_sex_posture=instruct_name,
         )
     if abilities.talent(target_data.cid)[1] == 1:
@@ -1192,7 +1184,7 @@ def handle_first_a_sex(
             fr.first_part_sex_dict[8] = {
                 "id": character_id,
                 "time": game_time.now(),
-                "place": list(target_data.position),
+                "place": list(activity.position(target_data.cid)),
                 "posture": instruct_name,
                 "item": 1 if item_flag else -1,
             }
@@ -1222,9 +1214,8 @@ def handle_first_u_sex(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
     # 判定是否为道具性交，已废弃
@@ -1243,7 +1234,7 @@ def handle_first_u_sex(
             character_id,
             first_sex_id=target_data.cid,
             first_sex_time=game_time.now(),
-            first_sex_place=character_data.position,
+            first_sex_place=activity.position(character_id),
             first_sex_posture=instruct_name,
         )
     if abilities.talent(target_data.cid)[2] == 1:
@@ -1253,7 +1244,7 @@ def handle_first_u_sex(
             fr.first_part_sex_dict[9] = {
                 "id": character_id,
                 "time": game_time.now(),
-                "place": list(target_data.position),
+                "place": list(activity.position(target_data.cid)),
                 "posture": instruct_name,
                 "item": -1,
             }
@@ -1283,9 +1274,8 @@ def handle_first_w_sex(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
     # 获取玩家最近一条非中断H指令的中文名，避免中断指令覆盖真实破处体位
@@ -1299,7 +1289,7 @@ def handle_first_w_sex(
             character_id,
             first_sex_id=target_data.cid,
             first_sex_time=game_time.now(),
-            first_sex_place=character_data.position,
+            first_sex_place=activity.position(character_id),
             first_sex_posture=instruct_name,
         )
     if abilities.talent(target_data.cid)[3] == 1:
@@ -1309,7 +1299,7 @@ def handle_first_w_sex(
             fr.first_part_sex_dict[7] = {
                 "id": character_id,
                 "time": game_time.now(),
-                "place": list(target_data.position),
+                "place": list(activity.position(target_data.cid)),
                 "posture": instruct_name,
                 "item": -1,
             }
@@ -1339,8 +1329,7 @@ def handle_day_first_meet_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     first_record.set(character_id, day_first_meet=0)
 
@@ -1364,8 +1353,7 @@ def handle_day_first_meet_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     first_record.set(character_id, day_first_meet=1)
 
@@ -1389,13 +1377,12 @@ def handle_first_kiss_to_penis(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     talent = abilities.talent(target_data.cid)
     # target_data.social_contact_data.setdefault(character_id, 0)
-    if character_data.target_character_id == character_id:
+    if activity.target(character_id) == character_id:
         return
 
     if talent[4] == 1:
@@ -1404,7 +1391,7 @@ def handle_first_kiss_to_penis(
             target_data.cid,
             first_kiss_id=character_id,
             first_kiss_time=game_time.now(),
-            first_kiss_place=target_data.position,
+            first_kiss_place=activity.position(target_data.cid),
             first_kiss_body_part=1,
         )
         # 阴茎初吻的二段结算
@@ -1432,8 +1419,7 @@ def handle_penetrating_vision_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     player_ability.set(character_id, visual=True)
     needs.add(character_id, "sanity", -1, min=0)
@@ -1460,8 +1446,7 @@ def handle_penetrating_vision_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     player_ability.set(character_id, visual=False)
 
@@ -1485,8 +1470,7 @@ def handle_hormone_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     player_ability.set(character_id, hormone=True)
 
@@ -1510,8 +1494,7 @@ def handle_hormone_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     player_ability.set(character_id, hormone=False)
 
@@ -1536,38 +1519,35 @@ def handle_hypnosis_one(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
+    target_character_data = cache.character_data[activity.target(character_id)]
     change_data.target_change.setdefault(
         target_character_data.cid, game_type.TargetChange()
     )
     target_change: game_type.TargetChange = change_data.target_change[
         target_character_data.cid
     ]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     # 结算理智消耗
     santi_down = hypnosis_panel.calculate_hypnosis_sanity_cost(
-        character_data.target_character_id
+        activity.target(character_id)
     )
     needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
     player_ability.add_sanity_cost(character_id, santi_down)
     # 结算催眠度增加
     hypnosis_degree_grow = hypnosis_panel.hypnosis_degree_calculation(
-        character_data.target_character_id
+        activity.target(character_id)
     )
     # debug下催眠增加到999
     if cache.debug_mode:
         hypnosis_degree_grow = 999
     new_hypnosis_degree = (
-        hypnosis.degree(character_data.target_character_id)
-        + hypnosis_degree_grow
+        hypnosis.degree(activity.target(character_id)) + hypnosis_degree_grow
     )
     # 赋予到角色数据
     hypnosis.set(
-        character_data.target_character_id,
+        activity.target(character_id),
         hypnosis_degree=min(
             new_hypnosis_degree,
             hypnosis_panel.hypnosis_degree_limit_calculation(),
@@ -1575,9 +1555,7 @@ def handle_hypnosis_one(
     )
     target_change.hypnosis_degree += hypnosis_degree_grow
     # 判断催眠完成
-    hypnosis_panel.evaluate_hypnosis_completion(
-        character_data.target_character_id
-    )
+    hypnosis_panel.evaluate_hypnosis_completion(activity.target(character_id))
     # 判断是否理智已耗尽导致催眠结束
     if needs.of(character_id)["sanity"] == 0 and flags.get(
         target_character_data.cid, "unconscious_h"
@@ -1586,9 +1564,7 @@ def handle_hypnosis_one(
         if flags.get(target_character_data.cid, "unconscious_h") == 5:
             player_ability.set(character_id, air_hypnosis_position="")
         flags.set(target_character_data.cid, unconscious_h=0)
-        hypnosis_state.clear_hypnosis_sub_states(
-            character_data.target_character_id
-        )
+        hypnosis_state.clear_hypnosis_sub_states(activity.target(character_id))
         now_draw = draw.NormalDraw()
         now_draw.text = _("\n{0}的理智耗尽，催眠结束\n\n").format(
             character_data.name
@@ -1616,12 +1592,12 @@ def handle_hypnosis_all(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_data.cid):
         return
     # 获取当前场景的全角色名单
     character_data = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_data.cid)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     scene_character_list = scene_data.character_list.copy()
@@ -1657,7 +1633,7 @@ def handle_hypnosis_all(
         target_change: game_type.TargetChange = change_data.target_change[
             target_character_data.cid
         ]
-        if target_character_data.dead:
+        if activity.dead(target_character_data.cid):
             continue
         # 结算催眠度增加
         hypnosis_degree_grow = hypnosis_panel.hypnosis_degree_calculation(
@@ -1713,11 +1689,8 @@ def handle_hypnosis_cancel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     # 空气催眠则重置催眠地点和解开门锁
     if flags.get(target_character_data.cid, "unconscious_h") == 5:
@@ -1726,7 +1699,7 @@ def handle_hypnosis_cancel(
     if flags.get(target_character_data.cid, "unconscious_h") >= 4:
         flags.set(target_character_data.cid, unconscious_h=0)
     # 去掉大部分的心体催眠状态
-    hypnosis_state.clear_hypnosis_sub_states(character_data.target_character_id)
+    hypnosis_state.clear_hypnosis_sub_states(activity.target(character_id))
     # 结算二段行为
     handle_npc_ai_in_h.settle_unconscious_semen_and_cloth(character_id)
 
@@ -1750,11 +1723,8 @@ def handle_target_hypnosis_increase_body_sensitivity_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     santi_down = 10
     hypnosis.set(target_character_data.cid, increase_body_sensitivity=True)
@@ -1782,11 +1752,8 @@ def handle_target_hypnosis_increase_body_sensitivity_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     hypnosis.set(target_character_data.cid, increase_body_sensitivity=False)
 
@@ -1810,15 +1777,14 @@ def handle_target_hypnosis_force_climax(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     needs.add(character_id, "sanity", -50, min=0)
     change_data.sanity_point -= 50
     player_ability.add_sanity_cost(character_id, 50)
 
     base_chara_climix_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         4,
         change_data_to_target_change=change_data,
     )
@@ -1843,20 +1809,17 @@ def handle_target_hypnosis_force_ovulation_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     santi_down = 10
     hypnosis.set(target_character_data.cid, force_ovulation=True)
     from Script.System.Pregnancy_System import egg_handle
 
-    with pregnancy.editing(character_data.target_character_id) as target_preg:
+    with pregnancy.editing(activity.target(character_id)) as target_preg:
         target_preg.reproduction_period = 5
         # 无壳卵生：强制进入排卵日的同时给予本日的体外排卵机会（周期直接改写不经过每日推进，需在此补置）
-        if egg_handle.is_egg_soft(character_data.target_character_id):
+        if egg_handle.is_egg_soft(activity.target(character_id)):
             target_preg.external_ovulation_chance = True
     needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
@@ -1882,11 +1845,8 @@ def handle_target_hypnosis_force_ovulation_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     hypnosis.set(target_character_data.cid, force_ovulation=False)
 
@@ -1910,17 +1870,12 @@ def handle_target_hypnosis_blockhead_switch_change(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     # 清理会复位全部行为模式标志，本次操作是开启还是关闭须以清理前的开关状态判断
     target_in_blockhead = hypnosis.get(target_character_data.cid, "blockhead")
-    hypnosis_state.clear_hypnosis_behavior_mode(
-        character_data.target_character_id
-    )
+    hypnosis_state.clear_hypnosis_behavior_mode(activity.target(character_id))
     if not target_in_blockhead:
         hypnosis.set(target_character_data.cid, blockhead=True)
         flags.set(target_character_data.cid, unconscious_h=6)
@@ -1949,11 +1904,8 @@ def handle_target_hypnosis_blockhead_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     if hypnosis.get(target_character_data.cid, "blockhead"):
         hypnosis.set(target_character_data.cid, blockhead=False)
@@ -1979,17 +1931,12 @@ def handle_target_hypnosis_active_h_switch_change(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     # 清理会复位全部行为模式标志，本次操作是开启还是关闭须以清理前的开关状态判断
     target_in_active_h = hypnosis.get(target_character_data.cid, "active_h")
-    hypnosis_state.clear_hypnosis_behavior_mode(
-        character_data.target_character_id
-    )
+    hypnosis_state.clear_hypnosis_behavior_mode(activity.target(character_id))
     if not target_in_active_h:
         hypnosis.set(target_character_data.cid, active_h=True)
         h_state.set(target_character_data.cid, npc_active_h=True)
@@ -2020,11 +1967,8 @@ def handle_target_hypnosis_active_h_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     if hypnosis.get(target_character_data.cid, "active_h"):
         hypnosis.set(target_character_data.cid, active_h=False)
@@ -2051,11 +1995,8 @@ def handle_target_hypnosis_pain_as_pleasure_switch_change(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     if hypnosis.get(target_character_data.cid, "pain_as_pleasure"):
         hypnosis.set(target_character_data.cid, pain_as_pleasure=False)
@@ -2086,11 +2027,8 @@ def handle_target_hypnosis_pain_as_pleasure_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     hypnosis.set(target_character_data.cid, pain_as_pleasure=False)
 
@@ -2169,12 +2107,11 @@ def handle_target_be_carried_in_time_stop(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.target_character_id == character_id:
+    if activity.target(character_id) == character_id:
         return
     player_ability.set(
         character_id,
-        carry_chara_id_in_time_stop=character_data.target_character_id,
+        carry_chara_id_in_time_stop=activity.target(character_id),
     )
 
 
@@ -2219,10 +2156,9 @@ def handle_target_be_free_in_time_stop(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     player_ability.set(
         character_id,
-        free_in_time_stop_chara_id=character_data.target_character_id,
+        free_in_time_stop_chara_id=activity.target(character_id),
     )
     needs.add(character_id, "sanity", -50, min=0)
     change_data.sanity_point -= 50
@@ -2270,8 +2206,7 @@ def handle_npc_active_h_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     h_state.set(character_id, npc_active_h=True)
 
@@ -2295,8 +2230,7 @@ def handle_npc_active_h_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     h_state.set(character_id, npc_active_h=False)
 
@@ -2320,11 +2254,8 @@ def handle_target_npc_active_h_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     h_state.set(target_character_data.cid, npc_active_h=True)
 
@@ -2348,11 +2279,8 @@ def handle_target_npc_active_h_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     h_state.set(target_character_data.cid, npc_active_h=False)
 
@@ -2464,9 +2392,8 @@ def handle_target_condom_info_show_flag_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_condom_info_show_flag_on(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -2489,9 +2416,8 @@ def handle_scene_all_characters_condom_info_show_flag_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -2569,9 +2495,8 @@ def handle_target_orgasm_edge_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_orgasm_edge_on(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -2594,9 +2519,8 @@ def handle_target_orgasm_edge_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_orgasm_edge_off(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -2732,11 +2656,8 @@ def handle_target_get_weeknesss_by_dr(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
     abilities.talent(target_character_data.cid)[402] = 1
     now_draw = draw.NormalDraw()
@@ -2767,7 +2688,7 @@ def handle_self_get_weeknesss_to_dr(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     abilities.talent(character_id)[401] = 1
     now_draw = draw.NormalDraw()
@@ -2843,15 +2764,13 @@ def handle_wait_unitl_traget_action_end(
         return
     from Script.Modules.gameplay_resolution import plan_queue
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    if character_data.dead:
+    target_character_data = cache.character_data[activity.target(character_id)]
+    if activity.dead(character_id):
         return
-    target_start_time = target_character_data.behavior.start_time
+    target_start_time = activity.behavior(target_character_data.cid).start_time
     target_end_time = game_time.get_sub_date(
-        target_character_data.behavior.duration, old_date=target_start_time
+        activity.behavior(target_character_data.cid).duration,
+        old_date=target_start_time,
     )
     # 到结束时间还有多少分钟，玩家接着等这么久
     add_time = int((target_end_time - now_time).total_seconds() / 60)
@@ -2883,19 +2802,17 @@ def handle_wait_unitl_player_action_end(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data = cache.character_data[0]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
-    player_action_start_time = pl_character_data.behavior.start_time
+    player_action_start_time = activity.behavior(0).start_time
     player_action_end_time = game_time.get_sub_date(
-        pl_character_data.behavior.duration, old_date=player_action_start_time
+        activity.behavior(0).duration, old_date=player_action_start_time
     )
     # 到结束时间还有多少分钟
     add_time = int((player_action_end_time - now_time).total_seconds() / 60)
-    character_data.behavior.behavior_id = constant.Behavior.WAIT
-    character_data.state = constant.CharacterStatus.STATUS_WAIT
-    character_data.behavior.duration = add_time + 1
+    activity.update_behavior(character_id, behavior_id=constant.Behavior.WAIT)
+    activity.set_state(character_id, constant.CharacterStatus.STATUS_WAIT)
+    activity.update_behavior(character_id, duration=add_time + 1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2917,13 +2834,12 @@ def handle_set_target_food_from_bag_last(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     if len(inventory.foods(character_id)) == 0:
         return
     # 获取背包最后一个食物
     last_key = list(inventory.foods(character_id).keys())[-1]
     now_food = inventory.foods(character_id)[last_key]
-    character_data.behavior.target_food = now_food
+    activity.update_behavior(character_id, target_food=now_food)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3019,11 +2935,10 @@ def handle_target_be_carried(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.target_character_id == character_id:
+    if activity.target(character_id) == character_id:
         return
     action_info.set(
-        character_id, "carry_chara_id", character_data.target_character_id
+        character_id, "carry_chara_id", activity.target(character_id)
     )
 
 
@@ -3046,8 +2961,7 @@ def handle_target_not_be_carried(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.target_character_id == character_id:
+    if activity.target(character_id) == character_id:
         return
     action_info.set(character_id, "carry_chara_id", 0)
 
@@ -3097,10 +3011,9 @@ def handle_facility_damage_check(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 获取当前位置
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     # 计算已损坏次数
     damage_count = maintenance.damage().get(scene_path_str, 0)
@@ -3133,8 +3046,7 @@ def handle_add_medium_hit_point(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     add_hit_point: num.Num = int(
         add_time * (20 + needs.of(character_id)["hit_max"] * 0.01)
@@ -3167,8 +3079,7 @@ def handle_add_medium_mana_point(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     add_mana_point: num.Num = int(
         add_time * (30 + needs.of(character_id)["hit_max"] * 0.02)
@@ -3201,25 +3112,24 @@ def handle_interrupt_target_activity(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if target_data.dead:
+    if activity.dead(target_data.cid):
         return
-    if character_data.target_character_id == 0:
+    if activity.target(character_id) == 0:
         return
     # if target_data.behavior.behavior_id == constant.Behavior.DEAD:
-    if target_data.behavior.behavior_id:
+    if activity.behavior(target_data.cid).behavior_id:
         if (
-            target_data.behavior.start_time
-            <= character_data.behavior.start_time
+            activity.behavior(target_data.cid).start_time
+            <= activity.behavior(character_id).start_time
         ):
             target_end_time = game_time.get_sub_date(
-                target_data.behavior.duration,
-                old_date=target_data.behavior.start_time,
+                activity.behavior(target_data.cid).duration,
+                old_date=activity.behavior(target_data.cid).start_time,
             )
-            if target_end_time >= character_data.behavior.start_time:
+            if target_end_time >= activity.behavior(character_id).start_time:
                 from Script.Modules.gameplay_resolution import plan_queue
 
                 # 对方的行为在她自己的结束函数（actions.wrap_up）里收尾
@@ -3269,8 +3179,7 @@ def handle_target_to_player(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.target_character_id = 0
+    activity.set_target(character_id, 0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3330,11 +3239,10 @@ def handle_add_this_event_to_already_triggered(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    player_character_data: game_type.Character = cache.character_data[0]
-    if player_character_data.event.son_event_id:
-        history.trigger(player_character_data.event.son_event_id)
+    if activity.event(0).son_event_id:
+        history.trigger(activity.event(0).son_event_id)
     else:
-        history.trigger(player_character_data.event.event_id)
+        history.trigger(activity.event(0).event_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3354,11 +3262,10 @@ def handle_add_this_event_to_today_already_triggered(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    player_character_data: game_type.Character = cache.character_data[0]
-    if player_character_data.event.son_event_id:
-        history.trigger_today(player_character_data.event.son_event_id)
+    if activity.event(0).son_event_id:
+        history.trigger_today(activity.event(0).son_event_id)
     else:
-        history.trigger_today(player_character_data.event.event_id)
+        history.trigger_today(activity.event(0).event_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3511,8 +3418,7 @@ def handle_pl_target_to_me(
     """
     if not add_time:
         return
-    pl_character_data: game_type.Character = cache.character_data[0]
-    pl_character_data.target_character_id = character_id
+    activity.set_target(0, character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3534,8 +3440,7 @@ def handle_target_to_self(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.target_character_id = character_id
+    activity.set_target(character_id, character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3557,8 +3462,7 @@ def handle_target_to_masturebate(
     """
     if not add_time:
         return
-    character_data = cache.character_data[character_id]
-    now_position = character_data.position
+    now_position = activity.position(character_id)
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
     now_scene_data = cache.scene_data[now_scene_str]
     if len(now_scene_data.character_list) >= 2:
@@ -3566,15 +3470,12 @@ def handle_target_to_masturebate(
         for chara_id in now_scene_data.character_list:
             # 遍历非自己且非玩家的角色
             if chara_id != character_id and chara_id != 0:
-                other_character_data: game_type.Character = (
-                    cache.character_data[chara_id]
-                )
                 # 检测是否在自慰
                 if (
-                    other_character_data.behavior.behavior_id
+                    activity.behavior(chara_id).behavior_id
                     == constant.Behavior.MASTUREBATE
                 ):
-                    character_data.target_character_id = chara_id
+                    activity.set_target(character_id, chara_id)
                     break
 
 
@@ -3597,8 +3498,7 @@ def handle_target_to_most_desire(
     """
     if not add_time:
         return
-    character_data = cache.character_data[character_id]
-    now_position = character_data.position
+    now_position = activity.position(character_id)
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
     now_scene_data = cache.scene_data[now_scene_str]
     target_chara_id = 0
@@ -3615,7 +3515,7 @@ def handle_target_to_most_desire(
                 target_chara_id = chara_id
         # 设置交互对象
         if target_chara_id:
-            character_data.target_character_id = target_chara_id
+            activity.set_target(character_id, target_chara_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3659,9 +3559,8 @@ def handle_target_add_small_s_feel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         0,
         50,
@@ -3688,9 +3587,8 @@ def handle_target_add_small_b_feel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         1,
         50,
@@ -3717,9 +3615,8 @@ def handle_target_add_small_c_feel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         2,
         50,
@@ -3746,11 +3643,10 @@ def handle_target_add_small_p_feel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if target_data.dead:
+    if activity.dead(target_data.cid):
         return
     status.setdefault(target_data.cid, 3, 0)
     now_lust_multiple = 30
@@ -3782,9 +3678,8 @@ def handle_target_add_small_v_feel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         4,
         50,
@@ -3811,9 +3706,8 @@ def handle_target_add_small_a_feel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         5,
         50,
@@ -3840,9 +3734,8 @@ def handle_target_add_small_u_feel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         6,
         50,
@@ -3869,9 +3762,8 @@ def handle_target_add_small_w_feel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         7,
         50,
@@ -3898,12 +3790,11 @@ def handle_target_add_small_lubrication(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         8,
         ability_level=abilities.ability(target_data.cid)[33],
@@ -3930,12 +3821,11 @@ def handle_target_add_small_learn(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         9,
         ability_level=abilities.ability(target_data.cid)[30],
@@ -3962,14 +3852,13 @@ def handle_target_add_small_repect(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         10,
         ability_level=abilities.ability(target_data.cid)[31],
@@ -3996,14 +3885,13 @@ def handle_target_add_small_friendly(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         11,
         ability_level=abilities.ability(target_data.cid)[32],
@@ -4030,14 +3918,13 @@ def handle_target_add_small_desire(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         12,
         ability_level=abilities.ability(target_data.cid)[33],
@@ -4064,14 +3951,13 @@ def handle_target_add_small_happy(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         13,
         ability_level=abilities.ability(target_data.cid)[13],
@@ -4098,14 +3984,13 @@ def handle_target_add_small_lead(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         14,
         ability_level=abilities.ability(target_data.cid)[35],
@@ -4132,14 +4017,13 @@ def handle_target_add_small_submit(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         15,
         ability_level=abilities.ability(target_data.cid)[14],
@@ -4166,14 +4050,13 @@ def handle_target_add_small_shy(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         16,
         ability_level=abilities.ability(target_data.cid)[34],
@@ -4200,14 +4083,13 @@ def handle_target_add_small_pain(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         17,
         ability_level=abilities.ability(target_data.cid)[15],
@@ -4234,14 +4116,13 @@ def handle_target_add_small_terror(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         18,
         10,
@@ -4269,11 +4150,10 @@ def handle_target_add_small_depression(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         19,
         change_data_to_target_change=change_data,
@@ -4299,14 +4179,13 @@ def handle_target_add_small_disgust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_id != 0 and character_data.target_character_id != 0:
+    if character_id != 0 and activity.target(character_id) != 0:
         return
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         20,
         5,
@@ -4334,8 +4213,7 @@ def handle_add_small_p_feel(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     now_lust_multiple = 10
     now_add_lust = (
@@ -4366,16 +4244,15 @@ def handle_both_add_small_learn(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id, add_time, 9, 10, change_data=change_data
     )
     # 交互对象也同样#
-    if character_data.target_character_id != character_id:
+    if activity.target(character_id) != character_id:
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             9,
             10,
@@ -4422,8 +4299,7 @@ def handle_add_small_lubrication(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id,
@@ -4453,8 +4329,7 @@ def handle_add_small_learn(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id,
@@ -4484,8 +4359,7 @@ def handle_add_small_respect(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id,
@@ -4515,8 +4389,7 @@ def handle_add_small_friendly(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id,
@@ -4546,8 +4419,7 @@ def handle_add_small_desire(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id,
@@ -4577,8 +4449,7 @@ def handle_add_small_happy(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id,
@@ -4608,8 +4479,7 @@ def handle_add_small_lead(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id,
@@ -4639,8 +4509,7 @@ def handle_add_small_submit(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id,
@@ -4670,8 +4539,7 @@ def handle_add_small_shy(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_state_common_settle(
         character_id,
@@ -4778,8 +4646,7 @@ def handle_door_close(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_position = character_data.position
+    now_position = activity.position(character_id)
     now_position_str = map_handle.get_map_system_path_str_for_list(now_position)
     now_scene_data = cache.scene_data[now_position_str]
     now_scene_data.close_flag = now_scene_data.close_type
@@ -4804,8 +4671,7 @@ def handle_door_close_reset(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_position = character_data.position
+    now_position = activity.position(character_id)
     now_position_str = map_handle.get_map_system_path_str_for_list(now_position)
     now_scene_data = cache.scene_data[now_position_str]
     now_scene_data.close_flag = 0
@@ -4830,17 +4696,16 @@ def handle_move_to_pre_scene(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     # 如果前一场景的移动数据与当前场景相同，则删除掉前一场景的移动数据
     past_moves = action_info.get(character_id, "past_move_position_list")
-    while past_moves and past_moves[-1] == character_data.position:
+    while past_moves and past_moves[-1] == activity.position(character_id):
         past_moves.pop(-1)
     action_info.set(character_id, "past_move_position_list", past_moves)
     # 然后再判断是否还有前一场景的移动数据，如果有则移动至前一场景
     if past_moves:
-        character_data.behavior.move_target = past_moves[-1]
+        activity.update_behavior(character_id, move_target=past_moves[-1])
         handle_move_to_target_scene(
             character_id, add_time, change_data, now_time
         )
@@ -4848,7 +4713,7 @@ def handle_move_to_pre_scene(
         action_info.pop_past_move(character_id, -1)
     # 博士被赶回前一场景后，原寻路目标已不可达，取消本次连续寻路以避免再次进入并触发循环。
     if character_id == 0:
-        character_data.behavior.move_final_target = []
+        activity.update_behavior(character_id, move_final_target=[])
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -4870,9 +4735,8 @@ def handle_target_move_to_pre_scene(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_move_to_pre_scene(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -4895,17 +4759,15 @@ def handle_scene_others_move_to_pre_scene(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
     for chara_id in scene_data.character_list.copy():
         # 跳过自己和交互对象
-        if (
-            chara_id == character_id
-            or chara_id == character_data.target_character_id
+        if chara_id == character_id or chara_id == activity.target(
+            character_id
         ):
             continue
         handle_move_to_pre_scene(chara_id, add_time, change_data, now_time)
@@ -4930,9 +4792,8 @@ def handle_scene_all_chara_move_to_pre_scene(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
@@ -4962,9 +4823,8 @@ def handle_scene_all_chara_except_masturebate_to_pl_move_to_pre_scene(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
@@ -4999,7 +4859,6 @@ def handle_self_h_state_reset(
         return
     from Script.System.Sex_System import group_sex_panel
 
-    character_data: game_type.Character = cache.character_data[character_id]
     # H状态数据归零
     h_state.reset(character_id)
     # 清零阴茎污浊
@@ -5028,16 +4887,12 @@ def handle_self_h_state_reset(
                     num.whole(status.of(character_id)[state_id])
                 )
     # 清零H相关二段状态
-    for (
-        second_behavior_id,
-        behavior_value,
-    ) in character_data.second_behavior.items():
-        if behavior_value != 0:
-            behavior_data = game_config.config_behavior[second_behavior_id]
-            if "H装备" in behavior_data.tag or "侍奉" in behavior_data.tag:
-                second_behavior.character_get_second_behavior(
-                    character_id, second_behavior_id, reset=True
-                )
+    for second_behavior_id in activity.second_behaviors(character_id):
+        behavior_data = game_config.config_behavior[second_behavior_id]
+        if "H装备" in behavior_data.tag or "侍奉" in behavior_data.tag:
+            second_behavior.character_get_second_behavior(
+                character_id, second_behavior_id, reset=True
+            )
     # 囚犯干员回到自己监牢
     if handle_premise.handle_imprisonment_1(
         character_id
@@ -5046,7 +4901,7 @@ def handle_self_h_state_reset(
             chara_life.dormitory(character_id)
         )
         map_handle.character_move_scene(
-            character_data.position, dormitory_list, character_id
+            activity.position(character_id), dormitory_list, character_id
         )
     # 退出H模式
     flags.set(character_id, is_h=False)
@@ -5071,10 +4926,9 @@ def handle_both_h_state_reset(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_h_state_reset(character_id, add_time, change_data, now_time)
     handle_self_h_state_reset(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -5097,9 +4951,8 @@ def handle_update_orgasm_level(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     with h_state.editing(character_id) as hs, h_state.editing(
         target_data.cid
@@ -5133,9 +4986,8 @@ def handle_scene_all_characters_update_orgasm_level(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -5168,9 +5020,8 @@ def handle_scene_all_characters_h_state_reset(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list.copy():
@@ -5221,9 +5072,8 @@ def handle_chara_off_line(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.behavior = game_type.Behavior()  # 行动数据归零
-    character_data.event = game_type.Chara_Event()  # 事件数据归零
+    activity.set_behavior(character_id)  # 行动数据归零
+    activity.set_event(character_id)  # 事件数据归零
     handle_assistant_reset(
         character_id, add_time, change_data, now_time
     )  # 助理数据归零
@@ -5242,11 +5092,11 @@ def handle_chara_off_line(
         roster.remove(character_id)
     # 离开地图
     old_scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     if character_id in cache.scene_data[old_scene_path_str].character_list:
         cache.scene_data[old_scene_path_str].character_list.remove(character_id)
-    character_data.position = ["0", "0"]
+    activity.set_position(character_id, ["0", "0"])
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5268,7 +5118,6 @@ def handle_chara_on_line(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 基础属性重置
     needs.set(character_id, hit=needs.of(character_id)["hit_max"])
     needs.set(character_id, mana=needs.of(character_id)["mana_max"])
@@ -5284,18 +5133,21 @@ def handle_chara_on_line(
     # 赋予默认行动数据：与内核加入角色时给的空闲一致，此刻开始、0分钟；已在内核里的角色当前的行动被打断
     from Script.Modules.gameplay_resolution import plan_queue
 
-    character_data.target_character_id = character_id
-    character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-    character_data.behavior.start_time = now_time
-    character_data.behavior.duration = 0
-    character_data.state = constant.CharacterStatus.STATUS_ARDER
+    activity.set_target(character_id, character_id)
+    activity.update_behavior(
+        character_id,
+        behavior_id=constant.Behavior.SHARE_BLANKLY,
+        start_time=now_time,
+        duration=0,
+    )
+    activity.set_state(character_id, constant.CharacterStatus.STATUS_ARDER)
     plan_queue.interrupt(character_id)
     # 加入当前干员列表
     if not roster.has(character_id):
         roster.add(character_id)
     # 进入地图
     now_scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     if character_id not in cache.scene_data[now_scene_path_str].character_list:
         cache.scene_data[now_scene_path_str].character_list.add(character_id)
@@ -5320,9 +5172,8 @@ def handle_t_be_bagged(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     flags.set(target_data.cid, be_bagged=True)
 
@@ -5346,9 +5197,8 @@ def handle_t_be_imprisonment(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     flags.set(target_data.cid, imprisonment=True)
 
@@ -5394,12 +5244,11 @@ def handle_place_all_chara_add_1_been_hypnosis_experience(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     # 获取当前场景的全角色名单
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     scene_character_list = scene_data.character_list.copy()
@@ -5895,9 +5744,8 @@ def handle_target_intelligent_follow_on(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_intelligent_follow_on(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -5942,9 +5790,8 @@ def handle_target_intelligent_follow_off(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_intelligent_follow_off(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -6066,9 +5913,8 @@ def handle_t_h_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_h_flag_to_0(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -6091,9 +5937,8 @@ def handle_t_h_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_h_flag_to_1(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -6116,9 +5961,8 @@ def handle_scene_all_characters_h_flag_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -6168,9 +6012,8 @@ def handle_target_hidden_sex_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_hidden_sex_flag_to_0(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -6193,12 +6036,11 @@ def handle_both_hidden_sex_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_hidden_sex_flag_to_0(
         character_id, add_time, change_data, now_time
     )
     handle_self_hidden_sex_flag_to_0(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -6243,9 +6085,8 @@ def handle_target_exhibitionism_sex_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_exhibitionism_sex_flag_to_0(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -6268,12 +6109,11 @@ def handle_both_exhibitionism_sex_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_self_exhibitionism_sex_flag_to_0(
         character_id, add_time, change_data, now_time
     )
     handle_self_exhibitionism_sex_flag_to_0(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -6606,8 +6446,7 @@ def handle_target_angry_with_player_flag_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character = cache.character_data[character_data.target_character_id]
+    target_character = cache.character_data[activity.target(character_id)]
     flags.set(target_character.cid, angry_with_player=False)
 
 
@@ -6810,17 +6649,16 @@ def handle_talk_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if character_id != 0 and character_data.target_character_id != 0:
+        if character_id != 0 and activity.target(character_id) != 0:
             return
         # 获取调整值#
         ability.setdefault(40, 0)
@@ -6831,7 +6669,7 @@ def handle_talk_add_adjust(
         )
         # 好意变化#
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             11,
             ability_level=ability[40],
@@ -6839,7 +6677,7 @@ def handle_talk_add_adjust(
         )
         # 快乐变化#
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             13,
             ability_level=ability[40],
@@ -6870,14 +6708,13 @@ def handle_coffee_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if character_id != 0 and character_data.target_character_id != 0:
+        if character_id != 0 and activity.target(character_id) != 0:
             return
         # 获取调整值#
         ability.setdefault(43, 0)
@@ -6892,7 +6729,7 @@ def handle_coffee_add_adjust(
         )
         # 好意变化#
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             11,
             ability_level=ability[43],
@@ -6919,18 +6756,17 @@ def handle_target_coffee_add_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if character_id != 0 and character_data.target_character_id != 0:
+        if character_id != 0 and activity.target(character_id) != 0:
             return
         # 获取调整值#
         ability.setdefault(43, 0)
@@ -6945,7 +6781,7 @@ def handle_target_coffee_add_adjust(
         )
         # 好意变化#
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             11,
             ability_level=ability[43],
@@ -6974,12 +6810,11 @@ def handle_make_food_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     # 读取当前行为中的菜谱难度等级（最低为1）
     cook_difficulty = 1
-    now_food = character_data.behavior.target_food
+    now_food = activity.behavior(character_id).target_food
     if now_food is not None and now_food.recipe in game_config.config_recipes:
         cook_difficulty = max(
             1, game_config.config_recipes[now_food.recipe].difficulty
@@ -7021,8 +6856,7 @@ def handle_taste_wine_add_adjust(
 
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     # 根据酒量随机选一个酒，并结算部分饮用效果
     taste_wine(character_id)
@@ -7060,14 +6894,13 @@ def handle_official_work_add_adjust(
         return
     from Script.Design import basement
 
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
-    if character_data.dead:
+    if activity.dead(character_id):
         return
-    if target_data.dead:
+    if activity.dead(target_data.cid):
         return
     now_draw_text = ""
     # 获取调整值#
@@ -7075,11 +6908,10 @@ def handle_official_work_add_adjust(
         abilities.ability(character_id)[45]
     )
     # 如果有交互对象，且对方不在无意识状态下，则算上对方的学识加成
-    if (
-        character_data.target_character_id != character_id
-        and handle_premise.handle_unconscious_flag_0(
-            character_data.target_character_id
-        )
+    if activity.target(
+        character_id
+    ) != character_id and handle_premise.handle_unconscious_flag_0(
+        activity.target(character_id)
     ):
         adjust_target = handle_ability.get_ability_adjust(
             abilities.ability(target_data.cid)[45]
@@ -7092,7 +6924,7 @@ def handle_official_work_add_adjust(
     finish_work = int(add_time * adjust)
     official.set_office_work(int(max(official.office_work() - finish_work, 0)))
     # 输出处理结果
-    if character_data.position == cache.character_data[0].position:
+    if activity.position(character_id) == activity.position(0):
         now_draw = draw.NormalDraw()
         now_draw_text += _("共处理了{0}公务，").format(finish_work)
         if official.office_work() > 0:
@@ -7135,7 +6967,7 @@ def handle_cure_patient_add_just(
     from Script.System.Medical_System import medical_constant, medical_service
 
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     # 玩家自己根据诊疗病人列表单独处理
@@ -7211,7 +7043,7 @@ def handle_cure_patient_add_just(
     )
 
     # 仅在玩家场景输出
-    if character_data.position != cache.character_data[0].position:
+    if activity.position(character_id) != activity.position(0):
         return
 
     now_draw = draw.NormalDraw()
@@ -7254,7 +7086,7 @@ def handle_perform_surgery(
         return
 
     doctor_data: game_type.Character = cache.character_data[character_id]
-    if doctor_data.dead:
+    if activity.dead(character_id):
         return
 
     # 获取病人id
@@ -7292,16 +7124,15 @@ def handle_ward_round_process(
         return
 
     doctor_data: game_type.Character = cache.character_data[character_id]
-    if doctor_data.dead:
+    if activity.dead(character_id):
         return
 
     outcome = medical_service.conduct_ward_round(doctor_data)
 
     # 仅在玩家或与玩家同场景时输出提示
-    show_message = (
-        character_id == 0
-        or doctor_data.position == cache.character_data[0].position
-    )
+    show_message = character_id == 0 or activity.position(
+        character_id
+    ) == activity.position(0)
     if not show_message:
         return
 
@@ -7325,7 +7156,7 @@ def handle_ward_round_process(
         severity_after_name = _("痊愈")
 
     # 仅在玩家场景输出
-    if doctor_data.position != cache.character_data[0].position:
+    if activity.position(character_id) != activity.position(0):
         return
 
     draw_text = draw.NormalDraw()
@@ -7420,12 +7251,12 @@ def handle_recruit_add_just(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
-    if character_data.dead:
+    if activity.dead(character_id):
         return
-    if target_data.dead:
+    if activity.dead(target_data.cid):
         return
 
     # 获取能力调整值
@@ -7469,7 +7300,7 @@ def handle_recruit_add_just(
         now_add_lust += 100
 
     # 如果是玩家在招募或玩家与招募者在同一位置的话，显示招募进度的增加情况
-    if character_data.position == cache.character_data[0].position:
+    if activity.position(character_id) == activity.position(0):
         now_draw = draw.NormalDraw()
         now_draw.width = width
         now_draw.text = _(
@@ -7511,12 +7342,12 @@ def handle_invite_visitor_add_adjust(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
-    if character_data.dead:
+    if activity.dead(character_id):
         return
-    if target_data.dead:
+    if activity.dead(target_data.cid):
         return
 
     target, progress = visitor.invite()
@@ -7554,7 +7385,7 @@ def handle_invite_visitor_add_adjust(
         now_add_lust += 100
 
     # 如果是玩家在邀请或玩家与邀请者在同一位置的话，显示进度的增加情况
-    if character_data.position == cache.character_data[0].position:
+    if activity.position(character_id) == activity.position(0):
         now_draw = draw.NormalDraw()
         now_draw.width = width
         now_draw.text = _(
@@ -7590,15 +7421,17 @@ def handle_milk_add_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
 
-    now_milk = int(needs.of(character_data.target_character_id)["milk"])
-    character_data.behavior.milk_ml += now_milk
-    fridge.add(fridge.MILK, character_data.target_character_id, now_milk)
-    player_collection.add_total(
-        "milk_total", character_data.target_character_id, now_milk
+    now_milk = int(needs.of(activity.target(character_id))["milk"])
+    activity.update_behavior(
+        character_id,
+        milk_ml=activity.behavior(character_id).milk_ml + (now_milk),
     )
-    needs.set(character_data.target_character_id, milk=0)
+    fridge.add(fridge.MILK, activity.target(character_id), now_milk)
+    player_collection.add_total(
+        "milk_total", activity.target(character_id), now_milk
+    )
+    needs.set(activity.target(character_id), milk=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -7642,10 +7475,7 @@ def handle_aromatherapy_add_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
+    target_character_data = cache.character_data[activity.target(character_id)]
 
     # 如果没有选择配方则直接返回
     if flags.get(target_character_data.cid, "aromatherapy") == 0:
@@ -7682,18 +7512,17 @@ def handle_urethral_swab_add_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 润滑调整
         status.setdefault(target_data.cid, 8, 0)
@@ -7711,7 +7540,7 @@ def handle_urethral_swab_add_adjust(
         final_adjust = pain_adjust * size_adjust
 
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             17,
             base_value=100,
@@ -7740,18 +7569,17 @@ def handle_urethral_finger_insertion_add_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 润滑调整
         status.setdefault(target_data.cid, 8, 0)
@@ -7769,7 +7597,7 @@ def handle_urethral_finger_insertion_add_adjust(
         final_adjust = pain_adjust * size_adjust
 
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             17,
             base_value=400,
@@ -7913,8 +7741,7 @@ def handle_orgasm_edge_release(
 
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     # 如果没有交互对象
     if target_id == character_id:
         return
@@ -8001,10 +7828,9 @@ def handle_end_h_add_hpmp_max(
 
     # 计奖前先释放行为者憋住的累计寸止绝顶，使其计入下方奖励统计（无累计时空转）
     orgasm_settle.release_orgasm_edge_now(character_id, change_data)
-    character_data: game_type.Character = cache.character_data[character_id]
     id_list = [character_id]
-    if character_data.target_character_id != character_id:
-        id_list.append(character_data.target_character_id)
+    if activity.target(character_id) != character_id:
+        id_list.append(activity.target(character_id))
     for chara_id in id_list:
         now_character_data: game_type.Character = cache.character_data[chara_id]
         info_text = now_character_data.name
@@ -8090,9 +7916,8 @@ def handle_group_sex_end_h_add_hpmp_max(
     from Script.Design import handle_ability
     from Script.Settle import orgasm_settle
 
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -8172,10 +7997,9 @@ def handle_group_sex_fail_add_just(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    original_target_character_id = character_data.target_character_id
+    original_target_character_id = activity.target(character_id)
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
@@ -8191,9 +8015,9 @@ def handle_group_sex_fail_add_just(
             continue
         # 如果是拒绝者，则进行邀请H失败结算
         if handle_premise.handle_group_sex_fail_and_self_refuse(chara_id):
-            character_data.target_character_id = chara_id
+            activity.set_target(character_id, chara_id)
             handle_do_h_failed_adjust(0, add_time, change_data, now_time)
-    character_data.target_character_id = original_target_character_id
+    activity.set_target(character_id, original_target_character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -8218,17 +8042,17 @@ def handle_board_game_win_add_adjust(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
     target_change = change_data.target_change[target_data.cid]
 
-    ai_level = character_data.behavior.board_game_ai_difficulty
+    ai_level = activity.behavior(character_id).board_game_ai_difficulty
     # 好感
     base_chara_favorability_and_trust_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time * 2,
         True,
         0,
@@ -8237,7 +8061,7 @@ def handle_board_game_win_add_adjust(
     )
     # 信赖
     base_chara_favorability_and_trust_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time * 2,
         False,
         0,
@@ -8254,7 +8078,7 @@ def handle_board_game_win_add_adjust(
         change_data=change_data,
     )
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         9,
         ability_level=ability[45],
@@ -8266,7 +8090,7 @@ def handle_board_game_win_add_adjust(
     warehouse.add(4, add_pink_certificates)
     # 输出提示信息
     game_name = game_config.config_board_game[
-        character_data.behavior.board_game_type
+        activity.behavior(character_id).board_game_type
     ].name
     info_draw = draw.NormalDraw()
     info_draw.text = _("{0}在{1}中获胜，获得了{2}粉红凭证\n\n").format(
@@ -8296,19 +8120,18 @@ def handle_board_game_lose_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
     target_change = change_data.target_change[target_data.cid]
 
-    ai_level = character_data.behavior.board_game_ai_difficulty
+    ai_level = activity.behavior(character_id).board_game_ai_difficulty
     # 好感
     base_chara_favorability_and_trust_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time * 2,
         True,
         0,
@@ -8325,7 +8148,7 @@ def handle_board_game_lose_add_adjust(
         change_data=change_data,
     )
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         add_time,
         9,
         ability_level=ability[45],
@@ -8353,10 +8176,9 @@ def handle_maintenance_add_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 获取当前位置
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     # 检查是否在损坏设施数据中
     damage = maintenance.damage()
@@ -8583,8 +8405,7 @@ def handle_recover_from_unconscious_add_adjust(
     if not add_time:
         return
     # 如果交互对象是在H中，则进行恢复意识结算
-    character_data: game_type.Character = cache.character_data[character_id]
-    if handle_premise.handle_self_is_h(character_data.target_character_id):
+    if handle_premise.handle_self_is_h(activity.target(character_id)):
         handle_npc_ai_in_h.recover_from_unconscious_h(character_id)
 
 
@@ -8605,9 +8426,8 @@ def handle_target_dirty_reset_in_shower(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_dirty_reset_in_shower(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -8628,11 +8448,10 @@ def handle_give_gift_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    gift_id = character_data.behavior.gift_id
+    gift_id = activity.behavior(character_id).gift_id
     # 如果没有礼物则返回
     if gift_id == 0:
         return
@@ -8657,7 +8476,7 @@ def handle_give_gift_add_adjust(
                 character_id, 10, True, 0, talk_adjust * 1.5, change_data
             )
             base_chara_state_common_settle(
-                character_data.target_character_id,
+                activity.target(character_id),
                 10,
                 11,
                 ability_level=abilities.ability(target_data.cid)[32],
@@ -8674,7 +8493,7 @@ def handle_give_gift_add_adjust(
                 character_id, 10, False, 0, talk_adjust * 2, change_data
             )
             base_chara_state_common_settle(
-                character_data.target_character_id,
+                activity.target(character_id),
                 30,
                 11,
                 ability_level=abilities.ability(target_data.cid)[32],
@@ -8691,14 +8510,14 @@ def handle_give_gift_add_adjust(
                 character_id, 30, False, 0, talk_adjust * 3, change_data
             )
             base_chara_state_common_settle(
-                character_data.target_character_id,
+                activity.target(character_id),
                 120,
                 11,
                 ability_level=abilities.ability(target_data.cid)[32],
                 change_data_to_target_change=change_data,
             )
             base_chara_experience_common_settle(
-                character_data.target_character_id,
+                activity.target(character_id),
                 40,
                 change_data_to_target_change=change_data,
             )
@@ -8711,7 +8530,7 @@ def handle_give_gift_add_adjust(
             character_id, 10, True, 0, 0, change_data
         )
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             10,
             11,
             ability_level=abilities.ability(target_data.cid)[32],
@@ -8734,7 +8553,7 @@ def handle_give_gift_add_adjust(
         from Script.UI.Panel import gift_panel
 
         gift_panel.handle_drug_use_effect(
-            character_data.target_character_id, gift_id
+            activity.target(character_id), gift_id
         )
     # 阴茎倒模
     elif gift_data.type == 13:
@@ -8745,7 +8564,7 @@ def handle_give_gift_add_adjust(
             character_id, 100, True, change_data=change_data
         )
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             100,
             16,
             ability_level=abilities.ability(target_data.cid)[34],
@@ -8809,9 +8628,9 @@ def handle_read_add_adjust(
         return
     character_data: game_type.Character = cache.character_data[character_id]
 
-    if character_data.dead:
+    if activity.dead(character_id):
         return
-    book_id = character_data.behavior.book_id
+    book_id = activity.behavior(character_id).book_id
     book_data = game_config.config_book[book_id]
     book_difficulty = book_data.difficulty
     book_difficulty_int = max(book_data.difficulty, 1)  # 确保难度至少为1
@@ -8827,9 +8646,9 @@ def handle_read_add_adjust(
         change_data=change_data,
     )
     # 如果有交互对象，则交互对象也加
-    if character_data.target_character_id != character_id:
+    if activity.target(character_id) != character_id:
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             9,
             extra_adjust=book_difficulty_int,
@@ -8850,7 +8669,7 @@ def handle_read_add_adjust(
             character_id, experience_index, 1, change_data=change_data
         )
         # 如果有交互对象，则交互对象也加
-        if character_data.target_character_id != character_id:
+        if activity.target(character_id) != character_id:
             base_chara_experience_common_settle(
                 character_id,
                 experience_index,
@@ -8969,7 +8788,7 @@ def _teach_subject(teacher_id: int) -> tuple[int, int]:
     return (
         education_constant.FALLBACK_SUBJECT_ABILITY,
         schedule_handle.get_course_type_by_position(
-            cache.character_data[teacher_id].position
+            activity.position(teacher_id)
         ),
     )
 
@@ -9049,18 +8868,18 @@ def _settle_pulled_by_player_teach(student_id: int, add_time: int) -> bool:
     Return arguments:
     bool -- 她是否在听玩家这次授课。为 True 时这次听课已由这里结算完，调用方不再按课表结算
     """
-    student_data: game_type.Character = cache.character_data[student_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
     if (
-        pl_character_data.behavior.behavior_id != constant.Behavior.TEACH
-        or pl_character_data.position != student_data.position
-        or pl_character_data.behavior.start_time
-        != student_data.behavior.start_time
+        activity.behavior(0).behavior_id != constant.Behavior.TEACH
+        or activity.position(0) != activity.position(student_id)
+        or activity.behavior(0).start_time
+        != activity.behavior(student_id).start_time
     ):
         return False
     ability_id, course_type = _teach_subject(0)
     scene_name = cache.scene_data[
-        map_handle.get_map_system_path_str_for_list(student_data.position)
+        map_handle.get_map_system_path_str_for_list(
+            activity.position(student_id)
+        )
     ].scene_name
     _settle_class_student(
         0,
@@ -9099,7 +8918,6 @@ def handle_teach_add_just(
     from Script.System.Education_System import growth_handle
     from Script.Modules.gameplay_resolution import plan_queue
 
-    character_data: game_type.Character = cache.character_data[character_id]
     ability_id, course_type = _teach_subject(character_id)
 
     # 教师自身的教学相长：加当节所授科目的习得与经验
@@ -9112,7 +8930,7 @@ def handle_teach_add_just(
 
     # 遍历当前场景的其他角色
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 场景角色数大于等于2时进行检测
@@ -9123,12 +8941,9 @@ def handle_teach_add_just(
             if chara_id == character_id:
                 continue
             else:
-                other_character_data: game_type.Character = (
-                    cache.character_data[chara_id]
-                )
                 # 如果对方在听课
                 if (
-                    other_character_data.behavior.behavior_id
+                    activity.behavior(chara_id).behavior_id
                     == constant.Behavior.ATTENT_CLASS
                 ):
                     if not _settle_class_student(
@@ -9149,7 +8964,7 @@ def handle_teach_add_just(
                         plan_queue.plan_next(
                             chara_id,
                             constant.Behavior.ATTENT_CLASS,
-                            other_character_data.behavior.duration,
+                            activity.behavior(chara_id).duration,
                             interrupt=True,
                         )
 
@@ -9276,8 +9091,7 @@ def handle_skip_class_add_just(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    start_time = character_data.behavior.start_time or game_time.now()
+    start_time = activity.behavior(character_id).start_time or game_time.now()
     with growth.editing(character_id) as growth_data:
         assert growth_data is not None
         growth_data.skip_class_flag = True
@@ -9365,8 +9179,7 @@ def handle_check_report_card_add_just(
         semester_handle,
     )
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     if target_id == character_id or target_id not in cache.character_data:
         return
     target_data: game_type.Character = cache.character_data[target_id]
@@ -9442,16 +9255,15 @@ def handle_bagging_and_moving_add_just(
     if not add_time:
         return
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     # 玩家数据结算
-    flags.set(character_id, bagging_chara_id=character_data.target_character_id)
+    flags.set(character_id, bagging_chara_id=activity.target(character_id))
     # 对方数据结算
     flags.set(target_data.cid, be_bagged=True)
     handle_chara_off_line(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -9475,16 +9287,15 @@ def handle_release_from_bag_add_just(
     if not add_time:
         return
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     # 玩家数据结算
     flags.set(character_id, bagging_chara_id=0)
     # 对方数据结算
     flags.set(target_data.cid, be_bagged=False)
     handle_chara_on_line(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
     # 如果当时是时间停止H中，则刷新时停状态
     if handle_premise.handle_time_stop_on(character_id):
@@ -9513,15 +9324,16 @@ def handle_put_into_prison_add_just(
     if not add_time:
         return
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[0]
     target_id = flags.get(0, "bagging_chara_id")
-    target_data: game_type.Character = cache.character_data[target_id]
     # 玩家数据结算
     flags.set(0, bagging_chara_id=0)
     # 对方位置结算
-    target_data.position = character_data.position
-    target_data.behavior.move_src = character_data.position
-    target_data.behavior.move_target = character_data.position
+    activity.set_position(target_id, activity.position(0))
+    activity.update_behavior(
+        target_id,
+        move_src=activity.position(0),
+        move_target=activity.position(0),
+    )
     # 对方数据结算
     confinement_and_training.chara_become_prisoner(target_id)
     # 角色上线
@@ -9553,21 +9365,18 @@ def handle_set_free_add_just(
     if not add_time:
         return
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     flags.set(target_data.cid, imprisonment=False)
     from Script.System.Dormitory_System import common as dormitory_common
 
     # 回到旧宿舍
-    dormitory_common.restore_character_dormitory(
-        character_data.target_character_id
-    )
+    dormitory_common.restore_character_dormitory(activity.target(character_id))
     # 从囚犯数据中删除
-    prison.release(character_data.target_character_id)
+    prison.release(activity.target(character_id))
     # 刷新衣服
-    clothing.get_cloth_from_dormitory_locker(character_data.target_character_id)
+    clothing.get_cloth_from_dormitory_locker(activity.target(character_id))
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -9595,10 +9404,9 @@ def handle_eat_add_just(
     from Script.System.Sex_System.drunk_sex_common import add_drunk_point
 
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
 
     # 获取食物数据
-    now_food = character_data.behavior.target_food
+    now_food = activity.behavior(character_id).target_food
     food_seasoning = now_food.special_seasoning if now_food is not None else 0
     food_quality = now_food.quality if now_food is not None else 1
     food_maker = now_food.maker if now_food is not None else ""
@@ -9614,10 +9422,10 @@ def handle_eat_add_just(
     eat_food_chara_id_list = []
     if food_seasoning == 0:
         eat_food_chara_id_list.append(character_id)
-        if character_data.target_character_id != character_id:
-            eat_food_chara_id_list.append(character_data.target_character_id)
+        if activity.target(character_id) != character_id:
+            eat_food_chara_id_list.append(activity.target(character_id))
     else:
-        eat_food_chara_id_list.append(character_data.target_character_id)
+        eat_food_chara_id_list.append(activity.target(character_id))
     # 判断是否是玩家制作的
     pl_make_flag = False
     if food_maker == cache.character_data[0].name:
@@ -9799,7 +9607,7 @@ def handle_add_hpmp_max(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     # 设施效率
     facility_adjust = basement.calc_facility_efficiency(9)
@@ -9819,7 +9627,7 @@ def handle_add_hpmp_max(
     needs.add(character_id, "hit_max", add_hp)
     needs.add(character_id, "mana_max", add_mp)
     # 如果和玩家位于同一地点，则输出提示信息
-    if character_data.position == cache.character_data[0].position:
+    if activity.position(character_id) == activity.position(0):
         now_draw = draw.NormalDraw()
         now_draw.text = _("\n{0}的体力上限增加{1},气力上限增加{2}").format(
             character_data.name, str(add_hp), str(add_mp)
@@ -9827,9 +9635,9 @@ def handle_add_hpmp_max(
         now_draw.width = width
         now_draw.draw()
     # 交互对象也同样#
-    if character_data.target_character_id != character_id:
+    if activity.target(character_id) != character_id:
         target_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
+            activity.target(character_id)
         ]
         add_hp = 128.961 * math.exp(
             -0.0016 * needs.of(target_data.cid)["hit_max"]
@@ -9846,7 +9654,7 @@ def handle_add_hpmp_max(
         needs.add(target_data.cid, "hit_max", add_hp)
         needs.add(target_data.cid, "mana_max", add_mp)
         # 如果和玩家位于同一地点，则输出提示信息
-        if character_data.position == cache.character_data[0].position:
+        if activity.position(character_id) == activity.position(0):
             now_draw = draw.NormalDraw()
             now_draw.text = _(
                 "\n{0}的体力上限增加{1},气力上限增加{2}\n"
@@ -9883,18 +9691,17 @@ def handle_sing_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if character_id != 0 and character_data.target_character_id != 0:
+        if character_id != 0 and activity.target(character_id) != 0:
             return
         # 获取调整值#
         ability.setdefault(44, 0)
@@ -9906,7 +9713,9 @@ def handle_sing_add_adjust(
 
         # 对在场的全部角色起效
         for chara_id in cache.scene_data[
-            map_handle.get_map_system_path_str_for_list(character_data.position)
+            map_handle.get_map_system_path_str_for_list(
+                activity.position(character_id)
+            )
         ].character_list:
             # 跳过玩家自己
             if chara_id == character_id:
@@ -10025,21 +9834,20 @@ def handle_play_instrument_add_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     # print(f"debug 演奏，角色 = {character_data.name}，目标= {target_data.name}")
     # 对着自己演奏乐器不进行该结算
-    if character_data.target_character_id == character_id:
+    if activity.target(character_id) == character_id:
         return
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if character_id != 0 and character_data.target_character_id != 0:
+        if character_id != 0 and activity.target(character_id) != 0:
             return
         # 获取调整值#
         ability.setdefault(44, 0)
@@ -10051,7 +9859,9 @@ def handle_play_instrument_add_adjust(
 
         # 对在场的全部角色起效
         for chara_id in cache.scene_data[
-            map_handle.get_map_system_path_str_for_list(character_data.position)
+            map_handle.get_map_system_path_str_for_list(
+                activity.position(character_id)
+            )
         ].character_list:
             # 跳过玩家自己
             if chara_id == character_id:
@@ -10170,21 +9980,20 @@ def handle_tech_add_s_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             0,
             50,
@@ -10193,7 +10002,7 @@ def handle_tech_add_s_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -10221,21 +10030,20 @@ def handle_tech_add_b_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             1,
             50,
@@ -10244,7 +10052,7 @@ def handle_tech_add_b_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -10272,21 +10080,20 @@ def handle_tech_add_c_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             2,
             50,
@@ -10295,7 +10102,7 @@ def handle_tech_add_c_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -10324,17 +10131,16 @@ def handle_tech_add_p_adjust(
     ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 获取调整值#
         ability.setdefault(19, 0)
@@ -10393,21 +10199,20 @@ def handle_tech_add_v_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             4,
             50,
@@ -10416,7 +10221,7 @@ def handle_tech_add_v_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -10444,21 +10249,20 @@ def handle_tech_add_a_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             5,
             50,
@@ -10467,7 +10271,7 @@ def handle_tech_add_a_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -10495,21 +10299,20 @@ def handle_tech_add_u_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             6,
             50,
@@ -10518,7 +10321,7 @@ def handle_tech_add_u_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -10546,21 +10349,20 @@ def handle_tech_add_w_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             7,
             50,
@@ -10569,7 +10371,7 @@ def handle_tech_add_w_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -10597,21 +10399,20 @@ def handle_tech_add_m_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             21,
             50,
@@ -10620,7 +10421,7 @@ def handle_tech_add_m_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -10648,21 +10449,20 @@ def handle_tech_add_f_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             22,
             50,
@@ -10671,7 +10471,7 @@ def handle_tech_add_f_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -10699,18 +10499,17 @@ def handle_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 获取调整值#
         ability.setdefault(19, 0)
@@ -10747,17 +10546,16 @@ def handle_target_lubrication_adjust_add_pain(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 获取调整值#
         status.setdefault(target_data.cid, 8, 0)
@@ -10765,7 +10563,7 @@ def handle_target_lubrication_adjust_add_pain(
             num.whole(status.of(target_data.cid)[8])
         )
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             17,
             ability_level=abilities.ability(target_data.cid)[15],
@@ -10793,17 +10591,16 @@ def handle_target_v_adjust_add_pain(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 润滑调整
         status.setdefault(target_data.cid, 8, 0)
@@ -10826,7 +10623,7 @@ def handle_target_v_adjust_add_pain(
         final_adjust = max(pain_adjust - waist_adjust, 0) * size_adjust
 
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             17,
             ability_level=abilities.ability(target_data.cid)[15],
@@ -10854,17 +10651,16 @@ def handle_target_a_adjust_add_pain(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 润滑调整
         status.setdefault(target_data.cid, 8, 0)
@@ -10887,7 +10683,7 @@ def handle_target_a_adjust_add_pain(
         final_adjust = max(pain_adjust - waist_adjust, 0) * size_adjust
 
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             17,
             ability_level=abilities.ability(target_data.cid)[15],
@@ -10915,17 +10711,16 @@ def handle_target_u_adjust_add_pain(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 润滑调整
         status.setdefault(target_data.cid, 8, 0)
@@ -10948,7 +10743,7 @@ def handle_target_u_adjust_add_pain(
         final_adjust = max(pain_adjust - waist_adjust, 0) * size_adjust
 
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             17,
             base_value=1000,
@@ -10977,17 +10772,16 @@ def handle_target_w_adjust_add_pain(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 润滑调整
         status.setdefault(target_data.cid, 8, 0)
@@ -11014,7 +10808,7 @@ def handle_target_w_adjust_add_pain(
         final_adjust = max(pain_adjust - waist_adjust, 0) * size_adjust
 
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             17,
             base_value=100,
@@ -11043,17 +10837,16 @@ def handle_target_v_adjust_add_by_sex(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
 
         # 阴茎大小的调整
@@ -11067,7 +10860,7 @@ def handle_target_v_adjust_add_by_sex(
 
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             4,
             50,
@@ -11077,7 +10870,7 @@ def handle_target_v_adjust_add_by_sex(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -11106,17 +10899,16 @@ def handle_target_a_adjust_add_by_sex(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
 
         # 阴茎大小的调整
@@ -11130,7 +10922,7 @@ def handle_target_a_adjust_add_by_sex(
 
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             5,
             50,
@@ -11140,7 +10932,7 @@ def handle_target_a_adjust_add_by_sex(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -11169,17 +10961,16 @@ def handle_target_u_adjust_add_by_sex(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
 
         # 阴茎大小的调整
@@ -11193,7 +10984,7 @@ def handle_target_u_adjust_add_by_sex(
 
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             6,
             50,
@@ -11203,7 +10994,7 @@ def handle_target_u_adjust_add_by_sex(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -11232,17 +11023,16 @@ def handle_target_w_adjust_add_by_sex(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
 
         # 阴茎大小的调整
@@ -11256,7 +11046,7 @@ def handle_target_w_adjust_add_by_sex(
 
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             7,
             50,
@@ -11266,7 +11056,7 @@ def handle_target_w_adjust_add_by_sex(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -11295,17 +11085,16 @@ def handle_target_pain_to_h_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
 
         # 技巧大小的调整
@@ -11319,7 +11108,7 @@ def handle_target_pain_to_h_adjust(
 
         # 快感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             23,
             50,
@@ -11329,7 +11118,7 @@ def handle_target_pain_to_h_adjust(
         )
         # 欲情
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             12,
             50,
@@ -11339,7 +11128,7 @@ def handle_target_pain_to_h_adjust(
         )
         # 苦痛
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             17,
             50,
@@ -11368,18 +11157,17 @@ def handle_finger_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 获取调整值#
         ability.setdefault(19, 0)
@@ -11418,18 +11206,17 @@ def handle_tongue_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 获取调整值#
         ability.setdefault(19, 0)
@@ -11468,18 +11255,17 @@ def handle_feet_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 获取调整值#
         ability.setdefault(19, 0)
@@ -11518,18 +11304,17 @@ def handle_breast_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 获取调整值#
         ability.setdefault(19, 0)
@@ -11568,18 +11353,17 @@ def handle_vagina_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 获取调整值#
         ability.setdefault(19, 0)
@@ -11618,18 +11402,17 @@ def handle_anus_tech_add_pl_p_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     ability = abilities.ability(target_data.cid)
-    if character_data.target_character_id != character_id and (
-        not character_id or not character_data.target_character_id
+    if activity.target(character_id) != character_id and (
+        not character_id or not activity.target(character_id)
     ):
 
-        if character_data.dead:
+        if activity.dead(character_id):
             return
-        if target_data.dead:
+        if activity.dead(target_data.cid):
             return
         # 获取调整值#
         ability.setdefault(19, 0)
@@ -11668,10 +11451,9 @@ def handle_low_obscenity_failed_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.target_character_id:
+    if activity.target(character_id):
         target_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
+            activity.target(character_id)
         ]
 
         # 不需要再进行该判断
@@ -11682,7 +11464,7 @@ def handle_low_obscenity_failed_adjust(
         )
         # 加反感
         base_chara_state_common_settle(
-            character_data.target_character_id,
+            activity.target(character_id),
             add_time,
             20,
             200,
@@ -11717,10 +11499,9 @@ def handle_high_obscenity_failed_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.target_character_id:
+    if activity.target(character_id):
         target_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
+            activity.target(character_id)
         ]
 
         # 不需要再进行该判断
@@ -11788,15 +11569,14 @@ def handle_do_h_failed_adjust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.target_character_id:
+    if activity.target(character_id):
         target_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
+            activity.target(character_id)
         ]
 
         # 高陷落不进行该判断
         chara_fall = attr_calculation.get_character_fall_level(
-            character_data.target_character_id
+            activity.target(character_id)
         )
         if chara_fall >= 4:
             return
@@ -11921,9 +11701,8 @@ def handle_target_urinate_point_zero(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     handle_urinate_point_zero(
-        character_data.target_character_id, add_time, change_data, now_time
+        activity.target(character_id), add_time, change_data, now_time
     )
 
 
@@ -11968,8 +11747,7 @@ def handle_target_hunger_point_zero(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    needs.set(character_data.target_character_id, hunger=0)
+    needs.set(activity.target(character_id), hunger=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12013,9 +11791,8 @@ def handle_target_sleep_point_zero(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     needs.set(target_data.cid, sleep=0)
 
@@ -12063,8 +11840,7 @@ def handle_target_add_small_urinate_point(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     needs.set(target_id, urine=min(needs.of(target_id)["urine"] + 60, 300))
 
 
@@ -12087,9 +11863,8 @@ def handle_target_desire_point_zero(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     needs.set(target_data.cid, desire=0)
 
@@ -12135,9 +11910,8 @@ def handle_target_desire_point_to_79(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     needs.set(target_data.cid, desire=79)
 
@@ -12347,9 +12121,8 @@ def handle_penis_in_t_reset(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=-1)
     h_state.set(character_id, insert_position=-1)
@@ -12374,9 +12147,8 @@ def handle_scene_all_characters_penis_in_reset(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -12404,14 +12176,14 @@ def record_first_part_sex(
         return
     # 姿势取行为发起者当前行为的中文名
     behavior_name = ""
-    behavior_id = cache.character_data[character_id].behavior.behavior_id
+    behavior_id = activity.behavior(character_id).behavior_id
     if behavior_id in game_config.config_behavior:
         behavior_name = game_config.config_behavior[behavior_id].name
     with first_record.editing(target_data.cid) as fr:
         fr.first_part_sex_dict[part_id] = {
             "id": character_id,
             "time": game_time.now(),
-            "place": list(target_data.position),
+            "place": list(activity.position(target_data.cid)),
             "posture": behavior_name,
             "item": item,
         }
@@ -12436,9 +12208,8 @@ def handle_penis_in_t_hair(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=0)
     record_first_part_sex(character_id, target_data)
@@ -12463,9 +12234,8 @@ def handle_penis_in_t_face(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=1)
     record_first_part_sex(character_id, target_data)
@@ -12490,9 +12260,8 @@ def handle_penis_in_t_mouse(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=2)
     record_first_part_sex(character_id, target_data)
@@ -12517,9 +12286,8 @@ def handle_penis_in_t_breast(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=3)
     record_first_part_sex(character_id, target_data)
@@ -12544,9 +12312,8 @@ def handle_penis_in_t_axilla(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=4)
     record_first_part_sex(character_id, target_data)
@@ -12571,9 +12338,8 @@ def handle_penis_in_t_hand(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=5)
     record_first_part_sex(character_id, target_data)
@@ -12598,9 +12364,8 @@ def handle_penis_in_t_vagina(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=6)
     record_first_part_sex(character_id, target_data)
@@ -12625,9 +12390,8 @@ def handle_penis_in_t_womb(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=7)
     record_first_part_sex(character_id, target_data)
@@ -12652,9 +12416,8 @@ def handle_penis_in_t_anal(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=8)
     record_first_part_sex(character_id, target_data)
@@ -12679,9 +12442,8 @@ def handle_penis_in_t_urethral(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=9)
     record_first_part_sex(character_id, target_data)
@@ -12706,9 +12468,8 @@ def handle_penis_in_t_leg(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=10)
     record_first_part_sex(character_id, target_data)
@@ -12733,9 +12494,8 @@ def handle_penis_in_t_foot(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=11)
     record_first_part_sex(character_id, target_data)
@@ -12760,9 +12520,8 @@ def handle_penis_in_t_tail(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=12)
     record_first_part_sex(character_id, target_data)
@@ -12787,9 +12546,8 @@ def handle_penis_in_t_horn(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=13)
     record_first_part_sex(character_id, target_data)
@@ -12814,9 +12572,8 @@ def handle_penis_in_t_ears(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=14)
     record_first_part_sex(character_id, target_data)
@@ -12841,9 +12598,8 @@ def handle_penis_in_t_deep_throat(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=15)
     record_first_part_sex(character_id, target_data)
@@ -12868,9 +12624,8 @@ def handle_penis_in_t_hat(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=20)
 
@@ -12894,9 +12649,8 @@ def handle_penis_in_t_classes(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=21)
 
@@ -12920,9 +12674,8 @@ def handle_penis_in_t_ear_ornament(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=22)
 
@@ -12946,9 +12699,8 @@ def handle_penis_in_t_neck_ornament(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=23)
 
@@ -12972,9 +12724,8 @@ def handle_penis_in_t_mouth_ornament(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=24)
 
@@ -12998,9 +12749,8 @@ def handle_penis_in_t_top(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=25)
 
@@ -13024,9 +12774,8 @@ def handle_penis_in_t_corset(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=26)
 
@@ -13050,9 +12799,8 @@ def handle_penis_in_t_gloves(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=27)
 
@@ -13076,9 +12824,8 @@ def handle_penis_in_t_skirt(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=28)
 
@@ -13102,9 +12849,8 @@ def handle_penis_in_t_underwear(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=29)
 
@@ -13128,9 +12874,8 @@ def handle_penis_in_t_socks(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=30)
 
@@ -13154,9 +12899,8 @@ def handle_penis_in_t_shoes(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=31)
 
@@ -13180,9 +12924,8 @@ def handle_penis_in_t_weapoms(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=32)
 
@@ -13206,9 +12949,8 @@ def handle_penis_in_t_trousers(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(target_data.cid, insert_position=28)
 
@@ -13232,9 +12974,8 @@ def handle_cancel_penis_in_face_or_mouse(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if h_state.get(target_data.cid, "insert_position") in {1, 2}:
         h_state.set(target_data.cid, insert_position=-1)
@@ -13611,9 +13352,8 @@ def handle_h_in_love_hotel_to_false(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     h_state.set(character_id, h_in_love_hotel=False)
     h_state.set(target_data.cid, h_in_love_hotel=False)
@@ -13640,8 +13380,7 @@ def handle_take_chara_eggs_settle(
         return
     from Script.System.Pregnancy_System import egg_handle
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
+    target_character_id = activity.target(character_id)
     # 无有效交互对象时不结算
     if (
         target_character_id == character_id
@@ -13803,8 +13542,7 @@ def handle_prenatal_add_adjust(
         return
     from Script.System.Education_System import baby_growth_handle
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     if target_id == character_id or target_id not in cache.character_data:
         return
     baby_growth_handle.add_prenatal_point(target_id)
@@ -13837,8 +13575,7 @@ def handle_nuirse_child_add_adjust(
         return
     from Script.System.Education_System import education_constant
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_id = character_data.target_character_id
+    target_id = activity.target(character_id)
     if target_id == character_id or target_id not in cache.character_data:
         return
     # 只对婴儿生效

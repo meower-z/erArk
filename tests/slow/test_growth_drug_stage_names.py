@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -72,7 +73,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
             if NURSERY_TAG in scene.scene_tag
         )
         self.world.move(0, map_handle.get_map_system_path_for_str(nursery))
-        self.cache.character_data[0].target_character_id = self.mother_id
+        aim(0, self.mother_id)
 
     def assert_stage_text(
         self, label: str, text: str, stage_list: tuple

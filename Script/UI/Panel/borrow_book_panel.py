@@ -13,7 +13,8 @@ from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 import random
 from Script.Design import game_time
-from Script.Modules.domains import abilities, facility, library, chara_life
+from Script.Modules.domains import abilities, activity, chara_life, facility
+from Script.Modules.domains import library
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -178,7 +179,6 @@ def prepare_npc_read_book(character_id: int) -> bool:
     返回:
         bool: 是否装配成功；借不到书时为 False，调用方自行决定等待
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     if not check_random_borrow_book(character_id):
         return False
     book_id = -1
@@ -186,8 +186,8 @@ def prepare_npc_read_book(character_id: int) -> bool:
         book_id = book_id_all
     if book_id not in game_config.config_book:
         return False
-    character_data.behavior.book_id = book_id
-    character_data.behavior.book_name = game_config.config_book[book_id].name
+    name = game_config.config_book[book_id].name
+    activity.update_behavior(character_id, book_id=book_id, book_name=name)
     return True
 
 

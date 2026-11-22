@@ -15,7 +15,7 @@ from collections.abc import Mapping
 
 from Script.Core import cache_control, game_type
 from Script.Kernel import core
-from Script.Modules.domains import flags, wardrobe
+from Script.Modules.domains import activity, flags, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -45,7 +45,7 @@ def keep() -> None:
         return
     cid, seen = _drawn
     _drawn = None
-    if cid != cache.character_data[0].target_character_id:
+    if cid != activity.target(0):
         return
     if not (flags.get(0, "is_h") or flags.get(cid, "is_h")):
         return

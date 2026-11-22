@@ -4,7 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities, flags, hypnosis, modes
+from Script.Modules.domains import abilities, activity, flags, hypnosis, modes
 from Script.Modules.domains import player_ability
 
 cache: game_type.Cache = cache_control.cache
@@ -116,8 +116,7 @@ def handle_target_hypnosis_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_hypnosis_0(character_data.target_character_id)
+    return handle_self_hypnosis_0(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_HYPNOSIS_NE_0)
@@ -129,8 +128,7 @@ def handle_target_hypnosis_ne_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_self_hypnosis_0(character_data.target_character_id)
+    return not handle_self_hypnosis_0(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_HAS_BEEN_HYPNOSIS)
@@ -205,8 +203,7 @@ def handle_target_has_been_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_has_been_hypnosis(character_data.target_character_id)
+    return handle_self_has_been_hypnosis(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_HAS_NOT_BEEN_HYPNOSIS)
@@ -218,8 +215,7 @@ def handle_target_has_not_been_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_self_has_been_hypnosis(character_data.target_character_id)
+    return not handle_self_has_been_hypnosis(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_HAS_BEEN_PRIMARY_HYPNOSIS)
@@ -231,10 +227,7 @@ def handle_target_has_been_primary_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_has_been_primary_hypnosis(
-        character_data.target_character_id
-    )
+    return handle_self_has_been_primary_hypnosis(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_HAS_BEEN_DEEP_HYPNOSIS)
@@ -246,10 +239,7 @@ def handle_target_has_been_deep_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_has_been_deep_hypnosis(
-        character_data.target_character_id
-    )
+    return handle_self_has_been_deep_hypnosis(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_HAS_BEEN_COMPLETE_HYPNOSIS)
@@ -261,10 +251,7 @@ def handle_target_has_been_complete_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_has_been_complete_hypnosis(
-        character_data.target_character_id
-    )
+    return handle_self_has_been_complete_hypnosis(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.IN_HYPNOSIS)
@@ -304,9 +291,8 @@ def handle_target_in_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if flags.get(target_data.cid, "unconscious_h") in [4, 5, 6, 7]:
         return 1
@@ -322,9 +308,8 @@ def handle_target_not_in_hypnosis(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if flags.get(target_data.cid, "unconscious_h") in [4, 5, 6, 7]:
         return 0
@@ -521,9 +506,8 @@ def handle_target_hypnosis_increase_body_sensitivity(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     return handle_hypnosis_increase_body_sensitivity(
-        character_data.target_character_id
+        activity.target(character_id)
     )
 
 
@@ -540,9 +524,8 @@ def handle_target_not_hypnosis_increase_body_sensitivity(
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     return not handle_hypnosis_increase_body_sensitivity(
-        character_data.target_character_id
+        activity.target(character_id)
     )
 
 
@@ -580,8 +563,7 @@ def handle_target_hypnosis_force_ovulation(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_hypnosis_force_ovulation(character_data.target_character_id)
+    return handle_hypnosis_force_ovulation(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_HYPNOSIS_FORCE_OVULATION)
@@ -593,10 +575,7 @@ def handle_target_not_hypnosis_force_ovulation(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_hypnosis_force_ovulation(
-        character_data.target_character_id
-    )
+    return not handle_hypnosis_force_ovulation(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HYPNOSIS_BLOCKHEAD)
@@ -633,8 +612,7 @@ def handle_target_hypnosis_blockhead(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_hypnosis_blockhead(character_data.target_character_id)
+    return handle_hypnosis_blockhead(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_HYPNOSIS_BLOCKHEAD)
@@ -646,8 +624,7 @@ def handle_target_not_hypnosis_blockhead(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_hypnosis_blockhead(character_data.target_character_id)
+    return not handle_hypnosis_blockhead(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HYPNOSIS_ACTIVE_H)
@@ -684,8 +661,7 @@ def handle_target_hypnosis_active_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_hypnosis_active_h(character_data.target_character_id)
+    return handle_hypnosis_active_h(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_HYPNOSIS_ACTIVE_H)
@@ -697,8 +673,7 @@ def handle_target_not_hypnosis_active_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_hypnosis_active_h(character_data.target_character_id)
+    return not handle_hypnosis_active_h(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HYPNOSIS_ROLEPLAY)
@@ -735,8 +710,7 @@ def handle_target_hypnosis_roleplay(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_hypnosis_roleplay(character_data.target_character_id)
+    return handle_hypnosis_roleplay(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_HYPNOSIS_ROLEPLAY)
@@ -748,8 +722,7 @@ def handle_target_not_hypnosis_roleplay(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_hypnosis_roleplay(character_data.target_character_id)
+    return not handle_hypnosis_roleplay(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_HYPNOSIS_ROLEPLAY_1)
@@ -761,8 +734,7 @@ def handle_target_hypnosis_roleplay_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -782,8 +754,7 @@ def handle_target_hypnosis_roleplay_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -803,8 +774,7 @@ def handle_target_hypnosis_roleplay_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -824,8 +794,7 @@ def handle_target_hypnosis_roleplay_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -845,8 +814,7 @@ def handle_target_hypnosis_roleplay_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -866,8 +834,7 @@ def handle_target_hypnosis_roleplay_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for cid in game_config.config_roleplay:
         roleplay_data = game_config.config_roleplay[cid]
         if (
@@ -912,8 +879,7 @@ def handle_t_hypnosis_pain_as_pleasure(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_hypnosis_pain_as_pleasure(character_data.target_character_id)
+    return handle_hypnosis_pain_as_pleasure(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_HYPNOSIS_PAIN_AS_PLEASURE)
@@ -925,10 +891,7 @@ def handle_t_not_hypnosis_pain_as_pleasure(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_hypnosis_pain_as_pleasure(
-        character_data.target_character_id
-    )
+    return not handle_hypnosis_pain_as_pleasure(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.PRIMARY_TIME_STOP)
@@ -1063,9 +1026,8 @@ def handle_target_is_carried_in_time_stop(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
     if player_ability.get(0, "carry_chara_id_in_time_stop") > 0:
-        if pl_character_data.target_character_id == player_ability.get(
+        if activity.target(0) == player_ability.get(
             0, "carry_chara_id_in_time_stop"
         ):
             return 1
@@ -1125,8 +1087,7 @@ def handle_target_free_in_time_stop(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if handle_self_free_in_time_stop(character_data.target_character_id):
+    if handle_self_free_in_time_stop(activity.target(character_id)):
         return 1
     return 0
 
@@ -1140,7 +1101,6 @@ def handle_target_not_free_in_time_stop(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if handle_self_free_in_time_stop(character_data.target_character_id):
+    if handle_self_free_in_time_stop(activity.target(character_id)):
         return 0
     return 1

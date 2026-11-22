@@ -19,6 +19,8 @@ from Script.System.Sex_System import sex_be_discovered_panel
 from Script.System.Instruct_System import handle_instruct
 from tests.fast.base import FastTestCase
 from tests.world import play
+from tests.chara_activity import aim
+from Script.Modules.domains import activity
 
 PARTNER = 1
 """ 和博士H的干员 """
@@ -44,7 +46,7 @@ class DiscoveryExhibitionismPlansTest(FastTestCase):
         player = self.world.chara(0, "博士")
         self.world.chara(PARTNER, "对方")
         self.world.chara(FINDER, "发现者")
-        player.target_character_id = PARTNER
+        aim(player.cid, PARTNER)
         player_starts: list[tuple[str, int]] = []
         settled: list[tuple[int, str, int]] = []
         after_panel: list[str] = []
@@ -52,7 +54,7 @@ class DiscoveryExhibitionismPlansTest(FastTestCase):
         def loop() -> None:
             """博士行动开始时结算的替身：记下博士开始的行为；第一次时给发现者排上发现"""
             player_starts.append(
-                (player.behavior.behavior_id, core.state().clock)
+                (activity.behavior(player.cid).behavior_id, core.state().clock)
             )
             if len(player_starts) == 1:
                 sex_be_discovered_panel.plan_discovery(FINDER)
@@ -68,7 +70,7 @@ class DiscoveryExhibitionismPlansTest(FastTestCase):
             if character_id == 0:
                 loop()
                 return 1
-            behavior = self.cache.character_data[character_id].behavior
+            behavior = activity.behavior(character_id)
             settled.append(
                 (character_id, behavior.behavior_id, core.state().clock)
             )
@@ -83,7 +85,7 @@ class DiscoveryExhibitionismPlansTest(FastTestCase):
             panel -- 面板
             """
             panel._continue_exhibitionism_sex()
-            after_panel.append(player.behavior.behavior_id)
+            after_panel.append(activity.behavior(player.cid).behavior_id)
 
         def pick_mode(
             panel: exhibitionism_sex_panel.Select_Exhibitionism_Sex_Mode_Panel,

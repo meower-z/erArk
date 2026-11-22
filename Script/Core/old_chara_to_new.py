@@ -10,7 +10,7 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import Any, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import abilities, action_info, body_manage
+from Script.Modules.domains import abilities, action_info, activity, body_manage
 from Script.Modules.domains import commission, diplomacy, dirty, economy
 from Script.Modules.domains import education, first_record, flags, fridge
 from Script.Modules.domains import growth, h_meters, h_state, hypnosis
@@ -243,12 +243,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 character.favorability[new_id] = value
 
     # 5.3 每个角色的target_character_id
-    for _char_id, character in new_character_data.items():
-        if hasattr(character, "target_character_id"):
-            old_target = character.target_character_id
-            character.target_character_id = old_to_new_id.get(
-                old_target, old_target
-            )
+    activity.remap_targets(new_character_data, old_to_new_id)
 
     # 5.4 每个角色的assistant_character_id
     for _char_id, character in new_character_data.items():
@@ -574,16 +569,9 @@ def migrate_character_replacement(
             old_character, new_character, new_tem.Hp, new_tem.Mp
         ):
             needs.set(new_id, hit_max=new_tem.Hp, mana_max=new_tem.Mp, drunk=0)
-        new_character.state = old_character.state
-        if hasattr(old_character, "last_behavior_id_list"):
-            new_character.last_behavior_id_list = (
-                old_character.last_behavior_id_list.copy()
-                if old_character.last_behavior_id_list
-                else [0]
-            )
-        # 如果旧的角色数据没有last_behavior_id_list，则初始化创建一个
-        else:
-            new_character.last_behavior_id_list = [0]
+        activity.copy_on_replace(
+            old_character, new_character, old_id, new_id, old_to_new_id_map
+        )
 
         # 字典/集合属性
         status.replace(new_id, status.of(old_id))
@@ -613,9 +601,6 @@ def migrate_character_replacement(
         new_character.trust = old_character.trust
 
         # 信赖相关
-        new_character.target_character_id = old_to_new_id_map.get(
-            old_character.target_character_id, old_character.target_character_id
-        )
         new_character.assistant_character_id = (
             old_to_new_id_map.get(
                 old_character.assistant_character_id,
@@ -638,11 +623,6 @@ def migrate_character_replacement(
         )
 
         # 位置数据
-        new_character.position = (
-            old_character.position.copy()
-            if old_character.position
-            else ["0", "0"]
-        )
         new_character.officeroom = (
             old_character.officeroom.copy()
             if hasattr(old_character, "officeroom") and old_character.officeroom
@@ -658,26 +638,6 @@ def migrate_character_replacement(
         new_character.birthday = old_character.birthday
 
         # 复杂对象属性 - 直接复制引用后更新内部ID
-        new_character.behavior = old_character.behavior
-        new_character.second_behavior = (
-            old_character.second_behavior.copy()
-            if hasattr(old_character, "second_behavior")
-            and old_character.second_behavior
-            else {}
-        )
-        new_character.must_settle_second_behavior_id_list = (
-            old_character.must_settle_second_behavior_id_list.copy()
-            if hasattr(old_character, "must_settle_second_behavior_id_list")
-            and old_character.must_settle_second_behavior_id_list
-            else []
-        )
-        new_character.must_show_second_behavior_id_list = (
-            old_character.must_show_second_behavior_id_list.copy()
-            if hasattr(old_character, "must_show_second_behavior_id_list")
-            and old_character.must_show_second_behavior_id_list
-            else []
-        )
-        new_character.event = old_character.event
         inventory.replace_foods(new_id, inventory.foods(old_id))
         dirty.copy_replaced(old_character, new_character, old_id, new_id)
         h_state.copy_replaced(old_character, new_character, old_id, new_id)
@@ -814,6 +774,7 @@ def migrate_character_replacement(
         return 0
 
     # ========== 6. 更新所有角色中对旧ID的引用 ==========
+    activity.remap_targets(character_data, old_to_new_id_map)
     for _char_id, character in character_data.items():
         # 好感度字典
         if hasattr(character, "favorability") and character.favorability:
@@ -823,12 +784,6 @@ def migrate_character_replacement(
                 character.favorability[
                     old_to_new_id_map.get(fav_id, fav_id)
                 ] = value
-
-        # target_character_id
-        if hasattr(character, "target_character_id"):
-            character.target_character_id = old_to_new_id_map.get(
-                character.target_character_id, character.target_character_id
-            )
 
         # assistant_character_id
         if hasattr(character, "assistant_character_id"):
@@ -1221,51 +1176,6 @@ def update_character_config_data(value: game_type.Character, cid: int) -> int:
                 assistant_services[key] = 0
                 update_count += 1
         relations.assistant_services.set(cid, assistant_services)
-    # 行为
-    # 如果行为id是int的话
-    if isinstance(value.behavior.behavior_id, int):
-        # 遍历Behavior，找到和当前行为id一致的行为键名
-        for key in vars(constant.Behavior_Int).keys():
-            # 跳过 Python 内置属性
-            if key.startswith("__"):
-                continue
-            # 如果当前行为 ID 与常量值匹配，则更新为常量名称
-            if value.behavior.behavior_id == getattr(
-                constant.Behavior_Int, key
-            ):
-                value.behavior.behavior_id = getattr(constant.Behavior, key)
-                break
-    second_behavior_copy = value.second_behavior.copy()
-    # 遍历原始的二级行为字典，处理整型键的更新或删除
-    for second_behavior_id, behavior_data in second_behavior_copy.items():
-        # 仅处理整型键
-        if isinstance(second_behavior_id, int):
-            # 查找匹配的常量名称
-            for key in vars(constant.SecondBehavior_Int).keys():
-                # 跳过 Python 内置属性
-                if key.startswith("__"):
-                    continue
-                # 如果当前行为 ID 与常量值匹配，则更新为常量名称
-                if second_behavior_id == getattr(
-                    constant.SecondBehavior_Int, key
-                ):
-                    new_behavior_id = getattr(constant.SecondBehavior, key)
-                    # 添加新的键值对，并删除旧的整型键
-                    value.second_behavior[new_behavior_id] = behavior_data
-                    del value.second_behavior[second_behavior_id]
-                    # 匹配成功后跳出查找
-                    break
-            else:
-                # 如果未找到匹配的常量，也删除该整型键
-                del value.second_behavior[second_behavior_id]
-    # 遍历二段行为数据库
-    for behavior_id in game_config.config_behavior:
-        if "二段结算" not in game_config.config_behavior[behavior_id].tag:
-            continue
-        # 如果二段行为不在角色的二段行为中，则添加
-        if behavior_id not in value.second_behavior:
-            value.second_behavior[behavior_id] = 0
-            update_count += 1
     return update_count
 
 
@@ -1481,10 +1391,11 @@ def _reset_behavior_to_idle(character: game_type.Character) -> None:
     Return arguments:
     None
     """
-    character.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-    character.behavior.duration = 1
-    character.state = constant.CharacterStatus.STATUS_ARDER
-    character.target_character_id = character.cid
+    activity.update_behavior(
+        character.cid, behavior_id=constant.Behavior.SHARE_BLANKLY, duration=1
+    )
+    activity.set_state(character.cid, constant.CharacterStatus.STATUS_ARDER)
+    activity.set_target(character.cid, character.cid)
 
 
 def _clear_missing_interest_course(selected_course: dict) -> int:
@@ -1526,7 +1437,7 @@ def _clear_child_activity(character: game_type.Character) -> int:
     """
     count = 0
     is_young_child = _is_young_child(character)
-    behavior_id = character.behavior.behavior_id
+    behavior_id = activity.behavior(character.cid).behavior_id
     if (
         behavior_id == FOLLOW_MOTHER_BEHAVIOR
         or behavior_id not in game_config.config_behavior
@@ -1883,23 +1794,27 @@ def _take_young_child_off_line(
     count += work.drop(young_child_id_set)
     for character_id in young_child_id_set:
         character = loaded_dict["character_data"][character_id]
-        count += _replace_if_changed(character, "position", ["0", "0"])
-        behavior = character.behavior
+        if activity.position(character_id) != ["0", "0"]:
+            activity.set_position(character_id, ["0", "0"])
+            count += 1
+        behavior = activity.behavior(character_id)
         if (
             behavior.behavior_id != constant.Behavior.SHARE_BLANKLY
             or behavior.move_target
             or behavior.move_src
             or behavior.move_final_target
         ):
-            character.behavior = game_type.Behavior()
-            character.state = constant.CharacterStatus.STATUS_ARDER
+            activity.set_behavior(character_id)
+            activity.set_state(
+                character_id, constant.CharacterStatus.STATUS_ARDER
+            )
             count += 1
         if flags.get(character_id, "is_follow") != 0:
             flags.set(character_id, is_follow=0)
             count += 1
-        count += _replace_if_changed(
-            character, "target_character_id", character_id
-        )
+        if activity.target(character_id) != character_id:
+            activity.set_target(character_id, character_id)
+            count += 1
         count += _reset_key(chara_life.work_type, character_id, 0)
         count += _reset_key(
             relations.assistant_services,
@@ -1909,15 +1824,19 @@ def _take_young_child_off_line(
         count += _reset_key(chara_life.dormitory, character_id, "")
         count += _reset_key(chara_life.permanent_dormitory, character_id, "")
         count += int(hypnosis.reset(character_id))
-        count += _replace_if_changed(
-            character, "event", game_type.Chara_Event()
-        )
-        count += _replace_if_changed(
-            character, "must_settle_second_behavior_id_list", []
-        )
-        count += _replace_if_changed(
-            character, "must_show_second_behavior_id_list", []
-        )
+        event = activity.event(character_id)
+        if any(
+            getattr(event, name) != value
+            for name, value in activity.EVENT_DEFAULT.items()
+        ):
+            activity.set_event(character_id)
+            count += 1
+        if activity.must_settle(character_id):
+            activity.set_must_settle(character_id, [])
+            count += 1
+        if activity.must_show(character_id):
+            activity.set_must_show(character_id, [])
+            count += 1
         for state_id in [
             state_id
             for state_id, state in game_config.config_character_state.items()
@@ -1928,13 +1847,13 @@ def _take_young_child_off_line(
                 count += 1
     for character in loaded_dict["character_data"].values():
         if (
-            character.target_character_id in young_child_id_set
-            and character.target_character_id != character.cid
+            activity.target(character.cid) in young_child_id_set
+            and activity.target(character.cid) != character.cid
         ):
             # NPC 正在对孩子进行的行为换成发呆；有孩子参与的会话由读档后的 end_young_child_session 结束
             if character.cid != 0:
                 _reset_behavior_to_idle(character)
-            character.target_character_id = character.cid
+            activity.set_target(character.cid, character.cid)
             count += 1
         if (
             relations.assistant_character_id(character.cid)
@@ -2020,17 +1939,17 @@ def _find_young_child_session(
         )
         child_in_scene_h = any(
             flags.get(chara_id, "is_h")
-            and character_data[chara_id].position == player.position
+            and activity.position(chara_id) == activity.position(player.cid)
             for chara_id in young_child_id_set
         )
         session["group"] = (
-            player.target_character_id in young_child_id_set
+            activity.target(player.cid) in young_child_id_set
             or in_template
             or child_in_scene_h
         )
     if loaded_dict.get("time_stop_mode", modes.time_stop()):
         time_stop_id_set = {
-            player.target_character_id,
+            activity.target(player.cid),
             player_ability.get(0, "free_in_time_stop_chara_id"),
             action_info.get(0, "carry_chara_id"),
             player_ability.get(0, "carry_chara_id_in_time_stop"),
@@ -2039,10 +1958,12 @@ def _find_young_child_session(
     for character in character_data.values():
         if (
             character.cid in young_child_id_set
-            or character.target_character_id not in young_child_id_set
+            or activity.target(character.cid) not in young_child_id_set
         ):
             continue
-        if session["group"] and character.position == player.position:
+        if session["group"] and activity.position(
+            character.cid
+        ) == activity.position(player.cid):
             continue
         if (
             flags.get(character.cid, "is_h")

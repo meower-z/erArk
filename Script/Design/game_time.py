@@ -18,6 +18,7 @@ from Script.Core import (
 )
 from Script.Config import game_config
 from Script.Kernel import core
+from Script.Modules.domains import activity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -699,8 +700,7 @@ def judge_work_today(character_id: int) -> int:
     Return arguments:
     int -- 周一到周五为1，周末为0
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or now()
+    now_time = activity.behavior(character_id).start_time or now()
     now_week = now_time.weekday()
     if now_week < 6:
         return 1
@@ -716,8 +716,7 @@ def judge_entertainment_time(character_id: int) -> int:
     Return arguments:
     int -- 0为不在娱乐时间段，1为早上，2为下午，3为晚上
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or now()
+    now_time = activity.behavior(character_id).start_time or now()
     now_hour = now_time.hour
     if 9 <= now_hour < 12:
         return 1
@@ -770,8 +769,7 @@ def get_class_period(character_id: int) -> int:
     Return arguments:
     int -- 节次编号0~8，不在任何节次内则为-1
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or now()
+    now_time = activity.behavior(character_id).start_time or now()
     return get_class_period_by_time(now_time)
 
 

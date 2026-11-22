@@ -1,4 +1,5 @@
 from tests.education._bootstrap import _ as _
+from tests.education._bootstrap import activity as activity
 from tests.education._bootstrap import attr_calculation as attr_calculation
 from tests.education._bootstrap import auto_schedule as auto_schedule
 from tests.education._bootstrap import baby_growth_handle as baby_growth_handle

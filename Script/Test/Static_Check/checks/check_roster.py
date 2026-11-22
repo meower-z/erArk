@@ -19,10 +19,10 @@ import os
 
 from Script.Config import game_config
 from Script.Core import cache_control
-from Script.Modules.domains import abilities, commission, diplomacy, facility
-from Script.Modules.domains import flags, location, modes, playthrough, prison
-from Script.Modules.domains import recruit, roster, visitor, work, chara_life
-from Script.Modules.domains import relations
+from Script.Modules.domains import abilities, activity, chara_life, commission
+from Script.Modules.domains import diplomacy, facility, flags, location, modes
+from Script.Modules.domains import playthrough, prison, recruit, relations
+from Script.Modules.domains import roster, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -219,7 +219,7 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
             f"in_diplomatic_visit={flags.get(cid, 'in_diplomatic_visit')}, vistor={flags.get(cid, 'vistor')}"
         )
         if roster.has(cid):
-            pos = getattr(c, "position", None)
+            pos = activity.position(c.cid)
             # 形状断言放宽为"非空list且元素全为str"：47%场景(248/530)是三段路径，["0","0"]是真实场景非哨兵，
             # map_handle无任何长度约束，故不再断言len==2。畸形position会被下面的路径存在性分支抓住，
             # 这里保留形状分支只为给出更精确的"形状异常"报错文案，不整段删除
@@ -304,7 +304,7 @@ def check_offline_source_flag_matches_real_offline_state() -> (
         hit = membership.get(cid, [])
         if hit:
             problems.append(f"仍残留在场景{hit}中")
-        pos = getattr(c, "position", None)
+        pos = activity.position(c.cid)
         if pos != ["0", "0"]:
             problems.append(f"position={pos!r}未归零")
         if problems:
@@ -316,8 +316,8 @@ def check_offline_source_flag_matches_real_offline_state() -> (
                         f"{warn}角色cid={cid} name={c.name!r} 三源flag("
                         f"field_commission={flags.get(cid, 'field_commission')}, "
                         f"escaping={flags.get(cid, 'escaping')}, be_bagged={flags.get(cid, 'be_bagged')})"
-                        f"指示应离线，但{'; '.join(problems)}；state={c.state}，"
-                        f"behavior.behavior_id={c.behavior.behavior_id!r}"
+                        f"指示应离线，但{'; '.join(problems)}；state={activity.state(c.cid)}，"
+                        f"behavior.behavior_id={activity.behavior(c.cid).behavior_id!r}"
                     ),
                     [cid],
                 )
@@ -351,7 +351,7 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
                 (
                     f"{warn}角色cid={cid} name={c.name!r} sp_flag.imprisonment为True，"
                     f"但既不在base.prisoners也不escaping；"
-                    f"position={c.position}，dormitory={chara_life.dormitory(c.cid)!r}，permanent_dormitory={chara_life.permanent_dormitory(c.cid)!r}"
+                    f"position={activity.position(c.cid)}，dormitory={chara_life.dormitory(c.cid)!r}，permanent_dormitory={chara_life.permanent_dormitory(c.cid)!r}"
                 ),
                 [cid],
             )
@@ -377,7 +377,7 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
                 "ROSTER-05",
                 "监禁flag的来源分区完整",
                 f"{warn}角色cid={cid} name={c.name!r} 同时在base.prisoners囚犯名册与escaping逃跑者集合中(应互斥)；"
-                f"position={c.position}，dormitory={chara_life.dormitory(c.cid)!r}",
+                f"position={activity.position(c.cid)}，dormitory={chara_life.dormitory(c.cid)!r}",
                 [cid],
             )
         )
@@ -480,7 +480,7 @@ def check_prisoner_dormitory_uniqueness() -> list[CheckFailure]:
                         "ROSTER-07",
                         "囚犯宿舍是互不重复的合法牢房",
                         f"{warn}囚犯cid={cid} name={c.name!r} 的宿舍dormitory={d!r}不在合法牢房集合PRISON_DORMS中；"
-                        f"position={c.position}，permanent_dormitory={chara_life.permanent_dormitory(c.cid)!r}，PRISON_DORMS={sorted(prison_dorms)}",
+                        f"position={activity.position(c.cid)}，permanent_dormitory={chara_life.permanent_dormitory(c.cid)!r}，PRISON_DORMS={sorted(prison_dorms)}",
                         [cid],
                     )
                 )
@@ -510,7 +510,6 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
     cd = cache.character_data
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    player = cd.get(0)
     for cid in prison.prisoner_ids():
         if cid not in cd:
             continue
@@ -519,7 +518,7 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
         if flags.get(c.cid, "be_bagged"):
             problems.append("同时被装袋(be_bagged=True)")
         if not flags.get(c.cid, "is_h"):
-            pos = getattr(c, "position", None)
+            pos = activity.position(c.cid)
             if not (
                 isinstance(pos, list) and len(pos) >= 1 and pos[0] == "关押"
             ):
@@ -530,9 +529,9 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
                     "ROSTER-08",
                     "囚犯留在关押区且不得同时被装袋",
                     (
-                        f"{warn}囚犯cid={cid} name={c.name!r} {'; '.join(problems)}；position={c.position}，"
-                        f"dormitory={chara_life.dormitory(cid)!r}，"
-                        f"is_h={flags.get(c.cid, "is_h")}，玩家position={getattr(player, 'position', None)}"
+                        f"{warn}囚犯cid={cid} name={c.name!r} {'; '.join(problems)}；"
+                        f"position={activity.position(c.cid)}，dormitory={chara_life.dormitory(cid)!r}，"
+                        f"is_h={flags.get(c.cid, "is_h")}，玩家position={activity.position(0)}"
                     ),
                     [cid],
                 )
@@ -566,8 +565,8 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
         hit = membership.get(cid, [])
         if hit:
             problems.append(f"仍残留在场景{hit}中")
-        if c.position != ["0", "0"]:
-            problems.append(f"position={c.position!r}未归零")
+        if activity.position(c.cid) != ["0", "0"]:
+            problems.append(f"position={activity.position(c.cid)!r}未归零")
         if flags.get(c.cid, "field_commission"):
             problems.append(
                 f"field_commission={flags.get(c.cid, "field_commission")}非零(逃犯不应挂外勤)"
@@ -883,7 +882,7 @@ def check_visitor_room_uniqueness() -> list[CheckFailure]:
                     "ROSTER-15",
                     "访客住在互不重复的客房",
                     f"{warn}访客cid={cid} name={c.name!r} 的dormitory={d!r}不在合法客房集合GUEST_ROOMS中；"
-                    f"position={c.position}，访客上限={visitor.capacity()}，facility_open(2000-2099)={open_2000}",
+                    f"position={activity.position(c.cid)}，访客上限={visitor.capacity()}，facility_open(2000-2099)={open_2000}",
                     [cid],
                 )
             )
@@ -1046,8 +1045,8 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
         problems.append(
             f"sp_flag.field_commission={flags.get(c.cid, "field_commission")}非零"
         )
-    if c.position != ["0", "0"]:
-        problems.append(f"position={c.position!r}未归零(未入编角色的必要属性)")
+    if (where := activity.position(c.cid)) != ["0", "0"]:
+        problems.append(f"position={where!r}未归零(未入编角色的必要属性)")
     if problems:
         failures.append(
             make_failure(
@@ -1104,8 +1103,8 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
             problems.append(
                 f"sp_flag.field_commission={flags.get(c.cid, "field_commission")}非零"
             )
-        if c.position != ["0", "0"]:
-            problems.append(f"position={c.position!r}未归零")
+        if activity.position(c.cid) != ["0", "0"]:
+            problems.append(f"position={activity.position(c.cid)!r}未归零")
         if problems:
             failures.append(
                 make_failure(
@@ -1404,7 +1403,8 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
                         (
                             f"{warn}委托mid={mid}人员cid={cid} name={c.name!r} "
                             f"的sp_flag.field_commission={flags.get(c.cid, 'field_commission')}"
-                            f"与所属委托不一致；cid in npc_id_got={roster.has(cid)}，position={c.position}，"
+                            f"与所属委托不一致；cid in npc_id_got={roster.has(cid)}，"
+                            f"position={activity.position(c.cid)}，"
                             f"命中场景={membership_scene.get(cid, [])}"
                         ),
                         [cid],
@@ -1424,7 +1424,7 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
                     f"{warn}角色cid={cid} name={c.name!r} "
                     f"sp_flag.field_commission={flags.get(c.cid, 'field_commission')}非零，"
                     f"但未出现在任何委托记录的人员列表中；cid in npc_id_got={roster.has(cid)}，"
-                    f"position={c.position}，"
+                    f"position={activity.position(c.cid)}，"
                     f"命中场景={membership_scene.get(cid, [])}"
                 ),
                 [cid],
@@ -1664,7 +1664,7 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
                     "ROSTER-30",
                     "外交官表与角色外派flag双向一致",
                     f"{warn}国家{country}外交官did={did} name={c.name!r} {'; '.join(problems)}；"
-                    f"work.work_type={chara_life.work_type(c.cid)}，所在国家={current_country}，position={c.position}",
+                    f"work.work_type={chara_life.work_type(c.cid)}，所在国家={current_country}，position={activity.position(c.cid)}",
                     [did],
                 )
             )
@@ -1816,8 +1816,8 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
         hit = membership.get(b, [])
         if hit:
             problems.append(f"仍残留在场景{hit}中")
-        if c.position != ["0", "0"]:
-            problems.append(f"position={c.position!r}未归零")
+        if activity.position(c.cid) != ["0", "0"]:
+            problems.append(f"position={activity.position(c.cid)!r}未归零")
         if prison.is_prisoner(b) or flags.get(c.cid, "imprisonment"):
             problems.append("同时是囚犯(base.prisoners或imprisonment)")
         if visitor.is_visitor(b) or flags.get(c.cid, "vistor") == 1:
@@ -1833,7 +1833,7 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-33",
                     "装袋双方记录双向一致",
-                    f"{warn}被装袋者b={b} name={c.name!r} {'; '.join(problems)}；玩家position={player.position}",
+                    f"{warn}被装袋者b={b} name={c.name!r} {'; '.join(problems)}；玩家position={activity.position(0)}",
                     [b],
                 )
             )

@@ -26,7 +26,7 @@ from Script.Design import (
     handle_premise,
 )
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import modes
+from Script.Modules.domains import activity, modes
 import logging, time
 
 cache: game_type.Cache = cache_control.cache
@@ -83,12 +83,10 @@ class InScenePanel:
             pl_character_data: game_type.Character = cache.character_data[0]
             # 场景数据
             scene_path_str = map_handle.get_map_system_path_str_for_list(
-                pl_character_data.position
+                activity.position(0)
             )
             scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-            character_handle_panel.null_button_text = (
-                pl_character_data.target_character_id
-            )
+            character_handle_panel.null_button_text = activity.target(0)
             character_list = character_behavior.scene_characters(scene_data)
             character_handle_panel.text_list = character_list
 
@@ -107,9 +105,7 @@ class InScenePanel:
             # game_time_draw.now_draw.width = len(game_time_draw)
             game_time_draw.draw()
             # 当前位置
-            position_text = attr_text.get_scene_path_text(
-                pl_character_data.position
-            )
+            position_text = attr_text.get_scene_path_text(activity.position(0))
             if handle_premise.handle_place_door_close(0):
                 position_text += _("(锁)")
             now_position_text = _("当前位置:") + position_text
@@ -126,9 +122,7 @@ class InScenePanel:
                 meet_draw.text += "\n"
             # meet_draw.width = self.width
             view.wframe_mouse.w_frame_skip_wait_mouse = 0
-            character_handle_panel.null_button_text = (
-                pl_character_data.target_character_id
-            )
+            character_handle_panel.null_button_text = activity.target(0)
 
             # 开始绘制主界面标题栏
             ask_list = []
@@ -177,7 +171,7 @@ class InScenePanel:
             )
             ask_list.extend(character_head_draw.return_list)
             target_head_draw = character_info_head.CharacterInfoHead(
-                pl_character_data.target_character_id, self.width
+                activity.target(0), self.width
             )
             character_head_draw_list = [
                 y for x in character_head_draw.draw_list for y in x
@@ -189,7 +183,7 @@ class InScenePanel:
                 value_tuple.draw()
             line_feed.draw()
             # 只有在有交互对象的情况下才绘制交互对象
-            if pl_character_data.target_character_id:
+            if activity.target(0):
                 for value_tuple in target_head_draw_list:
                     value_tuple.draw()
                 line_feed.draw()
@@ -250,7 +244,7 @@ class InScenePanel:
             # ↓以下为状态栏的内容↓#
             character_status_draw_list = []
             if (
-                pl_character_data.target_character_id
+                activity.target(0)
                 and normal_config.system_setting.scene_panel_show[0]
             ):
                 character_status_draw = (
@@ -260,7 +254,7 @@ class InScenePanel:
                 )
                 target_status_draw = (
                     see_character_info_panel.SeeCharacterStatusPanel(
-                        pl_character_data.target_character_id,
+                        activity.target(0),
                         self.width,
                         7,
                         0,
@@ -317,10 +311,9 @@ class InScenePanel:
                     label.draw()
 
             # ↓以下为服装栏的内容↓#
-            if (
-                normal_config.system_setting.scene_panel_show[1]
-                and pl_character_data.target_character_id
-            ):
+            if normal_config.system_setting.scene_panel_show[
+                1
+            ] and activity.target(0):
                 # 如果是在H中，则切换为按钮型的点选服装穿脱面板
                 if handle_premise.handle_is_h(0):
                     character_cloth_draw: (
@@ -338,10 +331,9 @@ class InScenePanel:
                 ask_list.extend(character_cloth_draw.return_list)
 
             # ↓以下为身体栏的内容↓#
-            if (
-                normal_config.system_setting.scene_panel_show[2]
-                and pl_character_data.target_character_id
-            ):
+            if normal_config.system_setting.scene_panel_show[
+                2
+            ] and activity.target(0):
                 character_body_draw = dirty_panel.SeeCharacterBodyPanel(
                     pl_character_data.cid, self.width, 9, 0, False
                 )

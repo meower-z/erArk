@@ -22,7 +22,8 @@ from Script.System.Medical_System import (
 )
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import abilities, medical_patient, warehouse
+from Script.Modules.domains import abilities, activity, medical_patient
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 全局缓存对象 """
@@ -180,12 +181,10 @@ class MedicalPlayerDiagnosePanel:
         )
 
         # 如果存在交互对象，则追加一半能力值并应用最低阈值
-        if (
-            self.player.target_character_id != 0
-            and self.player.target_character_id in cache.character_data
-        ):
+        target_id = activity.target(self.player.cid)
+        if target_id != 0 and target_id in cache.character_data:
             level += int(
-                abilities.ability(self.player.target_character_id).get(
+                abilities.ability(target_id).get(
                     medical_constant.MEDICAL_ABILITY_ID, 0
                 )
                 / 2

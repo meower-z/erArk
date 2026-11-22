@@ -20,7 +20,13 @@ from Script.Design import (
 )
 from Script.Modules.tk_ui import player_pick
 import math
-from Script.Modules.domains import action_info, h_meters, needs, relations
+from Script.Modules.domains import (
+    action_info,
+    activity,
+    h_meters,
+    needs,
+    relations,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -165,7 +171,7 @@ class Sleep_Panel:
             now_draw = draw.NormalDraw()
 
             # 计算地点数据
-            now_position = self.pl_character_data.position
+            now_position = activity.position(self.pl_character_data.cid)
             now_scene_str = map_handle.get_map_system_path_str_for_list(
                 now_position
             )
@@ -329,7 +335,7 @@ class Sleep_Panel:
         """计算睡到早安服务的时间"""
         # 计算时间差
         self.min_to_moring_service_min = judge_time_to_pl_awake(
-            self.pl_character_data.behavior.start_time
+            activity.behavior(self.pl_character_data.cid).start_time
         )
         self.min_to_moring_service_hour = int(
             self.min_to_moring_service_min / 60

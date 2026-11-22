@@ -16,6 +16,7 @@ from Script.Modules.domains import commission
 from Script.Modules.gameplay_resolution import time_hooks
 from Script.Settle import realtime_settle
 from tests import kernel_data
+from tests.chara_activity import behave
 from tests.fast.base import FastTestCase
 
 COMMISSION = 2
@@ -47,8 +48,7 @@ class CommissionTickTest(FastTestCase):
             )
         )
         player = self.world.chara(0, "博士")
-        player.behavior.behavior_id = constant.Behavior.SLEEP
-        player.behavior.duration = 600
+        behave(player.cid, constant.Behavior.SLEEP, duration=600)
         self.base = core.state().clock
         action = core.Action("0", core.idle.name, None, self.base, 600)
         core.load((time_hooks,))

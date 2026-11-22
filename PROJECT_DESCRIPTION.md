@@ -408,16 +408,13 @@ Script/
 - **地图**：`map_data`, `scene_data`, `collect_position_list`
 - **行为循环**：`over_behavior_character`
 - **基地/世界**：`rhodes_island`, `ai_setting`
-- **不在缓存里**：界面临时状态（`now_panel_id`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`；全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，存在 settings.json；在编/禁用/已用姓名名册（`roster.active`、`roster.forbidden`、`roster.names`，由 `Modules/domains/roster.py` 读写）、本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件与指令记录（`events.triggered`、`events.triggered_today`、`log.instructions`）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写
+- **不在缓存里**：界面临时状态（`now_panel_id`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`；全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，存在 settings.json；在编/禁用/已用姓名名册（`roster.active`、`roster.forbidden`、`roster.names`，由 `Modules/domains/roster.py` 读写）、本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件与指令记录（`events.triggered`、`events.triggered_today`、`log.instructions`）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写。角色的十项活动（状态、之前的行为、当前行为、二段行为、必须结算与必须显示的二段行为id列表、事件、位置、交互对象、是否死亡）在 GameState 的角色键 `activity.*` 里，用 `Modules/domains/activity.py` 读写
 
 ### 9.2 Character
 
 字段：
 
-- 基本：`cid`, `name`, `sex`, `adv`, `dead`, `profession`, `race`, `birthday`, `state`
-- 行为：`behavior`（Behavior 对象）, `second_behavior`, `must_settle_second_behavior_id_list`, `must_show_second_behavior_id_list`, `last_behavior_id_list`, `target_character_id`
-- 位置：`position`
-- 子对象：`event`
+- 基本：`cid`, `name`, `sex`, `adv`, `profession`, `race`, `birthday`
 - 其他：`text_color`, `talk_size`, `token_text`
 
 其余角色数据不在 `Character` 上，存在 GameState 的角色键里：
@@ -429,11 +426,12 @@ Script/
 - 服装、道具与身体管理：服装在 `body.cloth`（`Modules/domains/wardrobe.py`）；道具与食物背包在 `inventory.items`、`inventory.food_bag`（`Modules/domains/inventory.py`）；身体管理在 `body.manage`（`Modules/domains/body_manage.py`）
 - H 计量与状态：`eja_point`、`eja_point_max`、`semen_point`、`semen_point_max`、`tem_extra_semen_point` 在 `h.meters`（用 `h_meters.of(cid)` 读；全局 `shoot_position` 在 `h.shoot_position`，用 `h_meters.shoot_position()` 读）；H 状态、污浊、催眠、初次记录与历史初次记录在 `h.state`、`body.dirty`、`mind.hypnosis`、`history.first_record`、`history.first_record_history`（`Modules/domains/h_state.py`、`dirty.py`、`hypnosis.py`、`first_record.py`）
 - 玩家数据：玩家能力状态与玩家收藏品在 `player.ability`、`player.collection`（`Modules/domains/player_ability.py`、`Modules/domains/player_collection.py`）
+- 活动：状态、之前的行为、当前行为、二段行为、必须结算与必须显示的二段行为id列表、事件、位置、交互对象与是否死亡在 `activity.*`（`Modules/domains/activity.py`）
 - 社会关系、生活与个人资料：社会关系（好感、信赖、助理、父母、孩子、朋友、出生地与势力）在 `social.*`（`Modules/domains/relations.py`）；住处、工作与娱乐在 `life.*`（`Modules/domains/chara_life.py`）；称呼、个人设置与口上作者变量在 `profile.*`（`Modules/domains/chara_profile.py`）
 
 ### 9.3 Behavior / 其他重要类
 
-- `Behavior`：`start_time`, `duration`, `behavior_id`, 移动目标 `move_target/move_src/move_final_target`, 食物 `target_food`, 书、奶量、尿量、礼物等 19 个字段
+- `Behavior`：`start_time`, `duration`, `behavior_id`, 移动目标 `move_target/move_src/move_final_target`, 食物 `target_food`, 书、奶量、尿量、礼物等 21 个字段。`activity.behavior(cid)` 读出只读的 `activity.Behavior`（属性同 `Behavior`），改字段用 `activity.update_behavior`，换新用 `activity.set_behavior`
 - `NpcTem`：角色模板（能力/经验/素质/服装/基础属性）
 - `Map` / `MapDraw` / `MapDrawLine` / `MapDrawText`：AA 地图与绘制
 - `Scene`：场景路径、名字、室内外、家具、门、面积、标签、角色列表、图片

@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from typing import Any
@@ -97,9 +98,7 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
         self.assertTrue(
             kernel_data.domain("flags").get(self.operator.cid, "is_h")
         )
-        self.assertEqual(
-            self.cache.character_data[0].target_character_id, self.operator_id
-        )
+        self.assertEqual(activity.target(0), self.operator_id)
 
     def test_wait_option_keeps_door_locked(self) -> None:
         """杜宾在屋里，锁门指令里触发 wait 事件，选「逆来顺受」后门仍锁着"""
@@ -126,6 +125,6 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
                 ),
                 60,
             ),
-            f"杜宾在 {self.operator.position}",
+            f"杜宾在 {activity.position(self.operator.cid)}",
         )
         self.check_ambush("move")

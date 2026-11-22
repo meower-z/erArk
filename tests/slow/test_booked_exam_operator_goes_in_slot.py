@@ -18,6 +18,7 @@ from tests.slow.health_check import (
     HealthCheckTestCase,
 )
 from tests import kernel_data
+from tests.kernel_project import activity
 
 
 class BookedExamOperatorGoesInSlotTest(HealthCheckTestCase):
@@ -28,7 +29,6 @@ class BookedExamOperatorGoesInSlotTest(HealthCheckTestCase):
         from Script.Design import game_time
 
         operator_id = self.book_daily_exam("可露希尔")
-        operator = self.cache.character_data[operator_id]
         picks = self.record_picks(operator_id)
         self.sleep_through_midnight()
         slot = kernel_data.domain("action_info").get(
@@ -70,6 +70,8 @@ class BookedExamOperatorGoesInSlotTest(HealthCheckTestCase):
             f"进入时段后她依次执行的状态机：{in_slot()[:5]}",
         )
         self.assertTrue(
-            self.wait_until(lambda: operator.position == EXAM_ROOM, 60),
-            f"她在 {operator.position}",
+            self.wait_until(
+                lambda: activity.position(operator_id) == EXAM_ROOM, 60
+            ),
+            f"她在 {activity.position(operator_id)}",
         )

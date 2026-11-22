@@ -12,7 +12,8 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle, virgin_break_gate
-from Script.Modules.domains import abilities, flags, h_state, modes, roster
+from Script.Modules.domains import abilities, activity, flags, h_state, modes
+from Script.Modules.domains import roster
 
 panel_info_data: dict[str, object] = {}
 
@@ -247,9 +248,8 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
             if filter_judge:
                 status_data = game_config.config_behavior[status_id]
                 status_tag_list = status_data.tag.split("|")
-                pl_character_data = cache.character_data[0]
-                if pl_character_data.target_character_id != 0:
-                    target_id = pl_character_data.target_character_id
+                if activity.target(0) != 0:
+                    target_id = activity.target(0)
                     # 如果NPC为处，则跳过破处类
                     if virgin_break_gate.takes_kept_virginity(
                         status_tag_list, abilities.talent(target_id)
@@ -674,7 +674,7 @@ class Edit_Group_Sex_Temple_Panel:
 
         # 全NPC列表
         scene_path_str = map_handle.get_map_system_path_str_for_list(
-            self.pl_character_data.position
+            activity.position(self.pl_character_data.cid)
         )
         scene_data: game_type.Scene = cache.scene_data[scene_path_str]
         all_character_list: Collection[int] = scene_data.character_list
@@ -771,24 +771,22 @@ class Edit_Group_Sex_Temple_Panel:
     def show_status_list(self, temple_id: str, body_part: str) -> None:
         """绘制可选择的状态列表"""
         # 如果当前已指定对象角色id，则将其设为玩家的交互对象
-        old_target_character_id = self.pl_character_data.target_character_id
-        try:
+        pl = self.pl_character_data.cid
+        with activity.target_as(pl, activity.target(pl)):
             tpl_entry = h_state.view(0).group_sex_body_template_dict[temple_id]
             if body_part != "侍奉":
                 target_chara_id = tpl_entry[0][body_part][0]
                 if target_chara_id != -1:
-                    self.pl_character_data.target_character_id = target_chara_id
+                    activity.set_target(pl, target_chara_id)
             else:
                 target_chara_id_list = tpl_entry[1][0]
                 # 侍奉中则将最后一位设为玩家的交互对象
                 if -1 not in target_chara_id_list:
                     target_chara_id = target_chara_id_list[-1]
-                    self.pl_character_data.target_character_id = target_chara_id
+                    activity.set_target(pl, target_chara_id)
             new_status_id_list = get_status_id_list_from_group_sex_body_part(
                 body_part
             )
-        finally:
-            self.pl_character_data.target_character_id = old_target_character_id
         while 1:
             line = draw.LineDraw("-", self.width)
             line.draw()
@@ -857,7 +855,7 @@ class Edit_Group_Sex_Temple_Panel:
         )
         # 当前地点的角色列表
         scene_path_str = map_handle.get_map_system_path_str_for_list(
-            self.pl_character_data.position
+            activity.position(self.pl_character_data.cid)
         )
         scene_data: game_type.Scene = cache.scene_data[scene_path_str]
         now_scene_character_list = scene_data.character_list
@@ -1046,7 +1044,7 @@ class Edit_Group_Sex_Temple_Panel:
                 character_id, "be_invited_join_group_sex"
             )
             # 她前往玩家的位置：排进她的计划队列，打断她当前的行动；寻路失败时原地等待5分钟
-            to_dr = cache.character_data[0].position
+            to_dr = activity.position(0)
             minutes = choice.route_minutes(character_id, to_dr)
             if minutes > 0:
                 plan_queue.plan_next(

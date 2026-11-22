@@ -17,10 +17,11 @@ import random
 from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import handle_premise as HP
-from Script.Modules.domains import action_info, flags, modes, wardrobe
+from Script.Modules.domains import action_info, activity, flags, modes, wardrobe
 from Script.Modules.domains import physical_exam as exam
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import behave
 from Script.Modules.domains import relations
 
 SAMPLES = 4000
@@ -172,15 +173,18 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
         """
         rng, operator = self.rng, self.operator
         hour = rng.randrange(24)
-        operator.behavior.start_time = datetime.datetime(
-            2020, 12, 22, hour, rng.choice([0, 30])
-        )
-        operator.behavior.behavior_id = rng.choice(
-            [
-                constant.Behavior.SLEEP,
-                constant.Behavior.SHARE_BLANKLY,
-                constant.Behavior.WAIT,
-            ]
+        behave(
+            operator.cid,
+            rng.choice(
+                [
+                    constant.Behavior.SLEEP,
+                    constant.Behavior.SHARE_BLANKLY,
+                    constant.Behavior.WAIT,
+                ]
+            ),
+            start_time=datetime.datetime(
+                2020, 12, 22, hour, rng.choice([0, 30])
+            ),
         )
         kernel_data.put(flags.set, operator.cid, unconscious_h=rng.randrange(8))
         kernel_data.put(
@@ -247,7 +251,7 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
                             full,
                             short,
                             flags.get(op.cid, "unconscious_h"),
-                            op.behavior.behavior_id,
+                            activity.behavior(op.cid).behavior_id,
                             kernel_data.needs_of(op.cid)["sleep"],
                             kernel_data.needs_of(op.cid)["drunk"],
                         )

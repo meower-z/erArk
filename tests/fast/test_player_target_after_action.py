@@ -11,8 +11,9 @@
 from Script.Core import constant
 from Script.Design import character_behavior, update
 from Script.Kernel import core
-from Script.Modules.domains import history
+from Script.Modules.domains import activity, history
 from tests import kernel_data
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = update
@@ -38,22 +39,22 @@ class PlayerTargetAfterActionTest(FastTestCase):
     def test_target_who_left_is_replaced(self) -> None:
         """交互对象（干员1）已离开：换成场景里的干员2"""
         self.world.chara(HERE, "在场的干员")
-        self.player.target_character_id = GONE
-        character_behavior.player_after_end()
-        self.assertEqual(self.player.target_character_id, HERE)
+        aim(self.player.cid, GONE)
+        kernel_data.written(character_behavior.player_after_end)
+        self.assertEqual(activity.target(self.player.cid), HERE)
 
     def test_after_move_targets_first_in_scene(self) -> None:
         """刚移动过来，交互对象是自己：换成场景里的干员2"""
         self.world.chara(HERE, "在场的干员")
-        self.player.target_character_id = 0
+        aim(self.player.cid, 0)
         kernel_data.set_world(
             history.set_recent, [*history.recent(), constant.Behavior.MOVE]
         )
-        character_behavior.player_after_end()
-        self.assertEqual(self.player.target_character_id, HERE)
+        kernel_data.written(character_behavior.player_after_end)
+        self.assertEqual(activity.target(self.player.cid), HERE)
 
     def test_empty_scene_targets_self(self) -> None:
         """场景里没有别的角色：交互对象是自己"""
-        self.player.target_character_id = GONE
-        character_behavior.player_after_end()
-        self.assertEqual(self.player.target_character_id, 0)
+        aim(self.player.cid, GONE)
+        kernel_data.written(character_behavior.player_after_end)
+        self.assertEqual(activity.target(self.player.cid), 0)

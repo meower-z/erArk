@@ -47,7 +47,15 @@ from Script.Core import cache_control, game_type, constant
 from Script.Design import attr_calculation, game_time, map_handle
 from Script.System.Education_System import education_constant, schedule_handle
 from typing import TYPE_CHECKING
-from Script.Modules.domains import flags, growth, hypnosis, modes, needs, roster
+from Script.Modules.domains import (
+    activity,
+    flags,
+    growth,
+    hypnosis,
+    modes,
+    needs,
+    roster,
+)
 from Script.Modules.domains import status, chara_life, relations
 from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 
@@ -108,8 +116,7 @@ def judge_teacher_available(teacher_id: int, classroom: str = "") -> bool:
 
     if teacher_id == -1 or teacher_id not in cache.character_data:
         return False
-    teacher_data: game_type.Character = cache.character_data[teacher_id]
-    if teacher_data.dead:
+    if activity.dead(teacher_id):
         return False
     # 这几种状态下教师人不在教室，或不可能讲课
     if flags.get(teacher_id, "is_h") or flags.get(teacher_id, "imprisonment"):
@@ -217,9 +224,8 @@ def judge_in_scene(character_id: int, scene_name: str) -> bool:
     Return arguments:
     bool -- 是否在该场景
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     if now_scene_str not in cache.scene_data:
         return False
@@ -243,8 +249,7 @@ def settle_absent(character_id: int, by_skip: bool = False) -> bool:
     Return arguments:
     bool -- 是否真的记上了；同一节已记过缺课、已记了出勤、不在节次内为 False
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     period = game_time.get_class_period(character_id)
     if period == -1:
         return False
@@ -278,8 +283,7 @@ def judge_must_attend_sex_class(
     from Script.System.Education_System import sex_class_handle
 
     if now_time is None:
-        character_data: game_type.Character = cache.character_data[character_id]
-        now_time = character_data.behavior.start_time or game_time.now()
+        now_time = activity.behavior(character_id).start_time or game_time.now()
     period = game_time.get_class_period_by_time(now_time)
     if period == -1:
         return False
@@ -370,10 +374,9 @@ def get_pending_sex_classroom(character_id: int) -> str:
     Return arguments:
     str -- 教室场景名，不是学生岗或没有待赴的实操课时为空字符串
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return ""
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     return get_next_sex_class(character_id, now_time)[1]
 
 
@@ -394,10 +397,9 @@ def get_course_stage(character_id: int) -> int:
           本节没课、下一节马上开课的不判 UPCOMING
              而判 NONE（Plan 31 §3.5）——开课那一刻她照样判翘课，去教室门口等一趟再掉头走是白跑，与截短规则 B 同口径
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return education_constant.COURSE_STAGE_NONE
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     # 预到岗优先于本节的一切（原 find_character_target 里排在上课判定之前）
     pending_class, pending_classroom = get_next_sex_class(
         character_id, now_time
@@ -523,7 +525,6 @@ def judge_attend_running_sex_class_here(character_id: int) -> bool:
 
     if not modes.sex_class():
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
     if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return False
     running_class = sex_class_handle.get_running_class()
@@ -532,7 +533,7 @@ def judge_attend_running_sex_class_here(character_id: int) -> bool:
     classroom = running_class.get("classroom", "")
     if not classroom or not judge_in_scene(character_id, classroom):
         return False
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     # 待赴、已被玩家提前开讲的那一节（Plan 26 §3.5）
     pending_class, pending_classroom = get_next_sex_class(
         character_id, now_time
@@ -590,9 +591,8 @@ def roll_skip_class(
     rate = get_skip_class_rate(character_id)
     if rate <= 0:
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
     if now_time is None:
-        now_time = character_data.behavior.start_time or game_time.now()
+        now_time = activity.behavior(character_id).start_time or game_time.now()
     growth_data = growth.of(character_id)
     if (
         growth_data is not None
@@ -625,12 +625,11 @@ def judge_skip_class_today(
     """
     if character_id not in cache.character_data:
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
     growth_data = growth.of(character_id)
     if growth_data is None or not growth_data.skip_class_flag:
         return False
     if now_time is None:
-        now_time = character_data.behavior.start_time or game_time.now()
+        now_time = activity.behavior(character_id).start_time or game_time.now()
     return growth_data.skip_class_day == now_time.toordinal()
 
 
@@ -653,21 +652,19 @@ def judge_student_pullable(student_id: int) -> bool:
     """
     if student_id not in cache.character_data:
         return False
-    character_data: game_type.Character = cache.character_data[student_id]
-    if (
-        chara_life.work_type(student_id) != STUDENT_WORK_TYPE
-        or character_data.dead
+    if chara_life.work_type(student_id) != STUDENT_WORK_TYPE or activity.dead(
+        student_id
     ):
         return False
     if (
         flags.get(student_id, "is_h")
         or flags.get(student_id, "sleep")
-        or character_data.behavior.behavior_id == constant.Behavior.SLEEP
+        or activity.behavior(student_id).behavior_id == constant.Behavior.SLEEP
     ):
         return False
     if judge_skip_class_today(student_id):
         return False
-    return character_data.behavior.behavior_id != constant.Behavior.REST
+    return activity.behavior(student_id).behavior_id != constant.Behavior.REST
 
 
 def judge_student_join_class(
@@ -696,7 +693,7 @@ def judge_student_join_class(
 
     if not judge_student_pullable(student_id):
         return False
-    student_start_time = cache.character_data[student_id].behavior.start_time
+    student_start_time = activity.behavior(student_id).start_time
     if (
         now_time is not None
         and student_start_time is not None
@@ -763,27 +760,26 @@ def get_student_leave_time(character_id: int) -> datetime.datetime | None:
 
     if character_id == 0 or character_id not in cache.character_data:
         return None
-    character_data: game_type.Character = cache.character_data[character_id]
     if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return None
     if flags.get(character_id, "is_h") or flags.get(character_id, "sleep"):
         return None
-    behavior_id = character_data.behavior.behavior_id
+    behavior_id = activity.behavior(character_id).behavior_id
     if behavior_id not in game_config.config_behavior:
         return None
     behavior_tag = game_config.config_behavior[behavior_id].tag
     if "工作" not in behavior_tag and "娱乐" not in behavior_tag:
         return None
-    start_time = character_data.behavior.start_time
-    if start_time is None or character_data.behavior.duration <= 0:
+    start_time = activity.behavior(character_id).start_time
+    if start_time is None or activity.behavior(character_id).duration <= 0:
         return None
     if not handle_premise.handle_normal_all(character_id):
         return None
     end_time = start_time + datetime.timedelta(
-        minutes=character_data.behavior.duration
+        minutes=activity.behavior(character_id).duration
     )
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     skip_today = judge_skip_class_today(character_id, start_time)
     pre_arrive = datetime.timedelta(
@@ -878,8 +874,7 @@ def judge_mother_available(character_id: int) -> int:
     # 没有母亲，或母亲已不在角色表里（旧档 / 数据损坏）
     if mother_id == -1 or mother_id not in cache.character_data:
         return -1
-    mother_data: game_type.Character = cache.character_data[mother_id]
-    if mother_data.dead:
+    if activity.dead(mother_id):
         return -1
     # H中 / 无意识H中 / 被监禁
     if (
@@ -897,7 +892,7 @@ def judge_mother_available(character_id: int) -> int:
     #    每次启动从 1 自增），不关联任何角色，干员从不进这张表；拿母亲的角色 id 去查，只会在编号撞上时误判
     # 母亲所在场景不可达（未解锁 / 已拆除）
     mother_scene_str = map_handle.get_map_system_path_str_for_list(
-        mother_data.position
+        activity.position(mother_id)
     )
     if mother_scene_str not in cache.scene_data:
         return -1

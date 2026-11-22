@@ -17,7 +17,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
-from Script.Modules.domains import growth, official, roster
+from Script.Modules.domains import activity, growth, official, roster
 from Script.System.Official_Event_System import official_event_handle
 from Script.Modules.domains import relations
 
@@ -430,20 +430,19 @@ def judge_premise_all_pass(
     premise_text: str, character_id: int, partner_id: int = 0
 ) -> bool:
     """
-    逐条判定一组事件前提是否全部成立，不带口上的口球判定（Plan 32 §3.3 / §3.11）
+    逐条判定一组事件前提是否全部成立，不带口上的口球判定
+
+    official_event_handle.judge_premise_pass 走口上权重计算（handle_premise.get_weight_from_premise_dict），
+    主体或交互对象被塞着口球且前提没写口球时整组判 0，会让一次性生日事件或长大重判阶段记号错过、误清。
+    这里逐条调 handle_premise.handle_premise（CVP 走 handle_comprehensive_value_premise），跳过只管权重的
+    high_ 与 Weight|0。判定期间主体的交互对象读作 partner_id（activity.target_as，不写状态），
+    前提里的 A2 与 target_* 于是指向互动对象
     Keyword arguments:
     premise_text -- & 连接的前提串
     character_id -- 主体角色id
     partner_id -- 互动对象角色id，默认0为玩家
     Return arguments:
     bool -- 全部成立（或前提为空）为 True；主体不存在为 False
-    功能: official_event_handle.judge_premise_pass 走口上的权重计算（handle_premise.get_weight_from_premise_dict），
-             主体或交互对象被塞着口球、前提里又没写口球时整组判 0。每日派发里这只是那天少派一条，
-             一辈子只推一次的生日事件、孩子长大时重判阶段记号却会因此错过或误清。
-          这里逐条调前提处理函数（handle_premise.handle_premise，CVP 走 handle_comprehensive_value_premise）；
-             权重类前提（high_ 开头的与 CVP 的 Weight|0）只管权重、不算条件，跳过。
-          判定期间照 judge_premise_pass 的写法把交互对象临时指向 partner_id（前提里的 A2 与 target_*
-          于是指向互动对象），判完立刻还原
     """
     from Script.Design import handle_premise
 
@@ -452,17 +451,12 @@ def judge_premise_all_pass(
         return True
     if character_id not in cache.character_data:
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
-    old_target_id = character_data.target_character_id
-    character_data.target_character_id = partner_id
-    try:
+    with activity.target_as(character_id, partner_id):
         for premise in sorted(premise_set):
             if premise.startswith("high_") or "Weight|0" in premise:
                 continue
             if not handle_premise.handle_premise(premise, character_id):
                 return False
-    finally:
-        character_data.target_character_id = old_target_id
     return True
 
 

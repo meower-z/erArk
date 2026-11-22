@@ -8,7 +8,9 @@
 """
 
 from tests import kernel_data
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 DR_OFFICE = ["中枢", "博士办公室"]
 CORRIDOR = ["中枢", "走廊"]
@@ -36,21 +38,17 @@ class FollowerEntersFullRoomTest(SlowTestCase):
         office_str = map_handle.get_map_system_path_str_for_list(DR_OFFICE)
         self.assertTrue(map_handle.judge_scene_is_full(office_str))
         follower_id = self.npc("杜宾")
-        follower = self.cache.character_data[follower_id]
         self.world.move(follower_id, CORRIDOR)
         # 在场景里点选杜宾，再点「邀请同行」
-        self.cache.character_data[0].target_character_id = follower_id
+        aim(0, follower_id)
         self.instruct(constant.Instruct.FOLLOW)
         self.assertEqual(
             kernel_data.domain("flags").get(follower_id, "is_follow"), 1
         )
         self.walk(DR_OFFICE)
-        self.assertEqual(self.cache.character_data[0].position, DR_OFFICE)
-        self.assertEqual(follower.position, DR_OFFICE)
+        self.assertEqual(activity.position(0), DR_OFFICE)
+        self.assertEqual(activity.position(follower_id), DR_OFFICE)
         self.assertEqual(
-            sum(
-                self.cache.character_data[cid].position == DR_OFFICE
-                for cid in recruits
-            ),
+            sum(activity.position(cid) == DR_OFFICE for cid in recruits),
             RECRUITS,
         )

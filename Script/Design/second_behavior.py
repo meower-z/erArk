@@ -9,7 +9,7 @@ from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, activity
 from Script.Modules.domains import first_record as first_record_domain, flags
 from Script.Modules.domains import growth, h_state, status
 
@@ -52,46 +52,39 @@ def character_get_second_behavior(
     second_behavior_id -- 二段行为id
     reset -- 是否重置该二段行为，默认为False
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if second_behavior_id not in character_data.second_behavior:
-        character_data.second_behavior[second_behavior_id] = 0
     if reset:
-        character_data.second_behavior[second_behavior_id] = 0
+        activity.set_second_behavior(character_id, second_behavior_id, 0)
         # 如果该二段行为在必须结算列表中，则不再进行结算
         if (
             second_behavior_id
             in game_config.config_behavior_must_settle_cid_list
         ):
-            if (
-                second_behavior_id
-                in character_data.must_settle_second_behavior_id_list
-            ):
-                character_data.must_settle_second_behavior_id_list.remove(
-                    second_behavior_id
-                )
+            must_settle = activity.must_settle(character_id)
+            if second_behavior_id in must_settle:
+                must_settle.remove(second_behavior_id)
+                activity.set_must_settle(character_id, must_settle)
         # 如果该二段行为在必须显示列表中，则不再进行显示
         if second_behavior_id in game_config.config_behavior_must_show_cid_list:
-            if (
-                second_behavior_id
-                in character_data.must_show_second_behavior_id_list
-            ):
-                character_data.must_show_second_behavior_id_list.remove(
-                    second_behavior_id
-                )
+            must_show = activity.must_show(character_id)
+            if second_behavior_id in must_show:
+                must_show.remove(second_behavior_id)
+                activity.set_must_show(character_id, must_show)
     else:
-        character_data.second_behavior[second_behavior_id] = 1
+        activity.set_second_behavior(character_id, second_behavior_id, 1)
         # 如果该二段行为在必须结算列表中，则进行结算
         if (
             second_behavior_id
             in game_config.config_behavior_must_settle_cid_list
         ):
-            character_data.must_settle_second_behavior_id_list.append(
-                second_behavior_id
+            activity.set_must_settle(
+                character_id,
+                [*activity.must_settle(character_id), second_behavior_id],
             )
         # 如果该二段行为在必须显示列表中，则进行显示
         if second_behavior_id in game_config.config_behavior_must_show_cid_list:
-            character_data.must_show_second_behavior_id_list.append(
-                second_behavior_id
+            activity.set_must_show(
+                character_id,
+                [*activity.must_show(character_id), second_behavior_id],
             )
         # ——履历记录：二段行为类统一分发（一处覆盖全部来源，dict去重使重复置1零成本）——
         # (1) 部位绝顶行为则记录初次强/超强绝顶（超强同时回填空缺的强绝顶记录）
@@ -105,12 +98,12 @@ def character_get_second_behavior(
                 if state_id not in fr.first_strong_orgasm_dict:
                     fr.first_strong_orgasm_dict[state_id] = [
                         game_time.now(),
-                        list(character_data.position),
+                        list(activity.position(character_id)),
                     ]
                 if degree == 3 and state_id not in fr.first_super_orgasm_dict:
                     fr.first_super_orgasm_dict[state_id] = [
                         game_time.now(),
-                        list(character_data.position),
+                        list(activity.position(character_id)),
                     ]
         # (2) 刻印升级行为则记录刻印首达等级（id格式{类型}_mark_{等级}，与部位绝顶id格式互斥）
         elif "_mark_" in second_behavior_id:
@@ -118,7 +111,7 @@ def character_get_second_behavior(
                 if second_behavior_id not in fr.first_mark_dict:
                     fr.first_mark_dict[second_behavior_id] = [
                         game_time.now(),
-                        list(character_data.position),
+                        list(activity.position(character_id)),
                     ]
         # (3) 固定二段行为id到特殊履历的白名单映射（受精/喷乳绝顶/放尿绝顶）
         elif (
@@ -160,8 +153,8 @@ def check_second_effect(
     # 仅在存在激活的二段行为时才构建分类列表：
     # 无激活行为时，下游 second_behavior_effect 会因"无任何二段行为"直接返回，
     # 列表内容不会被使用，跳过每次约两百次的子串扫描
-    if any(character_data.second_behavior.values()):
-        for second_behavior_id in character_data.second_behavior:
+    if activity.second_behaviors(character_id):
+        for second_behavior_id in activity.second_ids(character_id):
             if "orgasm" in second_behavior_id:
                 orgasm_list.append(second_behavior_id)
             if "mark" in second_behavior_id:
@@ -181,15 +174,15 @@ def check_second_effect(
         second_behavior_effect(character_id, change_data)
         # NPC的刻印结算
         change_data.target_change.setdefault(
-            character_data.target_character_id, game_type.TargetChange()
+            activity.target(character_data.cid), game_type.TargetChange()
         )
         target_change: (
             game_type.TargetChange | game_type.CharacterStatusChange
-        ) = change_data.target_change[character_data.target_character_id]
-        mark_effect(character_data.target_character_id, target_change)
+        ) = change_data.target_change[activity.target(character_data.cid)]
+        mark_effect(activity.target(character_data.cid), target_change)
         # 单独遍历结算刻印
         second_behavior_effect(
-            character_data.target_character_id, target_change, mark_list
+            activity.target(character_data.cid), target_change, mark_list
         )
 
     # NPC自己检测自己
@@ -212,8 +205,8 @@ def check_second_effect(
         )
         from Script.System.Pregnancy_System import pregnancy_constant
 
-        if character_data.second_behavior.get(
-            pregnancy_constant.LAY_SOFT_EGG_SECOND_BEHAVIOR, 0
+        if activity.second_behavior(
+            character_id, pregnancy_constant.LAY_SOFT_EGG_SECOND_BEHAVIOR
         ):
             second_behavior_effect(
                 character_id,
@@ -245,34 +238,26 @@ def second_behavior_effect(
     # 延迟导入，避免与Script.Settle包的循环导入
     orgasm_settle = _get_orgasm_settle()
 
-    character_data: game_type.Character = cache.character_data[character_id]
-
     # 如果没有任何二段行为，则直接返回
-    if not any(character_data.second_behavior.values()):
+    if not activity.second_behaviors(character_id):
         return
 
     # 检测是否与玩家处于同一位置，进行必须显示和必须结算的二段行为处理
-    if (
-        character_data.position != cache.character_data[0].position
-        and character_data.behavior.move_src != cache.character_data[0].position
-    ):
+    if activity.position(character_id) != activity.position(
+        0
+    ) and activity.behavior(character_id).move_src != activity.position(0):
         talk.must_show_talk_check(character_id)
         must_settle_check(character_id)
         return
 
     # 在处理后，如果没有任何二段行为，则再次直接返回
-    if not any(character_data.second_behavior.values()):
+    if not activity.second_behaviors(character_id):
         return
 
     # 高潮结算调用时，先按部位统计本次待结算的部位绝顶行为，记录每个部位的最高绝顶程度
     part_max_degree_dict: dict[str, int] = {}
     if orgasm_settle_flag:
-        for (
-            second_behavior_id,
-            behavior_data,
-        ) in character_data.second_behavior.items():
-            if behavior_data == 0:
-                continue
+        for second_behavior_id in activity.second_behaviors(character_id):
             if (
                 second_behavior_list
                 and second_behavior_id not in second_behavior_list
@@ -288,11 +273,8 @@ def second_behavior_effect(
                 part_max_degree_dict[orgasm_part] = orgasm_degree
 
     # 遍历二段行为id，进行结算
-    for (
-        second_behavior_id,
-        behavior_data,
-    ) in character_data.second_behavior.items():
-        if behavior_data != 0:
+    for second_behavior_id in activity.second_ids(character_id):
+        if activity.second_behavior(character_id, second_behavior_id) != 0:
             if (
                 second_behavior_list
                 and second_behavior_id not in second_behavior_list
@@ -348,7 +330,7 @@ def second_behavior_effect(
                     )
             # print(f"debug {character_data.name}触发二段行为效果，behavior_id = {behavior_id}")
             # 触发后该行为值归零
-            character_data.second_behavior[second_behavior_id] = 0
+            activity.set_second_behavior(character_id, second_behavior_id, 0)
 
 
 def must_settle_check(character_id: int) -> None:
@@ -357,14 +339,13 @@ def must_settle_check(character_id: int) -> None:
     Keyword arguments:
     character_id -- 角色id
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 遍历所有必须计算的二段行为
-    for behavior_id in character_data.must_settle_second_behavior_id_list:
+    # 结算效果可能追加必须结算的id。读出的列表是副本，所以每轮重读列表、按下标取
+    index = 0
+    while index < len(activity.must_settle(character_id)):
+        behavior_id = activity.must_settle(character_id)[index]
+        index += 1
         # 跳过值为0的行为
-        if (
-            behavior_id in character_data.second_behavior
-            and character_data.second_behavior[behavior_id] == 0
-        ):
+        if activity.second_behavior(character_id, behavior_id) == 0:
             continue
         # 遍历该二段行为的所有结算效果，挨个触发，但因为不在结算阶段，所以不会显示具体的结算数据
         change_data = game_type.CharacterStatusChange()
@@ -381,8 +362,8 @@ def must_settle_check(character_id: int) -> None:
                     character_id, change_data
                 )
         # 触发后该行为值归零
-        character_data.second_behavior[behavior_id] = 0
-    character_data.must_settle_second_behavior_id_list = []
+        activity.set_second_behavior(character_id, behavior_id, 0)
+    activity.set_must_settle(character_id, [])
 
 
 def judge_character_first_meet(character_id: int) -> None:
@@ -393,8 +374,6 @@ def judge_character_first_meet(character_id: int) -> None:
     Return arguments:
     bool -- 本次update时间切片内活动是否已完成
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
 
     # 需要NPC状态6正常，且不是睡觉状态，玩家不在男隐或双隐的隐奸中，且没在睡觉
     if (
@@ -404,18 +383,16 @@ def judge_character_first_meet(character_id: int) -> None:
         and handle_premise.handle_action_not_sleep(0)
     ):
         # 优先输出初见，次要输出每日招呼
-        if (
-            first_record_domain.get(character_id, "first_meet")
-            and character_data.position == pl_character_data.position
-        ):
+        if first_record_domain.get(
+            character_id, "first_meet"
+        ) and activity.position(character_id) == activity.position(0):
             character_get_second_behavior(character_id, "first_meet")
             first_record_domain.set(
                 character_id, first_meet=0, day_first_meet=0
             )
-        elif (
-            first_record_domain.get(character_id, "day_first_meet")
-            and character_data.position == pl_character_data.position
-        ):
+        elif first_record_domain.get(
+            character_id, "day_first_meet"
+        ) and activity.position(character_id) == activity.position(0):
             # 如果是要早安问候的助理，则不每日招呼
             if handle_premise.handle_assistant_morning_salutation_on(
                 character_id
@@ -450,13 +427,11 @@ def judge_child_growth_second_behavior(character_id: int) -> None:
     Return arguments:
     无
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     growth_data = growth.of(character_id)
     if growth_data is None:
         return
-    pl_character_data: game_type.Character = cache.character_data[0]
     # 需要与玩家同场景，且双方都不在睡觉、玩家不在男隐或双隐的隐奸中，口径与初见判定一致
-    if character_data.position != pl_character_data.position:
+    if activity.position(character_id) != activity.position(0):
         return
     if not handle_premise.handle_action_not_sleep(
         character_id
@@ -504,8 +479,6 @@ def insert_position_effect(
     # 导入常用结算函数，避免循环导入
     from Script.Settle.common_default import base_chara_experience_common_settle
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
     # 当前不在H中，当前有阴茎插入，则重置插入
     insert_pos = h_state.get(character_id, "insert_position")
     if not handle_premise.handle_self_is_h(character_id) and insert_pos != -1:
@@ -517,10 +490,9 @@ def insert_position_effect(
         )
         insert_pos = -1
     # 当前有阴茎插入、当前位置为玩家位置
-    if (
-        insert_pos != -1
-        and character_data.position == pl_character_data.position
-    ):
+    if insert_pos != -1 and activity.position(
+        character_id
+    ) == activity.position(0):
         # 非群交模式
         if handle_premise.handle_group_sex_mode_off(character_id):
             # 如果不等于，则说明是本次指令改变了插入位置，因此不触发二段结算
@@ -928,7 +900,6 @@ def item_effect(character_id: int) -> None:
 
     # print()
     # print(f"进入道具结算")
-    character_data: game_type.Character = cache.character_data[character_id]
 
     # NPC对自己进行道具结算
     if character_id != 0:
@@ -942,7 +913,10 @@ def item_effect(character_id: int) -> None:
 
         for i, _end in h_state.active_body_items(character_id):
             # 事前避孕药的结算仅在每日问候的时候出现一起，其他时候不出现
-            if i == 11 and character_data.second_behavior["day_hello"] != 0:
+            if (
+                i == 11
+                and activity.second_behavior(character_id, "day_hello") != 0
+            ):
                 continue
             body_item_data = game_config.config_body_item[i]
             # 如果是猥亵型装备且当前不在H中，则判断该道具是否在开启中

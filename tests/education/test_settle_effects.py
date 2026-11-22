@@ -16,8 +16,16 @@ from _bootstrap import semester_handle, set_time, sex_class_handle, start
 from Script.Settle import common_default, default as settle_default
 from Script.System.Instruct_System import handle_instruct
 from Script.Design import character_behavior, second_behavior
-from Script.Modules.domains import first_record, flags, hypnosis, modes, status
+from Script.Modules.domains import (
+    activity,
+    first_record,
+    flags,
+    hypnosis,
+    modes,
+    status,
+)
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim, behave, doing
 
 open_all_classroom()
 clear_schedules()
@@ -104,8 +112,8 @@ assert growth.has(student_a.cid)
 student_a_growth = child_growth(student_a.cid)
 assert growth.has(student_b.cid)
 student_b_growth = child_growth(student_b.cid)
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
-student_b.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student_a.cid, constant.Behavior.ATTENT_CLASS)
+behave(student_b.cid, constant.Behavior.ATTENT_CLASS)
 bystander = make_character(
     204,
     "别班学生",
@@ -116,7 +124,7 @@ bystander = make_character(
     born_days=300,
     position=classroom_path(ROOM1),
 )
-bystander.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(bystander.cid, constant.Behavior.ATTENT_CLASS)
 exp_45 = growth_handle.get_subject_exp_id(45)
 change = game_type.CharacterStatusChange()
 EFFECT[512](101, 45, change, game_time.now())
@@ -171,7 +179,7 @@ settle_default.base_chara_favorability_and_trust_common_settle = (
     lambda *a, **k: None
 )
 set_time(DEFAULT_TIME.replace(hour=12, minute=30))
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student_a.cid, constant.Behavior.ATTENT_CLASS)
 reset_mark(201)
 attend_before = student_a_growth.attend_class_count
 exp_before = student_a_exp.get(exp_45, 0)
@@ -186,7 +194,7 @@ check(
     ),
 )
 set_time(period_time(0))
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student_a.cid, constant.Behavior.ATTENT_CLASS)
 reset_mark(201)
 EFFECT[512](0, 45, change, game_time.now())
 check(
@@ -196,7 +204,7 @@ check(
 schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_THEORY, _("理论教室二")
 )
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student_a.cid, constant.Behavior.ATTENT_CLASS)
 reset_mark(201)
 EFFECT[512](0, 45, change, game_time.now())
 check(
@@ -215,7 +223,7 @@ schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 reset_mark(201, 202)
 # 教师还在路上：人不在这间教室、也没在授课——玩家一步跨满一整节、教师换教室晚到时，学生坐下那一刻就是这样
 move_to(101, SCENE_DORM)
-teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(teacher.cid, constant.Behavior.SHARE_BLANKLY)
 before = student_a_exp.get(exp_45, 0)
 attend_before = student_a_growth.attend_class_count
 EFFECT[557](201, 45, change, game_time.now())
@@ -229,7 +237,7 @@ check(
     ),
 )
 move_to(101, classroom_path(ROOM1))
-teacher.behavior.behavior_id = constant.Behavior.TEACH
+behave(teacher.cid, constant.Behavior.TEACH)
 EFFECT[512](101, 45, change, game_time.now())
 check(
     "H1 教师随后到场开讲：512 广播不再给她重复发（同一节去重）",
@@ -297,7 +305,7 @@ check(
     student_b_growth.last_attend_period == [],
 )
 move_to(202, classroom_path(ROOM1))
-teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(teacher.cid, constant.Behavior.SHARE_BLANKLY)
 reset_mark(201, 202)
 
 section("548 自习 / 549 翘课")
@@ -413,7 +421,7 @@ EFFECT[552](201, 45, change, game_time.now())
 check("本节不是实习课时不结算", student_a_exp.get(exp_work, 0) == before)
 
 section("550 检查成绩单")
-pl.target_character_id = 201
+aim(pl.cid, 201)
 drawn_text.clear()
 EFFECT[550](0, 15, change, game_time.now())
 check(
@@ -458,7 +466,7 @@ semester_handle.push_report_card(
 drawn_text.clear()
 EFFECT[550](0, 15, change, game_time.now())
 check("有多份时提示去养成总览翻看", any("养成总览" in t for t in drawn_text))
-pl.target_character_id = 0
+aim(pl.cid, 0)
 EFFECT[550](0, 15, change, game_time.now())
 check("没有交互对象不报错", True)
 
@@ -490,8 +498,8 @@ check(
 )
 check(
     "到场二段行为已派发",
-    constant.Behavior.JOIN_SEX_CLASS in student_a.second_behavior
-    and student_a.second_behavior[constant.Behavior.JOIN_SEX_CLASS] > 0,
+    activity.second_behavior(student_a.cid, constant.Behavior.JOIN_SEX_CLASS)
+    > 0,
 )
 attend_before = student_a_growth.attend_class_count
 EFFECT[10014](0, 5, change, game_time.now())
@@ -514,8 +522,8 @@ move_to(201, classroom_path(ROOM1))
 move_to(202, SCENE_DORM)
 schedule_handle.set_class_cell(ROOM1, 0, 6, 71, 101)
 schedule_handle.set_selected_course(201, 0, 6, E.COURSE_TYPE_THEORY, ROOM1)
-teacher.behavior.behavior_id = constant.Behavior.TEACH
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(teacher.cid, constant.Behavior.TEACH)
+behave(student_a.cid, constant.Behavior.ATTENT_CLASS)
 reset_mark(201)
 oral_before = (student_a_exp.get(42, 0), teacher_exp.get(42, 0))
 theory_before = (student_a_exp.get(171, 0), teacher_exp.get(171, 0))
@@ -535,7 +543,7 @@ check(
 schedule_handle.set_class_cell(ROOM1, 0, 7, 74, -1)
 schedule_handle.set_selected_course(201, 0, 7, E.COURSE_TYPE_THEORY, ROOM1)
 set_time(period_time(7))
-student_a.behavior.behavior_id = constant.Behavior.SELF_STUDY
+behave(student_a.cid, constant.Behavior.SELF_STUDY)
 vaginal_before = (student_a_exp.get(61, 0), student_a_exp.get(174, 0))
 EFFECT[548](201, 45, change, game_time.now())
 check(
@@ -551,7 +559,7 @@ sex_class_handle.set_temp_class(
 )
 move_to(0, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student_a.cid, constant.Behavior.ATTENT_CLASS)
 reset_mark(201)
 _orig_favor_settle = (
     settle_default.base_chara_favorability_and_trust_common_settle
@@ -573,7 +581,7 @@ check(
 )
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student_a.cid, constant.Behavior.ATTENT_CLASS)
 reset_mark(201)
 finger_before = (student_a_exp.get(170, 0), student_a_exp.get(41, 0))
 EFFECT[512](0, 45, change, game_time.now())
@@ -591,7 +599,7 @@ move_to(0, SCENE_DORM)
 section(
     "Plan 27 §3.6：检查成绩单看过之后给本学期截至目前，养成数值 23 读待查看"
 )
-pl.target_character_id = 201
+aim(pl.cid, 201)
 growth_a = child_growth(201)
 growth_a.report_card_flag = False
 drawn_text.clear()
@@ -637,7 +645,7 @@ check(
     and growth_handle.get_growth_value(102, E.GROWTH_VALUE_REPORT_PENDING)
     == 0.0,
 )
-pl.target_character_id = 0
+aim(pl.cid, 0)
 
 section(
     "Plan 27 §3.5 / §3.7：玩家手动授课拉来的学生截到本节下课，爆睡的学生不拉"
@@ -650,39 +658,36 @@ move_to(202, classroom_path(ROOM1))
 set_time(period_time(0) + datetime.timedelta(minutes=30))
 kernel_data.put(flags.set, student_a.cid, is_h=False)
 kernel_data.put(flags.set, student_b.cid, is_h=False)
-student_a.behavior.behavior_id = constant.Behavior.SELF_STUDY
-student_a.behavior.duration = 45
-student_b.behavior.behavior_id = constant.Behavior.SLEEP
-student_b.behavior.duration = 480
+behave(student_a.cid, constant.Behavior.SELF_STUDY, duration=45)
+behave(student_b.cid, constant.Behavior.SLEEP, duration=480)
 kernel_data.put(flags.set, student_b.cid, sleep=False)
 start(handle_instruct.handle_teach)
 check(
     "9:30 开讲：学生听到 9:45 本节下课（15 分钟，此前固定 45 分钟、压进下一节），玩家自己仍是 45 分钟",
-    student_a.behavior.behavior_id == constant.Behavior.ATTENT_CLASS
-    and student_a.behavior.duration == 15
-    and pl.behavior.duration == 45,
+    doing(student_a.cid) == constant.Behavior.ATTENT_CLASS
+    and activity.behavior(student_a.cid).duration == 15
+    and activity.behavior(pl.cid).duration == 45,
     (
-        student_a.behavior.behavior_id,
-        student_a.behavior.duration,
-        pl.behavior.duration,
+        doing(student_a.cid),
+        activity.behavior(student_a.cid).duration,
+        activity.behavior(pl.cid).duration,
     ),
 )
 check(
     "行为是睡觉、没挂要睡觉标记的学生（当场爆睡）没被拉起来",
-    student_b.behavior.behavior_id == constant.Behavior.SLEEP,
-    student_b.behavior.behavior_id,
+    doing(student_b.cid) == constant.Behavior.SLEEP,
+    doing(student_b.cid),
 )
 set_time(DEFAULT_TIME.replace(hour=12, minute=30))
-student_a.behavior.behavior_id = constant.Behavior.SELF_STUDY
-student_a.behavior.duration = 45
+behave(student_a.cid, constant.Behavior.SELF_STUDY, duration=45)
 start(handle_instruct.handle_teach)
 check(
     "午休 12:30（节次外）开讲：学生仍听 45 分钟",
-    student_a.behavior.behavior_id == constant.Behavior.ATTENT_CLASS
-    and student_a.behavior.duration == 45,
-    student_a.behavior.duration,
+    doing(student_a.cid) == constant.Behavior.ATTENT_CLASS
+    and activity.behavior(student_a.cid).duration == 45,
+    activity.behavior(student_a.cid).duration,
 )
-student_b.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student_b.cid, constant.Behavior.SHARE_BLANKLY)
 move_to(0, SCENE_DORM)
 
 section("Plan 28 §3.2：548 自习时本节是上不成的个人式课，不计出勤")
@@ -738,7 +743,7 @@ move_to(201, classroom_path(ROOM1))
 reset_mark(201)
 student_a_growth.last_absent_period = []
 class_ai.settle_absent(201)
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
+behave(student_a.cid, constant.Behavior.ATTENT_CLASS)
 _exp_before = student_a_exp.get(exp_45, 0)
 _attend_before = student_a_growth.attend_class_count
 EFFECT[512](101, 45, change, game_time.now())
@@ -752,7 +757,7 @@ check(
     ),
 )
 reset_mark(201)
-teacher.behavior.behavior_id = constant.Behavior.TEACH
+behave(teacher.cid, constant.Behavior.TEACH)
 _exp_before = student_a_exp.get(exp_45, 0)
 EFFECT[557](201, 45, change, game_time.now())
 check(
@@ -767,8 +772,8 @@ check(
     "下一节没缺课：照常计出勤",
     student_a_growth.attend_class_count == _attend_before + 1,
 )
-teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-student_a.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(teacher.cid, constant.Behavior.SHARE_BLANKLY)
+behave(student_a.cid, constant.Behavior.SHARE_BLANKLY)
 student_a_growth.skip_class_flag = True
 SECOND[SE.CAUGHT_SKIP_CLASS](201, change)
 check(
@@ -815,8 +820,8 @@ check(
 set_time(period_time(1))
 move_to(0, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
-pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-student_a.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(pl.cid, constant.Behavior.SHARE_BLANKLY)
+behave(student_a.cid, constant.Behavior.SHARE_BLANKLY)
 second_behavior.character_get_second_behavior(
     201, "caught_skip_class", reset=True
 )
@@ -825,14 +830,14 @@ growth_a.skip_class_day = period_time(1).toordinal() - 1
 second_behavior.judge_child_growth_second_behavior(201)
 check(
     "L2 前一天挂上、跨天没清掉的 flag（一步跨过午夜 / 翘课当天离线）：与玩家同场景也不触发翘课被抓",
-    student_a.second_behavior.get("caught_skip_class", 0) == 0,
-    student_a.second_behavior.get("caught_skip_class", 0),
+    activity.second_behavior(student_a.cid, "caught_skip_class") == 0,
+    activity.second_behavior(student_a.cid, "caught_skip_class"),
 )
 growth_a.skip_class_day = period_time(1).toordinal()
 second_behavior.judge_child_growth_second_behavior(201)
 check(
     "L2 对照：今天挂上的 flag 照常触发翘课被抓",
-    student_a.second_behavior.get("caught_skip_class", 0) == 1,
+    activity.second_behavior(student_a.cid, "caught_skip_class") == 1,
 )
 second_behavior.character_get_second_behavior(
     201, "caught_skip_class", reset=True
@@ -862,14 +867,14 @@ schedule_handle.set_selected_course(
 schedule_handle.set_selected_course(
     201, _l6_week, 1, E.COURSE_TYPE_PRACTICE, ROOM_P
 )
-set_time(period_time(1) + datetime.timedelta(minutes=2))
+_t1 = period_time(1) + datetime.timedelta(minutes=2)
+set_time(_t1)
 sex_class_handle.set_temp_class(_l6_today, 1, ROOM_P, 70)
-teacher.behavior.behavior_id = constant.Behavior.TEACH
-teacher.behavior.start_time = period_time(0) + datetime.timedelta(minutes=40)
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
-student_a.behavior.start_time = period_time(1) + datetime.timedelta(minutes=2)
-student_b.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
-student_b.behavior.start_time = period_time(0) + datetime.timedelta(minutes=40)
+_t0 = period_time(0) + datetime.timedelta(minutes=40)
+_attent = constant.Behavior.ATTENT_CLASS
+behave(teacher.cid, constant.Behavior.TEACH, start_time=_t0)
+behave(student_a.cid, _attent, start_time=_t1)
+behave(student_b.cid, _attent, start_time=_t0)
 reset_mark(201, 202)
 student_a_growth.last_absent_period = []
 student_b_growth.last_absent_period = []
@@ -921,9 +926,9 @@ check(
     student_a_growth.attend_class_count - _l6_attend_a,
 )
 sex_class_handle.end_sex_class()
-teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-student_a.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-student_b.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(teacher.cid, constant.Behavior.SHARE_BLANKLY)
+behave(student_a.cid, constant.Behavior.SHARE_BLANKLY)
+behave(student_b.cid, constant.Behavior.SHARE_BLANKLY)
 clear_schedules()
 reset_mark(201, 202)
 move_to(0, SCENE_DORM)
@@ -945,21 +950,17 @@ schedule_handle.set_selected_course(
 schedule_handle.set_selected_course(
     201, _l6_week, 1, E.COURSE_TYPE_PRACTICE, ROOM_P
 )
-set_time(period_time(1) + datetime.timedelta(minutes=2))
+_t1 = period_time(1) + datetime.timedelta(minutes=2)
+set_time(_t1)
 sex_class_handle.set_temp_class(_l6_today, 1, ROOM_P, 70)
-teacher.behavior.behavior_id = constant.Behavior.TEACH
-teacher.behavior.start_time = period_time(0) + datetime.timedelta(minutes=40)
-teacher.behavior.duration = 5
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
-student_a.behavior.start_time = period_time(1) + datetime.timedelta(minutes=2)
-student_a.behavior.duration = 43
-student_b.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
-student_b.behavior.start_time = period_time(0) + datetime.timedelta(minutes=40)
-student_b.behavior.duration = 5
+_t0 = period_time(0) + datetime.timedelta(minutes=40)
+behave(teacher.cid, constant.Behavior.TEACH, start_time=_t0, duration=5)
+behave(student_a.cid, _attent, start_time=_t1, duration=43)
+behave(student_b.cid, _attent, start_time=_t0, duration=5)
 for _one in (student_a, student_b):
     kernel_data.set_needs(_one.cid, hit_max=100, hit=100)
     kernel_data.set_needs(_one.cid, mana_max=100, mana=100)
-    _one.target_character_id = _one.cid
+    aim(_one.cid, _one.cid)
 reset_mark(201, 202)
 student_a_growth.last_absent_period = []
 student_b_growth.last_absent_period = []
@@ -994,8 +995,8 @@ check(
 )
 for _one in (student_a, student_b):
     kernel_data.set_needs(_one.cid, hit=100, mana=100)
-    _one.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+    behave(_one.cid, constant.Behavior.SHARE_BLANKLY)
+behave(teacher.cid, constant.Behavior.SHARE_BLANKLY)
 move_to(101, classroom_path(ROOM1))
 clear_schedules()
 reset_mark(201, 202)
@@ -1042,8 +1043,7 @@ for _l13_room, _l13_type in (
     set_time(DEFAULT_TIME.replace(hour=12, minute=30))
     kernel_data.put(flags.set, student_a.cid, is_h=False)
     kernel_data.put(flags.set, student_a.cid, sleep=False)
-    student_a.behavior.behavior_id = constant.Behavior.SELF_STUDY
-    student_a.behavior.duration = 45
+    behave(student_a.cid, constant.Behavior.SELF_STUDY, duration=45)
     reset_mark(201)
     L13_LOG.clear()
     _l13_exp = student_a_exp.get(exp_45, 0)
@@ -1067,11 +1067,11 @@ for _l13_room, _l13_type in (
             f"L13 {_l13_room} 节次外 12:30 手动授课：handle_teach 把她拉成听课，她坐下时（557）按学识给了收益，"
             f"结算她的状态那一刻调了 judge_character_status"
         ),
-        student_a.behavior.behavior_id == constant.Behavior.ATTENT_CLASS
+        doing(student_a.cid) == constant.Behavior.ATTENT_CLASS
         and student_a_exp.get(exp_45, 0) > _l13_exp
         and [one[0] for one in L13_LOG].count(201) == 1,
         (
-            student_a.behavior.behavior_id,
+            doing(student_a.cid),
             student_a_exp.get(exp_45, 0) - _l13_exp,
             L13_LOG,
         ),
@@ -1100,11 +1100,9 @@ clear_schedules()
 move_to(0, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 set_time(DEFAULT_TIME.replace(hour=12, minute=30))
-pl.behavior.behavior_id = constant.Behavior.TEACH
-pl.behavior.start_time = game_time.now()
-student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
-student_a.behavior.start_time = game_time.now()
-student_a.last_behavior_id_list = [constant.Behavior.ATTENT_CLASS]
+behave(pl.cid, constant.Behavior.TEACH, start_time=game_time.now())
+behave(student_a.cid, _attent, start_time=game_time.now())
+kernel_data.put(activity.set_last_behaviors, student_a.cid, [_attent])
 reset_mark(201)
 _l13_exp = student_a_exp.get(exp_45, 0)
 EFFECT[557](201, 45, change, game_time.now())
@@ -1118,24 +1116,22 @@ clear_schedules()
 move_to(0, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 set_time(DEFAULT_TIME.replace(hour=9, minute=30))
-pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-pl.behavior.duration = 1
-pl.behavior.start_time = DEFAULT_TIME.replace(hour=9, minute=29)
+_at = DEFAULT_TIME.replace(hour=9, minute=29)
+behave(pl.cid, constant.Behavior.SHARE_BLANKLY, duration=1, start_time=_at)
 kernel_data.put(flags.set, student_a.cid, is_h=False)
 kernel_data.put(flags.set, student_a.cid, sleep=False)
-student_a.behavior.behavior_id = constant.Behavior.SELF_STUDY
-student_a.behavior.duration = 45
-student_a.behavior.start_time = DEFAULT_TIME.replace(hour=9, minute=10)
+_at = DEFAULT_TIME.replace(hour=9, minute=10)
+behave(student_a.cid, constant.Behavior.SELF_STUDY, duration=45, start_time=_at)
 reset_mark(201)
 start(handle_instruct.handle_teach)
 check(
     "L13 节次内 9:30 手动授课拉来的学生听到本节结束：15 分钟，不从她上一个行动的开始时刻算",
-    student_a.behavior.behavior_id == constant.Behavior.ATTENT_CLASS
-    and student_a.behavior.duration == 15,
-    (student_a.behavior.behavior_id, student_a.behavior.duration),
+    doing(student_a.cid) == constant.Behavior.ATTENT_CLASS
+    and activity.behavior(student_a.cid).duration == 15,
+    (doing(student_a.cid), activity.behavior(student_a.cid).duration),
 )
-student_a.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+behave(student_a.cid, constant.Behavior.SHARE_BLANKLY)
+behave(pl.cid, constant.Behavior.SHARE_BLANKLY)
 move_to(0, SCENE_DORM)
 move_to(201, classroom_path(ROOM1))
 clear_schedules()
@@ -1175,14 +1171,12 @@ for _l13_before, _l13_label in (
     move_to(201, classroom_path(ROOM1))
     move_to(202, SCENE_DORM)
     set_time(DEFAULT_TIME.replace(hour=12, minute=30))
-    pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-    pl.behavior.duration = 1
-    pl.behavior.start_time = DEFAULT_TIME.replace(hour=12, minute=29)
+    _at = DEFAULT_TIME.replace(hour=12, minute=29)
+    behave(pl.cid, constant.Behavior.SHARE_BLANKLY, duration=1, start_time=_at)
     kernel_data.put(flags.set, student_a.cid, is_h=False)
     kernel_data.put(flags.set, student_a.cid, sleep=False)
-    student_a.behavior.behavior_id = _l13_before
-    student_a.behavior.duration = 45
-    student_a.behavior.start_time = DEFAULT_TIME.replace(hour=12, minute=20)
+    _at = DEFAULT_TIME.replace(hour=12, minute=20)
+    behave(student_a.cid, _l13_before, duration=45, start_time=_at)
     reset_mark(201)
     L13_PAID.clear()
     _saved_judge = character_behavior.judge_character_status
@@ -1207,8 +1201,8 @@ for _l13_before, _l13_label in (
         L13_PAID.count(201) == 1,
         L13_PAID,
     )
-    student_a.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-    pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+    behave(student_a.cid, constant.Behavior.SHARE_BLANKLY)
+    behave(pl.cid, constant.Behavior.SHARE_BLANKLY)
 roster.set_active(_l13_roster)
 move_to(0, SCENE_DORM)
 set_time(DEFAULT_TIME)

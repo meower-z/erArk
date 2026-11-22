@@ -26,7 +26,12 @@ from Script.Modules.domains import dirty, h_state, hypnosis
 from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant, egg_handle
 from Script.Design import game_time
-from Script.Modules.domains import abilities, player_collection, pregnancy
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    player_collection,
+    pregnancy,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -156,7 +161,7 @@ def lay_soft_egg(character_id: int) -> int:
     egg_id = player_collection.add_soft_egg(
         character_id,
         game_time.now(),
-        character_data.position,
+        activity.position(character_id),
         float(transfer_count),
     )
     # 提示玩家

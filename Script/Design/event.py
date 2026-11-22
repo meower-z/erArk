@@ -4,7 +4,7 @@ import random
 from Script.Core import cache_control, game_type
 from Script.UI.Panel import draw_event_text_panel
 from Script.Config import game_config
-from Script.Modules.domains import history
+from Script.Modules.domains import activity, history
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -75,9 +75,9 @@ def handle_event(
         _handle_premise = _handle_premise_module
     handle_premise = _handle_premise
     character_data: game_type.Character = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
+    target_character_id = activity.target(character_id)
     target_character_data = cache.character_data[target_character_id]
-    behavior_id = character_data.behavior.behavior_id
+    behavior_id = activity.behavior(character_id).behavior_id
     weighted_event_ids: list[str] = []
     weighted_values: list[float] = []
     # 已计算过的前提字典
@@ -141,7 +141,7 @@ def handle_event(
         event_config = game_config.config_event[now_event_id]
         # 如果是事件前置指令后置类型，则判断是否存在跳过口上的结算
         if event_config.type == 2 and "10012" in event_config.effect:
-            character_data.event.skip_instruct_talk = True
+            activity.update_event(character_id, skip_instruct_talk=True)
         # print(f"debug now_event_id:{now_event_id}")
         return draw_event_text_panel.DrawEventTextPanel(
             now_event_id, character_id, event_config.type

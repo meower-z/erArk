@@ -11,6 +11,8 @@
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 ROOM = ["中枢", "会议室"]
 PRIMARY_HYPNOSIS = 331
@@ -31,13 +33,11 @@ class HypnosisBit5AfterTimeStopTest(SlowTestCase):
         from Script.Design import handle_premise
 
         talent = ca.talent(0)
-        pl = self.cache.character_data[0]
         talent[PRIMARY_HYPNOSIS] = 1
         talent[PRIMARY_TIME_STOP] = 1
         from Script.Modules.domains import hypnosis
 
         operator_id = self.npc("杜宾")
-        operator = self.cache.character_data[operator_id]
         kernel_data.put(
             hypnosis.set,
             operator_id,
@@ -50,11 +50,11 @@ class HypnosisBit5AfterTimeStopTest(SlowTestCase):
         self.instruct(constant.Instruct.ALL_NPC_POSITION)
         self.show_panel()
         self.assertTrue(
-            self.wait_until(lambda: operator.position == ROOM, 60),
-            f"杜宾在 {operator.position}",
+            self.wait_until(lambda: activity.position(operator_id) == ROOM, 60),
+            f"杜宾在 {activity.position(operator_id)}",
         )
         # 在场景里点选杜宾
-        pl.target_character_id = operator_id
+        aim(0, operator_id)
         self.world.player.press("平然")
         self.instruct(constant.Instruct.CHANGE_HYPNOSIS_MODE)
         self.show_panel()

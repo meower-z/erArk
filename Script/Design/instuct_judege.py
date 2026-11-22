@@ -10,9 +10,9 @@ from Script.Design import attr_calculation, handle_ability, handle_premise
 from Script.Design import handle_talent, map_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities, action_info, entertainment, flags
-from Script.Modules.domains import h_state, needs, player_ability, status
-from Script.Modules.domains import relations
+from Script.Modules.domains import abilities, action_info, activity
+from Script.Modules.domains import entertainment, flags, h_state, needs
+from Script.Modules.domains import player_ability, relations, status
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -35,10 +35,9 @@ def init_character_behavior_start_time(
     character_id -- 角色id
     now_time -- 指定时间
     """
-    character_data = cache.character_data[character_id]
     # 用 replace 截到整分钟，保留游戏时间的类型
     start_time = now_time.replace(second=0, microsecond=0)
-    character_data.behavior.start_time = start_time
+    activity.update_behavior(character_id, start_time=start_time)
 
 
 def calculation_instuct_judege(
@@ -305,7 +304,7 @@ def calculation_instuct_judege(
 
         # 当前场景有人修正，需要该对象角色有意识
         scene_path_str = map_handle.get_map_system_path_str_for_list(
-            character_data.position
+            activity.position(character_id)
         )
         scene_data = cache.scene_data[scene_path_str]
         if len(

@@ -15,6 +15,7 @@ from Script.Core import (
 from Script.Design import map_handle, attr_text, character_move, handle_premise
 from Script.Config import game_config
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import activity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -37,9 +38,8 @@ class SeeMapPanel:
         """初始化绘制对象"""
         self.width: int = width
         """ 绘制的最大宽度 """
-        character_data: game_type.Character = cache.character_data[0]
         self.now_map: list[str] = map_handle.get_map_for_path(
-            character_data.position
+            activity.position(0)
         )
         """ 当前查看的地图坐标 """
 
@@ -54,7 +54,7 @@ class SeeMapPanel:
             # 2: entertainmentSceneNamePanel(self.now_map, self.width),
         }
         move_menu_panel = MoveMenuPanel(self.width)
-        first_position = cache.character_data[0].position
+        first_position = activity.position(0)
         while 1:
             line_feed.draw()
             if view.now_panel_id != constant.Panel.SEE_MAP:
@@ -62,11 +62,8 @@ class SeeMapPanel:
             if len(self.now_map) >= 2 and self.now_map[-1] == "0":
                 self.now_map.pop()
             # 更新当前地图
-            character_data: game_type.Character = cache.character_data[0]
-            if character_data.position != first_position and len(self.now_map):
-                self.now_map = map_handle.get_map_for_path(
-                    character_data.position
-                )
+            if activity.position(0) != first_position and len(self.now_map):
+                self.now_map = map_handle.get_map_for_path(activity.position(0))
             # 获取当前地图数据
             map_path_str = map_handle.get_map_system_path_str_for_list(
                 self.now_map
@@ -105,7 +102,7 @@ class SeeMapPanel:
                 line_feed.draw()
             now_draw_list: game_type.MapDraw = map_data.map_draw
             character_scene_name = map_handle.get_map_scene_id_for_scene_path(
-                self.now_map, character_data.position
+                self.now_map, activity.position(0)
             )
             return_list = []
             index = 0
@@ -270,7 +267,7 @@ class SeeMapPanel:
             return_list.append(back_button.return_text)
             now_index += 1
             # 查看下级地图
-            character_map = map_handle.get_map_for_path(character_data.position)
+            character_map = map_handle.get_map_for_path(activity.position(0))
             if character_map != self.now_map:
                 now_id = text_handle.id_index(now_index)
                 now_text = now_id + _("查看下级地图")
@@ -311,7 +308,7 @@ class SeeMapPanel:
     def down_map(self) -> None:
         """将当前地图切换为下级地图"""
         py_cmd.clr_cmd()
-        character_position = cache.character_data[0].position
+        character_position = activity.position(0)
         down_map_scene_id = map_handle.get_map_scene_id_for_scene_path(
             self.now_map, character_position
         )
@@ -334,13 +331,9 @@ class SeeMapPanel:
         py_cmd.clr_cmd()
         line_feed.draw()
         view.wframe_mouse.w_frame_skip_wait_mouse = 1
-        character_data: game_type.Character = cache.character_data[0]
         flag_map_open = False
         # 从大地图移动到另一个区块时，不关闭地图面板，且切换到下级地图面板
-        if (
-            character_data.position[-2] != scene_path[-2]
-            and scene_path[-1] == "0"
-        ):
+        if activity.position(0)[-2] != scene_path[-2] and scene_path[-1] == "0":
             flag_map_open = True
         # 从大地图移动到另一个区块时，每一段移动开始后仍打开地图面板，面板按玩家的新位置显示下级地图
         character_move.own_charcter_move(scene_path, open_map=flag_map_open)
@@ -450,9 +443,8 @@ class MapSceneNameDraw:
         path_edge = map_data.path_edge
         scene_id_list = list(path_edge.keys())
         if len(scene_id_list):
-            character_data: game_type.Character = cache.character_data[0]
             character_scene_id = map_handle.get_map_scene_id_for_scene_path(
-                self.now_map, character_data.position
+                self.now_map, activity.position(0)
             )
             scene_path = path_edge[character_scene_id].copy()
             if character_scene_id in scene_path:
@@ -745,7 +737,7 @@ class SocialSceneNameDraw:
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的对象列表 """
         character_data: game_type.Character = cache.character_data[text]
-        self.scene_path: list[str] = character_data.position
+        self.scene_path: list[str] = activity.position(text)
         """ 角色所在场景 """
         path_text = attr_text.get_scene_path_text(self.scene_path)
         button_text = f"{character_data.name}:[{path_text}]"
@@ -826,7 +818,6 @@ class CollectionSceneNamePanel:
         # self.return_list = self.handle_panel.return_list
         self.return_list = []
         draw_list = []
-        pl_character_data: game_type.Character = cache.character_data[0]
 
         scene_id_list = cache.collect_position_list
         if len(scene_id_list):
@@ -834,7 +825,7 @@ class CollectionSceneNamePanel:
             for collect_position in scene_id_list:
                 # 标记当前位置
                 text_flag = False
-                if collect_position == pl_character_data.position:
+                if collect_position == activity.position(0):
                     text_flag = True
                 scene_position_str = (
                     map_handle.get_map_system_path_str_for_list(
@@ -913,8 +904,7 @@ class CollectionSceneNamePanel:
         Keyword arguments:
         collect_flag -- 是否收藏当前地点
         """
-        pl_character_data: game_type.Character = cache.character_data[0]
         if collect_flag:
-            cache.collect_position_list.append(pl_character_data.position)
+            cache.collect_position_list.append(activity.position(0))
         else:
-            cache.collect_position_list.remove(pl_character_data.position)
+            cache.collect_position_list.remove(activity.position(0))

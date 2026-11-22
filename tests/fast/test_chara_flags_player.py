@@ -21,7 +21,7 @@ from unittest import mock
 from Script.Core import game_type, get_text, old_chara_to_new
 from Script.Design import character_handle, game_time
 from Script.Kernel import core
-from Script.Modules.domains import action_info, flags, player_ability
+from Script.Modules.domains import action_info, activity, flags, player_ability
 from Script.Modules.domains import player_collection
 from Script.Modules.gameplay_resolution import events, starts, working
 from Script.Modules.npc_action_choice import choice
@@ -364,5 +364,5 @@ class CharaFlagsPlayerTest(FastTestCase):
         with kernel_data.writing():
             self.assertTrue(working.active())
             self.world.move(1, ["中枢", "0"])
-        self.assertEqual(self.op_a.position, ["中枢", "0"])
+        self.assertEqual(activity.position(1), ["中枢", "0"])
         self.assertTrue(action_info.get(1, "past_move_position_list"))

@@ -17,8 +17,9 @@ from google.genai import types as genai_types
 import os
 import re
 from typing import Any, Callable, Iterable, TypedDict
-from Script.Modules.domains import abilities, flags, hypnosis, needs, wardrobe
-from Script.Modules.domains import chara_life, chara_profile, relations
+from Script.Modules.domains import abilities, activity, chara_life
+from Script.Modules.domains import chara_profile, flags, hypnosis, needs
+from Script.Modules.domains import relations, wardrobe
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -205,15 +206,13 @@ def save_ai_talk_record(
             new_cid = int(last_cid) + 1
     # 开始数据处理
     character_data = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
+    target_character_data = cache.character_data[activity.target(character_id)]
     # 处理名字，将角色名替换为{Name}，交互对象名替换为{TargetName}
     Name = character_data.name
     TargetNickName = target_character_data.name
     if Name in ai_generated_text:
         ai_generated_text = ai_generated_text.replace(Name, "{Name}")
-    if character_id != 0 or character_data.target_character_id != 0:
+    if character_id != 0 or activity.target(character_id) != 0:
         if TargetNickName in ai_generated_text:
             ai_generated_text = ai_generated_text.replace(
                 TargetNickName, "{TargetName}"
@@ -226,7 +225,7 @@ def save_ai_talk_record(
     else:
         premise_text += "&sys_1"
     # 交互对象
-    if character_data.target_character_id == 0:
+    if activity.target(character_id) == 0:
         premise_text += "&sys_4"
     else:
         premise_text += "&sys_5"
@@ -274,12 +273,10 @@ def build_user_prompt(
 
     # 获取角色和场景相关数据
     character_data = cache.character_data[character_id]
-    target_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
+    target_character_data = cache.character_data[activity.target(character_id)]
     Name = character_data.name
     TargetName = target_character_data.name
-    Location = character_data.position[-1]
+    Location = activity.position(character_id)[-1]
     Season = game_time.get_month_text()
     time_str = game_time.get_day_and_time_text()
     Behavior_Name = game_config.config_behavior[behavior_id].name
@@ -287,10 +284,10 @@ def build_user_prompt(
     # 玩家与NPC的区分
     pl_name = Name
     npc_name = TargetName
-    npc_character_id = character_data.target_character_id
+    npc_character_id = activity.target(character_id)
     npc_character_data = target_character_data
     # 如果交互对象是玩家
-    if character_data.target_character_id == 0:
+    if activity.target(character_id) == 0:
         pl_name = TargetName
         npc_name = Name
         npc_character_id = character_id
@@ -331,7 +328,7 @@ def build_user_prompt(
     if tem_send_data_flags[12]:
         fall_lv = attr_calculation.get_character_fall_level(
             (
-                character_data.target_character_id
+                activity.target(character_id)
                 if character_id == 0
                 else character_id
             ),
@@ -454,7 +451,7 @@ def build_user_prompt(
     # 初始提示词构造（根据是否有交互对象以及直接对话模式分支）
     user_prompt = _("请根据以下条件，描写两个角色的互动场景：")
     # 有交互对象
-    if character_id != 0 or character_data.target_character_id != 0:
+    if character_id != 0 or activity.target(character_id) != 0:
         # 生成模式
         if not direct_mode:
             user_prompt += _(

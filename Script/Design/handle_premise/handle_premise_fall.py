@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import abilities, roster
+from Script.Modules.domains import abilities, activity, roster
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -121,10 +121,9 @@ def handle_target_fall_3_or_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     return handle_self_fall_3(
-        character_data.target_character_id
-    ) or handle_self_fall_4(character_data.target_character_id)
+        activity.target(character_id)
+    ) or handle_self_fall_4(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SELF_FALL_LOVE)
@@ -190,8 +189,7 @@ def handle_target_not_fall(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_self_fall(character_data.target_character_id):
+    if handle_self_fall(activity.target(character_id)):
         return 0
     return 1
 
@@ -205,8 +203,7 @@ def handle_target_fall(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_self_fall(character_data.target_character_id):
+    if handle_self_fall(activity.target(character_id)):
         return 1
     return 0
 
@@ -220,8 +217,7 @@ def handle_target_not_fall_love(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_self_fall_love(character_data.target_character_id)
+    return not handle_self_fall_love(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_FALL_OBEY)
@@ -233,8 +229,7 @@ def handle_target_not_fall_obey(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return not handle_self_fall_obey(character_data.target_character_id)
+    return not handle_self_fall_obey(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_LOVE_1)
@@ -246,8 +241,7 @@ def handle_target_love_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[201]:
         return 1
     return 0
@@ -262,8 +256,7 @@ def handle_target_love_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[202]:
         return 1
     return 0
@@ -278,8 +271,7 @@ def handle_target_love_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[203]:
         return 1
     return 0
@@ -306,8 +298,7 @@ def handle_target_love_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_love_4(character_data.target_character_id)
+    return handle_self_love_4(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_LOVE_GE_1)
@@ -319,8 +310,7 @@ def handle_target_love_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for i in {201, 202, 203, 204}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -336,8 +326,7 @@ def handle_target_love_ge_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for i in {202, 203, 204}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -353,8 +342,7 @@ def handle_target_love_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for i in {203, 204}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -370,8 +358,7 @@ def handle_target_love_le_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for i in {201, 202}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -387,10 +374,9 @@ def handle_target_love_0_or_le_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_self_not_fall(character_data.target_character_id):
+    if handle_self_not_fall(activity.target(character_id)):
         return 1
-    if handle_target_love_1(character_data.target_character_id):
+    if handle_target_love_1(activity.target(character_id)):
         return 1
     return 0
 
@@ -404,10 +390,9 @@ def handle_target_love_0_or_le_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_self_not_fall(character_data.target_character_id):
+    if handle_self_not_fall(activity.target(character_id)):
         return 1
-    if handle_target_love_le_2(character_data.target_character_id):
+    if handle_target_love_le_2(activity.target(character_id)):
         return 1
     return 0
 
@@ -421,8 +406,7 @@ def handle_target_obey_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[211]:
         return 1
     return 0
@@ -437,8 +421,7 @@ def handle_target_obey_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[212]:
         return 1
     return 0
@@ -453,8 +436,7 @@ def handle_target_obey_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if abilities.talent(target_data.cid)[213]:
         return 1
     return 0
@@ -481,8 +463,7 @@ def handle_target_obey_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_self_obey_4(character_data.target_character_id)
+    return handle_self_obey_4(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_OBEY_GE_1)
@@ -494,8 +475,7 @@ def handle_target_obey_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for i in {211, 212, 213, 214}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -511,8 +491,7 @@ def handle_target_obey_ge_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for i in {212, 213, 214}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -528,8 +507,7 @@ def handle_target_obey_ge_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for i in {213, 214}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -545,8 +523,7 @@ def handle_target_obey_le_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     for i in {211, 212}:
         if abilities.talent(target_data.cid)[i]:
             return 1
@@ -562,10 +539,9 @@ def handle_target_obey_0_or_le_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_self_not_fall(character_data.target_character_id):
+    if handle_self_not_fall(activity.target(character_id)):
         return 1
-    if handle_target_obey_1(character_data.target_character_id):
+    if handle_target_obey_1(activity.target(character_id)):
         return 1
     return 0
 
@@ -579,10 +555,9 @@ def handle_target_obey_0_or_le_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if handle_self_not_fall(character_data.target_character_id):
+    if handle_self_not_fall(activity.target(character_id)):
         return 1
-    if handle_target_obey_le_2(character_data.target_character_id):
+    if handle_target_obey_le_2(activity.target(character_id)):
         return 1
     return 0
 
@@ -629,11 +604,10 @@ def handle_player_have_other_lover_except_target(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
     for chara_id in roster.active():
         if chara_id == 0:
             continue
-        if chara_id == pl_character_data.target_character_id:
+        if chara_id == activity.target(0):
             continue
         if handle_self_fall_love(chara_id) and (
             handle_self_fall_3(chara_id) or handle_self_fall_4(chara_id)
@@ -696,11 +670,10 @@ def handle_player_have_other_pet_except_target(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data = cache.character_data[0]
     for chara_id in roster.active():
         if chara_id == 0:
             continue
-        if chara_id == pl_character_data.target_character_id:
+        if chara_id == activity.target(0):
             continue
         if handle_self_fall_obey(chara_id) and (
             handle_self_fall_3(chara_id) or handle_self_fall_4(chara_id)

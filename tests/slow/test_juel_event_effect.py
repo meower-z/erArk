@@ -7,6 +7,7 @@
 """
 
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
 
 EVENT_ID = "108c4126-9c89-4fb5-9de3-b56a94de9d5e"
@@ -33,7 +34,7 @@ class JuelEventEffectTest(SlowTestCase):
             for cid, chara in cache.character_data.items()
             if chara.adv == ADV_ID
         )
-        cache.character_data[0].target_character_id = npc_id
+        aim(0, npc_id)
         before = [
             ca.juel(npc_id).get(0, 0),
             status.of(npc_id).get(12, 0),

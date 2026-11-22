@@ -13,7 +13,7 @@
 3. 每条检查的文档字符串都说明健康存档为何恒不命中；无法给出该理由的候选不进入本模块。
 4. 消息的 ``[warning] `` 前缀表示已确认会命中当前版本真实缺陷的探测器，不是容许误报的出口。
 5. 沿用全局守卫：``["0", "0"]`` 是真实场景；路径由 map_handle 助手拼接；离线只认来源标记；
-   target_character_id 不作为 H 绑定断言；时停与 debug 按每条规格单独守卫。
+   交互对象（activity.target）不作为 H 绑定断言；时停与 debug 按每条规格单独守卫。
 6. 全部读取采用 getattr/dict.get 与形状判断；结构异常交给既有形状检查，不重复报告。
 7. 一个检查先收集全部失配，再合并为一条 failure，避免检查级日志去重吞掉同次快照中的其余证据。
 """
@@ -24,7 +24,14 @@ from collections.abc import Iterator
 
 from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
-from Script.Modules.domains import abilities, flags, h_state, history, modes
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    flags,
+    h_state,
+    history,
+    modes,
+)
 from Script.Modules.domains import needs, player_ability, prison, roster, work
 from ..check_registry import CheckFailure, make_failure, register_check
 
@@ -117,15 +124,6 @@ def _hs(chara: object) -> game_type.BODY_H_STATE | None:
     """角色 h_state 视图，缺少有效 cid 时返回 None"""
     cid = getattr(chara, "cid", None)
     return h_state.view(cid) if isinstance(cid, int) else None
-
-
-def _behavior(chara: object) -> game_type.Behavior | None:
-    """
-    参数: chara 角色对象
-    返回值: 角色 behavior 对象，缺失时返回 None
-    功能: 缩短防御式行为字段读取链。
-    """
-    return getattr(chara, "behavior", None)
 
 
 def _fully_out_of_h(chara: object) -> bool:
@@ -231,17 +229,17 @@ def check_observable_01() -> list[CheckFailure]:
     if flags.get(0, "is_h") or flags.get(0, "hidden_sex_mode") != 0:
         return []
     bad = []
-    for cid, chara in _iter_npcs(cache):
-        if getattr(chara, "position", None) == getattr(
-            pl, "position", None
-        ) and flags.get(cid, "is_h"):
+    for cid, _chara in _iter_npcs(cache):
+        if activity.position(cid) == activity.position(pl.cid) and flags.get(
+            cid, "is_h"
+        ):
             bad.append(cid)
     if not bad:
         return []
     details = [
         (
             f"cid={cid}({_name(cache.character_data[cid])}) "
-            f"target={getattr(cache.character_data[cid], 'target_character_id', None)}"
+            f"target={activity.target(cid)}"
         )
         for cid in bad
     ]
@@ -251,8 +249,8 @@ def check_observable_01() -> list[CheckFailure]:
             "玩家不在H时同场不得有在H的NPC",
             (
                 f"[warning] 已知缺陷机制：效果404按执行时target重置双方，错对象收尾会让真伙伴同场残留is_h；"
-                f"玩家已不在H但同场NPC仍在H：{details}；玩家target={getattr(pl, 'target_character_id', None)} "
-                f"position={getattr(pl, 'position', None)}"
+                f"玩家已不在H但同场NPC仍在H：{details}；玩家target={activity.target(pl.cid)} "
+                f"position={activity.position(pl.cid)}"
             ),
             [0] + bad,
         )
@@ -278,7 +276,7 @@ def check_observable_02() -> list[CheckFailure]:
     insertions = []
     h_in_scene = []
     for cid, chara in _iter_npcs(cache):
-        if getattr(chara, "position", None) != getattr(pl, "position", None):
+        if activity.position(cid) != activity.position(pl.cid):
             continue
         pos = getattr(_hs(chara), "insert_position", None)
         if isinstance(pos, int) and not isinstance(pos, bool):
@@ -403,7 +401,7 @@ def check_observable_05() -> list[CheckFailure]:
     data = _character_data(cache)
     if pl is None or data is None or getattr(cache, "debug_mode", False):
         return []
-    target_id = getattr(pl, "target_character_id", None)
+    target_id = activity.target(pl.cid)
     if (
         not isinstance(target_id, int)
         or isinstance(target_id, bool)
@@ -412,7 +410,7 @@ def check_observable_05() -> list[CheckFailure]:
         or target_id == flags.get(0, "bagging_chara_id")
     ):
         return []
-    scene = _scene(cache, getattr(pl, "position", None))
+    scene = _scene(cache, activity.position(pl.cid))
     roster = (
         getattr(scene, "character_list", None) if scene is not None else None
     )
@@ -427,8 +425,8 @@ def check_observable_05() -> list[CheckFailure]:
             "玩家的交互对象必须在当前场景名册里",
             (
                 f"[warning] target cid={target_id}({_name(target)})不在玩"
-                f"家当前场景名册，pl.position={getattr(pl, 'position', None)}，"
-                f"target.position={getattr(target, 'position', None)}，离线来源={_offline_context(target)}，"
+                f"家当前场景名册，pl.position={activity.position(pl.cid)}，"
+                f"target.position={activity.position(target.cid)}，离线来源={_offline_context(target)}，"
                 f"上一玩家指令={last_pre}"
             ),
             [0, target_id],
@@ -642,7 +640,7 @@ def check_observable_12() -> list[CheckFailure]:
     if (
         follow in {2, 3, 4}
         or follow != 0
-        or getattr(_behavior(assistant), "behavior_id", None)
+        or activity.behavior(assistant_id).behavior_id
         != constant.Behavior.SHARE_BLANKLY
     ):
         return []
@@ -753,7 +751,7 @@ def check_observable_16() -> list[CheckFailure]:
     bad = []
     details = []
     for cid, chara in _iter_npcs(cache):
-        behavior_id = getattr(_behavior(chara), "behavior_id", None)
+        behavior_id = activity.behavior(cid).behavior_id
         expected = (
             _BATH_BEHAVIOR_TAGS.get(behavior_id)
             if behavior_id is not None
@@ -761,14 +759,14 @@ def check_observable_16() -> list[CheckFailure]:
         )
         if expected is None:
             continue
-        scene = _scene(cache, getattr(chara, "position", None))
+        scene = _scene(cache, activity.position(cid))
         tags = getattr(scene, "scene_tag", None) if scene is not None else None
         if not isinstance(tags, (list, set, tuple)):
             continue
         if expected not in tags:
             bad.append(cid)
             details.append(
-                f"cid={cid}({_name(chara)}) behavior={behavior_id} position={getattr(chara, 'position', None)} "
+                f"cid={cid}({_name(chara)}) behavior={behavior_id} position={activity.position(cid)} "
                 f"scene_tags={tags} 期望={expected}"
             )
     if not bad:
@@ -801,14 +799,14 @@ def check_observable_17() -> list[CheckFailure]:
     bad = []
     details = []
     for cid, chara in _iter_npcs(cache):
-        behavior = _behavior(chara)
+        behavior = activity.behavior(cid)
         if (
             getattr(behavior, "behavior_id", None) == constant.Behavior.MOVE
             and getattr(behavior, "move_final_target", None) == []
         ):
             bad.append(cid)
             details.append(
-                f"cid={cid}({_name(chara)}) position={getattr(chara, 'position', None)} "
+                f"cid={cid}({_name(chara)}) position={activity.position(cid)} "
                 f"move_src={getattr(behavior, 'move_src', None)} "
                 f"move_target={getattr(behavior, 'move_target', None)} duration={getattr(behavior, 'duration', None)} "
                 f"start_time={getattr(behavior, 'start_time', None)} "

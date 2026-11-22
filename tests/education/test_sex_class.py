@@ -12,8 +12,8 @@ from _bootstrap import remove_character, schedule_handle, section, set_time
 from _bootstrap import sex_class_handle, sync
 from Script.Design import handle_npc_ai, instuct_judege
 from Script.Settle import common_default
-from Script.Modules.domains import flags, modes, player_ability, status
-from Script.Modules.domains import chara_life, relations
+from Script.Modules.domains import activity, chara_life, flags, modes
+from Script.Modules.domains import player_ability, relations, status
 from tests import chara_abilities as ca, kernel_data
 
 open_all_classroom()
@@ -165,9 +165,9 @@ check("女儿零门槛", sex_class_handle.judge_can_join_sex_class(201))
 kernel_data.put(flags.set, student_a.cid, imprisonment=True)
 check("被监禁不算", not sex_class_handle.judge_can_join_sex_class(201))
 kernel_data.put(flags.set, student_a.cid, imprisonment=False)
-student_a.dead = True
+kernel_data.put(activity.set_dead, student_a.cid, True)
 check("死亡不算", not sex_class_handle.judge_can_join_sex_class(201))
-student_a.dead = False
+kernel_data.put(activity.set_dead, student_a.cid, False)
 try:
     adult_ok = sex_class_handle.judge_can_join_sex_class(301)
     check(
@@ -914,7 +914,7 @@ def open_class_for_h1(period: int, reserved: bool = True) -> dict:
         sex_class_handle.set_temp_class(today, period, ROOM_P, 70)
     now_class = sex_class_handle.start_sex_class(70, [201, 202])
     kernel_data.put(flags.set, pl.cid, is_h=True)
-    pl.target_character_id = 201
+    kernel_data.put(activity.set_target, pl.cid, 201)
     run_effect_list([10014])
     return now_class
 
@@ -1027,7 +1027,7 @@ check(
     and modes.sex_class()
     and _temp(3).get("running"),
 )
-pl.target_character_id = 201
+kernel_data.put(activity.set_target, pl.cid, 201)
 run_effect_list([404])
 play()
 check(
@@ -1050,12 +1050,12 @@ check(
         "H1 复审补：最后一名学生力竭退出（commit_group_sex_tired_exit 的真实调用链）→ 玩家结束群交 → "
         "这个行动收尾时下课：课堂模式已关、那节课打上 ended、学生已不在 H"
     ),
-    pl.last_behavior_id_list[-1:] == [constant.Behavior.GROUP_SEX_END]
+    activity.last_behaviors(pl.cid)[-1:] == [constant.Behavior.GROUP_SEX_END]
     and not modes.sex_class()
     and sex_class_handle.get_running_class() is None
     and _temp(5).get("ended") is True
     and not flags.get(student_a.cid, "is_h"),
-    (pl.last_behavior_id_list[-1:], modes.sex_class(), _temp(5)),
+    (activity.last_behaviors(pl.cid)[-1:], modes.sex_class(), _temp(5)),
 )
 # 旧档里已经留下的幽灵课堂：课堂模式开着、那节课 running，玩家早已不在 H
 education.clear_temp_classes()
@@ -1369,7 +1369,7 @@ for _cid in (202, 204, 303):
 set_time(period_time(3) + datetime.timedelta(minutes=5))
 sex_class_handle.start_sex_class(70, [201])
 kernel_data.put(flags.set, pl.cid, is_h=True)
-pl.target_character_id = 301
+kernel_data.put(activity.set_target, pl.cid, 301)
 # 开课效果串里的 464 拉交互对象进 H，10014 置位两个模式并拉场景里符合门槛的学生进 H
 run_effect_list([464, 10014])
 kernel_data.put(flags.set, student_b.cid, is_h=True)
@@ -1391,10 +1391,10 @@ check(
     and flags.get(student_a.cid, "is_h")
     and 201 in _l11_members
     and flags.get(adult.cid, "is_h")
-    and adult.position == pl.position
+    and activity.position(adult.cid) == activity.position(pl.cid)
     and 301 not in _l11_members
     and 202 not in _l11_members,
-    (_l11_members, flags.get(adult.cid, "is_h"), adult.position),
+    (_l11_members, flags.get(adult.cid, "is_h"), activity.position(adult.cid)),
 )
 check(
     (
@@ -1451,7 +1451,7 @@ kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 for _cid in (0, 201, 202, 301):
     kernel_data.put(flags.set, _cid, is_h=False)
-pl.target_character_id = 0
+kernel_data.put(activity.set_target, pl.cid, 0)
 move_to(301, SCENE_DORM)
 
 finish()

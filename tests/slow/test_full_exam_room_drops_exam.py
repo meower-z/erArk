@@ -14,6 +14,7 @@
 
 from tests.slow.health_check import EXAM_ROOM, SLOT_START, HealthCheckTestCase
 from tests import kernel_data
+from tests.kernel_project import activity
 
 GIVE_UP_MINUTES = 30
 """ 坐满体检科后，等她放弃的最长分钟数（新干员原地等待的时长） """
@@ -71,13 +72,13 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         today = game_time.now().day
         self.assertTrue(
             self.wait_until(
-                lambda: self.operator.position == EXAM_ROOM
+                lambda: activity.position(self.operator.cid) == EXAM_ROOM
                 or game_time.now().day != today,
                 24 * 60,
             )
         )
         self.assertNotEqual(
-            self.operator.position,
+            activity.position(self.operator.cid),
             EXAM_ROOM,
             f"{game_time.now()} 她又进了体检科",
         )
@@ -111,8 +112,9 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         )
         self.assertTrue(
             self.wait_until(
-                lambda: operator.position != EXAM_ROOM
-                and operator.behavior.move_final_target == EXAM_ROOM,
+                lambda: activity.position(operator.cid) != EXAM_ROOM
+                and activity.behavior(operator.cid).move_final_target
+                == EXAM_ROOM,
                 24 * 60,
             ),
             "她离开体检科后往回走",

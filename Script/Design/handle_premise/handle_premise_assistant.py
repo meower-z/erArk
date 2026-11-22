@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import flags, relations
+from Script.Modules.domains import activity, flags, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -47,8 +47,7 @@ def handle_target_is_assistant(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_is_assistant(character_data.target_character_id)
+    return handle_is_assistant(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_ASSISTANT)
@@ -60,8 +59,7 @@ def handle_target_not_assistant(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_is_assistant(character_data.target_character_id)
+    return not handle_is_assistant(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.ASSISTANT_HELP_WORK_1)
@@ -171,13 +169,12 @@ def handle_assistant_send_food_of_ai_disable(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     if not relations.assistant_services(character_id)[4]:
         return 1
     if relations.assistant_services(character_id)[4] in {
         1,
         2,
-    } and character_data.behavior.start_time.hour in {7, 8, 18, 19}:
+    } and activity.behavior(character_id).start_time.hour in {7, 8, 18, 19}:
         return 1
     return 0
 
@@ -191,11 +188,10 @@ def handle_assistant_send_food_1_able(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     if (
         relations.assistant_services(character_id)[4] == 1
         and flags.get(character_id, "help_buy_food") == 0
-        and character_data.behavior.start_time.hour in {12, 13}
+        and activity.behavior(character_id).start_time.hour in {12, 13}
     ):
         return 1
     return 0
@@ -210,12 +206,12 @@ def handle_assistant_send_food_2_able(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     if flags.get(character_id, "help_make_food") != 0:
         return 0
     service = relations.assistant_services(character_id)[4]
     if service == 3 or (
-        service == 2 and character_data.behavior.start_time.hour in {12, 13}
+        service == 2
+        and activity.behavior(character_id).start_time.hour in {12, 13}
     ):
         return 1
     return 0
@@ -451,8 +447,7 @@ def handle_target_assistant_live_together_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_assistant_live_together_on(character_data.target_character_id)
+    return handle_assistant_live_together_on(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_ASSISTANT_LIVE_TOGETHER_OFF)
@@ -464,10 +459,7 @@ def handle_target_assistant_live_together_off(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_assistant_live_together_on(
-        character_data.target_character_id
-    )
+    return not handle_assistant_live_together_on(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.PL_ASSISTANT_CHANGE_EVERY_WEEK_ON)

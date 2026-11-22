@@ -2,7 +2,8 @@
 """
 行为快照的起始状态与玩家动作表
 ==============================
-每个状态由开新游戏后经游戏自己的流程构建出来（build_*），再按固定的玩家动作表（PLANS）一步一步推进，每一步录一份快照（tests/snapshot.py）。
+每个状态由开新游戏后经游戏自己的流程构建出来（build_*），再按 tests/snapshot_plans.py 里固定的玩家动作表（PLANS）
+一步一步推进，每一步录一份快照（tests/snapshot.py）。
 玩家的选择与输入都经 FullWorld 的 PlayerInput 按下真实按钮；动作表里没有随机，同一份代码两次运行的快照相同。
 
 两个状态开局都选初期奖励 FIRST_BONUS。
@@ -34,6 +35,8 @@ import contextlib
 from typing import TYPE_CHECKING
 from unittest import mock
 from tests.kernel_data import writing
+from tests import kernel_data
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -62,7 +65,9 @@ class PlanError(AssertionError):
     """动作表里的指令此刻不会出现在主界面，或安排的按钮没有用掉"""
 
 
-def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
+def instruct(
+    world: FullWorld, instruct_id: str, presses: tuple = (), target: int = -1
+) -> None:
     """
     像玩家在主界面点下指令一样执行它：先安排之后要按的按钮，确认指令的前提都成立，
     在玩家的一次选择里（world.act）交给 handle_instruct，指令打开了面板时显示面板（与主面板循环每一轮做的相同）；
@@ -71,6 +76,7 @@ def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
     world -- FullWorld
     instruct_id -- 指令id
     presses -- 之后依次按下的按钮文字
+    target -- 不为 -1 时，这次选择里先在场景里点选这个角色（场景面板的点选只改交互对象）
     Return arguments:
     无
     功能描述:
@@ -79,6 +85,7 @@ def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
     from Script.UI.Moudle import view
     from Script.Core import constant
     from Script.Design import handle_premise
+    from Script.Modules.tk_ui import player_pick
     from Script.System.Instruct_System import handle_instruct
     from tests.world import act
 
@@ -95,7 +102,12 @@ def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
 
     def choose() -> None:
         """玩家这一次选择：点下指令，指令打开了面板时显示面板"""
-        handle_instruct.handle_instruct(instruct_id)
+        if target == -1:
+            handle_instruct.handle_instruct(instruct_id)
+        else:
+            with player_pick.drafting("scene target"):
+                activity.set_target(0, target)
+                handle_instruct.handle_instruct(instruct_id)
         if view.now_panel_id != constant.Panel.IN_SCENE:
             constant.panel_data[view.now_panel_id]()
 
@@ -164,32 +176,30 @@ def npc_id(world: FullWorld, name: str) -> int:
     return found[0]
 
 
-def summon(world: FullWorld, name: str) -> None:
+def summon(world: FullWorld, name: str) -> int:
     """
-    在「干员位置一览」里把干员召集到博士所在的场景，等她走到，再在场景里点选她
+    在「干员位置一览」里把干员召集到博士所在的场景，等她走到
     Keyword arguments:
     world -- FullWorld
     name -- 干员名字
     Return arguments:
-    无
+    int -- 干员id，调用方把它作为下一条指令的 target，在那次选择里点选她
     """
     from Script.Core import constant
 
     cid = npc_id(world, name)
-    pl = world.cache.character_data[0]
     instruct(
         world,
         constant.Instruct.ALL_NPC_POSITION,
         ("召集到自己当前位置", name, "返回"),
     )
     for _ in range(24):
-        if world.cache.character_data[cid].position == pl.position:
+        if activity.position(cid) == activity.position(0):
             break
         instruct(world, constant.Instruct.WAIT)
-    if world.cache.character_data[cid].position != pl.position:
+    if activity.position(cid) != activity.position(0):
         raise PlanError(f"{name} 两小时内没有走到博士身边")
-    # 在场景里点选她：场景面板的点选只改这一个字段
-    pl.target_character_id = cid
+    return cid
 
 
 def build_time_stop_h(world: FullWorld) -> None:
@@ -221,8 +231,8 @@ def build_time_stop_h(world: FullWorld) -> None:
         ),
     )
     walk(world, DOCTOR_ROOM)
-    summon(world, ASSISTANT_NAME)
-    instruct(world, constant.Instruct.TIME_STOP_ON)
+    assistant = summon(world, ASSISTANT_NAME)
+    instruct(world, constant.Instruct.TIME_STOP_ON, target=assistant)
     instruct(world, constant.Instruct.TIME_STOP_H)
     if not (hp.handle_time_stop_on(0) and hp.handle_is_h(0)):
         raise PlanError("没有进入时停中的 H")
@@ -241,7 +251,7 @@ def days_passed(day: int) -> Iterator[None]:
         pregnancy_handle, "get_pregnancy_past_day", return_value=day
     ), mock.patch.object(
         pregnancy_handle, "get_child_grow_day", return_value=day
-    ), writing():
+    ), kernel_data.writing():
         yield
 
 
@@ -251,7 +261,6 @@ def fertilize(world: FullWorld, mother_id: int) -> None:
     from Script.Modules.domains import pregnancy
     from Script.System.Pregnancy_System import pregnancy_handle
     from Script.UI.Panel import ejaculation_panel
-    from tests.kernel_data import writing
 
     mother = world.cache.character_data[mother_id]
     with writing():
@@ -406,50 +415,6 @@ def build_family_commission(world: FullWorld) -> None:
         raise PlanError(f"应有两项进行中的委托：{commission.ongoing()}")
 
 
-def waits(count: int) -> list:
-    """
-    动作表里连续 count 次「等待五分钟」
-    Keyword arguments:
-    count -- 次数
-    Return arguments:
-    list[tuple] -- 动作
-    """
-    return [("instruct", "wait", ())] * count
-
-
-PLANS = {
-    "time_stop_h": [
-        ("instruct", "kiss_h", ("确定",)),
-        ("instruct", "cunnilingus", ()),
-        ("instruct", "breast_caress", ()),
-        ("instruct", "vaginal_sex", ("正常位", "确定")),
-        ("instruct", "normal_sex", ()),
-    ]
-    + waits(12)
-    + [("walk", DINING_HALL)]
-    + waits(24)
-    + [("walk", LIBRARY)]
-    + waits(36)
-    + [("walk", DOCTOR_ROOM)]
-    + [("until", "sleep", ("8小时", "确定"), 150)]
-    + waits(36),
-    "family_commission": waits(6)
-    + [("walk", CLASSROOM)]
-    + [("until", "teach", (), 36)]
-    + waits(12)
-    + [("walk", NURSERY)]
-    + waits(24)
-    + [("walk", DINING_HALL)]
-    + waits(36)
-    + [("walk", LIBRARY)]
-    + waits(60)
-    + [("walk", DOCTOR_ROOM)]
-    + waits(180),
-}
-""" 状态名: 玩家动作表。动作是 ("instruct", 指令id, 之后按下的按钮)、("walk", 目标场景路径)，
-或 ("until", 指令id, 之后按下的按钮, 最多等待的次数)：指令的前提不成立时「等待五分钟」再看，成立时执行它；
-每次等待与最后的指令各算一步 """
-
 BUILDERS = {
     "time_stop_h": build_time_stop_h,
     "family_commission": build_family_commission,
@@ -467,6 +432,7 @@ def run(world: FullWorld, state_name: str) -> Recorder:
     tests.snapshot.Recorder -- 录下的快照；第 0000 步是构建完的状态，第 n 步是第 n 个动作之后的状态
     """
     from tests.snapshot import ActionLog, Recorder, capture
+    from tests.snapshot_plans import PLANS
     from tests.world import seed_everything
 
     from Script.Core import constant, save_handle

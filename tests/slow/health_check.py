@@ -12,6 +12,7 @@ from unittest import mock
 
 from tests import kernel_data
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 EXAM_ROOM = ["医疗", "体检科"]
 DR_OFFICE = ["中枢", "博士办公室"]
@@ -130,7 +131,6 @@ class HealthCheckTestCase(SlowTestCase):
         from Script.Design import handle_npc_ai
 
         picks = []
-        character_data = self.cache.character_data[cid]
         choose_state_machine = handle_npc_ai.choose_state_machine
 
         def recorder(character_id: int) -> int | None:
@@ -144,7 +144,7 @@ class HealthCheckTestCase(SlowTestCase):
             state_machine_id = choose_state_machine(character_id)
             if character_id == cid and state_machine_id is not None:
                 picks.append(
-                    (character_data.behavior.start_time, state_machine_id)
+                    (activity.behavior(cid).start_time, state_machine_id)
                 )
             return state_machine_id
 

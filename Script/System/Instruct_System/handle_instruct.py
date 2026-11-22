@@ -28,7 +28,13 @@ from Script.UI.Moudle import draw, view
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, achievement, action_info, flags
+from Script.Modules.domains import (
+    abilities,
+    achievement,
+    action_info,
+    activity,
+    flags,
+)
 from Script.Modules.domains import h_state, needs, player_collection, roster
 from Script.Modules.domains import relations
 
@@ -341,7 +347,7 @@ def choose_instruct(
     if start:
         instruct_args[START] = start
     if target is None:
-        target = cache.character_data[0].target_character_id
+        target = activity.target(0)
     if (
         judge
         and judge != _("群交")
@@ -546,9 +552,8 @@ def plan_instruct_common_settle(
     from Script.Modules.gameplay_resolution import plan_queue
     from Script.System.Sex_System import group_sex_panel
 
-    character_data: game_type.Character = cache.character_data[character_id]
     if target_character_id == 0:
-        target_character_id = character_data.target_character_id
+        target_character_id = activity.target(character_id)
     judged = _judged_behavior_id(
         behavior_id, character_id, target_character_id, judge
     )
@@ -584,21 +589,17 @@ def handle_comprehensive_state_effect(
     """
     if not add_time:
         return None
-    character_data: game_type.Character = cache.character_data[0]
     # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
     if effect_all_value_list[0] == "A1":
         target_character_id = 0
     elif effect_all_value_list[0] == "A2":
         # 如果是NPC触发且该NPC不是玩家当前的交互对象，则将其设为交互对象
-        if (
-            character_id != 0
-            and character_id != character_data.target_character_id
-        ):
-            character_data.target_character_id = character_id
+        if character_id != 0 and character_id != activity.target(0):
+            activity.set_target(0, character_id)
         # 如果没有交互对象，则返回0
-        if character_data.target_character_id == 0:
+        if activity.target(0) == 0:
             return 0
-        target_character_id = character_data.target_character_id
+        target_character_id = activity.target(0)
     else:
         target_character_id = int(effect_all_value_list[0][3:])
         # 如果还没拥有该角色，则返回0
@@ -661,10 +662,7 @@ def handle_see_attr() -> None:
 @add_instruct(constant.Instruct.CHAT)
 def handle_chat() -> None:
     """处理聊天指令"""
-    character_data = cache.character_data[0]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
+    target_data: game_type.Character = cache.character_data[activity.target(0)]
     if (
         action_info.get(target_data.cid, "talk_count")
         > abilities.ability(0)[40] + 1
@@ -778,7 +776,7 @@ def _start_teach(who: int, chosen: intent.Intent) -> None:
     from Script.System.Education_System import class_ai, schedule_handle
 
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        cache.character_data[who].position
+        activity.position(who)
     )
     for chara_id in cache.scene_data[scene_path_str].character_list:
         if chara_id == who:
@@ -786,7 +784,7 @@ def _start_teach(who: int, chosen: intent.Intent) -> None:
         # 只拉学生岗、不在 H / 睡觉 / 翘课 / 休息中的人，已经在听别的教师讲课的不抢
         if (
             class_ai.judge_student_pullable(chara_id)
-            and cache.character_data[chara_id].behavior.behavior_id
+            and activity.behavior(chara_id).behavior_id
             != constant.Behavior.ATTENT_CLASS
         ):
             plan_queue.plan_next(
@@ -904,9 +902,8 @@ def handle_manage_dormitory() -> None:
 @add_instruct(constant.Instruct.HYPNOSIS_ONE)
 def handle_hypnosis_one() -> None:
     """处理单人催眠"""
-    character_data: game_type.Character = cache.character_data[0]
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(0)
     )
     door: dict[str, object] = {}
     if cache.scene_data[now_scene_str].close_flag == 0:
@@ -927,7 +924,7 @@ def handle_hypnosis_all() -> None:
     """处理集体催眠"""
     character_data: game_type.Character = cache.character_data[0]
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(0)
     )
     # 计算当前理智值是否足够进行催眠
     scene_data: game_type.Scene = cache.scene_data[now_scene_str]
@@ -1234,10 +1231,7 @@ def _set_target_sp_flag(who: int, chosen: intent.Intent) -> None:
 @add_instruct(constant.Instruct.APOLOGIZE)
 def handle_apologize() -> None:
     """处理道歉指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
+    target_data: game_type.Character = cache.character_data[activity.target(0)]
     value = _calm_value()
     # 判定减掉愤怒值后是否不生气了
     if needs.of(target_data.cid)["angry"] - value <= 30:
@@ -1340,11 +1334,10 @@ def _close_door(who: int, close: bool) -> None:
     who -- 角色id
     close -- 是否关门
     """
-    character_data = cache.character_data[who]
     action_info.set(who, "ask_close_door_flag", True)
     if close:
         now_scene_data = cache.scene_data[
-            map_handle.get_map_system_path_str_for_list(character_data.position)
+            map_handle.get_map_system_path_str_for_list(activity.position(who))
         ]
         now_scene_data.close_flag = now_scene_data.close_type
 
@@ -1358,7 +1351,7 @@ def _set_door(who: int, chosen: intent.Intent) -> None:
     chosen -- 行动的意图
     """
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        cache.character_data[who].position
+        activity.position(who)
     )
     now_scene_data = cache.scene_data[now_scene_str]
     if chosen["args"]["lock"]:
@@ -1393,9 +1386,11 @@ def _start_diy_event(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    event = cache.character_data[who].event
-    event.event_id = str(chosen["args"]["event_id"])
-    event.chara_diy_event_flag = True
+    activity.update_event(
+        who,
+        event_id=str(chosen["args"]["event_id"]),
+        chara_diy_event_flag=True,
+    )
 
 
 @start_part("bondage")
@@ -1584,7 +1579,7 @@ def _token_accepted(judge: str) -> bool:
         judge
         and instuct_judege.calculation_instuct_judege(
             0,
-            cache.character_data[0].target_character_id,
+            activity.target(0),
             judge,
             not_draw_flag=True,
             settle_hypnosis=False,
@@ -1698,7 +1693,6 @@ def _start_do_h(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    character_data: game_type.Character = cache.character_data[who]
     target_data = cache.character_data[chosen["target"]]
     place = str(chosen["args"]["place"])
     if place:
@@ -1708,7 +1702,7 @@ def _start_do_h(who: int, chosen: intent.Intent) -> None:
     now_draw.width = width
     now_draw_text = "\n"
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(who)
     )
     # 如果没关门，则自动将门关上
     if cache.scene_data[now_scene_str].close_flag == 0:
@@ -1774,10 +1768,9 @@ def handle_switch_to_h_interface() -> None:
 @add_instruct(constant.Instruct.SLEEP_OBSCENITY)
 def handle_sleep_obscenity() -> None:
     """处理睡眠猥亵指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(0)]
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(0)
     )
     if cache.scene_data[now_scene_str].close_flag == 0:
         door = ask_close_door()
@@ -1797,8 +1790,7 @@ def handle_stop_sleep_obscenity() -> None:
     """处理停止睡眠猥亵指令"""
     from Script.Settle import default
 
-    character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(0)]
     flags.set(target_data.cid, unconscious_h=0)
     now_draw = draw.WaitDraw()
     now_draw.width = width
@@ -1821,9 +1813,8 @@ def handle_unconscious_h(type_name: str = "") -> None:
     处理无意识奸指令
     type_name: str = ""  # 用于区分无意识奸类型
     """
-    character_data: game_type.Character = cache.character_data[0]
     now_scene_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(0)
     )
     door: dict[str, object] = {}
     if cache.scene_data[
@@ -1957,7 +1948,7 @@ def _group_members(character_id: int) -> list[int]:
     list -- 角色id
     """
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        cache.character_data[character_id].position
+        activity.position(character_id)
     )
     return [
         c for c in cache.scene_data[scene_path_str].character_list if c != 0
@@ -2162,13 +2153,12 @@ def _planned_end(
     Return arguments:
     tuple -- 行为id与角色状态
     """
-    character_data: game_type.Character = cache.character_data[0]
     if end_behavior_id == normal_end:
         return normal_end, normal_state
     if end_behavior_id is not None:
-        return end_behavior_id, character_data.state
-    if character_data.behavior.behavior_id in constant.special_end_H_list:
-        return character_data.behavior.behavior_id, character_data.state
+        return end_behavior_id, activity.state(0)
+    if activity.behavior(0).behavior_id in constant.special_end_H_list:
+        return activity.behavior(0).behavior_id, activity.state(0)
     return normal_end, normal_state
 
 
@@ -2205,7 +2195,7 @@ def plan_h_end(
         constant.Behavior.END_H,
         constant.CharacterStatus.STATUS_END_H,
     )
-    _h_end_others(behavior_id, cache.character_data[0].target_character_id)
+    _h_end_others(behavior_id, activity.target(0))
     plan_queue.plan_next(0, behavior_id, 5, state=state)
     return ()
 
@@ -2306,7 +2296,6 @@ def handle_start_sex_class() -> None:
         sex_class_handle,
     )
 
-    character_data: game_type.Character = cache.character_data[0]
     student_list = sex_class_handle.get_scene_student_list()
     if not student_list:
         now_draw = draw.WaitDraw()
@@ -2315,7 +2304,7 @@ def handle_start_sex_class() -> None:
         now_draw.draw()
         return
     # 选主修科目：预约的那节课已经定好了（提前几分钟开讲的也算，Plan 26 §3.5），当场开课则现选一门
-    classroom = sex_class_handle.get_scene_name(character_data.position)
+    classroom = sex_class_handle.get_scene_name(activity.position(0))
     temp_class = sex_class_handle.find_class_to_start(
         classroom, game_time.now()
     )[1]
@@ -3845,11 +3834,10 @@ def handle_condom_instruct_common(mode: str, behavior_id: str) -> None:
     """
     from Script.System.Item_System import condom_panel
 
-    character_data: game_type.Character = cache.character_data[0]
     judge = _("严重骚扰")
     if not instuct_judege.calculation_instuct_judege(
         0,
-        character_data.target_character_id,
+        activity.target(0),
         judge,
         not_draw_flag=True,
         settle_hypnosis=False,
@@ -4685,8 +4673,7 @@ def handle_give_blowjob() -> None:
 @add_instruct(constant.Instruct.CHANGE_TOP_AND_BOTTOM)
 def handle_change_top_and_bottom() -> None:
     """处理交给对方指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    h_state.set(character_data.target_character_id, npc_active_h=True)
+    h_state.set(activity.target(0), npc_active_h=True)
     handle_npc_ai_in_h.npc_active_h()
 
 
@@ -4699,8 +4686,7 @@ def handle_keep_enjoy() -> None:
 @add_instruct(constant.Instruct.TRY_PL_ACTIVE_H)
 def handle_try_pl_active_h() -> None:
     """处理尝试掌握主动权指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    h_state.set(character_data.target_character_id, npc_active_h=False)
+    h_state.set(activity.target(0), npc_active_h=False)
 
 
 @add_instruct(constant.Instruct.UNDRESS)

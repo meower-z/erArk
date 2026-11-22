@@ -8,9 +8,9 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Panel import hypnosis_panel
 from Script.Design import game_time
-from Script.Modules.domains import abilities, action_info, flags, h_meters
-from Script.Modules.domains import h_state, hypnosis, inventory, needs
-from Script.Modules.domains import chara_profile, relations
+from Script.Modules.domains import abilities, action_info, activity
+from Script.Modules.domains import chara_profile, flags, h_meters, h_state
+from Script.Modules.domains import hypnosis, inventory, needs, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -44,7 +44,6 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
     )
     from Script.Design import game_time, handle_premise, map_handle
 
-    character_data: game_type.Character = cache.character_data[character_id]
     period = game_time.get_class_period(character_id)
 
     if (
@@ -60,7 +59,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
                 get_course_text(now_course), period + 1
             )
 
-    behavior_id = character_data.behavior.behavior_id
+    behavior_id = activity.behavior(character_id).behavior_id
     # 教师视角：正在授课
     if behavior_id == constant.Behavior.TEACH:
         teaching = schedule_handle.get_now_teaching(character_id)
@@ -88,7 +87,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
         )
         if listen_course is not None:
             scene_path_str = map_handle.get_map_system_path_str_for_list(
-                character_data.position
+                activity.position(character_id)
             )
             classroom = (
                 cache.scene_data[scene_path_str].scene_name
@@ -152,7 +151,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
             and now_course["course_type"]
             not in education_constant.CLASSROOM_COURSE_TYPE_SET
         ):
-            now_time = character_data.behavior.start_time or game_time.now()
+            now_time = activity.behavior(character_id).start_time
             if (
                 behavior_id == constant.Behavior.REST
                 or flags.get(character_id, "is_h")
@@ -163,7 +162,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
                 return None
             to_place = schedule_handle.get_course_place(now_course)
             now_scene_str = map_handle.get_map_system_path_str_for_list(
-                character_data.position
+                activity.position(character_id)
             )
             if (
                 to_place
@@ -244,7 +243,6 @@ def get_character_status_list(
     from Script.Design import handle_premise
     from Script.System.Sex_System import drunk_sex_common
 
-    character_data: game_type.Character = cache.character_data[character_id]
     status_list = []
     status_text_list = []
 
@@ -303,7 +301,7 @@ def get_character_status_list(
             if handle_premise.handle_hunger_ge_80(character_id)
             else ""
         )
-        start_time = character_data.behavior.start_time.hour
+        start_time = activity.behavior(character_id).start_time.hour
         hunger_text = (
             hunger_text
             if start_time in {6, 7, 8, 11, 12, 13, 16, 17, 18}

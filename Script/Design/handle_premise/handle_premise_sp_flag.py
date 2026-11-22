@@ -3,7 +3,13 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import flags, location, needs, chara_profile
+from Script.Modules.domains import (
+    activity,
+    chara_profile,
+    flags,
+    location,
+    needs,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -73,9 +79,8 @@ def handle_target_hp_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if flags.get(target_data.cid, "tired") == 1:
         return 1
@@ -104,9 +109,8 @@ def handle_self_or_target_tired(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     if flags.get(character_id, "tired") == 1:
         return 1
@@ -573,8 +577,7 @@ def handle_target_visitor_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_visitor_flag_1(character_data.target_character_id)
+    return handle_self_visitor_flag_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_VISITOR_FLAG_1)
@@ -586,8 +589,7 @@ def handle_target_not_visitor_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_self_visitor_flag_1(character_data.target_character_id)
+    return not handle_self_visitor_flag_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.IS_FOLLOW)
@@ -679,9 +681,8 @@ def handle_target_is_follow(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     return flags.get(target_data.cid, "is_follow")
 
@@ -695,9 +696,8 @@ def handle_target_not_follow(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
     return not flags.get(target_data.cid, "is_follow")
 
@@ -1024,8 +1024,7 @@ def handle_t_imprisonment_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_imprisonment_1(character_data.target_character_id)
+    return not handle_imprisonment_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.T_IMPRISONMENT_1)
@@ -1037,8 +1036,7 @@ def handle_t_imprisonment_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_imprisonment_1(character_data.target_character_id)
+    return handle_imprisonment_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.ESCAPING_1)
@@ -1074,8 +1072,7 @@ def handle_t_escaping_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_escaping_1(character_data.target_character_id)
+    return handle_escaping_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.T_ESCAPING_0)
@@ -1087,8 +1084,7 @@ def handle_t_escaping_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_escaping_1(character_data.target_character_id)
+    return not handle_escaping_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.AROMATHERAPY_FLAG_0)
@@ -1235,8 +1231,7 @@ def handle_t_aromatherapy_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_aromatherapy_flag_0(target_chara_id):
         return 1
     return 0
@@ -1251,8 +1246,7 @@ def handle_t_aromatherapy_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_aromatherapy_flag_1(target_chara_id):
         return 1
     return 0
@@ -1267,8 +1261,7 @@ def handle_t_aromatherapy_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_aromatherapy_flag_2(target_chara_id):
         return 1
     return 0
@@ -1283,8 +1276,7 @@ def handle_t_aromatherapy_flag_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_aromatherapy_flag_3(target_chara_id):
         return 1
     return 0
@@ -1299,8 +1291,7 @@ def handle_t_aromatherapy_flag_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_aromatherapy_flag_4(target_chara_id):
         return 1
     return 0
@@ -1315,8 +1306,7 @@ def handle_t_aromatherapy_flag_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_aromatherapy_flag_5(target_chara_id):
         return 1
     return 0
@@ -1331,8 +1321,7 @@ def handle_t_aromatherapy_flag_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_aromatherapy_flag_6(target_chara_id):
         return 1
     return 0
@@ -1347,8 +1336,7 @@ def handle_t_aromatherapy_flag_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_aromatherapy_flag_7(target_chara_id):
         return 1
     return 0
@@ -1363,8 +1351,7 @@ def handle_t_aromatherapy_flag_8(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_aromatherapy_flag_8(target_chara_id):
         return 1
     return 0
@@ -1549,8 +1536,7 @@ def handle_is_unconscious_h(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(0)]
     if flags.get(target_data.cid, "unconscious_h") or flags.get(
         0, "unconscious_h"
     ):
@@ -1739,8 +1725,7 @@ def handle_t_unconscious_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h"):
         return 0
     else:
@@ -1756,8 +1741,7 @@ def handle_t_unconscious_flag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h"):
         return 1
     else:
@@ -1773,8 +1757,7 @@ def handle_t_unconscious_hypnosis_flag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_unconscious_hypnosis_flag(character_data.target_character_id)
+    return handle_unconscious_hypnosis_flag(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.T_UNCONSCIOUS_FLAG_1)
@@ -1786,8 +1769,7 @@ def handle_t_unconscious_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 1:
         return 1
     else:
@@ -1815,8 +1797,7 @@ def handle_t_unconscious_flag_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 2:
         return 1
     else:
@@ -1832,8 +1813,7 @@ def handle_t_unconscious_flag_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 3:
         return 1
     else:
@@ -1849,8 +1829,7 @@ def handle_t_unconscious_flag_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 4:
         return 1
     else:
@@ -1866,8 +1845,7 @@ def handle_t_not_unconscious_flag_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 4:
         return 0
     else:
@@ -1883,8 +1861,7 @@ def handle_t_unconscious_flag_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 5:
         return 1
     else:
@@ -1900,8 +1877,7 @@ def handle_t_not_unconscious_flag_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 5:
         return 0
     else:
@@ -1917,8 +1893,7 @@ def handle_t_unconscious_flag_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 6:
         return 1
     else:
@@ -1934,8 +1909,7 @@ def handle_t_not_unconscious_flag_6(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 6:
         return 0
     else:
@@ -1951,8 +1925,7 @@ def handle_t_unconscious_flag_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 7:
         return 1
     else:
@@ -1968,8 +1941,7 @@ def handle_t_not_unconscious_flag_7(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "unconscious_h") == 7:
         return 0
     else:
@@ -2013,8 +1985,7 @@ def handle_t_sleep_h_awake_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_sleep_h_awake_0(target_chara_id):
         return 1
     return 0
@@ -2029,8 +2000,7 @@ def handle_t_sleep_h_awake_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = activity.target(character_id)
     if handle_sleep_h_awake_0(target_chara_id):
         return 0
     return 1
@@ -2081,8 +2051,7 @@ def handle_target_not_in_hidden_sex_mode(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_hidden_sex_mode_0(character_data.target_character_id)
+    return handle_hidden_sex_mode_0(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HIDDEN_SEX_MODE_GE_1)
@@ -2106,8 +2075,7 @@ def handle_t_hidden_sex_mode_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_hidden_sex_mode_ge_1(character_data.target_character_id)
+    return handle_hidden_sex_mode_ge_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HIDDEN_SEX_MODE_1)
@@ -2131,8 +2099,7 @@ def handle_t_hidden_sex_mode_1(character_id: int) -> int:
     返回:
         int: 权重，若角色处于双不隐模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return handle_hidden_sex_mode_1(character_data.target_character_id)
+    return handle_hidden_sex_mode_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HIDDEN_SEX_MODE_2)
@@ -2156,8 +2123,7 @@ def handle_t_hidden_sex_mode_2(character_id: int) -> int:
     返回:
         int: 权重，若角色处于女隐模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return handle_hidden_sex_mode_2(character_data.target_character_id)
+    return handle_hidden_sex_mode_2(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HIDDEN_SEX_MODE_3)
@@ -2181,8 +2147,7 @@ def handle_t_hidden_sex_mode_3(character_id: int) -> int:
     返回:
         int: 权重，若角色处于男隐模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return handle_hidden_sex_mode_3(character_data.target_character_id)
+    return handle_hidden_sex_mode_3(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HIDDEN_SEX_MODE_4)
@@ -2206,8 +2171,7 @@ def handle_t_hidden_sex_mode_4(character_id: int) -> int:
     返回:
         int: 权重，若角色处于男隐模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return handle_hidden_sex_mode_4(character_data.target_character_id)
+    return handle_hidden_sex_mode_4(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HIDDEN_SEX_MODE_5)
@@ -2243,8 +2207,7 @@ def handle_t_hidden_sex_mode_5(character_id: int) -> int:
     返回:
         int: 权重，若交互对象处于携带模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return handle_hidden_sex_mode_5(character_data.target_character_id)
+    return handle_hidden_sex_mode_5(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HIDDEN_SEX_MODE_1_OR_2)
@@ -2400,8 +2363,7 @@ def handle_t_sleep_h_or_hidden_sex(character_id: int) -> int:
     返回:
         int: 权重，若角色处于双隐模式中则返回1，否则返回0
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_sleep_h_or_hidden_sex(character_data.target_character_id)
+    return handle_sleep_h_or_hidden_sex(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.EXHIBITIONISM_SEX_MODE_0)
@@ -2437,8 +2399,7 @@ def handle_target_not_in_exhibitionism_sex_mode(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_exhibitionism_sex_mode_0(character_data.target_character_id)
+    return handle_exhibitionism_sex_mode_0(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.EXHIBITIONISM_SEX_MODE_GE_1)
@@ -2462,10 +2423,7 @@ def handle_t_exhibitionism_sex_mode_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_exhibitionism_sex_mode_ge_1(
-        character_data.target_character_id
-    )
+    return handle_exhibitionism_sex_mode_ge_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.EXHIBITIONISM_SEX_MODE_1)
@@ -2489,8 +2447,7 @@ def handle_t_exhibitionism_sex_mode_1(character_id: int) -> int:
     返回:
         int: 权重，若角色处于无人室内露出模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return handle_exhibitionism_sex_mode_1(character_data.target_character_id)
+    return handle_exhibitionism_sex_mode_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.EXHIBITIONISM_SEX_MODE_2)
@@ -2514,8 +2471,7 @@ def handle_t_exhibitionism_sex_mode_2(character_id: int) -> int:
     返回:
         int: 权重，若角色处于无人室外露出模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return handle_exhibitionism_sex_mode_2(character_data.target_character_id)
+    return handle_exhibitionism_sex_mode_2(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.EXHIBITIONISM_SEX_MODE_3)
@@ -2539,8 +2495,7 @@ def handle_t_exhibitionism_sex_mode_3(character_id: int) -> int:
     返回:
         int: 权重，若角色处于人前露出模式中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return handle_exhibitionism_sex_mode_3(character_data.target_character_id)
+    return handle_exhibitionism_sex_mode_3(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.EXHIBITIONISM_SEX_MODE_4)
@@ -2564,8 +2519,7 @@ def handle_t_exhibitionism_sex_mode_4(character_id: int) -> int:
     返回:
         int: 权重，若角色处于无意识人前露出中则返回1，否则返回0
     """
-    character_data = cache.character_data[character_id]
-    return handle_exhibitionism_sex_mode_4(character_data.target_character_id)
+    return handle_exhibitionism_sex_mode_4(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.NOT_WITNESS_PL_H_WITH_OTHERS)
@@ -2613,5 +2567,4 @@ def handle_find_target_is_favorite(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_find_self_is_favorite(character_data.target_character_id)
+    return handle_find_self_is_favorite(activity.target(character_id))

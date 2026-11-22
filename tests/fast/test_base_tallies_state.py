@@ -20,13 +20,19 @@ from Script.Config import game_config
 from Script.Core import game_type, get_text, save_handle
 from Script.Design import basement, character_handle
 from Script.Kernel import core
-from Script.Modules.domains import country, entertainment, facility, fridge
+from Script.Modules.domains import (
+    country,
+    entertainment,
+    facility,
+    fridge,
+)
 from Script.Modules.domains import medical, tallies, warehouse
 from Script.Modules.gameplay_resolution import working
 from Script.System.Medical_System import clinic_patient_management
 from Script.System.Medical_System import medical_constant, medical_service
 from Script.UI.Moudle import draw
 from Script.UI.Panel import aromatherapy_panel, manage_library
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 
 SLOT = "base_tallies"
@@ -97,9 +103,9 @@ class BaseTalliesStateTest(FastTestCase):
         干员甲的交互对象为玩家时加 250 好感，为干员乙时加 40。计数 favorability 只记 250。
         再给计数 fallen_certificates 加 30。粉红凭证结算后粉红凭证多 2 + 30，两项计数为 0
         """
-        self.cache.character_data[1].target_character_id = 0
+        aim(1, 0)
         character_handle.add_favorability(1, 0, 250, None, None)
-        self.cache.character_data[1].target_character_id = 2
+        aim(1, 2)
         character_handle.add_favorability(1, 2, 40, None, None)
         self.assertEqual(tallies.get(tallies.FAVORABILITY), 250)
         tallies.add(tallies.FALLEN, 30)

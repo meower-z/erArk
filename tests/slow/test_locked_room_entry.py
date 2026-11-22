@@ -10,6 +10,7 @@
 
 from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.kernel_project import activity
 
 ROOM = ["中枢", "会议室"]
 DR_ROOM = ["中枢", "博士房间"]
@@ -36,14 +37,15 @@ class LockedRoomEntryTest(SlowTestCase):
             kernel_data.domain("flags").get(operator.cid, "is_follow"), 4
         )
         self.assertTrue(
-            self.wait_until(lambda: operator.position == ROOM, 60),
-            f"杜宾在 {operator.position}",
+            self.wait_until(
+                lambda: activity.position(operator.cid) == ROOM, 60
+            ),
+            f"杜宾在 {activity.position(operator.cid)}",
         )
         self.assertEqual(room.close_flag, 1)
 
     def test_doctor_walks_into_own_locked_rooms(self) -> None:
         """门锁着、博士在走廊：博士办公室和博士房间走得进去，会议室走不进去"""
-        pl = self.cache.character_data[0]
         for path, enters in ((DR_OFFICE, True), (DR_ROOM, True), (ROOM, False)):
             self.walk(CORRIDOR)
             # 博士离开房间时游戏会解开门锁；这里布置的是之后屋里有人把门锁上
@@ -51,7 +53,7 @@ class LockedRoomEntryTest(SlowTestCase):
             scene.close_flag = scene.close_type
             self.walk(path)
             self.assertEqual(
-                pl.position,
+                activity.position(0),
                 path if enters else CORRIDOR,
                 f"走向锁着的{scene.scene_name}",
             )

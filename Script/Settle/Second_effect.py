@@ -16,7 +16,14 @@ from Script.Settle.common_default import (
     base_chara_state_common_settle,
 )
 from Script.Design import game_time
-from Script.Modules.domains import abilities, action_info, flags, fridge, growth
+from Script.Modules.domains import (
+    abilities,
+    action_info,
+    activity,
+    flags,
+    fridge,
+    growth,
+)
 from Script.Modules.domains import h_meters, h_state, needs, player_collection
 from Script.Modules.domains import pregnancy, status
 
@@ -115,8 +122,7 @@ def handle_add_1_nclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 10, 1, change_data=change_data
@@ -141,8 +147,7 @@ def handle_add_1_bclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 11, 1, change_data=change_data
@@ -167,8 +172,7 @@ def handle_add_1_cclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 12, 1, change_data=change_data
@@ -219,8 +223,7 @@ def handle_add_1_vclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 14, 1, change_data=change_data
@@ -245,8 +248,7 @@ def handle_add_1_aclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 15, 1, change_data=change_data
@@ -271,8 +273,7 @@ def handle_add_1_uclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 16, 1, change_data=change_data
@@ -297,8 +298,7 @@ def handle_add_1_wclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 17, 1, change_data=change_data
@@ -349,8 +349,7 @@ def handle_add_1_cumming_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 21, 1, change_data=change_data
@@ -371,8 +370,7 @@ def handle_add_1_milking_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 22, 1, change_data=change_data
@@ -392,8 +390,7 @@ def handle_add_1_peeing_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 23, 1, change_data=change_data
@@ -413,11 +410,10 @@ def handle_target_add_1_cums_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         24,
         1,
         target_flag=False,
@@ -438,9 +434,8 @@ def handle_target_add_small_lubrication(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         0,
         8,
         300,
@@ -462,9 +457,8 @@ def handle_target_add_middle_lubrication(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         0,
         8,
         900,
@@ -486,9 +480,8 @@ def handle_target_add_large_lubrication(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
-        character_data.target_character_id,
+        activity.target(character_id),
         0,
         8,
         3000,
@@ -2255,8 +2248,7 @@ def handle_add_b_feel_remote_toy(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    duration = character_data.behavior.duration
+    duration = activity.behavior(character_id).duration
 
     # 补正根据档位变化
     toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
@@ -2288,8 +2280,7 @@ def handle_add_c_feel_remote_toy(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    duration = character_data.behavior.duration
+    duration = activity.behavior(character_id).duration
     toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
     if toy_adjust <= 0:
         return
@@ -2318,8 +2309,7 @@ def handle_add_v_feel_remote_toy(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    duration = character_data.behavior.duration
+    duration = activity.behavior(character_id).duration
     toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
     if toy_adjust <= 0:
         return
@@ -2348,8 +2338,7 @@ def handle_add_a_feel_remote_toy(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    duration = character_data.behavior.duration
+    duration = activity.behavior(character_id).duration
     toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
     if toy_adjust <= 0:
         return
@@ -2378,8 +2367,7 @@ def handle_add_u_feel_remote_toy(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    duration = character_data.behavior.duration
+    duration = activity.behavior(character_id).duration
     toy_adjust = flags.get(character_id, "sex_toy_level") * 0.5
     if toy_adjust <= 0:
         return
@@ -3109,8 +3097,7 @@ def handle_add_urinate(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     if h_state.body_item_on(character_id, 8):
@@ -3131,8 +3118,7 @@ def handle_add_sleep_point(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     if handle_premise.handle_self_sleep_pills(character_id):
@@ -3154,7 +3140,7 @@ def handle_milking_machine(
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     if h_state.body_item_on(character_id, 4):
@@ -3162,13 +3148,14 @@ def handle_milking_machine(
         now_milk = num.whole(
             min(
                 needs.of(character_id)["milk"],
-                5 * character_data.behavior.duration,
+                5 * activity.behavior(character_id).duration,
             )
         )
         fridge.add(fridge.MILK, character_id, now_milk)
         player_collection.add_total("milk_total", character_id, now_milk)
         needs.add(character_id, "milk", -(now_milk))
-        character_data.behavior.milk_ml += now_milk
+        milk_ml = activity.behavior(character_id).milk_ml
+        activity.update_behavior(character_id, milk_ml=milk_ml + now_milk)
 
         # 绘制信息
         if now_milk:
@@ -3210,7 +3197,7 @@ def handle_urine_collector(
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     if h_state.body_item_on(character_id, 5):
@@ -3218,13 +3205,14 @@ def handle_urine_collector(
         now_urine = num.whole(
             min(
                 needs.of(character_id)["urine"],
-                5 * character_data.behavior.duration,
+                5 * activity.behavior(character_id).duration,
             )
         )
         fridge.add(fridge.URINE, character_id, now_urine)
         player_collection.add_total("urine_total", character_id, now_urine)
         needs.add(character_id, "urine", -(now_urine))
-        character_data.behavior.urine_ml += now_urine
+        urine_ml = activity.behavior(character_id).urine_ml
+        activity.update_behavior(character_id, urine_ml=urine_ml + now_urine)
 
         # 绘制信息
         if now_urine:
@@ -3251,7 +3239,7 @@ def handle_b_orgasm_to_milk(
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     # 额外增加乳汁
@@ -3265,7 +3253,8 @@ def handle_b_orgasm_to_milk(
         needs.set(
             character_id, milk=int(pregnancy.milk_max(character_id) * 0.4)
         )
-        character_data.behavior.milk_ml += eject_milk
+        milk_ml = activity.behavior(character_id).milk_ml
+        activity.update_behavior(character_id, milk_ml=milk_ml + eject_milk)
 
         # 如果已经装上搾乳机了，则收集至搾乳机中
         if h_state.body_item_on(character_id, 4):
@@ -3301,7 +3290,7 @@ def handle_u_orgasm_to_pee(
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     # 额外增加尿意
@@ -3349,7 +3338,7 @@ def handle_extra_orgasm(
     """
     ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     # 额外高潮次数
@@ -3404,8 +3393,7 @@ def handle_plural_orgasm(
     """
     from Script.Settle.default import base_chara_state_common_settle
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
     # 多重高潮次数
@@ -3449,8 +3437,7 @@ def handle_bondage_effect(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     # 需要在捆绑中
     if handle_premise.handle_self_not_bondage(character_id):
@@ -3662,11 +3649,10 @@ def handle_penis_in_t_reset(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
 
-    h_state.set(character_data.target_character_id, insert_position=-1)
+    h_state.set(activity.target(character_id), insert_position=-1)
     h_state.set(character_id, insert_position=-1)
 
 
@@ -4009,8 +3995,7 @@ def handle_add_1_mclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 156, 1, change_data=change_data
@@ -4035,8 +4020,7 @@ def handle_add_1_fclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 157, 1, change_data=change_data
@@ -4061,8 +4045,7 @@ def handle_add_1_hclimax_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return
     base_chara_experience_common_settle(
         character_id, 158, 1, change_data=change_data

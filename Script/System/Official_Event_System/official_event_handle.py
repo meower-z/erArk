@@ -12,8 +12,8 @@
     1. **入队节流**：不节流的话多女儿或多部门时一次公务会涌出十几条，玩家会直接失去判断意愿
     2. **不重复触发**：同一个角色不再遇到同一条事件（别的角色仍可各自触发同一条），
        靠出队结算时写入的履历来保证
-    3. **交互对象还原**：判前提与跑结算时会临时把主体的 `target_character_id` 指向互动对象，
-       必须放在 `finally` 里还原——那是行为循环在实时读的字段
+    3. **交互对象还原**：判前提时主体的交互对象在 `activity.target_as` 块里读作互动对象，不写状态；
+       跑结算时临时换成互动对象，在 `finally` 里还原，因为行为循环实时读它
 
 本模块**不 import 任何部门**：部门在自己的模块里用 `register_provider` 反向注册，
    注册表是唯一的耦合点。未注册提供者的部门走默认提供者，于是新增一个部门的事件只要写 CSV。
@@ -27,7 +27,7 @@ from Script.Core import cache_control, constant, game_type, get_text
 from Script.Config import game_config
 from Script.System.Official_Event_System import ri_value
 from Script.Design import game_time
-from Script.Modules.domains import growth, official
+from Script.Modules.domains import activity, growth, official
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -213,9 +213,8 @@ def judge_premise_pass(
     """
     判定一组前提是否成立，返回总权重
 
-    判定期间临时把主体的交互对象指向 partner_id：前提里的 A2 与 target_* 系列
-       于是指向本次事件的互动对象（无互动对象时为博士），判完立刻还原，
-       不能留着不还——交互对象是行为循环在用的实时字段
+    判定期间主体的交互对象读作 partner_id（activity.target_as，不写状态）：前提里的 A2 与 target_* 系列
+       于是指向本次事件的互动对象（无互动对象时为博士）
     Keyword arguments:
     premise_text -- & 连接的前提串
     character_id -- 主体角色id，无主体的部门事件传0（即以博士为判定主体）
@@ -230,15 +229,10 @@ def judge_premise_pass(
         return 1
     if character_id not in cache.character_data:
         return 0
-    character_data: game_type.Character = cache.character_data[character_id]
-    old_target_id = character_data.target_character_id
-    character_data.target_character_id = partner_id
-    try:
+    with activity.target_as(character_id, partner_id):
         now_weight, _unused = handle_premise.get_weight_from_premise_dict(
             premise_set, character_id, {}, unconscious_pass_flag=True
         )
-    finally:
-        character_data.target_character_id = old_target_id
     return now_weight
 
 
@@ -637,9 +631,8 @@ def handle_effect_text(
 
     if not effect_text:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    old_target_id = character_data.target_character_id
-    character_data.target_character_id = partner_id
+    old_target_id = activity.target(character_id)
+    activity.set_target(character_id, partner_id)
     change_data = game_type.CharacterStatusChange()
     try:
         for raw_effect in effect_text.split("&"):
@@ -668,7 +661,7 @@ def handle_effect_text(
                     f"\ndebug 公务事件的结算{effect}格式不正确，请检查结算是否正确\n"
                 )
     finally:
-        character_data.target_character_id = old_target_id
+        activity.set_target(character_id, old_target_id)
 
 
 def settle_official_event_option(

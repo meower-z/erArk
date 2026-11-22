@@ -15,6 +15,7 @@ from Script.Kernel import core
 from Script.Modules.domains import needs
 from Script.Modules.gameplay_resolution import working
 from Script.UI.Panel import gift_panel
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
 from Script.Modules.domains import relations
@@ -52,7 +53,7 @@ class TraineeNotChildTest(FastTestCase):
         kernel_data.put(relations.father_id.set, self.daughter.cid, 0)
         self.enterContext(working.based_on(core.state()))
         needs.set(1, hunger=HUNGRY_POINT)
-        self.pl.target_character_id = 1
+        aim(self.pl.cid, 1)
 
     def set_stage(self, talent_id: int) -> None:
         """

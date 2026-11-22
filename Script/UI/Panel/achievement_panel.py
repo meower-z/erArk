@@ -10,10 +10,10 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities, achievement, commission, dirty
-from Script.Modules.domains import flags, h_state, inventory, needs
-from Script.Modules.domains import player_collection, playthrough, prison
-from Script.Modules.domains import roster, warehouse, chara_life, relations
+from Script.Modules.domains import abilities, achievement, activity, chara_life
+from Script.Modules.domains import commission, dirty, flags, h_state, inventory
+from Script.Modules.domains import needs, player_collection, playthrough, prison
+from Script.Modules.domains import relations, roster, warehouse
 
 if TYPE_CHECKING:
     from typing import Any
@@ -488,9 +488,8 @@ def settle_chara_group_sex() -> list[int]:
     if handle_premise.handle_group_sex_mode_off(0):
         return return_list
     # 地点数据
-    pl_character_data: game_type.Character = cache.character_data[0]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        pl_character_data.position
+        activity.position(0)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 统计群交人数，有意识人数，无意识人数
@@ -687,8 +686,7 @@ def settle_semen_shoot() -> list[int]:
     - return_list: 成就列表，包含已达成的成就ID
     """
     return_list: list[int] = []
-    pl_character_data: game_type.Character = cache.character_data[0]
-    target_character_id = pl_character_data.target_character_id
+    target_character_id = activity.target(0)
     # 射精次数
     now_semen_shoot_count = h_state.view(0).orgasm_count.get(3, [0, 0])[0]
     all_semen_shoot_count = abilities.experience(0)[21]

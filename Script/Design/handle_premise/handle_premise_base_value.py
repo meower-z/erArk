@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.Design import attr_calculation
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import needs, pregnancy
+from Script.Modules.domains import activity, needs, pregnancy
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -196,8 +196,7 @@ def handle_target_hp_low(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     value = (
         needs.of(target_data.cid)["hit"] / needs.of(target_data.cid)["hit_max"]
     )
@@ -216,8 +215,7 @@ def handle_target_hp_high(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     value = (
         needs.of(target_data.cid)["hit"] / needs.of(target_data.cid)["hit_max"]
     )
@@ -236,8 +234,7 @@ def handle_target_hp_ne_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if needs.of(target_data.cid)["hit"] > 1:
         return 1
     else:
@@ -253,8 +250,7 @@ def handle_target_mp_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     value = needs.of(target_data.cid)["mana"]
     if value == 0:
         return 1
@@ -271,8 +267,7 @@ def handle_target_mp_low(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     value = (
         needs.of(target_data.cid)["mana"]
         / needs.of(target_data.cid)["mana_max"]
@@ -292,8 +287,7 @@ def handle_target_mp_high(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     value = (
         needs.of(target_data.cid)["mana"]
         / needs.of(target_data.cid)["mana_max"]
@@ -313,8 +307,7 @@ def handle_self_and_target_hp_ge_70(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     value1 = needs.of(character_id)["hit"] / needs.of(character_id)["hit_max"]
     value2 = (
         needs.of(target_data.cid)["hit"] / needs.of(target_data.cid)["hit_max"]
@@ -334,8 +327,7 @@ def handle_t_hp_or_mp_low(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     value1 = (
         needs.of(target_data.cid)["hit"] / needs.of(target_data.cid)["hit_max"]
     )
@@ -512,9 +504,8 @@ def handle_t_tired_ge_50(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["tired"] / 160
+    value = needs.of(activity.target(character_id))["tired"] / 160
     if value >= 0.5:
         return 1
     else:
@@ -530,9 +521,8 @@ def handle_t_tired_le_74(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["tired"] / 160
+    value = needs.of(activity.target(character_id))["tired"] / 160
     if value <= 0.74:
         return 1
     else:
@@ -548,9 +538,8 @@ def handle_t_tired_ge_75(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["tired"] / 160
+    value = needs.of(activity.target(character_id))["tired"] / 160
     if value > 0.74:
         return 1
     else:
@@ -566,9 +555,8 @@ def handle_t_tired_le_84(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["tired"] / 160
+    value = needs.of(activity.target(character_id))["tired"] / 160
     if value <= 0.84:
         return 1
     else:
@@ -584,13 +572,10 @@ def handle_t_tired_ge_85(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["tired"] / 160
+    value = needs.of(activity.target(character_id))["tired"] / 160
     if value > 0.84:
-        return num.whole(
-            needs.of(character_data.target_character_id)["tired"] * 5
-        )
+        return num.whole(needs.of(activity.target(character_id))["tired"] * 5)
     else:
         return 0
 
@@ -604,9 +589,8 @@ def handle_t_tired_100(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["tired"] / 160
+    value = needs.of(activity.target(character_id))["tired"] / 160
     if value >= 1:
         return 1
     else:
@@ -709,9 +693,8 @@ def handle_target_urinate_le_49(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["urine"] / 240
+    value = needs.of(activity.target(character_id))["urine"] / 240
     if value <= 0.49:
         return 1
     else:
@@ -744,9 +727,8 @@ def handle_target_urinate_le_79(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["urine"] / 240
+    value = needs.of(activity.target(character_id))["urine"] / 240
     if value <= 0.79:
         return 1
     else:
@@ -762,9 +744,8 @@ def handle_target_urinate_ge_80(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["urine"] / 240
+    value = needs.of(activity.target(character_id))["urine"] / 240
     if value > 0.79:
         return 1
     else:
@@ -833,9 +814,8 @@ def handle_target_hunger_le_79(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["hunger"] / 240
+    value = needs.of(activity.target(character_id))["hunger"] / 240
     if value <= 0.79:
         return 1
     else:
@@ -851,9 +831,8 @@ def handle_target_hunger_ge_80(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = needs.of(character_data.target_character_id)["hunger"] / 240
+    value = needs.of(activity.target(character_id))["hunger"] / 240
     if value > 0.79:
         return 1
     else:
@@ -941,9 +920,8 @@ def handle_target_milk_le_29(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_character_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
     value = needs.of(target_character_data.cid)["milk"] / pregnancy.milk_max(
@@ -964,9 +942,8 @@ def handle_target_milk_ge_30(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_character_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
     value = needs.of(target_character_data.cid)["milk"] / pregnancy.milk_max(
@@ -987,9 +964,8 @@ def handle_target_milk_le_79(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_character_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
     value = needs.of(target_character_data.cid)["milk"] / pregnancy.milk_max(
@@ -1010,9 +986,8 @@ def handle_target_milk_ge_80(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     target_character_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
+        activity.target(character_id)
     ]
 
     value = needs.of(target_character_data.cid)["milk"] / pregnancy.milk_max(
@@ -1128,8 +1103,7 @@ def handle_t_sleep_level_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_sleep_level_ge_1(character_data.target_character_id)
+    return handle_sleep_level_ge_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.DRUNK_LEVEL_0)
@@ -1159,8 +1133,7 @@ def handle_t_drunk_level_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_drunk_level_0(character_data.target_character_id)
+    return handle_drunk_level_0(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.DRUNK_LEVEL_1)
@@ -1256,8 +1229,7 @@ def handle_t_drunk_level_ge_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_drunk_level_ge_1(character_data.target_character_id)
+    return handle_drunk_level_ge_1(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.SANITY_POINT_0)
@@ -1461,8 +1433,7 @@ def handle_t_desire_point_ge_80(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_desire_point_ge_80(character_data.target_character_id)
+    return handle_desire_point_ge_80(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_DESIRE_POINT_L_80)
@@ -1474,8 +1445,7 @@ def handle_t_desire_point_l_80(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_desire_point_l_80(character_data.target_character_id)
+    return handle_desire_point_l_80(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_DESIRE_POINT_GE_100)
@@ -1487,5 +1457,4 @@ def handle_t_desire_point_ge_100(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return handle_desire_point_ge_100(character_data.target_character_id)
+    return handle_desire_point_ge_100(activity.target(character_id))

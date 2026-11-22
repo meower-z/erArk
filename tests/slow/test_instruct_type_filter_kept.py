@@ -12,6 +12,8 @@
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 AGE_TALENTS = range(101, 109)
 """ 年龄素质 """
@@ -37,7 +39,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
         super().setUp()
         self.pl = self.cache.character_data[0]
         self.adult_id = self.npc("杜宾")
-        self.world.move(self.adult_id, self.pl.position)
+        self.world.move(self.adult_id, activity.position(self.pl.cid))
 
     def listed_types(self, target_id: int) -> dict:
         """
@@ -50,7 +52,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
         from Script.Core import constant
         from Script.System.Instruct_System import see_instruct_panel
 
-        self.pl.target_character_id = target_id
+        aim(self.pl.cid, target_id)
         panel = see_instruct_panel.SeeInstructPanel(PANEL_WIDTH)
         panel.draw()
         type_of = {
@@ -110,7 +112,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
             for talent_id in AGE_TALENTS:
                 ca.talent(chara_id)[talent_id] = 0
             ca.talent(chara_id)[{"婴儿": 101, "幼女": 102}[kind]] = 1
-        self.world.move(chara_id, self.pl.position)
+        self.world.move(chara_id, activity.position(self.pl.cid))
         return chara_id
 
     def test_special_target_keeps_player_setting(self) -> None:

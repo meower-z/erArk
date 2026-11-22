@@ -36,6 +36,7 @@ from Script.Modules.save_load import upgrade
 from Script.Settle import realtime_settle
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from tests.chara_activity import behave
 
 
 class OldSaveIntsTest(FastTestCase):
@@ -127,8 +128,11 @@ class OldSaveIntsTest(FastTestCase):
             pregnancy=game_type.PREGNANCY(),
         )
         now = game_time.now()
-        npc.behavior.start_time = now - datetime.timedelta(minutes=10)
-        npc.behavior.duration = 10
+        behave(
+            npc.cid,
+            start_time=now - datetime.timedelta(minutes=10),
+            duration=10,
+        )
         with working.based_on(core.state()):
             upgrade.adopt_pickled({"character_data": {0: npc}})
             realtime_settle.character_aotu_change_value(

@@ -19,6 +19,8 @@ from Script.Core import constant_promise
 from Script.Design import handle_premise
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
+from tests.chara_activity import aim
+from Script.Modules.domains import activity
 
 Premise = constant_promise.Premise
 
@@ -108,8 +110,8 @@ class KissPremisesOwnHandlerTest(FastTestCase):
         """
         player = self.world.chara(0, "玩家")
         npc = self.world.chara(1)
-        player.target_character_id = 1
-        npc.target_character_id = 0
+        aim(player.cid, 1)
+        aim(npc.cid, 0)
         for p_exp, n_exp, p_kiss, n_kiss in itertools.product(
             (0, 3), (0, 3), (0, 1), (0, 1)
         ):
@@ -122,7 +124,7 @@ class KissPremisesOwnHandlerTest(FastTestCase):
             ):
                 self_data = self.cache.character_data[character_id]
                 target_data = self.cache.character_data[
-                    self_data.target_character_id
+                    activity.target(character_id)
                 ]
                 with self.subTest(
                     player_exp=p_exp,

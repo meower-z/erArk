@@ -23,8 +23,8 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
-from Script.Modules.domains import abilities, facility, growth, pregnancy
-from Script.Modules.domains import roster, chara_life, relations
+from Script.Modules.domains import abilities, activity, chara_life, facility
+from Script.Modules.domains import growth, pregnancy, relations, roster
 from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 
 cache: game_type.Cache = cache_control.cache
@@ -267,10 +267,7 @@ def settle_student_class_gain(
 
     with growth.editing(student_id) as growth_data:
         assert growth_data is not None
-        now_time = (
-            cache.character_data[student_id].behavior.start_time
-            or game_time.now()
-        )
+        now_time = activity.behavior(student_id).start_time or game_time.now()
         period = game_time.get_class_period(student_id)
         now_mark = []
         if period != -1:
@@ -447,7 +444,6 @@ def settle_course_attend(character_id: int) -> bool:
 
     if character_id not in cache.character_data:
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
     if (
         relations.father_id(character_id) != 0
         and chara_life.work_type(character_id) != STUDENT_WORK_TYPE
@@ -456,7 +452,7 @@ def settle_course_attend(character_id: int) -> bool:
     period = game_time.get_class_period(character_id)
     if period == -1:
         return False
-    now_time = character_data.behavior.start_time or game_time.now()
+    now_time = activity.behavior(character_id).start_time or game_time.now()
     if judge_absent_this_period(character_id, now_time):
         return False
     now_mark = [now_time.toordinal(), period]

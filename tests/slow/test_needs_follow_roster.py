@@ -8,7 +8,6 @@
 - 上线的结算（default.handle_chara_on_line）把饥饿、疲劳、尿意清零，乳汁不变。
 """
 
-import datetime
 import importlib
 from fractions import Fraction
 from types import ModuleType
@@ -76,6 +75,7 @@ class NeedsFollowRosterTest(SlowTestCase):
         core = game("Script.Kernel.core")
         game_type = game("Script.Core.game_type")
         default = game("Script.Settle.default")
+        game_time = game("Script.Design.game_time")
         needs = game("Script.Modules.domains.needs")
         working = game("Script.Modules.gameplay_resolution.working")
         with working.based_on(core.state()):
@@ -84,7 +84,7 @@ class NeedsFollowRosterTest(SlowTestCase):
                 self.cid,
                 1,
                 game_type.CharacterStatusChange(),
-                datetime.datetime.now(),
+                game_time.now(),
             )
             got = needs.of(self.cid)
         self.assertEqual(

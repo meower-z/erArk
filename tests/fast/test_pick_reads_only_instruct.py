@@ -24,9 +24,16 @@ from Script.System.Instruct_System import handle_instruct
 from Script.System.Sex_System import bondage_panel, sex_position_panel
 from tests import chara_abilities as ca, kernel_data, pick_guard
 from tests import world as world_module
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
-from Script.Modules.domains import action_info, dirty, h_state, history
+from Script.Modules.domains import (
+    action_info,
+    activity,
+    dirty,
+    h_state,
+    history,
+)
 
 NPC = 1
 """ 玩家的交互对象 """
@@ -46,7 +53,7 @@ class InstructSubMenuTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
-        self.player.target_character_id = NPC
+        aim(self.player.cid, NPC)
         view.now_panel_id = constant.Panel.IN_SCENE
         world_module.act(player_pick.back)
 
@@ -121,6 +128,7 @@ class InstructSubMenuTest(FastTestCase):
     def test_judge_question(self) -> None:
         """夺走初吻的询问：[返回]没有行动也没有发呆；[确定]定下亲吻，开始时不再问"""
         ca.talent(self.npc)[FIRST_KISS] = 1
+        world_module.act(player_pick.back)
         self.cache.debug_mode = True
         kiss = self.instruct(constant.Instruct.KISS)
         self.assert_backs_out(kiss, NO)
@@ -134,6 +142,7 @@ class InstructSubMenuTest(FastTestCase):
 
         self.cache.debug_mode = True
         kernel_data.put(player_collection.put, "used_condoms", [10, 20])
+        world_module.act(player_pick.back)
         hang = self.instruct(constant.Instruct.HANG_CONDOM_DECORATION)
         self.assert_backs_out(hang, "cancel")
         self.assert_backs_out(hang, "condom_0", "confirm", "cancel")
@@ -143,7 +152,7 @@ class InstructSubMenuTest(FastTestCase):
 
     def test_close_door(self) -> None:
         """关门：关不上的地方回答否时取消；回答关门时门在行动开始时关上，记下问过"""
-        scene = self.world.scene(self.player.position)
+        scene = self.world.scene(activity.position(self.player.cid))
         scene.close_flag = 0
         hypnosis = self.instruct(constant.Instruct.HYPNOSIS_ONE)
         scene.close_type = 0
@@ -177,6 +186,7 @@ class InstructSubMenuTest(FastTestCase):
         kernel_data.put(
             h_state.set, 0, current_sex_position=3, pre_sex_position=-1
         )
+        world_module.act(player_pick.back)
         position_id = next(
             key
             for key, data in game_config.config_sex_position_data.items()
@@ -199,17 +209,19 @@ class InstructSubMenuTest(FastTestCase):
             for key, event in game_config.config_event.items()
             if event.text.count("|") and event.text.split("|")[1].isdigit()
         )
-        self.player.event.event_id = ""
+        kernel_data.put(activity.update_event, self.player.cid, event_id="")
         before = pick_guard.fingerprint()
         with self.assertRaises(player_pick.Chosen) as chosen:
             handle_instruct.handle_chara_diy_instruct(event_id)
         self.assertEqual(pick_guard.fingerprint(), before)
         data = json.loads(json.dumps(chosen.exception.action.action_data))
-        handle_instruct.start_instruct(0, cast(intent.Intent, data))
+        kernel_data.written(
+            handle_instruct.start_instruct, 0, cast(intent.Intent, data)
+        )
         self.assertEqual(
             (
-                self.player.event.event_id,
-                self.player.event.chara_diy_event_flag,
+                activity.event(self.player.cid).event_id,
+                activity.event(self.player.cid).chara_diy_event_flag,
             ),
             (event_id, True),
         )

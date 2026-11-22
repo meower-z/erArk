@@ -24,6 +24,7 @@ import sys
 from typing import TYPE_CHECKING
 
 import numpy
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     import datetime
@@ -64,11 +65,9 @@ def pass_key(character_id: int) -> str:
     Return arguments:
     str -- 键
     """
-    from Script.Core import cache_control
     from Script.Design import game_time
 
-    cache = cache_control.cache
-    start = cache.character_data[character_id].behavior.start_time
+    start = activity.behavior(character_id).start_time
     return f"{_seed}|{character_id}|{_minute(start)}|{_minute(game_time.now())}"
 
 

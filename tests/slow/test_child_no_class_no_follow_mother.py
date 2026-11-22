@@ -17,6 +17,8 @@ from unittest import mock
 
 from tests.slow.base import SlowTestCase
 from tests import chara_abilities as ca, kernel_data, world
+from tests.chara_activity import aim, behave
+from tests.kernel_project import activity
 
 BABY = 101
 """ 婴儿素质 """
@@ -249,23 +251,22 @@ class ChildStagesOfflineTest(SlowTestCase):
         from Script.System.Education_System import education_constant
 
         daughter_id = self.other_id
-        daughter = self.cache.character_data[daughter_id]
         kernel_data.put(relations.father_id.set, daughter_id, 0)
         kernel_data.put(relations.mother_id.set, daughter_id, self.mother_id)
-        daughter.target_character_id = daughter_id
+        aim(daughter_id, daughter_id)
         world.set_clock(game_time.to_game_time(CLASS_TIME))
-        if self.mother.position == daughter.position:
+        if activity.position(self.mother.cid) == activity.position(daughter_id):
             other_scene = next(
                 path
                 for path in self.cache.scene_data
                 if path
                 != map_handle.get_map_system_path_str_for_list(
-                    daughter.position
+                    activity.position(daughter_id)
                 )
             )
             kernel_data.written(
                 map_handle.character_move_scene,
-                self.mother.position,
+                activity.position(self.mother.cid),
                 map_handle.get_map_system_path_for_str(other_scene),
                 self.mother_id,
             )
@@ -283,8 +284,11 @@ class ChildStagesOfflineTest(SlowTestCase):
                     else 0
                 ),
             )
-            daughter.behavior.start_time = game_time.now()
-            daughter.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+            behave(
+                daughter_id,
+                constant.Behavior.SHARE_BLANKLY,
+                start_time=game_time.now(),
+            )
             chosen = handle_npc_ai.choose_state_machine(daughter_id)
             self.assertNotIn(
                 chosen,

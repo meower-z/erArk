@@ -13,7 +13,7 @@ from fractions import Fraction
 from Script.Core import constant, game_type
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import needs
+from Script.Modules.domains import activity, needs
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
@@ -41,11 +41,13 @@ class ExactRatesTest(FastTestCase):
         Return arguments:
         Character -- 干员
         """
-        behavior = self.npc.behavior
         start = game_time.now()
-        behavior.behavior_id = behavior_id
-        behavior.start_time = start
-        behavior.duration = minutes
+        activity.update_behavior(
+            self.npc.cid,
+            behavior_id=behavior_id,
+            start_time=start,
+            duration=minutes,
+        )
         cuts = list(range(0, minutes, step)) + [minutes]
         for since, now in zip(cuts, cuts[1:], strict=False):
             realtime_settle.character_aotu_change_value(

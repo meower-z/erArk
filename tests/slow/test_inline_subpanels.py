@@ -14,6 +14,8 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from tests import kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -43,11 +45,10 @@ class InlineSubpanelTest(SlowTestCase):
         self.addCleanup(
             self.core._bodies.__setitem__, "kernel.StartAction", saved
         )
-        player = self.cache.character_data[0]
         self.npcs = sorted(kernel_data.domain("roster").active())[:2]
         for cid in self.npcs:
-            self.world.move(cid, player.position)
-        player.target_character_id = self.npcs[0]
+            self.world.move(cid, activity.position(0))
+        aim(0, self.npcs[0])
 
     def run_pick(self, fn: "Callable[[], None]") -> tuple[int, int, bool]:
         """
@@ -135,9 +136,7 @@ class InlineSubpanelTest(SlowTestCase):
         self.assertEqual(self.player_starts(), [(self.edits.EDIT, 0)])
         self.assertEqual(end, start)
         self.assertFalse(changed)
-        self.assertEqual(
-            self.cache.character_data[0].target_character_id, self.npcs[1]
-        )
+        self.assertEqual(activity.target(0), self.npcs[1])
         name_button = info.SeeCharacterInfoByNameDrawInScene(
             str(self.npcs[0]), 120, True, False, 0
         )
@@ -145,6 +144,4 @@ class InlineSubpanelTest(SlowTestCase):
         self.assertEqual(self.player_starts(), [(self.edits.EDIT, 0)])
         self.assertEqual(end, start)
         self.assertFalse(changed)
-        self.assertEqual(
-            self.cache.character_data[0].target_character_id, self.npcs[0]
-        )
+        self.assertEqual(activity.target(0), self.npcs[0])

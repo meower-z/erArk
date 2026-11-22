@@ -14,7 +14,7 @@ from Script.Core import (
 )
 from Script.Design import handle_premise, talk, child_stage_gate
 from Script.Config import config_def, game_config, normal_config
-from Script.Modules.domains import history
+from Script.Modules.domains import activity, history
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -341,10 +341,7 @@ class SeeInstructPanel:
                 count += 1
                 # 获取事件数据
                 event_data = game_config.config_event[event_id]
-                pl_character_data = cache.character_data[0]
-                target_character_data = cache.character_data[
-                    pl_character_data.target_character_id
-                ]
+                target_character_data = cache.character_data[activity.target(0)]
                 chara_adv = target_character_data.adv
                 # 获取选项文本
                 option_text = event_data.text.split("|")[0]

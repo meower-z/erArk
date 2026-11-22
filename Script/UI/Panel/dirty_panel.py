@@ -6,7 +6,14 @@ from Script.Design import map_handle, clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, dirty, flags, h_state, needs
+from Script.Modules.domains import (
+    abilities,
+    activity,
+    dirty,
+    flags,
+    h_state,
+    needs,
+)
 from Script.Modules.domains import player_ability, pregnancy, status
 
 cache: game_type.Cache = cache_control.cache
@@ -42,16 +49,15 @@ def get_inserted_character_id() -> int:
     返回值: int -- 如果找到符合条件的角色则返回该角色id，否则返回0。
     """
     # 获取玩家数据，玩家角色id固定为0
-    pl_character_data = cache.character_data[0]
     # 获取玩家的交互对象id
-    target_id: int = pl_character_data.target_character_id
+    target_id: int = activity.target(0)
     # 检查玩家的交互对象是否存在且其阴茎插入数据符合条件（不为 -1）
     if target_id != 0 and h_state.get(target_id, "insert_position") != -1:
         return target_id
 
     # 如果交互对象不符合条件，遍历场景内其他角色（排除玩家和交互对象）
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        pl_character_data.position
+        activity.position(0)
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for character_id in scene_data.character_list:
@@ -100,9 +106,7 @@ class SeeCharacterBodyPanel:
         self.type_number = type_number
         """ 显示的状态类型 """
         character_data = cache.character_data[0]
-        target_character_data = cache.character_data[
-            character_data.target_character_id
-        ]
+        target_character_data = cache.character_data[activity.target(0)]
         # print("game_config.config_character_state_type_data :",game_config.config_character_state_type_data)
 
         type_line = draw.LittleTitleLineDraw(_("身体"), width, ":")
@@ -113,9 +117,7 @@ class SeeCharacterBodyPanel:
         abdomen_all_semen = 0
 
         # 获取没有穿服装的部位列表
-        no_cloth_body_list = clothing.get_exposed_body_parts(
-            character_data.target_character_id
-        )
+        no_cloth_body_list = clothing.get_exposed_body_parts(activity.target(0))
 
         # 是否透视中
         visual_flag = 0
@@ -184,7 +186,7 @@ class SeeCharacterBodyPanel:
                 if not abilities.talent(target_character_data.cid)[
                     0
                 ] and handle_premise.handle_first_sex_in_today(
-                    character_data.target_character_id
+                    activity.target(0)
                 ):
                     # 是否显示完整污浊文本
                     dirty_text_cid = "破处血1"
@@ -202,22 +204,14 @@ class SeeCharacterBodyPanel:
 
             # 尿液污浊
             if i == 9:
-                if handle_premise.handle_urinate_le_12(
-                    character_data.target_character_id
-                ):
+                if handle_premise.handle_urinate_le_12(activity.target(0)):
                     text_index = "尿液0"
-                elif handle_premise.handle_urinate_le_49(
-                    character_data.target_character_id
-                ):
+                elif handle_premise.handle_urinate_le_49(activity.target(0)):
                     text_index = "尿液1"
-                elif handle_premise.handle_urinate_le_79(
-                    character_data.target_character_id
-                ):
+                elif handle_premise.handle_urinate_le_79(activity.target(0)):
                     text_index = "尿液2"
                 elif (
-                    handle_premise.handle_urinate_ge_125(
-                        character_data.target_character_id
-                    )
+                    handle_premise.handle_urinate_ge_125(activity.target(0))
                     == 0
                 ):
                     text_index = "尿液3"
@@ -275,7 +269,7 @@ class SeeCharacterBodyPanel:
                 from Script.System.Item_System import condom_handle
 
                 decoration_count = condom_handle.get_decoration_count(
-                    character_data.target_character_id, 0, 0
+                    activity.target(0), 0, 0
                 )
                 if decoration_count:
                     # 开启详细污浊信息时显示等级描述文本，否则显示个数
@@ -308,7 +302,7 @@ class SeeCharacterBodyPanel:
         from Script.System.Pregnancy_System import soft_egg_handle
 
         for egg_id, egg_data in soft_egg_handle.get_soft_eggs_in_scene(
-            character_data.position
+            activity.position(0)
         ).items():
             egg_name = soft_egg_handle.get_soft_egg_name(egg_id)
             egg_semen_count = int(egg_data["semen_count"])

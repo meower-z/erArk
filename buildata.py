@@ -219,11 +219,13 @@ def constand_2_handle() -> str:
     out_str += f"{indent}Return arguments:\n"
     out_str += f"{indent}int -- 权重\n"
     out_str += f'{indent}"""\n'
-    out_str += f"{indent}character_data = cache.character_data[character_id]\n"
     if target_flag:
-        out_str += f"{indent}target_data = cache.character_data[character_data.target_character_id]\n"
+        out_str += f"{indent}target_data = cache.character_data[activity.target(character_id)]\n"
         out_str += f"{indent}if target_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
     else:
+        out_str += (
+            f"{indent}character_data = cache.character_data[character_id]\n"
+        )
         out_str += f"{indent}if character_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
     out_str += f"{indent}{indent}return 1\n"
     out_str += f"{indent}return 0\n"

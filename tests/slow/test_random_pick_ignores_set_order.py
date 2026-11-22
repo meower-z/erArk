@@ -32,7 +32,9 @@ from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests import kernel_data
+from tests.chara_activity import behave
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
@@ -196,9 +198,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         Return arguments:
         无
         """
-        self.world.move(
-            self.npc("阿米娅"), self.cache.character_data[character_id].position
-        )
+        self.world.move(self.npc("阿米娅"), activity.position(character_id))
 
     def test_npc_target(self) -> None:
         """凯尔希检索全部目标时，同一随机状态挑中同一个目标"""
@@ -275,9 +275,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
             prison.set_setting(13, 1)
         work = importlib.import_module("Script.Modules.domains.work")
         kernel_data.written(work.set_warden, self.npc("凯尔希"))
-        self.cache.character_data[0].behavior.behavior_id = (
-            constant.Behavior.BREAST_CARESS
-        )
+        behave(0, constant.Behavior.BREAST_CARESS)
 
         def pick(set_type: "type[InsertionOrderSet]") -> str:
             """

@@ -6,7 +6,8 @@ from Script.Core import cache_control, game_type, get_text, constant
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from types import FunctionType
-from Script.Modules.domains import facility, flags, chara_life, relations
+from Script.Modules.domains import activity, chara_life, facility, flags
+from Script.Modules.domains import relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -106,7 +107,6 @@ def character_move_scene(
     """
     old_scene_path_str = get_map_system_path_str_for_list(old_scene_path)
     new_scene_path_str = get_map_system_path_str_for_list(new_scene_path)
-    character_data = cache.character_data[character_id]
     # 从旧场景移除角色
     if character_id in cache.scene_data[old_scene_path_str].character_list:
         cache.scene_data[old_scene_path_str].character_list.remove(character_id)
@@ -118,21 +118,22 @@ def character_move_scene(
         cache.scene_data[old_scene_path_str].close_flag = 0
     # 在新场景添加角色
     if character_id not in cache.scene_data[new_scene_path_str].character_list:
-        character_data.position = new_scene_path
+        activity.set_position(character_id, new_scene_path)
         cache.scene_data[new_scene_path_str].character_list.add(character_id)
     # 如果角色已经在新场景角色列表中，但位置还没有移动到新场景，则移动位置
-    elif character_data.position != new_scene_path:
-        character_data.position = new_scene_path
+    elif activity.position(character_id) != new_scene_path:
+        activity.set_position(character_id, new_scene_path)
     # 刷新移动起止位置
-    character_data.behavior.move_src = old_scene_path
-    character_data.behavior.move_target = new_scene_path
+    activity.update_behavior(
+        character_id, move_src=old_scene_path, move_target=new_scene_path
+    )
     # 记录移动历史
     from Script.Modules.domains import action_info
 
     action_info.record_move(character_id, old_scene_path)
     # 清零最终目的地
-    if new_scene_path == character_data.behavior.move_final_target:
-        character_data.behavior.move_final_target = []
+    if new_scene_path == activity.behavior(character_id).move_final_target:
+        activity.update_behavior(character_id, move_final_target=[])
         # print(f"debug {character_data.name} 清零最终目的地")
 
 
@@ -385,8 +386,9 @@ def get_chara_now_scene_all_chara_id_list(
     character_id -- 角色id
     remove_own_character -- 从id列表中移除自己 (default False)
     """
-    character_data = cache.character_data[character_id]
-    scene_path_str = get_map_system_path_str_for_list(character_data.position)
+    scene_path_str = get_map_system_path_str_for_list(
+        activity.position(character_id)
+    )
     scene_character_data = cache.scene_data[scene_path_str].character_list
     now_scene_character_list = list(scene_character_data)
     if remove_own_character:
@@ -473,21 +475,18 @@ def judge_follow_player_into_scene(
     """
     if flags.get(character_id, "is_follow") not in {1, 2}:
         return False
-    pl_character_data = cache.character_data[0]
     if (
-        get_map_system_path_str_for_list(pl_character_data.position)
+        get_map_system_path_str_for_list(activity.position(0))
         == target_scene_str
     ):
         return True
     # 博士正在移动时，跟随者与博士同步走这一步，此时博士还在门外
-    if pl_character_data.behavior.behavior_id in {
+    if activity.behavior(0).behavior_id in {
         constant.Behavior.MOVE,
         constant.Behavior.CARRY_MOVE,
-    } and len(pl_character_data.behavior.move_target):
+    } and len(activity.behavior(0).move_target):
         return (
-            get_map_system_path_str_for_list(
-                pl_character_data.behavior.move_target
-            )
+            get_map_system_path_str_for_list(activity.behavior(0).move_target)
             == target_scene_str
         )
     return False
@@ -658,7 +657,6 @@ def judge_scene_accessible(
     # print(f"debug target_scene_str = {target_scene_str}")
     now_scene_data = cache.scene_data[target_scene_str]
     character_data = cache.character_data[character_id]
-    pl_character_data = cache.character_data[0]
     # print(f"debug now_scene_data.name = {now_scene_data.scene_name}")
 
     # 遍历设施开放清单，如果名称和地图名称一样的话，则进行判断
@@ -741,7 +739,7 @@ def judge_scene_accessible(
         elif (
             character_id
             and flags.get(character_data.cid, "is_follow") == 4
-            and get_map_system_path_str_for_list(pl_character_data.position)
+            and get_map_system_path_str_for_list(activity.position(0))
             == target_scene_str
         ):
             pass

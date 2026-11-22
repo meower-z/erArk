@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING
 from tests.slow.base import SlowTestCase
 from tests.world import UnplannedInput
 from tests import chara_abilities as ca, kernel_data
+from tests.chara_activity import aim
+from tests.kernel_project import activity
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -51,7 +53,6 @@ class OptionEventListsChildTest(SlowTestCase):
         from Script.Modules.domains import roster
         from tests import kernel_data
 
-        player = self.cache.character_data[0]
         npc_id = next(
             cid
             for cid, chara in self.cache.character_data.items()
@@ -59,13 +60,13 @@ class OptionEventListsChildTest(SlowTestCase):
         )
         npc = self.cache.character_data[npc_id]
         kernel_data.put(roster.add, npc_id)
-        self.world.move(npc_id, player.position)
+        self.world.move(npc_id, activity.position(0))
         ca.talent(npc_id)[FALL_3_TALENT] = 1
         kernel_data.put(
             relations.favorability.set_item, npc_id, 0, FAVORABILITY
         )
         kernel_data.put(relations.trust.set, npc_id, TRUST)
-        player.target_character_id = npc_id
+        aim(0, npc_id)
         self.assertTrue(
             handle_premise.handle_premise(
                 "target_instruct_judge_high_obscenity", 0

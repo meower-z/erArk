@@ -2,7 +2,14 @@
 
 from Script.Core import cache_control, constant, constant_promise, game_type
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import medical, official, prison, recruit, warehouse
+from Script.Modules.domains import (
+    activity,
+    medical,
+    official,
+    prison,
+    recruit,
+    warehouse,
+)
 from Script.Modules.domains import abilities, work, chara_life
 
 cache: game_type.Cache = cache_control.cache
@@ -32,8 +39,7 @@ def handle_t_have_work(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_have_work(character_data.target_character_id)
+    return handle_have_work(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_HAVE_WORK)
@@ -47,8 +53,7 @@ def handle_t_not_have_work(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_have_work(character_data.target_character_id)
+    return not handle_have_work(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_POWER_OPERATOR)
@@ -72,8 +77,7 @@ def handle_t_work_is_power_operator(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_power_operator(character_data.target_character_id)
+    return handle_work_is_power_operator(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_MAINTENANCE_ENGINEER)
@@ -97,10 +101,7 @@ def handle_t_work_is_maintenance_engineer(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_maintenance_engineer(
-        character_data.target_character_id
-    )
+    return handle_work_is_maintenance_engineer(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_BLACKSMITH)
@@ -124,8 +125,7 @@ def handle_t_work_is_blacksmith(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_blacksmith(character_data.target_character_id)
+    return handle_work_is_blacksmith(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_DOCTOR)
@@ -149,8 +149,7 @@ def handle_t_work_is_doctor(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_doctor(character_data.target_character_id)
+    return handle_work_is_doctor(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_HOSPITAL_DOCTOR)
@@ -174,8 +173,7 @@ def handle_t_work_is_hospital_doctor(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_hospital_doctor(character_data.target_character_id)
+    return handle_work_is_hospital_doctor(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_HR)
@@ -199,8 +197,7 @@ def handle_t_work_is_hr(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_hr(character_data.target_character_id)
+    return handle_work_is_hr(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_LIBRARY_MANAGER)
@@ -224,8 +221,7 @@ def handle_t_work_is_library_manager(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_library_manager(character_data.target_character_id)
+    return handle_work_is_library_manager(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_RESOURCE_TRADER)
@@ -249,8 +245,7 @@ def handle_t_work_is_resource_trader(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_resource_trader(character_data.target_character_id)
+    return handle_work_is_resource_trader(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_TEACHER)
@@ -279,8 +274,7 @@ def handle_t_work_is_teacher(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_teacher(character_data.target_character_id)
+    return handle_work_is_teacher(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_STUDENT)
@@ -309,8 +303,7 @@ def handle_t_work_is_student(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_student(character_data.target_character_id)
+    return handle_work_is_student(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_NURSERY_WORKER)
@@ -334,8 +327,7 @@ def handle_t_work_is_nursery_worker(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_nursery_worker(character_data.target_character_id)
+    return handle_work_is_nursery_worker(activity.target(character_id))
 
 
 # ---------------------------------------------------------------------------
@@ -624,7 +616,6 @@ def handle_self_in_course_place(character_id: int) -> int:
     from Script.Design import map_handle
     from Script.System.Education_System import class_ai, education_constant
 
-    character_data: game_type.Character = cache.character_data[character_id]
     if (
         chara_life.work_type(character_id)
         != education_constant.STUDENT_WORK_TYPE
@@ -634,7 +625,9 @@ def handle_self_in_course_place(character_id: int) -> int:
     if not to_place:
         return 0
     return int(
-        map_handle.get_map_system_path_str_for_list(character_data.position)
+        map_handle.get_map_system_path_str_for_list(
+            activity.position(character_id)
+        )
         == map_handle.get_map_system_path_str_for_list(to_place)
     )
 
@@ -651,7 +644,6 @@ def handle_self_not_in_course_place(character_id: int) -> int:
     from Script.Design import map_handle
     from Script.System.Education_System import class_ai, education_constant
 
-    character_data: game_type.Character = cache.character_data[character_id]
     if (
         chara_life.work_type(character_id)
         != education_constant.STUDENT_WORK_TYPE
@@ -661,7 +653,9 @@ def handle_self_not_in_course_place(character_id: int) -> int:
     if not to_place:
         return 0
     return int(
-        map_handle.get_map_system_path_str_for_list(character_data.position)
+        map_handle.get_map_system_path_str_for_list(
+            activity.position(character_id)
+        )
         != map_handle.get_map_system_path_str_for_list(to_place)
     )
 
@@ -780,7 +774,6 @@ def handle_nursery_have_work_to_do(character_id: int) -> int:
     from Script.System.Pregnancy_System import egg_handle
     from Script.Design import map_handle
 
-    character_data: game_type.Character = cache.character_data[character_id]
     # 所在场景有持可鉴定卵的角色（含自己）
     if egg_handle.find_identifiable_egg_owner_in_scene(character_id) != -1:
         return 1
@@ -789,7 +782,7 @@ def handle_nursery_have_work_to_do(character_id: int) -> int:
         return 1
     # 所在场景有婴儿
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     scene_data = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list:
@@ -819,8 +812,7 @@ def handle_t_work_is_combat_training(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_combat_training(character_data.target_character_id)
+    return handle_work_is_combat_training(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_FITNESS_TRAINER)
@@ -844,8 +836,7 @@ def handle_t_work_is_fitness_trainer(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_fitness_trainer(character_data.target_character_id)
+    return handle_work_is_fitness_trainer(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_COOK)
@@ -869,8 +860,7 @@ def handle_t_work_is_cook(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_cook(character_data.target_character_id)
+    return handle_work_is_cook(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_PRODUCTION_WORKER)
@@ -894,8 +884,7 @@ def handle_t_work_is_production_worker(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_production_worker(character_data.target_character_id)
+    return handle_work_is_production_worker(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_MASSAGE_THERAPIST)
@@ -919,8 +908,7 @@ def handle_t_work_is_massage_therapist(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_massage_therapist(character_data.target_character_id)
+    return handle_work_is_massage_therapist(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_DIPLOMAT)
@@ -944,8 +932,7 @@ def handle_t_work_is_diplomat(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_diplomat(character_data.target_character_id)
+    return handle_work_is_diplomat(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_INVITATION_COMMISSIONER)
@@ -969,10 +956,7 @@ def handle_t_work_is_invitation_commissioner(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_invitation_commissioner(
-        character_data.target_character_id
-    )
+    return handle_work_is_invitation_commissioner(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_MEDICINAL_PLANTER)
@@ -996,8 +980,7 @@ def handle_t_work_is_medicinal_planter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_medicinal_planter(character_data.target_character_id)
+    return handle_work_is_medicinal_planter(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_FLORAL_PLANTER)
@@ -1021,8 +1004,7 @@ def handle_t_work_is_floral_planter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_floral_planter(character_data.target_character_id)
+    return handle_work_is_floral_planter(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_SEX_TRAINEE)
@@ -1046,8 +1028,7 @@ def handle_t_work_is_sex_trainee(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_sex_trainee(character_data.target_character_id)
+    return handle_work_is_sex_trainee(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_WARDEN)
@@ -1071,8 +1052,7 @@ def handle_t_work_is_warden(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_warden(character_data.target_character_id)
+    return handle_work_is_warden(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.T_WORK_IS_NOT_WARDEN)
@@ -1084,8 +1064,7 @@ def handle_t_work_is_not_warden(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return not handle_work_is_warden(character_data.target_character_id)
+    return not handle_work_is_warden(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.WORK_IS_DORMITORY_MANAGER)
@@ -1109,8 +1088,7 @@ def handle_t_work_is_dormitory_manager(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return handle_work_is_dormitory_manager(character_data.target_character_id)
+    return handle_work_is_dormitory_manager(activity.target(character_id))
 
 
 @add_premise(constant_promise.Premise.HAVE_WARDEN)
@@ -1249,7 +1227,7 @@ def handle_have_patient_need_surgery_and_can_do(character_id: int) -> int:
         return 0
 
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
+    if activity.dead(character_id):
         return 0
 
     from Script.System.Medical_System import hospital_doctor_service
@@ -1359,20 +1337,21 @@ def handle_have_intern_student(character_id: int) -> int:
         schedule_handle,
     )
 
-    character_data: game_type.Character = cache.character_data[character_id]
     work_type_id = chara_life.work_type(character_id)
     if not work_type_id:
         return 0
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        activity.position(character_id)
     )
     if scene_path_str not in cache.scene_data:
         return 0
     for other_id in cache.scene_data[scene_path_str].character_list:
         if other_id == character_id:
             continue
-        other_data: game_type.Character = cache.character_data[other_id]
-        if other_data.behavior.behavior_id != constant.Behavior.INTERN_CLASS:
+        if (
+            activity.behavior(other_id).behavior_id
+            != constant.Behavior.INTERN_CLASS
+        ):
             continue
         now_course = schedule_handle.get_now_course(other_id)
         if now_course is None:

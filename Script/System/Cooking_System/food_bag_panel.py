@@ -16,7 +16,7 @@ from Script.UI.Moudle import panel, draw, view
 from Script.Design import attr_calculation, handle_premise
 from Script.Modules.tk_ui import player_pick
 from Script.Config import normal_config, game_config
-from Script.Modules.domains import inventory
+from Script.Modules.domains import activity, inventory
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -45,8 +45,7 @@ def calculate_food_effects(
     """
 
     # 获取角色数据
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_food = character_data.behavior.target_food
+    now_food = activity.behavior(character_id).target_food
 
     # 根据食物品质获得调整系数
     food_quality = now_food.quality if now_food is not None else 1
@@ -187,7 +186,7 @@ class FoodBagPanel:
 
             character_data = cache.character_data[0]
             target_character_data: game_type.Character = cache.character_data[
-                character_data.target_character_id
+                activity.target(character_data.cid)
             ]
 
             now_draw = draw.NormalDraw()
@@ -203,7 +202,7 @@ class FoodBagPanel:
                     ).format(character_data.name)
                 elif handle_premise.handle_have_target(0):
                     if handle_premise.handle_hunger_le_79(
-                        character_data.target_character_id
+                        activity.target(character_data.cid)
                     ):
                         now_draw.text += _(
                             "  {0}现在不饿，无法吃东西。\n\n"
@@ -221,7 +220,7 @@ class FoodBagPanel:
                     ).format(character_data.name)
                 elif handle_premise.handle_have_target(0):
                     if not handle_premise.handle_urinate_le_49(
-                        character_data.target_character_id
+                        activity.target(character_data.cid)
                     ):
                         now_draw.text += _(
                             "  {0}现在不渴，无法喝东西。\n\n"
@@ -246,7 +245,7 @@ class FoodBagPanel:
                 self.now_panel == _("食用")
                 and handle_premise.handle_have_target(0)
                 and handle_premise.handle_hunger_le_79(
-                    character_data.target_character_id
+                    activity.target(character_data.cid)
                 )
             ):
                 now_draw.text += _("  {0}现在不饿，无法吃东西。\n\n").format(
@@ -256,7 +255,7 @@ class FoodBagPanel:
                 self.now_panel in {_("饮用"), _("酒类")}
                 and handle_premise.handle_have_target(0)
                 and not handle_premise.handle_urinate_le_49(
-                    character_data.target_character_id
+                    activity.target(character_data.cid)
                 )
             ):
                 now_draw.text += _("  {0}现在不渴，无法喝东西。\n\n").format(
@@ -424,7 +423,6 @@ class FoodGroupDraw:
 
         # 判断是否可以点击（与原食用条件保持一致）
         draw_button_flag = True
-        character_data: game_type.Character = cache.character_data[0]
         if special_seasoning == 0:
             if handle_premise.handle_have_no_target(0):
                 if now_panel == _(
@@ -438,14 +436,12 @@ class FoodGroupDraw:
             elif handle_premise.handle_have_target(0):
                 if now_panel == _(
                     "食用"
-                ) and handle_premise.handle_hunger_le_79(
-                    character_data.target_character_id
-                ):
+                ) and handle_premise.handle_hunger_le_79(activity.target(0)):
                     draw_button_flag = False
                 elif now_panel == _(
                     "饮用"
                 ) and not handle_premise.handle_urinate_le_49(
-                    character_data.target_character_id
+                    activity.target(0)
                 ):
                     draw_button_flag = False
                 elif not handle_premise.handle_t_normal_6(0):
@@ -456,14 +452,12 @@ class FoodGroupDraw:
             elif handle_premise.handle_have_target(0):
                 if now_panel == _(
                     "食用"
-                ) and handle_premise.handle_hunger_le_79(
-                    character_data.target_character_id
-                ):
+                ) and handle_premise.handle_hunger_le_79(activity.target(0)):
                     draw_button_flag = False
                 elif now_panel == _(
                     "饮用"
                 ) and not handle_premise.handle_urinate_le_49(
-                    character_data.target_character_id
+                    activity.target(0)
                 ):
                     draw_button_flag = False
 

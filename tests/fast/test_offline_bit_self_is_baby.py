@@ -10,6 +10,7 @@
 from Script.Design import handle_premise
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
+from tests.chara_activity import aim
 
 NURSERY = ["教", "育儿"]
 BABY_TALENT = 101
@@ -26,8 +27,8 @@ class OfflineBitSelfIsBabyTest(FastTestCase):
         carer = self.world.chara(2, "保育员", position=NURSERY)
         ca.talent(baby)[BABY_TALENT] = 1
         # 游戏初始化角色时把交互对象设为她自己（同 character_handle.init_character）
-        baby.target_character_id = 1
-        carer.target_character_id = 1
+        aim(baby.cid, 1)
+        aim(carer.cid, 1)
         self.assertEqual(handle_premise.handle_normal_7(1), 0, "婴儿离线")
         self.assertEqual(
             handle_premise.handle_normal_7(2), 1, "照料婴儿的保育员在线"

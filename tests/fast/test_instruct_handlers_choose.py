@@ -20,6 +20,8 @@ from Script.System.Instruct_System import handle_instruct
 from tests.fast.base import FastTestCase
 from tests.fast.test_npc_pick_leaves_cache import changed, pickled
 from tests import kernel_data
+from tests.chara_activity import aim
+from Script.Modules.domains import activity
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
@@ -41,7 +43,7 @@ class InstructHandlersChooseTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
-        self.player.target_character_id = NPC
+        aim(self.player.cid, NPC)
         core.reset_state(kernel_data.reprojected(core.state()))
 
     def pick(self, instruct_id: str) -> core.Action | None:
@@ -116,7 +118,7 @@ class InstructHandlersChooseTest(FastTestCase):
         Return arguments:
         无
         """
-        scene = self.world.scene(self.player.position)
+        scene = self.world.scene(activity.position(self.player.cid))
         scene.close_flag = 0
         act = self.pick(constant.Instruct.DOOR_LOCK_INNER)
         assert act is not None
@@ -153,10 +155,9 @@ class InstructHandlersChooseTest(FastTestCase):
         """
         from Script.Modules.gameplay_resolution import plan_queue
 
-        target = self.cache.character_data[NPC]
-        behavior_before = target.behavior.behavior_id
+        behavior_before = activity.behavior(NPC).behavior_id
         act = self.pick(constant.Instruct.LISTEN_COMPLAINT)
         assert act is not None
         self.start(act)
-        self.assertEqual(target.behavior.behavior_id, behavior_before)
+        self.assertEqual(activity.behavior(NPC).behavior_id, behavior_before)
         self.assertTrue(plan_queue.plan_has(NPC, constant.Behavior.WAIT))

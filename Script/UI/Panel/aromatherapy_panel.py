@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, facility, flags, tallies
+from Script.Modules.domains import abilities, activity, facility, flags, tallies
 from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
@@ -65,10 +65,7 @@ class Aromatherapy_Panel:
 
         title_text = _("香薰疗愈")
         title_draw = draw.TitleLineDraw(title_text, self.width)
-        pl_character_data = cache.character_data[0]
-        target_character_data = cache.character_data[
-            pl_character_data.target_character_id
-        ]
+        target_character_data = cache.character_data[activity.target(0)]
 
         while 1:
             return_list = []
@@ -175,10 +172,7 @@ class Aromatherapy_Panel:
 
     def select_recipe(self) -> None:
         """选择配方"""
-        pl_character_data = cache.character_data[0]
-        target_character_data = cache.character_data[
-            pl_character_data.target_character_id
-        ]
+        target_character_data = cache.character_data[activity.target(0)]
         while 1:
             line = draw.LineDraw("-", window_width)
             line.draw()

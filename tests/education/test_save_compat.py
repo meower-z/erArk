@@ -21,7 +21,7 @@ from _bootstrap import (
 )
 from Script.System.Official_Event_System import official_event_handle
 from Script.Design import game_time
-from Script.Modules.domains import official
+from Script.Modules.domains import activity, official
 from tests import kernel_data
 from Script.Modules.domains import chara_life
 
@@ -284,9 +284,17 @@ for save_id in candidate_list:
                 )
             )
             break
-        if scene_str(character_data.position) not in cache.scene_data:
+        if (
+            scene_str(activity.position(character_data.cid))
+            not in cache.scene_data
+        ):
             problem.append(
-                (save_id, cid, "dead scene", character_data.position)
+                (
+                    save_id,
+                    cid,
+                    "dead scene",
+                    activity.position(character_data.cid),
+                )
             )
             break
     # 课表结构：{教室: {星期: {节次: [科目, 教师]}}}

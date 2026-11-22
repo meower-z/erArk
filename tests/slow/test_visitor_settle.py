@@ -14,6 +14,7 @@ import importlib
 from typing import Any
 
 from tests import kernel_data, world
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
 
 
@@ -44,10 +45,7 @@ class VisitorSettleTest(SlowTestCase):
         recruit_panel = game("Script.UI.Panel.recruit_panel")
         self.assertGreater(visitor.capacity(), 0, "前提：开新游戏后有客房")
         target = min(recruit_panel.find_recruitable_npc())
-        player = self.cache.character_data[0]
-        player.target_character_id = min(
-            kernel_data.domain("roster").active() - {0}
-        )
+        aim(0, min(kernel_data.domain("roster").active() - {0}))
         change = game_type.CharacterStatusChange()
         with kernel_data.writing():
             visitor.set_invite(target)
@@ -74,7 +72,7 @@ class VisitorSettleTest(SlowTestCase):
         game_time = game("Script.Design.game_time")
         settle = game("Script.Settle.default").handle_invite_visitor_add_adjust
         joined = min(kernel_data.domain("roster").active() - {0})
-        self.cache.character_data[0].target_character_id = joined
+        aim(0, joined)
         with kernel_data.writing():
             visitor.set_invite(joined, 30)
             settle(0, 5, game_type.CharacterStatusChange(), game_time.now())

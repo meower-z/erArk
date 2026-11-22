@@ -13,6 +13,7 @@ NPC角色 [013] 本次H 输入「6,部位,第几项」与新值，只改这个�
 import importlib
 
 from tests import kernel_data
+from tests.chara_activity import aim
 from tests.slow.base import SlowTestCase
 
 PARTY_ENTERTAINMENT = 101
@@ -168,7 +169,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
             [count[0], 5],
             "只改这个部位的总次计数",
         )
-        self.cache.character_data[0].target_character_id = npc_id
+        aim(0, npc_id)
         self.assertEqual(
             handle_premise_H.handle_t_turn_s_orgasm_g_3(0),
             1,

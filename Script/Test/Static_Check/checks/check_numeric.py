@@ -19,7 +19,7 @@ from typing import TypeGuard
 from Script.Core import cache_control, num
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import facility, flags, h_meters
+from Script.Modules.domains import activity, facility, flags, h_meters
 from Script.Modules.domains import h_state as h_state_domain
 from Script.Modules.domains import hypnosis as hypnosis_domain, needs
 from Script.Modules.domains import player_ability, playthrough, status
@@ -564,7 +564,7 @@ def check_num_13_status_data_non_negative() -> list[CheckFailure]:
                     "NUM-13",
                     "状态值为非负的整数或分数",
                     f"角色cid={cid} name={_chara_name(chara)} 非法状态值={bad} "
-                    f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}",
+                    f"behavior_id={activity.behavior(chara.cid).behavior_id}",
                     [cid],
                 )
             )
@@ -609,7 +609,7 @@ def check_num_14_status_data_upper_bound() -> list[CheckFailure]:
                     "NUM-14",
                     "状态值不超过99999",
                     f"[warning] 角色cid={cid} name={_chara_name(chara)} 越界状态(id:(值,名字))={detail} "
-                    f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}",
+                    f"behavior_id={activity.behavior(chara.cid).behavior_id}",
                     [cid],
                 )
             )
@@ -712,7 +712,7 @@ def check_num_17_trust_hypnosis_finite() -> list[CheckFailure]:
                     "NUM-17",
                     "信赖与催眠程度为有限实数",
                     f"角色cid={cid} name={_chara_name(chara)} trust={trust!r} hypnosis_degree={hypnosis_degree!r} "
-                    f"target_character_id={getattr(chara, 'target_character_id', '?')}",
+                    f"target_character_id={activity.target(chara.cid)}",
                     [cid],
                 )
             )
@@ -810,7 +810,7 @@ def check_num_20_hit_point_range() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        if getattr(chara, "dead", False):
+        if activity.dead(chara.cid):
             continue
         hp = needs.of(cid)["hit"]
         hp_max = needs.of(cid)["hit_max"]
@@ -825,8 +825,7 @@ def check_num_20_hit_point_range() -> list[CheckFailure]:
                     "当前体力在[1,上限]",
                     (
                         f"角色cid={cid} name={_chara_name(chara)} hit_point={hp!r} hit_point_max={hp_max!r} "
-                        f"dead={getattr(chara, 'dead', '?')} "
-                        f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}"
+                        f"dead={activity.dead(chara.cid)} behavior_id={activity.behavior(chara.cid).behavior_id}"
                     ),
                     [cid],
                 )
@@ -863,7 +862,7 @@ def check_num_21_mana_point_range() -> list[CheckFailure]:
                     "当前气力在[0,上限]",
                     f"角色cid={cid} name={_chara_name(chara)} mana_point={mp!r} mana_point_max={mp_max!r} "
                     f"hit_point={num.shown(needs.of(cid)['hit'])} "
-                    f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}",
+                    f"behavior_id={activity.behavior(chara.cid).behavior_id}",
                     [cid],
                 )
             )
@@ -1098,8 +1097,8 @@ def check_num_27_fatigue_family_range() -> list[CheckFailure]:
                     "疲劳/饥饿/熟睡/醉酒在各自量程内",
                     (
                         f"角色cid={cid} name={_chara_name(chara)} 越界字段={bad_fields} "
-                        f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')} "
-                        f"state={getattr(chara, 'state', '?')} "
+                        f"behavior_id={activity.behavior(chara.cid).behavior_id} "
+                        f"state={activity.state(chara.cid)} "
                         f"unconscious_h={flags.get(chara.cid, "unconscious_h")}"
                     ),
                     [cid],
@@ -1131,7 +1130,7 @@ def check_num_28_urinate_point_non_negative() -> list[CheckFailure]:
                     "尿意值非负且为整数",
                     f"角色cid={cid} name={_chara_name(chara)} urine={urinate!r} "
                     f"drunk_point={num.shown(needs.of(cid)['drunk'])} "
-                    f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}",
+                    f"behavior_id={activity.behavior(chara.cid).behavior_id}",
                     [cid],
                 )
             )
@@ -1163,7 +1162,7 @@ def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
                     "角色尿意值不超过300",
                     (
                         f"[warning] 角色cid={cid} name={_chara_name(chara)} urine={urinate!r} "
-                        f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')} "
+                        f"behavior_id={activity.behavior(chara.cid).behavior_id} "
                         f"difficulty_setting[11]={difficulty_setting.get(11)} "
                         f"difficulty_setting[12]={difficulty_setting.get(12)}"
                     ),

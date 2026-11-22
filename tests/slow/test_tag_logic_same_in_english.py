@@ -27,8 +27,10 @@ from types import ModuleType
 from typing import Any, Callable
 
 from tests import kernel_data
+from tests.chara_activity import aim, behave
 from tests.slow import remove_parent_guard
 from tests.slow.base import SlowTestCase
+from tests.kernel_project import activity
 
 CHINESE = "zh_CN"
 """ 基准语言 """
@@ -151,7 +153,9 @@ class LanguageRun:
         presses += (chara.name, self.translate("返回"))
         self.instruct(self.constant.Instruct.ALL_NPC_POSITION, presses)
         for _ in range(24):
-            if chara.position == self.player.position:
+            if activity.position(chara_id) == activity.position(
+                self.player.cid
+            ):
                 break
             self.instruct(self.constant.Instruct.WAIT)
         # 好感与信赖的上限，日常互动能攒到，够邀请群交与邀请H的判定
@@ -171,7 +175,7 @@ class LanguageRun:
         game("tests.snapshot_states").walk(self.world, ["中枢", "博士办公室"])
         self.summon(KALTSIT_ID)
         self.summon(AMIYA_ID)
-        self.player.target_character_id = AMIYA_ID
+        aim(self.player.cid, AMIYA_ID)
         self.instruct(instruct.ASK_GROUP_SEX)
         behavior = self.config.config_behavior
         panel = game("Script.System.Sex_System.group_sex_panel")
@@ -207,7 +211,7 @@ class LanguageRun:
         """
         game("tests.snapshot_states").walk(self.world, ["中枢", "博士房间"])
         self.summon(AMIYA_ID)
-        self.player.target_character_id = AMIYA_ID
+        aim(self.player.cid, AMIYA_ID)
         self.instruct(self.constant.Instruct.DO_H)
         in_h: bool = game("Script.Design.handle_premise").handle_is_h(0)
         return in_h
@@ -225,12 +229,12 @@ class LanguageRun:
             if str(game_time.now()) != time_before:
                 break
             self.instruct(self.constant.Instruct.KEEP_ENJOY)
-        behavior = self.player.behavior.behavior_id
+        behavior = activity.behavior(self.player.cid).behavior_id
         return [
             time_before,
             str(game_time.now()),
             behavior,
-            self.player.state,
+            activity.state(self.player.cid),
         ]
 
     def group_sex_parts(self) -> dict[str, list[str]]:
@@ -249,7 +253,7 @@ class LanguageRun:
         panel: Any = game("Script.System.Sex_System.hidden_sex_panel")
         h_state_mod: Any = game("Script.Modules.domains.h_state")
         value_dict = {}
-        now_behavior_id = self.player.behavior.behavior_id
+        now_behavior_id = activity.behavior(self.player.cid).behavior_id
         with kernel_data.writing():
             for (
                 behavior_id,
@@ -257,7 +261,7 @@ class LanguageRun:
             ) in self.config.config_behavior.items():
                 if not HIDDEN_TAG_SET & set(behavior_data.tag.split("|")):
                     continue
-                self.player.behavior.behavior_id = behavior_id
+                behave(self.player.cid, behavior_id)
                 h_state_mod.set(0, hidden_sex_discovery_dregree=HIDDEN_START)
                 panel.settle_hidden_value_by_action(
                     0, now_duration=HIDDEN_DURATION
@@ -265,7 +269,7 @@ class LanguageRun:
                 value_dict[behavior_id] = h_state_mod.get(
                     0, "hidden_sex_discovery_dregree"
                 )
-        self.player.behavior.behavior_id = now_behavior_id
+        behave(self.player.cid, now_behavior_id)
         return value_dict
 
     def commission_check(self) -> dict[str, list[bool]]:

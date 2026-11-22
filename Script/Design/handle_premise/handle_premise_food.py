@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import flags
+from Script.Modules.domains import activity, flags
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -20,8 +20,7 @@ def handle_pl_action_food_normal(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 0:
+    if activity.behavior(character_id).target_food.special_seasoning == 0:
         return 1
     return 0
 
@@ -35,8 +34,7 @@ def handle_pl_action_food_sour(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 1:
+    if activity.behavior(character_id).target_food.special_seasoning == 1:
         return 1
     return 0
 
@@ -50,8 +48,7 @@ def handle_pl_action_food_sweet(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 2:
+    if activity.behavior(character_id).target_food.special_seasoning == 2:
         return 1
     return 0
 
@@ -65,8 +62,7 @@ def handle_pl_action_food_bitter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 3:
+    if activity.behavior(character_id).target_food.special_seasoning == 3:
         return 1
     return 0
 
@@ -80,8 +76,7 @@ def handle_pl_action_food_spicy(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 4:
+    if activity.behavior(character_id).target_food.special_seasoning == 4:
         return 1
     return 0
 
@@ -95,8 +90,7 @@ def handle_pl_action_food_sement_hidden(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 11:
+    if activity.behavior(character_id).target_food.special_seasoning == 11:
         return 1
     return 0
 
@@ -110,8 +104,7 @@ def handle_pl_action_food_sement_direct(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 12:
+    if activity.behavior(character_id).target_food.special_seasoning == 12:
         return 1
     return 0
 
@@ -125,8 +118,7 @@ def handle_pl_action_food_medicine(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning >= 100:
+    if activity.behavior(character_id).target_food.special_seasoning >= 100:
         return 1
     return 0
 
@@ -140,8 +132,7 @@ def handle_pl_action_food_birth_control_after(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 102:
+    if activity.behavior(character_id).target_food.special_seasoning == 102:
         return 1
     return 0
 
@@ -155,8 +146,7 @@ def handle_pl_action_food_philter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 103:
+    if activity.behavior(character_id).target_food.special_seasoning == 103:
         return 1
     return 0
 
@@ -170,8 +160,7 @@ def handle_pl_action_food_diuretics_once(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 105:
+    if activity.behavior(character_id).target_food.special_seasoning == 105:
         return 1
     return 0
 
@@ -185,8 +174,7 @@ def handle_pl_action_food_diuretics_persistent(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 106:
+    if activity.behavior(character_id).target_food.special_seasoning == 106:
         return 1
     return 0
 
@@ -200,8 +188,7 @@ def handle_pl_action_food_sleeping_pills(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 107:
+    if activity.behavior(character_id).target_food.special_seasoning == 107:
         return 1
     return 0
 
@@ -215,8 +202,7 @@ def handle_pl_action_food_clomid(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.special_seasoning == 108:
+    if activity.behavior(character_id).target_food.special_seasoning == 108:
         return 1
     return 0
 
@@ -230,8 +216,7 @@ def handle_food_quality_low(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.quality <= 3:
+    if activity.behavior(character_id).target_food.quality <= 3:
         return 1
     return 0
 
@@ -245,8 +230,7 @@ def handle_food_quality_medium(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if 4 <= character_data.behavior.target_food.quality <= 5:
+    if 4 <= activity.behavior(character_id).target_food.quality <= 5:
         return 1
     return 0
 
@@ -260,8 +244,7 @@ def handle_food_quality_high(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if 6 <= character_data.behavior.target_food.quality <= 7:
+    if 6 <= activity.behavior(character_id).target_food.quality <= 7:
         return 1
     return 0
 
@@ -275,8 +258,7 @@ def handle_food_quality_highest(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.behavior.target_food.quality >= 8:
+    if activity.behavior(character_id).target_food.quality >= 8:
         return 1
     return 0
 
@@ -290,8 +272,7 @@ def handle_food_recipe_difficulty_low(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -309,8 +290,7 @@ def handle_food_recipe_difficulty_medium(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -328,8 +308,7 @@ def handle_food_recipe_difficulty_high(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -347,8 +326,7 @@ def handle_food_recipe_difficulty_highest(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -366,8 +344,7 @@ def handle_food_type_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -385,8 +362,7 @@ def handle_food_type_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -404,8 +380,7 @@ def handle_food_type_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -423,8 +398,7 @@ def handle_food_type_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -442,8 +416,7 @@ def handle_food_type_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -461,8 +434,7 @@ def handle_food_type_5(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -480,8 +452,7 @@ def handle_food_type_8(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -499,8 +470,7 @@ def handle_food_type_9(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    recipe_id = character_data.behavior.target_food.recipe
+    recipe_id = activity.behavior(character_id).target_food.recipe
     if recipe_id == -1:
         return 0
     recipe_data = cache.recipe_data[recipe_id]
@@ -548,8 +518,7 @@ def handlefind_t_food_weird_flag_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "find_food_weird") == 0:
         return 1
     else:
@@ -565,8 +534,7 @@ def handlefind_t_food_weird_flag_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[activity.target(character_id)]
     if flags.get(target_data.cid, "find_food_weird") == 1:
         return 1
     else:

@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 from Script.Core import cache_control, constant, game_type
 from Script.Config import game_config
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, activity
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -143,9 +143,8 @@ def involves_child_stage(character_id: int) -> bool:
     Return arguments:
     bool -- 任一方处于幼年阶段时为True
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     return is_child_stage(character_id) or is_child_stage(
-        character_data.target_character_id
+        activity.target(character_id)
     )
 
 
@@ -157,9 +156,7 @@ def blocks_instruct(instruct_id: str) -> bool:
     Return arguments:
     bool -- 指令属于H类且玩家的交互对象处于幼年阶段时为True
     """
-    return is_h_instruct(instruct_id) and is_child_stage(
-        cache.character_data[0].target_character_id
-    )
+    return is_h_instruct(instruct_id) and is_child_stage(activity.target(0))
 
 
 def blocks_behavior(character_id: int) -> bool:
@@ -170,9 +167,8 @@ def blocks_behavior(character_id: int) -> bool:
     Return arguments:
     bool -- 行为属于H类，且角色自己或其交互对象处于幼年阶段时为True
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     return is_h_behavior(
-        character_data.behavior.behavior_id
+        activity.behavior(character_id).behavior_id
     ) and involves_child_stage(character_id)
 
 
@@ -184,10 +180,7 @@ def reset_to_idle(character_id: int) -> None:
     Return arguments:
     无
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    start_time = character_data.behavior.start_time
-    character_data.behavior = game_type.Behavior()
-    character_data.behavior.start_time = start_time
-    character_data.behavior.duration = 1
-    character_data.state = constant.CharacterStatus.STATUS_ARDER
-    character_data.target_character_id = character_id
+    start_time = activity.behavior(character_id).start_time
+    activity.set_behavior(character_id, start_time=start_time, duration=1)
+    activity.set_state(character_id, constant.CharacterStatus.STATUS_ARDER)
+    activity.set_target(character_id, character_id)
