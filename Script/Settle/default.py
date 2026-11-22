@@ -7871,7 +7871,7 @@ def handle_dirty_reset_in_shower(
         # 计算保留数据，使用原数据以继承0号和3号元素
         body_dirty = character_data.dirty.body_semen[body_cid].copy()
         keep_rate = keep_rate_dict[body_cid]
-        new_dirty = body_dirty[1] * keep_rate
+        new_dirty = body_dirty[1] * num.exact(keep_rate)
         # 如果保留后小于5，则归零
         if new_dirty < 5:
             new_dirty = 0

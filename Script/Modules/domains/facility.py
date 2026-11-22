@@ -8,6 +8,7 @@ base.effectiveness 是基地效率，单位为百分数。
 写入整值替换一个键。对外的设施id 是 int，存进键里时换成字符串。
 干员人数上限不存，people_max 读时取宿舍区当前等级的效果值。
 基建面板里的升级先记进玩家选择的缓冲区，离开面板时随一个 0 分钟的 Edit 生效。
+open_by_level 经 reset.repair 登记为读档修补。每次读档时它按各设施当前等级开放够条件的待开放设施。
 """
 
 from collections.abc import Mapping
@@ -17,6 +18,7 @@ from Script.Config import game_config
 from Script.Core import get_text
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
+from Script.Modules.save_load import reset
 
 LEVEL = "base.facility_level"
 """ 设施等级的全局键 """
@@ -126,6 +128,22 @@ def set_open(cid: int, value: bool = True) -> None:
     value -- 是否开放
     """
     _set(OPEN, cid, value)
+
+
+@reset.repair
+def open_by_level() -> None:
+    """
+    按各设施当前等级对应的效果id 开放够条件的待开放设施，写进当前缓冲区。对于 Facility_open.csv 的每一项，
+    若其 zone_cid // 10 等于某设施当前效果id // 10 且该效果id % 10 不小于 zone_cid % 10，则将其设为已开放。
+    该函数经 reset.repair 登记，会在每次读档时运行
+    """
+    for cid, data in game_config.config_facility.items():
+        levels = game_config.config_facility_effect_data[data.name]
+        effect_cid = levels[level(cid)]
+        for open_cid, room in game_config.config_facility_open.items():
+            zone = room.zone_cid
+            if zone // 10 == effect_cid // 10 and effect_cid % 10 >= zone % 10:
+                set_open(open_cid, True)
 
 
 def effectiveness(game: core.GameState | None = None) -> int | float:

@@ -37,39 +37,13 @@ def get_base_zero() -> game_type.Rhodes_Island:
 
 def get_base_updata() -> None:
     """
-    按各设施的当前等级开放够条件的待开放设施、招募线与生产线。它还按疗养庭院的等级重置计数 tallies.AROMATHERAPY
+    先调用 facility.open_by_level 按各设施的当前等级开放够条件的待开放设施。随后按设施当前等级开放招募线与生产线。
+    它还按疗养庭院的等级重置计数 tallies.AROMATHERAPY
     """
-    # 遍历全设施清单
+    facility.open_by_level()
     for all_cid in game_config.config_facility:
-        # 全设施等级设为对应值
         level = facility.level(all_cid)
-
-        # 累加全设施的用电量
         facility_name = game_config.config_facility[all_cid].name
-        facility_cid = game_config.config_facility_effect_data[facility_name][
-            level
-        ]
-
-        # 如果满足设施开放的前提条件，则开放该设施
-        for open_cid in game_config.config_facility_open:
-            if game_config.config_facility_open[open_cid] == True:
-                continue
-            # 如果zone_cid和facility_cid相等，则开放该设施
-            if (
-                game_config.config_facility_open[open_cid].zone_cid
-                == facility_cid
-            ):
-                # print(f"debug zone_cid = {game_config.config_facility_open[open_cid].zone_cid}")
-                # print(f"debug facility_cid = {facility_cid}")
-                facility.set_open(open_cid, True)
-            # 如果zone_cid和facility_cid除以十的除数相等，且facility_cid的个位数大于等于zone_cid的个位数，则开放该设施
-            elif (
-                game_config.config_facility_open[open_cid].zone_cid // 10
-                == facility_cid // 10
-                and facility_cid % 10
-                >= game_config.config_facility_open[open_cid].zone_cid % 10
-            ):
-                facility.set_open(open_cid, True)
 
         # 按等级开放招募线：1 级 1 条，3 到 5 级每级多 1 条
         if facility_name == _("文职部"):
