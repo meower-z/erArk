@@ -13,7 +13,8 @@ from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
 import copy
 from Script.Modules.domains import abilities, facility, first_record, h_meters
-from Script.Modules.domains import hypnosis, needs, player_collection
+from Script.Modules.domains import hypnosis, needs, npc_template
+from Script.Modules.domains import player_collection
 from Script.Modules.domains import playthrough, roster, chara_life, relations
 
 cache: game_type.Cache = cache_control.cache
@@ -1120,7 +1121,7 @@ def _inherit_npc_data(
     old = cast(Mapping[str, core.JSON], inherit["abilities"])
     social = cast(Mapping[str, tuple[Num, Num]], inherit["fallen_social"])
     roster.clear_active()
-    for now_id, now_npc_data in cache.npc_tem_data.items():
+    for now_id, now_npc_data in npc_template.table().items():
         character_handle.init_character(
             now_id, now_npc_data, collect_reset=False
         )
@@ -1291,7 +1292,6 @@ class CharacterabiText:
         self.draw_list.append(type_line)
         # 进入能力大类#
         for anility_type in ability_list:
-            # if anility_type == type:
             type_set = ability_list[anility_type]
             # 去掉玩家的若干能力#
             if self.character_id == 0:

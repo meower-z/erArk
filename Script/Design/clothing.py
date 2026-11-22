@@ -10,6 +10,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_premise, map_handle
 from Script.Modules.domains import abilities, activity, dirty, prison, wardrobe
+from Script.Modules.domains import npc_template
 from Script.UI.Moudle import draw
 
 cache: game_type.Cache = cache_control.cache
@@ -36,7 +37,7 @@ def get_npc_cloth(character_id: int) -> None:
         from Script.System.Item_System import condom_handle
 
         condom_handle.remove_cloth_decoration(character_id)
-        tem_character = cache.npc_tem_data.get(character_id, None)
+        tem_character = npc_template.get(character_id)
         if tem_character is None:
             return  # 模板不存在时安全返回
 
@@ -152,7 +153,7 @@ def get_cloth_from_dormitory_locker(character_id: int) -> None:
         elif handle_premise.handle_self_parturient_or_postpartum(character_id):
             get_patient_cloth(character_id)
             return
-        tem_character = cache.npc_tem_data.get(character_id, None)
+        tem_character = npc_template.get(character_id)
         if tem_character is None:
             return  # 模板不存在时安全返回
         tem_cloth_list = tem_character.Cloth.copy()
@@ -656,7 +657,6 @@ def chara_special_wear_cloth(character_id: int) -> list[int]:
         if handle_premise.handle_imprisonment_1(character_id):
             if 1302 not in wardrobe.of(character_id).cloth_wear[13]:
                 wardrobe.append(character_id, "cloth_wear", 13, 1302)
-                # print("换上镣铐了")
             return_list.append(1302)
         # 有戒指素质的必须戴戒指
         if talent[205]:

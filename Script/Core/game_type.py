@@ -1593,8 +1593,6 @@ class Cache:
         """初始化游戏缓存数据对象"""
         self.character_data: dict[int, Character] = {}
         """ 角色对象数据缓存组 """
-        self.npc_tem_data: dict[int, NpcTem] = {}
-        """ npc模板字典，键为AdvNpc """
         self.input_cache: list[str] = []
         """ 玩家指令输入记录（最大20）"""
         self.collect_position_list: list = []

@@ -87,7 +87,6 @@ SKIPPED_CACHE_FIELDS = {
     "scene_data": "按 scene.<场景路径> 单独记",
     "rhodes_island": "按 WORLD_AREAS 拆开记",
     "map_data": "地图配置，读入后不变",
-    "npc_tem_data": "角色模板（配置）；生下的孩子另作为角色记在 chara.<id>",
     "daily_intsruce": "玩家当天的指令记录（文本）",
     "input_cache": "界面：输入历史",
 }

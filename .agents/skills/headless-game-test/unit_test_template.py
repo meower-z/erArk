@@ -72,7 +72,6 @@ map_config.init_map_data()
 from Script.Design import (  # noqa: E402
     attr_calculation,
     character_behavior,
-    character_handle,
     clothing,
     game_time,
     handle_premise,
@@ -95,7 +94,6 @@ from Script.Modules.save_load import kernel_state
 from Script.Modules.domains import abilities, status
 from tests import chara_data, kernel_data
 
-character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
 cache = cache_control.cache
 

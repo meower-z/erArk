@@ -12,9 +12,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, cast
 
 from Script.Config import game_config
-from Script.Core import cache_control
 from Script.Design import game_time
 from Script.Kernel import core
+from Script.Modules.domains import npc_template
 from Script.Modules.gameplay_resolution import working
 
 KEY = "player.collection"
@@ -222,7 +222,7 @@ def has_soft_eggs(cid: int = 0) -> bool:
 
 def init_zero(cid: int = 0) -> None:
     """按当前配置与角色模板初始化收藏品"""
-    npcs = tuple(cache_control.cache.npc_tem_data)
+    npcs = tuple(npc_template.ids())
     sparse: dict[str, core.JSON] = {}
     for name, val in (
         (

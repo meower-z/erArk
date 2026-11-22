@@ -51,15 +51,12 @@ if __name__ == "__main__":
 
     map_config.init_map_data()
 
-    from Script.Design import start_flow, character_handle
+    from Script.Design import start_flow
     import Script.Settle
     import Script.StateMachine
     import Script.System.Medical_System
     from Script.Core import game_init
     import Script.UI.Flow
-
-    # 载入角色人物卡数据
-    character_handle.init_character_tem()
 
     # 初始化游戏时间：内核时钟从开局时刻开始，新游戏或读档时再换掉内核的 GameState
     from Script.Modules.save_load import kernel_state

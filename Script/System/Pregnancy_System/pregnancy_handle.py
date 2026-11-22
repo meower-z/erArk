@@ -28,7 +28,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import activity, dirty, h_state, hypnosis
 from Script.Modules.gameplay_resolution import working
-from Script.Modules.domains import abilities, chara_life, growth
+from Script.Modules.domains import abilities, chara_life, growth, npc_template
 from Script.Modules.domains import pregnancy, relations, roster, work
 
 game_path = game_path_config.game_path
@@ -1146,7 +1146,7 @@ def remove_abnormal_daughter(character_id: int) -> bool:
     roster.discard(character_id)
     cache.character_data.pop(character_id, None)
     working.forget(character_id)
-    cache.npc_tem_data.pop(character_id, None)
+    npc_template.remove(character_id)
     # 清掉其他角色对她的引用：血缘子女名单与当前交互对象
     for other_data in cache.character_data.values():
         child_id_list = relations.child_id_list(other_data.cid)

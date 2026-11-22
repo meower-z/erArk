@@ -9,7 +9,7 @@ from Script.Design import map_handle, game_time
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import abilities, action_info, activity
 from Script.Modules.domains import entertainment, fridge, inventory, playthrough
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import npc_template, warehouse
 
 panel_info_data: dict[str, object] = {}
 
@@ -139,7 +139,7 @@ class Take_Care_Baby_Panel:
             info_draw.draw()
 
             # 遍历婴儿名字并输出按钮
-            for adv_id in cache.npc_tem_data.keys():
+            for adv_id in npc_template.ids():
                 chara_id = adv_id
                 if chara_id not in cache.character_data:
                     continue
