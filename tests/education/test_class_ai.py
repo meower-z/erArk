@@ -1984,7 +1984,7 @@ clear_schedules()
 section(
     "Plan 29 §3.2：兴趣课「读书」先借书，借不到书的这一节视为没课；娱乐读书（401）的行为不变"
 )
-from Script.UI.Panel import borrow_book_panel  # noqa: E402
+from Script.Modules.gameplay_resolution import library_service
 
 set_time(period_time(0))
 prepare_ai(201)
@@ -2074,8 +2074,8 @@ check(
 )
 kernel_data.put(library.put_holders, _saved_borrow)
 # 判定与执行之间书被别人借走：716 等 1 分钟、不记出勤
-_orig_borrow = borrow_book_panel.check_random_borrow_book
-borrow_book_panel.check_random_borrow_book = lambda character_id: 0
+_orig_borrow = library_service.check_random_borrow_book
+library_service.check_random_borrow_book = lambda character_id: 0
 child_growth(201).last_attend_period = []
 _attend = child_growth(201).attend_class_count
 start_sm(SM.EDUCATION_DO_COURSE, 201)
@@ -2089,7 +2089,7 @@ check(
         activity.behavior(student.cid).duration,
     ),
 )
-borrow_book_panel.check_random_borrow_book = _orig_borrow
+library_service.check_random_borrow_book = _orig_borrow
 # 401 对照：娱乐读书抽出的装配函数，行为与改前一致
 reader = make_character(402, "读书的干员", 21, position=_read_place)
 start_sm(SM.ENTERTAIN_READ, 402)
