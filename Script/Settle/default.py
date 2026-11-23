@@ -8520,7 +8520,7 @@ def handle_read_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    from Script.UI.Panel import borrow_book_panel
+    from Script.Modules.gameplay_resolution import library_service
 
     ability = abilities.ability(character_id)
     if not add_time:
@@ -8655,7 +8655,7 @@ def handle_read_add_adjust(
         info_text += _("不过已经读完过了，无法再增加阅读进度。\n")
         # NPC的还书判定
         if character_id:
-            borrow_book_panel.check_return_book(character_id)
+            library_service.check_return_book(character_id)
     # 仅在是玩家的情况下输出该提示信息
     if character_id == 0:
         info_draw = draw.NormalDraw()

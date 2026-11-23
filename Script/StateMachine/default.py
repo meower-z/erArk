@@ -1820,10 +1820,10 @@ def character_entertain_read(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    from Script.UI.Panel import borrow_book_panel
+    from Script.Modules.gameplay_resolution import library_service
 
     # 没借书就先借一本，并把借着的那本写进 behavior（与兴趣课读书共用，Plan 29 §3.2）；借不到就等 1 分钟
-    if not borrow_book_panel.judge_can_get_read_book(character_id):
+    if not library_service.judge_can_get_read_book(character_id):
         plan.set("behavior.behavior_id", constant.Behavior.WAIT)
         plan.set("behavior.duration", 1)
         plan.set("state", constant.CharacterStatus.STATUS_WAIT)
@@ -3471,9 +3471,9 @@ def character_education_do_course(character_id: int) -> choice.Plan:
             behavior_name = schedule_handle.get_behavior_name_by_cid(state_id)
             # 读书先借书并装配 behavior.book_id / book_name
             if behavior_name == constant.Behavior.READ_BOOK:
-                from Script.UI.Panel import borrow_book_panel
+                from Script.Modules.gameplay_resolution import library_service
 
-                if not borrow_book_panel.judge_can_get_read_book(character_id):
+                if not library_service.judge_can_get_read_book(character_id):
                     plan.set("behavior.behavior_id", constant.Behavior.WAIT)
                     plan.set("behavior.duration", 1)
                     plan.set("state", constant.CharacterStatus.STATUS_WAIT)
@@ -3614,7 +3614,7 @@ def character_work_library_2(character_id: int) -> choice.Plan:
     character_id -- 角色id
     """
     plan = handle_state_machine.new_plan(character_id)
-    from Script.UI.Panel import borrow_book_panel
+    from Script.Modules.gameplay_resolution import library_service
 
     plan.set("target_character_id", character_id)
     rand_num = random.randint(0, 99)
@@ -3625,7 +3625,7 @@ def character_work_library_2(character_id: int) -> choice.Plan:
         plan.move(to_library)
     else:
         # 借不到书就等 1 分钟；借得到时开始时借书，并把借着的那本写进 behavior
-        if not borrow_book_panel.judge_can_get_read_book(character_id):
+        if not library_service.judge_can_get_read_book(character_id):
             plan.set("behavior.behavior_id", constant.Behavior.WAIT)
             plan.set("behavior.duration", 1)
             plan.set("state", constant.CharacterStatus.STATUS_WAIT)

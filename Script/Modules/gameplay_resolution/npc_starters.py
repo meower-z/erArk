@@ -14,7 +14,7 @@ from Script.Core import constant, game_type
 from Script.Kernel import core
 from Script.Modules.domains import activity, economy, kitchen
 from Script.Modules.domains import maintenance as engineering
-from Script.Modules.gameplay_resolution import intent, starts
+from Script.Modules.gameplay_resolution import intent, library_service, starts
 from Script.Modules.domains import medical, medical_patient, physical_exam
 from Script.Modules.domains import inventory, chara_life
 from Script.Modules.domains import identity
@@ -90,9 +90,7 @@ def see_h(who: int, data: intent.Intent) -> None:
 @starts.starter("read_book")
 def read_book(who: int, data: intent.Intent) -> None:
     """借一本书，并把借着的那本写进 behavior"""
-    from Script.UI.Panel import borrow_book_panel
-
-    borrow_book_panel.prepare_npc_read_book(who)
+    library_service.prepare_npc_read_book(who)
 
 
 @starts.check("identify_eggs")
@@ -280,9 +278,7 @@ def course_book_ready(who: int, data: intent.Intent) -> core.Action | None:
     """兴趣课读书：借书，借不到书时等1分钟"""
     if not _args(data).get("read_book"):
         return None
-    from Script.UI.Panel import borrow_book_panel
-
-    if borrow_book_panel.prepare_npc_read_book(who):
+    if library_service.prepare_npc_read_book(who):
         return None
     return _wait_one_minute(who)
 
@@ -292,9 +288,7 @@ def do_course(who: int, data: intent.Intent) -> None:
     """个人式课：兴趣课读书把借着的书装配进行为；体育课与兴趣课记一节出勤"""
     args = _args(data)
     if args.get("read_book"):
-        from Script.UI.Panel import borrow_book_panel
-
-        borrow_book_panel.prepare_npc_read_book(who)
+        library_service.prepare_npc_read_book(who)
     if args.get("attend"):
         from Script.System.Education_System import growth_handle
 

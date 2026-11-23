@@ -805,10 +805,9 @@ def judge_personal_course_valid(character_id: int, course: dict) -> bool:
     if not judge_personal_course_real(character_id, course):
         return False
     if judge_interest_course_is_read_book(course):
-        # UI 层模块，顶层 import 会成环，照现有写法延迟
-        from Script.UI.Panel import borrow_book_panel
+        from Script.Modules.gameplay_resolution import library_service
 
-        return borrow_book_panel.judge_can_get_read_book(character_id)
+        return library_service.judge_can_get_read_book(character_id)
     return True
 
 
