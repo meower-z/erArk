@@ -15,14 +15,12 @@
 - 存档编解码后五个键的值与类型不变，分数的状态值仍是分数。
 - 写回读出的同一个值不产生写入。值相等而类型不同时产生写入。
 - body_manage.clear 把给出编号里不为 0 的项清成 0，其余项不变。
-- H 中的服装面板绘制时在写缓冲外读取服装，被外衣遮住的内衣不显示按钮，
-  不改存下的 cloth_see，只记下本次绘制判定的可见性。
-- 记下的可见性在进入选择草稿块时、点服装按钮重绘后，或之后第一个行动开始
-  （开始代码之前）或结束时写入 cloth_see；点按钮时接着脱下对应衣物。
-- H 中外衣遮住胸衣时，在选择阶段绘制面板并点击外衣按钮，选择草稿块在开启时与重绘后
-  各写入一次可见性，落成的编辑行动正常开始，外衣脱下，cloth_see[6] 变为可见。
-- H 中下衣遮住内裤且无透视时，绘制面板后再选收走内裤：行动开始先写入绘制判定的
-  不可见，收内裤开始代码再把 cloth_see[9] 设为 True，内裤收入玩家收藏。
+- H 中的服装面板在写缓冲外读取服装，被外层遮住的内衣不显示按钮，且不修改存下的 cloth_see。
+- 玩家或交互对象在 H 中时，每步套用效果前按透视与外层衣物更新穿着内衣的 cloth_see，
+  不依赖服装面板绘制。不在 H 中时不修改 cloth_see。
+- H 中先等待 5 分钟记下可见内裤，再点内裤按钮可脱下内裤，且 cloth_see[9] 保持为 True。
+- H 中点外衣按钮形成编辑行动，脱下外衣并在同一步将露出的胸衣 cloth_see[6] 记为 True。
+- H 中下衣遮住内裤且无透视时选「把内裤收走」，内裤收入玩家收藏，cloth_see[9] 为 True。
 - 从衣柜拿走内裤时同步清空面板副本，再次拿取不再重复加入收藏。
 """
 
@@ -38,7 +36,8 @@ from Script.Design import settle_behavior
 from Script.Kernel import core
 from Script.Core import constant, game_type
 from Script.Modules.domains import body_manage, flags, inventory, kitchen, modes
-from Script.Modules.domains import player_collection, status, wardrobe
+from Script.Modules.domains import player_ability, player_collection
+from Script.Modules.domains import status, wardrobe
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.save_load import kernel_state
@@ -277,18 +276,20 @@ class CharaInventoryBodyStateTest(FastTestCase):
         self.assertNotIn(bra, shown)
         self.assertEqual(wardrobe.of(1).cloth_see, {6: True, 9: True})
 
-    def test_h_cloth_button_keeps_drawn_see(self) -> None:
+    def test_h_cloth_button_takes_off_seen_panties(self) -> None:
         """
-        玩家处于 H（is_h=1）、目标未穿下衣且穿着内裤（部位 9）、存下的 cloth_see
-        为 {6: False, 9: False} 时，在玩家选择（world.act）中绘制面板并点击内裤
-        按钮（switch_cloth）：选择草稿块开启时写入绘制判定的可见性，cloth_see 更新为
-        {6: False, 9: True}，内裤从 cloth_wear[9] 移入 cloth_off[9]
+        玩家与目标处于 H 且目标未穿下衣、穿着内裤（部位 9）时，先等待 5 分钟再点击内裤按钮
+        （switch_cloth）。最终 cloth_see 为 {6: False, 9: True}。内裤从 cloth_wear[9] 移入 cloth_off[9]
         """
         pan = _cloth_of_part(9)
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 9, [pan])
         kernel_data.put(wardrobe.set, 1, "cloth_see", {6: False, 9: False})
         kernel_data.put(flags.set, 0, is_h=1)
+        kernel_data.put(flags.set, 1, is_h=1)
         aim(0, 1)
+        world_module.act(
+            lambda: player_pick.choose(constant.Behavior.WAIT, 5, target=1)
+        )
 
         def click_pan() -> None:
             panel = cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)
@@ -301,45 +302,67 @@ class CharaInventoryBodyStateTest(FastTestCase):
         self.assertEqual(wardrobe.of(1).cloth_wear[9], ())
         self.assertIn(pan, wardrobe.of(1).cloth_off[9])
 
-    def test_h_cloth_drawn_see_kept_by_next_action(self) -> None:
+    def test_seen_underwear_follows_outer_and_xray(self) -> None:
         """
-        玩家处于 H（is_h=1）、目标只穿内裤（部位 9）且存下的 cloth_see 为
-        {6: False, 9: False} 时，绘制服装面板而不点按钮，再选择等待 5 分钟：
-        绘制时不写 cloth_see，等待开始时将其更新为 {6: False, 9: True}；
-        随后不改 cloth_see 直接清空 cloth_wear[9]，再次绘制面板时内裤一栏显示「真空」
+        不绘制服装面板而让玩家等待 5 分钟，验证四个场景下的 cloth_see 更新与「真空」显示。
+        玩家与目标处于 H 时，每步套用效果前按透视（visual 与素质 307）及外层衣物更新穿着内衣的
+        cloth_see。不在 H 时 cloth_see 不变。清空 cloth_wear[9] 后，面板仅在 cloth_see[9] 为真时显示「真空」
         """
-        pan = _cloth_of_part(9)
-        kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 9, [pan])
-        kernel_data.put(wardrobe.set, 1, "cloth_see", {6: False, 9: False})
-        kernel_data.put(flags.set, 0, is_h=1)
-        aim(0, 1)
-
-        def draw_then_wait() -> None:
-            cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)
-            self.assertEqual(wardrobe.of(1).cloth_see[9], False)
-            player_pick.choose(constant.Behavior.WAIT, 5, target=1)
-
-        world_module.act(draw_then_wait)
-        self.assertEqual(wardrobe.of(1).cloth_see, {6: False, 9: True})
-        kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 9, [])
-        aim(0, 1)
-        panel = cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)
-        texts = [getattr(d, "text", "") for d in panel.draw_list]
+        kernel_data.set_needs(0, sanity=100)
+        skirt = _cloth_of_part(8)
+        cases = (
+            ("H，无透视", 1, False, False, {6: False, 9: True}),
+            ("H，有下衣", 1, True, False, {6: False, 9: False}),
+            ("H，有透视", 1, True, True, {6: True, 9: True}),
+            ("非 H", 0, False, False, {6: False, 9: True}),
+        )
         name = game_config.config_clothing_type[9].name
-        self.assertIn(f"  [{name}]: 真空", texts)
+        for label, is_h, skirted, xray, expected in cases:
+            before = {k: v != bool(is_h) for k, v in expected.items()}
+            with self.subTest(label):
+                kernel_data.put(
+                    wardrobe.set_part, 1, "cloth_wear", 9, [_cloth_of_part(9)]
+                )
+                kernel_data.put(
+                    wardrobe.set_part,
+                    1,
+                    "cloth_wear",
+                    8,
+                    [skirt] if skirted else [],
+                )
+                kernel_data.put(wardrobe.set, 1, "cloth_see", before)
+                kernel_data.put(flags.set, 0, is_h=is_h)
+                kernel_data.put(flags.set, 1, is_h=is_h)
+                kernel_data.put(player_ability.set, 0, visual=xray)
+                ca.talent(0)[307] = int(xray)
+                aim(0, 1)
+                world_module.act(
+                    lambda: player_pick.choose(
+                        constant.Behavior.WAIT, 5, target=1
+                    )
+                )
+                self.assertEqual(dict(wardrobe.of(1).cloth_see), expected)
+                kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 9, [])
+                aim(0, 1)
+                panel = cloth_panel.SwitchCharacterClothPanel(
+                    0, 100, 20, 0, False
+                )
+                texts = [getattr(d, "text", "") for d in panel.draw_list]
+                self.assertEqual(
+                    f"  [{name}]: 真空" in texts, expected[9], texts
+                )
 
     def test_h_cloth_outer_click_runs_as_edit(self) -> None:
         """
-        玩家处于 H（is_h=1）、目标穿着外衣（部位 5）与胸衣（部位 6）且存下的 cloth_see
-        为 {6: False, 9: False} 时，在玩家选择（world.act）中绘制面板并点击外衣按钮：
-        选择草稿块开启时与重绘后各写入一次可见性，形成的编辑行动正常开始不报错，
-        外衣从 cloth_wear[5] 移入 cloth_off[5]，cloth_see[6] 更新为重绘判定的 True
+        玩家与目标处于 H 且目标穿着外衣（部位 5）与胸衣（部位 6）时，点击外衣按钮执行编辑行动。
+        外衣从 cloth_wear[5] 移入 cloth_off[5]。该步套用效果后，cloth_see[6] 变为 True
         """
         coat, bra = _cloth_of_part(5), _cloth_of_part(6)
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 5, [coat])
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 6, [bra])
         kernel_data.put(wardrobe.set, 1, "cloth_see", {6: False, 9: False})
         kernel_data.put(flags.set, 0, is_h=1)
+        kernel_data.put(flags.set, 1, is_h=1)
         aim(0, 1)
 
         def click_coat() -> None:
@@ -353,26 +376,24 @@ class CharaInventoryBodyStateTest(FastTestCase):
         self.assertIn(coat, wardrobe.of(1).cloth_off[5])
         self.assertEqual(wardrobe.of(1).cloth_see[6], True)
 
-    def test_h_start_code_sets_see_after_drawn(self) -> None:
+    def test_h_take_panties_start_code_sees_them(self) -> None:
         """
-        玩家处于 H（is_h=1）且无透视、目标穿着下衣（部位 8）遮住内裤（部位 9）时，
-        在玩家选择（world.act）中先绘制服装面板，再选脱衣面板的「把内裤收走」：
-        行动开始先写入绘制判定的不可见，随后脱衣开始代码把 cloth_see[9] 设为 True，
-        内裤收入玩家收藏
+        玩家与目标处于 H、无透视且目标穿着下衣（部位 8）与内裤（部位 9）时，选择脱衣面板的「把内裤收走」。
+        脱衣开始代码将内裤脱下收入玩家收藏并把 cloth_see[9] 设为 True。该步套用效果后 cloth_see[9] 保持为 True
         """
         skirt, pan = _cloth_of_part(8), _cloth_of_part(9)
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 8, [skirt])
         kernel_data.put(wardrobe.set_part, 1, "cloth_wear", 9, [pan])
         kernel_data.put(wardrobe.set, 1, "cloth_see", {6: False, 9: False})
         kernel_data.put(flags.set, 0, is_h=1)
+        kernel_data.put(flags.set, 1, is_h=1)
         aim(0, 1)
 
-        def draw_then_take() -> None:
-            cloth_panel.SwitchCharacterClothPanel(0, 100, 20, 0, False)
+        def take() -> None:
             take_pan: Any = SimpleNamespace(button_id=3)
             cloth_panel.SeeUndressButtonList.chose_button(take_pan)
 
-        world_module.act(draw_then_take)
+        world_module.act(take)
         self.assertIn(pan, player_collection.get("npc_panties_tem")[1])
         self.assertEqual(wardrobe.of(1).cloth_see[9], True)
 
