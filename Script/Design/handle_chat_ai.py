@@ -1,7 +1,7 @@
 """文本生成AI：判断是否启用、构造提示词、调用接口生成文本、流式输出、保存对话记录与直接对话模式"""
 
 from types import FunctionType
-from Script.Core import get_text, constant, flow_handle
+from Script.Core import get_text, constant, flow_handle, io_init
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, attr_calculation, game_time, attr_text
@@ -941,7 +941,7 @@ def process_stream_response(
     last_text: str = ""
 
     try:
-        for chunk in stream:
+        for chunk in io_init.flushing(stream):
             # 提取当前chunk中的文本
             chunk_text: str | None = extractor(chunk)
             if chunk_text is None or not chunk_text:

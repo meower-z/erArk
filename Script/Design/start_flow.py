@@ -18,7 +18,6 @@ def start_frame() -> None:
     while True:
         if view.now_panel_id in player_pick.PRE_GAME_PANELS:
             py_cmd.clr_cmd()
-            py_cmd.focus_cmd()
             constant.panel_data[view.now_panel_id]()
             continue
         try:

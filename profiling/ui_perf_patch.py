@@ -4,11 +4,11 @@ flow 线程排版耗时补丁（monkey-patch，不改动产品代码）
 
 用途：
     包裹 Script/UI/Moudle/draw.py 与 panel.py 中的绘制类方法，
-    统计 flow 线程侧"排版 + 入队"的分类耗时与数量，
-    与 main_frame/io_init 中的受开关保护埋点配合，构成完整的 TK 渲染性能画像。
+    统计 flow 线程侧"排版 + 发送"的分类耗时与数量，
+    与 Script/Frontend/Tk 及 io_init 的埋点配合构成完整的 TK 渲染性能画像。
 
 统计口径说明：
-    - 各 key 之间存在嵌套包含关系（如 flow.panel.InScenePanel 包含其内部所有子绘制），
+    - 各 key 存在嵌套包含关系（如 flow.panel.InScenePanel 包含其内部子绘制），
       分析时应以最外层 key 为总量、内层 key 看占比，不能简单相加。
     - flow.bar_cells 为比例条格数累计（每格对应一条图片消息，是消息量放大器指标）。
     - flow.text_index_cache 为 text_handle.get_text_index 的 lru_cache 命中统计采样，

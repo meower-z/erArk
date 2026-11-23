@@ -542,7 +542,6 @@ class PlayerInput:
         """
         from Script.Core import flow_handle, io_init
 
-        io_init.put_queue = lambda message: None
         io_init.era_print = self._print
         io_init.io_print_cmd = self._print_cmd
         io_init.io_print_image_cmd = self._print_cmd

@@ -155,7 +155,7 @@ class Base_function_class:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        view.wframe_mouse.w_frame_skip_wait_mouse = 1
+        flow_handle.set_skip_pauses(True)
         for birthplace_id in game_config.config_birthplace:
             birthplace_data = game_config.config_birthplace[birthplace_id]
             if birthplace_data.name == scene_name:

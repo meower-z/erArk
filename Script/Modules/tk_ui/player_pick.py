@@ -192,7 +192,6 @@ def _round() -> None:
     面板把面板id换成了标题或建角色面板时抛出 LeftGame
     """
     py_cmd.clr_cmd()
-    py_cmd.focus_cmd()
     constant.panel_data[view.now_panel_id]()
     if view.now_panel_id in PRE_GAME_PANELS:
         raise LeftGame

@@ -48,11 +48,11 @@ CHECK_SIZES = [12, 14, 16, 18, 20, 22, 24, 26, 30, 40]
 
 def get_current_font_size() -> int:
     """
-    按 Script/Core/main_frame.py:248 的算法反算当前实际使用的字号
-    Keyword arguments:
-    无
-    Return arguments:
-    int -- 当前字号
+    按 Script/Frontend/Tk/screen.py 中 init_config 的算法反算当前实际使用的字号
+
+    参数：无
+
+    返回值类型：int -- 当前字号
     """
     cfg = normal_config.config_normal
     return int(cfg.window_width / cfg.text_width) * 2

@@ -122,6 +122,12 @@ class PortCore(UiPort):
                 self._flush()
 
     @override
+    def flush(self) -> None:
+        with self._cond:
+            self._require_open()
+            self._flush()
+
+    @override
     def clear(self, target: ClearTarget) -> None:
         with self._cond:
             self._require_open()

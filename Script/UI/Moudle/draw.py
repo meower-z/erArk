@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import time
 from typing import Protocol
 
 from Script.Core import text_handle, io_init, py_cmd, flow_handle
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
-from Script.UI.Moudle import view
 
 if TYPE_CHECKING:
     from collections.abc import Sized, Callable
@@ -111,11 +109,7 @@ class WaitDraw(NormalDraw):
         if self.width <= 0 or not self.text:
             io_init.era_print(self.text, self.style, tooltip=self.tooltip)
             if int(len(self.text)):
-                # 右键激活跳过标志时忽略等待，否则正常停顿等待玩家操作
-                if not view.wframe_mouse.w_frame_skip_wait_mouse:
-                    flow_handle.askfor_wait()
-                else:
-                    time.sleep(0.001)
+                flow_handle.askfor_wait()
             return
         text = self.text
         # 当前剩余待输出的文本
@@ -136,11 +130,7 @@ class WaitDraw(NormalDraw):
             text = text[len(now_text) :]
         # 输出后等待玩家操作
         if int(len(self.text)):
-            # 右键激活跳过标志时忽略等待，否则正常停顿等待玩家操作
-            if not view.wframe_mouse.w_frame_skip_wait_mouse:
-                flow_handle.askfor_wait()
-            else:
-                time.sleep(0.001)
+            flow_handle.askfor_wait()
 
 
 class LineFeedWaitDraw(NormalDraw):
@@ -194,10 +184,7 @@ class LineFeedWaitDraw(NormalDraw):
                 if remain:
                     io_init.era_print("\n")
                 # 等待玩家操作
-                if not view.wframe_mouse.w_frame_skip_wait_mouse:
-                    flow_handle.askfor_wait()
-                else:
-                    time.sleep(0.001)
+                flow_handle.askfor_wait()
             io_init.era_print("\n")
 
 

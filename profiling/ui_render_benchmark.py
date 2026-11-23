@@ -3,11 +3,9 @@
 erArk TK 渲染性能自动化基准脚本
 
 原理：
-    加载存档后，直接进入主场景面板 InScenePanel 的真实 while-1 重绘循环，
-    但把 flow_handle.askfor_all 替换为"入队上膛标记 -> 等待 GUI 线程渲染完成 -> 直接返回"，
-    从而无人值守地驱动 N 次完整主界面重绘（真实 Tk 窗口、真实渲染路径）。
-    每屏的分类耗时由 Script/Core/perf_hook.py + main_frame/io_init 埋点 +
-    profiling/ui_perf_patch.py 排版补丁收集，逐屏写入 JSONL，结束时输出会话汇总。
+    加载存档后进入 InScenePanel 或 SeeMapPanel 的真实重绘循环，将 flow_handle.askfor_all 替换为
+    io_init.ask_choice(()) 阻塞等待，并在 TkFrontend 就绪时自动提交空输入以驱动 N 次完整重绘。
+    每屏耗时由 Script/Core/perf_hook.py、Script/Frontend/Tk、io_init 埋点及 ui_perf_patch.py 收集。
 
 使用示例：
     python -m profiling.ui_render_benchmark --load-save 1 --screens 30
@@ -20,54 +18,35 @@ erArk TK 渲染性能自动化基准脚本
 import argparse
 import json
 import os
+import secrets
 import sys
 import time
-import traceback
 from datetime import datetime
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
+from profiling.ui_benchmark_session import BenchmarkSession, BenchmarkState, log
 from Script.Modules.domains import roster
 from Script.Modules.domains import identity
 
 if TYPE_CHECKING:
-    from typing import TypedDict
-
     from Script.UI.Panel import in_scene_panel, see_map_panel
 
     BenchmarkPanel = see_map_panel.SeeMapPanel | in_scene_panel.InScenePanel
-
-    class BenchmarkState(TypedDict):
-        """基准运行状态：已完成屏数、每屏等待耗时（秒）、是否已在预热后清屏、是否超时中止"""
-
-        screens_done: int
-        screen_wall_times: list[float]
-        warmup_wall_times: list[float]
-        warmup_cleared: bool
-        aborted: bool
 
 
 PROFILE_DIR = "profiling_output"
 os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
-def log(msg: str) -> None:
-    """
-    输出带前缀的日志
-    参数:
-        msg (str) -- 日志内容
-    返回值类型：无
-    功能描述：统一日志前缀，便于与游戏自身输出区分
-    """
-    print(f"[ui_benchmark] {msg}", flush=True)
-
-
 def parse_args() -> argparse.Namespace:
     """
     解析命令行参数
+
     参数：无
+
     返回值类型：argparse.Namespace
-    功能描述：提供存档号、重绘屏数、单屏超时等参数
+    功能描述：提供存档号、重绘屏数、目标面板、预热选项与汇总文件前缀等参数
     """
     ap = argparse.ArgumentParser()
     ap.add_argument(
@@ -78,12 +57,6 @@ def parse_args() -> argparse.Namespace:
     )
     ap.add_argument(
         "--screens", type=int, default=30, help="要执行的主界面完整重绘次数"
-    )
-    ap.add_argument(
-        "--timeout-per-screen",
-        type=float,
-        default=60.0,
-        help="单屏渲染等待超时（秒）",
     )
     ap.add_argument(
         "--summary-name",
@@ -110,9 +83,15 @@ def parse_args() -> argparse.Namespace:
         help="预热后不清屏（对照实验：区分尖峰来自字形度量还是清屏后重建）",
     )
     ap.add_argument(
+        "--timeout-per-screen",
+        type=float,
+        default=60.0,
+        help="单屏渲染等待超时（秒）",
+    )
+    ap.add_argument(
         "--prewarm",
         action="store_true",
-        help="调用产品化预热函数 io_init.warm_up_text_metrics()（等价于真实启动流程 game_init.init 中的预热）",
+        help="保留启动期的常用字符度量预热 Script.Frontend.Tk.warmup.warm_up()（与正常游戏启动流程一致）",
     )
     return ap.parse_args()
 
@@ -147,6 +126,9 @@ def main() -> None:
 
     from Script.Core import constant, flow_handle, io_init
     from Script.Config import normal_config
+    from Script.Frontend.Tk import warmup
+    from Script.Frontend.Tk.app import TkFrontend
+    from Script.Protocol import ThreadedUiPort
     from Script.UI.Moudle import view
 
     if not identity.exists(0):
@@ -161,6 +143,7 @@ def main() -> None:
         "warmup_wall_times": [],
         "warmup_cleared": False,
         "aborted": False,
+        "exit_code": 0,
     }
     total_screens = args.screens + args.warmup_screens
 
@@ -168,26 +151,17 @@ def main() -> None:
         input_list: list, print_order: bool = False
     ) -> str:
         """
-        askfor_all 的基准替身
-        参数:
-            input_list (list) -- 原函数的可选项列表（此处忽略）
-            print_order (bool) -- 原函数的回显开关（此处忽略）
-        返回值类型：str -- 恒为空字符串（InScenePanel 不使用其返回值）
-        功能描述：推送上膛标记触发 GUI 侧本屏 flush，轮询等待渲染完成后返回，
-                  达到目标屏数后修改面板 id 使 InScenePanel 的重绘循环退出
+        askfor_all 的基准替身：调用 `io_init.ask_choice(())` 阻塞等待前端渲染完成与自动应答并记录单屏耗时，
+        达标后置 `view.now_panel_id = -999` 退出循环
+
+        参数：
+        input_list (list) -- askfor_all 的可选项列表（此处忽略）
+        print_order (bool) -- askfor_all 的回显开关（此处忽略）
+
+        返回值类型：str -- 恒为空字符串
         """
-        screen_before = perf_hook.get_screen_count()
         t0 = time.perf_counter()
-        io_init.arm_input()
-        deadline = time.time() + args.timeout_per_screen
-        while perf_hook.get_screen_count() == screen_before:
-            time.sleep(0.005)
-            if time.time() > deadline:
-                log(
-                    f"警告：第 {state['screens_done'] + 1} 屏等待渲染超时（{args.timeout_per_screen}s），中止。"
-                )
-                state["aborted"] = True
-                break
+        io_init.ask_choice(())
         wall = time.perf_counter() - t0
         state["screens_done"] += 1
         # 预热屏与正式测量屏分开记录
@@ -212,117 +186,123 @@ def main() -> None:
             state["warmup_cleared"] = True
             if not args.no_warmup_clear:
                 io_init.clear_screen()
-        if state["screens_done"] >= total_screens or state["aborted"]:
+        if state["screens_done"] >= total_screens:
             # 让面板的 while-1 循环在下一次条件检查时退出
             view.now_panel_id = -999
         return ""
 
     flow_handle.askfor_all = benchmark_askfor_all
 
-    def benchmark_flow() -> None:
+    def draw() -> None:
         """
-        flow 线程主函数
+        注册样式并按参数进入主场景或查看地图面板的重绘循环，直至基准屏数达标或会话取消
+
         参数：无
-        返回值类型：无
-        功能描述：初始化样式后进入真实的主场景面板重绘循环，
-                  结束后输出汇总 JSON 并退出整个进程（关闭 Tk 窗口）
+
+        返回值类型：None
         """
-        exit_code = 0
-        try:
-            # 样式注册需经队列发给 GUI 线程
-            io_init.init_style()
-            # 产品化预热：与真实启动流程（game_init.init）相同的预热函数
-            if args.prewarm:
-                t_prewarm = time.perf_counter()
-                io_init.warm_up_text_metrics()
-                # 固定等待 GUI 线程处理完预热批（含 metrics_sync，实测约4秒），避免其成本混入首屏测量
-                # 注：gui.metrics_sync 计时要到首个屏边界 flush 才进入会话汇总，无法轮询其出现
-                time.sleep(8)
-                log(
-                    f"产品化预热完成（flow侧入队+等待GUI共 {(time.perf_counter() - t_prewarm) * 1000:.1f}ms，"
-                    f"GUI侧耗时见 gui.metrics_sync）"
-                )
-            width = normal_config.config_normal.text_width
+        io_init.init_style()
+        width = normal_config.config_normal.text_width
+        log(
+            f"开始基准：面板={args.panel}，{args.screens} 屏完整重绘，文本宽度 {width}"
+        )
+        panel: BenchmarkPanel
+        if args.panel == "map":
+            view.now_panel_id = constant.Panel.SEE_MAP
+            from Script.UI.Panel import see_map_panel
+
+            panel = see_map_panel.SeeMapPanel(width)
+        else:
+            view.now_panel_id = constant.Panel.IN_SCENE
+            from Script.UI.Panel import in_scene_panel
+
+            panel = in_scene_panel.InScenePanel(width)
+        panel.draw()
+
+    def report(total_wall: float) -> None:
+        """
+        将本次基准的汇总 JSON 写入 profiling_output 目录，并向日志输出分类耗时表与每屏等待统计
+
+        参数：
+        total_wall (float) -- 重绘循环总墙钟耗时（秒）
+
+        返回值类型：None
+        """
+        log(
+            f"重绘循环结束：{state['screens_done']} 屏，总墙钟 {total_wall:.2f}s"
+        )
+        summary = {
+            "screens_requested": args.screens,
+            "screens_done": len(state["screen_wall_times"]),
+            "warmup_screens": args.warmup_screens,
+            "aborted": state["aborted"],
+            "warmup_wall_ms": [
+                round(t * 1000, 1) for t in state["warmup_wall_times"]
+            ],
+            "npc_count": roster.count(),
+            "total_wall_s": round(total_wall, 3),
+            "screen_wall_ms": [
+                round(t * 1000, 1) for t in state["screen_wall_times"]
+            ],
+            "session": perf_hook.get_session_summary(),
+            "jsonl_path": perf_hook.get_output_path(),
+        }
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        summary_path = os.path.join(
+            PROFILE_DIR, f"{args.summary_name}_{ts}.json"
+        )
+        with open(summary_path, "w", encoding="utf-8") as f:
+            json.dump(summary, f, ensure_ascii=False, indent=2)
+
+        times = summary["session"]["times_ms"]
+        log("=" * 60)
+        log(f"分类耗时汇总（{state['screens_done']} 屏累计，按总耗时降序）：")
+        for key, rec in sorted(
+            times.items(), key=lambda kv: kv[1]["total_ms"], reverse=True
+        )[:25]:
             log(
-                f"开始基准：面板={args.panel}，{args.screens} 屏完整重绘，文本宽度 {width}"
+                f"  {key:<40} calls={rec['calls']:<7} total={rec['total_ms']:>10.1f}ms max={rec['max_ms']:>8.2f}ms"
             )
-            t_total = time.perf_counter()
-            panel: BenchmarkPanel
-            if args.panel == "map":
-                # 查看地图界面：SeeMapPanel 的 while-1 循环同样以 now_panel_id 为退出条件
-                view.now_panel_id = constant.Panel.SEE_MAP
-                from Script.UI.Panel import see_map_panel
-
-                panel = see_map_panel.SeeMapPanel(width)
-            else:
-                view.now_panel_id = constant.Panel.IN_SCENE
-                from Script.UI.Panel import in_scene_panel
-
-                panel = in_scene_panel.InScenePanel(width)
-            panel.draw()
-            total_wall = time.perf_counter() - t_total
+        log(f"消息计数：{summary['session']['counts']}")
+        wall_list = state["screen_wall_times"]
+        if wall_list:
+            sorted_wall = sorted(wall_list)
             log(
-                f"重绘循环结束：{state['screens_done']} 屏，总墙钟 {total_wall:.2f}s"
+                f"每屏flow等待GUI耗时: mean={sum(wall_list) / len(wall_list) * 1000:.1f}ms "
+                f"p50={sorted_wall[len(sorted_wall) // 2] * 1000:.1f}ms "
+                f"max={sorted_wall[-1] * 1000:.1f}ms"
             )
+        log(f"每屏明细 JSONL: {summary['jsonl_path']}")
+        log(f"会话汇总 JSON: {summary_path}")
+        log("基准完成。")
 
-            # 汇总输出
-            summary = {
-                "screens_requested": args.screens,
-                "screens_done": len(state["screen_wall_times"]),
-                "warmup_screens": args.warmup_screens,
-                "warmup_wall_ms": [
-                    round(t * 1000, 1) for t in state["warmup_wall_times"]
-                ],
-                "aborted": state["aborted"],
-                "npc_count": roster.count(),
-                "total_wall_s": round(total_wall, 3),
-                "screen_wall_ms": [
-                    round(t * 1000, 1) for t in state["screen_wall_times"]
-                ],
-                "session": perf_hook.get_session_summary(),
-                "jsonl_path": perf_hook.get_output_path(),
-            }
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            summary_path = os.path.join(
-                PROFILE_DIR, f"{args.summary_name}_{ts}.json"
-            )
-            with open(summary_path, "w", encoding="utf-8") as f:
-                json.dump(summary, f, ensure_ascii=False, indent=2)
+    token = secrets.token_hex(16)
+    port = ThreadedUiPort(token)
+    frontend = TkFrontend(port, token)
+    io_init.configure(port)
+    io_init.apply_frontend_config(frontend.init_config)
+    session = BenchmarkSession(
+        frontend, frontend.window.root, port, state, args.timeout_per_screen
+    )
+    arm = frontend._do_arm
 
-            # 控制台输出分类耗时 Top 表
-            times = summary["session"]["times_ms"]
-            log("=" * 60)
-            log(
-                f"分类耗时汇总（{state['screens_done']} 屏累计，按总耗时降序）："
-            )
-            for key, rec in sorted(
-                times.items(), key=lambda kv: kv[1]["total_ms"], reverse=True
-            )[:25]:
-                log(
-                    f"  {key:<40} calls={rec['calls']:<7} total={rec['total_ms']:>10.1f}ms max={rec['max_ms']:>8.2f}ms"
-                )
-            log(f"消息计数：{summary['session']['counts']}")
-            wall_list = state["screen_wall_times"]
-            if wall_list:
-                sorted_wall = sorted(wall_list)
-                log(
-                    f"每屏flow等待GUI耗时: mean={sum(wall_list) / len(wall_list) * 1000:.1f}ms "
-                    f"p50={sorted_wall[len(sorted_wall) // 2] * 1000:.1f}ms "
-                    f"max={sorted_wall[-1] * 1000:.1f}ms"
-                )
-            log(f"每屏明细 JSONL: {summary['jsonl_path']}")
-            log(f"会话汇总 JSON: {summary_path}")
-            log("基准完成。")
-        except Exception:
-            log("基准执行异常：")
-            traceback.print_exc()
-            exit_code = 1
-        finally:
-            # 退出整个进程以关闭 Tk 窗口（主线程阻塞在 mainloop 中）
-            os._exit(exit_code)
+    def arm_and_answer() -> None:
+        """
+        先执行前端输入就绪回调完成本屏耗时统计，再立即提交空输入以驱动下一屏重绘并重置单屏超时定时器
 
-    # 主线程运行 Tk mainloop，flow 线程执行基准
-    io_init.run(benchmark_flow)
+        参数：无
+
+        返回值类型：None
+        """
+        arm()
+        frontend.submit_input()
+        session.restart_deadline()
+
+    frontend._do_arm = arm_and_answer
+    if not args.prewarm:
+        warmup.warm_up = lambda *_, **__: None
+    session.serve(draw, report)
+    sys.exit(state["exit_code"])
 
 
 if __name__ == "__main__":

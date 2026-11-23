@@ -1098,14 +1098,14 @@ def handle_wait() -> None:
 @add_instruct(constant.Instruct.WAIT_1_HOUR)
 def handle_wait_1_hour() -> None:
     """处理等待一个小时指令"""
-    view.wframe_mouse.w_frame_skip_wait_mouse = 1
+    flow_handle.set_skip_pauses(True)
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=60)
 
 
 @add_instruct(constant.Instruct.WAIT_6_HOUR)
 def handle_wait_6_hour() -> None:
     """处理等待六个小时指令"""
-    view.wframe_mouse.w_frame_skip_wait_mouse = 1
+    flow_handle.set_skip_pauses(True)
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=360)
 
 

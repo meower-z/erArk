@@ -1,492 +1,226 @@
 # -*- coding: UTF-8 -*-
-"""输入输出接口层：命令与文本的队列收发、文本样式设置与图片打印"""
+"""游戏后端与协议端口之间的 IO 适配层，负责发送渲染操作、清屏、同步前端配置与阻塞请求玩家输入。"""
 
-from __future__ import annotations
+import secrets
+import sys
+from collections.abc import Iterable, Iterator
+from typing import NoReturn
 
-import threading
-import queue
-import json
-import time
 from Script.Config import game_config, normal_config
 from Script.Core import perf_hook
-from typing import TYPE_CHECKING
+from Script.Protocol import (
+    BgColorOp,
+    ButtonOp,
+    ClearButtonsOp,
+    ExitReason,
+    FrontendInitConfig,
+    ImageBatchOp,
+    ImageButtonOp,
+    ImageOp,
+    RenderOp,
+    SessionCancelled,
+    StyleDefOp,
+    TextOp,
+    ThreadedUiPort,
+    UiPort,
+)
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-    from typing import Any
-    from types import ModuleType
-
-# Tkinter main_frame 延迟导入状态（解决无显示环境下的导入问题）
-_main_frame_module: ModuleType | None = None
-""" main_frame模块的引用（延迟导入） """
-_main_frame_load_attempted = False
-""" 是否已尝试加载main_frame模块 """
+TEXT_LIMIT = sys.maxsize
+"""调用 `ask_text` 时传给端口的文本长度上限，取 `sys.maxsize` 表示不限制输入长度。"""
+_port: UiPort = ThreadedUiPort(secrets.token_hex(16))
 
 
-def _get_main_frame() -> ModuleType | None:
+def configure(port: UiPort) -> None:
     """
-    延迟获取main_frame模块
+    替换后端当前使用的通信端口实例
 
-    参数：无
-    返回值类型：module 或 None
-    功能描述：只在需要时才导入main_frame，避免在无显示环境下报错
+    参数：
+    port (UiPort) -- 新的后端通信端口
+
+    返回值类型：None
     """
-    global _main_frame_module, _main_frame_load_attempted
-
-    if _main_frame_module is not None:
-        return _main_frame_module
-
-    if _main_frame_load_attempted:
-        return None
-
-    _main_frame_load_attempted = True
-
-    try:
-        from Script.Core import main_frame
-
-        _main_frame_module = main_frame
-        return _main_frame_module
-    except Exception as e:
-        print(f"警告：无法导入Tkinter main_frame模块: {e}")
-        return None
+    global _port
+    _port = port
 
 
-input_evnet = threading.Event()
-_send_queue: queue.Queue[str] = queue.Queue()
-_order_queue: queue.Queue[str] = queue.Queue()
-order_swap = None
-_flowthread: threading.Thread
-""" 运行开场流程的线程，由 run 创建 """
-
-# main_frame 的绑定（延迟到首次使用时）
-_main_frame_bound = False
-""" 是否已绑定main_frame """
-
-
-def _ensure_main_frame_bound() -> None:
+def apply_frontend_config(config: FrontendInitConfig) -> None:
     """
-    确保main_frame已绑定
+    将前端初始配置中的窗口尺寸、文本宽度与字号写入全局 `normal_config.config_normal`
+
+    参数：
+    config (FrontendInitConfig) -- 前端上报的窗口与字号配置
+
+    返回值类型：None
     """
-    global _main_frame_bound
-    if not _main_frame_bound:
-        main_frame = _get_main_frame()
-        if main_frame is not None:
-            main_frame.bind_return(_input_evnet_set)
-            main_frame.bind_queue(_send_queue)
-            _main_frame_bound = True
+    normal = normal_config.config_normal
+    normal.window_width = config.window_width
+    normal.window_hight = config.window_height
+    normal.text_width = config.text_width
+    normal.font_size = config.font_size
+    normal.order_font_size = config.font_size - 2
 
 
-def _input_evnet_set(order: str) -> None:
-    """
-    推送一个命令
-
-    参数:
-    order (str) -- 命令
-
-    返回值类型：无
-    功能描述：将命令推送到队列中
-    """
-    put_order(order)
-
-
-def get_order() -> str:
-    """
-    获取一个命令
-
-    参数：无
-
-    返回值类型：str
-    功能描述：从命令队列中获取一个命令
-    """
-    _ensure_main_frame_bound()
-    return _order_queue.get()
-
-
-def _get_input_event() -> threading.Event:
-    """
-    获取输入事件锁
-
-    参数：无
-
-    返回值类型：threading.Event
-    功能描述：获取用于同步的输入事件锁
-    """
-    return input_evnet
-
-
-def run(open_func: Callable[[], object]) -> None:
-    """
-    运行游戏
-
-    参数:
-    open_func (function) -- 开场流程函数
-
-    返回值类型：无
-    功能描述：启动游戏主流程
-    """
-    _ensure_main_frame_bound()
-    main_frame = _get_main_frame()
-    if main_frame is None:
-        print("错误：无法加载Tkinter")
+def _count(kind: str = "") -> None:
+    if not perf_hook.enabled:
         return
-    global _flowthread
-    _flowthread = threading.Thread(target=open_func, name="flowthread")
-    _flowthread.start()
-    main_frame.run()
+    if not perf_hook.get_mark("flow.screen_first_msg"):
+        perf_hook.mark("flow.screen_first_msg")
+    perf_hook.hook_count("flow.msg_total")
+    if kind:
+        perf_hook.hook_count(kind)
 
 
-def put_queue(message: str) -> None:
+def _emit(op: RenderOp, kind: str = "") -> None:
+    _count(kind)
+    _port.emit_op(op)
+
+
+def _style(style: str | tuple[str, ...]) -> tuple[str, ...]:
+    return (style,) if isinstance(style, str) else tuple(style)
+
+
+def ask_choice(valid_ids: tuple[str, ...]) -> str:
     """
-    向输出队列中推送信息
+    标记本屏入队完成并阻塞等待前端从指定合法选项中返回选择
 
-    参数:
-    message (str) -- 推送的信息
+    参数：
+    valid_ids (tuple[str, ...]) -- 本次提示允许接受的选项编号元组
 
-    返回值类型：无
-    功能描述：将消息推送到输出队列中
+    返回值类型：str -- 前端提交的原始选项文本
     """
-    if perf_hook.enabled:
-        # 记录本屏首条消息入队时刻（供 GUI 侧计算整屏耗时），并累计消息数/字节数
-        if not perf_hook.get_mark("flow.screen_first_msg"):
-            perf_hook.mark("flow.screen_first_msg")
-        perf_hook.hook_count("flow.msg_total")
-        perf_hook.hook_count("flow.msg_bytes", len(message))
-    _send_queue.put_nowait(message)
-
-
-def arm_input() -> None:
-    """
-    向输出队列推送一个"输入上膛"标记
-
-    参数：无
-
-    返回值类型：无
-    功能描述：在某个提示的输入等待入口调用，把独立的 {"input_arm": true} 标记入队，
-              待 read_queue 处理到该标记时把 GUI 侧输入门禁置为已上膛，此后才接受该屏输入。
-    """
-    # 隐性前提：绘制队列为单生产者（flow 线程），标记 push 后 flow 即阻塞等待输入，
-    # 故标记恒为该屏消息的批尾；若未来出现后台绘制生产者需重新评估此假设。
-    # 性能监控：flow 侧入队完成时刻，与 GUI 侧 _do_arm 配对得出真实渲染延迟
     perf_hook.mark("flow.enqueue_done")
-    _send_queue.put_nowait(json.dumps({"input_arm": True}))
+    return _port.choose(valid_ids).raw_value
 
 
-def put_order(message: str) -> None:
+def ask_text(allow_empty: bool) -> str:
     """
-    向命令队列中推送信息
+    标记本屏入队完成、关闭跳过暂停并阻塞等待前端返回自由文本
 
-    参数:
-    message (str) -- 推送的命令信息
+    参数：
+    allow_empty (bool) -- 是否允许前端提交空字符串
 
-    返回值类型：无
-    功能描述：将命令推送到命令队列中
+    返回值类型：str -- 前端提交的文本内容
     """
-    _order_queue.put_nowait(message)
+    perf_hook.mark("flow.enqueue_done")
+    return _port.input_text(TEXT_LIMIT, allow_empty=allow_empty).text
 
 
-# #######################################################################
-# json 构建函数
-
-
-def new_json() -> dict[str, Any]:
+def wait_continue() -> None:
     """
-    定义一个通用json结构
+    标记本屏入队完成并调用端口暂停，跳过模式开启且允许跳过时端口会在刷出缓冲后立即返回
 
     参数：无
 
-    返回值类型：dict
-    功能描述：创建一个基本的JSON结构
+    返回值类型：None
     """
-    flow_json: dict[str, Any] = {}
-    flow_json["content"] = []
-    return flow_json
+    perf_hook.mark("flow.enqueue_done")
+    _port.pause()
 
 
-def text_json(
-    string: str, style: tuple | str, tooltip: str = ""
-) -> dict[str, Any]:
+def set_skip_pauses(enabled: bool) -> None:
     """
-    定义一个文本json
+    向端口设置跳过可跳过暂停的开关状态
 
-    参数:
-    string (str) -- 要显示的文本
-    style (tuple或str) -- 显示时的样式
+    参数：
+    enabled (bool) -- 为 True 时开启跳过暂停，为 False 时关闭
 
-    返回值类型：dict
-    功能描述：创建一个文本JSON对象
+    返回值类型：None
     """
-    re: dict[str, object] = {}
-    re["type"] = "text"
-    re["text"] = string
-    if isinstance(style, tuple):
-        re["style"] = style
-    if isinstance(style, str):
-        re["style"] = (style,)
-    re["tooltip"] = tooltip or ""
-    return re
+    _port.set_skip_pauses(enabled)
 
 
-def cmd_json(
-    cmd_str: str,
-    cmd_num: int | str,
-    normal_style: tuple | str,
-    on_style: tuple | str,
-    tooltip: str = "",
-) -> dict[str, Any]:
+def flush() -> None:
     """
-    定义一个命令json
+    立即刷出端口中已缓冲的渲染操作
 
-    参数:
-    cmd_str (str) -- 命令文本
-    cmd_num (int | str) -- 命令数字
-    normal_style (tuple或str) -- 正常显示样式
-    on_style (tuple或str) -- 鼠标在其上时显示样式
+    参数：无
 
-    返回值类型：dict
-    功能描述：创建一个命令JSON对象
+    返回值类型：None
     """
-    re: dict[str, object] = {}
-    re["type"] = "cmd"
-    re["text"] = cmd_str
-    re["num"] = cmd_num
-    if isinstance(normal_style, tuple):
-        re["normal_style"] = normal_style
-    if isinstance(normal_style, str):
-        re["normal_style"] = (normal_style,)
-    if isinstance(on_style, tuple):
-        re["on_style"] = on_style
-    if isinstance(on_style, str):
-        re["on_style"] = (on_style,)
-    re["tooltip"] = tooltip or ""
-    return re
+    _port.flush()
 
 
-def style_json(
-    style_name: str,
-    foreground: str,
-    background: str,
-    font: str,
-    fontsize: int,
-    bold: bool,
-    underline: bool,
-    italic: bool,
-) -> dict[str, str | int | bool]:
+def flushing[T](items: Iterable[T]) -> Iterator[T]:
     """
-    定义一个样式json
+    逐项产出可迭代对象中的元素，并在调用方处理完每一项后调用 `flush()` 立即刷出缓冲输出
 
-    参数:
-    style_name (str) -- 样式名称
-    foreground (str) -- 前景色/字体颜色
-    background (str) -- 背景色
-    font (str) -- 字体
-    fontsize (int) -- 字号
-    bold (bool) -- 加粗
-    underline (bool) -- 下划线
-    italic (bool) -- 斜体
+    参数：
+    items (Iterable[T]) -- 待逐项处理的数据流
 
-    返回值类型：dict
-    功能描述：创建一个样式JSON对象
+    返回值类型：Iterator[T] -- 依次产出 `items` 元素的迭代器
     """
-    re: dict[str, str | int | bool] = {}
-    re["style_name"] = style_name
-    re["foreground"] = foreground
-    re["background"] = background
-    re["font"] = font
-    re["fontsize"] = fontsize
-    re["bold"] = bold
-    re["underline"] = underline
-    re["italic"] = italic
-    return re
+    for item in items:
+        yield item
+        flush()
 
 
-# #######################################################################
-# 输出格式化
+def end_session(reason: ExitReason = "normal") -> NoReturn:
+    """
+    向端口发送会话结束事件并抛出 `SessionCancelled` 以正常退出游戏流程线程
+
+    参数：
+    reason (ExitReason) -- 会话结束原因，默认 "normal"
+
+    返回值类型：NoReturn -- 始终抛出 `SessionCancelled`
+    """
+    _port.finish(reason)
+    raise SessionCancelled(reason)
 
 
 def era_print(
     string: str, style: str | tuple[str, ...] = "standard", tooltip: str = ""
 ) -> None:
     """
-    输出命令
+    向端口发送一条带样式与可选悬停提示的文本渲染操作
 
-    参数:
-    string (str) -- 输出文本
-    style (str) -- 显示样式
+    参数：
+    string (str) -- 要显示的文本内容
+    style (str | tuple[str, ...]) -- 单个样式名或样式名元组
+    tooltip (str) -- 鼠标悬停提示文本，为空时不绑定提示
 
-    返回值类型：无
-    功能描述：输出格式化文本到界面
+    返回值类型：None
     """
-    if perf_hook.enabled:
-        _t0 = time.perf_counter()
-        json_str = new_json()
-        json_str["content"].append(text_json(string, style, tooltip))
-        message = json.dumps(json_str, ensure_ascii=False)
-        perf_hook.hook_time("flow.json_dumps", time.perf_counter() - _t0)
-        perf_hook.hook_count("flow.msg_text")
-        put_queue(message)
-        return
-    json_str = new_json()
-    json_str["content"].append(text_json(string, style, tooltip))
-    put_queue(json.dumps(json_str, ensure_ascii=False))
+    _emit(TextOp(string, _style(style), tooltip or ""), "flow.msg_text")
 
 
 def image_print(image_name: str) -> None:
     """
-    图片输出命令
+    向端口发送单张图片的渲染操作
 
-    参数:
-    image_name (str) -- 图片名称
+    参数：
+    image_name (str) -- 图片资源名
 
-    返回值类型：无
-    功能描述：输出图片到界面
+    返回值类型：None
     """
-    if perf_hook.enabled:
-        # 图片消息计数（比例条每格一条消息，是消息量放大器的直接指标）
-        perf_hook.hook_count("flow.msg_image")
-    json_str = new_json()
-    image_json = {"image_name": image_name}
-    json_str["image"] = image_json
-    put_queue(json.dumps(json_str, ensure_ascii=False))
+    _emit(ImageOp(image_name), "flow.msg_image")
 
 
-def image_list_print(image_name_list: list) -> None:
+def image_list_print(image_name_list: list[str]) -> None:
     """
-    批量图片输出命令
+    向端口批量发送多张图片的渲染操作，列表为空时直接返回
 
-    参数:
-    image_name_list (list) -- 图片名称列表
+    参数：
+    image_name_list (list[str]) -- 按显示顺序排列的图片资源名列表
 
-    返回值类型：无
-    功能描述：把一组图片合并为一条消息输出到界面。
-              比例条等逐格图片若逐张调用 image_print，每格都是一条独立队列消息
-              （json序列化/反序列化/队列操作各一次），主界面单屏可达数百条；
-              合并后一条比例条只占一条消息。
+    返回值类型：None
     """
     if not image_name_list:
         return
-    # 单条消息携带整组图片名
     if perf_hook.enabled:
-        # 图片格数计数与逐格模式保持同口径，另计批数
         perf_hook.hook_count("flow.msg_image", len(image_name_list))
-        perf_hook.hook_count("flow.msg_image_batch")
-    json_str = new_json()
-    json_str["image_list"] = list(image_name_list)
-    put_queue(json.dumps(json_str, ensure_ascii=False))
-
-
-def warm_up_text_metrics() -> None:
-    """
-    预热 Tk 文本行度量
-
-    参数：无
-
-    返回值类型：无
-    功能描述：Tk Text 控件对新字形/新内容的行度量是异步惰性完成的，欠账会在
-              进入游戏后的前几屏由 see(END) 一次性同步补算，造成 0.3~1 秒的偶发卡顿
-              （地图制表符等特殊字形尤其明显）。本函数在启动加载末尾绘制若干屏
-              典型内容：①主场景互动面板（in_scene_panel）及其状态栏/服装栏/身体栏/
-              图片栏/污浊栏/指令面板所用文本的去重字形集；②data/map 各级目录 Map
-              原文件的地图绘制文本（constant.map_data 即其加载结果）。随后推送
-              metrics_sync 标记让 GUI 线程强制完成全部行度量，并立即清屏——
-              全程在同一渲染批内处理，玩家不可见，度量成本被移入加载期。
-    """
-    # 1. 地图面板内容：constant.map_data 即 data/map 各级目录下 Map 原文件的加载结果。
-    #    抽取部分真实行保留行结构（制表符对齐是地图界面度量成本的大头），
-    #    其余行的字形并入去重字形集，保证全部地图的字形都被覆盖
-    from Script.Core import constant
-
-    sample_lines = []
-    glyph_set: set[str] = set()
-    try:
-        raw_line_quota = 40
-        for map_data in constant.map_data.values():
-            map_draw = getattr(map_data, "map_draw", None)
-            if map_draw is None:
-                continue
-            for draw_line in map_draw.draw_text:
-                line_text = "".join(
-                    getattr(now_draw, "text", "")
-                    for now_draw in draw_line.draw_list
-                )
-                if not line_text.strip():
-                    continue
-                glyph_set.update(line_text)
-                if raw_line_quota > 0:
-                    sample_lines.append(line_text)
-                    raw_line_quota -= 1
-    except Exception:
-        # 地图数据不可用时仅用字符样本预热
-        pass
-    # 2. 主场景互动面板典型文本字形：面板固定标签 + 常用字符样本
-    glyph_set.update(
-        "场景当前位置的角色一览:收起展开状态栏服装身体图片详细污浊(锁)预热样本：体力气力理智熟练欲望快感绝顶0123456789ABCabc[]（），。！？→○◆·—/%+-|"
-    )
-    try:
-        from Script.Core import get_text
-
-        translate = get_text._
-        # 主界面各子面板所用配置表的名字字段：
-        # 状态栏（状态名）、服装栏（部位名）、身体栏与污浊栏（器官名/部位名）、指令面板（分类名）。
-        name_sources = (
-            game_config.config_character_state.values(),
-            game_config.config_clothing_type.values(),
-            game_config.config_organ.values(),
-            game_config.config_body_part.values(),
-            game_config.config_instruct_type.values(),
-            game_config.config_instruct_sex_type.values(),
-        )
-        for source in name_sources:
-            for config_data in source:
-                name_text = getattr(config_data, "name", "")
-                if name_text:
-                    glyph_set.update(translate(name_text))
-        # 指令面板：全部指令名
-        for instruct_name in constant.handle_instruct_name_data.values():
-            glyph_set.update(translate(instruct_name))
-    except Exception:
-        # 配置表不可用时仅用地图行与固定样本预热
-        pass
-    # 3. 去重字形按行拼接（去重后仅数十行即可覆盖主界面与全部地图的常见字形）
-    glyph_set.difference_update("\n\r\t\x00 ")
-    glyph_list = sorted(glyph_set)
-    chunk_size = 60
-    for i in range(0, len(glyph_list), chunk_size):
-        sample_lines.append("".join(glyph_list[i : i + chunk_size]))
-    # 逐行入队绘制（与下方的度量同步、清屏在同一渲染批内完成，不会被玩家看到）
-    for line_text in sample_lines:
-        era_print(line_text + "\n")
-    # 3. 字体变体预热：粗体/下划线/斜体是独立的字体实例，字形度量单独缓存
-    variant_sample = "预热字体变体样本0123456789体力气力理智"
-    for style_name in ("bold", "underline", "italic", "standard_bold"):
-        era_print(variant_sample + "\n", style=style_name)
-    # 4. 状态条图片预热：首次使用时的 PhotoImage 惰性转换与图片行度量
-    try:
-        bar_image_names = set()
-        for bar_config in game_config.config_bar.values():
-            bar_image_names.add(bar_config.ture_bar)
-            bar_image_names.add(bar_config.null_bar)
-        image_list_print(sorted(bar_image_names))
-        era_print("\n")
-    except Exception:
-        pass
-    # 请求 GUI 线程同步完成全部行度量
-    put_queue(json.dumps({"metrics_sync": True}))
-    # 立即清屏
-    clear_screen()
+    _emit(ImageBatchOp(tuple(image_name_list)), "flow.msg_image_batch")
 
 
 def clear_screen() -> None:
     """
-    清屏
+    向端口发送清空屏幕内容的指令
 
     参数：无
 
-    返回值类型：无
-    功能描述：清空显示界面
+    返回值类型：None
     """
-    json_str = new_json()
-    json_str["clear_cmd"] = "true"
-    put_queue(json.dumps(json_str, ensure_ascii=False))
+    _count()
+    _port.clear("screen")
 
 
 def frame_style_def(
@@ -500,62 +234,56 @@ def frame_style_def(
     italic: bool,
 ) -> None:
     """
-    推送一条在前端定义样式的信息
+    向端口发送一条富文本样式定义操作
 
-    参数:
+    参数：
     style_name (str) -- 样式名称
-    foreground (str) -- 前景色/字体颜色
+    foreground (str) -- 前景色
     background (str) -- 背景色
-    font (str) -- 字体
-    fontsize (int) -- 字号
-    bold (bool) -- 加粗
-    underline (bool) -- 下划线
-    italic (bool) -- 斜体
+    font (str) -- 字体名称
+    fontsize (int) -- 字号大小
+    bold (bool) -- 是否加粗
+    underline (bool) -- 是否加下划线
+    italic (bool) -- 是否斜体
 
-    返回值类型：无
-    功能描述：定义一个样式并推送到前端
+    返回值类型：None
     """
-    json_str = new_json()
-    json_str["set_style"] = style_json(
-        style_name,
-        foreground,
-        background,
-        font,
-        fontsize,
-        bold,
-        underline,
-        italic,
+    _emit(
+        StyleDefOp(
+            style_name,
+            foreground,
+            background,
+            font,
+            fontsize,
+            bold,
+            underline,
+            italic,
+        )
     )
-    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def set_background(color: str) -> None:
     """
-    设置前端背景颜色
+    向端口发送修改文本框背景色的操作
 
-    参数:
-    color (str) -- 颜色
+    参数：
+    color (str) -- 目标背景色字符串
 
-    返回值类型：无
-    功能描述：设置界面的背景颜色
+    返回值类型：None
     """
-    json_str = new_json()
-    json_str["bgcolor"] = color
-    put_queue(json.dumps(json_str, ensure_ascii=False))
+    _emit(BgColorOp(color))
 
 
 def clear_order() -> None:
     """
-    清除前端已经设置的命令
+    向端口发送清空输入框内容的指令
 
     参数：无
 
-    返回值类型：无
-    功能描述：清除界面上的所有命令按钮
+    返回值类型：None
     """
-    json_str = new_json()
-    json_str["clearorder_cmd"] = "true"
-    put_queue(json.dumps(json_str, ensure_ascii=False))
+    _count()
+    _port.clear("input")
 
 
 def io_print_cmd(
@@ -566,67 +294,54 @@ def io_print_cmd(
     tooltip: str = "",
 ) -> None:
     """
-    打印一条指令
+    向端口发送一个文本命令按钮的渲染操作
 
-    参数:
-    cmd_str (str) -- 命令文本
-    cmd_number (int | str) -- 命令数字
-    normal_style (str) -- 正常显示样式
-    on_style (str) -- 鼠标在其上时显示样式
+    参数：
+    cmd_str (str) -- 按钮显示文字
+    cmd_number (int | str) -- 按钮对应的命令编号
+    normal_style (str) -- 常态样式名
+    on_style (str) -- 鼠标悬停样式名
+    tooltip (str) -- 悬停提示文本
 
-    返回值类型：无
-    功能描述：在界面上显示一个可点击的命令按钮
+    返回值类型：None
     """
-    if perf_hook.enabled:
-        # 按钮消息计数
-        perf_hook.hook_count("flow.msg_cmd")
-    json_str = new_json()
-    json_str["content"].append(
-        cmd_json(cmd_str, cmd_number, normal_style, on_style, tooltip)
+    op = ButtonOp(
+        cmd_str,
+        str(cmd_number),
+        _style(normal_style),
+        _style(on_style),
+        tooltip or "",
     )
-    put_queue(json.dumps(json_str, ensure_ascii=False))
+    _emit(op, "flow.msg_cmd")
 
 
 def io_print_image_cmd(
     cmd_str: str, cmd_number: int | str, tooltip: str = ""
 ) -> None:
     """
-    打印图片指令
+    向端口发送一个图片命令按钮的渲染操作
 
-    参数:
-    cmd_str (str) -- 命令文本
-    cmd_number (int | str) -- 命令数字
+    参数：
+    cmd_str (str) -- 按钮图片资源名
+    cmd_number (int | str) -- 按钮对应的命令编号
+    tooltip (str) -- 悬停提示文本
 
-    返回值类型：无
-    功能描述：在界面上显示一个图片按钮
+    返回值类型：None
     """
-    json_str = new_json()
-    data: dict[str, object] = {}
-    data["type"] = "image_cmd"
-    data["text"] = cmd_str
-    data["num"] = cmd_number
-    if tooltip:
-        data["tooltip"] = tooltip
-    json_str["content"].append(data)
-    put_queue(json.dumps(json_str, ensure_ascii=False))
+    _emit(ImageButtonOp(cmd_str, str(cmd_number), tooltip or ""))
 
 
 def io_clear_cmd(*cmd_numbers: int | str) -> None:
     """
-    清除命令
+    向端口发送清除指定或全部命令按钮的操作
 
-    参数:
-    cmd_numbers (int | str) -- 命令数字，不输入则清除当前已有的全部命令
+    参数：
+    cmd_numbers (int | str) -- 要清除的命令编号，不传时清除当前全部按钮
 
-    返回值类型：无
-    功能描述：清除指定的命令按钮，或者所有命令按钮
+    返回值类型：None
     """
-    json_str = new_json()
-    if cmd_numbers:
-        json_str["clearcmd_cmd"] = cmd_numbers
-    else:
-        json_str["clearcmd_cmd"] = "all"
-    put_queue(json.dumps(json_str, ensure_ascii=False))
+    ids = tuple(str(number) for number in cmd_numbers) if cmd_numbers else None
+    _emit(ClearButtonsOp(ids))
 
 
 def style_def(

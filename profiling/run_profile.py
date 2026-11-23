@@ -130,12 +130,13 @@ def log(msg: str) -> None:
 # ------------------------- IO / 等待补丁 -------------------------
 def patch_for_benchmark(no_patch_io: bool = False) -> None:
     """
-    替换输入与界面函数：py_cmd.focus_cmd、py_cmd.clr_cmd 与 WaitDraw.draw 换成什么也不做的函数，
-    flow_handle.askfor_all 换成返回第一个选项的函数，该选项是有效命令时先分发它；某项替换失败时只打日志
-    Keyword arguments:
-    no_patch_io -- 为真时不做任何替换
-    Return arguments:
-    None
+    替换输入与界面函数：将 `py_cmd.clr_cmd` 与 `WaitDraw.draw` 换为空函数，将 `flow_handle.askfor_all`
+    换为返回首个选项并在命令有效时先分发其回调的函数，某项替换失败时记录日志
+
+    参数：
+    no_patch_io (bool) -- 为 True 时不做任何替换
+
+    返回值类型：None
     """
     if no_patch_io:
         log("未应用 IO 补丁 (--no-patch-io)")
@@ -144,7 +145,6 @@ def patch_for_benchmark(no_patch_io: bool = False) -> None:
     try:
         from Script.Core import py_cmd
 
-        py_cmd.focus_cmd = lambda: None
         py_cmd.clr_cmd = lambda *number, clr_default_flow=True: None
     except Exception as e:
         log(f"补丁 py_cmd 失败: {e}")
@@ -301,7 +301,6 @@ def new_game_minimal_init() -> None:
     except Exception as e:
         log(f"cooking 初始化忽略异常: {e}")
 
-    # 6. 初始化字体 / 颜色风格 (避免 rich_text / main_frame 缺依赖)
     try:
         io_init.init_style()
     except Exception as e:
@@ -325,12 +324,15 @@ def init_game_environment(
     args: argparse.Namespace | SimpleNamespace,
 ) -> ModuleType | None:
     """
-    修复顺序：
-    1. 先初始化 normal_config
-    2. 再 game_config.init() （字体等需要先装）
-    3. 再 import 任何会间接触发 UI / main_frame 的模块 (map_config 等)
-    4. 载入其他配置 (character 模板、地图等)
-    5. 根据参数尝试加载存档 -> 否则新建
+    按依赖顺序初始化无渲染基准所需的游戏环境：
+    1. 初始化 normal_config
+    2. 调用 game_config.init() 载入字体与基础配置
+    3. 按需激活前提统计代理并导入角色模板、地图与流程模块
+    4. 加载内核模块并按参数读档或新建最小开局状态
+    参数：
+    args (argparse.Namespace | SimpleNamespace) -- 基准运行参数
+
+    返回值类型：ModuleType | None -- 启用前提统计时返回代理模块，否则返回 None
     """
     log("开始初始化环境...")
     from Script.Config import normal_config
@@ -359,12 +361,10 @@ def init_game_environment(
         except Exception as e:
             log(f"激活前提统计代理失败: {e}")
 
-    # 此时才能安全 import 其它会追溯到 main_frame / 字体的模块
     from Script.Config import character_config
 
     character_config.init_character_tem_data()
 
-    # 地图 (map_config 会 import rich_text -> draw -> io_init -> main_frame)
     from Script.Config import map_config
 
     map_config.init_map_data()

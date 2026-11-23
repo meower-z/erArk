@@ -11,7 +11,14 @@ from Script.UI.Panel import (
     chara_image_list_panel,
     character_info_head,
 )
-from Script.Core import get_text, game_type, flow_handle, constant, py_cmd
+from Script.Core import (
+    get_text,
+    game_type,
+    flow_handle,
+    constant,
+    py_cmd,
+    io_init,
+)
 from Script.Design import (
     attr_text,
     character_behavior,
@@ -106,7 +113,7 @@ class InScenePanel:
             if len(character_list) > 9:
                 meet_draw.text += "\n"
             # meet_draw.width = self.width
-            view.wframe_mouse.w_frame_skip_wait_mouse = 0
+            flow_handle.set_skip_pauses(False)
             character_handle_panel.null_button_text = activity.target(0)
 
             # 开始绘制主界面标题栏
@@ -382,8 +389,6 @@ class InScenePanel:
                 from Script.Test import Static_Check as static_check_system
 
                 if static_check_system.run_turn_check():
-                    from Script.Core import io_init
-
                     io_init.era_print(
                         _(
                             "警告：检测到游戏逻辑状态不自洽，请把 {0} 文件提交给开发者。\n"

@@ -1,6 +1,5 @@
 """标题流程：绘制游戏标题菜单与logo，并注册标题面板"""
 
-import os
 from types import FunctionType
 from Script.Config import normal_config
 from Script.UI.Moudle import panel, draw, view
@@ -10,7 +9,7 @@ from Script.UI.Panel import (
     mod_panel,
 )  # 新增导入
 from Script.Design import handle_panel
-from Script.Core import constant, get_text, flow_handle, py_cmd
+from Script.Core import constant, get_text, flow_handle, py_cmd, io_init
 
 config_normal = normal_config.config_normal
 _: FunctionType = get_text._
@@ -76,7 +75,7 @@ def title_panel() -> None:
         now_panel = mod_panel.ModManagePanel(width)
         now_panel.draw()
     elif now_key == now_list[4]:
-        os._exit(0)
+        io_init.end_session()
 
 
 def draw_logo() -> None:

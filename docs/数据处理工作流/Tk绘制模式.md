@@ -4,26 +4,25 @@
 
 ## 1. 启动流程
 
-- **主流程**：`Script.Core.game_init.run()` 委托 `io_init.run(open_func)`。该函数：
-  1. 创建并启动后台线程运行具体流程（`open_func`，通常是 `Script.Design.start_flow.start_frame`）。
-  2. 调用 `Script.Core.main_frame.run()` 打开 Tk 主循环。
+- **主流程**：`game.py` 创建 `Script.Protocol.ThreadedUiPort` 与 `Script.Frontend.Tk.app.TkFrontend`，再依次执行：
+  1. 调用 `Script.Core.game_init.start(start_flow.start_frame, port, frontend.init_config)` 配置端口、把前端按实际屏幕算出的尺寸配置写入 `normal_config.config_normal`，并启动名为 `"flowthread"` 的后台工作线程运行游戏主流程。
+  2. 调用 `frontend.run()` 执行常用字符预热、绑定键鼠事件、启动事件泵并进入 Tk 主循环。
+  3. Tk 主循环退出后调用 `port.close("window closed")` 通知端口关闭，并等待工作线程在超时内正常退出。
 
-## 2. Tk 主窗口与事件总线（`Script.Core.main_frame`）
+## 2. Tk 前端包（`Script.Frontend.Tk`）
 
-- **窗口装配**：初始化 `Tk` 根窗口、文本输出区 `Text`、滚动条、指令输入框 `Entry`，并根据屏幕尺寸动态调整字号、窗口大小。窗口图标统一来自 `image/logo.png`。
-- **字体加载**：`load_local_fonts()` 会扫描 `static/fonts` 并在 Tk 环境注册字体/别名，确保配置中的字体能被识别。
-- **输出渲染**：核心逻辑在 `read_queue()`：
-  - 轮询 `io_init` 推入的 JSON 消息并转化为文本插入 (`now_print`)、图片插入 (`textbox.image_create`)、命令按钮 (`io_print_cmd`) 等。
-  - 支持清屏（`clear_screen`）、清命令（`io_clear_cmd`）、设背景色和动态样式注册。
-- **命令标签**：按钮输出通过 Tk `Text` 的 tag 机制实现，`io_print_cmd` 为每个 cmd 生成唯一 tag，绑定 `<1>/<Enter>/<Leave>` 事件以触发回调与 hover 样式。
-- **输入框行为**：`main_frame.send_input()` 从 `Entry` 读取文本，非空时写入界面输入历史 `view.input_cache`（最多保留 21 条），再触发绑定的输入处理函数。
+- **窗口装配（`window.py`、`screen.py`）**：仅在实例化 `Window` 时创建 Tk 根窗口、文本输出区 `Text`、滚动条与指令输入框 `Entry`，导入前端模块不创建根窗口。`screen.init_config()` 按屏幕尺寸钳制窗口宽高并计算字号，窗口图标取自 `image/logo.png`。
+- **字体加载（`fonts.py`）**：`load_local_fonts()` 扫描 `static/fonts` 并在 Tk 中注册字体与别名，本地字体文件无法被 Tk 加载时回退同名系统字体。
+- **事件泵与输入门控（`app.py`、`gate.py`）**：`TkFrontend._pump()` 通过 `after(1)` 每次批量拉取最多 256 条后端事件并交给 `Renderer.render()`。输入门控状态由 `gate.InputGate` 维护，收到渲染或清屏事件时关闭门控（`disarm`），收到 `Pause`、`Choose` 或 `InputText` 请求时经 `after_idle` 开启门控（`arm`），并在 `Choose` 与 `InputText` 就绪时聚焦输入框。
+- **渲染与按钮标签（`render.py`、`tooltip.py`）**：`Renderer` 处理 `TextOp`、`ButtonOp`、`ImageButtonOp`、`ImageOp`、`ImageBatchOp`、`StyleDefOp`、`BgColorOp` 与 `ClearButtonsOp`，为每个按钮创建唯一 tag 并绑定 `<1>`、`<Enter>`、`<Leave>`、`<Motion>` 事件与 350ms 延迟悬停提示。
+- **输入框与历史（`app.py`、`history.py`）**：`TkFrontend.submit_input()` 在输入门控开启时读取 `Entry` 文本，记入前端 `InputHistory`（最多 21 条，支持上下键浏览），再按当前挂起请求向端口提交 `Continue`、`SubmitChoice` 或 `SubmitText` 应答并清空输入框。窗口关闭时提交 `Cancel("window closed")` 并销毁根窗口。
 
 ## 3. IO 管线（`Script.Core.io_init`）
 
-- **统一入口**：所有文本/图片/命令输出都经 `io_init.*`。
-- **队列协议**：`era_print`、`image_print`、`io_print_cmd` 等函数构造 JSON 包并写入 `_send_queue`。`main_frame.read_queue()` 消费队列，实现 UI 与业务线程解耦。
-- **样式初始化**：`init_style()` 遍历 `game_config.config_font`，调用 `frame_style_def()` 将样式注册为 Tk `Text` tag；同时额外生成 `bold/underline/italic` 及其与基础样式的组合标记。
-- **命令输入**：`get_order()` 读取 `_order_queue` 中的指令；`put_order()` 直接入队，被 `flow_handle.order_deal()` 消费。
+- **统一入口**：文本、图片、样式与按钮输出经由 `io_init.*` 写入已配置的 `Script.Protocol.UiPort`。
+- **协议端口**：`era_print`、`image_print`、`image_list_print`、`io_print_cmd`、`io_print_image_cmd` 与 `io_clear_cmd` 发送不可变 `RenderOp`，`clear_screen` 与 `clear_order` 发送 `Clear` 事件。
+- **样式初始化**：`init_style()` 遍历 `game_config.config_font` 调用 `frame_style_def()` 发送 `StyleDefOp`，并生成 `bold`、`underline`、`italic` 及其与基础样式的组合样式。
+- **阻塞输入、刷出与跳过模式**：`ask_choice()`、`ask_text()` 与 `wait_continue()` 直接通过端口等待前端应答，无定时轮询。`flush()` 与 `flushing()` 可在不触发输入等待的情况下立即刷出已缓冲的渲染操作（供 AI 流式文本等逐块显示）。`set_skip_pauses()` 直接设置端口的跳过暂停开关，模块自身不另存跳过状态，`end_session()` 发出 `Exit` 事件并抛出 `SessionCancelled` 结束工作线程。
 
 ## 4. 绘制组件层（`Script.UI.Moudle.draw`）
 
@@ -33,7 +32,7 @@
 - `NormalDraw`：基础文本绘制，使用 `text_handle.get_text_index` 计算宽度，按 `self.width` 自动换行。
 - `FullDraw`：不处理换行，直接输出。
 - `WaitDraw`：绘制完成后调用 `flow_handle.askfor_wait()`；用于需要暂停的剧情输出。
-- `LineFeedWaitDraw`：以 `\n` 分段并逐行等待，底层利用 `view.wframe_mouse` 控制跳过逻辑。
+- `LineFeedWaitDraw`：以 `\n` 分段并逐行调用 `flow_handle.askfor_wait()` 等待。
 - `CenterDraw`/`RightDraw`/`LeftDraw`：对齐变种，内部调用 `text_handle.align()`。
 - `CenterMergeDraw`/`LeftMergeDraw`：合并多个 `NormalDraw` 并控制整体宽度。
 
@@ -57,7 +56,7 @@
   - `SingleColumnButton`：将若干 `draw.Button` 竖向排列。
   - `OneMessageAndSingleColumnButton`：常见的“上方文本 + 下方选项”组合。
   - `CenterDrawTextListPanel`、`LeftDrawTextListPanel`：按列对齐输出列表。
-  - `LeftDrawTextListWaitPanel`：绘制完成后阻塞等待输入（结合 `view.wframe_mouse`）。
+  - `LeftDrawTextListWaitPanel`：绘制完成后调用 `flow_handle.askfor_wait()` 等待确认。
 - 业务面板位于 `Script/UI/Panel/*`，多数 `draw()` 函数中：
   1. 收集数据并实例化 `draw.*` 元素。
   2. 调用 `io_init.clear_cmd()`/`io_init.clear_screen()` 等更新 UI。
@@ -69,20 +68,19 @@
 - **绑定阶段**：`py_cmd.pcmd()` -> `flow_handle.print_cmd()` -> `flow_handle.bind_cmd()` 将命令编号与处理函数写入 `constant.cmd_map`。
 - **渲染阶段**：`flow_handle.print_cmd()` 同时调用 `io_init.io_print_cmd()`，由 Tk 侧转为带事件的 tag。
 - **输入阶段**：
-  1. 玩家点击命令或直接在输入框输入数字，`main_frame.send_input()` 将文本塞入 `_order_queue`。
-  2. `flow_handle.order_deal()` 监听 `_order_queue`：若命令存在于 `cmd_map` 则执行，反之触发尾处理函数或错误提示。
-  3. `askfor_all`/`askfor_int` 等封装基于 `order_deal()` 循环等待合法输入。
+  1. 玩家点击按钮或在输入框按回车，`TkFrontend.submit_input()` 经 `InputGate.submit()` 校验并向会话端口提交对应协议应答。
+  2. `flow_handle.order_deal()` 按输入类别请求端口：`askfor_all` 与 `askfor_int` 通过 `_offering()` 传入各自可接受选项并发出 `Choose`，`"order"` 模式发出包含 `cmd_map` 全部键的 `Choose`，`askfor_str` 与 `"console"` 模式发出 `InputText`（`allow_empty = not donot_return_null_str`），`askfor_wait` 发出 `Pause`。非空输入会记入 `view.input_cache` 与 `orders.accept`，`"order"` 模式中命令存在于 `cmd_map` 时执行绑定函数，否则调用尾处理函数。
+  3. `askfor_all`、`askfor_int` 与 `askfor_str` 基于 `order_deal()` 循环等待合法输入。
 - **默认流程**：`flow_handle.set_default_flow()` 可以注册默认逻辑（常用于绘制后的刷新）。`game_init.init()` 会在主循环中 `call_default_flow()`。
 
-## 7. 等待控制与鼠标状态
+## 7. 等待控制与跳过模式
 
-- **状态结构体**：`view.wframe_mouse`（定义于 `view.WFrameMouse`，`Script/UI/Moudle/view.py`）记录逐字/逐行输出状态、鼠标点击、是否跳过等待等标志位。
-- **事件绑定**：`Script.Core.key_listion_event.on_wframe_listion()` 在 Tk 根窗口上绑定鼠标与键盘事件：
-  - 左键：聚焦输入框并触发 `set_wframe_up()`。
-  - 右键：开启跳过模式（`w_frame_skip_wait_mouse = 1`）。
-  - 上/下方向键：遍历指令历史。
-  - 回车：发送输入框内容。
-- **等待逻辑**：`flow_handle.askfor_wait()` 在循环中检查 `view.wframe_mouse.w_frame_up`；部分 `draw`（例如 `LineFeedWaitDraw`）与面板会依据 `w_frame_skip_wait_mouse` 决定是否自动继续。
+- **事件绑定（`Script.Frontend.Tk.app`）**：`TkFrontend.run()` 在 Tk 根窗口上绑定鼠标与键盘事件：
+  - 左键：聚焦输入框，处于暂停等待时提交 `Continue(skip_pauses=False)`，否则在未命中按钮时提交当前输入框内容。
+  - 右键：仅在无挂起请求或当前请求为 `Pause` 时经 `InputGate.right_click()` 预排跳过，已就绪且处于暂停等待时提交 `Continue(skip_pauses=True)`，处于选项或文本等待且未命中按钮时提交当前输入框内容而不预排跳过。
+  - 上/下方向键：通过 `InputHistory` 浏览最近 21 条输入记录并支持恢复草稿。
+  - 回车：调用 `submit_input()`，暂停期间输入空文本则提交 `Continue`，输入非空文本则清空输入框并继续等待。
+- **跳过模式**：游戏侧通过 `flow_handle.set_skip_pauses(True)`（转调 `io_init.set_skip_pauses` 设置端口开关）或玩家右键推进暂停开启跳过模式。期间 `flow_handle.askfor_wait()` 调用 `io_init.wait_continue()`，端口会在刷出缓冲输出后对可跳过暂停立即返回。按协议规则，跳过模式会在下一次 `Choose`、`InputText` 或 `sync_panel` 请求时自动关闭，主场景面板也会显式调用 `flow_handle.set_skip_pauses(False)`。
 
 ## 8. 样式、文本宽度与对齐
 
@@ -94,11 +92,11 @@
 
 ## 9. 图片与资源处理
 
-- **图片加载**：`Script.Core.image_catalog` 在导入时通过 `Script.Core.image_path_index` 扫描 `image/` 目录，建立图片名到路径索引（`image_path_data`）与角色索引（`image_data_index_by_chara`），不解码图片。`Script.Core.image_cache.image_data` 在某张 `.png` 首次取图时按 `main_frame.normal_font.measure("A") / 11` 缩放并缓存为 `PhotoImage`（无 Tk 时比例为 `1.0`，解码失败时缓存 1x1 透明图），并保留至进程结束。
+- **图片加载**：`Script.Core.image_catalog` 在导入时通过 `Script.Core.image_path_index` 扫描 `image/` 目录，建立图片名到路径索引（`image_path_data`）与角色索引（`image_data_index_by_chara`），不解码图片。`Script.Frontend.Tk.image_cache.image_data` 在某张 `.png` 首次取图时按 `set_font_scaling()` 设置的系数（前端初始化设为 `window.normal_font.measure("A") / 11`，未设置时为 `1.0`）缩放并缓存为 `PhotoImage`（解码失败时缓存 1x1 透明图），并保留至进程结束。
 - **图片绘制**：
-  - `draw.ImageDraw.draw()` 调用 `io_init.image_print()`。
-  - `main_frame.read_queue()` 在 `textbox` 中 `image_create`。
-  - 图片按钮 (`ImageButton`) 则通过 `io_print_image_cmd()` 绑定点击事件。
+  - `draw.ImageDraw.draw()` 调用 `io_init.image_print()` 发送 `ImageOp`。
+  - `Script.Frontend.Tk.render.Renderer` 在 `textbox` 中调用 `image_create` 显示图片。
+  - 图片按钮（`ImageButton`）通过 `io_print_image_cmd()` 发送 `ImageButtonOp` 并由渲染器绑定点击事件。
 
 ## 10. 扩展指引
 
@@ -114,7 +112,7 @@
 
 - **输出异常/乱码**：检查 `io_init.init_style()` 是否执行；确认字体文件是否被 `load_local_fonts()` 正常加载（查看控制台日志）。
 - **命令点击无反应**：确认 `py_cmd.pcmd()` 绑定的 `cmd_id` 是否唯一，`flow_handle.cmd_map` 有对应条目；`io_init.clear_cmd()` 是否被提前清空。
-- **等待卡死**：定位 `view.wframe_mouse` 状态，确保在鼠标事件中正确设置 `w_frame_up`；必要时排查是否存在持续的 `askfor_wait()`。
+- **等待卡死**：检查前端 `InputGate.armed` 与 `InputGate.request`，并排查游戏侧是否存在未响应的 `askfor_wait()` 或未关闭的跳过状态。
 - **图片不显示**：确认 `image/*.png` 名称与 `game_config.config_image` 中一致，首次显示该图片时控制台是否输出「加载图片失败」。
 
 ---

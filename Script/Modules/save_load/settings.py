@@ -18,7 +18,7 @@ kernel.Reset 的输出钩子在每次换 GameState（读档、新游戏、改时
 若 Reset 未换掉内核状态，它调用 drop_pending_ai 丢弃暂存的 AI 设置。
 当 settings.json 已有 "ai_setting" 段、玩家改过 AI 设置，或已收下含非默认值的存档 AI 设置时，
 后续读档不覆盖全局 AI 设置。
-游戏退出走 os._exit，不跑 atexit。没在设置面板里改的设置，到下一次存档或换 GameState 时写进文件。
+本模块不注册退出钩子。没在设置面板里改的设置，到下一次存档或换 GameState 时写进文件。
 本模块不登记行动、事件或规则。
 """
 

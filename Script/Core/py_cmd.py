@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from Script.Core import flow_handle
-from Script.Config import normal_config
 from typing import TYPE_CHECKING
-from Script.UI.Moudle import view
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -40,7 +38,6 @@ def pcmd(
     normal_style -- 正常状态下命令显示样式
     on_style -- 鼠标在其上的时候命令显示样式
     """
-    view.text_wait = float(normal_config.config_normal.text_wait)
     global last_char
     if len(cmd_str) > 0:
         last_char = cmd_str[-1:]
@@ -73,7 +70,6 @@ def pimagecmd(
     arg -- 传给命令函数的顺序参数
     kw -- 传给命令函数的字典参数，None 时不传字典参数
     """
-    view.text_wait = float(normal_config.config_normal.text_wait)
     global last_char
     if len(cmd_str) > 0:
         last_char = cmd_str[-1:]
@@ -110,16 +106,3 @@ def clr_cmd(*number: str | int, clr_default_flow: bool = True) -> None:
         global unused_cmd_num
         unused_cmd_num = 500
         flow_handle.cmd_clear()
-
-
-def focus_cmd() -> None:
-    """
-    使光标聚焦在命令输出框上
-    """
-    try:
-        # 仅在需要时导入，避免无显示环境在模块导入阶段触发Tk初始化
-        from Script.Core import main_frame
-
-        main_frame.inputbox.focus_force()
-    except Exception:
-        return

@@ -7,8 +7,11 @@
 
 import sys
 import logging
-import time
+import secrets
 from types import FunctionType
+
+WORKER_JOIN_SECONDS = 5
+"""Tk 主循环退出后主线程等待游戏流程线程结束的最长秒数。"""
 
 if __name__ == "__main__":
 
@@ -76,18 +79,20 @@ if __name__ == "__main__":
             f"性能监控已开启，每屏渲染耗时将写入 {perf_hook.get_output_path()}"
         )
 
+    from Script.Frontend.Tk.app import TkFrontend
+    from Script.Protocol import ThreadedUiPort
+
+    token = secrets.token_hex(16)
+    port = ThreadedUiPort(token)
     try:
-        game_init.run(start_flow.start_frame)
+        frontend = TkFrontend(port, token)
+        worker = game_init.start(
+            start_flow.start_frame, port, frontend.init_config
+        )
     except Exception as e:
         print(f"游戏初始化失败: {e}")
         logging.error(f"游戏初始化失败: {str(e)}", exc_info=True)
         sys.exit(1)
-
-    # 保持主线程运行
-    try:
-        while True:
-            # 主循环保持程序运行，减少CPU使用率
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\n游戏已被用户中断")
-        sys.exit(0)
+    frontend.run()
+    port.close("window closed")
+    worker.join(WORKER_JOIN_SECONDS)
