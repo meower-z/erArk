@@ -30,16 +30,16 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import player_ability, tallies, scene_state
 from Script.Modules.gameplay_resolution import (
+    achievement_service,
     intent,
     library_service,
     plan_queue,
     starts,
     training_prep,
+    ui_hooks,
 )
 from Script.System.Cooking_System import cooking
 from Script.System.Sex_System import drunk_sex_common
-from Script.UI.Moudle import draw
-from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import kitchen, needs, warehouse
 from Script.Modules.domains import inventory, wardrobe, relations
 
@@ -178,7 +178,7 @@ def start_eat_food(who: int, chosen: intent.Intent) -> None:
         and food.special_seasoning in [11, 12]
         and food.special_seasoning_amount > 0
     ):
-        achievement_panel.achievement_flow(_("进食"), 1076)
+        achievement_service.settle_and_notify(_("进食"), 1076)
 
 
 @starts.starter("make_food")
@@ -201,21 +201,19 @@ def start_make_food(who: int, chosen: intent.Intent) -> None:
             who, target_food=inventory.foods(who)[made[-1]]
         )
     if len(made) < count:
-        now_draw = draw.NormalDraw()
-        now_draw.text = _(
-            "因为调味材料或精液量不足，实际制作数量为 {0} 个\n"
-        ).format(len(made))
-        now_draw.draw()
-    achievement_panel.achievement_flow(_("烹饪"))
+        ui_hooks.emit_notice(
+            _("因为调味材料或精液量不足，实际制作数量为 {0} 个\n").format(
+                len(made)
+            )
+        )
+    achievement_service.settle_and_notify(_("烹饪"))
 
 
 @starts.starter("talent_up")
 def start_talent_up(who: int, chosen: intent.Intent) -> None:
     """手动获得素质：提示选择成功，以手动获得类型结算该素质"""
     args = _args(chosen)
-    now_draw = draw.WaitDraw()
-    now_draw.text = _("选择成功\n")
-    now_draw.draw()
+    ui_hooks.emit_notice(_("选择成功\n"), wait=True)
     handle_talent.gain_talent(
         int(cast(int, args["character_id"])),
         1,
@@ -245,7 +243,7 @@ def start_aromatherapy(who: int, chosen: intent.Intent) -> None:
         interrupt=True,
     )
     achievement.add("aromatherapy_count", 1)
-    achievement_panel.achievement_flow(_("调香"))
+    achievement_service.settle_and_notify(_("调香"))
 
 
 @starts.starter("sleep")

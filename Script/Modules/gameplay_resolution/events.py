@@ -21,6 +21,7 @@ from types import FunctionType
 from Script.Core import constant, get_text, num
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, plan_queue, time_hooks
+from Script.Modules.gameplay_resolution import ui_hooks
 from Script.Modules.domains import activity, flags, modes, needs
 from Script.Modules.domains import player_ability
 from Script.Modules.domains import identity
@@ -376,14 +377,11 @@ def h_left_behind(who: str) -> core.Effects:
 
 def _draw(text: str) -> None:
     """
-    画一行要玩家确认的文本
+    经 ui_hooks.emit_notice 发出需要玩家确认并按配置文本宽度排版的提示文本。
+    实际绘制由已登记的界面回调完成。
     Keyword arguments:
-    text -- 文本
+    text -- str，提示文本
+    Return arguments:
+    None -- 无返回值
     """
-    from Script.Config import normal_config
-    from Script.UI.Moudle import draw
-
-    now_draw = draw.WaitDraw()
-    now_draw.width = normal_config.config_normal.text_width
-    now_draw.text = text
-    now_draw.draw()
+    ui_hooks.emit_notice(text, wait=True, use_text_width=True)

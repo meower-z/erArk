@@ -25,7 +25,7 @@ def settle_power_system(draw_flag: bool = True) -> tuple[float, str]:
     Return arguments:
     tuple -- (仍缺的电量占耗电量的比例, 结算文本)
     """
-    from Script.UI.Panel import achievement_panel
+    from Script.Modules.gameplay_resolution import achievement_service
 
     day = power_supply.settle_day()
     text = _("\n○动力区结算\n")
@@ -74,11 +74,11 @@ def settle_power_system(draw_flag: bool = True) -> tuple[float, str]:
         draw_text.text = text
         draw_text.draw()
     generated = int(day["generated"])
-    achievement_panel.get_achievement_judge_by_value(821, generated)
-    achievement_panel.get_achievement_judge_by_value(822, generated)
-    achievement_panel.get_achievement_judge_by_value(823, generated)
+    achievement_service.get_achievement_judge_by_value(821, generated)
+    achievement_service.get_achievement_judge_by_value(822, generated)
+    achievement_service.get_achievement_judge_by_value(823, generated)
     if day["fuel_use"] == 0 and day["generated"] >= day["consumed"]:
-        achievement_panel.get_achievement_judge_by_value(826, 1)
+        achievement_service.get_achievement_judge_by_value(826, 1)
     return day["shortage_ratio"], text
 
 

@@ -26,9 +26,9 @@ from Script.Modules.gameplay_resolution import (
     actions,
     intent,
     plan_queue,
+    ui_hooks,
     working,
 )
-from Script.UI.Moudle import draw, view
 
 type Extra = Callable[[int, intent.Intent], None]
 """ 一种行动自己的开始代码：角色id、意图 """
@@ -149,14 +149,20 @@ def write_field(who: int, path: str, value: core.JSON) -> None:
 
 def begin(who: int, act: core.Action, chosen: intent.Intent) -> None:
     """
-    行动开始时照着意图写游戏状态：来自队列的弹出队首；换上新的 Behavior（此刻开始，时长同内核；
-    时停中玩家的 0 分钟行动用名义分钟数；保留移动的来源与最终目标）、状态与交互对象
-    （意图没写交互对象时不改）；写 fields；移动；绘制 say（参数 say_wait 为真时等玩家确认，
-    say_style 为样式）。玩家的面板回到场景主面板
+    行动开始时按意图写入游戏状态。
+    行动来自队列时弹出队首。
+    随后写入新的 Behavior，开始时间为此刻且时长同内核（时停中玩家的 0 分钟行动取名义分钟数），
+    并保留原移动来源与最终目标。
+    同时写入状态，仅在意图指定 target 时更新交互对象。
+    随后写入 fields 并在含 move 时执行移动。
+    意图含 say 时经 ui_hooks.emit_notice 发出提示，其中 say_wait 为真时等待确认、say_style 为字符串时用作样式。
+    角色为玩家时经 ui_hooks.switch_panel 切换面板，args 的 open_map 为真时切到地图面板，否则切到场景主面板。
     Keyword arguments:
-    who -- 角色id
-    act -- 开始的行动
-    chosen -- 行动的意图
+    who -- int，角色 id
+    act -- core.Action，开始的行动
+    chosen -- intent.Intent，行动的意图
+    Return arguments:
+    None -- 无返回值
     """
     if chosen.get("queued"):
         plan_queue.pop(who)
@@ -189,16 +195,14 @@ def begin(who: int, act: core.Action, chosen: intent.Intent) -> None:
     say = chosen.get("say")
     if say is not None:
         args = chosen.get("args", {})
-        now_draw = (
-            draw.WaitDraw() if args.get("say_wait") else draw.NormalDraw()
-        )
-        now_draw.text = say
         style = args.get("say_style")
-        if isinstance(style, str):
-            now_draw.style = style
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            say,
+            wait=bool(args.get("say_wait")),
+            style=style if isinstance(style, str) else None,
+        )
     if who == 0:
-        view.now_panel_id = (
+        ui_hooks.switch_panel(
             constant.Panel.SEE_MAP
             if chosen.get("args", {}).get(OPEN_MAP)
             else constant.Panel.IN_SCENE
