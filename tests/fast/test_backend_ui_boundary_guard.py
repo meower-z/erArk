@@ -17,6 +17,7 @@ BACKEND_UI_FREE_DIRS = (
     "Script/Modules/domains",
     "Script/Modules/gameplay_resolution",
     "Script/Modules/save_load",
+    "Script/StateMachine",
 )
 """ 禁止导入界面与输入输出模块的后端目录 """
 BANNED = (
