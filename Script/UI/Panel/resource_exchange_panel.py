@@ -1,4 +1,4 @@
-"""资源交易面板，以及交易价格、供需波动与自动交易的计算"""
+"""资源交易界面面板"""
 
 from types import FunctionType
 from Script.Core import get_text, flow_handle, constant
@@ -7,8 +7,8 @@ from Script.Modules.domains import abilities, economy, location
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import warehouse
-import random
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import trade_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -18,310 +18,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def _get_resource_type_key(resouce_id: int) -> str:
-    """获取资源的类型"""
-
-    return game_config.config_resouce[resouce_id].type
-
-
-def get_trade_resource_types() -> list[str]:
-    """获取所有可管理的资源类型列表"""
-
-    res_types: list[str] = []
-    seen_type: set = set()
-    for res_id in game_config.config_resouce:
-        if res_id == 0:
-            continue
-        res_type = game_config.config_resouce[res_id].type
-        if res_type in seen_type:
-            continue
-        seen_type.add(res_type)
-        res_types.append(res_type)
-    return res_types
-
-
-def calculate_trade_multiplier(
-    resouce_id: int, buy_flag: bool
-) -> tuple[float, float, float]:
-    """
-    计算交易价格乘数及主副交易员加成\n
-    输入: resouce_id(int) 资源ID, buy_flag(bool) 买入(True)/卖出(False)]\n
-    输出: (float乘数, float主交易员加成, float副交易员加成)
-    """
-
-    TRADE_MAIN_RATE: float = 0.005
-    """ 主交易员每级话术带来的价格百分比调整 """
-    TRADE_SUB_RATE: float = 0.001
-    """ 副交易员每级话术带来的价格百分比调整 """
-    MIN_BUY_MULTIPLIER: float = 0.5
-    """ 交易员调整的买入价格下限（为基础价格的百分比） """
-    MAX_SELL_MULTIPLIER: float = 2.0
-    """ 交易员调整的卖出价格上限（为基础价格的百分比） """
-
-    res_type = _get_resource_type_key(resouce_id)
-    trade_ids = economy.trade_operator_ids()
-    main_id = economy.main_trader(res_type)
-    main_bonus = 0.0
-    sub_bonus = 0.0
-    if main_id in trade_ids and main_id > 0:
-        ability_lv = abilities.ability(main_id).get(40, 0)
-        main_bonus = ability_lv * TRADE_MAIN_RATE
-    for chara_id in trade_ids:
-        if chara_id == main_id or not identity.exists(chara_id):
-            continue
-        ability_lv = abilities.ability(chara_id).get(40, 0)
-        sub_bonus += ability_lv * TRADE_SUB_RATE
-    total_bonus = main_bonus + sub_bonus
-    if buy_flag:
-        multiplier = max(MIN_BUY_MULTIPLIER, 1 - total_bonus)
-    else:
-        multiplier = min(MAX_SELL_MULTIPLIER, 1 + total_bonus)
-    return multiplier, main_bonus, sub_bonus
-
-
-def _adjust_supply_demand_after_trade(
-    resouce_id: int, quantity: int, buy_flag: bool
-) -> None:
-    """依据交易数量调整供需系数"""
-
-    if quantity <= 0:
-        return
-    supply_demand_dict = economy.supply_demand()
-    supply_demand_dict.setdefault(resouce_id, 1)
-    today_total = economy.traded_today().get(resouce_id, 0)
-    for _step in range(quantity // 50):
-        cur_sd = supply_demand_dict[resouce_id]
-        if buy_flag:
-            delta_sd = 0.001 * 10 * (1 / cur_sd)
-            delta_sd *= 1 + (today_total / 1000)
-            supply_demand_dict[resouce_id] = round(
-                min(5.0, cur_sd + delta_sd), 4
-            )
-        else:
-            delta_sd = 0.001 * 10 * cur_sd
-            delta_sd /= 1 + (today_total / 1000)
-            supply_demand_dict[resouce_id] = round(
-                max(0.1, cur_sd - delta_sd), 4
-            )
-    economy.set_supply_demand(supply_demand_dict)
-
-
-def perform_trade(
-    resouce_id: int, quantity: int, buy_flag: bool
-) -> dict[str, int] | None:
-    """执行具体交易结算，返回实际成交情况"""
-
-    # 数量为0或负数直接返回无效
-    if quantity <= 0:
-        return None
-    price, _percent = get_resouce_price(resouce_id, buy_flag)
-    # 价格为0或负数直接返回无效
-    if price <= 0:
-        return None
-    # 初始化资源库存
-    warehouse.ensure(resouce_id)
-    warehouse.ensure(1)
-
-    result_quantity = quantity
-    # 买入操作
-    if buy_flag:
-        capacity_left = warehouse.capacity() - warehouse.amount(resouce_id)
-        # 仓库已满无法购买
-        if capacity_left <= 0:
-            return None
-        result_quantity = min(result_quantity, capacity_left)
-        if price > 0:
-            affordable = warehouse.amount(1) // price
-            result_quantity = min(result_quantity, affordable)
-        if result_quantity <= 0:
-            return None
-        total_price = price * result_quantity
-        warehouse.add(resouce_id, result_quantity)
-        warehouse.add(1, -total_price)
-        _adjust_supply_demand_after_trade(resouce_id, result_quantity, True)
-    # 卖出操作
-    else:
-        available = warehouse.amount(resouce_id)
-        result_quantity = min(result_quantity, available)
-        # 无法卖出任何数量
-        if result_quantity <= 0:
-            return None
-        total_price = price * result_quantity
-        warehouse.add(resouce_id, -result_quantity)
-        warehouse.add(1, total_price)
-        _adjust_supply_demand_after_trade(resouce_id, result_quantity, False)
-
-    economy.add_traded(resouce_id, result_quantity)
-
-    return {
-        "quantity": result_quantity,
-        "price": price,
-        "total_price": price * result_quantity,
-    }
-
-
-def auto_trade_resources() -> None:
-    """根据自动交易设置执行买卖"""
-
-    if not economy.trade_operator_ids():
-        return
-
-    summary_lines: list[str] = []
-    for res_type in get_trade_resource_types():
-        # 跳过无效或货币类资源
-        if res_type in {"无", "货币"}:
-            continue
-        if not economy.main_trader(res_type):
-            continue
-
-        for resouce_id, resouce_data in game_config.config_resouce.items():
-            if resouce_id == 0 or resouce_data.type != res_type:
-                continue
-            settings = economy.auto_trade(resouce_id)
-            buy_on = settings.get("buy_on", False)
-            buy_stock = settings.get("buy_stock", 0)
-            buy_percent = settings.get("buy_price_percent", 0)
-            sell_on = settings.get("sell_on", False)
-            sell_stock = settings.get("sell_stock", 0)
-            sell_percent = settings.get("sell_price_percent", 0)
-            warehouse.ensure(resouce_id)
-
-            # 自动卖出
-            if (
-                sell_on
-                and sell_stock >= 0
-                and sell_percent > 0
-                and warehouse.amount(resouce_id) > sell_stock
-            ):
-                _price_now, percent_sell = get_resouce_price(resouce_id, False)
-                if percent_sell + 100 >= sell_percent:
-                    need_qty = warehouse.amount(resouce_id) - sell_stock
-                    trade_ret = perform_trade(resouce_id, need_qty, False)
-                    if trade_ret:
-                        summary_lines.append(
-                            _("  · 自动卖出{0} x {1}，单价{2}，总计{3}").format(
-                                _(resouce_data.name),
-                                trade_ret["quantity"],
-                                trade_ret["price"],
-                                trade_ret["total_price"],
-                            )
-                        )
-
-            # 自动买入
-            if (
-                buy_on
-                and buy_stock > 0
-                and buy_percent > 0
-                and resouce_data.cant_buy == 0
-                and warehouse.amount(resouce_id) < buy_stock
-            ):
-                _price_now, percent_buy = get_resouce_price(resouce_id, True)
-                if percent_buy + 100 <= buy_percent:
-                    need_qty = buy_stock - warehouse.amount(resouce_id)
-                    trade_ret = perform_trade(resouce_id, need_qty, True)
-                    if trade_ret:
-                        summary_lines.append(
-                            _("  · 自动买入{0} x {1}，单价{2}，总计{3}").format(
-                                _(resouce_data.name),
-                                trade_ret["quantity"],
-                                trade_ret["price"],
-                                trade_ret["total_price"],
-                            )
-                        )
-
-    if summary_lines:
-        info_draw = draw.WaitDraw()
-        info_draw_text = "\n"
-        info_draw_text += _("○贸易部结算：\n")
-        info_draw_text += "\n".join(summary_lines) + "\n"
-        info_draw.text = info_draw_text
-        info_draw.draw()
-
-
-def get_resouce_price(
-    resouce_id: int, buy_or_sell_flag: bool, self_check: bool = True
-) -> tuple[int, float]:
-    """
-    获取指定资源的交易价格及波动百分比
-    输入:
-        resouce_id(int) 资源ID
-        buy_or_sell_flag(bool) 买入(True)/卖出(False)
-        self_check(bool) 是否进行自检，默认为True
-    输出: (int价格, float波动百分比)
-    功能: 返回价格和供需波动百分比
-    """
-    resouce_data = game_config.config_resouce[resouce_id]
-    base_price: float = resouce_data.price
-    # 非本地特产的价格为1.5倍
-    if (
-        resouce_data.type == _("特产")
-        and resouce_data.specialty == location.country()
-    ):
-        base_price *= 1.5
-    else:
-        base_price = 1.1 * base_price if buy_or_sell_flag else 0.9 * base_price
-    # 供需影响
-    supply_demand = economy.supply_demand().get(resouce_id, 1)
-    # 交易员影响
-    multiplier, _tem1, _tem2 = calculate_trade_multiplier(
-        resouce_id, buy_or_sell_flag
-    )
-    # 总影响
-    final_adjustment = supply_demand * multiplier
-    # 计算最终价格
-    price = base_price * final_adjustment
-    # 买入价格不能低于卖出价格，卖出价格不能高于买入价格
-    if buy_or_sell_flag and self_check:
-        sell_price = get_resouce_price(resouce_id, False, self_check=False)[0]
-        price = max(price, sell_price)
-        final_adjustment = max(final_adjustment, sell_price / base_price)
-    elif not buy_or_sell_flag and self_check:
-        buy_price = get_resouce_price(resouce_id, True, self_check=False)[0]
-        price = min(price, buy_price)
-        final_adjustment = min(final_adjustment, buy_price / base_price)
-    # 计算波动百分比（相对基础价格）
-    percent = (final_adjustment - 1) * 100
-    return int(price), percent
-
-
-def daily_supply_demand_fluctuation() -> None:
-    """
-    每日供需关系自然波动
-    输入: 无
-    输出: 无
-    功能: 按当前供需系数，随机调整每种资源的供需，模拟经济学规律
-    """
-    supply_demand_dict = economy.supply_demand()
-    traded_reset: dict[int, int] = {}
-    for res_id in game_config.config_resouce:
-        # 跳过货币类（如龙门币）
-        if res_id == 1:
-            continue
-        # 今日买入卖出数量归零
-        traded_reset[res_id] = 0
-        # 当前供需系数
-        cur = supply_demand_dict.get(res_id, 1)
-        # 经济学规律：
-        # 1. 越偏离1，回归趋势越强（均值回归）
-        # 2. 随机波动幅度与偏离程度相关
-        # 3. 保证供需系数不为负
-        # 回归因子（越远离1，回归越强）
-        revert = (1 - cur) * 0.05
-        # 随机波动（基础±0.005，偏离越大波动越大）
-        rand_fluct = random.uniform(-0.005, 0.005) + random.uniform(
-            -abs(cur - 1) * 0.02, abs(cur - 1) * 0.02
-        )
-        # 总变化
-        delta = revert + rand_fluct
-        new_val = max(0.1, cur + delta)
-        supply_demand_dict[res_id] = round(new_val, 4)
-    economy.set_traded(traded_reset)
-    economy.set_supply_demand(supply_demand_dict)
-
-    # 供需波动后尝试执行自动交易
-    auto_trade_resources()
 
 
 class Resource_Exchange_Line_Panel:
@@ -380,14 +76,16 @@ class Resource_Exchange_Line_Panel:
             money = warehouse.amount(1)  # 当前龙门币数量
 
             # 提取价格与加成数据用于显示
-            buy_price, buy_percent = get_resouce_price(
+            buy_price, buy_percent = trade_service.get_resouce_price(
                 self.now_select_resouce_id, True
             )
-            sell_price, sell_percent = get_resouce_price(
+            sell_price, sell_percent = trade_service.get_resouce_price(
                 self.now_select_resouce_id, False
             )
-            _multiplier, main_bonus, sub_bonus = calculate_trade_multiplier(
-                self.now_select_resouce_id, True
+            _multiplier, main_bonus, sub_bonus = (
+                trade_service.calculate_trade_multiplier(
+                    self.now_select_resouce_id, True
+                )
             )
 
             # =======================================[ 资产与库存 ]=======================================
@@ -428,7 +126,9 @@ class Resource_Exchange_Line_Panel:
 
             # 自动交易信息
             auto_draw = draw.NormalDraw()
-            res_type_key = _get_resource_type_key(self.now_select_resouce_id)
+            res_type_key = trade_service._get_resource_type_key(
+                self.now_select_resouce_id
+            )
             settings = economy.auto_trade(self.now_select_resouce_id)
             main_id = economy.main_trader(res_type_key)
 
@@ -821,7 +521,7 @@ class Resource_Exchange_Line_Panel:
         buy_or_sell_flag = self.quantity_of_resouce > 0
         actual_req_quantity = abs(self.quantity_of_resouce)
 
-        trade_result = perform_trade(
+        trade_result = trade_service.perform_trade(
             self.now_select_resouce_id, actual_req_quantity, buy_or_sell_flag
         )
         if not trade_result:
@@ -896,7 +596,7 @@ class Resource_Exchange_Line_Panel:
             line_feed.draw()
             line_feed.draw()
 
-            trade_types = get_trade_resource_types()
+            trade_types = trade_service.get_trade_resource_types()
             main_ids = set()
             for res_type in trade_types:
                 # 跳过无效或货币类资源
@@ -1045,7 +745,7 @@ class Resource_Exchange_Line_Panel:
     def auto_trade_setting(self, res_id: int) -> None:
         """调整一种资源的自动交易设置"""
 
-        target_type = _get_resource_type_key(res_id)
+        target_type = trade_service._get_resource_type_key(res_id)
         resource_data = game_config.config_resouce[res_id]
         while 1:
             settings = economy.auto_trade(res_id)
@@ -1406,8 +1106,10 @@ class Resource_Exchange_Line_Panel:
                         )
                         # 判断是否可以买入卖出
                         if resouce_data.cant_buy == 0:
-                            price_buy, percent_buy = get_resouce_price(
-                                resouce_id, True
+                            price_buy, percent_buy = (
+                                trade_service.get_resouce_price(
+                                    resouce_id, True
+                                )
                             )
                             if percent_buy > 0:
                                 percent_str_buy = f"(+{percent_buy:.1f}%)"
@@ -1419,8 +1121,8 @@ class Resource_Exchange_Line_Panel:
                                 price_buy, percent_str_buy
                             )
                         # 如果是卖出
-                        price_sell, percent_sell = get_resouce_price(
-                            resouce_id, False
+                        price_sell, percent_sell = (
+                            trade_service.get_resouce_price(resouce_id, False)
                         )
                         if percent_sell > 0:
                             percent_str_sell = f"(+{percent_sell:.1f}%)"
@@ -1471,7 +1173,9 @@ class Resource_Exchange_Line_Panel:
         if resouce_data.cant_buy == 1:
             return
 
-        buy_price, _ = get_resouce_price(self.now_select_resouce_id, True)
+        buy_price, _ = trade_service.get_resouce_price(
+            self.now_select_resouce_id, True
+        )
         if buy_price <= 0:
             return
 
