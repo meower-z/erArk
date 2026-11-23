@@ -11,8 +11,7 @@ from Script.Design import (
     handle_premise,
 )
 from Script.Core import constant_effect, game_type, get_text, num
-from Script.Config import normal_config
-from Script.UI.Moudle import draw
+from Script.Modules.gameplay_resolution import ui_hooks
 from Script.Modules.domains import (
     abilities,
     activity,
@@ -25,9 +24,6 @@ from Script.Modules.domains import kitchen, needs, status
 from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-width = normal_config.config_normal.text_width
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1645,10 +1641,7 @@ def handle_target_enema_end(
                 info_text = _("{0}的后穴喷出了{1}ml的精液\n").format(
                     target_data.name, int(semen_num)
                 )
-                info_draw = draw.NormalDraw()
-                info_draw.text = info_text
-                info_draw.width = width
-                info_draw.draw()
+                ui_hooks.emit_notice(info_text, use_text_width=True)
     else:
         dirty.set(target_data.cid, enema_capacity=0)
 
