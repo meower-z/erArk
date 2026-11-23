@@ -26,8 +26,8 @@ pip install -r requirements-lint.txt   # 可选，做棘轮检查时装。它也
   - 属性的 setter，即带 `@x.setter` 装饰器的方法（x 是属性名）。
   - 模块定义了 `__all__` 时，没列进 `__all__` 的函数和类，以及这些类里的方法。
 - `# noqa`：棘轮运行 ruff 时带 `--ignore-noqa`，所以 `# noqa` 注释压不下棘轮报出的问题。已有 `# noqa` 注释的行上的问题记在基线里。不带 `--ignore-noqa` 运行时，ruff 不报这些注释压下的问题。
-- mypy：配置在 `pyproject.toml` 的 `[tool.mypy]`。棘轮对每个模块都用这一套参数。mypy 也检查没有类型标注的函数的函数体。它还报出执行不到的代码、可能未赋值就用到的名字和永远不成立的比较等问题。这一套不要求函数写类型标注。mypy 推断不出一个变量的类型时，仍要求给这个变量写类型标注。在装了 `requirements-lint.txt` 的环境里，从仓库根目录运行 `git ls-files -z '*.py' ':!Script/Config/config_def.py' | xargs -0 mypy` 时，得到的报错与棘轮运行 mypy 时相同。
-- 加严：先清掉基线里记着的问题，再加严规则。加严的做法是在 `pyproject.toml` 里加规则组或 mypy 参数，然后重算基线。
+- pyrefly：配置在 `pyproject.toml` 的 `[tool.pyrefly]`。对每个模块都用这一套配置。pyrefly 也检查没有类型标注的函数的函数体。它还报出执行不到的代码、可能未赋值就用到的名字、永远不成立的比较、多余的 cast 和已标记弃用的使用。这一套不要求函数写类型标注，也不采信任何忽略注释。棘轮运行 pyrefly 时带 `--min-severity=error`。在装了 `requirements-lint.txt` 的环境里，从仓库根目录运行 `git ls-files -z '*.py' ':!Script/Config/config_def.py' | xargs -0 pyrefly check --config=pyproject.toml --min-severity=error` 时，得到的报错与棘轮运行 pyrefly 时相同。CI 通过 `python tools/pyrefly_baseline_check.py` 将报错与 `.lint-baseline.tsv` 对比。
+- 加严：先清掉基线里记着的问题，再加严规则。加严的做法是在 `pyproject.toml` 里加规则组或 pyrefly 错误类型，然后重算基线。
 - 注释与文档字符串用中文。
 
 ## 棘轮与基线

@@ -7,34 +7,36 @@ include = '^/((\.agents|mod|profiling|Script|tests|tools)/.*)?[^/]+\.pyi?$'
 # config_def.py 由 buildconfig.py 生成
 force-exclude = '^/Script/Config/config_def\.py$'
 
-# 棘轮对每个模块都按下面这一套参数运行 mypy。
-# mypy 也检查没有类型标注的函数的函数体。
-# 它还报出执行不到的代码、可能未赋值就用到的名字、永远不成立的比较、多余的 cast，以及没用上或没写错误码的 `# type: ignore`。
-# 这一套不要求函数写类型标注。
-# mypy 推断不出一个变量的类型时，仍要求给这个变量写类型标注。
-[tool.mypy]
-explicit_package_bases = true
-follow_imports = "silent"
-# tests/education 的脚本按顶层模块名导入 _bootstrap 与 official_event_check，tests/_mypy_stubs 的存根把这两个名字指到真实模块
-# tools/test_quality 的脚本也以自己的目录为脚本目录运行，按顶层模块名导入同目录的 data_check、fast_suite 与 checkout_fixture
-# tools/verify 的 tk.py、tk_game.py、test_limited_run.py 与 test_tk_game.py 把自己的目录加进 sys.path，再按顶层模块名导入同目录的模块。被这样导入的模块是 limited_run、tk 与 tk_game。tests/_mypy_stubs 里同名的存根把这三个名字指到真实模块。
-# mypy 优先读取 tests/_mypy_stubs 里的 openai 与 google/genai 存根，以此避开解析这两个完整的已安装包。
-# 存根的参数类型可等于或窄于真实包中的类型。除下述例外，返回类型与代码读取的属性类型与真实包一致。
-# openai.DefaultHttpxClient 声明为不依赖 httpx2 的独立存根类。构造该类或调用 __enter__ 均得到该存根类。
+# 棘轮与手动运行的 pyrefly 对每个模块都用下面这套配置。
+# python-version 固定为 3.12，与 CI 和 lint 环境一致，让 sys.version 判断在各处得到相同结果。
+# search-path 把 tools/test_quality、tests/_mypy_stubs 与仓库根目录加入搜索路径。
+# tools/test_quality 的脚本按顶层模块名导入同目录的 data_check、fast_suite 与 checkout_fixture。
+# tests/education 的脚本按顶层模块名导入 _bootstrap 与 official_event_check，tests/_mypy_stubs 中的同名存根将其指到真实模块。
+# tools/verify 的 tk.py、tk_game.py、test_limited_run.py 与 test_tk_game.py 按顶层模块名导入 limited_run、tk 与 tk_game，tests/_mypy_stubs 中的同名存根将其指到真实模块。
+# tests/_mypy_stubs 还存放 openai 与 google/genai 的精简存根，避免 pyrefly 解析这两个完整的已安装包。
+# 这些存根的参数类型等于或窄于真实包；除下述例外，返回类型与代码读取的属性类型与真实包一致。
+# openai.DefaultHttpxClient 声明为不依赖 httpx2 的独立存根类，构造该类或调用 __enter__ 均得到该存根类。
 # 这些存根对应 requirements-lint.txt 固定的版本，即 openai 3.31.0 与 google-genai 2.31.0。
-mypy_path = ["tools/test_quality", "tests/_mypy_stubs"]
-check_untyped_defs = true
-strict_equality = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-extra_checks = true
-warn_unreachable = true
-enable_error_code = ["possibly-undefined", "ignore-without-code", "deprecated", "redundant-self", "truthy-iterable"]
+# project-excludes 跳过由 buildconfig.py 生成的 Script/Config/config_def.py。
+# ignore-missing-imports 忽略 lint 与 lint.rules，因为 tools/test_quality 导入的可选本机 lint 引擎不随仓库提供（见 CONTRIBUTING.md），两个名字都需要列出。
+# check-unannotated-defs 让没有类型标注的函数体同样接受检查，但不要求为函数写类型标注。
+# enabled-ignores 设为空列表，pyrefly 不采信任何工具的忽略注释，行上的忽略注释无法隐藏该行报错。
+# [tool.pyrefly.errors] 将五类检查设为 error 级别：incompatible-comparison（永不可能相等的类型比较）、unreachable（return 或 raise 之后执行不到的代码）、redundant-cast（多余的 cast）、deprecated（使用已标记弃用的对象）与 unbound-name（可能未赋值就使用的名字）。
+# 其余规则保持 pyrefly 默认级别，implicit-bool 保持关闭。
+[tool.pyrefly]
+python-version = "3.12"
+search-path = ["tools/test_quality", "tests/_mypy_stubs", "."]
+project-excludes = ["Script/Config/config_def.py"]
+ignore-missing-imports = ["lint", "lint.rules"]
+check-unannotated-defs = true
+enabled-ignores = []
 
-# tools/test_quality 的脚本导入的 lint 包是可选的本机 lint 引擎，不随仓库提供（见 CONTRIBUTING.md），mypy 找不到它
-[[tool.mypy.overrides]]
-module = ["lint", "lint.rules"]
-ignore_missing_imports = true
+[tool.pyrefly.errors]
+incompatible-comparison = "error"
+unreachable = "error"
+redundant-cast = "error"
+deprecated = "error"
+unbound-name = "error"
 
 # 可选的本机 lint 引擎做棘轮检查时读这张表。
 # 这个引擎不随仓库提供。
@@ -48,7 +50,7 @@ baseline = ".lint-baseline.tsv"
 exclude = ["Script/Config/config_def.py"]
 soft = 400
 hard = 500
-reset = "kernel prototype round 4: zero-minute edits, action-end hook, read-only picks and the round-3 changes lengthen capped modules"
+reset = "switch type checker from mypy 2.4.0 to pyrefly 1.5.0"
 # 棘轮运行 ruff 时带 `--ignore-noqa`，所以 `# noqa` 注释压不下棘轮报出的问题。
 # 因此这里不禁止 `# noqa` 注释。
 ban_noqa = false
@@ -68,13 +70,12 @@ rules_argv = ["ruff", "check", "--config=pyproject.toml", "--show-settings", "{f
 rules_format = '^\t\S+ \((?P<rule>[A-Z]+[0-9]+)\),$'
 reads = ["pyproject.toml:tool.ruff"]
 
-[tool.lint-ratchet.checkers.mypy]
-requires = ["mypy==2.4.0"]
-argv = ["mypy", "--config-file=pyproject.toml", "--explicit-package-bases", "--follow-imports=silent", "--show-error-codes", "--no-error-summary", "--no-pretty", "--hide-error-context", "--cache-dir={cache}", "{files}"]
-strict_args = []
-format = '^(?P<path>.+?):(?P<line>\d+)(?::\d+)?(?::\d+:\d+)?: error: (?P<message>.*?)(?:  \[(?P<rule>[a-z0-9-]+)\])?$'
-reads = ["pyproject.toml:tool.mypy"]
-prefix = "mypy:"
+[tool.lint-ratchet.checkers.pyrefly]
+requires = ["pyrefly==1.5.0"]
+argv = ["pyrefly", "check", "--config=pyproject.toml", "--min-severity=error", "--output-format=min-text", "--summary=none", "--progress-bar=no", "--color=never", "{files}"]
+format = '^\s*ERROR\s+(?P<path>.+?):(?P<line>\d+):.+?: (?P<message>.*?) \[(?P<rule>[a-z0-9-]+)\]$'
+reads = ["pyproject.toml:tool.pyrefly"]
+prefix = "pyrefly:"
 
 [tool.lint-ratchet.checkers.black]
 requires = ["black==26.5.1"]
@@ -162,14 +163,14 @@ ignore = ["PLW0603"]
 "profiling/run_profile.py" = ["F401", "B010"]
 "tests/world.py" = ["F401", "B010"]
 # 这些 setattr 调用替换方法或类，或者给对象加上类里没有声明的属性。
-# 改写成普通的属性赋值后，mypy 会对每一处报错。
-# 上面几组里的 B010 也是这个原因。
+# 改写成普通属性赋值后，pyrefly 在三个文件里新增报错：tests/world.py（所赋函数不能赋给属性声明的类型），以及 tests/education/test_save_compat.py 与 tests/fast/test_mod_loader.py（类或模块未定义该属性）。
+# 其余忽略 B010 的文件（tests/education/test_growth_event.py、tests/education/test_panels.py、.agents/skills/headless-game-test 下的两个模板、profiling/run_profile.py、profiling/ui_perf_patch.py 与两个 tests/slow 文件）改写后 pyrefly 不新增报错。
 "profiling/ui_perf_patch.py" = ["B010"]
 "tests/education/test_save_compat.py" = ["B010"]
 "tests/fast/test_mod_loader.py" = ["B010"]
 "tests/slow/test_move_option_event_lists_child.py" = ["B010"]
 "tests/slow/test_option_event_lists_child.py" = ["B010"]
-# 这里改写成属性访问时，mypy 报 GNUTranslations 没有 _catalog 属性。
+# 这里改写成属性访问时，pyrefly 报 GNUTranslations 没有 _catalog 属性。
 "Script/Core/get_text.py" = ["B009"]
 # 这两处 raise 改成带 from 的写法，会改变启动时显示的报错追溯文字。
 # 这两个 lambda 换成被包装的函数，会改变调用方可用的关键字参数名。
