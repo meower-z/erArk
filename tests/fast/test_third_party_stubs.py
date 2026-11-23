@@ -5,10 +5,10 @@
 本模块包含两项针对 tests/_mypy_stubs 第三方类型存根的快速测试。
 StubVersionsTest 核对 requirements-lint.txt 中 openai 与 google-genai 的固定版
 本与 STUB_VERSIONS 一致。ThirdPartyStubsTest 在临时目录生成包含 openai 与
-google.genai 调用用例的 Python 模块。该测试使用仓库的 pyproject.toml 对该模块
-运行 mypy。该测试核对每行报出的错误码集合与预期一致。该测试从 -v 日志核对
-mypy 解析了 openai 与 google.genai。该测试还核对每个以 openai 或
-google.genai 为前缀的已解析模块都来自 tests/_mypy_stubs。
+google.genai 调用用例的 Python 模块，用仓库的 pyproject.toml 对其运行两次
+pyrefly：一次指定当前解释器路径，核对每行输出均为 ERROR 且错误码集合与预期一
+致；另一次跳过解释器查询并指向空 site-packages 目录，核对两次输出完全一致，以
+验证两个包均从 search-path 解析。
 """
 
 import importlib.util
@@ -128,50 +128,52 @@ CASES: list[tuple[str, tuple[str, ...]]] = [
         ' contents="c"), Iterator[genai_types.GenerateContentResponse])',
         (),
     ),
-    ("openai.OpenAI(api_key=1)", ("arg-type",)),
-    ('client.with_options(timeout="60")', ("arg-type",)),
-    ("openai.DefaultHttpxClient(proxy=8080)", ("arg-type",)),
+    ("openai.OpenAI(api_key=1)", ("bad-argument-type",)),
+    ('client.with_options(timeout="60")', ("bad-argument-type",)),
+    ("openai.DefaultHttpxClient(proxy=8080)", ("bad-argument-type",)),
     (
         "client.chat.completions.create(model=1, messages=[])",
-        ("call-overload",),
+        ("bad-argument-type",),
     ),
-    ('client.chat.completions.create(model="m")', ("call-overload",)),
+    ('client.chat.completions.create(model="m")', ("no-matching-overload",)),
     (
         'client.chat.completions.create(model="m", messages=['
         '{"role": "robot", "content": "x"}])',
-        ("list-item", "misc"),
+        ("bad-argument-type",),
     ),
-    ('client.images.generate(prompt="p", quality="ultra")', ("call-overload",)),
-    ('client.images.edit(image="a.png", prompt="p")', ("arg-type",)),
+    (
+        'client.images.generate(prompt="p", quality="ultra")',
+        ("no-matching-overload",),
+    ),
+    ('client.images.edit(image="a.png", prompt="p")', ("bad-argument-type",)),
     (
         'len(client.chat.completions.create(model="m", messages=[])'
         ".choices[0].message.content)",
-        ("arg-type",),
+        ("bad-argument-type",),
     ),
-    ("genai.Client(api_key=1)", ("arg-type",)),
-    ("genai.types.HttpOptions(api_version=1)", ("arg-type",)),
+    ("genai.Client(api_key=1)", ("bad-argument-type",)),
+    ("genai.types.HttpOptions(api_version=1)", ("bad-argument-type",)),
     (
         'genai_client.models.generate_content(model="m", contents=1)',
-        ("arg-type",),
+        ("bad-argument-type",),
     ),
     (
         'genai_client.models.generate_content(model="m", contents="c", stream=True)',
-        ("call-arg",),
+        ("unexpected-keyword",),
     ),
-    ("genai_types.GenerateContentConfig(system_instruction=1)", ("arg-type",)),
+    (
+        "genai_types.GenerateContentConfig(system_instruction=1)",
+        ("bad-argument-type",),
+    ),
     (
         'genai_client.models.generate_content(model="m", contents="c").text.upper()',
-        ("union-attr",),
+        ("missing-attribute",),
     ),
 ]
-""" 用例列表，每项为一条调用语句和该行预期的 mypy 错误码元组 """
+""" 用例列表，每项为一条调用语句和该行预期的 pyrefly 错误码元组 """
 
-ERROR_LINE = re.compile(r"^.+:(\d+): error: .*  \[([a-z-]+)\]$")
-""" 匹配单行 mypy 报错输出并提取行号与错误码的正则表达式 """
-PARSING_LINE = re.compile(r"Parsing (.+) \(([\w.]+)\)$", re.MULTILINE)
-""" 匹配 mypy -v 日志中 Parsing 行并提取文件路径与模块名的正则表达式 """
-STUBBED = ("openai", "google.genai")
-""" 必须由 tests/_mypy_stubs 提供的模块名前缀 """
+ERROR_LINE = re.compile(r"^ERROR (.+):(\d+):\S+: .* \[([a-z-]+)\]$")
+""" 匹配 pyrefly min-text 单行 ERROR 输出并提取路径、行号与错误码的正则表达式 """
 STUB_VERSIONS = {"openai": "3.31.0", "google-genai": "2.31.0"}
 """ tests/_mypy_stubs 中第三方包存根对应的包名与版本号 """
 
@@ -198,13 +200,45 @@ class StubVersionsTest(FastTestCase):
             self.assertEqual(version, pins.get(name), name)
 
 
-@unittest.skipUnless(importlib.util.find_spec("mypy"), "本测试需要 mypy")
+def pyrefly(path: str, *extra: str) -> str:
+    """
+    在仓库根目录用 pyproject.toml 对指定文件运行 pyrefly check 并返回标准输出。
+    Keyword arguments:
+    path -- 待检查的 Python 文件路径
+    extra -- 附加命令行参数
+    Return arguments:
+    str -- pyrefly 命令的标准输出文本
+    """
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pyrefly",
+            "check",
+            "--config",
+            os.path.join(ROOT, "pyproject.toml"),
+            "--output-format=min-text",
+            "--summary=none",
+            "--progress-bar=no",
+            "--color=never",
+            *extra,
+            path,
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return proc.stdout
+
+
+@unittest.skipUnless(importlib.util.find_spec("pyrefly"), "本测试需要 pyrefly")
 class ThirdPartyStubsTest(FastTestCase):
-    """验证 mypy 通过 tests/_mypy_stubs 检查 openai 与 google.genai 调用"""
+    """验证 pyrefly 通过 tests/_mypy_stubs 检查 openai 与 google.genai 调用"""
 
     def test_stubs_check_callers(self) -> None:
         """
-        核对 mypy 检查临时调用模块时的每行错误码与模块解析路径
+        核对 pyrefly 检查临时调用模块时的每行错误码，并验证隐藏 site-packages 后输出一致。
         Keyword arguments:
         无
         Return arguments:
@@ -219,48 +253,20 @@ class ThirdPartyStubsTest(FastTestCase):
             path = os.path.join(tmp, "calls.py")
             with open(path, "w", encoding="utf-8") as f:
                 f.write(source)
-            proc = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "mypy",
-                    "--config-file",
-                    os.path.join(ROOT, "pyproject.toml"),
-                    "--cache-dir",
-                    os.path.join(tmp, "cache"),
-                    "--show-error-codes",
-                    "--no-pretty",
-                    "--no-error-summary",
-                    "--hide-error-context",
-                    "-v",
-                    path,
-                ],
-                cwd=ROOT,
-                capture_output=True,
-                text=True,
-                check=False,
+            empty = os.path.join(tmp, "site-packages")
+            os.mkdir(empty)
+            output = pyrefly(path, "--python-interpreter-path", sys.executable)
+            hidden = pyrefly(
+                path,
+                "--skip-interpreter-query",
+                "--site-packages-path",
+                empty,
             )
         found: dict[int, set[str]] = {}
-        for line in proc.stdout.splitlines():
-            if ": note: " in line:
-                continue
+        for line in output.splitlines():
             match = ERROR_LINE.match(line)
             if match is None:
                 self.fail(line)
-            found.setdefault(int(match.group(1)), set()).add(match.group(2))
+            found.setdefault(int(match.group(2)), set()).add(match.group(3))
         self.assertEqual(expected, found)
-        stubs = os.path.join(ROOT, "tests", "_mypy_stubs")
-        parsed = {
-            module: file
-            for file, module in PARSING_LINE.findall(proc.stderr)
-            if module.startswith(STUBBED)
-        }
-        self.assertIn("openai", parsed)
-        self.assertIn("google.genai", parsed)
-        for module, file in parsed.items():
-            self.assertTrue(
-                os.path.normcase(os.path.abspath(file)).startswith(
-                    os.path.normcase(stubs + os.sep)
-                ),
-                f"{module} {file}",
-            )
+        self.assertEqual(output, hidden)

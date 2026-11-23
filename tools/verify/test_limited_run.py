@@ -1187,7 +1187,7 @@ class Headroom(unittest.TestCase):
                             (cgroup / name).write_text(value + "\n")
                     self.assertEqual(limited_run.container_limit(), limit)
 
-    def test_earlyoom_margin(self) -> None:
+    def test_low_memory_margin(self) -> None:
         """earlyoom -m 20 时，余量是可用内存减去总内存的 20%，比容器余量小就用它；
         再有一个 -m 15 的 earlyoom 时仍按 20%"""
         self.process(7, "python3", "-m", "50")
