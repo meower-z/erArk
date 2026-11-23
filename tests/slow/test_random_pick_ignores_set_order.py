@@ -13,7 +13,7 @@
 证明候选确实有多个。
 - NPC AI：handle_npc_ai.search_target 把同权重的目标id放进集合，再从中挑一个。开新游戏后对凯尔希检索全部目标。
 - 口上：talk.choice_talk_from_talk_data 从同权重的口上id集合里挑一句。
-- 调教助手：confinement_and_training.get_behavior_id_of_sex_assistant 把可用行为id经集合去重，再挑一个。
+- 调教助手：prison_service.get_behavior_id_of_sex_assistant 把可用行为id经集合去重，再挑一个。
   开新游戏后博士在会议室锁门时被杜宾逆推（与 test_talk_common_nested 的开场相同），调教助手设为与博士同部位，
   监狱长为凯尔希，博士在爱抚胸部。
 
@@ -22,7 +22,7 @@
 先确认「场景内有可交互对象」此刻确实抽随机数：判断的角色身边放了另一名干员。
 - 目标的前提：配置里同时要求这两个前提的目标，把它的前提集合换成只含这两个前提，search_target 检索这一个目标（凯尔希）。
 - 口上与事件的前提：handle_premise.get_weight_from_premise_dict（凯尔希）。
-- 指令的前提：see_instruct_panel.judge_single_instruct_filter（博士）。
+- 指令的前提：instruct_filter.judge_single_instruct_filter（博士）。
 """
 
 import functools
@@ -255,7 +255,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
     def test_sex_assistant(self) -> None:
         """博士爱抚杜宾胸部时，调教助手在同一随机状态挑中同一个行为"""
         from Script.Core import constant
-        from Script.UI.Panel import confinement_and_training
+        from Script.Modules.gameplay_resolution import prison_service
 
         self.walk(ROOM)
         operator_id = self.npc("杜宾")
@@ -286,11 +286,9 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
             str -- 挑中的行为id
             """
             with mock.patch.object(
-                confinement_and_training, "set", set_type, create=True
+                prison_service, "set", set_type, create=True
             ):
-                return (
-                    confinement_and_training.get_behavior_id_of_sex_assistant()
-                )
+                return prison_service.get_behavior_id_of_sex_assistant()
 
         self.assert_same_picks(pick)
 
@@ -356,12 +354,12 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
     def test_instruct_premises(self) -> None:
         """博士的指令过滤：两种前提顺序抽的随机数相同"""
         from Script.Core import constant
-        from Script.System.Instruct_System import see_instruct_panel
+        from Script.Modules.gameplay_resolution import instruct_filter
 
         self.beside(0)
         instruct_id = constant.Instruct.WAIT
         checks = {
-            "see_instruct_panel": lambda: see_instruct_panel.judge_single_instruct_filter(
+            "instruct_filter": lambda: instruct_filter.judge_single_instruct_filter(
                 instruct_id,
                 {},
                 constant.InstructType.SYSTEM,

@@ -245,8 +245,8 @@ class LanguageRun:
 
     def sex_assistant(self) -> list[str]:
         """调教助手可用的行为id"""
-        panel: Any = game("Script.UI.Panel.confinement_and_training")
-        return sorted(panel.get_all_can_use_behavior_id_for_sex_assistant())
+        service: Any = game("Script.Modules.gameplay_resolution.prison_service")
+        return sorted(service.get_all_can_use_behavior_id_for_sex_assistant())
 
     def hidden_value(self) -> dict[str, int]:
         """隐奸中玩家做各项H行为后的被发现度"""
