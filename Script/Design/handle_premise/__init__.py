@@ -1019,9 +1019,9 @@ def handle_target_have_chara_diy_instruct(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    from Script.UI.Panel import event_option_panel
+    from Script.Modules.gameplay_resolution import diy_instruct_service
 
-    len_son_event_list, __ = event_option_panel.get_target_chara_diy_instruct(
+    len_son_event_list, __ = diy_instruct_service.get_target_chara_diy_instruct(
         character_id
     )
     if len_son_event_list:

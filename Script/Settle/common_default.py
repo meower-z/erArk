@@ -8,8 +8,8 @@ from Script.System.First_Record_System import first_record_handle
 from Script.Core import constant, game_type, get_text, num
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.UI.Panel import ejaculation_panel, system_setting
-
+from Script.UI.Panel import ejaculation_panel
+from Script.Modules.gameplay_resolution import difficulty_service
 import math
 import random
 from Script.Modules.domains import (
@@ -446,9 +446,8 @@ def chara_feel_state_adjust(
         # 最大只能吃十个人的加成
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.02
-    # 系统难度修正
     now_difficulty = playthrough.setting(playthrough.DIFFICULTY, 2)
-    difficulty_adjust = system_setting.get_difficulty_coefficient(
+    difficulty_adjust = difficulty_service.get_difficulty_coefficient(
         now_difficulty
     )
     final_adjust *= difficulty_adjust
@@ -562,9 +561,8 @@ def chara_base_state_adjust(
         # 最大只能吃十个人的加成
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.05
-    # 系统难度修正
     now_difficulty = playthrough.setting(playthrough.DIFFICULTY, 3)
-    difficulty_adjust = system_setting.get_difficulty_coefficient(
+    difficulty_adjust = difficulty_service.get_difficulty_coefficient(
         now_difficulty
     )
     # 对正面状态的加成
@@ -816,10 +814,11 @@ def base_chara_favorability_and_trust_common_settle(
             if add_favorability > 0:
                 # 连续重复减值
                 final_adjust *= continuous_adjust
-                # 系统难度修正
                 now_difficulty = playthrough.setting(playthrough.DIFFICULTY, 1)
-                difficulty_adjust = system_setting.get_difficulty_coefficient(
-                    now_difficulty
+                difficulty_adjust = (
+                    difficulty_service.get_difficulty_coefficient(
+                        now_difficulty
+                    )
                 )
                 final_adjust *= difficulty_adjust
 
@@ -863,10 +862,11 @@ def base_chara_favorability_and_trust_common_settle(
             if add_trust > 0:
                 # 连续重复减值
                 final_adjust *= continuous_adjust
-                # 系统难度修正
                 now_difficulty = playthrough.setting(playthrough.DIFFICULTY, 1)
-                difficulty_adjust = system_setting.get_difficulty_coefficient(
-                    now_difficulty
+                difficulty_adjust = (
+                    difficulty_service.get_difficulty_coefficient(
+                        now_difficulty
+                    )
                 )
                 final_adjust *= difficulty_adjust
 
