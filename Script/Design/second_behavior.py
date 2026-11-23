@@ -6,18 +6,16 @@ from types import FunctionType
 from Script.Core import constant, game_type, get_text, num
 from Script.Design import game_time, handle_premise, settle_behavior, talk
 from Script.System.First_Record_System import first_record_handle
-from Script.UI.Moudle import draw
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from typing import TYPE_CHECKING
 from Script.Modules.domains import abilities, activity, identity
 from Script.Modules.domains import first_record as first_record_domain, flags
 from Script.Modules.domains import growth, h_state, status
+from Script.Modules.gameplay_resolution import ui_hooks
 
 if TYPE_CHECKING:
     from types import ModuleType
 
-width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -625,7 +623,6 @@ def mark_effect(
     ability = abilities.ability(character_id)
     character_data: identity.Identity = identity.of(character_id)
     # print(f"name = {character_data.name},change_data.status_data = {change_data.status_data}")
-    now_draw = draw.WaitDraw()
     now_draw_text = ""
 
     if character_id == 0:
@@ -881,8 +878,7 @@ def mark_effect(
 
     if len(now_draw_text) > 0:
         now_draw_text += "\n"
-    now_draw.text = now_draw_text
-    now_draw.draw()
+    ui_hooks.emit_notice(now_draw_text, wait=True)
 
 
 def item_effect(character_id: int) -> None:

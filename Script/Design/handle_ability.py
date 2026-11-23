@@ -4,20 +4,13 @@
 
 from types import FunctionType
 from Script.Core import get_text
-from Script.Config import game_config, normal_config
-from Script.UI.Moudle import draw
+from Script.Config import game_config
 from Script.Modules.domains import abilities, growth, chara_life, relations
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
-
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
-window_width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 
 
 def check_upgrade_requirements(
@@ -139,11 +132,12 @@ def gain_ability(character_id: int) -> None:
                 ]
 
             # 输出升级信息
-            now_draw_succed = draw.NormalDraw()
-            now_draw_succed.text = _("{0}的{1}提升到{2}级\n").format(
-                character_data.name, ability_name, str(ability_level + 1)
+            ui_hooks.emit_notice(
+                _("{0}的{1}提升到{2}级\n").format(
+                    character_data.name, ability_name, str(ability_level + 1)
+                ),
+                wait=False,
             )
-            now_draw_succed.draw()
 
             # 孩子升级时记一笔待炫耀（Plan 22 §3.15 延迟炫耀）
             # 升级发生在玩家睡觉时的睡眠结算里，当场没有观众，所以攒着等下次见到玩家再说
@@ -311,9 +305,7 @@ def extra_ability_check(
             judge = 0
     # 绘制额外条件信息
     if draw_flag:
-        now_draw = draw.NormalDraw()
-        now_draw.text = info_text
-        now_draw.draw()
+        ui_hooks.emit_notice(info_text, wait=False)
     return judge
 
 
