@@ -7,7 +7,7 @@ from collections import deque, defaultdict
 import re
 
 from Script.UI.Moudle import draw, view
-from Script.Core import get_text, flow_handle, constant, py_cmd
+from Script.Core import get_text, flow_handle, constant, py_cmd, io_init
 from types import FunctionType
 from Script.Config import normal_config, game_config
 from Script.Modules.tk_ui import player_pick
@@ -1905,13 +1905,13 @@ class GomokuPanel:
                 self.current_player = "X"
                 self.selected_row = -1
                 self.selected_col = -1
-                # 绘制等待信息
                 info_draw = draw.NormalDraw()
                 info_draw.text = _(
                     "\n{0}思考中...\n".format(self.target_character_data.name)
                 )
                 info_draw.width = self.width
                 info_draw.draw()
+                io_init.flush()
                 self.ai_move()
 
     def factory(
