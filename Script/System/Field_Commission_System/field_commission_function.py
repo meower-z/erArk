@@ -436,7 +436,7 @@ def judge_field_commission_finish() -> None:
     """
 
     from Script.Settle import default
-    from Script.UI.Panel import achievement_panel
+    from Script.Modules.gameplay_resolution import achievement_service
     from Script.Design import second_behavior
 
     draw_text = ""
@@ -498,9 +498,9 @@ def judge_field_commission_finish() -> None:
             draw_text += equipment_damage_text
             # 结算成就
             achievement.add("field_commission_count", 1)
-            achievement_panel.achievement_flow(_("外勤"))
+            achievement_service.settle_and_notify(_("外勤"))
             if "追捕" in game_config.config_commission[commision_id].reward:
-                achievement_panel.achievement_flow(_("外勤"), 306)
+                achievement_service.settle_and_notify(_("外勤"), 306)
 
     # 绘制完成委托
     if len(draw_text):

@@ -91,7 +91,7 @@ Script/Modules/tk_ui/player_pick.py	picking	pyrefly:deprecated	count=1
 Script/Settle/Second_effect.py	<module>	module-lines	lines=4111
 Script/Settle/common_default.py	<module>	module-lines	lines=1309
 Script/Settle/default.py	<module>	E401	count=1
-Script/Settle/default.py	<module>	module-lines	lines=13362
+Script/Settle/default.py	<module>	module-lines	lines=13359
 Script/Settle/default_cloth.py	<module>	module-lines	lines=1005
 Script/Settle/item_effect.py	<module>	module-lines	lines=2186
 Script/Settle/orgasm_settle.py	<module>	module-lines	lines=596
@@ -122,7 +122,7 @@ Script/System/Field_Commission_System/field_commission_function.py	<module>	modu
 Script/System/Field_Commission_System/field_commission_panel.py	<module>	module-lines	lines=1513
 Script/System/First_Record_System/first_record_panel.py	<module>	module-lines	lines=661
 Script/System/Instruct_System/Instruct.py	<module>	module-lines	lines=868
-Script/System/Instruct_System/handle_instruct.py	<module>	module-lines	lines=4738
+Script/System/Instruct_System/handle_instruct.py	<module>	module-lines	lines=4733
 Script/System/Medical_System/clinic_doctor_service.py	<module>	module-lines	lines=637
 Script/System/Medical_System/clinic_patient_management.py	<module>	UP035	count=1
 Script/System/Medical_System/clinic_patient_management.py	<module>	module-lines	lines=896

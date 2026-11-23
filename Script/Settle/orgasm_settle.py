@@ -6,7 +6,8 @@ from Script.Core import game_type, get_text
 from Script.Design import attr_calculation, handle_premise, second_behavior
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.UI.Panel import achievement_panel, ejaculation_panel
+from Script.Modules.gameplay_resolution import achievement_service
+from Script.UI.Panel import ejaculation_panel
 from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, activity, identity
 from Script.Modules.domains import first_record, h_meters, h_state, status
@@ -452,13 +453,12 @@ def orgasm_settle_in_second_behavior(
                     list(activity.position(character_id)),
                     sorted(tem_orgasm_set),
                 ]
-        # 结算成就
         if part_count >= 2:
-            achievement_panel.achievement_flow(_("绝顶"), 1221)
+            achievement_service.settle_and_notify(_("绝顶"), 1221)
         if part_count >= 6:
-            achievement_panel.achievement_flow(_("绝顶"), 1222)
+            achievement_service.settle_and_notify(_("绝顶"), 1222)
         if part_count >= 10:
-            achievement_panel.achievement_flow(_("绝顶"), 1223)
+            achievement_service.settle_and_notify(_("绝顶"), 1223)
         # 如果在人力发电室中，则增加人力发电量
         if handle_premise.handle_in_human_power_room(character_id):
             draw_flag = False

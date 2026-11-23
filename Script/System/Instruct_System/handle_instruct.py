@@ -12,19 +12,14 @@ from Script.Core import (
     get_text,
     flow_handle,
 )
-from Script.Design import (
-    handle_ability,
-    map_handle,
-    instuct_judege,
-    handle_npc_ai_in_h,
-    handle_premise,
-    child_stage_gate,
-)
-from Script.UI.Panel import achievement_panel, normal_panel
+from Script.Design import handle_ability, map_handle, instuct_judege
+from Script.Design import handle_npc_ai_in_h, handle_premise, child_stage_gate
+from Script.UI.Panel import normal_panel
 from Script.Kernel import core
 from Script.Config import normal_config, game_config
 from Script.UI.Moudle import draw, view
 from Script.Design import game_time
+from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import (
@@ -2084,7 +2079,7 @@ def _start_h_end(who: int, chosen: intent.Intent) -> None:
     """
     if chosen["args"]["daughter"]:
         achievement.add("h_with_daughter_count", 1)
-        achievement_panel.achievement_flow(_("乱伦"))
+        achievement_service.settle_and_notify(_("乱伦"))
     _h_end_others(chosen["behavior_id"], chosen["target"])
 
 
@@ -2226,7 +2221,7 @@ def _start_unconscious_h_end(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    achievement_panel.achievement_flow(_("睡奸"))
+    achievement_service.settle_and_notify(_("睡奸"))
     _draw_end_text(_("\n结束无意识奸\n"))
 
 
@@ -2267,10 +2262,10 @@ def _start_sex_mode_end(who: int, chosen: intent.Intent) -> None:
     target_id = chosen["target"]
     _h_end_follow(target_id)
     if chosen["args"]["mode"] == "hidden":
-        achievement_panel.achievement_flow(_("隐奸"))
+        achievement_service.settle_and_notify(_("隐奸"))
         text = _("\n结束隐奸\n")
     else:
-        achievement_panel.achievement_flow(_("露出"))
+        achievement_service.settle_and_notify(_("露出"))
         text = _("\n结束露出\n")
     if target_id != 0:
         plan_queue.plan_next(

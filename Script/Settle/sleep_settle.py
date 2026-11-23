@@ -12,7 +12,7 @@ from Script.Design import (
 from Script.System.Pregnancy_System import pregnancy_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.UI.Panel import achievement_panel
+from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.domains import (
     abilities,
     action_info,
@@ -82,8 +82,7 @@ def update_sleep() -> None:
                     assistant_id
                 ):
                     flags.set(assistant_id, is_follow=1)
-                # 助理成就
-                achievement_panel.achievement_flow(_("助理"))
+                achievement_service.settle_and_notify(_("助理"))
             # 体外无壳卵：长时间睡眠期间到期的卵进行受精判定（先于各NPC的破壳判定）
             from Script.System.Pregnancy_System import soft_egg_handle
 
