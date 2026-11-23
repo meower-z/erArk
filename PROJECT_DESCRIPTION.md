@@ -169,7 +169,9 @@ Script/
 │   ├── rich_text.py        # 富文本样式
 │   ├── json_handle.py      # JSON 读写
 │   ├── value_handle.py     # 数值处理
-│   ├── era_image.py        # 图片管理
+│   ├── image_catalog.py    # 图片路径与角色索引（不依赖 Tk）
+│   ├── image_cache.py      # Tk 按需解码与 PhotoImage 缓存
+│   ├── image_path_index.py # 同名图片取舍与目录路径索引
 │   ├── dijkstra.py         # 寻路
 │   ├── key_listion_event.py# 键盘监听
 │   ├── py_cmd.py           # 命令/面板 ID 辅助

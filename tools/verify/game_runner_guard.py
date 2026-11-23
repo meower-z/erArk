@@ -4,7 +4,7 @@
 =======================================
 由 venv 里的 game_runner_guard.pth 在每个 Python 进程启动时导入（安装见 install_guard.sh）。
 进程第一次导入下面两个模块之一时，若没有 limited_run.py 设的环境变量 USE_GAME_RUNNER=1，就打印说明并以退出码 3 结束：
-    Script.Core.era_image   -- 导入即建图片索引，Tk 显示过的图片都留在内存里直到进程结束
+    Script.Core.image_cache -- Tk 显示过的图片都留在内存里直到进程结束
     Script.Core.game_init   -- 启动 Tk 游戏，启动时不到 2 GB，显示的图片越多占用越大
 导入时连带导入这两个模块之一的模块同样被拦下。不连带导入它们的模块照常导入。
 """
@@ -13,7 +13,7 @@ import os
 import sys
 import importlib.abc
 
-GUARDED = frozenset({"Script.Core.era_image", "Script.Core.game_init"})
+GUARDED = frozenset({"Script.Core.image_cache", "Script.Core.game_init"})
 """ 需要经 limited_run.py 才能导入的模块 """
 MESSAGE = (
     "Blocked: importing {name} without limited_run.py. This module {why}, so "
@@ -24,7 +24,7 @@ MESSAGE = (
     "from the erArk checkout root.\n"
 )
 WHY = {
-    "Script.Core.era_image": (
+    "Script.Core.image_cache": (
         "keeps every image that Tk shows in memory until the process ends"
     ),
     "Script.Core.game_init": (

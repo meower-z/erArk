@@ -33,8 +33,8 @@ def image_path_priority(image_path: str) -> tuple:
 
 def build_image_path_index(directory: str) -> tuple:
     """
-    遍历目录下的全部 png，为每个图片名（文件名去掉 .png）取一个文件
-    era_image.index_images_from_directory 用这里的结果建立图片索引
+    遍历目录下的全部 png，为每个图片名（文件名去掉 .png）取一个文件。
+    image_catalog.index_images_from_directory 用这里的结果建立图片索引。
 
     Keyword arguments:
     directory -- str，图片根目录
