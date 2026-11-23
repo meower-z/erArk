@@ -91,7 +91,7 @@ Script/Modules/tk_ui/player_pick.py	picking	pyrefly:deprecated	count=1
 Script/Settle/Second_effect.py	<module>	module-lines	lines=4111
 Script/Settle/common_default.py	<module>	module-lines	lines=1309
 Script/Settle/default.py	<module>	E401	count=1
-Script/Settle/default.py	<module>	module-lines	lines=13363
+Script/Settle/default.py	<module>	module-lines	lines=13362
 Script/Settle/default_cloth.py	<module>	module-lines	lines=1023
 Script/Settle/item_effect.py	<module>	module-lines	lines=2193
 Script/Settle/orgasm_settle.py	<module>	module-lines	lines=596
@@ -188,7 +188,7 @@ Script/UI/Panel/draw_event_text_panel.py	DrawEventTextPanel.__init__	pyrefly:bad
 Script/UI/Panel/ejaculation_panel.py	<module>	module-lines	lines=868
 Script/UI/Panel/equipmen_panel.py	<module>	module-lines	lines=570
 Script/UI/Panel/gift_panel.py	<module>	module-lines	lines=846
-Script/UI/Panel/hypnosis_panel.py	<module>	module-lines	lines=980
+Script/UI/Panel/hypnosis_panel.py	<module>	module-lines	lines=797
 Script/UI/Panel/in_scene_panel.py	<module>	E401	count=1
 Script/UI/Panel/invite_visitor_panel.py	<module>	module-lines	lines=624
 Script/UI/Panel/manage_assembly_line_panel.py	<module>	module-lines	lines=647

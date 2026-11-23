@@ -1,11 +1,9 @@
-"""催眠类型与角色扮演类型的选择面板，以及催眠的消耗、程度、上限与完成判定"""
+"""催眠类型与角色扮演类型的选择面板"""
 
 from types import FunctionType
-import random
 from Script.Core import constant, flow_handle
 from Script.Core import get_text
-from Script.Design import handle_ability, handle_premise, handle_talent
-from Script.Design import hypnosis_state, map_handle
+from Script.Design import handle_premise, hypnosis_state
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import (
@@ -15,7 +13,8 @@ from Script.Modules.domains import (
     hypnosis,
     player_ability,
 )
-from Script.Modules.domains import identity, scene_state
+from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import hypnosis_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -25,190 +24,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-unconscious_list = [
-    _("无"),
-    _("睡眠"),
-    _("醉酒"),
-    _("时停"),
-    _("平然催眠"),
-    _("空气催眠"),
-    _("体控催眠"),
-    _("心控催眠"),
-]
-""" 无意识状态列表 """
-
-
-def calculate_hypnosis_sanity_cost(character_id: int) -> int:
-    """
-    计算催眠所需的理智消耗
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 预计会消耗的理智值
-    """
-    talent = abilities.talent(character_id)
-    base_cost = 10
-    if talent[73]:
-        return 1
-    elif talent[72]:
-        return base_cost + 20
-    elif talent[71]:
-        return base_cost + 15
-    else:
-        return base_cost + 10
-
-
-def hypnosis_degree_calculation(target_character_id: int) -> float:
-    """
-    计算催眠的增长程度
-    Keyword arguments:
-    target_character_id -- 角色id
-    Return arguments:
-    float -- 催眠增长值
-    """
-    talent = abilities.talent(0)
-
-    if target_character_id == 0:
-        return 0
-
-    # 如果已经达到当前玩家的能力上限，则不再增加
-    hypnosis_degree_limit = hypnosis_degree_limit_calculation()
-    if hypnosis.degree(target_character_id) >= hypnosis_degree_limit:
-        return 0
-
-    base_addition = 1
-
-    # 根据玩家的催眠能力，计算催眠增长系数
-    hypnosis_degree_adjust: float = 2
-    if talent[334]:
-        hypnosis_degree_adjust = 6
-    elif talent[333]:
-        hypnosis_degree_adjust = 4
-
-    # 调香的加成
-    if flags.get(target_character_id, "aromatherapy") == 6:
-        hypnosis_degree_adjust += 5
-
-    # 根据无觉刻印的等级，计算催眠增长系数
-    hypnosis_degree_adjust *= handle_ability.get_ability_adjust(
-        abilities.ability(target_character_id)[19]
-    )
-
-    # 乘以0.5~1.5的随机系数
-    hypnosis_degree_adjust *= random.uniform(0.5, 1.5)
-
-    # 最后计算
-    final_addition = base_addition * hypnosis_degree_adjust
-    # 限制为1位小数
-    final_addition = round(final_addition, 1)
-
-    return final_addition
-
-
-def hypnosis_degree_limit_calculation() -> int:
-    """
-    计算催眠的上限
-    Keyword arguments:
-    target_character_id -- 角色id
-    Return arguments:
-    int -- 催眠上限
-    """
-
-    # 如果已经达到当前玩家的能力上限，则不再增加
-    hypnosis_degree_limit = 0
-    for cid in game_config.config_hypnosis_talent_of_pl:
-        hypnosis_data = game_config.config_hypnosis_talent_of_pl[cid]
-        if abilities.talent(0)[hypnosis_data.hypnosis_talent_id]:
-            hypnosis_degree_limit = max(
-                hypnosis_degree_limit, hypnosis_data.max_hypnosis_degree
-            )
-
-    return hypnosis_degree_limit
-
-
-def evaluate_hypnosis_completion(character_id: int) -> int:
-    """
-    判断与结算催眠完成\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    Return arguments:\n
-    int -- 1完成，0未完成\n
-    """
-    character_data: identity.Identity = identity.of(character_id)
-    # 进行素质获得检测
-    handle_talent.npc_gain_hypnosis_talent(character_id)
-    # 计算催眠完成度
-    now_hypnosis_type = player_ability.get(0, "hypnosis_type")
-    hypnosis_degree_need = game_config.config_hypnosis_type[
-        now_hypnosis_type
-    ].hypnosis_degree
-    # 催眠完成，开始结算
-    if hypnosis.degree(character_id) >= hypnosis_degree_need:
-        # 空气催眠
-        if now_hypnosis_type == 2:
-            # 限制为需要锁门的地点，并强制锁门
-            now_position = activity.position(0)
-            now_scene_str = map_handle.get_map_system_path_str_for_list(
-                now_position
-            )
-            now_scene_data = constant.scene_data[now_scene_str]
-            if now_scene_data.close_type != 1:
-                now_draw: draw.NormalDraw = draw.WaitDraw()
-                draw_text = _("\n当前地点不能锁门，无法进行空气催眠\n")
-                now_draw.text = draw_text
-                now_draw.draw()
-                return 0
-            elif scene_state.close_flag(now_scene_str) == 0:
-                scene_state.set_close_flag(
-                    now_scene_str, now_scene_data.close_type
-                )
-                now_draw = draw.WaitDraw()
-                draw_text = _("\n为了防止有人打扰，将门锁上了\n")
-                now_draw.text = draw_text
-                now_draw.draw()
-            # 更新记录当前地点
-            player_ability.set(0, air_hypnosis_position=activity.position(0))
-        if now_hypnosis_type == 1 or now_hypnosis_type == 2:
-            hypnosis_state.clear_hypnosis_behavior_mode(character_id)
-            flags.set(character_id, unconscious_h=now_hypnosis_type + 3)
-        return 1
-    # 未完成催眠
-    else:
-        now_draw = draw.NormalDraw()
-        draw_text = _(
-            "\n{0}的催眠深度未达到{1}%，无法进入{2}催眠状态，需要切换更低的催眠模式或加深催眠程度\n"
-        ).format(
-            character_data.name,
-            hypnosis_degree_need,
-            game_config.config_hypnosis_type[now_hypnosis_type].name,
-        )
-        now_draw.text = draw_text
-        now_draw.draw()
-        return 0
-
-
-def get_hypnosis_degree_color(hypnosis_degree: float) -> str:
-    """
-    输入催眠等级，输出角色催眠状态对应的字体颜色
-    参数:
-        hypnosis_degree (float): 催眠等级
-    输出:
-        str: 催眠等级对应的字体颜色
-    功能:
-        根据角色的催眠等级返回对应的字体颜色字符串
-    """
-    if hypnosis_degree == 0:
-        font_color = "standard"
-    elif hypnosis_degree < 50:
-        font_color = "pink"
-    elif hypnosis_degree < 100:
-        font_color = "hot_pink"
-    elif hypnosis_degree < 200:
-        font_color = "deep_pink"
-    else:
-        font_color = "purple"
-    return font_color
 
 
 class Chose_Hypnosis_Type_Panel:
@@ -344,7 +159,9 @@ class Chose_Hypnosis_Type_Panel:
             now_draw.draw()
             # 如果当前有交互对象
             if self.instruct_flag and activity.target(0):
-                if not evaluate_hypnosis_completion(activity.target(0)):
+                if not hypnosis_service.evaluate_hypnosis_completion(
+                    activity.target(0)
+                ):
                     return
                 now_draw = draw.WaitDraw()
                 now_draw.style = "pink"

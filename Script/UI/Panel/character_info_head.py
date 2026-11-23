@@ -6,7 +6,7 @@ from Script.Core import constant, get_text, num
 from Script.Core import text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
-from Script.UI.Panel import hypnosis_panel
+from Script.Modules.gameplay_resolution import hypnosis_service
 from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, activity
 from Script.Modules.domains import chara_profile, flags, h_meters, h_state
@@ -422,11 +422,11 @@ def get_character_status_list(
         or (hyp_deg > 0 and normal_config.system_setting.draw_setting[4] == 2)
     ):
         hypnosis_text = _(" <催眠")
-        # 根据催眠程度来区分颜色
-        hypnosis_draw.style = hypnosis_panel.get_hypnosis_degree_color(hyp_deg)
+        hypnosis_draw.style = hypnosis_service.get_hypnosis_degree_color(
+            hyp_deg
+        )
         # 是否显示具体数值
         if normal_config.system_setting.draw_setting[4] == 2:
-            # 显示到小数点后一位
             hypnosis_text += f"({round(hyp_deg, 1)}%)"
         # 是否显示催眠类型
         if handle_premise.handle_unconscious_hypnosis_flag(character_id):

@@ -8,7 +8,8 @@ from Script.UI.Moudle import draw
 from Script.Core import game_type, get_text, num
 from Script.Config import game_config, normal_config
 from Script.Design import attr_text, game_time
-from Script.UI.Panel import character_info_head, hypnosis_panel
+from Script.UI.Panel import character_info_head
+from Script.Modules.gameplay_resolution import hypnosis_service
 from Script.Modules.domains import dirty, first_record as first_record_domain
 from Script.Modules.domains import playthrough, identity
 
@@ -352,14 +353,13 @@ def _build_h_mode_text(first_record: game_type.FIRST_RECORD) -> str:
     """
     now_text = ""
     h_mode_dict = getattr(first_record, "first_h_mode_dict", {})
-    # 组装11项固定条目 [(模式键, 条目名)]
     mode_list = []
     for unconscious_type in range(1, 8):
         mode_list.append(
             (
                 f"unconscious_{unconscious_type}",
                 _("第一次{0}H").format(
-                    hypnosis_panel.unconscious_list[unconscious_type]
+                    hypnosis_service.unconscious_list[unconscious_type]
                 ),
             )
         )
