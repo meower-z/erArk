@@ -29,7 +29,7 @@ from Script.Modules.save_load import kernel_state, upgrade
 from Script.System.Cooking_System import cooking
 from Script.System.Medical_System import medical_core
 from Script.Test.Static_Check.check_registry import get_all_checks
-from Script.UI.Panel import resource_exchange_panel as trade
+from Script.Modules.gameplay_resolution import trade_service as trade
 from tests.fast.base import FastTestCase
 from Script.Modules.domains import chara_life
 from tests import kernel_data

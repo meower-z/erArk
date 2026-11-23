@@ -26,11 +26,11 @@ from Script.Modules.domains import (
     fridge,
 )
 from Script.Modules.domains import medical, tallies, warehouse
-from Script.Modules.gameplay_resolution import working
+from Script.Modules.gameplay_resolution import daily_base_service, working
 from Script.System.Medical_System import clinic_patient_management
 from Script.System.Medical_System import medical_constant, medical_service
 from Script.UI.Moudle import draw
-from Script.UI.Panel import aromatherapy_panel, manage_library
+from Script.UI.Panel import manage_library
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 from Script.Modules.save_load.legacy_pickle import LegacyObject
@@ -118,7 +118,7 @@ class BaseTalliesStateTest(FastTestCase):
     def test_aromatherapy_follows_courtyard_level(self) -> None:
         """疗养庭院 4 级时日结的刷新给 2 次，用掉 1 次剩 1 次。升到 5 级后刷新基地，为 3 次"""
         facility.set_level(COURTYARD, 4)
-        aromatherapy_panel.settle_aromatherapy_sessions()
+        daily_base_service.settle_aromatherapy_sessions()
         self.assertEqual(tallies.get(tallies.AROMATHERAPY), 2)
         tallies.add(tallies.AROMATHERAPY, -1)
         self.assertEqual(tallies.get(tallies.AROMATHERAPY), 1)
