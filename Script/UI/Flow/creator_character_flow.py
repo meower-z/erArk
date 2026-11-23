@@ -13,7 +13,7 @@ from Script.Kernel import core
 from Script.Modules.domains import abilities, country, physical_exam, modes
 from Script.Modules.domains import player_ability, playthrough, prison, roster
 from Script.Modules.domains import npc_template, visitor, warehouse, work
-from Script.Modules.gameplay_resolution import working
+from Script.Modules.gameplay_resolution import vehicle_service, working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import normal_config, game_config
@@ -85,7 +85,7 @@ def first_bonus_and_setting_updata() -> None:
 def game_start() -> None:
     """初始化游戏数据"""
     from Script.System.Cooking_System import cooking
-    from Script.UI.Panel import achievement_panel, manage_vehicle_panel
+    from Script.UI.Panel import achievement_panel
     from Script.System.Medical_System import medical_service
     from Script.System.Dormitory_System import common as dormitory_common
 
@@ -99,7 +99,7 @@ def game_start() -> None:
     basement.get_base_updata()
     character_handle.init_character_entertainment()  # 需要设施开放的属性，所以放在设施后面
     medical_service.init_medical_department_data(reset_runtime=True)
-    manage_vehicle_panel.update_basement_vehicle_data()
+    vehicle_service.update_basement_vehicle_data()
     visitor.set_last_arrival(game_time.now())
     achievement_panel.achievement_flow(_("周目"))
 

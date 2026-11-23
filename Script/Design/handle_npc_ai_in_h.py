@@ -625,7 +625,7 @@ def npc_active_h() -> int:
     int -- 0为对方没有逆推或没有可选的行为
     """
     from Script.Modules.tk_ui import player_pick
-    from Script.System.Instruct_System import see_instruct_panel
+    from Script.Modules.gameplay_resolution import instruct_filter
 
     target_character_id = activity.target(0)
     target_character_data = identity.of(target_character_id)
@@ -689,7 +689,7 @@ def npc_active_h() -> int:
             instruct_id = constant.behavior_id_to_instruct_id[behavior_id]
             # 检查指令是否可用
             filter_judge, now_premise_data = (
-                see_instruct_panel.judge_single_instruct_filter(
+                instruct_filter.judge_single_instruct_filter(
                     instruct_id,
                     now_premise_data,
                     constant.InstructType.SEX,

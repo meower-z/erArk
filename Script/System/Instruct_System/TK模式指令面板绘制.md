@@ -177,7 +177,7 @@ for now_type in normal_config.system_setting.instruct_type_filter:
     # 遍历该类型下的所有指令
     for instruct in constant.instruct_type_data[now_type]:
         # 调用过滤函数判断是否显示
-        filter_judge, now_premise_data = judge_single_instruct_filter(
+        filter_judge, now_premise_data = instruct_filter.judge_single_instruct_filter(
             instruct, now_premise_data, now_type
         )
         if filter_judge:
@@ -407,7 +407,7 @@ def handle_chara_diy_instruct(self, event_id: str):
 
 ## 5. 单个指令过滤逻辑
 
-### 5.1 judge_single_instruct_filter 函数
+### 5.1 instruct_filter.judge_single_instruct_filter 函数
 
 ```python
 def judge_single_instruct_filter(
@@ -648,7 +648,7 @@ instruct_button_width = int(self.width / SINGLE_LINE_INSTRUCT_NUM)
 # 在遍历指令时复用前提判断结果
 now_premise_data = {}
 for instruct in all_instructs:
-    filter_judge, now_premise_data = judge_single_instruct_filter(
+    filter_judge, now_premise_data = instruct_filter.judge_single_instruct_filter(
         instruct, now_premise_data, now_type
     )
 ```

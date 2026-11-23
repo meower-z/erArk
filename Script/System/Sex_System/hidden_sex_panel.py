@@ -6,7 +6,7 @@ from Script.UI.Moudle import draw, view
 from Script.Core import get_text, flow_handle, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, handle_ability, map_handle
-from Script.UI.Panel import dirty_panel
+from Script.Modules.gameplay_resolution import dirty_queries
 
 import random
 from Script.Modules.domains import abilities, achievement, activity, flags
@@ -369,7 +369,7 @@ class See_Hidden_Sex_InfoPanel:
             )
 
         # 阴茎文本
-        insert_chara_id = dirty_panel.get_inserted_character_id()
+        insert_chara_id = dirty_queries.get_inserted_character_id()
         if insert_chara_id != 0:
             insert_character_data = identity.of(insert_chara_id)
             chara_name = insert_character_data.name

@@ -1,13 +1,14 @@
-"""装备维护面板，以及装备损坏、维修与保养的结算"""
+"""装备维护界面面板 Equipment_Maintain_Panel，以及装备情况一览与铁匠维修保养函数"""
 
 from types import FunctionType
 from Script.Core import constant, flow_handle, get_text
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_ability, handle_premise, basement
-from Script.Modules.domains import abilities, achievement, commission, identity
+from Script.Modules.domains import abilities, achievement, identity
 from Script.Modules.domains import maintenance, physical_exam, roster, wardrobe
 import random
+from Script.Modules.gameplay_resolution import equipment_service
 from Script.UI.Panel import achievement_panel
 
 _: FunctionType = get_text._
@@ -18,26 +19,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def get_equipment_condition_name(value: float) -> str:
-    """
-    根据装备condition的float值查找csv区间，返回装备情况名
-    输入：value: float
-    输出：str 装备情况名
-    """
-    # 读取装备情况配置表，假设game_config.config_equipment_condition的key为int，value有name和value属性
-    # 先按value排序，找到value最接近且不大于输入值的那一项
-    condition_list = list(game_config.config_equipment_condition.values())
-    # 按value升序排列
-    condition_list.sort(key=lambda x: x.value)
-    result_name = condition_list[0].name
-    for cond in condition_list:
-        if value >= cond.value:
-            result_name = cond.name
-        else:
-            break
-    return result_name
 
 
 def show_damaged_equipment() -> None:
@@ -58,7 +39,9 @@ def show_damaged_equipment() -> None:
             npc_data = identity.of(npc_id)
             condition_val = wardrobe.of(npc_id).equipment_condition
             if condition_val < 0:
-                condition_name = get_equipment_condition_name(condition_val)
+                condition_name = equipment_service.get_equipment_condition_name(
+                    condition_val
+                )
                 now_text += (
                     f"  {npc_data.name}：{condition_name} ({condition_val})\n"
                 )
@@ -94,7 +77,9 @@ def show_maintained_equipment() -> None:
             npc_data = identity.of(npc_id)
             condition_val = wardrobe.of(npc_id).equipment_condition
             if condition_val > 0:
-                condition_name = get_equipment_condition_name(condition_val)
+                condition_name = equipment_service.get_equipment_condition_name(
+                    condition_val
+                )
                 now_text += (
                     f"  {npc_data.name}：{condition_name} ({condition_val})\n"
                 )
@@ -110,54 +95,6 @@ def show_maintained_equipment() -> None:
         yrn = flow_handle.askfor_all([back_draw.return_text])
         if yrn == back_draw.return_text:
             break
-
-
-def settle_equipment_damage_in_commission(commision_id: int) -> str:
-    """
-    结算外勤委托中装备的损坏\n
-    输入：\n
-    commision_id -- 外勤委托id\n
-    输出：\n
-    str 装备损坏信息
-    """
-    equipment_damage_text = ""
-    # 获取派遣人员列表
-    send_npc_list = commission.ongoing()[commision_id].team
-    commision_lv = game_config.config_commission[commision_id].level
-    damage_rate_data = game_config.config_equipment_damage_rate[commision_lv]
-    damage_rate_list = [
-        damage_rate_data.rate_0,
-        damage_rate_data.rate_1,
-        damage_rate_data.rate_2,
-        damage_rate_data.rate_3,
-        damage_rate_data.rate_4,
-    ]
-    # 遍历派遣人员列表
-    for send_npc_id in send_npc_list:
-        send_npc_data = identity.of(send_npc_id)
-        # 获取装备损坏概率，为0~1的随机小数
-        random_damage_rate = random.random()
-        # 根据装备损坏概率获取损坏等级
-        damage_lv = 0
-        count_damage_rate: float = 0
-        for i, rate in enumerate(damage_rate_list):
-            count_damage_rate += rate
-            if random_damage_rate < count_damage_rate:
-                damage_lv = i
-                break
-        # 如果损坏等级大于0，则进行装备损坏
-        if damage_lv > 0:
-            wardrobe.set(send_npc_id, "equipment_condition", damage_lv * -1)
-            # 获取装备损坏情况
-            equipment_condition = get_equipment_condition_name(
-                wardrobe.of(send_npc_id).equipment_condition
-            )
-            # 绘制装备损坏信息
-            equipment_damage_text += _(
-                "{0}的装备损坏了，损坏情况为{1}，需要进行维修。\n"
-            ).format(send_npc_data.name, equipment_condition)
-
-    return equipment_damage_text
 
 
 def smith_maintain_equipment_once(
@@ -284,7 +221,9 @@ def repair_equipment(
         )
         wardrobe.set(npc_data.cid, "equipment_condition", condition)
         repair_flag = True
-        new_condition_text = get_equipment_condition_name(condition)
+        new_condition_text = equipment_service.get_equipment_condition_name(
+            condition
+        )
         repair_text = _("{0}维修了{1}的装备，当前情况：{2} ({3})\n").format(
             smith_chara_data.name,
             npc_data.name,
@@ -364,7 +303,9 @@ def maintain_equipment(
         )
         wardrobe.set(npc_data.cid, "equipment_condition", condition)
         maintain_flag = True
-        new_condition_text = get_equipment_condition_name(condition)
+        new_condition_text = equipment_service.get_equipment_condition_name(
+            condition
+        )
         maintain_text = _("{0}保养了{1}的装备，当前情况：{2} ({3})\n").format(
             smith_chara_data.name,
             npc_data.name,

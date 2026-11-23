@@ -1,8 +1,8 @@
-"""显示角色身体污秽状况的面板，以及精液量与插入对象的查询"""
+"""角色身体污秽状况展示面板 SeeCharacterBodyPanel"""
 
 from types import FunctionType
 from Script.Core import get_text, rich_text, num
-from Script.Design import map_handle, clothing, attr_calculation
+from Script.Design import clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
@@ -15,7 +15,6 @@ from Script.Modules.domains import (
     needs,
 )
 from Script.Modules.domains import player_ability, pregnancy, status, identity
-from Script.Modules.domains import scene_state
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -25,49 +24,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def get_v_and_w_semen_count(character_id: int) -> num.Num:
-    """
-    获取角色的小穴和子宫精液总量
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 精液总量
-    """
-    all_semen_count = dirty.body_semen_amount(
-        character_id, 6
-    ) + dirty.body_semen_amount(character_id, 7)
-    return all_semen_count
-
-
-def get_inserted_character_id() -> int:
-    """
-    获取玩家同场景中阴茎插入数据不为 -1 的角色id。
-    参数: 无
-    返回值: int -- 如果找到符合条件的角色则返回该角色id，否则返回0。
-    """
-    # 获取玩家数据，玩家角色id固定为0
-    # 获取玩家的交互对象id
-    target_id: int = activity.target(0)
-    # 检查玩家的交互对象是否存在且其阴茎插入数据符合条件（不为 -1）
-    if target_id != 0 and h_state.get(target_id, "insert_position") != -1:
-        return target_id
-
-    # 如果交互对象不符合条件，遍历场景内其他角色（排除玩家和交互对象）
-    scene_path_str = map_handle.get_map_system_path_str_for_list(
-        activity.position(0)
-    )
-    for character_id in scene_state.occupants(scene_path_str):
-        # 排除玩家和已检测的交互对象
-        if character_id == 0 or character_id == target_id:
-            continue
-        # 如果该角色的阴茎插入数据不为 -1，则返回该角色id
-        if h_state.get(character_id, "insert_position") != -1:
-            return character_id
-
-    # 如果没有找到符合条件的角色则返回0
-    return 0
 
 
 class SeeCharacterBodyPanel:

@@ -1,13 +1,14 @@
-"""查看操作菜单面板，以及单个指令是否通过过滤的判断"""
+"""查看操作菜单界面面板 SeeInstructPanel"""
 
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw, panel
 from Script.Core import get_text, text_handle, value_handle, constant, py_cmd
-from Script.Design import handle_premise, talk, child_stage_gate
+from Script.Design import handle_premise, talk
 from Script.Config import config_def, game_config, normal_config
-from Script.Modules.domains import activity, history, modes
+from Script.Modules.domains import activity, history
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import instruct_filter
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -15,91 +16,6 @@ line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
-
-
-def judge_single_instruct_filter(
-    instruct_id: str,
-    now_premise_data: dict,
-    now_type: int,
-    use_type_filter_flag: bool = True,
-    skip_h_judge: bool = False,
-    skip_not_h_judge: bool = False,
-) -> tuple:
-    """
-    判断单个指令是否通过过滤\n
-    Keyword arguments：\n
-    instruct_id -- 指令id\n
-    now_premise_data -- 当前记录的前提数据\n
-    now_type -- 当前指令类型\n
-    use_type_filter_flag -- 是否使用类型过滤\n
-    skip_h_judge -- 是否跳过H类指令判断\n
-    skip_not_h_judge -- 是否跳过非H类指令判断\n
-    Returns：\n
-    bool -- 是否通过过滤\n
-    now_premise_data -- 当前记录的前提数据\n
-    """
-    filter_judge = True
-    # 如果该指令不存在，则置为存在
-    if instruct_id not in normal_config.system_setting.instruct_index_filter:
-        normal_config.system_setting.instruct_index_filter[instruct_id] = True
-    # 如果在过滤列表里，则过滤
-    if not normal_config.system_setting.instruct_index_filter[instruct_id]:
-        filter_judge = False
-    # H子类指令过滤
-    if (
-        use_type_filter_flag
-        and handle_premise.handle_now_show_h_instruct(0)
-        and now_type == constant.InstructType.SEX
-    ):
-        now_sub_type = constant.instruct_sub_type_data[instruct_id]
-        if (
-            normal_config.system_setting.instruct_sex_type_filter[now_sub_type]
-            == 0
-        ):
-            filter_judge = False
-    # 前提判断
-    if filter_judge:
-        premise_judge = True
-        if instruct_id in constant.instruct_premise_data:
-            # 按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
-            for premise in sorted(constant.instruct_premise_data[instruct_id]):
-                # 忽略子类时（即非主界面），NPC逆推模式下则忽略NPC逆推的相关前提
-                if (
-                    not use_type_filter_flag
-                    and handle_premise.handle_t_npc_active_h(0)
-                    and premise == "t_npc_not_active_h"
-                ):
-                    continue
-                if premise in now_premise_data:
-                    if now_premise_data[premise]:
-                        continue
-                    premise_judge = False
-                    break
-                # 如果跳过H类指令判断，则不进行H类前提判断
-                elif skip_h_judge and premise == "is_h":
-                    now_premise_data[premise] = 1
-                # 如果跳过非H类指令判断，则不进行非H类前提判断
-                elif skip_not_h_judge and premise == "not_h":
-                    now_premise_data[premise] = 1
-                else:
-                    now_premise_value = handle_premise.handle_premise(
-                        premise, 0
-                    )
-                    now_premise_data[premise] = now_premise_value
-                    if not now_premise_value:
-                        premise_judge = False
-                        break
-        # 如果前提不满足，则过滤
-        if not premise_judge:
-            filter_judge = False
-    # 如果是debug模式，则强制通过
-    if modes.debug():
-        filter_judge = True
-    # 交互对象处于幼年阶段时过滤H类指令，debug模式下也一样
-    if child_stage_gate.blocks_instruct(instruct_id):
-        filter_judge = False
-
-    return filter_judge, now_premise_data
 
 
 class SeeInstructPanel:
@@ -252,7 +168,7 @@ class SeeInstructPanel:
                     # 隐奸中且显示非H时，跳过not_h的前提
                     if handle_premise.handle_show_non_h_in_hidden_sex(0):
                         filter_judge, now_premise_data = (
-                            judge_single_instruct_filter(
+                            instruct_filter.judge_single_instruct_filter(
                                 instruct,
                                 now_premise_data,
                                 now_type,
@@ -262,7 +178,7 @@ class SeeInstructPanel:
                     # 检测指令是否通过过滤
                     else:
                         filter_judge, now_premise_data = (
-                            judge_single_instruct_filter(
+                            instruct_filter.judge_single_instruct_filter(
                                 instruct, now_premise_data, now_type
                             )
                         )

@@ -1,18 +1,16 @@
-"""监禁调教管理面板，以及囚犯的逃脱结算与调教助手的行为选择"""
+"""监禁调教管理面板，以及囚犯每日结算、逃脱结果处理与调教前准备入口函数"""
 
 import os
 from types import FunctionType
 from typing import NoReturn
 from Script.Core import game_type, get_text, flow_handle, constant
-from Script.Design import attr_calculation, basement, game_time, handle_premise
-from Script.Design import map_handle, virgin_break_gate
+from Script.Design import game_time
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-import random
-from Script.Modules.domains import abilities, activity, body_manage, chara_life
-from Script.Modules.domains import facility, flags, inventory
-from Script.Modules.domains import needs, prison, work
-from Script.Modules.gameplay_resolution import training_prep
+from Script.Modules.domains import activity, chara_life
+from Script.Modules.domains import flags, inventory
+from Script.Modules.domains import prison
+from Script.Modules.gameplay_resolution import prison_service, training_prep
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import identity
 
@@ -30,11 +28,11 @@ def settle_prisoners() -> None:
     囚犯结算，先计算逃脱概率的增加，再判断是否能逃脱，最后处理失败与成功的情况。\n
     """
     for character_id in prison.prisoner_ids():
-        # 计算逃脱概率
-        escape_probability = calculate_escape_probability(character_id)
-        # 判断是否能逃脱
-        can_escape, _escape_value, _warden_value = judge_can_escape(
+        escape_probability = prison_service.calculate_escape_probability(
             character_id
+        )
+        can_escape, _escape_value, _warden_value = (
+            prison_service.judge_can_escape(character_id)
         )
         # 逃脱成功
         if can_escape:
@@ -42,106 +40,6 @@ def settle_prisoners() -> None:
         # 逃脱对抗失败
         elif escape_probability > 0:
             escape_fail(character_id)
-
-
-def calculate_escape_probability(character_id: int) -> float:
-    """
-    计算指定角色的逃脱概率。\n
-    逃脱概率 = (战斗技能 + 学识技能) * ((生活水平设置 + 1) * 0.5)\n
-    战斗技能与学识技能分别是能力表 abilities.ability(character_id) 的 42 号与 45 号。\n
-    计算得到的概率将写入内核状态的 base.prisoners。\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    Return arguments:\n
-    float -- 逃脱概率\n
-    """
-
-    # 战斗和学识技能
-    ability = abilities.ability(character_id)
-    combat_skill = ability[42]
-    knowledge_skill = ability[45]
-    total_skill = combat_skill + knowledge_skill
-
-    # 基础系数基于生活水平
-    coefficient = (prison.setting(4) + 1) * 0.5
-    # 屈服刻印减少系数
-    coefficient -= ability[14] * 0.1
-    # 反发刻印增加系数
-    coefficient += ability[18] * 0.2
-    # 陷落降低系数
-    now_fall = attr_calculation.get_character_fall_level(character_id)
-    coefficient -= now_fall * 0.2
-    # 设施效率影响
-    coefficient /= basement.calc_facility_efficiency(19)
-    # 乘以系数后的逃脱概率
-    add_escape_probability = total_skill * coefficient
-
-    # 已逃脱概率越高，则越难提升，最少也有1%
-    old_prob = prison.escape_probability(character_id)
-    max_probability = (100 - old_prob) * 0.1
-    add_escape_probability = int(min(add_escape_probability, max_probability))
-    add_escape_probability = max(add_escape_probability, 1)
-
-    # 记录逃脱概率
-    new_prob = min(old_prob + add_escape_probability, 100)
-    prison.set_escape_probability(character_id, new_prob)
-    return new_prob
-
-
-def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
-    """
-    判断指定角色是否能逃脱成功。\n
-    逃脱成功条件：\n
-    1. 逃脱概率大于阈值\n
-    2. 如果存在监狱长，则需要对比逃脱角色和监狱长的战斗技能与体力气力\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    Return arguments:\n
-    bool -- 是否逃脱成功\n
-    float -- 囚犯逃脱值\n
-    float -- 监狱长对抗值\n
-    """
-    # 需要是囚犯
-    if not prison.is_prisoner(character_id):
-        return False, 0, 0
-    prob = prison.escape_probability(character_id)
-    # 如果没有监狱长，且概率大于30，则直接逃脱
-    warden_id = work.warden()
-    if warden_id == 0:
-        if prob > 30:
-            return True, 0, 0
-        return False, 0, 0
-    # 关押区的等级效果
-    now_level = facility.level(19)
-    facility_cid = game_config.config_facility_effect_data[_("关押区")][
-        int(now_level)
-    ]
-    facility_effect = game_config.config_facility_effect[facility_cid].effect
-    # 需要逃脱概率大于50+关押区效果，最大99
-    need_escape_probability = 50 + facility_effect
-    need_escape_probability = min(need_escape_probability, 99)
-    if prob < need_escape_probability:
-        return False, 0, 0
-
-    # 囚犯的逃脱概率
-    escape_value = prob / 100
-    # 乘以生活水平
-    escape_value *= (prison.setting(4) + 1) * 0.4
-    # 乘以战斗技能
-    escape_value *= abilities.ability(character_id)[42]
-    # 乘以体力气力
-    escape_value *= needs.of(character_id)["hit"] / 100
-    escape_value *= needs.of(character_id)["mana"] / 100
-
-    # 监狱长的对抗值
-    warden_value: float = abilities.ability(warden_id)[42]
-    warden_value *= needs.of(warden_id)["hit"] / 100
-    warden_value *= needs.of(warden_id)["mana"] / 100
-
-    # 对比
-    if escape_value > warden_value:
-        return True, escape_value, warden_value
-    return False, escape_value, warden_value
 
 
 def escape_success(character_id: int) -> None:
@@ -197,99 +95,6 @@ def escape_fail(character_id: int) -> None:
     prison.set_escape_probability(character_id, 0)
 
 
-def chara_become_prisoner(character_id: int) -> None:
-    """
-    角色成为囚犯，不含位置和上线结算\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    """
-    from Script.Design import clothing, second_behavior
-
-    ability = abilities.ability(character_id)
-
-    # flag结算
-    flags.set(character_id, be_bagged=False)
-    flags.set(character_id, imprisonment=True)
-    flags.set(character_id, escaping=False)
-    # 重置身体管理
-    body_manage.replace(character_id, attr_calculation.get_body_manage_zero())
-    # 加入囚犯数据
-    prison.imprison(character_id, game_time.now(), 0)
-    # 服装结算
-    clothing.handle_prisoner_clothing(character_id)
-    # 当前位置作为宿舍，并保存旧宿舍
-    from Script.System.Dormitory_System import common as dormitory_common
-
-    dormitory_common.register_permanent_dormitory(character_id)
-    chara_life.dormitory.set(
-        character_id,
-        map_handle.get_map_system_path_str_for_list(
-            activity.position(character_id)
-        ),
-    )
-    # 给予屈服2，恐怖1，反发3，但如果有隶属系陷落，则可以减轻该效果
-    target_fall = attr_calculation.get_character_fall_level(
-        character_id, minus_flag=True
-    )
-    if ability[14] <= 0:
-        ability[14] = 1
-        second_behavior.character_get_second_behavior(
-            character_id, "yield_mark_1"
-        )
-    if ability[14] <= 1:
-        ability[14] = 2
-        second_behavior.character_get_second_behavior(
-            character_id, "yield_mark_2"
-        )
-    if ability[17] <= 0 and target_fall >= -2:
-        ability[17] = 1
-        second_behavior.character_get_second_behavior(
-            character_id, "terror_mark_1"
-        )
-    if ability[18] <= 0 and target_fall >= -2:
-        ability[18] = 1
-        second_behavior.character_get_second_behavior(
-            character_id, "hate_mark_1"
-        )
-    if ability[18] <= 1 and target_fall >= -1:
-        ability[18] = 2
-        second_behavior.character_get_second_behavior(
-            character_id, "hate_mark_2"
-        )
-    if ability[18] <= 2 and target_fall >= 0:
-        ability[18] = 3
-        second_behavior.character_get_second_behavior(
-            character_id, "hate_mark_3"
-        )
-
-
-def get_unused_prison_dormitory() -> str:
-    """
-    遍历当前所有囚犯，从其角色属性中读取宿舍位置，
-    根据预设的所有牢狱列表，选取还没有被使用的牢狱，
-    返回该牢狱的名字。如果所有牢狱都已被占用，则返回空字符串。
-
-    Return:
-        str -- 可用牢狱的名字，如果没有可用牢狱则返回空字符串
-    """
-    # 预设的所有牢狱名字列表
-    all_dormitories = ["牢1", "牢2", "牢3", "牢4", "牢5", "牢6", "牢7", "牢8"]
-
-    # 收集所有在用的牢狱名字
-    occupied_dorms = set()
-    for prisoner_id in prison.prisoner_ids():
-        dorm = chara_life.dormitory(prisoner_id)
-        for d in all_dormitories:
-            if d in dorm:
-                occupied_dorms.add(d)
-
-    # 选取一个未被占用的牢狱
-    for dorm in all_dormitories:
-        if dorm not in occupied_dorms:
-            return dorm
-    return ""
-
-
 def prepare_training() -> NoReturn:
     """
     玩家定下调教前准备：10 分钟的等待，准备工作在行动开始时进行（start_training_preparation）
@@ -301,144 +106,6 @@ def prepare_training() -> NoReturn:
         target=activity.target(0),
         state=constant.CharacterStatus.STATUS_WAIT,
     )
-
-
-def get_all_can_use_behavior_id_for_sex_assistant(
-    select_part: str = "", not_selet_part: str = ""
-) -> list[str]:
-    """
-    获取调教助手所有可用的行为id
-    Keyword arguments:
-    select_part -- 选择的部位
-    not_selet_part -- 不选择的部位
-    Return arguments:
-    List[str] -- 可用的行为id列表
-    """
-    from Script.System.Instruct_System import see_instruct_panel
-
-    # 获取所有可用的状态id
-    behavior_id_list = []
-    behavior_id_list.extend(
-        game_config.config_behavior_id_list_of_group_sex_body_part["口"]
-    )
-    behavior_id_list.extend(
-        game_config.config_behavior_id_list_of_group_sex_body_part["手"]
-    )
-    behavior_id_list.extend(
-        game_config.config_behavior_id_list_of_group_sex_body_part["道具"]
-    )
-    # 去重
-    behavior_id_list = list(set(behavior_id_list))
-    # 遍历状态id
-    now_premise_data: dict[str, float] = {}
-    new_behavior_id_list = []
-    for behavior_id in behavior_id_list:
-        if behavior_id in constant.behavior_id_to_instruct_id:
-            # 获取指令id
-            instruct_id = constant.behavior_id_to_instruct_id[behavior_id]
-            # 检查指令是否可用
-            filter_judge, now_premise_data = (
-                see_instruct_panel.judge_single_instruct_filter(
-                    instruct_id,
-                    now_premise_data,
-                    constant.InstructType.SEX,
-                    use_type_filter_flag=False,
-                    skip_h_judge=True,
-                )
-            )
-            # 进一步检查是否可用
-            if filter_judge:
-                behavior_data = game_config.config_behavior[behavior_id]
-                behavior_tag_list: str | list[str] = behavior_data.tag
-                behavior_tag_list = behavior_data.tag.split("|")
-                # 跳过仅玩家可用的指令
-                if behavior_data.trigger == "pl":
-                    continue
-                # 如果指定了部位
-                if select_part != "" and select_part not in behavior_tag_list:
-                    continue
-                # 如果指定了不使用的部位
-                if not_selet_part != "" and not_selet_part in behavior_tag_list:
-                    continue
-                # 如果指定了部位或者不使用的部位，则也跳过被ban的指令id
-                if select_part != "" or not_selet_part != "":
-                    if behavior_id in prison.assistant_ban_behaviors():
-                        continue
-                if activity.target(0) != 0:
-                    target_character_data = identity.of(activity.target(0))
-                    # 如果NPC为处，则跳过破处类
-                    if virgin_break_gate.takes_kept_virginity(
-                        behavior_tag_list,
-                        abilities.talent(target_character_data.cid),
-                    ):
-                        continue
-
-                # 加入到新列表中
-                new_behavior_id_list.append(behavior_id)
-    return new_behavior_id_list
-
-
-def get_behavior_id_of_sex_assistant() -> str:
-    """
-    获取调教助手的行为id
-    Return arguments:
-    str -- 调教助手的行为id
-    """
-    # 如果没有开启性爱助手，则返回0
-    if handle_premise.handle_sex_assistant_off(0):
-        return "0"
-    # 如果调教目标是仅囚犯干员的话，玩家的交互对象不是囚犯时返回0
-    if prison.setting(13) == 0 and handle_premise.handle_t_imprisonment_0(0):
-        return "0"
-    # 6异常或者绳子捆绑则返回0
-    warden_id = work.warden()
-    if not handle_premise.handle_normal_6(
-        warden_id
-    ) or handle_premise.handle_self_now_bondage(warden_id):
-        return "0"
-    # 如果是指定指令列表，则直接随机选择
-    behaviors = prison.assistant_behaviors()
-    if handle_premise.handle_sex_assistant_3(0) and behaviors:
-        return random.choice(behaviors)
-    # 获取玩家当前的状态id
-    behavior_id = activity.behavior(0).behavior_id
-    if behavior_id in game_config.config_behavior:
-        state_data = game_config.config_behavior[behavior_id]
-        # 遍历部位列表，获取存在与tag中的部位
-        part_str_list = ["U", "W", "V", "A", "C", "B", "N"]
-        now_part = ""
-        for part_str in part_str_list:
-            if part_str in state_data.tag:
-                now_part = part_str
-                break
-        # 如果没有部位，则返回0
-        if now_part == "":
-            return "0"
-        # 如果目标为玩家同部位
-        if handle_premise.handle_sex_assistant_1(0):
-            # 获取目标的行为id
-            new_behavior_id_list = (
-                get_all_can_use_behavior_id_for_sex_assistant(
-                    select_part=now_part
-                )
-            )
-            # 随机选择一个行为id。列表经集合去重，顺序随字符串哈希变化；排序后，同一随机状态总挑中同一个。
-            if len(new_behavior_id_list) > 0:
-                behavior_id = random.choice(sorted(new_behavior_id_list))
-                return behavior_id
-        # 如果为非玩家同部位
-        elif handle_premise.handle_sex_assistant_2(0):
-            # 获取目标的行为id
-            new_behavior_id_list = (
-                get_all_can_use_behavior_id_for_sex_assistant(
-                    not_selet_part=now_part
-                )
-            )
-            # 随机选择一个行为id。列表经集合去重，顺序随字符串哈希变化；排序后，同一随机状态总挑中同一个。
-            if len(new_behavior_id_list) > 0:
-                behavior_id = random.choice(sorted(new_behavior_id_list))
-                return behavior_id
-    return "0"
 
 
 class Confinement_And_Training_Manage_Panel:
@@ -737,7 +404,9 @@ class Confinement_And_Training_Manage_Panel:
         self, ban_flag: bool = False
     ) -> None:
         """调整调教助手指令列表"""
-        new_status_id_list = get_all_can_use_behavior_id_for_sex_assistant()
+        new_status_id_list = (
+            prison_service.get_all_can_use_behavior_id_for_sex_assistant()
+        )
         while 1:
             return_list = []
             selected_behaviors = prison.assistant_behaviors()

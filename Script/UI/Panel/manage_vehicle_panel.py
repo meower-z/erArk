@@ -1,12 +1,10 @@
-"""载具管理界面面板，以及基地载具数据的更新与损坏回收结算"""
+"""基地载具管理界面面板 Manage_Vehicle_Panel"""
 
 from types import FunctionType
 from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.save_load import reset
 from Script.Modules.domains import commission, warehouse
-import random
 from Script.Modules.domains import facility
 
 _: FunctionType = get_text._
@@ -17,41 +15,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-@reset.repair
-def update_basement_vehicle_data() -> None:
-    """
-    补齐基地载具数据：开新游戏时与读档时运行
-    """
-    commission.fill_vehicles()
-
-
-def settle_vehicle(commision_id: int) -> str:
-    """
-    结算载具损坏与回收
-    Keyword arguments:
-    commision_id -- 委托编号
-    Return arguments:
-    vehicle_text -- 载具损坏与回收信息
-    """
-    vehicle_text = ""
-    send_vehicle_list = commission.ongoing()[commision_id].vehicles
-    # 损坏概率与等级相关
-    base_rate = 0.05 * game_config.config_commission[commision_id].level
-    for vehicle_id in send_vehicle_list:
-        # 根据基准概率判断载具是否损坏
-        if random.random() < base_rate:
-            commission.add_vehicle(vehicle_id, owned=-1, out=-1)
-            vehicle_text += _("({0}损坏)").format(
-                game_config.config_vehicle[vehicle_id].name
-            )
-            # 如果损坏了，则概率下降一半，以免连续损坏
-            base_rate *= 0.5
-        else:
-            commission.add_vehicle(vehicle_id, out=-1)
-
-    return vehicle_text
 
 
 class Manage_Vehicle_Panel:
