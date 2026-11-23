@@ -7,8 +7,7 @@ from Script.Core import get_text, game_type, flow_handle, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, instuct_judege
 from Script.Settle import default
-from Script.UI.Panel import achievement_panel
-from Script.Modules.gameplay_resolution import starts
+from Script.Modules.gameplay_resolution import achievement_service, starts
 from Script.Modules.gameplay_resolution.intent import Intent
 from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, activity, flags
@@ -267,7 +266,7 @@ class Sex_Be_Discovered_Panel:
         else:
             # 结算成就
             if flags.get(self.pl_chara_data.cid, "hidden_sex_mode") == 1:
-                achievement_panel.get_achievement_judge_by_value(914, 1)
+                achievement_service.get_achievement_judge_by_value(914, 1)
 
     def _continue_exhibitionism_sex(self) -> None:
         """选择转为露出"""
@@ -301,7 +300,7 @@ class Sex_Be_Discovered_Panel:
                 self._end_current_h()
             else:
                 # 结算成就
-                achievement_panel.get_achievement_judge_by_value(934, 1)
+                achievement_service.get_achievement_judge_by_value(934, 1)
 
     def _invite_find_char_to_join(self) -> None:
         """选择邀请对方加入群交"""
@@ -321,7 +320,7 @@ class Sex_Be_Discovered_Panel:
                     constant.Behavior.OTHER_SEX_BE_FOUND_TO_GROUP_SEX
                 )
                 # 结算成就
-                achievement_panel.get_achievement_judge_by_value(905, 1)
+                achievement_service.get_achievement_judge_by_value(905, 1)
         else:
             # 如果当前在群交中，则拒绝加入
             if handle_premise.handle_group_sex_mode_on(0):

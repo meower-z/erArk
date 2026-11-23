@@ -11,6 +11,7 @@ from Script.Config import game_config, normal_config
 import random
 
 from Script.UI.Panel import achievement_panel
+from Script.Modules.gameplay_resolution import achievement_service
 from Script.Design import game_time
 from Script.Modules.domains import (
     abilities,
@@ -578,8 +579,7 @@ def ejaculation_flow(
         line_feed.draw()
         line_feed.draw()
 
-    # 结算成就
-    achievement_panel.get_achievement_judge_by_value(1201, 1)
+    achievement_service.get_achievement_judge_by_value(1201, 1)
     achievement_panel.achievement_flow(_("射精"))
 
 

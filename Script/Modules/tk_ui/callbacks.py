@@ -3,14 +3,19 @@ Tk 界面向后端登记的回调函数
 ===========================
 本模块向 playthrough 登记设定表补齐时的提示绘制函数。
 本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
-本模块不登记内核钩子。load_order 导入本模块时完成上述登记。
+本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制与面板切换函数。
+本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
+本模块不登记内核钩子。
+load_order 导入本模块时完成上述登记。
 """
 
 from collections.abc import Mapping
 
+from Script.Config import normal_config
 from Script.Core import constant
 from Script.Kernel import core
 from Script.Modules.domains import playthrough
+from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import draw, view
 
@@ -50,3 +55,52 @@ def back_to_scene(
     view.now_panel_id = constant.Panel.IN_SCENE
     view.show_non_h_in_hidden_sex = False
     return new
+
+
+@ui_hooks.on_notice
+def draw_notice(
+    text: str, *, wait: bool, style: str | None, use_text_width: bool
+) -> None:
+    """
+    按参数构造 WaitDraw 或 NormalDraw 并绘制一条提示文本。
+    Keyword arguments:
+    text -- str，要绘制的提示文本
+    wait -- bool，为真时使用 WaitDraw 等待玩家确认，否则使用 NormalDraw
+    style -- str | None，文本样式名，为 None 时保留绘制类默认样式
+    use_text_width -- bool，为真时将绘制宽度设为 normal_config.config_normal.text_width
+    Return arguments:
+    None -- 无返回值
+    """
+    now_draw = draw.WaitDraw() if wait else draw.NormalDraw()
+    if use_text_width:
+        now_draw.width = normal_config.config_normal.text_width
+    now_draw.text = text
+    if style is not None:
+        now_draw.style = style
+    now_draw.draw()
+
+
+@ui_hooks.on_panel_switch
+def set_panel(panel_id: int) -> None:
+    """
+    将 view 记录的当前面板编号设为 panel_id。
+    Keyword arguments:
+    panel_id -- int，目标面板编号
+    Return arguments:
+    None -- 无返回值
+    """
+    view.now_panel_id = panel_id
+
+
+@achievement_service.on_unlocked
+def draw_unlocked(new_ids: list[int]) -> None:
+    """
+    调用 achievement_panel.draw_achievement_notice 绘制新达成成就的获得提示。
+    Keyword arguments:
+    new_ids -- list[int]，新达成的成就编号列表
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.UI.Panel import achievement_panel
+
+    achievement_panel.draw_achievement_notice(new_ids)

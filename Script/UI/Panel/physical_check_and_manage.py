@@ -10,7 +10,7 @@ from Script.Modules.domains import abilities, achievement, action_info, activity
 from Script.Modules.domains import body_manage, chara_life, dirty, first_record
 from Script.Modules.domains import hypnosis, physical_exam, player_collection
 from Script.Modules.domains import pregnancy, relations, roster, modes
-
+from Script.Modules.gameplay_resolution import achievement_service
 from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import identity
 
@@ -997,7 +997,7 @@ class Physical_Check_And_Manage_Panel:
         """将交互对象记入体检报告干员名单并结算「体检报告」成就，绘制报告后显示达成提示"""
         target_character_id = activity.target(self.pl_character_data.cid)
         achievement.append("body_report_chara_count_list", target_character_id)
-        achieved = achievement_panel.settle_by_type(_("体检报告"))
+        achieved = achievement_service.settle_by_type(_("体检报告"))
         self.draw_report(target_character_id)
         achievement_panel.draw_achievement_notice(achieved)
 

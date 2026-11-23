@@ -1197,7 +1197,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> tuple[str, list[int]]:
     """
     from Script.UI.Flow import creator_character_flow
     from Script.System.Medical_System import medical_service
-    from Script.UI.Panel import achievement_panel
+    from Script.Modules.gameplay_resolution import achievement_service
 
     info_draw_text = "\n"
     info_draw_text += _("开始重置游戏数据\n")
@@ -1222,7 +1222,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> tuple[str, list[int]]:
         playthrough.set_settings(table, values)
     playthrough.set_game_round(new_game_round)
     roster.set_active(new_npc_id_got)
-    achieved = achievement_panel.settle_by_type(_("周目"))
+    achieved = achievement_service.settle_by_type(_("周目"))
     creator_character_flow.game_start()
 
     # 根据继承的角色，将有人住的宿舍设为开放
