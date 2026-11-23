@@ -80,9 +80,13 @@ class HDirtyHypnosisSaveV20Test(SlowTestCase):
         kernel.load(load_order.LOAD_ORDER)
 
     def _state_json(self) -> str:
+        """序列化合并未结算玩家输入后的内核状态以便存读与续玩比较"""
         kernel = _mod("Script.Kernel.core")
         kernel_state = _mod("Script.Modules.save_load.kernel_state")
-        return json.dumps(kernel_state.encode(kernel.state()), sort_keys=True)
+        orders = _mod("Script.Modules.tk_ui.orders")
+        return json.dumps(
+            kernel_state.encode(orders.settled(kernel.state())), sort_keys=True
+        )
 
     def _digest(self) -> tuple[object, ...]:
         kernel = _mod("Script.Kernel.core")

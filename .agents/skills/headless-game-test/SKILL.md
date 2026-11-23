@@ -138,9 +138,10 @@ random.randint = _real
 生育事件、送礼面板这类"带按钮循环 + 输入 + 创建角色 + 成就结算"的重流程也能在模式 A 里跑通，关键是**让按钮循环能退出、把需要完整罗德岛 fixture 的旁路打桩**：
 
 ```python
-# ① 按钮循环：面板普遍写成 `while 1: ... yrn = askfor_all(return_list); if yrn in return_list: break`，
-#    默认的 `lambda *a, **k: ""` 会让它死循环。改成返回第一个可选项：
-flow_handle.askfor_all = lambda return_list, *a, **k: return_list[0] if return_list else ""
+# ① 按钮循环：挂载 tests.world.quiet_port()，选单返回首项，空选项列表立即抛 ValueError，并丢弃事件
+from Script.Core import io_init
+from tests import world
+io_init.configure(world.quiet_port())
 
 # ② 调面板的 .draw()
 born_event_panel.Born_Panel(mother_id).draw()
@@ -195,7 +196,7 @@ rm -f data/Character_Talk.json
 | `UnboundLocalError` 出现在 `chest_grow` / 乳汁上限 | fixture 没有罩杯素质，加 `talent[121] = 1` |
 | `KeyError: '1'` 出现在 `achievement_panel.achievement_flow` | 成就结算用 `warehouse.amount(1)` 读 `base.stock`，库存里没有资源 1，打桩 `achievement_flow` |
 | `IndexError` 出现在 `random.choice(doctor_id_list)` 之类 | 事件要随机选医生/干员，`npc_id_got` 为空或没有 profession=3 |
-| 面板测试永不返回（无报错） | `askfor_all` 桩返回了不在 `return_list` 里的值，按钮循环退不出 |
+| 面板测试永不返回（无报错） | 漏调 `io_init.configure(world.quiet_port())` 导致阻塞在无前端默认端口，或自定义应答器返回了不在 `return_list` 里的值 |
 | 调 `get_new_character` 后一连串 KeyError | 上线链要完整罗德岛 fixture，用只登记 `npc_id_got` 的 stub |
 | 生成物里种族/道具名单与预期不符 | 用户可能在实施中手改了 CSV（本轮就遇到过追加种族），先 `awk`/grep 看实际 CSV 再改断言 |
 
@@ -233,8 +234,9 @@ for cls_name in dir(draw):
     if isinstance(cls, type) and hasattr(cls, 'draw'):
         try: cls.draw = lambda self, *a, **k: None
         except Exception: pass
-flow_handle.askfor_all = lambda *a, **k: ""
-flow_handle.askfor_wait = lambda *a, **k: None
+from Script.Core import io_init
+from tests import world
+io_init.configure(world.quiet_port())  # 选单答首项、空选项列表抛 ValueError、暂停放行并丢弃事件
 ```
 
 需要断言"某段文本是否被绘制"（如吵醒提示）时，用记录型 stub 替换对应类：

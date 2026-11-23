@@ -84,7 +84,7 @@ world = FullWorld.load()
 # 推进中要玩家选择时，按 world.player.press("按钮文字的一部分") 事先安排；没安排就抛 UnplannedInput（退出码 2），
 # 并列出屏幕上的按钮
 
-from Script.Core import io_init, save_handle
+from Script.Core import save_handle
 from Script.Design import character_behavior, game_time, handle_npc_ai
 from Script.Kernel import core
 from Script.Modules.domains import activity, flags, identity, modes, needs
@@ -96,30 +96,8 @@ from tests.world import act
 SAVE_ID = "<存档编号>"  # 存档目录 save/<SAVE_ID>/
 WATCH_NAME = "阿米娅"  # 重点观察的角色名；None 则不观察
 CAPTURE_KEYWORD = "吵醒"  # 结果里只打印含此关键词的屏幕文字；None 则全部打印
-captured_texts: list[str] = []
-"""输出时就收下的屏幕文字（world.player.screen 只留最近 400 段，循环跑完再筛会漏掉早先的文字）"""
-player_print = (
-    io_init.era_print
-)  # FullWorld 载入时由 world.player 换上的输出函数
-
-
-def capture_print(string, *args, **kwargs):
-    """
-    包装 io_init.era_print：含 CAPTURE_KEYWORD 的文字收进 captured_texts，再照常交给 world.player
-    Keyword arguments:
-    string -- 输出的文字
-    args / kwargs -- 原样传给原函数的其余参数
-    Return arguments:
-    原函数的返回值
-    """
-    if str(string).strip() and (
-        not CAPTURE_KEYWORD or CAPTURE_KEYWORD in str(string)
-    ):
-        captured_texts.append(str(string))
-    return player_print(string, *args, **kwargs)
-
-
-io_init.era_print = capture_print
+captured_texts: list[str] = world.player.capture(CAPTURE_KEYWORD)
+"""按 CAPTURE_KEYWORD 持续收集的非空屏幕文本列表，不受 world.player.screen 的长度上限截断。"""
 
 save_handle.input_load_save(SAVE_ID)
 pl = identity.of(0)

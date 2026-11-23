@@ -220,7 +220,7 @@ class ProtocolPortsTest(FastTestCase):
         port = ScriptedUiPort(default_first_option(lambda r: "n" * r.max_len))
         self.assertEqual(port.pause(), Continue(1, 1))
         self.assertEqual(port.choose(("x", "y")).raw_value, "x")
-        self.assertEqual(port.choose(()).raw_value, "")
+        self.assertRaises(ValueError, port.choose, ())
         self.assertEqual(port.input_text(3).text, "nnn")
 
     def test_cancel_and_close_raise_session_cancelled(self) -> None:

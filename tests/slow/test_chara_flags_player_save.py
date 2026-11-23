@@ -74,10 +74,13 @@ class SaveCharaFlagsPlayerTest(SlowTestCase):
                 kernel.step()
 
     def state_json(self) -> str:
-        """序列化当前内核状态以便跨轮比较"""
+        """序列化合并未结算玩家输入后的内核状态以便存读与续玩比较"""
         kernel = game("Script.Kernel.core")
         kernel_state = game("Script.Modules.save_load.kernel_state")
-        return json.dumps(kernel_state.encode(kernel.state()), sort_keys=True)
+        orders = game("Script.Modules.tk_ui.orders")
+        return json.dumps(
+            kernel_state.encode(orders.settled(kernel.state())), sort_keys=True
+        )
 
     def test_round_trip_and_continue(self) -> None:
         """四个新角色键存读、$frac 保留、二次存盘一致、续玩 60 分钟一致"""

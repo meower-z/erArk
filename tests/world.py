@@ -39,6 +39,8 @@ if TYPE_CHECKING:
     from typing import Self
 
     from Script.Core import game_type
+    from Script.Protocol import BackendEvent, RenderOp, ScriptedUiPort
+    from Script.Protocol import UiRequest, UiResponse
     from Script.UI.Moudle import draw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -179,15 +181,12 @@ play = act
 
 def _mute_ui() -> list:
     """
-    屏蔽全部绘制类，并给等待输入的函数打桩
+    屏蔽 draw 模块中绘制类的 draw 方法，并记录 WaitDraw 绘制的文本。
     Keyword arguments:
     无
     Return arguments:
-    list[str] -- WaitDraw 绘制过的文本，按绘制顺序追加
-    功能描述:
-        askfor_all 返回第一个可选项，面板的按钮循环才能退出；它只返回选项，不执行选中的选项。
+    list[str] -- WaitDraw 绘制过的文本列表，按绘制顺序追加
     """
-    from Script.Core import flow_handle
     from Script.UI.Moudle import draw
 
     wait_texts = []
@@ -211,11 +210,14 @@ def _mute_ui() -> list:
             with contextlib.suppress(AttributeError, TypeError):
                 cls.draw = lambda self, *args, **kwargs: None
     setattr(draw.WaitDraw, "draw", record_wait_draw)
-    flow_handle.askfor_all = lambda return_list, *args, **kwargs: (
-        return_list[0] if return_list else ""
-    )
-    flow_handle.askfor_wait = lambda *args, **kwargs: None
     return wait_texts
+
+
+def quiet_port() -> ScriptedUiPort:
+    """构造以 default_first_option 应答并丢弃后端事件的 ScriptedUiPort 实例。"""
+    from Script.Protocol import ScriptedUiPort, default_first_option
+
+    return ScriptedUiPort(default_first_option(), listener=lambda event: None)
 
 
 def _fresh_config() -> None:
@@ -358,8 +360,10 @@ class MinimalWorld:
             游戏配置（game_config 等）与模块级打桩不在复原范围内：
             测试不能改配置，打桩用 unittest.mock 自行恢复。
         """
-        from Script.Core import constant
+        from Script.Core import constant, io_init
 
+        io_init.configure(quiet_port())
+        constant.cmd_map.clear()
         self._scene_data.clear()
         self._scene_data.update(self._scenes)
         constant.scene_data = self._scene_data
@@ -508,11 +512,11 @@ class UnplannedInput(AssertionError):
 
 class PlayerInput:
     """
-    无头的玩家输入：记下屏幕上画出的按钮，游戏等输入时按测试安排的顺序按下按钮或输入文字
-    绘制照常执行，输出不送往界面：文字收进 self.screen，按钮收进 self.buttons。
-    清屏、清除命令绑定时忘掉相应的按钮，命令id 重新绑定时只留最新的按钮；
-    按下一个按钮后忘掉全部按钮，下一次只从之后画出的按钮里选。
-    按下的按钮经游戏自己的 askfor_all 执行，所以按钮绑定的函数（如事件选项）照常生效。
+    无头玩家输入驱动，通过 ScriptedUiPort 监听后端输出并按计划应答输入请求。
+    监听回调把非空文本记入 screen 与捕获列表，并维护 buttons 中的当前按钮。
+    同命令编号的按钮只保留最新项。清屏、清除按钮或按下按钮时移除相应按钮。
+    应答器按 planned 顺序消费文字输入或匹配按钮。非等待请求未匹配计划时抛 UnplannedInput。
+    应答经协议端口返回真实 flow_handle，由后者执行绑定命令并记录输入。
     """
 
     SCREEN_LIMIT = 400
@@ -531,23 +535,14 @@ class PlayerInput:
         """ 最近输出的文字 """
         self.planned: list[tuple[str, str]] = []
         """ 还没用掉的输入：("press", 按钮文字的一部分) 或 ("type", 输入的文字) """
+        self._captures: list[tuple[str | None, list[str]]] = []
 
     def install(self) -> None:
-        """
-        换掉界面输出与读输入的函数
-        Keyword arguments:
-        无
-        Return arguments:
-        无
-        """
-        from Script.Core import flow_handle, io_init
+        """向 io_init 安装使用 self._answer 应答、self._see 监听的 ScriptedUiPort。"""
+        from Script.Core import io_init
+        from Script.Protocol import ScriptedUiPort
 
-        io_init.era_print = self._print
-        io_init.io_print_cmd = self._print_cmd
-        io_init.io_print_image_cmd = self._print_cmd
-        io_init.io_clear_cmd = self._clear_cmd
-        io_init.clear_screen = self._clear_cmd
-        setattr(flow_handle, "order_deal", self._order_deal)
+        io_init.configure(ScriptedUiPort(self._answer, listener=self._see))
 
     def press(self, *labels: str) -> None:
         """
@@ -569,6 +564,18 @@ class PlayerInput:
         """
         self.planned.append(("type", text))
 
+    def capture(self, keyword: str | None = None) -> list[str]:
+        """
+        注册一个文本捕获列表，持续收集之后输出的非空屏幕文本，不受 SCREEN_LIMIT 截断。
+        Keyword arguments:
+        keyword -- 过滤关键词，为空或 None 时收集全部非空文本
+        Return arguments:
+        list[str] -- 随输出持续追加的文本列表
+        """
+        texts: list[str] = []
+        self._captures.append((keyword, texts))
+        return texts
+
     def check_done(self) -> None:
         """
         安排的输入都已用掉，否则抛 UnplannedInput
@@ -582,88 +589,76 @@ class PlayerInput:
                 f"安排的输入没有用掉：{self.planned}；最近的文字：{self.screen[-5:]}"
             )
 
-    def _print(
-        self,
-        string: str,
-        style: str | tuple[str, ...] = "standard",
-        tooltip: str = "",
-    ) -> None:
-        """
-        替换 io_init.era_print：记下文字
-        Keyword arguments:
-        string -- 文字
-        style -- 样式，不使用
-        tooltip -- 悬停提示，不使用
-        Return arguments:
-        无
-        """
-        if str(string).strip():
-            self.screen.append(str(string))
-            del self.screen[: -self.SCREEN_LIMIT]
+    def _see(self, event: BackendEvent) -> None:
+        """端口监听回调：把 RenderChunk 里的操作交给 _draw，在清除 screen 或 buttons 时清空 buttons。"""
+        from Script.Protocol import Clear, RenderChunk
 
-    def _print_cmd(
-        self, cmd_str: str, cmd_number: int | str, *args: str, **kwargs: str
-    ) -> None:
-        """
-        替换 io_init.io_print_cmd：记下按钮（命令已由 flow_handle.print_cmd 绑定）
-        Keyword arguments:
-        cmd_str -- 按钮文字
-        cmd_number -- 命令id
-        Return arguments:
-        无
-        """
-        self._clear_cmd(cmd_number)
-        self.buttons.append((str(cmd_str), str(cmd_number)))
+        match event:
+            case RenderChunk(ops=ops):
+                for op in ops:
+                    self._draw(op)
+            case Clear(target="screen" | "buttons"):
+                self.buttons.clear()
 
-    def _clear_cmd(self, *cmd_numbers: int | str) -> None:
-        """
-        替换 io_init.io_clear_cmd 与 clear_screen：忘掉按钮
-        Keyword arguments:
-        cmd_numbers -- 要忘掉的按钮的命令id；不给时忘掉全部按钮
-        Return arguments:
-        无
-        """
-        if not cmd_numbers:
+    def _draw(self, op: RenderOp) -> None:
+        """处理单条渲染操作：记录非空文本与文本/图片按钮，并按 ClearButtonsOp 移除对应按钮。"""
+        from Script.Protocol import (
+            ButtonOp,
+            ClearButtonsOp,
+            ImageButtonOp,
+            TextOp,
+        )
+
+        match op:
+            case TextOp(text=text) if str(text).strip():
+                self.screen.append(str(text))
+                del self.screen[: -self.SCREEN_LIMIT]
+                for keyword, texts in self._captures:
+                    if not keyword or keyword in str(text):
+                        texts.append(str(text))
+            case ButtonOp(label=label, command_id=cmd) | ImageButtonOp(
+                asset_id=label, command_id=cmd
+            ):
+                self._forget((cmd,))
+                self.buttons.append((str(label), cmd))
+            case ClearButtonsOp(command_ids=cmd_ids):
+                self._forget(cmd_ids)
+
+    def _forget(self, cmd_ids: tuple[str, ...] | None) -> None:
+        """从 buttons 中移除 cmd_ids 指定的按钮，cmd_ids 为 None 时清空全部按钮。"""
+        if cmd_ids is None:
             self.buttons.clear()
             return
-        gone = {str(number) for number in cmd_numbers}
         self.buttons = [
-            (text, cmd) for text, cmd in self.buttons if cmd not in gone
+            (text, cmd) for text, cmd in self.buttons if cmd not in cmd_ids
         ]
 
-    def _order_deal(
-        self,
-        flag: str = "order",
-        print_order: bool = True,
-        donot_return_null_str: bool = True,
-    ) -> str | None:
+    def _answer(self, request: UiRequest) -> UiResponse:
         """
-        替换 flow_handle.order_deal：给出下一项安排的输入
+        队首为 type 且非等待请求（Pause 或可空 InputText）时消费它，否则匹配最新按钮的 press。
+        命中按钮时消费并清空 buttons。未命中时等待请求不消费并返回默认应答，其余抛 UnplannedInput。
         Keyword arguments:
-        flag -- "str" 时返回命令id；"order" 时执行按钮绑定的函数
-        print_order -- 不使用
-        donot_return_null_str -- 为假时是「按任意键继续」的等待：安排的下一项是文字，或是屏幕上没有的按钮时，
-        返回空串、不用掉它
+        request -- 待应答的 UiRequest
         Return arguments:
-        str -- 命令id、输入的文字或空串
-        功能描述:
-            安排的文字交给 donot_return_null_str 为真的请求（输入文字、选择按钮都是），「按任意键继续」的等待不用掉它。
-            游戏要求选择而测试没有安排、或屏幕上没有安排的按钮时抛 UnplannedInput，并列出屏幕上的按钮。
+        UiResponse -- 对应的 Continue、SubmitChoice 或 SubmitText 响应
         """
-        from Script.Core import flow_handle
+        from Script.Protocol import InputText, Pause, reply
 
         kind, value = self.planned[0] if self.planned else ("", "")
-        if kind == "type" and donot_return_null_str:
+        waiting = isinstance(request, Pause) or (
+            isinstance(request, InputText) and request.allow_empty
+        )
+        if kind == "type" and not waiting:
             self.planned.pop(0)
-            return value
+            return reply(request, value)
         matches = [
             cmd
             for text, cmd in reversed(self.buttons)
             if kind == "press" and value in text
         ]
         if not matches:
-            if not donot_return_null_str:
-                return ""
+            if waiting:
+                return reply(request)
             shown = [text for text, _ in self.buttons]
             raise UnplannedInput(
                 f"游戏在等玩家选择，安排的下一步是 {value or '（没有）'!r}；屏幕上的按钮：{shown}；最近的文字："
@@ -671,10 +666,7 @@ class PlayerInput:
             )
         self.planned.pop(0)
         self.buttons.clear()
-        if flag == "order":
-            flow_handle._cmd_deal(matches[0])
-            return None
-        return matches[0]
+        return reply(request, matches[0])
 
 
 class FullWorld(MinimalWorld):

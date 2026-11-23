@@ -82,8 +82,8 @@ import Script.StateMachine  # noqa: F401,E402  注册全部状态机
 from Script.Core import (
     constant,
     constant_effect,
-    flow_handle,
     game_type,
+    io_init,
     save_handle,
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
@@ -91,7 +91,7 @@ from Script.UI.Moudle import draw  # noqa: E402
 from Script.Modules.domains import activity, identity, relations
 from Script.Modules.save_load import kernel_state
 from Script.Modules.domains import abilities, status
-from tests import chara_data, kernel_data
+from tests import chara_data, kernel_data, world
 
 kernel_state.reset_clock(kernel_state.first_clock())
 
@@ -111,11 +111,7 @@ for _n in dir(draw):
             _c.draw = lambda self, *a, **k: None
         except Exception:
             pass
-# askfor_all 返回第一个可选项：面板的 `while 1: ... if yrn in return_list: break` 按钮循环才能退出
-flow_handle.askfor_all = lambda return_list, *a, **k: (
-    return_list[0] if return_list else ""
-)
-flow_handle.askfor_wait = lambda *a, **k: None
+io_init.configure(world.quiet_port())
 
 # 记录 WaitDraw 文本，供「某段提示是否被绘制」类断言使用
 messages: list[str] = []
