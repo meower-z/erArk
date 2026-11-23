@@ -7,7 +7,7 @@ calendar.round 是当前周目数，没有这一项时为 1。
 对外的设定id 是 int，存进键里时换成字符串。写入整值替换一个键，值没变时不写。
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from types import FunctionType
 from typing import Any, cast
 
@@ -16,7 +16,6 @@ from Script.Design import attr_calculation
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import pickled
-from Script.UI.Moudle import draw
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -45,6 +44,22 @@ PICKLED = {
 
 working.register(SETTINGS, {table: {} for table in TABLES})
 working.register(ROUND, 1)
+
+type Notice = Callable[[str], None]
+_notices: list[Notice] = []
+""" 补齐设定表时按登记顺序接收提示文本的函数列表 """
+
+
+def on_filled(fn: Notice) -> Notice:
+    """
+    装饰器：登记一个在补齐设定表时接收提示文本的函数
+    Keyword arguments:
+    fn -- 接收提示文本的函数
+    Return arguments:
+    Notice -- 原样交回 fn
+    """
+    _notices.append(fn)
+    return fn
 
 
 def _tables(game: core.GameState | None) -> Mapping[str, Mapping[str, Any]]:
@@ -136,23 +151,22 @@ def set_game_round(value: int) -> None:
 
 def _fill(values: dict[int, int], default: dict[int, int], text: str) -> int:
     """
-    表的项数与默认表不同时补上缺的项并绘制 text
+    在 values 与 default 项数不同时，向 values 补入 default 中缺失的键。
+    项数不同时还会按登记顺序把 text 传给 on_filled 登记的每个函数。
     Keyword arguments:
-    values -- 存档里的表，原地修改
-    default -- 默认表
-    text -- 提示
+    values -- 设定表，原地修改
+    default -- 默认设定表
+    text -- 传给登记函数的提示文本
     Return arguments:
-    int -- 补上的项数
+    int -- 补入的项数
     """
     if len(values) == len(default):
         return 0
     missing = [key for key in default if key not in values]
     for key in missing:
         values[key] = default[key]
-    now_draw = draw.NormalDraw()
-    now_draw.style = "gold_enrod"
-    now_draw.text = text
-    now_draw.draw()
+    for fn in _notices:
+        fn(text)
     return len(missing)
 
 
@@ -194,7 +208,7 @@ def adopt_old_save(loaded_dict: dict[str, Any], version: int) -> int:
     """
     读档时调用，要在 all_system_setting 被取走之前。存档缓存带着 PICKLED 的四张表与 game_round 时删掉它们，
     写进当前缓冲区；难度与生殖方式表为空时从存档的设置对象里取（更旧的存档存在那里）。
-    每次读档都给难度表与生殖方式表补上缺的项，项数与默认表不同时绘制提示
+    当难度表或生殖方式表的项数与默认表不同时，通过 _fill 补入缺失项并通知 on_filled 登记的函数。
     Keyword arguments:
     loaded_dict -- 存档缓存的属性表
     version -- 存档的版本，旧存档为 0

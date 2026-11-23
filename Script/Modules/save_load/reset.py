@@ -7,6 +7,7 @@ save_load 的 Reset 步骤
 每一步只在 why["cause"] 属于它的 causes 时运行，经 working 缓冲区写游戏状态，
 返回交给下一步的 GameState。
 读档时另跑一次各模块用 repair 登记的旧存档修补（面板打开时只读，旧存档的修补放在这里）。
+new_round 与 panel 两步须由界面经 frontend 登记，否则在任何步骤运行前报 RuntimeError。
 本模块排在 LOAD_ORDER 的最后，它的输入钩子最先运行。本模块不登记行动、事件或规则。
 """
 
@@ -21,6 +22,8 @@ type Repair = Callable[[], None]
 
 _repairs: list[Repair] = []
 """ 读档后依次运行的旧存档修补 """
+_frontend: dict[str, Step] = {}
+""" 界面登记的步骤映射，键为 STEPS 中的步骤名，值为步骤函数 """
 
 
 def repair(fn: Repair) -> Repair:
@@ -34,6 +37,33 @@ def repair(fn: Repair) -> Repair:
     """
     _repairs.append(fn)
     return fn
+
+
+def frontend(name: str) -> Callable[[Step], Step]:
+    """
+    返回把步骤函数登记到 _frontend[name] 的装饰器。
+    同名步骤重复登记时，后登记的函数会覆盖先登记的函数。
+    Keyword arguments:
+    name -- STEPS 中的步骤名
+    Return arguments:
+    Callable -- 登记步骤函数并原样交回该函数的装饰器
+    """
+
+    def register(fn: Step) -> Step:
+        _frontend[name] = fn
+        return fn
+
+    return register
+
+
+@dataclass(frozen=True)
+class _FrontendStep:
+    name: str
+
+    def __call__(
+        self, new: core.GameState, why: Mapping[str, core.JSON]
+    ) -> core.GameState:
+        return _frontend[self.name](new, why)
 
 
 @dataclass(frozen=True)
@@ -68,19 +98,6 @@ def _exact_stats(
     from Script.Core import save_handle
 
     save_handle.exact_stats()
-    return new
-
-
-def _new_round(
-    new: core.GameState, why: Mapping[str, core.JSON]
-) -> core.GameState:
-    """按继承选择建新周目的缓存"""
-    from Script.UI.Panel import new_round
-
-    inherit = why["inherit"]
-    if not isinstance(inherit, Mapping):
-        raise TypeError(f"inherit {inherit!r} is not a mapping")
-    new_round.setup(inherit)
     return new
 
 
@@ -119,20 +136,12 @@ def _reconcile_roster_data(
     return working.reconcile(new)
 
 
-def _panel(new: core.GameState, why: Mapping[str, core.JSON]) -> core.GameState:
-    """回到场景面板，关掉隐奸中显示非H指令的开关"""
-    from Script.Core import constant
-    from Script.UI.Moudle import view
-
-    view.now_panel_id = constant.Panel.IN_SCENE
-    view.show_non_h_in_hidden_sex = False
-    return new
-
-
 STEPS: tuple[ResetStep, ...] = (
     ResetStep("install_save", frozenset({"load"}), _install_save),
     ResetStep("exact_stats", frozenset({"load"}), _exact_stats),
-    ResetStep("new_round", frozenset({"new_round"}), _new_round),
+    ResetStep(
+        "new_round", frozenset({"new_round"}), _FrontendStep("new_round")
+    ),
     ResetStep(
         "project", frozenset({"load", "new_round", "new_game"}), _project
     ),
@@ -146,7 +155,9 @@ STEPS: tuple[ResetStep, ...] = (
         frozenset({"load", "new_round", "new_game"}),
         _reconcile_roster_data,
     ),
-    ResetStep("panel", frozenset({"load", "new_round"}), _panel),
+    ResetStep(
+        "panel", frozenset({"load", "new_round"}), _FrontendStep("panel")
+    ),
 )
 """ Reset 的步骤，按运行顺序 """
 
@@ -156,17 +167,26 @@ def run_steps(
     new: core.GameState, why: Mapping[str, core.JSON]
 ) -> tuple[core.GameState, Mapping[str, core.JSON]]:
     """
-    依次运行 cause 属于它的步骤
+    先检查当前 cause 命中的界面步骤是否均已登记，缺失则在运行任何步骤前报 RuntimeError。
+    校验通过后，按 STEPS 顺序依次运行当前 cause 命中的各步骤。
     Keyword arguments:
     new -- 换入的 GameState
     why -- 换入的原因，{"cause": ...} 加上这个原因的键
     Return arguments:
     tuple -- 最后一步返回的 GameState 与 why
     """
-    for step in STEPS:
-        if why.get("cause") in step.causes:
-            with working.based_on(new) as buffer:
-                stepped = step.run(new, why)
-                effects = buffer.effects()
-            new = core.preview(stepped, effects)
+    steps = [step for step in STEPS if why.get("cause") in step.causes]
+    for step in steps:
+        if (
+            isinstance(step.run, _FrontendStep)
+            and step.run.name not in _frontend
+        ):
+            raise RuntimeError(
+                f"no frontend registered the Reset step {step.run.name!r}"
+            )
+    for step in steps:
+        with working.based_on(new) as buffer:
+            stepped = step.run(new, why)
+            effects = buffer.effects()
+        new = core.preview(stepped, effects)
     return (new, why)
