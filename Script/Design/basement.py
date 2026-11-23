@@ -220,12 +220,9 @@ def update_base_resouce_newday() -> None:
     Return arguments:
     无
     """
-    from Script.UI.Panel import (
-        invite_visitor_panel,
-        agriculture_production_panel,
-        manage_assembly_line_panel,
-        confinement_and_training,
-    )
+    from Script.UI.Panel import invite_visitor_panel, confinement_and_training
+    from Script.Modules.gameplay_resolution import agriculture_service
+    from Script.Modules.gameplay_resolution import assembly_service
     from Script.Modules.gameplay_resolution import daily_base_service
     from Script.Modules.gameplay_resolution import trade_service
     from Script.System.Medical_System import medical_service
@@ -245,9 +242,9 @@ def update_base_resouce_newday() -> None:
     # 结算医疗经营，并输出日报
     medical_service.settle_medical_department()
     # 结算农业生产
-    agriculture_production_panel.settle_agriculture_line()
+    agriculture_service.settle_agriculture_line()
     # 结算流水线
-    manage_assembly_line_panel.settle_assembly_line(newdayflag=True)
+    assembly_service.settle_assembly_line(newdayflag=True)
     # 结算访客抵达和离开
     invite_visitor_panel.settle_visitor_arrivals_and_departures()
     if trade_lines := trade_service.daily_supply_demand_fluctuation():
@@ -553,11 +550,9 @@ def draw_todo() -> None:
     """
     绘制待办事项
     """
-    from Script.UI.Panel import (
-        manage_assembly_line_panel,
-        agriculture_production_panel,
-        invite_visitor_panel,
-    )
+    from Script.UI.Panel import invite_visitor_panel
+    from Script.Modules.gameplay_resolution import agriculture_service
+    from Script.Modules.gameplay_resolution import assembly_service
     from Script.Modules.domains import power_supply
 
     # 如果系统设置中关闭了待办事项，直接返回
@@ -581,14 +576,12 @@ def draw_todo() -> None:
         draw_text += _("  当前有干员正在体检科等待体检\n")
 
     # 流水线生产是否正常
-    un_normal, now_text = manage_assembly_line_panel.settle_assembly_line(
-        draw_flag=False
-    )
+    un_normal, now_text = assembly_service.settle_assembly_line(draw_flag=False)
     if un_normal:
         draw_text += now_text[1:] + " "
 
     # 农业生产是否正常
-    un_normal, now_text = agriculture_production_panel.settle_agriculture_line(
+    un_normal, now_text = agriculture_service.settle_agriculture_line(
         draw_flag=False
     )
     if un_normal:

@@ -17,12 +17,12 @@ from Script.Kernel import core
 from Script.Modules.domains import action_info, economy, facility
 from Script.Modules.domains import physical_exam, tallies, warehouse
 from Script.Modules.domains import work
+from Script.Modules.gameplay_resolution import agriculture_service
+from Script.Modules.gameplay_resolution import assembly_service
 from Script.Modules.gameplay_resolution import daily_base_service
 from Script.Modules.gameplay_resolution import trade_service, working
 from Script.UI.Moudle import draw
-from Script.UI.Panel import agriculture_production_panel as agriculture
 from Script.UI.Panel import confinement_and_training as prison_panel
-from Script.UI.Panel import manage_assembly_line_panel as assembly
 from tests import chara_abilities as ca
 from tests.fast.base import FastTestCase
 
@@ -324,8 +324,8 @@ class NewDayTradeNoticeTest(FastTestCase):
         sys.modules[VISITOR_PANEL] = mock.MagicMock()
         self.addCleanup(sys.modules.pop, VISITOR_PANEL)
         with (
-            mock.patch.object(agriculture, "settle_agriculture_line"),
-            mock.patch.object(assembly, "settle_assembly_line"),
+            mock.patch.object(agriculture_service, "settle_agriculture_line"),
+            mock.patch.object(assembly_service, "settle_assembly_line"),
             mock.patch.object(prison_panel, "settle_prisoners"),
             mock.patch.object(
                 trade_service,

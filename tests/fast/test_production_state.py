@@ -19,10 +19,9 @@ from Script.Config import game_config
 from Script.Design import basement, game_time
 from Script.Kernel import core
 from Script.Modules.domains import production, roster, warehouse
-from Script.Modules.gameplay_resolution import working
+from Script.Modules.gameplay_resolution import assembly_service, working
 from Script.Modules.save_load import upgrade
 from Script.Test.Static_Check.check_registry import get_all_checks
-from Script.UI.Panel import manage_assembly_line_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.Modules.domains import chara_life
@@ -125,12 +124,10 @@ class ProductionStateTest(FastTestCase):
         production.set_line("assembly", 0, hour=hour - 4)
         warehouse.set(11, 1000)
         before = warehouse.amount(21)
-        _text, rate = (
-            manage_assembly_line_panel.calculate_assembly_line_efficiency(0)
-        )
+        _text, rate = assembly_service.calculate_assembly_line_efficiency(0)
         made = int(4 * rate / 100)
         self.assertGreater(made, 0, "前提：4 小时能生产")
-        manage_assembly_line_panel.settle_assembly_line(draw_flag=False)
+        assembly_service.settle_assembly_line(draw_flag=False)
         self.assertEqual(warehouse.amount(21) - before, made)
         self.assertEqual(warehouse.amount(11), 1000 - 10 * made)
         self.assertEqual(production.lines("assembly")[0]["hour"], hour)
