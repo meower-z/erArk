@@ -1,4 +1,4 @@
-"""导航面板、快捷移动菜单与场景名列表的绘制，以及抵达判断"""
+"""导航面板、快捷移动菜单与场景名列表的绘制与移动交互"""
 
 from types import FunctionType
 from Script.UI.Moudle import draw, panel, view
@@ -6,9 +6,8 @@ from Script.Core import constant, flow_handle, game_type
 from Script.Core import get_text, py_cmd, text_handle, value_handle
 from Script.Design import map_handle, attr_text, game_time
 from Script.Config import game_config, normal_config
-from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import achievement, diplomacy, location, modes
-from Script.Modules.domains import visitor, warehouse
+from Script.Modules.domains import location, modes
+from Script.Modules.domains import warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -18,64 +17,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def judge_arrive() -> bool:
-    """
-    判断是否抵达指定地点
-    Keyword arguments:
-    """
-    from Script.Settle import default
-
-    going = location.move()
-    if going is not None:
-        target_scene_id, arrive_time = going
-        if game_time.judge_date_big_or_small(game_time.now(), arrive_time):
-            # 结算抵达
-            now_scene_id = location.country()
-            visitor.set_moved(True)
-            target_scene_name = game_config.config_birthplace[
-                target_scene_id
-            ].name
-            location.arrive()
-            # 结算变动的外交官
-            if now_scene_id in diplomacy.table():
-                now_diplomat_chara_id = diplomacy.of(now_scene_id)["diplomat"]
-                if now_diplomat_chara_id != 0:
-                    default.handle_chara_off_line(
-                        now_diplomat_chara_id,
-                        1,
-                        change_data=game_type.CharacterStatusChange(),
-                        now_time=game_time.now(),
-                    )
-            if target_scene_id in diplomacy.table():
-                target_diplomat_chara_id = diplomacy.of(target_scene_id)[
-                    "diplomat"
-                ]
-                if target_diplomat_chara_id != 0:
-                    default.handle_chara_on_line(
-                        target_diplomat_chara_id,
-                        1,
-                        change_data=game_type.CharacterStatusChange(),
-                        now_time=game_time.now(),
-                    )
-            # 绘制提示信息
-            now_draw = draw.WaitDraw()
-            now_draw.text = _("\n罗德岛已抵达目的地：{0}\n").format(
-                target_scene_name
-            )
-            now_draw.width = window_width
-            now_draw.style = "gold_enrod"
-            now_draw.draw()
-            # 如果炎不在列表中，则添加
-            if 17 not in achievement.get("visited_nation_list"):
-                achievement.append("visited_nation_list", 17)
-            # 结算成就
-            if target_scene_id not in achievement.get("visited_nation_list"):
-                achievement.append("visited_nation_list", target_scene_id)
-            achievement_panel.achievement_flow(_("导航"))
-            return True
-    return False
 
 
 class Base_function_class:

@@ -586,3 +586,23 @@ reads = "Script/Settle/common_default.py、Script/Design/handle_premise/__init__
 used_for = "测试：三处调用方导入对应的后端服务模块且不导入 system_setting 或 event_option_panel"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R42"
+file = "tests/fast/test_diplomacy_navigation_services.py"
+symbol = "imported_names"
+mechanism = "getsource"
+reads = "Script/Settle/past_day_settle.py 中的 import 与 from ... import 语句"
+used_for = "测试：每日结算导入外交与导航后端服务，不导入外交与导航界面面板"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R43"
+file = "tests/fast/test_diplomacy_navigation_services.py"
+symbol = "bound_names"
+mechanism = "ast"
+reads = "diplomacy_service、navigation_service、nation_diplomacy_panel 与 navigation_panel 源码中任意作用域绑定的全部名称"
+used_for = "测试：两个后端服务各自只绑定自身所属的结算函数，外交与导航面板不绑定三个结算函数名、* 与 __getattr__"
+when = "test"
+capture = "suite"
