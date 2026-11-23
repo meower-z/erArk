@@ -634,9 +634,9 @@ def handle_eat() -> None:
 @add_instruct(constant.Instruct.PUT_SELFMADE_FOOD_IN)
 def handle_put_selfmade_food_in() -> None:
     """处理放入正常食物指令"""
-    from Script.UI.Panel import food_shop_panel
+    from Script.Modules.gameplay_resolution import canteen_service
 
-    food_shop_panel.put_selfmade_food_in()
+    canteen_service.put_selfmade_food_in()
 
 
 @add_instruct(constant.Instruct.MOVE)
@@ -1664,9 +1664,9 @@ def _collect(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    from Script.UI.Panel import collection_panel
+    from Script.Modules.gameplay_resolution import collection_service
 
-    collection_panel.collapse_collection()
+    collection_service.collapse_collection()
 
 
 @add_instruct(constant.Instruct.DO_H)

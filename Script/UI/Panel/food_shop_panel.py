@@ -1,4 +1,4 @@
-"""食物商店界面面板与自制食物放入食堂的处理"""
+"""食物商店界面面板与食物列表绘制对象"""
 
 from typing import Literal
 from types import FunctionType
@@ -13,12 +13,10 @@ from Script.Core import (
 )
 from Script.Design import map_handle, attr_calculation
 from Script.Modules.domains import activity, economy, kitchen
-from Script.Modules.domains import inventory
 from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -28,45 +26,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def put_selfmade_food_in() -> None:
-    """
-    将自制食物放入食堂
-    """
-    character_data: identity.Identity = identity.of(0)
-
-    # 读取背包食物，并只提取uid列表
-    id_list_normal = []
-    for i, food_data in inventory.foods(0).items():
-        if food_data.special_seasoning == 0:
-            id_list_normal.append(i)
-
-    # 绘制提示信息
-    if len(id_list_normal):
-        info_draw_text = _(
-            "{0}开始将身上没有调味的食物放进食堂取餐区里\n"
-        ).format(character_data.name)
-    else:
-        info_draw_text = _("{0}身上没有正常调味的食物\n").format(
-            character_data.name
-        )
-    info_draw = draw.NormalDraw()
-    info_draw.text = info_draw_text
-    info_draw.width = window_width
-    info_draw.draw()
-
-    # 遍历食物列表，将食物放入食堂
-    for uid in id_list_normal:
-        food_data = inventory.foods(0)[uid]
-        recipes_id = str(food_data.recipe)
-        food_name = food_data.name
-        kitchen.stock(recipes_id, inventory.take_food(0, uid))
-        # 绘制提示信息
-        info_draw = draw.NormalDraw()
-        info_draw.text = _("{0}已放入食堂\n").format(food_name)
-        info_draw.width = window_width
-        info_draw.draw()
 
 
 class FoodShopPanel:
