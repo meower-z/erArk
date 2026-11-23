@@ -220,11 +220,11 @@ def update_base_resouce_newday() -> None:
     Return arguments:
     无
     """
-    from Script.UI.Panel import invite_visitor_panel, confinement_and_training
+    from Script.UI.Panel import invite_visitor_panel
     from Script.Modules.gameplay_resolution import agriculture_service
     from Script.Modules.gameplay_resolution import assembly_service
     from Script.Modules.gameplay_resolution import daily_base_service
-    from Script.Modules.gameplay_resolution import trade_service
+    from Script.Modules.gameplay_resolution import prison_service, trade_service
     from Script.System.Medical_System import medical_service
     from Script.System.Cooking_System import cooking
 
@@ -259,7 +259,7 @@ def update_base_resouce_newday() -> None:
     # 刷新食堂食物
     cooking.init_food_shop_data(new_day_flag=True)
     # 囚犯逃跑结算
-    confinement_and_training.settle_prisoners()
+    prison_service.settle_prisoners()
 
 
 def update_work_people() -> None:

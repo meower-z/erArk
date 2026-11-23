@@ -1,21 +1,22 @@
 """
 监禁与调教助手服务（prison_service）
 ====================================
-提供囚犯逃脱概率计算、逃脱判定、角色入狱处理、空闲牢房查询及调教助手行为筛选与选择逻辑。
-不直接导入界面模块，供监禁调教面板、行动结算、通用结算与外勤委托系统调用。
+提供囚犯逃脱概率计算、逃脱判定、囚犯每日结算、逃脱结果处理、角色入狱处理、空闲牢房查询与调教助手行为筛选选择。
+逃脱成功与逃脱失败提示经 ui_hooks.emit_notice 发出。
+本模块不直接导入界面模块，供基地每日结算、监禁调教面板、行动结算、通用结算与外勤委托系统调用。
 """
 
 import random
 from types import FunctionType
 
 from Script.Config import game_config
-from Script.Core import constant, get_text
+from Script.Core import constant, game_type, get_text
 from Script.Design import attr_calculation, basement, game_time, handle_premise
 from Script.Design import map_handle, virgin_break_gate
 from Script.Modules.domains import abilities, activity, body_manage, chara_life
 from Script.Modules.domains import facility, flags, identity, needs, prison
 from Script.Modules.domains import work
-from Script.Modules.gameplay_resolution import instruct_filter
+from Script.Modules.gameplay_resolution import instruct_filter, ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -99,6 +100,75 @@ def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
     if escape_value > warden_value:
         return True, escape_value, warden_value
     return False, escape_value, warden_value
+
+
+def settle_prisoners() -> None:
+    """
+    遍历当前全部囚犯并执行每日结算。
+    对每名囚犯依次调用 calculate_escape_probability 更新逃脱概率，再调用 judge_can_escape 判断能否逃脱。
+    判定可逃脱时调用 escape_success，未逃脱且新逃脱概率大于 0 时调用 escape_fail。
+    Return arguments:
+    None -- 无返回值
+    """
+    for character_id in prison.prisoner_ids():
+        escape_probability = calculate_escape_probability(character_id)
+        can_escape, _escape_value, _warden_value = judge_can_escape(
+            character_id
+        )
+        if can_escape:
+            escape_success(character_id)
+        elif escape_probability > 0:
+            escape_fail(character_id)
+
+
+def escape_success(character_id: int) -> None:
+    """
+    处理指定囚犯的逃脱成功结果。
+    经 ui_hooks.emit_notice 以等待确认、warning 样式与配置文本宽度发出逃脱成功提示。
+    开启角色 escaping 标志，调用 prison.release 移出囚犯名册，使角色离线并生成追捕逃犯外勤委托。
+    Keyword arguments:
+    character_id -- int，角色编号
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.Settle import default
+    from Script.System.Field_Commission_System import field_commission_function
+
+    character_data = identity.of(character_id)
+    escape_text = _("\n囚犯{0}逃脱成功，请尽快派遣外勤干员进行追捕！\n").format(
+        character_data.name
+    )
+    ui_hooks.emit_notice(
+        escape_text, wait=True, style="warning", use_text_width=True
+    )
+    flags.set(character_id, escaping=True)
+    prison.release(character_id)
+    default.handle_chara_off_line(
+        character_id,
+        1,
+        change_data=game_type.CharacterStatusChange(),
+        now_time=game_time.now(),
+    )
+    field_commission_function.create_capture_fugitive_commission(character_id)
+
+
+def escape_fail(character_id: int) -> None:
+    """
+    处理指定囚犯的逃脱失败结果。
+    经 ui_hooks.emit_notice 以非等待确认、gold_enrod 样式与配置文本宽度发出逃脱失败提示，并将该囚犯的逃脱概率清零。
+    Keyword arguments:
+    character_id -- int，角色编号
+    Return arguments:
+    None -- 无返回值
+    """
+    character_data = identity.of(character_id)
+    escape_text = _("囚犯{0}逃脱失败，监狱长已经加强了对其的监视！\n").format(
+        character_data.name
+    )
+    ui_hooks.emit_notice(
+        escape_text, wait=False, style="gold_enrod", use_text_width=True
+    )
+    prison.set_escape_probability(character_id, 0)
 
 
 def chara_become_prisoner(character_id: int) -> None:

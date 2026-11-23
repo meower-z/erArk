@@ -606,3 +606,23 @@ reads = "diplomacy_service、navigation_service、nation_diplomacy_panel 与 nav
 used_for = "测试：两个后端服务各自只绑定自身所属的结算函数，外交与导航面板不绑定三个结算函数名、* 与 __getattr__"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R46"
+file = "tests/fast/test_prison_settlement_service.py"
+symbol = "file_imports"
+mechanism = "ast"
+reads = "Script/Design/basement.py 中的全部 import 与 from ... import 语句"
+used_for = "测试：Script/Design/basement.py 导入 prison_service 且不导入监禁调教管理面板"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R47"
+file = "tests/fast/test_prison_settlement_service.py"
+symbol = "bound_names"
+mechanism = "ast"
+reads = "Script/UI/Panel/confinement_and_training.py 中各作用域的函数名、类名、导入绑定名与赋值目标名"
+used_for = "测试：监禁调教管理面板不绑定 settle_prisoners、escape_success 与 escape_fail"
+when = "test"
+capture = "suite"
