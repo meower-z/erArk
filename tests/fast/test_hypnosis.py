@@ -16,7 +16,7 @@ from Script.Modules import load_order
 from Script.Modules.domains import hypnosis
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import default as settle_default
-from Script.UI.Panel import hypnosis_panel
+from Script.Modules.gameplay_resolution import hypnosis_service
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
 from Script.Modules.save_load.legacy_pickle import LegacyObject
@@ -86,19 +86,21 @@ class HypnosisTest(FastTestCase):
         with (
             working.based_on(core.state()) as buf,
             mock.patch.object(
-                hypnosis_panel, "calculate_hypnosis_sanity_cost", return_value=0
+                hypnosis_service,
+                "calculate_hypnosis_sanity_cost",
+                return_value=0,
             ),
             mock.patch.object(
-                hypnosis_panel,
+                hypnosis_service,
                 "hypnosis_degree_calculation",
                 side_effect=[3.7, 2.4],
             ),
             mock.patch.object(
-                hypnosis_panel,
+                hypnosis_service,
                 "hypnosis_degree_limit_calculation",
                 return_value=100,
             ),
-            mock.patch.object(hypnosis_panel, "evaluate_hypnosis_completion"),
+            mock.patch.object(hypnosis_service, "evaluate_hypnosis_completion"),
         ):
             settle_default.handle_hypnosis_one(
                 0, 5, game_type.CharacterStatusChange(), now

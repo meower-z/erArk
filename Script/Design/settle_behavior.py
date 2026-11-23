@@ -14,7 +14,7 @@ from Script.Design import handle_premise, second_behavior, talk
 from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
-from Script.UI.Panel import hypnosis_panel
+from Script.Modules.gameplay_resolution import hypnosis_service
 from Script.Modules.domains import abilities, action_info, activity
 from Script.Modules.domains import chara_profile, flags, h_meters, hypnosis
 from Script.Modules.domains import modes, needs, relations, roster, status, work
@@ -410,7 +410,7 @@ def handle_settle_behavior(
                         target_character_id
                     ):
                         unconscious_color = (
-                            hypnosis_panel.get_hypnosis_degree_color(
+                            hypnosis_service.get_hypnosis_degree_color(
                                 hypnosis.of(target_data.cid)["hypnosis_degree"]
                             )
                         )
@@ -422,7 +422,7 @@ def handle_settle_behavior(
                             )
                         )
                     name += f"<{unconscious_color}>"
-                    name += f" ({hypnosis_panel.unconscious_list[now_unconscious_h]}) "
+                    name += f" ({hypnosis_service.unconscious_list[now_unconscious_h]}) "
                     name += f"</{unconscious_color}>"
                 # 完整角色名抬头
                 now_text = name + f"<{color_name}>:</{color_name}>"
@@ -475,7 +475,7 @@ def handle_settle_behavior(
                     )
                     judge = 1
                 if target_change.hypnosis_degree:
-                    hypnosis_color = hypnosis_panel.get_hypnosis_degree_color(
+                    hypnosis_color = hypnosis_service.get_hypnosis_degree_color(
                         hypnosis.of(target_data.cid)["hypnosis_degree"]
                     )
                     now_text += (

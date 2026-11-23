@@ -17,7 +17,8 @@ from Script.System.Instruct_System import handle_instruct
 from Script.System.Instruct_System.common_behavior_utils import (
     get_last_valid_sex_behavior_id,
 )
-from Script.UI.Panel import hypnosis_panel, event_option_panel
+from Script.Modules.gameplay_resolution import hypnosis_service
+from Script.UI.Panel import event_option_panel
 from Script.UI.Panel import ejaculation_panel, achievement_panel
 
 from Script.Settle.common_default import base_chara_hp_mp_common_settle
@@ -1509,14 +1510,14 @@ def handle_hypnosis_one(
     if activity.dead(character_id):
         return
     # 结算理智消耗
-    santi_down = hypnosis_panel.calculate_hypnosis_sanity_cost(
+    santi_down = hypnosis_service.calculate_hypnosis_sanity_cost(
         activity.target(character_id)
     )
     needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
     player_ability.add_sanity_cost(character_id, santi_down)
     # 结算催眠度增加
-    hypnosis_degree_grow = hypnosis_panel.hypnosis_degree_calculation(
+    hypnosis_degree_grow = hypnosis_service.hypnosis_degree_calculation(
         activity.target(character_id)
     )
     # debug下催眠增加到999
@@ -1530,12 +1531,11 @@ def handle_hypnosis_one(
         activity.target(character_id),
         hypnosis_degree=min(
             new_hypnosis_degree,
-            hypnosis_panel.hypnosis_degree_limit_calculation(),
+            hypnosis_service.hypnosis_degree_limit_calculation(),
         ),
     )
     target_change.hypnosis_degree += hypnosis_degree_grow
-    # 判断催眠完成
-    hypnosis_panel.evaluate_hypnosis_completion(activity.target(character_id))
+    hypnosis_service.evaluate_hypnosis_completion(activity.target(character_id))
     # 判断是否理智已耗尽导致催眠结束
     if needs.of(character_id)["sanity"] == 0 and flags.get(
         target_character_data.cid, "unconscious_h"
@@ -1590,7 +1590,7 @@ def handle_hypnosis_all(
     # 遍历角色列表
     for target_id in scene_character_list:
         # 计算理智消耗
-        santi_down = hypnosis_panel.calculate_hypnosis_sanity_cost(target_id)
+        santi_down = hypnosis_service.calculate_hypnosis_sanity_cost(target_id)
         sanity_point_cost += santi_down
         hypnosis_character_list.append(target_id)
         # 如果超出了现有理智，则取现有理智
@@ -1615,7 +1615,7 @@ def handle_hypnosis_all(
         if activity.dead(target_character_data.cid):
             continue
         # 结算催眠度增加
-        hypnosis_degree_grow = hypnosis_panel.hypnosis_degree_calculation(
+        hypnosis_degree_grow = hypnosis_service.hypnosis_degree_calculation(
             target_id
         )
         # debug下催眠增加到999
@@ -1627,12 +1627,11 @@ def handle_hypnosis_all(
             target_id,
             hypnosis_degree=min(
                 new_hypnosis_degree,
-                hypnosis_panel.hypnosis_degree_limit_calculation(),
+                hypnosis_service.hypnosis_degree_limit_calculation(),
             ),
         )
         target_change.hypnosis_degree += hypnosis_degree_grow
-        # 判断催眠完成
-        hypnosis_panel.evaluate_hypnosis_completion(target_id)
+        hypnosis_service.evaluate_hypnosis_completion(target_id)
     # 判断是否理智已耗尽导致催眠结束
     if needs.of(character_data.cid)["sanity"] == 0:
         for target_id in scene_character_list:
