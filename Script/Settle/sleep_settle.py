@@ -2,7 +2,7 @@
 
 import random
 from types import FunctionType
-from Script.Core import game_path_config, get_text, num
+from Script.Core import game_path_config, get_text, io_init, num
 from Script.Design import (
     handle_premise,
     attr_calculation,
@@ -48,6 +48,7 @@ def update_sleep() -> None:
     now_draw.width = window_width
     now_draw.text = _("\n博士入睡，开始结算各种数据\n")
     now_draw.draw()
+    io_init.flush()
     id_list = roster.active()
     id_list.add(0)
 

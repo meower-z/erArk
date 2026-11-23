@@ -629,17 +629,17 @@ def install_save(save_id: str, version: int) -> None:
     for domain in (maintenance, physical_exam, bookmarks):
         update_count += domain.adopt_old_save(loaded_dict, version)
 
-    draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
     now_draw = draw.LeftDraw()
-    now_draw.text = draw_text
+    now_draw.text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
     now_draw.draw()
+    io_init.flush()
 
     # 检测是否为旧版存档（npc_tem_data是List而不是Dict）
     if isinstance(loaded_dict.get("npc_tem_data"), list):
-        draw_text = _("\n检测到旧版存档，开始迁移角色ID系统...\n")
         now_draw = draw.LeftDraw()
-        now_draw.text = draw_text
+        now_draw.text = _("\n检测到旧版存档，开始迁移角色ID系统...\n")
         now_draw.draw()
+        io_init.flush()
 
         migrate_count = old_chara_to_new.migrate_old_save_data(loaded_dict)
 
@@ -677,10 +677,10 @@ def install_save(save_id: str, version: int) -> None:
             break
 
     if need_migration:
-        draw_text = _("\n检测到需要进行角色替换迁移...\n")
         now_draw = draw.LeftDraw()
-        now_draw.text = draw_text
+        now_draw.text = _("\n检测到需要进行角色替换迁移...\n")
         now_draw.draw()
+        io_init.flush()
 
         migration_count = old_chara_to_new.migrate_character_replacement(
             loaded_dict, character_replacement_map

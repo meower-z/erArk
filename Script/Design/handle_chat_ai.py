@@ -109,8 +109,8 @@ def judge_use_text_ai(
         info_draw.text = info_text
         info_draw.width = window_width
         info_draw.draw()
+        io_init.flush()
 
-    # 获取ai返回文本
     ai_result = text_ai(
         character_id,
         behavior_id,

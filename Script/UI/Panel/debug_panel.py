@@ -4,7 +4,7 @@ import datetime
 from dataclasses import replace
 from typing import Any, cast
 from types import FunctionType, MappingProxyType
-from Script.Core import get_text, flow_handle, constant, py_cmd, num
+from Script.Core import get_text, flow_handle, constant, py_cmd, num, io_init
 from Script.Design import (
     basement,
     character_handle,
@@ -697,13 +697,12 @@ class TALK_QUICK_TEST:
         line = draw.LineDraw("-", window_width)
         line.draw()
         now_draw = draw.NormalDraw()
-        draw_text = _("\n\n开始刷新口上文件，请稍等\n")
-        now_draw.text = draw_text
+        now_draw.text = _("\n\n开始刷新口上文件，请稍等\n")
         now_draw.draw()
         for _i in range(5):
             line_feed.draw()
 
-        # 构建角色口上数据
+        io_init.flush()
         build_chara_talk(chara_adv_id)
 
         # 旧的口上数据计数

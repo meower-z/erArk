@@ -2,7 +2,7 @@
 
 import random
 from types import FunctionType
-from Script.Core import game_path_config, get_text
+from Script.Core import game_path_config, get_text, io_init
 from Script.Design import (
     game_time,
     handle_premise,
@@ -55,6 +55,7 @@ def update_new_day() -> None:
     now_draw.width = window_width
     now_draw.text = _("\n已过24点，开始结算各种数据\n\n")
     now_draw.draw()
+    io_init.flush()
 
     # 清理过期的临时性技实操课，避免字典随游戏天数无限膨胀并进存档（Plan 22 四期 §7-16）
     # 课还在上（课堂模式开着、玩家在 H 里）时，该函数跳过 running 为真的那条：下课时间由玩家决定，
