@@ -423,7 +423,6 @@ class SeeFoodListByFoodNameDraw:
             if yrn in return_list:
                 view.now_panel_id = constant.Panel.IN_SCENE
                 break
-            kitchen.keep_shelf(self.cid)
 
     def buy_food(
         self,

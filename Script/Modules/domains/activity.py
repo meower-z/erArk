@@ -15,7 +15,7 @@
 - activity.dead：是否已死亡，默认 False。
 角色不在花名册上时，这些键存在全局键 roster.offstage 里这个角色的一项下。
 读函数给了 game 时只读这个 GameState，事件触发函数这样读。没给 game 时读当前缓冲区，含还没套用的写入。
-target_as 在块内临时覆盖一个角色的交互对象（仅未给 game 时），不写状态也不用缓冲区。
+target_as 在块内临时覆盖角色的交互对象，不论是否给出 game，不写状态也不用缓冲区。
 读出的列表是新列表。behavior 与 event 读出只读的 Behavior、Event，属性名与类型同 game_type.Behavior、Chara_Event。
 读档时 adopt_old_save 把旧存档角色对象上的这十个属性写进这些键。
 """
@@ -264,14 +264,14 @@ _target_as: dict[int, int] = {}
 
 def target(cid: int, game: core.GameState | None = None) -> int:
     """
-    角色当前交互对象的id。未给 game 且在该角色的 target_as 块内时读块内值
+    返回角色当前交互对象的id。在该角色的 target_as 块内时，不论是否给出 game，返回块内覆盖值
     Keyword arguments:
     cid -- 角色id
-    game -- 给出时只读这个 GameState，不受 target_as 影响；没有时读 target_as 块或当前缓冲区
+    game -- 不在 target_as 块内时，给出则读取该 GameState，为 None 则读取当前缓冲区
     Return arguments:
     int -- 交互对象id
     """
-    if game is None and cid in _target_as:
+    if cid in _target_as:
         return _target_as[cid]
     return cast(int, _get(cid, TARGET, game))
 
@@ -293,8 +293,8 @@ def set_target(cid: int, value: int) -> None:
 @contextmanager
 def target_as(cid: int, value: int) -> Iterator[None]:
     """
-    在 with 块内把角色的交互对象读作 value（仅未给 game 的 target），块内对它的 set_target 只改块内值。
-    退出块时撤回这次覆盖，状态不变，不需要缓冲区。判前提、换文本时临时指向别的角色用
+    在 with 块内将 target(cid, ...) 的返回值临时覆盖为 value，不论是否给出 game。
+    块内对该角色调用 set_target 只修改本次覆盖值。退出块时撤销本次覆盖，不写状态，也不需要缓冲区
     Keyword arguments:
     cid -- 角色id
     value -- 块内读到的交互对象id

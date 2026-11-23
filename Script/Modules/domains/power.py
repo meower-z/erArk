@@ -7,6 +7,7 @@ base.power 是发电与蓄电设施（Plant），没有时读 DEFAULT_PLANT。
 base.power_storage 是当前储能，没有时读 0.0。写入整值替换这三个键。
 最大储能、供能调控员名单与主反应炉等级由别的状态算出，不存。
 动力系统管理面板里的修改先记进玩家选择的缓冲区，离开面板时随一个 0 分钟的 Edit 生效。
+读档时经 reset.repair 修补超限储能，并在动力区低于 2 级时将副源石反应炉设为 3 台。
 """
 
 from collections.abc import Callable, Mapping
@@ -16,6 +17,7 @@ from Script.Config import game_config
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.domains import facility, warehouse, work
+from Script.Modules.save_load import reset
 
 KEY = "base.power_strategy"
 """ 供电策略在全局数据里的键 """
@@ -183,8 +185,9 @@ def storage_max() -> int:
     )
 
 
+@reset.repair
 def clamp_storage() -> None:
-    """储能超过最大储能时，把储能降到最大储能"""
+    """储能超过最大储能时降到最大储能，同时登记为读档修补（reset.repair）"""
     top = storage_max()
     if storage() > top:
         set_storage(top)
@@ -208,6 +211,13 @@ def main_reactor_level() -> int:
     int -- 等级
     """
     return facility.level(1, 1)
+
+
+@reset.repair
+def fix_aux_reactors() -> None:
+    """动力区低于 2 级时将副源石反应炉数量设为 3 台，登记为读档修补（reset.repair）"""
+    if main_reactor_level() < 2:
+        set_plant(aux_reactors=3)
 
 
 def operator_ids() -> list[int]:

@@ -31,9 +31,7 @@ line_feed.width = 1
  2. [002]调控员管理，增减调控员，任命火力、水力、风力、光伏的主调控员。
  3. [003]发电设施管理，显示燃料库存，增减副源石反应炉与清洁能源设施。
  4. [004]蓄电池管理，显示储能，增减 L1、L2、L3 蓄电池。
-按钮的修改记进玩家选择的缓冲区，离开面板时随一个 0 分钟的 Edit 生效。
-概览与蓄电池管理在绘制时把超过最大储能的储能降到最大储能。
-发电设施管理在设施1的等级低于 2 时把副源石反应炉设为 3 台。
+按钮的修改记进玩家选择的缓冲区，离开面板时随一个 0 分钟的 Edit 生效。绘制本身不写游戏状态。
 """
 
 
@@ -72,7 +70,6 @@ class Manage_Power_System_Panel:
                     power_supply.power_generation(),
                 )
             )
-            power.clamp_storage()
             overview.append(
                 _("  储能: {0:.1f}/{1:.1f}").format(
                     power.storage(), power.storage_max()
@@ -565,7 +562,6 @@ class Manage_Power_System_Panel:
             row.draw()
             # 如果等级小于2则不允许调整，固定为3台
             if fac_lv < 2:
-                power.set_plant(aux_reactors=3)
                 aux_limit_text = _("（区块等级不足，无法调整副源石反应炉）\n")
                 aux_limit_draw = draw.NormalDraw()
                 aux_limit_draw.text = aux_limit_text
@@ -705,7 +701,6 @@ class Manage_Power_System_Panel:
         while 1:
             title = draw.TitleLineDraw(_("蓄电池管理"), self.width)
             title.draw()
-            power.clamp_storage()
             return_list = []
             # 蓄电池总量限制与生产入口
             batteries = power.plant()["batteries"]

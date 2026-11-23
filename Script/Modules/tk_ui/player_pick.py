@@ -24,7 +24,6 @@ from Script.Modules.gameplay_resolution import (
     plan_queue,
     working,
 )
-from Script.Modules.tk_ui import drawn_see
 from Script.UI.Moudle import view
 
 PRE_GAME_PANELS = (constant.Panel.TITLE, constant.Panel.CREATOR_CHARACTER)
@@ -150,7 +149,7 @@ def _carrying(
 def drafting(origin: str) -> Iterator[None]:
     """
     玩家选择中的草稿上下文：打开选择缓冲区（working.open_pick）并记下当前待打断位置（plan_queue.mark），
-    进入后先调 drawn_see.keep。正常退出且有写入或打断时定下 0 分钟 Edit（抛 Chosen）；
+    正常退出且有写入或打断时定下 0 分钟 Edit（抛 Chosen）；
     块内定下行动时把写入与打断附到该行动上；遇到 Back 或异常时丢弃两者。
     不在玩家选择中时直接运行块，外层已有选择缓冲区时并入外层
     Keyword arguments:
@@ -162,7 +161,6 @@ def drafting(origin: str) -> Iterator[None]:
     mark = plan_queue.mark()
     buffer = working.open_pick()
     try:
-        drawn_see.keep()
         yield
     except Chosen as chosen:
         effects = working.close_pick(buffer)
