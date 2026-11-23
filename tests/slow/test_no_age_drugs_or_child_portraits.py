@@ -5,7 +5,7 @@
 道具表与礼物表里没有道具 31、32；世界设定表里没有设定 1，旧存档里留着的 world_setting[1] 不改任何干员的素质 102~107；
 image 目录与游戏的图片索引里没有以「_小」为差分段的图片名；干员带素质 102、103 时、女儿的母亲是阿米娅时，
 立绘查找的结果都不含「_小」段。没有同名立绘、种族也没有女儿图的女儿没有立绘，查找结果不在图片索引里。
-图片索引在导入 Script.Core.era_image 时建立，快速层不能导入它，所以本测试属于慢速层。
+本测试读取导入 Script.Core.image_catalog 时建立的图片索引，因快速层禁止导入该模块而属于慢速层。
 """
 
 import importlib
@@ -88,7 +88,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
         """image 目录与图片索引里没有「_小」差分；
         带素质 102、103 的干员、母亲是 MOTHER_NAME 的女儿，查找结果都不含「_小」段"""
         from Script.Modules.domains import relations
-        from Script.Core import era_image
+        from Script.Core import image_catalog
         from Script.Design import character_image
 
         child_files = [
@@ -101,7 +101,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
         self.assertEqual(
             [
                 name
-                for name in era_image.image_path_data
+                for name in image_catalog.image_path_data
                 if CHILD_SEGMENT.search(name)
             ],
             [],
@@ -144,7 +144,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
     def test_daughter_without_art_has_no_portrait(self) -> None:
         """母亲的种族没有女儿图时，女儿的立绘查找结果不在图片索引里"""
         from Script.Modules.domains import relations
-        from Script.Core import era_image
+        from Script.Core import image_catalog
         from Script.Design import character_image
 
         mother_id = next(
@@ -173,7 +173,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
             [
                 name
                 for name in (image_name, f"{image_name}_半身")
-                if name in era_image.image_path_data
+                if name in image_catalog.image_path_data
             ],
             [],
         )
