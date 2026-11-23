@@ -100,9 +100,10 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         无
         """
         from Script.Config import normal_config
+        from Script.Modules.gameplay_resolution import vehicle_service
         from Script.UI.Panel import manage_vehicle_panel
 
-        manage_vehicle_panel.update_basement_vehicle_data()
+        vehicle_service.update_basement_vehicle_data()
         panel = manage_vehicle_panel.Manage_Vehicle_Panel(
             normal_config.config_normal.text_width
         )

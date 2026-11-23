@@ -194,12 +194,10 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
 
     def test_sex_assistant(self) -> None:
         """阿米娅为交互对象：她还是处的部位，调教助手不列出该部位的破处类行为；破处之后就列出"""
-        from Script.UI.Panel import confinement_and_training
+        from Script.Modules.gameplay_resolution import prison_service
 
         talent = ca.talent(AMIYA_ID)
-        find = (
-            confinement_and_training.get_all_can_use_behavior_id_for_sex_assistant
-        )
+        find = prison_service.get_all_can_use_behavior_id_for_sex_assistant
 
         def listing() -> list:
             """调教助手选与爱抚胸部不同部位时可用的行为"""

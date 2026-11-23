@@ -55,10 +55,8 @@ class ChildStageHGateTest(SlowTestCase):
         无
         """
         from Script.Core import constant
-        from Script.System.Instruct_System import (
-            handle_instruct,
-            see_instruct_panel,
-        )
+        from Script.Modules.gameplay_resolution import instruct_filter
+        from Script.System.Instruct_System import handle_instruct
 
         child_id = self.make_child(stage, "杜宾")
         # 监禁让 imprisonment_h 的「合作或监禁」或分支成立
@@ -70,7 +68,7 @@ class ChildStageHGateTest(SlowTestCase):
             "Tk面板": [
                 i
                 for i in H_INSTRUCTS
-                if see_instruct_panel.judge_single_instruct_filter(
+                if instruct_filter.judge_single_instruct_filter(
                     i, {}, 0, use_type_filter_flag=False
                 )[0]
             ],
@@ -99,7 +97,7 @@ class ChildStageHGateTest(SlowTestCase):
 
     def test_h_instructs_closed_in_debug_mode(self) -> None:
         """debug模式下交互对象是102：抽查的H类指令在指令面板的过滤中仍不成立"""
-        from Script.System.Instruct_System import see_instruct_panel
+        from Script.Modules.gameplay_resolution import instruct_filter
 
         kernel_data.put(kernel_data.domain("modes").set_debug, True)
         aim(0, self.make_child(102, "杜宾"))
@@ -107,7 +105,7 @@ class ChildStageHGateTest(SlowTestCase):
             "Tk面板": [
                 i
                 for i in H_INSTRUCTS
-                if see_instruct_panel.judge_single_instruct_filter(
+                if instruct_filter.judge_single_instruct_filter(
                     i, {}, 0, use_type_filter_flag=False
                 )[0]
             ],

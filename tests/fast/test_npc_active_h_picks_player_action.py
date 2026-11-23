@@ -15,9 +15,9 @@ from Script.Core import constant
 from Script.Design import update
 from Script.Kernel import core
 from Script.Modules.domains import h_state
-from Script.Modules.gameplay_resolution import plan_queue
+from Script.Modules.gameplay_resolution import instruct_filter, plan_queue
 from Script.Modules.tk_ui import player_pick
-from Script.System.Instruct_System import handle_instruct, see_instruct_panel
+from Script.System.Instruct_System import handle_instruct
 from tests import kernel_data
 from tests.chara_activity import aim
 from Script.Modules.domains import flags
@@ -43,7 +43,7 @@ class NpcActiveHPicksPlayerActionTest(FastTestCase):
         kernel_data.put(flags.set, self.npc.cid, is_h=True)
         core.reset_state(kernel_data.reprojected(core.state()))
         patch = mock.patch.object(
-            see_instruct_panel,
+            instruct_filter,
             "judge_single_instruct_filter",
             side_effect=lambda instruct_id, data, *a, **kw: (True, data),
         )
