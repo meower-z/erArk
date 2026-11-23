@@ -26,6 +26,7 @@ from Script.Modules.domains import country, history
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import index, kernel_state
 from Script.Modules.tk_ui import orders
+from Script.Protocol import ScriptedUiPort, script
 from Script.UI.Moudle import draw, view
 from tests import kernel_data
 from tests.fast.base import FastTestCase
@@ -160,11 +161,9 @@ class RecentInputsTest(FastTestCase):
 
     def test_order_deal_hands_inputs_to_orders(self) -> None:
         """order_deal("str") 规范化纯数字返回值，同时将原始输入交给 orders 暂存"""
-        self.enterContext(mock.patch.object(io_init, "arm_input", lambda: None))
-        self.enterContext(
-            mock.patch.object(io_init, "_ensure_main_frame_bound", lambda: None)
-        )
-        io_init.put_order("05")
+        self.enterContext(mock.patch.object(io_init, "_port", io_init._port))
+        self.enterContext(mock.patch.object(view, "input_cache", []))
+        io_init.configure(ScriptedUiPort(script("05")))
         self.assertEqual(flow_handle.order_deal("str", print_order=False), "5")
         self.assertEqual(history.inputs(orders.settled(core.state())), ["05"])
 

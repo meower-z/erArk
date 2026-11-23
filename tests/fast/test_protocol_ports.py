@@ -178,6 +178,28 @@ class ProtocolPortsTest(FastTestCase):
                 self.assertIsInstance(port.events[1], kind)
                 self.assertEqual(port.events[1].seq, 2)
 
+    def test_flush_publishes_buffered_ops_without_a_barrier(self) -> None:
+        """
+        断言 `ScriptedUiPort` 与 `ThreadedUiPort` 的 `flush()` 无缓冲时不发事件、有缓冲时发布 `RenderChunk`，关闭后抛出
+        `SessionCancelled`。
+        """
+        port = ScriptedUiPort(default_first_option())
+        port.flush()
+        self.assertEqual(port.events, [])
+        port.emit_op(TextOp("a"))
+        port.emit_op(TextOp("b"))
+        port.flush()
+        chunk = RenderChunk("scripted", 1, (TextOp("a"), TextOp("b")))
+        self.assertEqual(port.events, [chunk])
+        threaded = ThreadedUiPort(TOKEN)
+        threaded.attach(TOKEN)
+        threaded.emit_op(TextOp("c"))
+        threaded.flush()
+        self.assertEqual(_ops([_next(threaded)]), [TextOp("c")])
+        threaded.close("done")
+        with self.assertRaises(SessionCancelled):
+            threaded.flush()
+
     def test_skip_pauses_until_choose_input_or_sync(self) -> None:
         """验证可跳过暂停受跳过开关与 Continue 跳过标记控制，并在选择、文本输入或面板同步后关闭跳过。"""
         port = ScriptedUiPort(script("", "a", _skip, "t", "", ""))

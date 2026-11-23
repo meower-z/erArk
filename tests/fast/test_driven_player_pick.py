@@ -72,7 +72,6 @@ class DrivenPlayerPick(FastTestCase):
             )
         )
         self.enterContext(mock.patch.object(py_cmd, "clr_cmd"))
-        self.enterContext(mock.patch.object(py_cmd, "focus_cmd"))
         _started.clear()
 
     def script(self, rounds: list[Callable[[], None]]) -> list[int]:
