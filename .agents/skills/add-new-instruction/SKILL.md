@@ -60,7 +60,7 @@ description: 为 erArk 新增一个玩家指令及其行为、前提、结算、
 3. 其他常用段速查：0~40 与 1501~1531 属性_基础 / 41~89 属性_状态 / 110~146 属性_状态特殊补正 / 301~374 特殊flag_基础 / 451~489 特殊flag_H / 601~654 属性_服装（函数在 `default_cloth.py`）/ 800~868 H_阴茎位置与体位 / 901~1063 道具（函数在 `item_effect.py`）/ 1201~1246 源石技艺 / 1401~1419 属性_H / 1701~1726 行动 / 9999 空结算。
 4. 二段行为效果是 `SecondEffect` 独立编号空间（函数在 `Second_effect.py`，装饰器 `add_settle_second_behavior_effect`），与 `BehaviorEffect` 编号互不相干，勿混用（空结算 999 vs 9999 即一例）。
 
-数值增减优先走 `Script/Settle/common_default.py` 通用函数；精液污浊唯一入口 `ejaculation_panel.update_semen_dirty(..., update_shoot_position_flag=False)`。
+数值增减优先走 `Script/Settle/common_default.py` 通用函数；精液污浊唯一入口 `semen_dirty_service.update_semen_dirty(..., update_shoot_position_flag=False)`。
 
 ### 第六步：前提
 

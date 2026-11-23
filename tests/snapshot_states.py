@@ -13,9 +13,9 @@ time_stop_h -- 时停中的 H、跨午夜的睡眠、医疗部。
     动作表先做几样 H 指令（接吻、舔阴、爱抚胸部、插入后正常位）；理智用尽时时停与 H 一并结束，之后博士在岛上走动与等待，
     到能睡觉时在博士房间睡 8 小时：这一步里跨过午夜，跑完新一天的结算（含医疗部的每日结算），睡醒后再等一会儿。
 family_commission -- 孕产、各阶段的孩子、上课与外勤委托。构建：
-    - 受精：射精污浊函数（ejaculation_panel.update_semen_dirty）把精液记进子宫，
-    生理周期（pregnancy_handle.update_reproduction_period）推进到排卵日，
-      再走受精结算（get_fertilization_rate、check_fertilization）；
+    - 受精：射精污浊函数（semen_dirty_service.update_semen_dirty）写入子宫精液，
+    生理周期（pregnancy_handle.update_reproduction_period）推至排卵日，
+    再走受精结算（get_fertilization_rate、check_fertilization）；
     - 之后的妊娠、临盆、生产（生产面板里按「焦急等待」并给每个孩子取名）、产后转育儿、婴儿长成幼女、
     幼女长成学员、学员长成少女，
       都走 pregnancy_handle 的结算函数。这些函数按经过的天数判断，构建时用 unittest.mock 把两个数天数的函数
@@ -257,12 +257,12 @@ def fertilize(world: FullWorld, mother_id: int) -> None:
     from Script.Design import handle_premise
     from Script.Modules.domains import pregnancy
     from Script.System.Pregnancy_System import pregnancy_handle
-    from Script.UI.Panel import ejaculation_panel
+    from Script.Modules.gameplay_resolution import semen_dirty_service
 
     mother = identity.of(mother_id)
     with writing():
         # 部位 7 为子宫，类型 0 为身体
-        ejaculation_panel.update_semen_dirty(mother_id, 7, 0, 1000)
+        semen_dirty_service.update_semen_dirty(mother_id, 7, 0, 1000)
         for _ in range(7):
             if pregnancy.of(mother_id).ovulation_flag:
                 break

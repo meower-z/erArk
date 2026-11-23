@@ -5,6 +5,7 @@ Tk 界面向后端登记的回调函数
 本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
 本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制与面板切换函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
+本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
 本模块不登记内核钩子。
 load_order 导入本模块时完成上述登记。
 """
@@ -15,7 +16,8 @@ from Script.Config import normal_config
 from Script.Core import constant
 from Script.Kernel import core
 from Script.Modules.domains import playthrough
-from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
+from Script.Modules.gameplay_resolution import achievement_service
+from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import draw, view
 
@@ -104,3 +106,29 @@ def draw_unlocked(new_ids: list[int]) -> None:
     from Script.UI.Panel import achievement_panel
 
     achievement_panel.draw_achievement_notice(new_ids)
+
+
+@ejaculation_service.on_banner
+def draw_banner(text: str) -> None:
+    """
+    按六步顺序绘制射精文本：换行、分隔线、换行、WaitDraw 文本与两次换行。
+    分隔线与 WaitDraw 均采用 normal_config.config_normal.text_width，WaitDraw 使用 semen 样式并等待玩家确认。
+    Keyword arguments:
+    text -- str，要绘制的射精文本
+    Return arguments:
+    None -- 无返回值
+    """
+    width = normal_config.config_normal.text_width
+    line_feed = draw.NormalDraw()
+    line_feed.text = "\n"
+    line_feed.width = 1
+    line_feed.draw()
+    draw.LineDraw("-", width).draw()
+    line_feed.draw()
+    now_draw = draw.WaitDraw()
+    now_draw.text = text
+    now_draw.width = width
+    now_draw.style = "semen"
+    now_draw.draw()
+    line_feed.draw()
+    line_feed.draw()

@@ -15,7 +15,7 @@ from Script.Design import (
     attr_calculation,
 )
 from Script.UI.Moudle import draw
-from Script.UI.Panel import ejaculation_panel
+from Script.Modules.gameplay_resolution import semen_dirty_service
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, action_info, activity, dirty
 from Script.Modules.domains import entertainment, facility, flags, h_meters
@@ -335,7 +335,7 @@ def settle_semen_flow(character_id: int, true_add_time: int) -> None:
                 all_real_flow += now_flow
                 now_flow_dict["remaining_volume"] -= now_flow
                 now_part_cid = now_flow_dict["id"]
-                ejaculation_panel.update_semen_dirty(
+                semen_dirty_service.update_semen_dirty(
                     character_id=character_id,
                     part_cid=now_part_cid,
                     part_type=now_flow_dict["type"],
@@ -349,7 +349,7 @@ def settle_semen_flow(character_id: int, true_add_time: int) -> None:
         all_flow_dict["targets"] = new_target_list
         # 遍历完全目标后，如果实际流动的精液总量大于0，则在源头部位减少相应的精液量
         if all_real_flow > 0:
-            ejaculation_panel.update_semen_dirty(
+            semen_dirty_service.update_semen_dirty(
                 character_id=character_id,
                 part_cid=source_id,
                 part_type=source_type,
