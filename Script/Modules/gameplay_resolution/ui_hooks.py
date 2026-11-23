@@ -1,9 +1,10 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-为 gameplay_resolution 提供提示文本输出与面板切换两类回调的登记与触发入口。
+本模块提供三类回调的登记与调用入口：输出提示文本、切换面板、只读查询隐奸中显示非H指令的开关。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，触发函数不执行任何操作。
+未登记回调时，提示输出与面板切换函数不执行任何操作。
+未登记回调时，开关查询函数返回 False。
 """
 
 from collections.abc import Callable
@@ -34,6 +35,10 @@ _notices: list[Notice] = []
 """ 按登记顺序保存的提示文本回调列表。 """
 _panel_switches: list[PanelSwitch] = []
 """ 按登记顺序保存的面板切换回调列表。 """
+type ToggleQuery = Callable[[], bool]
+""" 只读开关查询回调函数类型，不接收参数并返回布尔值。 """
+_show_non_h_queries: list[ToggleQuery] = []
+""" 按登记顺序保存的回调列表，用于只读查询隐奸中显示非H指令的开关。 """
 
 
 def on_notice(fn: Notice) -> Notice:
@@ -91,3 +96,24 @@ def switch_panel(panel_id: int) -> None:
     """
     for fn in _panel_switches:
         fn(panel_id)
+
+
+def on_hidden_sex_show_non_h(fn: ToggleQuery) -> ToggleQuery:
+    """
+    登记一个只读查询回调（用于读取隐奸中显示非H指令的开关），可作为装饰器使用。
+    Keyword arguments:
+    fn -- ToggleQuery，要登记的开关查询回调函数
+    Return arguments:
+    ToggleQuery -- 原样返回传入的 fn
+    """
+    _show_non_h_queries.append(fn)
+    return fn
+
+
+def hidden_sex_show_non_h() -> bool:
+    """
+    按登记顺序查询隐奸中显示非H指令的开关，未登记回调时返回 False。
+    Return arguments:
+    bool -- 任一已登记回调返回真值时返回 True，未登记或全部返回假值时返回 False
+    """
+    return any(fn() for fn in _show_non_h_queries)

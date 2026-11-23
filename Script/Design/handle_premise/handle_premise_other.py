@@ -8,7 +8,7 @@ from Script.Design import map_handle, game_time, attr_calculation
 from Script.Design import child_stage_gate
 from Script.Config import normal_config, game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.UI.Moudle import view
+from Script.Modules.gameplay_resolution import ui_hooks
 from Script.Modules.domains import abilities, action_info, activity, chara_life
 from Script.Modules.domains import chara_profile, facility, flags, growth
 from Script.Modules.domains import history, modes, needs, physical_exam
@@ -2195,7 +2195,7 @@ def handle_show_non_h_in_hidden_sex(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return view.show_non_h_in_hidden_sex
+    return ui_hooks.hidden_sex_show_non_h()
 
 
 @add_premise(constant_promise.Premise.NOT_SHOW_NON_H_IN_HIDDEN_SEX)

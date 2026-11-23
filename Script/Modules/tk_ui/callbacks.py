@@ -3,7 +3,7 @@ Tk 界面向后端登记的回调函数
 ===========================
 本模块向 playthrough 登记设定表补齐时的提示绘制函数。
 本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
-本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制与面板切换函数。
+本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制函数、面板切换函数与隐奸中显示非H指令的开关查询函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
 本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
 本模块不登记内核钩子。
@@ -92,6 +92,16 @@ def set_panel(panel_id: int) -> None:
     None -- 无返回值
     """
     view.now_panel_id = panel_id
+
+
+@ui_hooks.on_hidden_sex_show_non_h
+def show_non_h_in_hidden_sex() -> bool:
+    """
+    读取 view 记录的隐奸中显示非H指令的开关并以布尔值返回。
+    Return arguments:
+    bool -- 当前开关状态对应的布尔值
+    """
+    return bool(view.show_non_h_in_hidden_sex)
 
 
 @achievement_service.on_unlocked
