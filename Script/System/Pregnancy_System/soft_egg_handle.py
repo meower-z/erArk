@@ -13,7 +13,6 @@
 import random
 from types import FunctionType
 from Script.Core import get_text, constant
-from Script.Config import normal_config
 from Script.Design import (
     attr_calculation,
     child_stage_gate,
@@ -23,7 +22,6 @@ from Script.Design import (
     talk,
 )
 from Script.Modules.domains import dirty, h_state, hypnosis
-from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant, egg_handle
 from Script.Design import game_time
 from Script.Modules.domains import (
@@ -33,11 +31,10 @@ from Script.Modules.domains import (
     pregnancy,
 )
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 
 def have_external_ovulation_chance(character_id: int) -> bool:
@@ -177,10 +174,7 @@ def lay_soft_egg(character_id: int) -> int:
         "\n请在{0}小时内尽量多地把精液射在这团卵块上，精液需要穿过凝胶层才能与卵粒结合，精液越多，受精的概率与受精卵粒的数量就越高\n"
     ).format(pregnancy_constant.SOFT_EGG_FERTILIZATION_DELAY_HOUR)
     draw_text += "\n※※※※※※※※※\n"
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = draw_text
-    now_draw.draw()
+    ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
     return egg_id
 
 
@@ -369,7 +363,4 @@ def check_soft_eggs_fertilization() -> None:
                 "\n{1}ml精液没能穿透{0}的凝胶层与卵粒结合，没有一颗卵粒受精，整团卵块失去了活性\n"
             ).format(egg_name, int(semen_total))
         draw_text += "\n※※※※※※※※※\n"
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)

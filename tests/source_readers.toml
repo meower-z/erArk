@@ -626,3 +626,13 @@ reads = "Script/UI/Panel/confinement_and_training.py 中各作用域的函数名
 used_for = "测试：监禁调教管理面板不绑定 settle_prisoners、escape_success 与 escape_fail"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R52"
+file = "tests/fast/test_egg_draw_notices.py"
+symbol = "EggImportBoundaryTest.test_sources_import_no_ui"
+mechanism = "ast"
+reads = "Script/System/Pregnancy_System/egg_handle.py 与 Script/System/Pregnancy_System/soft_egg_handle.py 源码中的 import 与 from ... import 语句"
+used_for = "测试：这两个模块源码的任意作用域均不导入 Script.UI、tkinter、Script.Core.io_init 及三者的子模块"
+when = "test"
+capture = "suite"
