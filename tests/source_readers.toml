@@ -646,3 +646,13 @@ reads = "MODULES 中五个 Script/Design 模块源码中的 import 与 from ... 
 used_for = "测试：这五个模块在各作用域中均不导入 BANNED 所列的界面包、tkinter 与输入输出模块"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R51"
+file = "tests/fast/test_settle_draw_notices.py"
+symbol = "SettleImportBoundaryTest.test_settle_modules_skip_ui_imports"
+mechanism = "ast"
+reads = "Script/Settle/item_effect.py、Script/Settle/realtime_settle.py 与 Script/Settle/default_cloth.py 源码中的 import 与 from ... import 语句"
+used_for = "测试：这三个结算模块的任意作用域均不导入 BANNED 中的界面、Tk 与输入输出模块"
+when = "test"
+capture = "suite"
