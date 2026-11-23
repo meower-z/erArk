@@ -482,6 +482,12 @@ symbol = "module_problems"
 pattern = "__file__"
 why = "用测试模块的 __file__ 算出相对路径写进提示，不读源码内容"
 
+[[allow]]
+file = "tests/fast/test_backend_ui_boundary_guard.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "该文件只用 __file__ 定位仓库根目录，实际由 violations（R38）读取源码"
+
 [[reader]]
 id = "R34"
 file = "tests/fast/test_npc_choice_reads_only.py"
@@ -523,3 +529,13 @@ when = "test"
 capture = "command"
 command = ["python", "tools/lint_comments.py"]
 outputs = []
+
+[[reader]]
+id = "R38"
+file = "tests/fast/test_backend_ui_boundary_guard.py"
+symbol = "violations"
+mechanism = "ast"
+reads = "Script/Kernel、Script/Modules/domains 与 Script/Modules/save_load 下全部 .py 文件中的 import 与 from ... import 语句"
+used_for = "测试：这三个后端目录不导入 BANNED 中的界面、Tk 适配与输入输出模块（ALLOWED 放行项除外）"
+when = "test"
+capture = "suite"
