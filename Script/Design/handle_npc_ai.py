@@ -12,8 +12,7 @@ from Script.Core import (
 )
 from Script.Design import attr_calculation, character_move, game_time
 from Script.Design import handle_premise, map_handle
-from Script.UI.Moudle import draw
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Modules.domains import abilities, action_info, activity, chara_life
 from Script.Modules.domains import entertainment, facility, flags, hypnosis
 from Script.Modules.domains import needs, roster, identity, scene_state
@@ -21,12 +20,6 @@ from Script.Modules.domains import needs, roster, identity, scene_state
 game_path = game_path_config.game_path
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
 
 _handle_npc_ai_in_h = None
 """ handle_npc_ai_in_h 模块的延迟导入缓存（规避循环导入，同时消除每角色每轮重复导入的开销） """

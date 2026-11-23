@@ -3,16 +3,14 @@
 import random
 from types import FunctionType
 from Script.Core import get_text
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Design import attr_calculation, handle_premise, map_handle
 from Script.Modules.domains import abilities, activity, dirty, prison, wardrobe
 from Script.Modules.domains import npc_template
-from Script.UI.Moudle import draw
+from Script.Modules.gameplay_resolution import ui_hooks
 from Script.Modules.domains import identity
 from Script.Core import constant
 
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -449,12 +447,13 @@ def pl_get_chara_pan(character_id: int) -> None:
                     character_id, "stolen_panties_in_unconscious", True
                 )
             # 绘制信息
-            now_draw = draw.NormalDraw()
-            now_draw.width = window_width
-            now_draw.text = _(
-                "\n获得了{0}的{1}，可在藏品馆里纳入收藏\n"
-            ).format(character_data.name, TPanName)
-            now_draw.draw()
+            ui_hooks.emit_notice(
+                _("\n获得了{0}的{1}，可在藏品馆里纳入收藏\n").format(
+                    character_data.name, TPanName
+                ),
+                wait=False,
+                use_text_width=True,
+            )
 
 
 def pl_get_chara_socks(character_id: int) -> None:
@@ -486,12 +485,13 @@ def pl_get_chara_socks(character_id: int) -> None:
             if handle_premise.handle_unconscious_flag_ge_1(character_id):
                 wardrobe.set(character_id, "stolen_socks_in_unconscious", True)
             # 绘制信息
-            now_draw = draw.NormalDraw()
-            now_draw.width = window_width
-            now_draw.text = _(
-                "\n获得了{0}的{1}，可在藏品馆里纳入收藏\n"
-            ).format(character_data.name, TSocName)
-            now_draw.draw()
+            ui_hooks.emit_notice(
+                _("\n获得了{0}的{1}，可在藏品馆里纳入收藏\n").format(
+                    character_data.name, TSocName
+                ),
+                wait=False,
+                use_text_width=True,
+            )
 
 
 def get_all_cloth_off(character_id: int) -> None:

@@ -13,22 +13,17 @@ from Script.Design import (
     child_stage_gate,
     virgin_break_gate,
 )
-from Script.UI.Moudle import draw
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, action_info, activity
 from Script.Modules.domains import dirty, flags, h_state, history, hypnosis
 from Script.Modules.domains import needs, player_ability, wardrobe
 from Script.Modules.domains import identity, scene_state
+from Script.Modules.gameplay_resolution import ui_hooks
 
 game_path = game_path_config.game_path
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-line_feed = draw.NormalDraw()
-line_feed.text = "\n"
-line_feed.width = 1
 
 _settle_default = None
 """ Script.Settle.default 模块的延迟导入缓存（规避循环导入，同时消除每角色每轮重复导入的开销） """
@@ -198,17 +193,13 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
         return
 
     # 输出提示信息
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
     if info_text == "":
         name_text = target_data.name
         # 如果在群交中
         if handle_premise.handle_group_sex_mode_on(character_id):
             name_text += _("等人")
-        now_draw.text = _("\n{0}从无意识状态中恢复过来\n").format(name_text)
-    else:
-        now_draw.text = info_text
-    now_draw.draw()
+        info_text = _("\n{0}从无意识状态中恢复过来\n").format(name_text)
+    ui_hooks.emit_notice(info_text, wait=True, use_text_width=True)
 
     # 睡眠中，则对方获得睡奸醒来状态
     if handle_premise.handle_action_sleep(activity.target(character_id)):
@@ -496,10 +487,7 @@ def wake_by_noise(character_id: int, target_character_id: int) -> None:
     info_text = _("\n{0}被{1}的动静吵醒了\n").format(
         target_data.name, now_character_data.name
     )
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = info_text
-    now_draw.draw()
+    ui_hooks.emit_notice(info_text, wait=True, use_text_width=True)
     plan_queue.interrupt(target_character_id)
 
 

@@ -636,3 +636,13 @@ reads = "Script/System/Pregnancy_System/egg_handle.py 与 Script/System/Pregnanc
 used_for = "测试：这两个模块源码的任意作用域均不导入 Script.UI、tkinter、Script.Core.io_init 及三者的子模块"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R50"
+file = "tests/fast/test_design_draw_notices.py"
+symbol = "ImportBoundaryTest.test_modules_skip_ui"
+mechanism = "ast"
+reads = "MODULES 中五个 Script/Design 模块源码中的 import 与 from ... import 语句"
+used_for = "测试：这五个模块在各作用域中均不导入 BANNED 所列的界面包、tkinter 与输入输出模块"
+when = "test"
+capture = "suite"
