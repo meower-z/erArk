@@ -302,10 +302,9 @@ def settle_medical_department(
         day_past_flag=True,
     )
 
-    # 触发成就面板刷新龙门币成就进度。
-    from Script.UI.Panel import achievement_panel
+    from Script.Modules.gameplay_resolution import achievement_service
 
-    achievement_panel.achievement_flow(_("龙门币"))
+    achievement_service.settle_and_notify(_("龙门币"))
 
     # --- 清理已完成流程的病人记录，避免缓存持续膨胀 ---
     cleared_outpatient_ids: list[int] = []

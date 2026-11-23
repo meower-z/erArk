@@ -20,7 +20,8 @@ from Script.System.Instruct_System.common_behavior_utils import (
 from Script.Modules.gameplay_resolution import ejaculation_service
 from Script.Modules.gameplay_resolution import hypnosis_service
 from Script.Modules.gameplay_resolution import semen_dirty_service
-from Script.UI.Panel import achievement_panel, event_option_panel
+from Script.Modules.gameplay_resolution import achievement_service
+from Script.UI.Panel import event_option_panel
 from Script.Settle.common_default import base_chara_hp_mp_common_settle
 from Script.Settle.common_default import base_chara_state_common_settle
 from Script.Settle.common_default import (
@@ -3266,7 +3267,7 @@ def handle_group_sex_mode_on(
     modes.set_group_sex(True)
     # 结算成就
     achievement.put("group_sex_record", {1: [], 2: []})
-    achievement_panel.achievement_flow(_("群交"))
+    achievement_service.settle_and_notify(_("群交"))
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -6856,7 +6857,7 @@ def handle_official_work_add_adjust(
     basement.draw_todo()
     # 结算成就
     achievement.add("handle_official_business_count", 1)
-    achievement_panel.achievement_flow(_("公务"))
+    achievement_service.settle_and_notify(_("公务"))
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -8469,8 +8470,7 @@ def handle_give_gift_add_adjust(
             change_data_to_target_change=change_data,
         )
 
-    # 结算成就
-    achievement_panel.achievement_flow(_("礼物"))
+    achievement_service.settle_and_notify(_("礼物"))
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -8661,8 +8661,7 @@ def handle_read_add_adjust(
         info_draw.text = info_text
         info_draw.style = "gold_enrod"
         info_draw.draw()
-        # 结算成就
-        achievement_panel.achievement_flow(_("读书"))
+        achievement_service.settle_and_notify(_("读书"))
 
 
 def _teach_subject(teacher_id: int) -> tuple[int, int]:
@@ -9235,8 +9234,7 @@ def handle_put_into_prison_add_just(
     # 如果当时是时间停止H中，则刷新时停状态
     if handle_premise.handle_time_stop_on(character_id):
         flags.set(target_id, unconscious_h=3)
-    # 囚犯成就
-    achievement_panel.achievement_flow(_("囚犯"))
+    achievement_service.settle_and_notify(_("囚犯"))
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -9558,9 +9556,8 @@ def handle_add_hpmp_max(
         now_draw.text = "\n"
         now_draw.width = 1
         now_draw.draw()
-    # 结算成就
     if character_id == 0:
-        achievement_panel.achievement_flow(_("锻炼"))
+        achievement_service.settle_and_notify(_("锻炼"))
 
 
 @settle_behavior.add_settle_behavior_effect(

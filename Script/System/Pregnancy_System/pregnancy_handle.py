@@ -17,7 +17,7 @@ from Script.Design import (
     second_behavior,
 )
 from Script.UI.Moudle import draw
-from Script.UI.Panel import achievement_panel
+from Script.Modules.gameplay_resolution import achievement_service
 from Script.System.Pregnancy_System import born_event_panel
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config, normal_config
@@ -527,10 +527,10 @@ def check_fertilization(character_id: int) -> int | None:
     if handle_premise.handle_fertilization_1(character_id):
         # 破处当天受精
         if handle_premise.handle_first_sex_in_today(character_id):
-            achievement_panel.achievement_flow(_("生育"), 706)
+            achievement_service.settle_and_notify(_("生育"), 706)
         # 育儿中的角色受精怀孕
         if handle_premise.handle_rearing_1(character_id):
-            achievement_panel.achievement_flow(_("生育"), 708)
+            achievement_service.settle_and_notify(_("生育"), 708)
     return None
 
 

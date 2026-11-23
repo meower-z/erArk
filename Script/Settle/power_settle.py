@@ -120,7 +120,7 @@ def store_power_by_human_power(
     if not achievement.done(827):
         achievement_data = game_config.config_achievement[827]
         if per_degree >= achievement_data.value:
-            from Script.UI.Panel import achievement_panel
+            from Script.Modules.gameplay_resolution import achievement_service
 
-            achievement_panel.achievement_flow(achievement_data.type, 827)
+            achievement_service.settle_and_notify(achievement_data.type, 827)
     return round(per_degree, 2)

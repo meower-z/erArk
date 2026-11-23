@@ -529,6 +529,26 @@ when = "test"
 capture = "suite"
 
 [[reader]]
+id = "R48"
+file = "tests/fast/test_backend_achievement_callers.py"
+symbol = "violations"
+mechanism = "ast"
+reads = "Script 下除 Script/UI/ 与 Script/Modules/tk_ui/callbacks.py 外全部 .py 文件中的 import 与 from ... import 语句"
+used_for = "测试：Script 下界面目录与 Tk 回调以外的源码在任意作用域均不导入 Script.UI.Panel.achievement_panel 及其成员"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R45"
+file = "tests/fast/test_backend_achievement_callers.py"
+symbol = "template_notice"
+mechanism = "open+bytes"
+reads = "TEMPLATES 中两份模式 A 模板文件（.agents/skills/headless-game-test/unit_test_template.py 与 tools/verify/headless_unit_template.py）在截断标记之前的源码文本"
+used_for = "测试：两份模式 A 单元测试模板在子进程执行初始化段后，调用 achievement_service.settle_and_notify 均能达成成就 821 并记录一条提示"
+when = "test"
+capture = "suite"
+
+[[reader]]
 id = "R39"
 file = "tests/fast/test_frontend_boundary_guard.py"
 symbol = "violations"

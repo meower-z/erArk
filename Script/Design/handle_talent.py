@@ -6,7 +6,7 @@ from Script.System.First_Record_System import first_record_handle
 from Script.Core import get_text, num
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.UI.Panel import achievement_panel
+from Script.Modules.gameplay_resolution import achievement_service
 from Script.Design import game_time
 from Script.Modules.domains import (
     abilities,
@@ -114,7 +114,7 @@ def gain_talent(
 
     # 结算陷落素质的成就
     if gain_talent_flag:
-        achievement_panel.achievement_flow(_("关系"))
+        achievement_service.settle_and_notify(_("关系"))
 
     # 特殊素质获得
     if now_gain_type == 0:
@@ -266,7 +266,7 @@ def npc_gain_hypnosis_talent(character_id: int) -> None:
             ).format(character_data.name, now_data.hypnosis_degree, talent_name)
             now_draw_succed.draw()
             break
-    achievement_panel.achievement_flow(_("催眠"))
+    achievement_service.settle_and_notify(_("催眠"))
 
 
 def npc_gain_and_lost_cumflation(character_id: int) -> None:

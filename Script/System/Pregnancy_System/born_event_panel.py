@@ -7,7 +7,7 @@ from Script.Config import normal_config
 from Script.Design import character_handle, handle_premise, talk, map_handle
 import random
 
-from Script.UI.Panel import achievement_panel
+from Script.Modules.gameplay_resolution import achievement_service
 from Script.Design import game_time
 from Script.Modules.domains import (
     abilities,
@@ -440,12 +440,11 @@ class Born_Panel:
             now_draw.text = "\n"
             now_draw.draw()
 
-            # 结算成就
-            achievement_panel.achievement_flow(_("生育"))
+            achievement_service.settle_and_notify(_("生育"))
             # 与女儿生育了孩子
             if handle_premise.handle_self_is_player_daughter(
                 self.mother_character_id
             ):
-                achievement_panel.achievement_flow(_("生育"), 707)
+                achievement_service.settle_and_notify(_("生育"), 707)
 
             break

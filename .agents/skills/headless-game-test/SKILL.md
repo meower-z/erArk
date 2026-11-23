@@ -150,8 +150,8 @@ born_event_panel.Born_Panel(mother_id).draw()
 asks = []; names = iter(["长女", "次女"])
 character.input_name_func = lambda ask_text: (asks.append(ask_text), next(names))[1]
 
-# ④ 成就结算用 warehouse.amount(1) 读 base.stock，库存里没有资源 1 时 KeyError: '1'，直接打桩（注意要打在**调用方模块**上）
-born_event_panel.achievement_panel.achievement_flow = lambda *a, **k: None
+# ④ settle_by_type 每次都会经 warehouse.amount(1) 读 base.stock，缺资源 1 时会报 KeyError: '1'。可先调用 kernel_data.written(warehouse.ensure, 1) 为缺失的资源 1 补 0（不覆盖已有库存），或替换共享的 achievement_service.settle_by_type 以覆盖全部成就入口。
+born_event_panel.achievement_service.settle_by_type = lambda *a, **k: []
 
 # ⑤ 角色上线链 get_new_character 需要娱乐安排等完整 fixture → 只做登记的 stub
 pregnancy_handle.character_handle.get_new_character = lambda cid, visitor_flag=False: roster.add(cid)
@@ -194,7 +194,7 @@ rm -f data/Character_Talk.json
 | 进程"卡死"、看不到任何输出 | 用了 `| tail` 管道，见铁律 4 |
 | `SyntaxError: invalid syntax`，报错行里有 `��` | heredoc/stdin 里的中文被 GBK 解码，改写成脚本文件，见铁律 7 |
 | `UnboundLocalError` 出现在 `chest_grow` / 乳汁上限 | fixture 没有罩杯素质，加 `talent[121] = 1` |
-| `KeyError: '1'` 出现在 `achievement_panel.achievement_flow` | 成就结算用 `warehouse.amount(1)` 读 `base.stock`，库存里没有资源 1，打桩 `achievement_flow` |
+| `KeyError: '1'` 出现在 `achievement_service.settle_by_type` | `settle_by_type` 每次调用都会经 `warehouse.amount(1)` 读 `base.stock`，库存缺资源 1 时会报错。可调用 `kernel_data.written(warehouse.ensure, 1)` 为缺失的资源 1 补 0（不覆盖已有库存），或将共享的 `achievement_service.settle_by_type` 打桩返回 `[]`。这两种做法覆盖全部成就入口（仅打桩 `achievement_flow` 或 `settle_and_notify` 无法覆盖直接调用 `settle_by_type` 的界面） |
 | `IndexError` 出现在 `random.choice(doctor_id_list)` 之类 | 事件要随机选医生/干员，`npc_id_got` 为空或没有 profession=3 |
 | 面板测试永不返回（无报错） | 漏调 `io_init.configure(world.quiet_port())` 导致阻塞在无前端默认端口，或自定义应答器返回了不在 `return_list` 里的值 |
 | 调 `get_new_character` 后一连串 KeyError | 上线链要完整罗德岛 fixture，用只登记 `npc_id_got` 的 stub |

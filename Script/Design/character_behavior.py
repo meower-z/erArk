@@ -119,7 +119,7 @@ def player_after_end() -> None:
     睡觉留下了存档标记时向 save_load 提出自动存档，最后跑时停与群交的成就
     """
     from Script.Design import character_move
-    from Script.UI.Panel import achievement_panel
+    from Script.Modules.gameplay_resolution import achievement_service
 
     character_move.continue_player_route()
     if plan.route() is None:
@@ -128,8 +128,8 @@ def player_after_end() -> None:
     if plan.sleep_save():
         plan.set_sleep_save(False)
         autosave.update_save()
-    achievement_panel.achievement_flow(_("时停"))
-    achievement_panel.achievement_flow(_("群交"))
+    achievement_service.settle_and_notify(_("时停"))
+    achievement_service.settle_and_notify(_("群交"))
 
 
 def scene_characters(scene_data: game_type.Scene) -> list[int]:
