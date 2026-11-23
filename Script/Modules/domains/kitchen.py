@@ -172,17 +172,6 @@ def take(recipe: str, uid: str) -> game_type.Food:
     return food(uid, kept)
 
 
-def keep_shelf(recipe: str) -> None:
-    """
-    没有这种食谱的货架时，在最后放一个空货架
-    Keyword arguments:
-    recipe -- 食谱id的字符串
-    """
-    current = _stored()
-    if recipe not in current:
-        working.put(None, KEY, cast(core.JSON, {**current, recipe: {}}))
-
-
 def clear() -> None:
     """撤掉全部货架，空货架也撤掉"""
     if _stored():

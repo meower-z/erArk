@@ -1057,8 +1057,15 @@ class Physical_Check_And_Manage_Panel:
                 break
 
     def check_physcial_report(self) -> None:
-        """查看检查报告"""
+        """将交互对象记入体检报告干员名单并结算「体检报告」成就，绘制报告后显示达成提示"""
+        target_character_id = activity.target(self.pl_character_data.cid)
+        achievement.append("body_report_chara_count_list", target_character_id)
+        achieved = achievement_panel.settle_by_type(_("体检报告"))
+        self.draw_report(target_character_id)
+        achievement_panel.draw_achievement_notice(achieved)
 
+    def draw_report(self, target_character_id: int) -> None:
+        """绘制 target_character_id 的检查报告并在玩家点击「返回」时结束，过程中不写游戏状态"""
         level_text_dict = {
             0: _("缺陷"),
             1: _("普通"),
@@ -1112,7 +1119,6 @@ class Physical_Check_And_Manage_Panel:
         #     # "examine_urination_status": "排尿情况",  # 测试排尿
         # }
 
-        target_character_id = activity.target(self.pl_character_data.cid)
         target_character_id_abi = abilities.ability(target_character_id)
         target_character_id_exp = abilities.experience(target_character_id)
         target_character_data = identity.of(target_character_id)
@@ -1326,9 +1332,6 @@ class Physical_Check_And_Manage_Panel:
         report_text += _("检查日期：{0}\n").format(
             game_time.get_date_until_day()[3:]
         )
-        # 成就记录
-        achievement.append("body_report_chara_count_list", target_character_id)
-
         while 1:
 
             title_draw = draw.TitleLineDraw("检查报告", self.width)
@@ -1347,9 +1350,6 @@ class Physical_Check_And_Manage_Panel:
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
                 break
-
-        # 结算成就
-        achievement_panel.achievement_flow(_("体检报告"))
 
     def draw_info(self, cid: int) -> None:
         """绘制体检设置的详细信息"""

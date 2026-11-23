@@ -6,7 +6,8 @@ from Script.Core import get_text, py_cmd, rich_text, text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
 from Script.UI.Moudle import draw, panel, view
-from Script.Modules.tk_ui import drawn_see, player_pick
+from Script.Modules.gameplay_resolution import cloth_see
+from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import abilities, activity, dirty, modes
 from Script.Modules.domains import player_ability, wardrobe, identity
 
@@ -466,9 +467,9 @@ class SwitchCharacterClothPanel:
         """
         self.draw_list.clear()
         self.button_list.clear()
-        seen: dict[int, bool] = {}
         target_character_data = identity.of(activity.target(0))
         cloth = wardrobe.of(target_character_data.cid)
+        seen = cloth_see.seen(target_character_data.cid)
         # 添加标题
         type_line = draw.LittleTitleLineDraw(_("服装"), self.width, ":")
         self.draw_list.append(type_line)
@@ -480,13 +481,6 @@ class SwitchCharacterClothPanel:
             if len(cloth.cloth_wear[clothing_type]):
                 # 处理胸部和内裤的特殊显示逻辑
                 if clothing_type in {6, 9} and not modes.debug():
-                    seen[clothing_type] = (
-                        bool(
-                            player_ability.get(0, "visual")
-                            and abilities.talent(0)[307]
-                        )
-                        or not cloth.cloth_wear[clothing_type - 1]
-                    )
                     if not seen[clothing_type]:
                         continue
                 # 下衣8时换行
@@ -565,7 +559,6 @@ class SwitchCharacterClothPanel:
                 vac_draw.text = _("  [{0}]: 真空").format(type_name)
                 vac_draw.width = self.width
                 now_row.append(vac_draw)
-        drawn_see.remember(target_character_data.cid, seen)
         # 最后一行补换行
         if now_row:
             self.draw_list.extend(now_row)
@@ -715,4 +708,3 @@ class SwitchClothButton(draw.LeftButton):
                     )
             # 刷新面板
             self.panel._refresh_panel()
-            drawn_see.keep()
