@@ -3,7 +3,7 @@
 罗德岛所在位置（base.location）
 ===============================
 - 没有 base.location 时，罗德岛在国家 location.START，停着。
-- 抵达判断（navigation_panel.judge_arrive）时，抵达时刻未到的移动不变。抵达时刻已到的移动结束：所在国家换成目标，
+- 抵达判断（navigation_service.judge_arrive）时，抵达时刻未到的移动不变。抵达时刻已到的移动结束：所在国家换成目标，
   移动清掉，访客的移动标记记为 True。按所在国家判断的前提随之变化。
 - 读档：所在国家取旧位置列表的第一项。旧移动列表的目标不为 0 且第三项是时间时记为移动。属性从对象上删掉。
   location.adopt_old_save 交回缺了或类型不符的属性个数。
@@ -16,8 +16,7 @@ from Script.Design import game_time
 from Script.Design.handle_premise import handle_premise_place
 from Script.Kernel import core
 from Script.Modules.domains import location, visitor
-from Script.Modules.gameplay_resolution import working
-from Script.UI.Panel import navigation_panel
+from Script.Modules.gameplay_resolution import navigation_service, working
 from tests.fast.base import FastTestCase
 
 AEGIR = 1
@@ -42,10 +41,10 @@ class LocationStateTest(FastTestCase):
         self.assertFalse(handle_premise_place.handle_in_aegir(0))
         later = game_time.now() + datetime.timedelta(days=1)
         location.set_move(AEGIR, later)
-        navigation_panel.judge_arrive()
+        navigation_service.judge_arrive()
         self.assertEqual(location.move(), (AEGIR, later))
         location.set_move(AEGIR, game_time.now())
-        navigation_panel.judge_arrive()
+        navigation_service.judge_arrive()
         self.assertEqual(location.country(), AEGIR)
         self.assertIsNone(location.move())
         self.assertTrue(visitor.moved())

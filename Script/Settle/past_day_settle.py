@@ -36,11 +36,11 @@ def update_new_day() -> None:
     无
     """
     from Script.System.Cooking_System import cooking
-    from Script.UI.Panel import (
-        nation_diplomacy_panel,
-        navigation_panel,
-        assistant_panel,
+    from Script.Modules.gameplay_resolution import (
+        diplomacy_service,
+        navigation_service,
     )
+    from Script.UI.Panel import assistant_panel
     from Script.System.Pregnancy_System import pregnancy_handle, egg_handle
     from Script.System.Education_System import (
         schedule_template_handle,
@@ -144,11 +144,11 @@ def update_new_day() -> None:
         now_draw.draw()
         now_draw.style = "standard"
     basement.update_base_resouce_newday()  # 更新基地资源
-    navigation_panel.judge_arrive()  # 判断是否到达目的地
+    navigation_service.judge_arrive()  # 判断是否到达目的地
     # 每周一次
     if game_time.now().weekday() == 6:
-        nation_diplomacy_panel.judge_diplomatic_policy()  # 结算外交政策
-        nation_diplomacy_panel.settle_all_country_infection_rate()  # 结算全国度的源石病感染率变化
+        diplomacy_service.judge_diplomatic_policy()  # 结算外交政策
+        diplomacy_service.settle_all_country_infection_rate()  # 结算全国度的源石病感染率变化
     # 每周一的助理轮换
     if (
         game_time.now().weekday() == 0

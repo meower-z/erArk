@@ -1,4 +1,4 @@
-"""势力外交界面面板，以及外交方针与各国感染率的结算"""
+"""势力外交界面面板与读档时的国家感染率修补函数"""
 
 from types import FunctionType
 from Script.Core import game_type, get_text, flow_handle
@@ -6,11 +6,10 @@ from Script.Core import constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
-import random
 from Script.Design import game_time
 from Script.Modules.save_load import reset
 from Script.Modules.domains import abilities, country, diplomacy, facility
-from Script.Modules.domains import flags, location, medical, roster, chara_life
+from Script.Modules.domains import flags, location, roster, chara_life
 from Script.Modules.domains import relations
 from Script.Modules.domains import identity
 
@@ -51,194 +50,6 @@ def update_nation_data() -> None:
                 country_id,
                 game_config.config_birthplace[country_id].infect_rate,
             )
-
-
-def judge_diplomatic_policy() -> None:
-    """
-    结算外交方针
-    """
-
-    from Script.Settle import common_default
-
-    all_reputation: float
-    all_infection_rate: float
-    all_reputation, all_infection_rate = 0, 0
-    # 遍历所有势力
-    for country_id in diplomacy.table():
-        # 外交官数据
-        diplomat_chara_id = diplomacy.of(country_id)["diplomat"]
-        if diplomat_chara_id == 0:
-            continue
-        # 外交方针数据
-        diplomatic_policy_id = diplomacy.of(country_id)["policy"]
-        if diplomatic_policy_id == 0:
-            continue
-        diplomatic_policy_data = game_config.config_diplomatic_policy[
-            diplomatic_policy_id
-        ]
-
-        # 外交官增加对话经验和学识经验
-        for _i in range(diplomatic_policy_data.difficulty):
-            common_default.base_chara_experience_common_settle(
-                diplomat_chara_id, 80
-            )
-            common_default.base_chara_experience_common_settle(
-                diplomat_chara_id, 82
-            )
-
-        # 能力修正
-        ability_adjust = handle_ability.get_ability_adjust(
-            abilities.ability(diplomat_chara_id)[40]
-        )
-        # 随机6+能力等级的随机数
-        random_just = (
-            random.uniform(
-                -6 + abilities.ability(diplomat_chara_id)[40],
-                6 + abilities.ability(diplomat_chara_id)[40],
-            )
-            / 10
-        )
-
-        # 结算外交方针
-        if diplomatic_policy_id == 1:
-            # 小幅度降低源石病感染率
-            down_rate = 0.01 * ability_adjust * random_just
-            country.add_infection_rate(country_id, -down_rate)
-            all_infection_rate += down_rate
-        elif diplomatic_policy_id == 2:
-            # 小幅度提高声望
-            up_reputation = 0.1 * ability_adjust * random_just
-            # 修正声望
-            nation_cid = country_id * 10 + 1
-            country.add_reputation(nation_cid, up_reputation)
-            all_reputation += up_reputation
-            # 遍历当地的附属势力
-            for (
-                subordinate_id
-            ) in game_config.config_nation_data_of_country_subordinate[
-                nation_cid
-            ]:
-                # 修正声望
-                country.add_reputation(subordinate_id, up_reputation * 0.5)
-                all_reputation += up_reputation * 0.5
-        elif diplomatic_policy_id == 3:
-            # 小幅度提高声望
-            up_reputation = 0.1 * ability_adjust * random_just
-            # 修正声望
-            nation_cid = country_id * 10 + 1
-            country.add_reputation(nation_cid, up_reputation)
-            all_reputation += up_reputation
-            # 遍历当地的附属势力
-            for (
-                subordinate_id
-            ) in game_config.config_nation_data_of_country_subordinate[
-                nation_cid
-            ]:
-                # 修正声望
-                country.add_reputation(subordinate_id, up_reputation * 3)
-                all_reputation += up_reputation * 3
-        elif diplomatic_policy_id == 4:
-            # 大幅度降低源石病感染率
-            down_rate = 0.05 * ability_adjust * random_just
-            country.add_infection_rate(country_id, -down_rate)
-            all_infection_rate += down_rate
-        elif diplomatic_policy_id == 5:
-            # 大幅度提高声望
-            up_reputation = 0.3 * ability_adjust * random_just
-            # 修正声望
-            nation_cid = country_id * 10 + 1
-            country.add_reputation(nation_cid, up_reputation)
-            all_reputation += up_reputation
-            # 遍历当地的附属势力
-            for (
-                subordinate_id
-            ) in game_config.config_nation_data_of_country_subordinate[
-                nation_cid
-            ]:
-                # 修正声望
-                country.add_reputation(subordinate_id, up_reputation)
-                all_reputation += up_reputation
-
-    # 保留小数
-    all_reputation = round(all_reputation, 2)
-    all_infection_rate = round(all_infection_rate, 3)
-    # 绘制总结算信息
-    info_text = "\n"
-    info_text += _("本周全势力声望变化：{0}\n").format(all_reputation)
-    info_draw = draw.WaitDraw()
-    info_draw.text = info_text
-    info_draw.width = window_width
-    info_draw.draw()
-
-
-def settle_all_country_infection_rate() -> None:
-    """
-    结算全国度的源石病感染率变化
-    """
-    # 每周治疗加权量
-    weekly_weighted_treatment = medical.state().weekly_weighted_treatment
-    # 本周所有国家感染率总和
-    this_week_all_country_infection_rate = 0.0
-    # 当前所在国家
-    now_country = location.country()
-    now_country_change = 0.0
-    count = 0
-    for country_id in game_config.config_birthplace:
-        # 跳过不出现的大地图中的国家
-        if game_config.config_birthplace[country_id].inmap == 0:
-            continue
-        # 跳过拉特兰
-        if country_id == 7:
-            country.set_patient_ratio(country_id, 0.1)
-            continue
-        count += 1
-        # 旧比例
-        old_rate = country.infection_rate(country_id)
-        # 基础上升次数与当前感染率有关，感染率越高，上升越快
-        base_times = (old_rate // 10) + 1
-        # 基础上升率与每周治疗加权量有关，治疗量越高，上升越慢，可以为负数
-        base_rate = 0.5 - weekly_weighted_treatment * 0.001
-        # 基础上升为次数乘以倍率
-        change = base_times * base_rate
-        # 如果当前国家，则进行记录
-        if country_id == now_country:
-            now_country_change = change
-        # 进行调整，限制在0~99.99之间
-        new_rate = min(max(round(old_rate + change, 3), 0), 99.99)
-        country.set_infection_rate(country_id, new_rate)
-        this_week_all_country_infection_rate += new_rate
-        # 计算矿石病感染率对于病人数量的影响，限制在0.1~3.0之间
-        country.set_patient_ratio(country_id, min(max(new_rate / 30, 0.1), 3.0))
-
-    # 重置每周治疗加权量
-    with medical.editing() as m:
-        m.weekly_weighted_treatment = 0
-    # 如果存在上周感染率总和，则进行对比输出变化
-    if country.last_week_rate() != -1.0:
-        total_change = (
-            this_week_all_country_infection_rate - country.last_week_rate()
-        )
-        total_change_rate = total_change / count
-    else:
-        total_change_rate = 0.0
-    # 更新本周所有国家感染率总和
-    country.set_last_week_rate(this_week_all_country_infection_rate)
-    # 输出结算信息
-    info_text = "\n"
-    info_text += _("○源石病感染率统计报告：")
-    info_text += _("本周各国源石病感染率平均总变化：")
-    if total_change_rate != 0.0:
-        info_text += f"{round(total_change_rate, 2)}%\n"
-    else:
-        info_text += _("暂无数据\n")
-    info_text += _("当前罗德岛所在国家为{0}，本周感染率变化：{1}%\n").format(
-        game_config.config_birthplace[now_country].name,
-        round(now_country_change, 2),
-    )
-    info_draw = draw.WaitDraw()
-    info_draw.text = info_text
-    info_draw.width = window_width
-    info_draw.draw()
 
 
 class Nation_Diplomacy_Panel:
