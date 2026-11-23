@@ -557,3 +557,22 @@ reads = "Script/UI/Panel/ejaculation_panel.py 源码中的顶层函数与类定�
 used_for = "测试：射精面板顶层只定义 show_endure_ejaculation_panel 与 Ejaculation_Panel，且任意作用域不绑定五个服务函数名"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R49"
+file = "tools/ci_slow_shards.py"
+symbol = "count_tests"
+mechanism = "ast"
+reads = "tests/slow/test_*.py（不含 test_education_suite.py）中以 test_ 开头的普通函数与异步函数定义"
+used_for = "按测试函数数量把慢速测试文件均衡分配到 CI 并行分片"
+when = "ci"
+capture = "command"
+command = ["python", "-c", '''
+import sys
+sys.path.insert(0, "tools")
+import ci_slow_shards
+weights = ci_slow_shards.slow_files(ci_slow_shards.ROOT)
+print(sorted(weights.items()))
+print(ci_slow_shards.plan(weights, 4))
+''']
+outputs = []
