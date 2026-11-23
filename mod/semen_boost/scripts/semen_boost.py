@@ -143,26 +143,23 @@ def multiply_by_ten(value: int) -> int:
 # ===== 替换函数：无精液时也判定为"有精液"，跳过绝顶结算中的无精液高潮分支 =====
 def modded_handle_pl_semen_le_2(character_id: int) -> int:
     """
-    修改后的"玩家当前精液量小于等于2ml"前提函数，始终返回0（即判定为精液充足）
+    用于替换「玩家精液量小于等于 2ml」前提的函数，恒返回 0。
 
     参数:
-        character_id: 角色id（前提函数的统一签名，本函数不使用）
+        character_id: int，角色编号（前提函数统一签名，本函数不使用）
 
     返回:
-        int -- 权重，恒为0
+        int -- 权重，恒为 0
 
     用途:
-        2026-07起，Script/Settle/orgasm_settle.py 的 orgasm_judge 会在打开射精面板之前
-        先调用 handle_premise.handle_pl_semen_le_2(0)，若为真则登记 p_no_semen_climax
-        （无精液高潮）并直接返回，后面的射精结算（common_ejaculation）根本不会被调用。
-        因此仅替换 common_ejaculation 已不足以实现"无视精液量射精"，还需要把这个前提一并替换掉。
+        Script/Settle/orgasm_settle.py 的 orgasm_judge 在打开射精面板前调用 handle_premise.handle_pl_semen_le_2(0)。
+        返回真时登记 p_no_semen_climax 并跳过射精结算。
+        替换本函数后，精液耗尽也能进入射精流程。
 
     注意:
-        该替换只影响通过 handle_premise.handle_pl_semen_le_2 这一模块属性进行的调用
-        （orgasm_settle 与 ejaculation_panel 都是这样调用的）。
-        口上/事件系统使用的前提字典 constant.handle_premise_data["pl_semen_le_2"]
-        是在游戏导入时由装饰器登记的原函数引用，不受模块属性替换的影响，
-        所以"精液耗尽"相关的口上前提仍按真实精液量判断。
+        本替换只影响通过 handle_premise.handle_pl_semen_le_2 属性的调用
+        （含 orgasm_settle 与 ejaculation_service.common_ejaculation）。
+        constant.handle_premise_data["pl_semen_le_2"] 保留导入时的原函数引用，口上与事件前提仍按真实精液量判定。
     """
     return 0
 

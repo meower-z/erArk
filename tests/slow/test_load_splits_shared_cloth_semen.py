@@ -8,7 +8,7 @@
 - 第三名：两表都缺最后一个服装部位（读档时两表都换成全部部位、精液量为 0 的新表）。
 经 save_handle 真实写盘、读档后：
 - 前两名两表的精液量与写盘前相同，第三名两表的精液量都是 0；
-- 往每人穿着的袜子上射精（ejaculation_panel.update_semen_dirty），只有穿着的表变，
+- 往每人穿着的袜子上射精（semen_dirty_service.update_semen_dirty），只有穿着的表变，
   衣柜的表不变；
 - 再写盘、读档一次，三人两表的精液量不变。
 """
@@ -84,7 +84,7 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
         from Script.Config import game_config
         from Script.Core import save_handle
         from Script.Modules.domains import dirty as dirty_mod, wardrobe
-        from Script.UI.Panel import ejaculation_panel
+        from Script.Modules.gameplay_resolution import semen_dirty_service
 
         all_types = sorted(game_config.config_clothing_type)
         whole_dict_id = self.npc("阿米娅")
@@ -100,7 +100,7 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
                 f"{cid} 穿着袜子",
             )
             kernel_data.written(
-                ejaculation_panel.update_semen_dirty,
+                semen_dirty_service.update_semen_dirty,
                 cid,
                 SOCKS,
                 1,
@@ -152,7 +152,7 @@ class TestLoadSplitsSharedClothSemen(SlowTestCase):
 
         for cid in expected:
             kernel_data.written(
-                ejaculation_panel.update_semen_dirty, cid, SOCKS, 1, SHOT
+                semen_dirty_service.update_semen_dirty, cid, SOCKS, 1, SHOT
             )
             worn, locker = self._semen(cid)
             self.assertEqual(

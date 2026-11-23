@@ -347,7 +347,7 @@ def player_make_dishes(
     Return arguments:
     list -- 做好的食物uid，按做出的顺序
     """
-    from Script.UI.Panel import ejaculation_panel
+    from Script.Modules.gameplay_resolution import ejaculation_service
 
     character_data = identity.of(0)
     made: list[uuid.UUID] = []
@@ -358,7 +358,7 @@ def player_make_dishes(
             inventory.add_item(0, seasoning, -1)
         semen_count = 0
         if seasoning in {11, 12}:
-            __, semen_count = ejaculation_panel.common_ejaculation()
+            __, semen_count = ejaculation_service.common_ejaculation()
             if semen_count <= 0:
                 break
         food = create_food("", recipe_id, quality, character_data.name)

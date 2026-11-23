@@ -13,7 +13,7 @@ from Script.Kernel import core
 from Script.Modules.gameplay_resolution import edits
 from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
-from Script.UI.Panel import ejaculation_panel
+from Script.Modules.gameplay_resolution import ejaculation_service
 from Script.Modules.domains import roster, wardrobe, chara_life
 
 _: FunctionType = get_text._
@@ -614,7 +614,7 @@ def shoot_in_locker(who: int, args: Mapping[str, core.JSON]) -> None:
     who -- 角色id
     args -- part 衣物类型，locker 衣柜类型（2 大浴场更衣室，3 宿舍），target 衣柜主人的角色id
     """
-    ejaculation_panel.ejaculation_flow(
+    ejaculation_service.ejaculation_flow(
         part_cid=int(cast(int, args["part"])),
         part_type=int(cast(int, args["locker"])),
         target_character_id=int(cast(int, args["target"])),

@@ -17,10 +17,10 @@ from Script.System.Instruct_System import handle_instruct
 from Script.System.Instruct_System.common_behavior_utils import (
     get_last_valid_sex_behavior_id,
 )
+from Script.Modules.gameplay_resolution import ejaculation_service
 from Script.Modules.gameplay_resolution import hypnosis_service
-from Script.UI.Panel import event_option_panel
-from Script.UI.Panel import ejaculation_panel, achievement_panel
-
+from Script.Modules.gameplay_resolution import semen_dirty_service
+from Script.UI.Panel import achievement_panel, event_option_panel
 from Script.Settle.common_default import base_chara_hp_mp_common_settle
 from Script.Settle.common_default import base_chara_state_common_settle
 from Script.Settle.common_default import (
@@ -7363,7 +7363,7 @@ def handle_salutation_3_add_adjust(
     """
     if not add_time:
         return
-    ejaculation_panel.ejaculation_flow(2, 0, character_id)
+    ejaculation_service.ejaculation_flow(2, 0, character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -9444,7 +9444,7 @@ def handle_eat_add_just(
             # 加精液到口腔
             temp_position = h_meters.shoot_position()
             h_meters.set_shoot_position(2)  # 口腔
-            ejaculation_panel.update_semen_dirty(
+            semen_dirty_service.update_semen_dirty(
                 chara_id, 2, 0, semen_ml, update_shoot_position_flag=False
             )
             h_meters.set_shoot_position(temp_position)

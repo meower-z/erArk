@@ -63,8 +63,8 @@ class ModLoaderTest(FastTestCase):
         本方法让每个测试新建 ModManager 和 FailedImportModManager 的单例。
         本方法让每个测试从空的 _original_functions、_mod_functions 和 _mod_assets 开始。
         对 handle_premise.handle_pl_semen_le_2 的补丁让 Mod 对该函数的替换在测试结束后撤销。
-        本方法把一个名为 Script.UI.Panel.ejaculation_panel 的替身模块放入 sys.modules。
-        该替身模块存为 self.panel。替身模块中的 common_ejaculation 是一个 Mock。本方法施加的补丁在每个测试结束后撤销。
+        本方法把一个名为 Script.Modules.gameplay_resolution.ejaculation_service 的替身模块放入 sys.modules。
+        该替身模块存为 self.service。替身模块中的 common_ejaculation 是一个 Mock。本方法施加的补丁在每个测试结束后撤销。
 
         返回:
             None
@@ -76,10 +76,12 @@ class ModLoaderTest(FastTestCase):
         self.enterContext(patch.object(mod_manager, "_mod_functions", {}))
         self.enterContext(patch.object(mod_manager, "_mod_assets", {}))
         self.enterContext(patch.object(handle_premise, "handle_pl_semen_le_2"))
-        self.panel = ModuleType("Script.UI.Panel.ejaculation_panel")
-        setattr(self.panel, "common_ejaculation", Mock(return_value=("", 0)))
+        self.service = ModuleType(
+            "Script.Modules.gameplay_resolution.ejaculation_service"
+        )
+        setattr(self.service, "common_ejaculation", Mock(return_value=("", 0)))
         self.enterContext(
-            patch.dict(sys.modules, {self.panel.__name__: self.panel})
+            patch.dict(sys.modules, {self.service.__name__: self.service})
         )
 
     def load_semen_mod(self, manager: mod_manager.ModManager) -> None:
@@ -138,7 +140,7 @@ class ModLoaderTest(FastTestCase):
                 handle_premise, "handle_aromatherapy_flag_7", return_value=1
             )
         )
-        settle = self.panel.common_ejaculation
+        settle = self.service.common_ejaculation
         self.enterContext(
             patch.object(
                 settle.__globals__["random"], "uniform", return_value=1.0
@@ -165,11 +167,11 @@ class ModLoaderTest(FastTestCase):
             None
         """
         self.load_semen_mod(FailedImportModManager())
-        self.assertEqual(self.panel.multiply_by_ten(3), 30)
+        self.assertEqual(self.service.multiply_by_ten(3), 30)
         self.assertEqual(handle_premise.handle_pl_semen_le_2(0), 0)
         self.world.chara(0, "博士")
         with self.assertRaisesRegex(NameError, "'_'"):
-            self.panel.common_ejaculation()
+            self.service.common_ejaculation()
 
     def test_replacement_calls_saved_original_with_arguments(self) -> None:
         """

@@ -537,3 +537,23 @@ reads = "Script 下除 Script/Frontend/Tk 外全部 .py 文件的导入语句"
 used_for = "测试：游戏后端代码不导入 Tk、Tk 图片接口与 Tk 前端模块"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R40"
+file = "tests/fast/test_ejaculation_services.py"
+symbol = "imported_modules"
+mechanism = "getsource"
+reads = "CALLERS 五个调用方模块源码中的 import 与 from ... import 语句"
+used_for = "测试：这五个调用方均导入射精或精液污浊服务，且任意作用域均不导入射精面板模块"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R41"
+file = "tests/fast/test_ejaculation_services.py"
+symbol = "ModuleBoundaryTest.test_panel_keeps_only_panel_code"
+mechanism = "getsource"
+reads = "Script/UI/Panel/ejaculation_panel.py 源码中的顶层函数与类定义、导入绑定及名称赋值"
+used_for = "测试：射精面板顶层只定义 show_endure_ejaculation_panel 与 Ejaculation_Panel，且任意作用域不绑定五个服务函数名"
+when = "test"
+capture = "suite"

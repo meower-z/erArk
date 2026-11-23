@@ -185,7 +185,6 @@ Script/UI/Panel/debug_panel.py	Debug_Panel.change_value	pyrefly:bad-argument-typ
 Script/UI/Panel/debug_panel.py	Debug_Panel.change_value	pyrefly:bad-index	count=4
 Script/UI/Panel/dirty_panel.py	<module>	module-lines	lines=526
 Script/UI/Panel/draw_event_text_panel.py	DrawEventTextPanel.__init__	pyrefly:bad-override-mutable-attribute	count=1
-Script/UI/Panel/ejaculation_panel.py	<module>	module-lines	lines=868
 Script/UI/Panel/equipmen_panel.py	<module>	module-lines	lines=570
 Script/UI/Panel/gift_panel.py	<module>	module-lines	lines=846
 Script/UI/Panel/hypnosis_panel.py	<module>	module-lines	lines=797

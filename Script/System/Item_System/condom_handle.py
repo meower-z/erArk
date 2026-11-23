@@ -232,7 +232,7 @@ def settle_drink(
     Return arguments:\n
     无
     """
-    from Script.UI.Panel import ejaculation_panel
+    from Script.Modules.gameplay_resolution import semen_dirty_service
     from Script.Settle.common_default import (
         base_chara_experience_common_settle,
         base_chara_state_common_settle,
@@ -254,7 +254,7 @@ def settle_drink(
         mouth_count = min(mouth_count, semen_count)
         stomach_count = semen_count - mouth_count
         if mouth_count:
-            ejaculation_panel.update_semen_dirty(
+            semen_dirty_service.update_semen_dirty(
                 target_character_id,
                 2,
                 0,
@@ -262,7 +262,7 @@ def settle_drink(
                 update_shoot_position_flag=False,
             )
         if stomach_count:
-            ejaculation_panel.update_semen_dirty(
+            semen_dirty_service.update_semen_dirty(
                 target_character_id,
                 15,
                 0,
@@ -294,7 +294,7 @@ def settle_squeeze(
     Return arguments:\n
     无
     """
-    from Script.UI.Panel import ejaculation_panel
+    from Script.Modules.gameplay_resolution import semen_dirty_service
 
     # 标记当前行为的目标是身体部位还是服装部位，用于口上前提区分
     flags.set(0, condom_cloth_flag=1 if part_type == 1 else 0)
@@ -304,7 +304,7 @@ def settle_squeeze(
         return
     all_semen_count = sum(consumed_list)
     # 全额转移到目标部位
-    ejaculation_panel.update_semen_dirty(
+    semen_dirty_service.update_semen_dirty(
         target_character_id,
         part_cid,
         part_type,
@@ -313,7 +313,7 @@ def settle_squeeze(
     )
     # 身体部位追加自然流动结算
     if part_type == 0 and target_character_id != 0:
-        ejaculation_panel.calculate_semen_flow(
+        semen_dirty_service.calculate_semen_flow(
             target_character_id, part_cid, part_type, all_semen_count
         )
 
