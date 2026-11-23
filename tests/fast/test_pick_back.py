@@ -43,7 +43,6 @@ class PickBackTest(FastTestCase):
             )
         )
         self.enterContext(mock.patch.object(py_cmd, "clr_cmd"))
-        self.enterContext(mock.patch.object(py_cmd, "focus_cmd"))
         _started.clear()
 
     def test_back_returns_to_the_loop(self) -> None:

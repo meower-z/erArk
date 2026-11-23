@@ -539,3 +539,13 @@ reads = "Script/Kernel、Script/Modules/domains 与 Script/Modules/save_load 下
 used_for = "测试：这三个后端目录不导入 BANNED 中的界面、Tk 适配与输入输出模块（ALLOWED 放行项除外）"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R39"
+file = "tests/fast/test_frontend_boundary_guard.py"
+symbol = "violations"
+mechanism = "ast"
+reads = "Script 下除 Script/Frontend/Tk 外全部 .py 文件的导入语句"
+used_for = "测试：游戏后端代码不导入 Tk、Tk 图片接口与 Tk 前端模块"
+when = "test"
+capture = "suite"

@@ -1,12 +1,12 @@
 # -*- coding: UTF-8 -*-
 """
-导入 Tk 主窗口模块后，主窗口与屏幕同宽
-======================================
-载入游戏，再导入 Tk 主窗口模块 Script.Core.main_frame。导入时就创建主窗口，并设置它最大化。
+创建 Tk 主窗口后，主窗口与屏幕同宽
+==================================
+载入游戏后，实例化 Script.Frontend.Tk.window.Window 创建主窗口并请求最大化。
 主窗口宽度应在 SETTLE_SECONDS 秒内达到屏幕宽度。
 X11 上的最大化请求由窗口管理器执行，所以测试需要带窗口管理器的显示。
 是否有可用的显示由 setUp 里的一个临时 Tk 窗口判断。没有可用的显示时跳过测试。
-导入主窗口模块时报的错让测试失败。不开新游戏。
+创建主窗口时报的错让测试失败。不开新游戏。
 """
 
 import signal
@@ -22,7 +22,7 @@ SETTLE_SECONDS = 5
 
 
 class TkWindowMaximizedTest(SlowTestCase):
-    """导入 Tk 主窗口模块后，主窗口宽度等于屏幕宽度"""
+    """创建 Tk 主窗口后，主窗口宽度等于屏幕宽度"""
 
     def setUp(self) -> None:
         """
@@ -42,10 +42,11 @@ class TkWindowMaximizedTest(SlowTestCase):
             self.skipTest(f"没有可用的显示，无法创建 Tk 窗口：{error}")
 
     def test_window_fills_screen_width(self) -> None:
-        """导入主窗口模块后，主窗口宽度在 SETTLE_SECONDS 秒内达到屏幕宽度"""
-        from Script.Core import main_frame
+        """实例化 Window 后，主窗口宽度在 SETTLE_SECONDS 秒内达到屏幕宽度"""
+        from Script.Config import normal_config
+        from Script.Frontend.Tk.window import Window
 
-        root = main_frame.root
+        root = Window(normal_config.config_normal).root
         deadline = time.monotonic() + SETTLE_SECONDS
         root.update()
         while (

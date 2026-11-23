@@ -1,7 +1,7 @@
 """
 无 Tk 环境下导入图片目录索引与立绘查找的测试
 ============================================
-本测试在独立子进程中屏蔽 tkinter、_tkinter、PIL.ImageTk 与 Script.Core.main_frame 后，验证
+本测试在独立子进程中屏蔽 tkinter、_tkinter、PIL.ImageTk 与 Script.Frontend.Tk 后，验证
 image_catalog 与 character_image 可正常导入并建立与 build_image_path_index 一致的非空索引。
 快速层禁止在当前进程导入 image_catalog。本测试因此通过子进程在仓库根目录执行。
 """
@@ -17,7 +17,7 @@ WITHOUT_TK = """
 import json
 import sys
 
-for name in ("tkinter", "_tkinter", "PIL.ImageTk", "Script.Core.main_frame"):
+for name in ("tkinter", "_tkinter", "PIL.ImageTk", "Script.Frontend.Tk"):
     sys.modules[name] = None
 from Script.Config import normal_config
 
@@ -31,7 +31,7 @@ print(json.dumps({
     "indexed": len(image_catalog.image_path_data),
 }))
 """
-""" 子进程脚本：屏蔽 Tk 与主界面后加载配置，导入 image_catalog 与 character_image 并打印核对 JSON。 """
+"""子进程脚本：屏蔽 Tk、Tk 图片接口与 Tk 前端包后加载配置，导入 image_catalog 与 character_image 并打印核对 JSON。"""
 
 
 class ImageCatalogWithoutTkTest(FastTestCase):

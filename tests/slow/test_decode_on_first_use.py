@@ -3,7 +3,7 @@
 图片按需解码测试
 ================
 Script.Core.image_catalog 导入时只建立图片名到路径的索引和角色索引，不解码图片。
-Script.Core.image_cache.image_data 在首次按名称取图时解码并缩放图片，此后返回同一对象。
+Script.Frontend.Tk.image_cache.image_data 在首次按名称取图时解码并缩放图片，此后返回同一对象。
 
 本测试统计 PIL.Image.open 的调用次数，覆盖启动并开新游戏、in 检查、首次取图和再次取图。测试核对
 image_catalog 的两张索引与 build_image_path_index 的结果一致，并核对首次取图按固定比例 1.5 缩放。
@@ -75,7 +75,8 @@ class DecodeOnFirstUseTest(SlowTestCase):
         super().setUp()
         self.opened_at_start = list(self.opened)
         """ 启动游戏与开新游戏期间打开过的文件 """
-        from Script.Core import image_cache, image_catalog
+        from Script.Core import image_catalog
+        from Script.Frontend.Tk import image_cache
 
         self.image_cache = image_cache
         self.image_catalog = image_catalog

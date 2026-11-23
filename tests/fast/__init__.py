@@ -8,7 +8,7 @@
 本包先于包内测试模块执行。测试模块因此可在顶部直接导入游戏模块。
 
 快速层禁止导入 FORBIDDEN 中的三个模块。Script.Core.image_catalog 导入时遍历 image 目录。
-Script.Core.image_cache 将图片解码为 Tk PhotoImage。Script.Core.game_init 启动 Tk 游戏。
+Script.Frontend.Tk.image_cache 将图片解码为 Tk PhotoImage。Script.Core.game_init 启动游戏主流程。
 首次导入受禁模块会抛 FastLayerImportError 并指明模块名。此类测试属慢速层。拦截不管装上前
 已载入的模块。pytest tests/fast 先导入本包再导入测试模块。
 """
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 FORBIDDEN = frozenset(
     {
         "Script.Core.image_catalog",
-        "Script.Core.image_cache",
+        "Script.Frontend.Tk.image_cache",
         "Script.Core.game_init",
     }
 )

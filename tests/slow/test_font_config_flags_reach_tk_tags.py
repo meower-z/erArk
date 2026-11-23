@@ -2,14 +2,13 @@
 """
 字体配置里的加粗、下划线、斜体到达 Tk 文本框的标签
 ==================================================
-照游戏启动的顺序：载入游戏，导入 Tk 主窗口模块 Script.Core.main_frame，再调用 io_init.init_style；
-样式定义经输出队列送到 main_frame，main_frame.read_queue 读出后注册成文本框的标签。
-每个字体配置样式的标签字体所带的修饰词（bold、underline、italic）就是它在字体配置里设为真的那几个标志；
+照游戏启动的顺序：载入游戏，创建 ThreadedUiPort 与 TkFrontend，再配置端口并调用 io_init.init_style。
+样式定义经端口发出，拉取 RenderChunk 后交给 frontend.renderer.render 注册成文本框的标签。
+每个字体配置样式的标签字体所带的修饰词（bold、underline、italic）就是它在字体配置里设为真的那几个标志。
 三个修饰符标签与每个样式的修饰符组合标签各带名字里的修饰词。
 没有可用的显示时跳过测试。不开新游戏。
 """
 
-import queue
 import signal
 import tkinter
 from itertools import combinations
@@ -20,6 +19,8 @@ from tests.world import FullWorld
 
 MODIFIERS = ("bold", "underline", "italic")
 """ 字体修饰词，也是字体配置的三个标志列名与三个修饰符标签名 """
+TOKEN = "font-test"
+"""测试内 `ThreadedUiPort` 与 `TkFrontend` 附着校验使用的固定鉴权令牌。"""
 
 
 class FontConfigFlagsReachTkTagsTest(SlowTestCase):
@@ -38,28 +39,23 @@ class FontConfigFlagsReachTkTagsTest(SlowTestCase):
         remove_parent_guard()
         self.world = FullWorld.load()
         from Script.Core import io_init
+        from Script.Frontend.Tk.app import TkFrontend
+        from Script.Protocol import RenderChunk, ThreadedUiPort
 
+        port = ThreadedUiPort(TOKEN)
         try:
-            from Script.Core import main_frame
+            frontend = TkFrontend(port, TOKEN)
         except tkinter.TclError as error:
             self.skipTest(f"没有可用的显示，无法创建 Tk 窗口：{error}")
-        messages: queue.Queue[str] = queue.Queue()
-
-        def put_queue(message: str) -> None:
-            """
-            替换 io_init.put_queue：把消息放进接给 main_frame 的队列
-            Keyword arguments:
-            message -- 推送的信息
-            Return arguments:
-            无
-            """
-            messages.put_nowait(message)
-
-        io_init.put_queue = put_queue
-        main_frame.bind_queue(messages)
+        epoch = port.attach(TOKEN).controller_epoch
+        io_init.configure(port)
         io_init.init_style()
-        main_frame.read_queue()
-        self.textbox = main_frame.textbox
+        io_init.clear_order()
+        for event in port.drain(epoch, 1024):
+            if isinstance(event, RenderChunk):
+                for op in event.ops:
+                    frontend.renderer.render(op)
+        self.textbox = frontend.window.textbox
 
     def font_modifiers(self, tag: str) -> set[str]:
         """
