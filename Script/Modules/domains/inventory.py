@@ -1,23 +1,24 @@
 """
 角色的道具与食物背包：角色键 inventory.items 与 inventory.food_bag
 =================================================================
-inventory.items 的值是 {道具id的字符串: 数量}，角色没有这一项时读空表。
-新角色由 character.init_attr 补上 Item.csv 里缺的道具，数量为 0。
-这个键归本模块的规则 apply 所有。代码用 add_item、set_item、drop_item、replace_items 记一次操作，操作见 counts.fold。
+inventory.items 存 {道具id字符串: 数量}，缺失时读空表。
+新角色由 character.init_attr 补上 Item.csv 缺的道具，数量为 0。
+该键归本模块规则 apply 所有。代码用 add_item、set_item、drop_item、replace_items 记操作，操作见 counts.fold。
 套用后值不变的操作不记。
-inventory.food_bag 的值是 {食物uid的字符串: 食物记录}，按放进的顺序排列，食物记录见 kitchen.record。
-角色没有这一项时读空背包。写入整值替换这个键。replace_foods 在记录、顺序与值的类型都没变时不写。
-foods 读出的是按记录新建的 Food 对象，改它不改背包。
+inventory.food_bag 存 {食物uid字符串: 食物记录}，按放入顺序排列，记录见 kitchen.record。
+缺失时读空背包。写入整值替换该键。replace_foods 在记录、顺序与值类型都没变时不写。
+foods 返回带缓存的只读 FoodView 映射。clone_mutable_snapshot_foods 返回新建的可修改 Food 字典。
 """
 
 from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any, cast
 from uuid import UUID
 
 from Script.Core import game_type
 from Script.Kernel import core
 from Script.Modules.domains import counts, kitchen
-from Script.Modules.gameplay_resolution import working
+from Script.Modules.gameplay_resolution import readonly, working
 
 ITEMS = "inventory.items"
 """ 道具在角色数据里的键 """
@@ -116,16 +117,37 @@ def _bag(cid: int, game: core.GameState | None = None) -> Bag:
     return cast(Bag, working.get(str(cid), FOODS, game))
 
 
+def _view(stored: core.JSON) -> Mapping[UUID, kitchen.FoodView]:
+    bag = cast(Bag, stored)
+    return MappingProxyType(
+        {UUID(uid): kitchen.food_view(uid, kept) for uid, kept in bag.items()}
+    )
+
+
 def foods(
+    cid: int, game: core.GameState | None = None
+) -> Mapping[UUID, kitchen.FoodView]:
+    """
+    读取角色背包食物的只读视图映射，原始值未变时复用缓存
+    Keyword arguments:
+    cid -- 角色id
+    game -- 给出时只读该 GameState，为 None 时读当前缓冲区（含未套用的写入）
+    Return arguments:
+    Mapping[UUID, kitchen.FoodView] -- 食物uid到只读 FoodView 的只读映射，按放入顺序排列
+    """
+    return readonly.view(str(cid), FOODS, _view, game)
+
+
+def clone_mutable_snapshot_foods(
     cid: int, game: core.GameState | None = None
 ) -> dict[UUID, game_type.Food]:
     """
-    角色背包里的食物
+    按当前背包记录新建可修改的 Food 字典副本，修改副本不影响背包
     Keyword arguments:
     cid -- 角色id
-    game -- 给出时只读这个状态，没有时读当前缓冲区，含还没套用的写入
+    game -- 给出时只读该 GameState，为 None 时读当前缓冲区（含未套用的写入）
     Return arguments:
-    dict -- 食物uid到按记录新建的 Food，按放进的顺序
+    dict[UUID, game_type.Food] -- 食物uid到新建 Food 对象的字典，按放入顺序排列
     """
     return {
         UUID(uid): kitchen.food(uid, kept)
@@ -133,7 +155,9 @@ def foods(
     }
 
 
-def replace_foods(cid: int, new: Mapping[UUID, game_type.Food]) -> None:
+def replace_foods(
+    cid: int, new: Mapping[UUID, game_type.Food | kitchen.FoodView]
+) -> None:
     """
     把角色的背包整个换成 new，写进当前缓冲区。记录、顺序与值的类型都没变时不写（working.same）
     Keyword arguments:
@@ -153,7 +177,7 @@ def put_food(cid: int, food: game_type.Food) -> None:
     cid -- 角色id
     food -- 食物
     """
-    bag = foods(cid)
+    bag = clone_mutable_snapshot_foods(cid)
     bag[food.uid] = food
     replace_foods(cid, bag)
 
@@ -177,7 +201,7 @@ def take_food(cid: int, uid: UUID) -> game_type.Food:
     Return arguments:
     game_type.Food -- 拿走的食物，按记录新建
     """
-    bag = foods(cid)
+    bag = clone_mutable_snapshot_foods(cid)
     food = bag.pop(uid)
     replace_foods(cid, bag)
     return food

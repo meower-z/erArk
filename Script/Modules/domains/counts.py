@@ -7,6 +7,7 @@ body.status（status）、inventory.items（inventory）与 body.manage（body_m
 """
 
 from collections.abc import Iterator, Mapping
+from types import MappingProxyType
 from typing import Any, cast
 
 from Script.Core.num import Num
@@ -58,7 +59,7 @@ def fold(old: core.JSON, op: str, operand: core.JSON) -> core.JSON:
     """
     if op == "replace":
         return operand
-    values = dict(cast(Mapping[str, Num], old))
+    values = cast(MappingProxyType[str, Num], old).copy()
     if op == "set":
         values.update(cast(Mapping[str, Num], operand))
     elif op == "add":

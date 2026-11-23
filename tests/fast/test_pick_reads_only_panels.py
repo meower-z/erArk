@@ -8,12 +8,11 @@
   开始代码做好了要做的事。
 """
 
-import copy
 from collections.abc import Callable, Iterator, Mapping
 from unittest import mock
 
 from Script.Config import game_config, normal_config
-from Script.Core import constant, flow_handle, game_type
+from Script.Core import constant, flow_handle
 from Script.Design import game_time, update
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import start_gate, starts
@@ -23,7 +22,7 @@ from Script.System.Instruct_System import handle_instruct
 from Script.System.Pregnancy_System import egg_handle, pregnancy_handle
 from Script.UI.Panel import gift_panel, play_gomoku_panel, talent_up_panel
 from Script.Modules.domains import achievement, activity, inventory, pregnancy
-from Script.Modules.domains import modes
+from Script.Modules.domains import kitchen, modes
 from tests import chara_abilities as ca, kernel_data, pick_guard
 from tests import world as world_module
 from tests.chara_activity import aim
@@ -67,9 +66,7 @@ class PanelSubMenusReadOnly(FastTestCase):
         ) -> core.Effects:
             effects = behave(act, extra)
             if act.who == "0":
-                self.started.append(
-                    copy.deepcopy(activity.behavior(self.player.cid))
-                )
+                self.started.append(activity.behavior(self.player.cid))
             return effects
 
         self.enterContext(mock.patch.object(starts, "behave", recording))
@@ -303,7 +300,7 @@ class PanelSubMenusReadOnly(FastTestCase):
             (str(recipe_id), "", seasoning, cook_mode, 0), WIDTH, True, True, 0
         )
 
-    def bag(self) -> Iterator[game_type.Food]:
+    def bag(self) -> Iterator[kitchen.FoodView]:
         """玩家背包里的食物"""
         return iter(inventory.foods(self.player.cid).values())
 

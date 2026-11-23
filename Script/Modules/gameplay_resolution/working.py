@@ -19,6 +19,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from fractions import Fraction
+from types import MappingProxyType
 from typing import cast
 
 from Script.Kernel import core
@@ -41,7 +42,7 @@ _keys: dict[str, _Key] = {}
 
 def register(key: str, default: core.JSON, fold: Fold | None = None) -> None:
     """
-    登记一个键。给了 fold 时这个键由规则拥有，只能 change。没有 fold 时只能 put
+    登记一个键并冻结默认值后存入。给了 fold 时这个键由规则拥有，只能 change。没有 fold 时只能 put
     Keyword arguments:
     key -- 键名，登记过的键或 roster.offstage 报 RuntimeError
     default -- 没有这一项时读到的值
@@ -49,11 +50,23 @@ def register(key: str, default: core.JSON, fold: Fold | None = None) -> None:
     """
     if key in _keys or key == OFFSTAGE:
         raise RuntimeError(f"{key} is registered twice")
-    _keys[key] = _Key(default, fold)
+    _keys[key] = _Key(_frozen(default), fold)
 
 
 _ATOMS = frozenset((int, bool, float, str, Fraction, type(None)))
 """ same 里不用再往下比的值的类型 """
+
+
+def _frozen(value: core.JSON) -> core.JSON:
+    if type(value) in _ATOMS or type(value) is MappingProxyType:
+        return value
+    if isinstance(value, Mapping):
+        if set(map(type, value.values())) <= _ATOMS:
+            return MappingProxyType(dict(value))
+        return MappingProxyType({k: _frozen(v) for k, v in value.items()})
+    if isinstance(value, tuple | list):
+        return tuple(v if type(v) in _ATOMS else _frozen(v) for v in value)
+    raise TypeError(f"{value!r} is not JSON")
 
 
 def same(a: object, b: object) -> bool:
@@ -143,14 +156,14 @@ class _Buffer:
     def put(self, who: str | None, key: str, new: core.JSON) -> None:
         if _keys[key].fold is not None:
             raise RuntimeError(f"{key} changes only by its rule")
-        self.entry(who, key).value = new
+        self.entry(who, key).value = _frozen(new)
         self.revisions[key] = self.revisions.get(key, 0) + 1
 
     def change(
         self, who: str | None, key: str, op: str, operand: core.JSON
     ) -> None:
         hit = self.entry(who, key)
-        hit.value = fold_all(key, hit.value, ((op, operand),))
+        hit.value = _frozen(fold_all(key, hit.value, ((op, operand),)))
         hit.ops.append((op, operand))
         self.revisions[key] = self.revisions.get(key, 0) + 1
 
@@ -311,7 +324,7 @@ def get(
 
 def put(who: str | None, key: str, new: core.JSON) -> None:
     """
-    整值替换一项数据，写进当前缓冲区。规则拥有的键报 RuntimeError
+    冻结新值后整值替换一项数据，写进当前缓冲区。规则拥有的键报 RuntimeError
     Keyword arguments:
     who -- 角色键，None 为全局数据
     key -- 键名
@@ -322,7 +335,7 @@ def put(who: str | None, key: str, new: core.JSON) -> None:
 
 def change(who: str | None, key: str, op: str, operand: core.JSON) -> None:
     """
-    给规则拥有的一项数据记一次操作，写进当前缓冲区。缓冲区里这一项的值随即按 fold 更新
+    给规则拥有的一项数据记一次操作，写进当前缓冲区。缓冲区里这一项的值按 fold 更新并冻结存入
     Keyword arguments:
     who -- 角色键，None 为全局数据
     key -- 键名

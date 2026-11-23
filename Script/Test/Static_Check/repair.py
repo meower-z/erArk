@@ -169,7 +169,7 @@ def _iter_cloth_containers(
         逐个交出四个服装容器，结构非法的容器跳过（形状问题属BODY-01，不在修复范围）。
         遍历到底后把服装写回 body.cloth，调用方对槽位字典的修改因此生效
     """
-    cloth = wardrobe.of(cid)
+    cloth = wardrobe.clone_mutable_snapshot(cid)
     for attr_name in (
         "cloth_wear",
         "cloth_off",
@@ -280,7 +280,7 @@ def repair_clothing_tem_list() -> list[dict]:
         return []
     records = []
     for cid, chara in identity.table().items():
-        cloth = wardrobe.of(cid)
+        cloth = wardrobe.clone_mutable_snapshot(cid)
         lst = cloth.clothing_tem
         bad = [x for x in lst if type(x) is not int or x not in tem]
         if not bad:

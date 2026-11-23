@@ -2,7 +2,7 @@
 
 import random
 from types import FunctionType
-from Script.Core import game_type, get_text, constant
+from Script.Core import get_text, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
@@ -404,8 +404,7 @@ def settle_milk() -> None:
     for character_id in chara_id_list:
 
         # 遍历角色背包
-        for food_id in inventory.foods(character_id).copy():
-            food: game_type.Food = inventory.foods(character_id)[food_id]
+        for food in inventory.foods(character_id).values():
             # 如果是母乳，则转化，并删掉原物品
             if food.milk_ml > 0:
                 warehouse.add(31, food.milk_ml)

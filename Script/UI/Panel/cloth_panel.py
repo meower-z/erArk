@@ -27,7 +27,7 @@ def cloth_off_after_settle(character_id: int) -> None:
     Keyword arguments:
     character_id -- 角色id
     """
-    cloth = wardrobe.of(character_id)
+    cloth = wardrobe.clone_mutable_snapshot(character_id)
     for i in game_config.config_clothing_type:
         # 去重
         cloth.cloth_off[i] = list(set(cloth.cloth_off[i]))

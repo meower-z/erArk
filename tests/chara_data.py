@@ -53,8 +53,8 @@ def project(state: dict[str, object]) -> None:
     for cid in identity.table():
         fields: dict[str, object] = {
             "item": dict(inventory.items(cid)),
-            "food_bag": inventory.foods(cid),
-            "cloth": wardrobe.of(cid),
+            "food_bag": inventory.clone_mutable_snapshot_foods(cid),
+            "cloth": wardrobe.clone_mutable_snapshot(cid),
             "body_manage": dict(body_manage.of(cid)),
             "status_data": dict(status.of(cid)),
         }

@@ -248,10 +248,6 @@ def second_behavior_effect(
         must_settle_check(character_id)
         return
 
-    # 在处理后，如果没有任何二段行为，则再次直接返回
-    if not activity.second_behaviors(character_id):
-        return
-
     # 高潮结算调用时，先按部位统计本次待结算的部位绝顶行为，记录每个部位的最高绝顶程度
     part_max_degree_dict: dict[str, int] = {}
     if orgasm_settle_flag:

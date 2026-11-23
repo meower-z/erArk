@@ -49,7 +49,7 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
 
     def foot_cloth_to_locker(
         self,
-    ) -> "tuple[identity.Identity, list[int], list[int]]":
+    ) -> "tuple[identity.Identity, tuple[int, ...], tuple[int, ...]]":
         """
         开局的阿米娅鞋上有 30ml 精液时，跑一次脱鞋袜进大浴场衣柜的结算
         Keyword arguments:
@@ -68,8 +68,9 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
         self.assertEqual(
             dirty.view(cid).cloth_locker_semen, {}, "开局的衣柜精液表"
         )
-        socks, shoes = list(wardrobe.of(cid).cloth_wear[10]), list(
-            wardrobe.of(cid).cloth_wear[11]
+        socks, shoes = (
+            wardrobe.of(cid).cloth_wear[10],
+            wardrobe.of(cid).cloth_wear[11],
         )
         self.assertTrue(shoes, "开局穿着鞋")
         with kernel_data.writing(), dirty.editing(cid) as d:

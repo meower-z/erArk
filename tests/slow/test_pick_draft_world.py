@@ -179,7 +179,7 @@ class PickDraftWorldTest(SlowTestCase):
             [pan_id],
         )
         self.assertEqual(
-            wardrobe.of(npc.cid).cloth_locker_in_shower[PANTIES], []
+            wardrobe.of(npc.cid).cloth_locker_in_shower[PANTIES], ()
         )
 
     def test_locker_look_only_commits_nothing(self) -> None:
@@ -397,9 +397,9 @@ class PickDraftWorldTest(SlowTestCase):
             shutil.rmtree(
                 save_handle.get_save_dir_path(save_id), ignore_errors=True
             )
-        bag = inventory.foods(0)
-        self.assertNotIn(old.uid, bag)
-        self.assertIn(new.uid, bag)
+        kept = inventory.foods(0)
+        self.assertNotIn(old.uid, kept)
+        self.assertIn(new.uid, kept)
 
     def test_diagnose_leave_without_check_commits_nothing(self) -> None:
         """有病人时打开亲自诊疗面板，一项检查都不做就返回：没有行动，缓存不变，时钟不动"""

@@ -21,7 +21,7 @@ _: FunctionType = get_text._
 def _drop_old_format_food() -> None:
     """读档时删掉各角色背包里旧版本的食物：没有母乳量，或精液调味却没有调味量"""
     for character_id in identity.table():
-        food_bag = inventory.foods(character_id)
+        food_bag = inventory.clone_mutable_snapshot_foods(character_id)
         for uid, food in list(food_bag.items()):
             if not hasattr(food, "milk_ml") or (
                 food.special_seasoning in [11, 12]
@@ -382,8 +382,7 @@ def get_character_food_bag_type_list_buy_food_type(
     Dict -- 食物名字数据 食物名字:uid集合
     """
     food_list: dict[str, set[uuid.UUID]] = {}
-    for food_uid in inventory.foods(character_id):
-        food_data: Food = inventory.foods(character_id)[food_uid]
+    for food_uid, food_data in inventory.foods(character_id).items():
         if food_data.recipe != -1:
             food_name = game_config.config_recipes[food_data.recipe].name
             food_list.setdefault(food_name, set())
@@ -552,7 +551,7 @@ def get_filtered_sorted_cook_data(food_type: str) -> list:
 
 
 def judge_accept_special_seasoning_food(
-    character_id: int, food: game_type.Food
+    character_id: int, food: kitchen.FoodView
 ) -> int:
     """
     是否接受玩家给的特殊调味的食物（玩家的行动开始时判定，食物由调用方传入）
@@ -680,7 +679,7 @@ def handle_food_deterioration(character_id: int) -> int:
     Return arguments:
     int -- 过期食物数量
     """
-    food_bag = inventory.foods(character_id)
+    food_bag = inventory.clone_mutable_snapshot_foods(character_id)
     remove_food_uid_list = []
     # NPC只有在持有食物大于1个时才进行变质与过期结算
     if character_id != 0 and len(food_bag) <= 1:

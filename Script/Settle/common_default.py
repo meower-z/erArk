@@ -1258,11 +1258,9 @@ def base_chara_experience_common_settle(
             )
 
     # 结算最终值
-    abilities.experience(character_data.cid).setdefault(experience_id, 0)
-    abilities.experience(character_data.cid)[experience_id] += base_value
-    abilities.experience(character_data.cid)[experience_id] = max(
-        0, abilities.experience(character_data.cid)[experience_id]
-    )
+    experience = abilities.experience(character_data.cid)
+    now = experience.get(experience_id, 0) + base_value
+    experience[experience_id] = max(0, now)
 
     # 口交经验结算时补记口交初体验（覆盖早安咬/晚安咬、测试口腔吮吸、AI文本等不经阴茎位置效果的口交来源）
     # 判定只用"dict无键2"而不用exp42==0——多周目下经验按比例继承，exp42非0不代表本周目发生过口交
