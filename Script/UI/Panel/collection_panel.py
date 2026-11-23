@@ -6,6 +6,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import player_collection, roster, warehouse, modes
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import collection_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -15,88 +16,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def collapse_collection() -> None:
-    """
-    收起收集品
-    """
-    from Script.UI.Panel import achievement_panel
-
-    now_draw: draw.NormalDraw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = _("\n开始摆放藏品\n")
-    now_draw.draw()
-    now_draw = draw.NormalDraw()
-    now_draw.width = window_width
-    now_draw_text = ""
-
-    # 内裤
-    panties_tem = player_collection.get("npc_panties_tem")
-    if panties_tem:
-        npc_panties = player_collection.get("npc_panties")
-        for npc_id, pan_ids in panties_tem.items():
-            if npc_id == 0:
-                continue
-            for pan_id in pan_ids:
-                # 如果该内裤不存在，则跳过
-                if pan_id not in game_config.config_clothing_tem:
-                    continue
-                pan_name = game_config.config_clothing_tem[pan_id].name
-                npc_panties.setdefault(npc_id, []).append(pan_name)
-                now_draw_text += _("增加了藏品：{0}的{1}\n").format(
-                    identity.of(npc_id).name, pan_name
-                )
-                now_draw.draw()
-        player_collection.update(npc_panties=npc_panties, npc_panties_tem={})
-
-    # 袜子
-    socks_tem = player_collection.get("npc_socks_tem")
-    if socks_tem:
-        npc_socks = player_collection.get("npc_socks")
-        for npc_id, sock_ids in socks_tem.items():
-            if npc_id == 0:
-                continue
-            for socks_id in sock_ids:
-                # 如果该袜子不存在，则跳过
-                if socks_id not in game_config.config_clothing_tem:
-                    continue
-                socks_name = game_config.config_clothing_tem[socks_id].name
-                npc_socks.setdefault(npc_id, []).append(socks_name)
-                now_draw_text += _("增加了藏品：{0}的{1}\n").format(
-                    identity.of(npc_id).name, socks_name
-                )
-                now_draw.draw()
-        player_collection.update(npc_socks=npc_socks, npc_socks_tem={})
-
-    now_draw.text = now_draw_text
-    now_draw.draw()
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = _("\n摆放藏品结束\n")
-    now_draw.draw()
-
-    # 结算成就
-    achievement_panel.achievement_flow(_("收藏服装"))
-
-
-def refresh_all_bonus() -> None:
-    """
-    刷新所有未获得的解锁奖励
-    """
-    eqip = player_collection.get("eqip_token")
-    limit = eqip[0]
-    # 遍历全部收集奖励
-    for bonus_id in game_config.config_collection_bonus_data:
-        # 目前仅刷新前10个奖励
-        if bonus_id >= 10:
-            break
-        bonus_data = game_config.config_collection_bonus_data[bonus_id]
-        if player_collection.bonus(bonus_id):
-            # 刷新信物的上限解锁奖励
-            limit = max(limit, bonus_data.effect_2)
-    if limit != eqip[0]:
-        player_collection.set_eqip_token(limit, eqip[1])
 
 
 class Collection_Panel:
@@ -118,7 +37,7 @@ class Collection_Panel:
     def draw(self) -> None:
         """绘制对象"""
 
-        refresh_all_bonus()
+        collection_service.refresh_all_bonus()
 
         title_text = _("收藏品")
         collection_type_list = [_("信物"), _("内裤"), _("袜子")]
