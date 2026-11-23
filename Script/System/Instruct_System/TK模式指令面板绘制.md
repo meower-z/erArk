@@ -11,8 +11,10 @@
 ```
 Script/UI/Panel/
 ├── see_instruct_panel.py   # 指令面板绘制（核心）
-├── in_scene_panel.py       # 场景主面板（调用指令面板）
-└── event_option_panel.py   # 事件选项面板（角色自定义指令）
+└── in_scene_panel.py       # 场景主面板（调用指令面板）
+
+Script/Modules/gameplay_resolution/
+└── diy_instruct_service.py # 角色自定义指令查询（get_target_chara_diy_instruct）
 
 Script/UI/Moudle/
 ├── draw.py                 # 绘制基础类
@@ -241,8 +243,8 @@ now_draw.draw()
 
 ```python
 # 获取角色自定义指令
-from Script.UI.Panel import event_option_panel
-len_son_event_list, son_event_list = event_option_panel.get_target_chara_diy_instruct(0)
+from Script.Modules.gameplay_resolution import diy_instruct_service
+len_son_event_list, son_event_list = diy_instruct_service.get_target_chara_diy_instruct(0)
 
 if len_son_event_list:
     count = 0

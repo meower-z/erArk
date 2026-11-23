@@ -8,6 +8,7 @@ from Script.Design import handle_premise, talk
 from Script.Config import config_def, game_config, normal_config
 from Script.Modules.domains import activity, history
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import diy_instruct_service
 from Script.Modules.gameplay_resolution import instruct_filter
 
 _: FunctionType = get_text._
@@ -237,10 +238,8 @@ class SeeInstructPanel:
                     now_draw_list.append(now_draw)
                 self.return_list.append(now_draw.return_text)
         # 角色自定义特殊指令检测与绘制
-        from Script.UI.Panel import event_option_panel
-
         len_son_event_list, son_event_list = (
-            event_option_panel.get_target_chara_diy_instruct(0)
+            diy_instruct_service.get_target_chara_diy_instruct(0)
         )
         if len_son_event_list:
             count = 0

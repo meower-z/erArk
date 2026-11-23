@@ -7,7 +7,6 @@ from Script.Core import (
     flow_handle,
     text_handle,
     py_cmd,
-    constant,
 )
 from Script.Design import talk, handle_premise
 from Script.UI.Moudle import draw, panel
@@ -23,56 +22,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def get_target_chara_diy_instruct(
-    character_id: int = 0,
-) -> tuple[int, list[str]]:
-    """
-    获得交互对象的角色自定义指令\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    Return arguments:\n
-    int -- 子事件数量\n
-    list -- 子事件列表\n
-    """
-    son_event_list = []  # 子事件列表
-    if activity.target(character_id):
-        target_character_data = identity.of(activity.target(character_id))
-        # 判断是否存在该行为对应的事件
-        if (
-            constant.Behavior.CHARA_DIY_INSTRUCT
-            in game_config.config_event_status_data_by_chara_adv
-        ):
-            all_chara_diy_instruct_event_list = (
-                game_config.config_event_status_data_by_chara_adv[
-                    constant.Behavior.CHARA_DIY_INSTRUCT
-                ]
-            )
-            # 判断交互对象是否有该行为事件
-            if target_character_data.adv in all_chara_diy_instruct_event_list:
-                target_diy_instruct_event_list = (
-                    all_chara_diy_instruct_event_list[target_character_data.adv]
-                )
-                # 已计算过的前提字典
-                calculated_premise_dict: dict[str, float] = {}
-                # 遍历事件列表
-                for event_id in target_diy_instruct_event_list:
-                    event_config = game_config.config_event[event_id]
-                    # 计算总权重
-                    now_weight, calculated_premise_dict = (
-                        handle_premise.get_weight_from_premise_dict(
-                            event_config.premise,
-                            character_id,
-                            calculated_premise_dict,
-                            unconscious_pass_flag=True,
-                        )
-                    )
-                    # 判定通过，加入到子事件的列表中
-                    if now_weight:
-                        son_event_list.append(event_id)
-
-    return len(son_event_list), son_event_list
 
 
 def check_son_event_list_from_event_list(

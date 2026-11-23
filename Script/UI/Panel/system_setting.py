@@ -1,5 +1,5 @@
 """
-系统设置面板与游戏基础设置面板，以及按难度返回修正系数
+系统设置面板与游戏基础设置面板
 """
 
 from types import FunctionType
@@ -18,15 +18,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def get_difficulty_coefficient(difficulty: int) -> float:
-    """根据设定的难度值返回修正系数"""
-    coefficients = [0.25, 0.5, 0.75, 1.0, 1.25, 2.0, 4.0]
-    if 0 <= difficulty < len(coefficients):
-        return coefficients[difficulty]
-    else:
-        return 1.0
 
 
 class System_Setting_Panel:
