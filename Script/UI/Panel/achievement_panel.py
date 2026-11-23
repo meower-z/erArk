@@ -55,13 +55,12 @@ def get_achievement_judge_by_value(
 
 
 def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
-    """
-    成就系统流程\n
-    输入：\n
-    - achievement_type: str，成就类型\n
-    - achievement_id: int，强制成功的成就ID（默认为0）\n
-    功能：根据类型结算成就并绘制获得提示
-    """
+    """按 achievement_type 结算成就（achievement_id 非 0 时强制结算该项），并绘制新达成成就的获得提示。"""
+    draw_achievement_notice(settle_by_type(achievement_type, achievement_id))
+
+
+def settle_by_type(achievement_type: str, achievement_id: int = 0) -> list[int]:
+    """按 achievement_type 结算成就（achievement_id 非 0 时强制结算），不绘制，返回新达成 ID 列表。"""
     pl_needs = needs.of(0)
     # 成就类型与结算函数的映射字典
     func = None
@@ -163,8 +162,7 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
     # 如果有对应的结算值，则使用settle_achievement进行结算
     elif judge_value is not None and achievement_ids is not None:
         achievement_id_list = settle_achievement(judge_value, achievement_ids)
-    # 绘制成就获得提示
-    draw_achievement_notice(achievement_id_list)
+    return achievement_id_list
 
 
 def settle_achievement(

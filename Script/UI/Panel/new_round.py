@@ -27,6 +27,8 @@ line_feed_draw = draw.NormalDraw()
 line_feed_draw.text = "\n"
 line = draw.LineDraw("=", width)
 """ 标题线绘制对象 """
+awakening: tuple[str, tuple[int, ...]] = ("", ())
+""" setup 暂存的新周目唤醒数据：(继承报告文本, 新达成成就 ID 元组)，供 start_new_round 换态后绘制。 """
 
 
 class New_Round_Handle:
@@ -905,8 +907,8 @@ class New_Round_Handle:
 
     def start_new_round(self) -> None:
         """
-        开始新的周目：送别干员的送别口上属于结束的周目，先在这里输出；
-        再经 kernel_state.new_round 换入新周目，玩家选行动时调用则中止这次选择
+        先输出送别干员的送别口上，再经 kernel_state.new_round 换入新周目（选行动时中止该选择）。
+        换态成功后，本方法在 finally 中绘制继承报告、等待 [醒来] 并显示成就提示，期间不改写游戏状态。
         """
         from Script.Design import talk, second_behavior
 
@@ -925,7 +927,27 @@ class New_Round_Handle:
 
         line_draw = draw.LineDraw("-", self.width)
         line_draw.draw()
-        kernel_state.new_round(self.choices())
+        before = core.state()
+        try:
+            kernel_state.new_round(self.choices())
+        finally:
+            if core.state() is not before:
+                from Script.UI.Panel import achievement_panel
+
+                report, achieved = awakening
+                info_draw = draw.NormalDraw()
+                info_draw.text = report + "\n\n\n\n\n\n\n\n\n"
+                info_draw.draw()
+                while 1:
+                    return_list = []
+                    button_draw = draw.CenterButton(
+                        _("[醒来]"), _("醒来\n"), width
+                    )
+                    return_list.append(button_draw.return_text)
+                    button_draw.draw()
+                    if flow_handle.askfor_all(return_list) in return_list:
+                        break
+                achievement_panel.draw_achievement_notice(list(achieved))
 
 
 def _int(value: core.JSON) -> int:
@@ -968,42 +990,27 @@ def _inherit_rate(type_id: int, count: int) -> int:
 
 def setup(inherit: Mapping[str, core.JSON]) -> None:
     """
-    新周目的 Reset 步骤：按继承选择重建玩家与干员数据，重置游戏数据，等玩家「醒来」。
-    此时 game_time.now() 已是新周目的开局时刻，新状态尚未写入角色与世界数据
+    新周目的 Reset 步骤：按继承选择重建玩家与干员数据、重置游戏数据并结算周目成就，不绘制也不等待输入。
+    本函数把继承报告与新达成成就 ID 存入 awakening。此时 game_time.now() 已是新周目开局时刻。
     Keyword arguments:
     inherit -- 继承选择，键见 New_Round_Handle.choices
     """
-    from Script.UI.Panel import achievement_panel
-
+    global awakening
     fallen = inherit["all_fall_chara_list"]
     world_setting = inherit["world_setting"]
     carried = inherit["carried"]
     if not isinstance(fallen, tuple) or not isinstance(world_setting, Mapping):
         raise TypeError(f"inherit {inherit!r} is malformed")
     playthrough.restore_carried(cast(Mapping[str, core.JSON], carried))
-    _inherit_player_data(inherit)
-    _inherit_npc_data(inherit, {_int(chara_id) for chara_id in fallen})
-    _reset_game_data(
+    report = _inherit_player_data(inherit)
+    report += _inherit_npc_data(inherit, {_int(cid) for cid in fallen})
+    reset_report, achieved = _reset_game_data(
         {int(cid): _int(value) for cid, value in world_setting.items()}
     )
-
-    info_draw = draw.NormalDraw()
-    info_draw.width = width
-    info_draw.text = "\n\n\n\n\n\n\n\n\n"
-    info_draw.draw()
-
-    while 1:
-        return_list = []
-        button_draw = draw.CenterButton(_("[醒来]"), _("醒来\n"), width)
-        return_list.append(button_draw.return_text)
-        button_draw.draw()
-        yrn = flow_handle.askfor_all(return_list)
-        if yrn in return_list:
-            achievement_panel.achievement_flow(_("周目"))
-            break
+    awakening = (report + reset_report, tuple(achieved))
 
 
-def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
+def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> str:
     """
     继承玩家数据。这一步在新周目的 Reset 里运行，GameState 已是新周目的，
     所以博士的体力、气力与理智上限从继承选择的 player_maxima 算出
@@ -1012,8 +1019,6 @@ def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
     """
     from Script.Design import character
 
-    info_draw = draw.NormalDraw()
-    info_draw.width = width
     info_draw_text = "\n\n"
     info_draw_text += _("开始继承玩家数据\n")
 
@@ -1092,13 +1097,12 @@ def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
             break
     player_collection.update(npc_panties=new_panties, npc_socks=new_socks)
     info_draw_text += _("玩家收藏品继承完毕\n")
-    info_draw.text = info_draw_text
-    info_draw.draw()
+    return info_draw_text
 
 
 def _inherit_npc_data(
     inherit: Mapping[str, core.JSON], fallen_ids: set[int]
-) -> None:
+) -> str:
     """
     继承干员数据。每名干员都重建，陷落干员再按继承选择的比例带上 trust、对博士的 favorability、能力、经验与催眠进度。
     其中 trust 与 favorability 取自 fallen_social，因为重建会把角色键换回默认值
@@ -1106,8 +1110,6 @@ def _inherit_npc_data(
     inherit -- 继承选择
     fallen_ids -- 陷落干员id
     """
-    info_draw = draw.NormalDraw()
-    info_draw.width = width
     info_draw_text = "\n"
     info_draw_text += _("开始继承干员数据\n")
 
@@ -1183,12 +1185,10 @@ def _inherit_npc_data(
         first_record.restore_for_new_round(
             now_id, playthrough.game_round(), carried_fr
         )
-
-    info_draw.text = info_draw_text
-    info_draw.draw()
+    return info_draw_text
 
 
-def _reset_game_data(world_setting: dict[int, int]) -> None:
+def _reset_game_data(world_setting: dict[int, int]) -> tuple[str, list[int]]:
     """
     重置游戏数据：留下继承后的角色与已获得干员、难度与生殖方式设定，周目数加一，换上新周目的世界设定。
     成就与 playthrough.CARRIED_KEYS 里其余的键已在 setup 里写回
@@ -1197,9 +1197,8 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     """
     from Script.UI.Flow import creator_character_flow
     from Script.System.Medical_System import medical_service
+    from Script.UI.Panel import achievement_panel
 
-    info_draw = draw.NormalDraw()
-    info_draw.width = width
     info_draw_text = "\n"
     info_draw_text += _("开始重置游戏数据\n")
 
@@ -1223,6 +1222,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
         playthrough.set_settings(table, values)
     playthrough.set_game_round(new_game_round)
     roster.set_active(new_npc_id_got)
+    achieved = achievement_panel.settle_by_type(_("周目"))
     creator_character_flow.game_start()
 
     # 根据继承的角色，将有人住的宿舍设为开放
@@ -1243,8 +1243,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
                 facility.set_open(open_cid, True)
 
     info_draw_text += _("继承数据覆盖完毕\n")
-    info_draw.text = info_draw_text
-    info_draw.draw()
+    return info_draw_text, achieved
 
 
 class CharacterabiText:

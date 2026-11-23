@@ -706,7 +706,6 @@ def scope_env(extra):
         key: value for key, value in os.environ.items() if ENV_ALLOW.match(key)
     }
     env.update(extra)
-    # game_runner_guard.py 凭这个标记放行 era_image、game_init 的导入
     env["USE_GAME_RUNNER"] = "1"
     return env
 

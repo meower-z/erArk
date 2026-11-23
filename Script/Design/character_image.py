@@ -4,7 +4,7 @@
 
 import itertools
 from types import FunctionType
-from Script.Core import get_text, era_image
+from Script.Core import get_text, image_catalog
 from Script.Config import game_config
 from Script.Design import handle_premise
 from Script.Modules.domains import relations
@@ -31,8 +31,8 @@ def find_character_image_name(character_id: int) -> str:
         character_image_name = "女儿_1"
         # 优先选择自己的同名图片（兼容扁平命名与半身图层命名）
         if (
-            character_data.name in era_image.image_data
-            or f"{character_data.name}_半身" in era_image.image_data
+            character_data.name in image_catalog.image_path_data
+            or f"{character_data.name}_半身" in image_catalog.image_path_data
         ):
             character_image_name = _(
                 character_data.name, revert_translation=True
@@ -59,7 +59,7 @@ def find_character_image_name(character_id: int) -> str:
     # 例如女儿的底图是"女儿_丰蹄"，索引键为"女儿"，用角色名（女儿的自定义名）去查会永远查不到，导致差分匹配被整段跳过
     base_chara_key = base_name.split("_")[0]
     # 如果底图在差分索引中存在，则尝试匹配符合的候选图片
-    if base_chara_key in era_image.image_data_index_by_chara:
+    if base_chara_key in image_catalog.image_data_index_by_chara:
         # 只保留实际生效的差分，顺序仍为优先度顺序
         active_diff_list = [diff for diff in diff_list if diff != ""]
         # 构造候选组合列表：
@@ -79,10 +79,10 @@ def find_character_image_name(character_id: int) -> str:
         # 按顺序在候选列表中选择存在的第一个
         for candidate in candidates:
             # 检查候选图片是否存在（扁平命名）
-            if candidate in era_image.image_data:
+            if candidate in image_catalog.image_path_data:
                 return candidate
             # 检查半身图层命名（如 薇薇安娜_半身），兼容半身/全身双图层结构
-            if f"{candidate}_半身" in era_image.image_data:
+            if f"{candidate}_半身" in image_catalog.image_path_data:
                 return f"{candidate}_半身"
             # 如果候选图片不匹配且裸体差分不为空，则尝试互换全裸与半裸
             if naked_diff != "" and naked_diff in candidate:
@@ -91,19 +91,19 @@ def find_character_image_name(character_id: int) -> str:
                     naked_diff, "_半裸" if naked_diff == "_全裸" else "_全裸"
                 )
                 # 检查替换后的候选图片是否存在
-                if candidate_alt in era_image.image_data:
+                if candidate_alt in image_catalog.image_path_data:
                     return candidate_alt
                 # 同样检查替换后候选的半身图层命名
-                if f"{candidate_alt}_半身" in era_image.image_data:
+                if f"{candidate_alt}_半身" in image_catalog.image_path_data:
                     return f"{candidate_alt}_半身"
 
     # 若无匹配则使用原始立绘名，但需要检查半身图格式兼容
     # 这是为了兼容新的文件名格式：{角色名}_半身.png
-    if base_name in era_image.image_data:
+    if base_name in image_catalog.image_path_data:
         return base_name
     # 如果原始立绘名不存在，尝试查找半身图格式
     half_body_name = f"{base_name}_半身"
-    if half_body_name in era_image.image_data:
+    if half_body_name in image_catalog.image_path_data:
         return half_body_name
     # 都不存在则返回原始名，调用方按没有立绘处理
     return base_name
@@ -137,7 +137,7 @@ def find_daughter_race_image_name(character_data: identity.Identity) -> str:
             f"{image_name}_半身",
             f"{image_name}_全身",
         ):
-            if layer_name in era_image.image_data:
+            if layer_name in image_catalog.image_path_data:
                 return image_name
     return ""
 

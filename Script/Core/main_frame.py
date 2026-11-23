@@ -49,7 +49,7 @@ from Script.Core import (
     perf_hook,
 )
 from Script.Config import normal_config, game_config
-from Script.Core import era_image
+from Script.Core import image_cache, image_catalog
 from typing import TYPE_CHECKING
 from Script.UI.Moudle import view
 
@@ -634,7 +634,7 @@ def _read_queue_drain() -> None:
             _t0 = time.perf_counter() if _perf else 0.0
             textbox.image_create(
                 "end",
-                image=era_image.image_data[json_data["image"]["image_name"]],
+                image=image_cache.image_data[json_data["image"]["image_name"]],
             )
             if _perf:
                 perf_hook.hook_time(
@@ -643,7 +643,7 @@ def _read_queue_drain() -> None:
         if "image_list" in json_data:
             # 批量图片消息（如整条比例条），一条消息内逐格嵌入
             _t0 = time.perf_counter() if _perf else 0.0
-            image_data_dict = era_image.image_data
+            image_data_dict = image_cache.image_data
             for image_name in json_data["image_list"]:
                 textbox.image_create("end", image=image_data_dict[image_name])
             if _perf:
@@ -1161,7 +1161,7 @@ def io_print_image_cmd(
     tooltip -- 鼠标悬停提示文本
     功能描述：图片名不在图片索引里时（例如没有立绘的女儿）不绘制按钮
     """
-    if cmd_str not in era_image.image_data:
+    if cmd_str not in image_catalog.image_path_data:
         return
     cmd_tag_name = str(uuid.uuid1())
     textbox.tag_configure(cmd_tag_name)
@@ -1199,7 +1199,7 @@ def io_print_image_cmd(
             _update_tooltip_coords((event.x_root, event.y_root))
 
     index = textbox.index("end -1c")
-    textbox.image_create(index, image=era_image.image_data[cmd_str])
+    textbox.image_create(index, image=image_cache.image_data[cmd_str])
     textbox.tag_add(cmd_tag_name, index, f"{index} + 1 char")
     textbox.tag_bind(cmd_tag_name, "<1>", send_cmd)
     textbox.tag_bind(cmd_tag_name, "<Enter>", enter_func)

@@ -94,7 +94,7 @@
 
 ## 9. 图片与资源处理
 
-- **图片加载**：`Script.Core.era_image` 在启动时扫描 `image/` 目录，建立图片名 → 路径索引；某张 `.png` 首次显示时才缩放并缓存为 `PhotoImage`。缩放比例与当前字体宽度相关 (`main_frame.normal_font.measure("A")`) ，保证图像与文本排版一致。
+- **图片加载**：`Script.Core.image_catalog` 在导入时通过 `Script.Core.image_path_index` 扫描 `image/` 目录，建立图片名到路径索引（`image_path_data`）与角色索引（`image_data_index_by_chara`），不解码图片。`Script.Core.image_cache.image_data` 在某张 `.png` 首次取图时按 `main_frame.normal_font.measure("A") / 11` 缩放并缓存为 `PhotoImage`（无 Tk 时比例为 `1.0`，解码失败时缓存 1x1 透明图），并保留至进程结束。
 - **图片绘制**：
   - `draw.ImageDraw.draw()` 调用 `io_init.image_print()`。
   - `main_frame.read_queue()` 在 `textbox` 中 `image_create`。
@@ -108,7 +108,7 @@
    - 在 `Script/UI/Panel` 下建模块，组合 `draw.*` 与 `panel.*` 组件。
    - 通过 `handle_panel.add_panel` 注册到对应 Flow，或在行为循环中直接调用。
 3. **新增样式**：更新 `data/csv` → `buildconfig.py` 生成配置，再调用 `io_init.init_style()` 时自动注册。
-4. **新增图片**：放入 `image/`，注意命名与配置。需要差分立绘时使用 `角色名_xxx.png`，`era_image` 会自动建立索引。
+4. **新增图片**：将 `.png` 文件放入 `image/` 并保持命名与配置一致。需要差分立绘时按 `角色名_xxx.png` 命名。`Script.Core.image_catalog` 导入时会自动建立路径索引与角色索引。
 
 ## 11. 调试与排错建议
 

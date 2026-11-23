@@ -1,17 +1,13 @@
-"""游戏图片的路径索引与按需解码缓存"""
+"""
+Tk 图片缓存：image_data 按需从磁盘解码图片，按字体缩放比例生成 PhotoImage 并缓存至进程结束。
+成员检查（in）只查询 image_catalog.image_path_data，不解码图片。
+解码失败的图片缓存为 1x1 透明 PhotoImage。
+"""
 
-import os
 import threading
-import time
 from PIL.ImageTk import PhotoImage
 from PIL import Image
-from Script.Core import image_path_index
-
-image_path_data: dict[str, str] = {}  # 图片路径数据
-image_data_index_by_chara: dict[str, list[str]] = {}
-image_text_data: dict[str, str] = {}
-image_lock = 0
-image_dir_path = os.path.join("image")
+from Script.Core import image_catalog
 
 _font_scaling = None
 _image_load_lock = threading.Lock()
@@ -23,7 +19,6 @@ def _get_font_scaling() -> float:
     """
     global _font_scaling
     if _font_scaling is None:
-        # 无Tk环境下，main_frame.normal_font 可能不存在，退化为 1.0
         try:
             from Script.Core import main_frame
 
@@ -49,14 +44,13 @@ def _decode_image(image_name: str) -> PhotoImage | None:
     Return arguments:
     PhotoImage -- 转换好的图片；解码失败时返回 None
     """
-    image_file_path = image_path_data[image_name]
+    image_file_path = image_catalog.image_path_data[image_name]
     font_scaling = _get_font_scaling()
     try:
         with Image.open(image_file_path) as img:
             old_width, old_height = img.size
             now_width = int(old_width * font_scaling)
             now_height = int(old_height * font_scaling)
-            # 使用BILINEAR，比LANCZOS快且质量可接受
             resized_img = img.resize(
                 (now_width, now_height), Image.Resampling.BILINEAR
             )
@@ -64,45 +58,6 @@ def _decode_image(image_name: str) -> PhotoImage | None:
     except Exception as e:
         print(f"  加载图片失败: {image_file_path} - {e}")
         return None
-
-
-def index_images_from_directory(directory: str) -> None:
-    """
-    建立目录下全部图片的名字 -> 路径索引与角色索引，不解码图片
-
-    Keyword arguments:
-    directory -- str，图片根目录
-
-    Return arguments:
-    无
-    """
-    start_time = time.time()
-
-    # 每个图片名只取一个文件
-    path_index, duplicates = image_path_index.build_image_path_index(directory)
-    for image_file_name in sorted(duplicates):
-        paths = duplicates[image_file_name]
-        print(
-            f"图片重名：{image_file_name} 使用 {paths[0]}，忽略 {'、'.join(paths[1:])}"
-        )
-
-    if not path_index:
-        print("未找到任何图片文件")
-        return
-
-    for image_file_name, image_file_path in path_index.items():
-        image_path_data[image_file_name] = image_file_path
-        # 建立角色索引，键为文件名首段（第一个"_"之前的部分）
-        if "_" in image_file_name:
-            character_name = image_file_name.split("_")[0]
-            image_data_index_by_chara.setdefault(character_name, []).append(
-                image_file_name
-            )
-
-    elapsed_time = time.time() - start_time
-    print(
-        f"图片索引完成！共 {len(image_path_data)} 张，耗时 {elapsed_time:.2f} 秒"
-    )
 
 
 class _LazyImageDict(dict):
@@ -113,13 +68,11 @@ class _LazyImageDict(dict):
     """
 
     def __getitem__(self, key: str) -> PhotoImage:
-        # 已解码的直接返回
         if super().__contains__(key):
             return super().__getitem__(key)
         if key not in self:
             raise KeyError(key)
 
-        # 首次使用时解码；加锁避免同一张图片被解码两次
         with _image_load_lock:
             if super().__contains__(key):
                 return super().__getitem__(key)
@@ -132,8 +85,7 @@ class _LazyImageDict(dict):
             return photo_image
 
     def __contains__(self, key: object) -> bool:
-        # 只查索引，不解码
-        return key in image_path_data
+        return key in image_catalog.image_path_data
 
     def get(self, key: str, default: object = None) -> object:
         try:
@@ -143,5 +95,3 @@ class _LazyImageDict(dict):
 
 
 image_data = _LazyImageDict()
-
-index_images_from_directory(image_dir_path)

@@ -25,8 +25,7 @@ PROBE = Path(__file__).resolve().parent / "tk_probe.py"
 SCREEN = "2100x1100x24"
 
 # 默认内存上限。Tk 游戏启动峰值连文件缓存在内不到 2 GB，3G 留出余量，
-# 按 limited_run.SLOT_SIZE 占 ceil(3G / SLOT_SIZE) 个槽位；
-# 图片首次显示时才解码并保留到进程结束（Script/Core/era_image.py），显示过很多图片的长时间运行需另传更大的 --mem
+# 按 limited_run.SLOT_SIZE 占 ceil(3G / SLOT_SIZE) 个槽位。
 DEFAULT_MEM = "3G"
 
 

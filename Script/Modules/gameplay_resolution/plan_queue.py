@@ -74,6 +74,17 @@ def forget_on_reset(game: core.GameState) -> core.GameState:
     return game
 
 
+@core.input_hook(core.step_failed)
+def forget_on_failure() -> tuple[()]:
+    """
+    kernel.StepFailed 的输入钩子：一步出错后丢掉尚未提交的打断，并清掉正在开始行动的角色键。
+    Return arguments:
+    tuple -- 交给内层的空参数元组
+    """
+    forget()
+    return ()
+
+
 def _queue(who: int, game: core.GameState | None = None) -> list[Queued]:
     """
     角色的队列，只读；没有时为空列表
