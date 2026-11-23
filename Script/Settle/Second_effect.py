@@ -40,25 +40,6 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-# @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.S_orgasm_small)
-# def handle_s_orgasm_small(
-#     character_id: int,
-#     change_data: game_type.CharacterStatusChange,
-# ):
-#     """
-#     结算S小绝顶
-#     Keyword arguments:
-#     character_id -- 角色id
-#     change_data -- 状态变更信息记录对象
-#     """
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     if character_data.dead:
-#         return
-#     #仅在H模式下才计算高潮次数计数
-#     if character_data.sp_flag.is_h == 1:
-#         character_data.h_state.orgasm_count[0] += 1
-
-
 @settle_behavior.add_settle_second_behavior_effect(
     constant_effect.SecondEffect.Nothing
 )
@@ -182,32 +163,6 @@ def handle_add_1_cclimax_experience(
         _bump_orgasm_count(character_id, 2)
 
 
-# @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_PClimax_EXPERIENCE)
-# def handle_add_1_pclimax_experience(
-#     character_id: int,
-# #     change_data: game_type.CharacterStatusChange,
-# # ):
-#     """
-#     增加1P绝顶经验
-#     Keyword arguments:
-#     character_id -- 角色id
-# #     change_data -- 状态变更信息记录对象
-# #     """
-#     if not add_time:
-#         return
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     if character_data.dead:
-#         return
-#     character_data.experience.setdefault(13, 0)
-#     character_data.experience[13] += 1
-#     character_data.experience.setdefault(20, 0)
-#     character_data.experience[20] += 1
-#     change_data.experience.setdefault(13, 0)
-#     change_data.experience[13] += 1
-#     change_data.experience.setdefault(20, 0)
-#     change_data.experience[20] += 1
-
-
 @settle_behavior.add_settle_second_behavior_effect(
     constant_effect.SecondEffect.ADD_1_VClimax_EXPERIENCE
 )
@@ -311,27 +266,6 @@ def handle_add_1_wclimax_experience(
 """
     8-9留空
 """
-
-# @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_Climax_EXPERIENCE)
-# def handle_add_1_climax_experience(
-#     character_id: int,
-# #     change_data: game_type.CharacterStatusChange,
-# # ):
-#     """
-#     增加1绝顶经验
-#     Keyword arguments:
-#     character_id -- 角色id
-# #     change_data -- 状态变更信息记录对象
-# #     """
-#     if not add_time:
-#         return
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     if character_data.dead:
-#         return
-#     character_data.experience.setdefault(20, 0)
-#     character_data.experience[20] += 1
-#     change_data.experience.setdefault(20, 0)
-#     change_data.experience[20] += 1
 
 
 @settle_behavior.add_settle_second_behavior_effect(

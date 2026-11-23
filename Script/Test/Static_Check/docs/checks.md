@@ -44,15 +44,15 @@
 | BEHAV-08 | 当前行为id必须已注册 | 每个被调度角色的behavior_id都能在game_config.config_behavior(键为en_name)中查到 |
 | BEHAV-09 | 运行中行为时长为非负整数 | 每个被调度角色的behavior.duration是非负整数 |
 | BEHAV-10 | 活动角色的行为起时不得是哨兵 | 每个被调度角色的behavior.start_time不是哨兵0001-01-01 |
-| BEHAV-11 | 行为起时不得晚于游戏时间 | 每个被调度角色的behavior.start_time不晚于cache.game_time |
-| BEHAV-12 | 不得残留已过期的行为 | 非H、duration>0的被调度角色，其行为结束时间END()不早于cache.game_time |
+| BEHAV-11 | 行为起时不得晚于游戏时间 | 每个被调度角色的behavior.start_time不晚于game_time.now() |
+| BEHAV-12 | 不得残留已过期的行为 | 非H、duration>0的被调度角色，其行为结束时间END()不早于game_time.now() |
 | BEHAV-14 | 移动行为必须带着可执行的路径 | behavior_id为move的角色带着可执行的路径快照 |
 | BEHAV-15 | "谁在跟我互动"的记录必须指向真实角色 | 每个角色的action_info.interacting_character_end_info[0]（结算交互行为时写进对方的"发起方id"）要么是哨兵-1，要么指向角色身份表（identity.characters）中存在的角色 |
-| BEHAV-16 | 生效中的身体道具不得已过期 | h_state.body_item中"生效中(item[1]为真)"的道具，其结束时间item[2]要么为None要么晚于 cache.game_time |
+| BEHAV-16 | 生效中的身体道具不得已过期 | h_state.body_item中"生效中(item[1]为真)"的道具，其结束时间item[2]要么为None要么晚于 game_time.now() |
 | BEHAV-17 | 二段行为取值与待结算id合法 | second_behavior(二段行为id→0/1触发标记字典)的取值只能是0或1的int，以及 must_settle_second_behavior_id_list/must_show_second_behavior_id_list两个待处理id列表中的每个id都在 game_config.config_behavior_effect_data中——must_settle_check()与must_show_talk_check()都会无保护地 下标该配表，键错即KeyError |
 | BEHAV-18 | 行为历史队列有界且条目可比 | last_behavior_id_list是长度在[1,5]的list，且每个元素要么是0要么是字符串 |
 | BEHAV-19 | 时停中玩家必须处于时停无意识态 | time_stop_mode为真时，0号玩家的sp_flag.unconscious_h必须等于3(时停语义) |
-| BEHAV-20 | 群交模式必须有玩家在H中 | cache.group_sex_mode为真时，0号玩家的sp_flag.is_h必须为真 |
+| BEHAV-20 | 群交模式必须有玩家在H中 | modes.group_sex()为真时，0号玩家的sp_flag.is_h必须为真 |
 | BEHAV-22 | 行为起时落在四季月上 | 每个被调度角色(排除哨兵值)的behavior.start_time月份属于四季月{3,6,9,12} |
 
 ## BODY：服装与身体
@@ -120,7 +120,7 @@ H 状态、群交模式、逆推、隐奸。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| HGROUP-01 | 群交模式蕴含玩家在H | cache.group_sex_mode为真时玩家必然带is_h标记：所有真正开启群交的效果链都同时给玩家挂462； 若同时命中HGROUP-02，还存在群交模式与同场景在H的NPC人数不一致；本条不推断具体退出路径 |
+| HGROUP-01 | 群交模式蕴含玩家在H | modes.group_sex()为真时玩家必然带is_h标记：所有真正开启群交的效果链都同时给玩家挂462； 若同时命中HGROUP-02，还存在群交模式与同场景在H的NPC人数不一致；本条不推断具体退出路径 |
 | HGROUP-02 | 群交模式需满足场内在H的NPC人数 | 普通群交需同场景至少2名在H的NPC；性技实操课使用群交模式，但允许仅1名学生 |
 | HGROUP-03 | 非群交时玩家群交模板必须为空 | 群交模式关闭时玩家A/B两套群交模板均已清空 |
 | HGROUP-04 | 群交模板结构固定 | 玩家群交模板字典恰含A/B两键，每套为[单槽字典,侍奉项]，单槽字典恰含5个部位键、每个单槽 是长度2的列表，侍奉项是[list,state_id] |
@@ -331,7 +331,7 @@ H 状态、群交模式、逆推、隐奸。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| ROSTER-01 | 在编名册id自洽 | cache.npc_id_got中每个id都存在角色对象，且角色自身cid与名册键一致，这是后续全部名册检查的地基 |
+| ROSTER-01 | 在编名册id自洽 | roster.active()中每个id都存在于identity.table()，且角色自身cid与名册键一致，这是后续全部名册检查的地基 |
 | ROSTER-02 | 玩家id不应长期留在NPC名册里 | npc_id_got语义上是NPC集合，但init_character_position/init_character_entertainment会对玩家本体add(0)， discard(0)只在基建/宿舍面板(玩家触发)里执行，回合主循环从不调用 |
 | ROSTER-03 | 在编干员与场景名册双向一致 | 在编NPC恰好出现在其position对应的那一个场景里，离线角色从所有场景消失，场景里不得有幽灵id |
 | ROSTER-04 | 离线来源flag必须对应真正的离线态 | 装袋/外勤/越狱三条路径都是"置来源flag→handle_chara_off_line"的原子写法 |
@@ -344,7 +344,7 @@ H 状态、群交模式、逆推、隐奸。
 | ROSTER-11 | 监狱长缓存唯一且指向真实岗位 | 在编干员里最多只能有一名工作类型191的监狱长，监狱长(work.warden)非零时必须指向存在的角色， 不能与那名在编191冲突 |
 | ROSTER-12 | 监狱长身份软约束 | 期望状态：监狱长(work.warden)非零时该人在编、宿舍是关押区休息室、不是囚犯/访客、不在外勤 |
 | ROSTER-13 | 监禁调教设置键齐全且取值在选项范围内 | 设置字典由配置表全量初始化为0，UI用option[cid][value]直接索引(越界IndexError)， 结算路径对[4]/[13]直取(缺键KeyError) |
-| ROSTER-14 | 访客名册与访客flag完全等价 | base.visitor的访客名册与sp_flag.vistor == 1的角色是同一批人，且当前访客都在在编名册(cache.npc_id_got)里 |
+| ROSTER-14 | 访客名册与访客flag完全等价 | base.visitor的访客名册与sp_flag.vistor == 1的角色是同一批人，且当前访客都在在编名册(roster.active())里 |
 | ROSTER-15 | 访客住在互不重复的客房 | 访客由分配器挑一间没有别的访客占用的客房；用场景标签集合GUEST_ROOMS判定房间合法性， 比"客房" in d的子串判定更强 |
 | ROSTER-16 | 访客人数不超过客房上限 | 访客数不超过visitor.capacity()按已开放客房数算出的访客上限 |
 | ROSTER-17 | 没有严重逾期未结算的访客 | base.visitor里没有离开时刻已过去一整天或更久的访客 |

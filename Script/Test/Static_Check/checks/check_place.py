@@ -723,7 +723,7 @@ def check_cohabitation_service_matches_dormitory() -> list[CheckFailure]:
     功能:
         校验当前助理开启服务7（同居）时，其宿舍应为"中枢/博士房间"。级别为warning。判定范围有两处限制：
         当前助理同时任命为监狱长(work_type==191)是合法状态，予以豁免；不要求permanent_dormitory非空
-        （Character.dormitory初值即""，该子句守不住任何真实约束）
+        （chara_life.dormitory（键life.dormitory）初值即""，该子句守不住任何真实约束）
     """
     failures: list[CheckFailure] = []
     character_data = identity.table()

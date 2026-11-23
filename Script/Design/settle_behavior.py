@@ -200,11 +200,6 @@ def handle_settle_behavior(
                 son_event_id, character_id, add_time, change_data, now_time
             )
 
-    # target_data = game_type.Character = cache.character_data[player_character_data.target_character_id]
-    # 注释掉了会按不交流的时间自动扣好感的系统#
-    # change_character_favorability_for_time(character_id, now_time)
-    # 注释掉了社交关系#
-    # change_character_social(character_id, status_data)
     now_judge = False
     exchange_flag = False  # 玩家和NPC输出互换的flag
     PC_information_flag = 0  # 0初始，1PC输出，2不输出
@@ -845,36 +840,6 @@ def get_cut_down_favorability_for_consume_time(consume_time: int) -> int:
         return (consume_time - 999) * 1000 + 90909
 
 
-# def change_character_favorability_for_time(character_id: int, now_time: datetime.datetime):
-#     """
-#     按最后社交时间扣除角色好感度
-#     Keyword arguments:
-#     character_id -- 角色id
-#     now_time -- 当前时间
-#     """
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     for now_character in character_data.favorability:
-#         if character_data.favorability[now_character] <= 500:
-#             continue
-#         character_data.social_contact_last_time.setdefault(now_character, now_time)
-#         last_add_time: datetime.datetime = character_data.social_contact_last_time[now_character]
-#         now_consume_time = int((now_time - last_add_time).seconds / 60)
-#         if now_consume_time < 60:
-#             continue
-#         now_cut_down = get_cut_down_favorability_for_consume_time(int(now_consume_time / 60))
-#         if now_character in character_data.social_contact_last_cut_down_time:
-#             last_cut_down_time: datetime.datetime = character_data.social_contact_last_cut_down_time[
-#                 now_character
-#             ]
-#             old_consume_time = int((last_cut_down_time - last_add_time).seconds / 60)
-#             old_cut_down = get_cut_down_favorability_for_consume_time(int(old_consume_time / 60))
-#             now_cut_down -= old_cut_down
-#         character_data.favorability[now_character] -= now_cut_down
-#         if character_data.favorability[now_character] < 0:
-#             character_data.favorability[now_character] = 0
-#         # change_character_social_now(now_character, character_id)
-
-
 def change_character_talkcount_for_time(
     character_id: int, now_time: datetime.datetime
 ) -> None:
@@ -908,52 +873,6 @@ def change_character_talkcount_for_time(
     if action_info.get(target_data.cid, "talk_count") < 0:
         action_info.set(target_data.cid, "talk_count", 0)
     # print("target_data.action_info.talk_count :",target_data.action_info.talk_count)
-
-
-# def change_character_social(character_id: int, change_data: game_type.CharacterStatusChange):
-#     """
-#     处理角色关系变化
-#     Keyword argumenys:
-#     character_id -- 状态变化数据所属角色id
-#     change_data -- 状态变化数据
-#     """
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     for now_character in change_data.target_change:
-#         change_character_social_now(character_id, now_character, change_data)
-
-
-# def change_character_social_now(
-#     character_id: int,
-#     target_id: int,
-#     change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange(),
-# ):
-#     """
-#     执行角色关系变化
-#     Keyword arguments:
-#     character_id -- 状态变化数据所属角色id
-#     target_id -- 关系变化角色id
-#     change_data -- 状态变化数据
-#     """
-#     if target_id in change_data.target_change:
-#         target_change: game_type.TargetChange = change_data.target_change[target_id]
-#     target_data: game_type.Character = cache.character_data[target_id]
-#     old_social = 0
-#     new_social = 0
-#     if character_id in target_data.social_contact_data:
-#         old_social = target_data.social_contact_data[character_id]
-#     target_data.favorability.setdefault(character_id, 0)
-#     now_favorability = target_data.favorability[character_id]
-#     new_social = get_favorability_social(now_favorability)
-#     if new_social != old_social:
-#         if target_id in change_data.target_change:
-#             target_change.old_social = old_social
-#             target_change.new_social = new_social
-#         target_data.social_contact.setdefault(old_social, set())
-#         target_data.social_contact.setdefault(new_social, set())
-#         if character_id in target_data.social_contact[old_social]:
-#             target_data.social_contact[old_social].remove(character_id)
-#         target_data.social_contact[new_social].add(character_id)
-#         target_data.social_contact_data[character_id] = new_social
 
 
 def get_favorability_social(favorability: int) -> int:

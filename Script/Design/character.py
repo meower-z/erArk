@@ -165,61 +165,6 @@ def input_name_func(ask_text: str) -> str:
     return return_name
 
 
-# def character_rest_to_time(character_id: int, need_time: int):
-#     """
-#     设置角色状态为休息指定时间
-#     Keyword arguments:
-#     character_id -- 角色id
-#     need_time -- 休息时长(分钟)
-#     """
-#     character_data = cache.character_data[character_id]
-#     character_data.behavior["Duration"] = need_time
-#     character_data.behavior["BehaviorId"] = constant.Behavior.REST
-#     character_data.state = constant.CharacterStatus.STATUS_REST
-
-
-# def calculation_favorability(character_id: int, target_character_id: int, favorability: int) -> int:
-#     """
-#     按角色性格和关系计算最终增加的好感值
-#     Keyword arguments:
-#     character_id -- 角色id
-#     target_character_id -- 目标角色id
-#     favorability -- 基础好感值
-#     Return arguments:
-#     int -- 最终的好感值
-#     """
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     target_data: game_type.Character = cache.character_data[target_character_id]
-#     fix = 1.0
-#     for i in {0, 1, 2, 5, 13, 14, 15, 16}:
-#         now_fix = 0
-#         if character_data.nature[i] > 50:
-#             nature_value = character_data.nature[i] - 50
-#             now_fix -= nature_value / 50
-#         else:
-#             now_fix += character_data.nature[i] / 50
-#         if target_data.nature[i] > 50:
-#             nature_value = target_data.nature[i] - 50
-#             if now_fix < 0:
-#                 now_fix *= -1
-#                 now_fix += nature_value / 50
-#                 now_fix = now_fix / 2
-#             else:
-#                 now_fix += nature_value / 50
-#         else:
-#             nature_value = target_data.nature[i]
-#             if now_fix < 0:
-#                 now_fix += nature_value / 50
-#             else:
-#                 now_fix -= nature_value / 50
-#                 now_fix = now_fix / 2
-#         fix += now_fix
-#     if character_id in target_data.social_contact_data:
-#         fix += target_data.social_contact_data[character_id]
-#     favorability *= fix
-#     return favorability
-
-
 def judge_character_time_over_24(character_id: int) -> int:
     """
     校验角色的时间是否已过24点

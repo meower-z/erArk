@@ -833,7 +833,7 @@ def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验cache.group_sex_mode为真时，0号玩家的sp_flag.is_h必须为真。群交是玩家主导的H场景，标记为真但
+        校验modes.group_sex()为真时，0号玩家的sp_flag.is_h必须为真。群交是玩家主导的H场景，标记为真但
         玩家不在H意味着模式泄漏，之后NPC的AI会一直走群交分支。级别为warning：GROUP_SEX_MODE_OFF是配表驱动的
         结算效果，能结束群交的行为是否都挂了该效果并无逐条保证，可能存在合法但暂时不同步的窗口。隐奸把玩家
         is_h清零的路径用的是hidden_sex_mode而非group_sex_mode，不构成本条反例

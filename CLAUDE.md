@@ -42,7 +42,7 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 ## High-Level Architecture
 
 ### Core Game Flow
-1. **Entry Point**: `game.py` - Auto-builds config data (`auto_build_config`), initializes cache and configs, loads the mod system (`init_mod_system()`), then starts the Tkinter GUI (`game_init.run(start_flow.start_frame)`)
+1. **Entry Point**: `game.py` - Auto-builds config data (`auto_build_config`), initializes configs (`normal_config`, `game_config`), loads the mod system (`init_mod_system()`), character templates, and map data, resets the kernel clock (`kernel_state.reset_clock`), then starts the Tkinter GUI (`game_init.run(start_flow.start_frame)`)
 2. **Game Initialization**: `Script/Core/game_init.py` - Sets up the game environment, styles, and main flow
 3. **Main Frame Loop**: `Script/Design/start_flow.py` - Contains UI handling and panel management
 4. **Main Behavior Loop**: `Script/Design/character_behavior.py` - The actual game simulation loop
@@ -166,11 +166,11 @@ This is the core game loop that manages character behaviors and time progression
 ### 1. Player Phase
 - Player selects an action (instruction) through UI panels
 - Action sets behavior ID, duration, and start time on player character
-- Loop processes player behavior until completion (`0 not in cache.over_behavior_character`)
-- Special handling for time stop mode - time is rolled back after player action
+- Kernel `_step()` (`Script/Kernel/core.py`) ends the action via `actions.wrap_up` when `action.start + action.duration <= GameState.clock`, then sets the character to `kernel.Idle`
+- Time stop: `actions.time_stop` (`Script/Modules/gameplay_resolution/actions.py`) starts the player's action as 0 kernel minutes, so the clock does not advance (except for `TIME_STOP_OFF`)
 
 ### 2. NPC Phase
-- After player action completes, all NPCs in `cache.npc_id_got` are processed
+- Each NPC in `roster.active()` (global key `roster.active`, `Script/Modules/domains/roster.py`) picks its next action when its own action runs out; within one minute characters pick in roster order (player first, then NPCs by id)
 - Each NPC's behavior is calculated based on:
   - Current state (tired, following, in H-mode, unconscious, etc.)
   - AI decision making (`handle_npc_ai.find_character_target()`)
@@ -201,10 +201,10 @@ For each character:
 - **Special handling**: Group activities, hidden actions, and complex interactions
 
 ### 6. Key Variables
-- `cache.over_behavior_character`: Set of characters who completed their current behavior
-- `cache.game_time`: Current game time
+- `GameState.characters[who].action` (`Script/Kernel/core.py`): Each character's active `Action` (`start` and `duration` in kernel minutes); `_step()` finishes it via `actions.wrap_up` when `start + duration <= GameState.clock`
+- `game_time.now()` (`Script/Design/game_time.py`): Current game time, built from the kernel clock (`GameState.clock`)
 - `pl_start_time`: Player's behavior start time (reference for NPC timing)
-- `cache.time_stop_mode`: Special mode where time doesn't advance
+- `modes.time_stop()` (global key `mode.time_stop`, `Script/Modules/domains/modes.py`): Special mode where time doesn't advance
 
 ### 7. Loop Exit Conditions
 - All characters (player + NPCs) have completed their behaviors

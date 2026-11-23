@@ -3,7 +3,7 @@
 两层课表：
     全局课表 base.class_schedule（经 education 读写）—— 只排班级式的教室课（理论/实践/公开），
         结构为 {教室场景名: {星期: {节次: [科目能力id, 授课教师id]}}}
-    个人课表 Character.child_growth.selected_course —— 承载学生的选课与个人式课程
+    个人课表 growth.child 中的 selected_course（经 growth 读写）—— 承载学生的选课与个人式课程
         （体育/兴趣/实习），结构为 {星期: {节次: [课型, 目标]}}
 
 教师视角不另存字段，由全局课表反查得到，避免两处数据互相追赶。

@@ -124,7 +124,7 @@ def _behavior_id(chara: identity.Identity | None) -> str | None:
 def _pre_instr() -> list:
     """
     返回值: list 最近3条玩家行为指令(id)，字段缺失或非list时返回空列表
-    功能: 防御式获取cache.pl_pre_behavior_instruce末尾3条，用于失败上下文定位"上一条玩家指令"
+    功能: 防御式获取history.recent()（全局键log.instructions）末尾3条，用于失败上下文定位"上一条玩家指令"
     """
     return history.recent()[-3:]
 
@@ -174,7 +174,7 @@ def check_hgroup_01() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验cache.group_sex_mode为真时玩家必然带is_h标记：所有真正开启群交的效果链都同时给玩家挂462；
+        校验modes.group_sex()为真时玩家必然带is_h标记：所有真正开启群交的效果链都同时给玩家挂462；
         若同时命中HGROUP-02，还存在群交模式与同场景在H的NPC人数不一致；本条不推断具体退出路径
     """
     pl = _pl()
@@ -1610,7 +1610,7 @@ def check_hgroup_27() -> list[CheckFailure]:
     功能:
         校验开启时停会给ALL全员(含玩家自己)写unconscious_h=3，关闭时全员写0，除时停外没有第二处写3。
         本条是其余条目时停守卫的根状态验证：先确认时停标记本身没断链，才能放心把位置类误报归因于时停。
-        迭代范围必须正好是cache.npc_id_got | {0}，与写入侧的集合一致
+        迭代范围必须正好是roster.active() | {0}，与写入侧的集合一致
     """
     all_ids = _all()
     ts = modes.time_stop()
@@ -1662,7 +1662,7 @@ def check_hgroup_28() -> list[CheckFailure]:
         校验h_state.pretend_sleep=True必须同时满足sp_flag.sleep_h_awake=True、
         sp_flag.unconscious_h==1、sp_flag.is_h=True。唯一置真点一次性写全三项。唯一已知例外是时停：
         handle_time_stop_on会把该NPC的unconscious_h覆盖成3，若装睡期间开时停，本条会误报——命中时
-        先核对cache.time_stop_mode再判定，故失败上下文附带该值供triage，不在检查体内加时停豁免
+        先核对modes.time_stop()再判定，故失败上下文附带该值供triage，不在检查体内加时停豁免
         (原始不变式给出的检查体本身未加该豁免)
     """
     all_ids = _all()

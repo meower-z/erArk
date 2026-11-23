@@ -35,7 +35,7 @@ pip install -r requirements.txt
 ## 高层架构
 
 ### 核心游戏流程
-1. **入口点**：`game.py` - 自动构建配置数据（`auto_build_config`），初始化缓存和配置，加载 mod 系统（`init_mod_system()`），然后启动 Tkinter GUI（`game_init.run(start_flow.start_frame)`）
+1. **入口点**：`game.py` - 自动构建配置数据（`auto_build_config`），初始化配置（`normal_config`、`game_config`），加载 mod 系统（`init_mod_system()`）、角色模板与地图数据，重置内核时钟（`kernel_state.reset_clock`），然后启动 Tkinter GUI（`game_init.run(start_flow.start_frame)`）
 2. **游戏初始化**：`Script/Core/game_init.py` - 设置游戏环境、样式和主流程
 3. **主框架循环**：`Script/Design/start_flow.py` - 包含 UI 处理和面板管理
 4. **主行为循环**：`Script/Design/character_behavior.py` - 实际的游戏模拟循环
@@ -156,11 +156,11 @@ GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 mast
 ### 1. 玩家阶段
 - 玩家通过 UI 面板选择一个行动（指令）
 - 行动设置玩家角色的行为 ID、持续时间和开始时间
-- 循环处理玩家行为直到完成（`0 not in cache.over_behavior_character`）
-- 时停模式的特殊处理 - 玩家行动后时间会回退
+- 内核 `_step()`（`Script/Kernel/core.py`）在 `action.start + action.duration <= GameState.clock` 时通过 `actions.wrap_up` 收尾，并将角色置为 `kernel.Idle`
+- 时停模式：`actions.time_stop`（`Script/Modules/gameplay_resolution/actions.py`）把玩家的行动以 0 分钟开始，时钟不前进（解除时停 `TIME_STOP_OFF` 除外）
 
 ### 2. NPC 阶段
-- 玩家行动完成后，处理 `cache.npc_id_got` 中的所有 NPC
+- `roster.active()`（全局键 `roster.active`，`Script/Modules/domains/roster.py`）中的每个 NPC 在自己的行动用完时选下一个行动，同一分钟内按花名册顺序（玩家在前，NPC 按 id）
 - 每个 NPC 的行为基于以下内容计算：
   - 当前状态（疲劳、跟随、H 模式、无意识等）
   - AI 决策（`handle_npc_ai.find_character_target()`）
@@ -191,10 +191,10 @@ GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 mast
 - **特殊处理**：群体活动、隐藏行动和复杂交互
 
 ### 6. 关键变量
-- `cache.over_behavior_character`：完成当前行为的角色集合
-- `cache.game_time`：当前游戏时间
+- `GameState.characters[who].action`（`Script/Kernel/core.py`）：每个角色当前的 `Action`（含内核分钟计的 `start` 与 `duration`），`_step()` 在 `start + duration <= GameState.clock` 时通过 `actions.wrap_up` 收尾
+- `game_time.now()`（`Script/Design/game_time.py`）：当前游戏时间，由内核时钟（`GameState.clock`）换算得到
 - `pl_start_time`：玩家行为开始时间（NPC 计时的参考）
-- `cache.time_stop_mode`：时间不推进的特殊模式
+- `modes.time_stop()`（全局键 `mode.time_stop`，`Script/Modules/domains/modes.py`）：时间不推进的特殊模式
 
 ### 7. 循环退出条件
 - 所有角色（玩家 + NPC）都完成了他们的行为
