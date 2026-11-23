@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 BACKEND_UI_FREE_DIRS = (
     "Script/Kernel",
     "Script/Modules/domains",
+    "Script/Modules/gameplay_resolution",
     "Script/Modules/save_load",
 )
 """ 禁止导入界面与输入输出模块的后端目录 """
