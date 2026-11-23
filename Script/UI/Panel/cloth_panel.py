@@ -22,23 +22,6 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def cloth_off_after_settle(character_id: int) -> None:
-    """
-    结算后的脱衣服操作
-    Keyword arguments:
-    character_id -- 角色id
-    """
-    cloth = wardrobe.clone_mutable_snapshot(character_id)
-    for i in game_config.config_clothing_type:
-        # 去重
-        cloth.cloth_off[i] = list(set(cloth.cloth_off[i]))
-        # 如果某个脱掉的衣服还在穿着，则从脱掉的衣服列表中移除
-        for j in cloth.cloth_off[i]:
-            if j in cloth.cloth_wear[i]:
-                cloth.cloth_off[i].remove(j)
-    wardrobe.put(character_id, cloth)
-
-
 class SeeCharacterClothPanel:
     """
     显示角色服装面板对象

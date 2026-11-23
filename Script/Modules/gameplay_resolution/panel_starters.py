@@ -29,16 +29,17 @@ from Script.Modules.domains import (
     flags,
 )
 from Script.Modules.domains import player_ability, tallies, scene_state
-from Script.Modules.gameplay_resolution import intent, plan_queue, starts
+from Script.Modules.gameplay_resolution import (
+    intent,
+    library_service,
+    plan_queue,
+    starts,
+    training_prep,
+)
 from Script.System.Cooking_System import cooking
 from Script.System.Sex_System import drunk_sex_common
 from Script.UI.Moudle import draw
-from Script.UI.Panel import (
-    achievement_panel,
-    borrow_book_panel,
-    cloth_panel,
-    confinement_and_training,
-)
+from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import kitchen, needs, warehouse
 from Script.Modules.domains import inventory, wardrobe, relations
 
@@ -76,7 +77,7 @@ def _wait_one_minute(who: int) -> core.Action:
 @starts.starter("player_read_book")
 def start_read_book(who: int, chosen: intent.Intent) -> None:
     """读书：历史记录里这本书的阅读次数加一"""
-    borrow_book_panel.update_read_count_in_history(
+    library_service.update_read_count_in_history(
         who, int(cast(int, _args(chosen)["book_id"]))
     )
 
@@ -329,12 +330,18 @@ def start_undress(who: int, chosen: intent.Intent) -> None:
         clothing.get_all_cloth_off(target_id)
     elif choice == 3:
         clothing.pl_get_chara_pan(target_id)
-    cloth_panel.cloth_off_after_settle(target_id)
+    cloth = wardrobe.clone_mutable_snapshot(target_id)
+    for i in game_config.config_clothing_type:
+        cloth.cloth_off[i] = list(set(cloth.cloth_off[i]))
+        for j in cloth.cloth_off[i]:
+            if j in cloth.cloth_wear[i]:
+                cloth.cloth_off[i].remove(j)
+    wardrobe.put(target_id, cloth)
 
 
 @starts.starter("prepare_training")
 def start_prepare_training(who: int, chosen: intent.Intent) -> None:
     """调教前准备：三人到调教室，监狱长做好准备，交互对象与监狱长随玩家等待"""
-    confinement_and_training.start_training_preparation(
+    training_prep.start_training_preparation(
         chosen.get("target", activity.target(who))
     )

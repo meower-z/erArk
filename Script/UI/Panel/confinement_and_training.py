@@ -10,9 +10,9 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 import random
 from Script.Modules.domains import abilities, activity, body_manage, chara_life
-from Script.Modules.domains import dirty, facility, flags, h_state, inventory
+from Script.Modules.domains import facility, flags, inventory
 from Script.Modules.domains import needs, prison, work
-from Script.Modules.gameplay_resolution import plan_queue
+from Script.Modules.gameplay_resolution import training_prep
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import identity
 
@@ -301,129 +301,6 @@ def prepare_training() -> NoReturn:
         target=activity.target(0),
         state=constant.CharacterStatus.STATUS_WAIT,
     )
-
-
-def start_training_preparation(target_character_id: int) -> None:
-    """
-    调教前准备的开始：玩家、交互对象、监狱长三个人到调教室\n
-    监狱长对交互对象完成调教前准备工作，交互对象与监狱长随玩家等待 10 分钟\n
-    Keyword arguments:
-    target_character_id -- 玩家的交互对象
-    """
-    from Script.Settle import default
-    from Script.UI.Panel import h_item_shop_panel
-
-    target_character_data = identity.of(target_character_id)
-    warden_id = work.warden()
-    # 移动到调教室
-    humiliation_room_list = map_handle.get_map_system_path_for_str(
-        random.choice(constant.place_data["Humiliation_Room"])
-    )
-    map_handle.character_move_scene(
-        activity.position(target_character_id),
-        humiliation_room_list,
-        target_character_id,
-    )
-    map_handle.character_move_scene(
-        activity.position(warden_id), humiliation_room_list, warden_id
-    )
-    map_handle.character_move_scene(
-        activity.position(0), humiliation_room_list, 0
-    )
-    # 清洗
-    if prison.cleaning():
-        dirty.reset(target_character_data.cid)
-    # 润滑
-    if prison.lubrication() and handle_premise.handle_have_body_lubricant(0):
-        default.handle_use_body_lubricant(
-            0,
-            add_time=1,
-            change_data=game_type.CharacterStatusChange(),
-            now_time=game_time.now(),
-        )
-        default.handle_target_add_huge_lubrication(
-            warden_id,
-            add_time=1,
-            change_data=game_type.CharacterStatusChange(),
-            now_time=game_time.now(),
-        )
-    # 道具使用
-    body_item_list = h_item_shop_panel.body_item_list
-    for i in range(len(body_item_list)):
-        # 已开启
-        if prison.tool(i):
-            item_id = h_item_shop_panel.get_item_id_from_body_item_list(i)
-            item_num = inventory.items(0)[item_id]
-            # 如果没有道具，则跳过
-            if item_num <= 0:
-                continue
-            # 使用道具
-            # 避孕套
-            if i == 13:
-                default.handle_wear_condom(
-                    0,
-                    add_time=1,
-                    change_data=game_type.CharacterStatusChange(),
-                    now_time=game_time.now(),
-                )
-                inventory.add_item(0, item_id, -1)
-            # 其他道具
-            else:
-                h_state.set_body_item(target_character_data.cid, i, True)
-                # 消耗类道具
-                if i in {8, 9, 10, 11, 12}:
-                    # 数量减少
-                    inventory.add_item(0, item_id, -1)
-                    # 利尿剂
-                    if i == 8:
-                        default.handle_target_diuretics_on(
-                            warden_id,
-                            add_time=1,
-                            change_data=game_type.CharacterStatusChange(),
-                            now_time=game_time.now(),
-                        )
-                    # 安眠药
-                    elif i == 9:
-                        default.handle_target_add_tired_tosleep(
-                            warden_id,
-                            add_time=1,
-                            change_data=game_type.CharacterStatusChange(),
-                            now_time=game_time.now(),
-                        )
-                    # 排卵促进药
-                    elif i == 10:
-                        default.handle_target_add_pregnancy_chance(
-                            warden_id,
-                            add_time=1,
-                            change_data=game_type.CharacterStatusChange(),
-                            now_time=game_time.now(),
-                        )
-                    # 事前避孕药
-                    elif i == 11:
-                        default.handle_target_no_pregnancy_next_day(
-                            warden_id,
-                            add_time=1,
-                            change_data=game_type.CharacterStatusChange(),
-                            now_time=game_time.now(),
-                        )
-                    # 事后避孕药
-                    elif i == 12:
-                        default.handle_target_no_pregnancy_from_last_h(
-                            warden_id,
-                            add_time=1,
-                            change_data=game_type.CharacterStatusChange(),
-                            now_time=game_time.now(),
-                        )
-    # 交互对象与监狱长随玩家等待10分钟
-    for waiting_id in (target_character_id, warden_id):
-        plan_queue.plan_next(
-            waiting_id,
-            constant.Behavior.WAIT,
-            10,
-            target=target_character_id,
-            state=constant.CharacterStatus.STATUS_WAIT,
-            interrupt=True,
-        )
 
 
 def get_all_can_use_behavior_id_for_sex_assistant(
@@ -770,9 +647,7 @@ class Confinement_And_Training_Manage_Panel:
 
     def adjust_tool_list(self) -> None:
         """调整道具使用"""
-        from Script.UI.Panel import h_item_shop_panel
-
-        body_item_list = h_item_shop_panel.body_item_list
+        body_item_list = training_prep.body_item_list
 
         while 1:
             return_list = []
@@ -791,7 +666,7 @@ class Confinement_And_Training_Manage_Panel:
             # 遍历道具列表
             for i in range(len(body_item_list)):
                 # 持有道具数量
-                item_id = h_item_shop_panel.get_item_id_from_body_item_list(i)
+                item_id = training_prep.get_item_id_from_body_item_list(i)
                 item_num = inventory.items(0)[item_id]
                 name_draw_text = f"[{(str(i)).rjust(2, '0')}]"
                 len_add = 40 - len(body_item_list[i])  # 排版用的空格数量
