@@ -6,7 +6,7 @@ Tk 取证启动器与只读探针。不要直接运行，由 tk_game.py 调用�
 每 300ms 把下列内容原子地写到 ERARK_PROBE_JSON：
   buttons   可见按钮 {返回值: [x, y]}，取按钮首字符的中心，换算成游戏窗口内坐标
   awaiting  游戏当前等待的输入：askfor_all 与 askfor_int 的选项列表、
-            askfor_wait 时为 "wait"（包括它内部调用的 askfor_str）、其余 askfor_str 时为 "text"、
+            askfor_wait 时为 "wait"、askfor_str 时为 "text"、
             当前没有记录到等待输入时为 null（包括首次等待之前和两次等待之间）
   input     输入框中心的窗口内坐标
   ts        写入时间
@@ -24,6 +24,7 @@ import time
 import tkinter
 import traceback
 from pathlib import Path
+from typing import Any
 
 import numpy
 
@@ -32,6 +33,7 @@ SEED = int(os.environ["ERARK_SEED"])
 
 _awaiting = None
 _dump_failed = False
+_frontend: Any = None
 
 
 def _recorded(original, awaiting_of):
@@ -89,30 +91,66 @@ def _record_awaiting(flow_handle):
     flow_handle.askfor_wait = _recorded(
         flow_handle.askfor_wait, lambda *args, **kwargs: "wait"
     )
-    # askfor_wait 内部调用 askfor_str，这时 awaiting 仍是 "wait"；按钮回调里的 askfor_str（如睡眠面板输入时长）
-    # 在 askfor_all 内部运行，仍记为 "text"
     flow_handle.askfor_str = _recorded(
-        flow_handle.askfor_str,
-        lambda *args, **kwargs: "wait" if _awaiting == "wait" else "text",
+        flow_handle.askfor_str, lambda *args, **kwargs: "text"
     )
 
 
-class _FlowHandleHook(importlib.abc.MetaPathFinder):
+def _record_frontend(app):
     """
-    在 Script.Core.flow_handle 首次加载完成时装上等待记录，早于任何模块拷走 askfor_all
+    包装 `TkFrontend.run`，在前端启动时把实例保存到 `_frontend`
+
+    参数：
+    app (module) -- 刚加载的 `Script.Frontend.Tk.app` 模块
+
+    返回值类型：None
     """
+    real_run = app.TkFrontend.run
+
+    def run(self):
+        """
+        将当前 `TkFrontend` 实例记入 `_frontend` 后调用原 `run` 方法
+
+        参数：
+        self (TkFrontend) -- 当前 Tk 前端实例
+
+        返回值类型：None
+        """
+        global _frontend
+        _frontend = self
+        return real_run(self)
+
+    app.TkFrontend.run = run
+
+
+class _ModuleHook(importlib.abc.MetaPathFinder):
+    """一次性元路径导入钩子，在目标模块首次加载执行完成后触发记录回调。"""
+
+    def __init__(self, name, record):
+        """
+        保存目标模块全名与加载完成后的回调函数
+
+        参数：
+        name (str) -- 要拦截的模块全名
+        record (Callable) -- 模块执行完成后调用的回调
+
+        返回值类型：None
+        """
+        self.name = name
+        self.record = record
 
     def find_spec(self, name, path, target=None):
         """
-        只拦截 Script.Core.flow_handle，包一层 exec_module
+        拦截目标模块的查找，移除自身并包装其 loader 的 `exec_module` 以在执行后调用回调
+
         参数：
-            name (str): 模块全名
-            path: 搜索路径
-            target: 目标模块
-        返回：
-            ModuleSpec | None: 包装后的 spec，其他模块返回 None
+        name (str) -- 正在导入的模块全名
+        path (Sequence[str] | None) -- 搜索路径
+        target (ModuleType | None) -- 目标模块对象
+
+        返回值类型：ModuleSpec | None -- 命中目标模块时返回包装后的 spec，其他模块返回 None
         """
-        if name != "Script.Core.flow_handle":
+        if name != self.name:
             return None
         sys.meta_path.remove(self)
         spec = importlib.util.find_spec(name)
@@ -121,12 +159,15 @@ class _FlowHandleHook(importlib.abc.MetaPathFinder):
 
         def exec_and_record(module):
             """
-            执行模块后装上等待记录
+            执行目标模块后调用记录回调
+
             参数：
-                module (module): 刚加载的 flow_handle
+            module (module) -- 刚加载完成的目标模块
+
+            返回值类型：None
             """
             exec_module(module)
-            _record_awaiting(module)
+            self.record(module)
 
         spec.loader.exec_module = exec_and_record
         return spec
@@ -140,15 +181,13 @@ def _dump(root):
     """
     global _dump_failed
     try:
-        import Script.Core.main_frame as mf
-
-        tb = mf.textbox
+        tb = _frontend.window.textbox
         ox, oy = (
             tb.winfo_rootx() - root.winfo_rootx(),
             tb.winfo_rooty() - root.winfo_rooty(),
         )
         buttons = {}
-        for cmd_number, tag in list(mf.cmd_tag_map.items()):
+        for cmd_number, tag in list(_frontend.renderer.cmd_tag_map.items()):
             rng = tb.tag_ranges(tag)
             if not rng:
                 continue
@@ -161,7 +200,7 @@ def _dump(root):
                 ox + x + max(w // 2, 4),
                 oy + y + h // 2,
             ]
-        box = mf.inputbox
+        box = _frontend.window.inputbox
         entry = [
             box.winfo_rootx() - root.winfo_rootx() + box.winfo_width() // 2,
             box.winfo_rooty() - root.winfo_rooty() + box.winfo_height() // 2,
@@ -202,7 +241,10 @@ def _mainloop(self, *args, **kwargs):
     return _real_mainloop(self, *args, **kwargs)
 
 
-sys.meta_path.insert(0, _FlowHandleHook())
+sys.meta_path.insert(
+    0, _ModuleHook("Script.Core.flow_handle", _record_awaiting)
+)
+sys.meta_path.insert(0, _ModuleHook("Script.Frontend.Tk.app", _record_frontend))
 tkinter.Misc.mainloop = _mainloop
 random.seed(SEED)
 numpy.random.seed(SEED)

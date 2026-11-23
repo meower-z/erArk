@@ -323,7 +323,7 @@ class SeeMapPanel:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        view.wframe_mouse.w_frame_skip_wait_mouse = 1
+        flow_handle.set_skip_pauses(True)
         flag_map_open = False
         # 从大地图移动到另一个区块时，不关闭地图面板，且切换到下级地图面板
         if activity.position(0)[-2] != scene_path[-2] and scene_path[-1] == "0":
@@ -501,7 +501,7 @@ class MapSceneNameDraw:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        view.wframe_mouse.w_frame_skip_wait_mouse = 1
+        flow_handle.set_skip_pauses(True)
         character_move.own_charcter_move(scene_path)
 
 
@@ -646,7 +646,7 @@ class ScenePathNameMoveDraw:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        view.wframe_mouse.w_frame_skip_wait_mouse = 1
+        flow_handle.set_skip_pauses(True)
         character_move.own_charcter_move(self.scene_path)
 
 
@@ -710,7 +710,7 @@ class SocialSceneNameDraw:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        view.wframe_mouse.w_frame_skip_wait_mouse = 1
+        flow_handle.set_skip_pauses(True)
         character_move.own_charcter_move(self.scene_path)
 
 
@@ -843,7 +843,7 @@ class CollectionSceneNamePanel:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        view.wframe_mouse.w_frame_skip_wait_mouse = 1
+        flow_handle.set_skip_pauses(True)
         character_move.own_charcter_move(scene_path)
 
     def settle_collection_place(self, collect_flag: bool) -> None:

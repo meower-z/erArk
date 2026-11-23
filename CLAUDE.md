@@ -42,7 +42,7 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 ## High-Level Architecture
 
 ### Core Game Flow
-1. **Entry Point**: `game.py` - Auto-builds config data (`auto_build_config`), initializes configs (`normal_config`, `game_config`), loads the mod system (`init_mod_system()`), character templates, and map data, resets the kernel clock (`kernel_state.reset_clock`), then starts the Tkinter GUI (`game_init.run(start_flow.start_frame)`)
+1. **Entry Point**: `game.py` - Auto-builds config data (`auto_build_config`), initializes configs (`normal_config`, `game_config`), loads the mod system (`init_mod_system()`), character templates, and map data, resets the kernel clock (`kernel_state.reset_clock`), creates `ThreadedUiPort` with a random token and `TkFrontend(port, token)`, starts the game thread with `game_init.start(start_flow.start_frame, port, frontend.init_config)`, and runs the Tk main loop with `frontend.run()`
 2. **Game Initialization**: `Script/Core/game_init.py` - Sets up the game environment, styles, and main flow
 3. **Main Frame Loop**: `Script/Design/start_flow.py` - Contains UI handling and panel management
 4. **Main Behavior Loop**: `Script/Design/character_behavior.py` - The actual game simulation loop
@@ -225,14 +225,14 @@ The game uses Tkinter for GUI rendering:
    - `LineFeedWaitDraw`: Wait on each line break
 
 2. **IO Operations** (`Script/Core/io_init.py`):
-   - Uses `main_frame` from Tkinter for display
-   - Commands are handled through event queues
-   - Direct rendering to Tkinter text widgets
+   - Emits `Script/Protocol` render operations and clear events through the configured `UiPort`
+   - Blocks on the port for choice, text, and pause requests without importing Tkinter
+   - Rendered by the Tkinter frontend package (`Script/Frontend/Tk/`)
 
 3. **Flow Control** (`Script/Core/flow_handle.py`):
    - `askfor_all()`: Wait for player to select from options
-   - `askfor_wait()`: Simple wait for player input
-   - Direct event handling through Tkinter bindings
+   - `askfor_wait()`: Pause for confirmation unless skip mode is active
+   - Receives player responses from the port via `io_init`
 
 ### Development Considerations
 

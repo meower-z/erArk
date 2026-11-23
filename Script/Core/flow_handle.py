@@ -4,10 +4,8 @@
 并请求玩家输入
 """
 
-import time
-import os
-import psutil
-import signal
+from collections.abc import Generator, Sequence
+from contextlib import contextmanager
 from types import FunctionType
 from typing import Callable, Literal, overload
 from Script.Core import text_handle, io_init, get_text, constant
@@ -16,6 +14,8 @@ from Script.UI.Moudle import view
 
 benchmark_mode = False
 """ 性能分析脚本置为 True 时，等待暂停立即返回 """
+INPUT_CACHE_LIMIT = 21
+"""界面输入历史 `view.input_cache` 最多保留的最近非空输入条数。"""
 
 # 翻译函数
 _: FunctionType = get_text._
@@ -273,14 +273,39 @@ def _cmd_valid(order_number: int | str) -> bool:
     return cmd_map.get(order_number) not in (null_func, None)
 
 
-__skip_flag__ = False
 exit_flag = False
+_offered: tuple[str, ...] | None = None
 
 
-# 处理输入
+def _remember(order: str) -> None:
+    if order != "":
+        if len(view.input_cache) >= INPUT_CACHE_LIMIT:
+            del view.input_cache[0]
+        view.input_cache.append(order)
+
+
+@contextmanager
+def _offering(options: Sequence[object]) -> Generator[None]:
+    global _offered
+    previous = _offered
+    _offered = tuple(str(option) for option in options)
+    try:
+        yield
+    finally:
+        _offered = previous
+
+
+def _next_order(flag: str, donot_return_null_str: bool) -> str:
+    if _offered is not None:
+        return io_init.ask_choice(_offered)
+    if flag == "order":
+        return io_init.ask_choice(tuple(str(number) for number in cmd_map))
+    return io_init.ask_text(allow_empty=not donot_return_null_str)
+
+
 @overload
 def order_deal(
-    flag: Literal["str"],
+    flag: Literal["str", "wait"],
     print_order: bool = True,
     donot_return_null_str: bool = True,
 ) -> str: ...
@@ -300,86 +325,70 @@ def order_deal(
     donot_return_null_str: bool = True,
 ) -> str | None:
     """
-    处理命令函数
+    经 `io_init` 按输入类型向端口请求玩家输入并分发处理，选项提示期与 `"order"` 模式请求 `Choose`，`"str"` 与
+    `"console"` 请求 `InputText`，`"wait"` 请求暂停
 
     参数：
-    flag (str) -- 类型，默认为order，如果为console，会执行输入得到的内容
-    print_order (bool) -- 是否将输入的order输出到屏幕上
-    donot_return_null_str (bool) -- 不接受输入空字符串
+    flag (str) -- 处理模式，可选 "order"、"str"、"wait" 或 "console"
+    print_order (bool) -- 是否将非空输入回显到屏幕
+    donot_return_null_str (bool) -- 为 False 时在文本请求中允许空字符串
 
-    返回值类型：str | None。flag 为 "str" 时返回输入的字符串，纯数字的输入先经 str(int(...)) 规范化。
-    flag 为 "order" 时处理这条输入后返回 None。
-    donot_return_null_str 为假且 view.wframe_mouse.w_frame_up 已置位时返回空串。
-    功能描述：从输入队列取出用户输入的命令，交给 orders.accept 后按 flag 处理
+    返回值类型：str | None -- "wait" 返回空串，"str" 返回规范化字符串，"order" 执行命令后返回 None
     """
-    global __skip_flag__
-    __skip_flag__ = False
-    # 渲染期输入门禁：本次输入等待的一屏内容此时已全部入队，在进入轮询前 push 一次上膛标记。
-    # 该标记恒排在本屏内容之后，read_queue 处理到它时才置为已上膛。每次进入 order_deal 只 push 一次，
-    # 绝不放进下方轮询循环，避免渲染队列被标记刷屏；askfor_all/askfor_wait 因无效输入重进本函数时
-    # 会再次 push，即"重新上膛"，是允许且正确的。
-    io_init.arm_input()
+    if flag == "wait":
+        io_init.wait_continue()
+        return ""
     while True:
-        time.sleep(0.01)
-        if not donot_return_null_str and view.wframe_mouse.w_frame_up:
-            return ""
-        while not io_init._order_queue.empty():
-            order = io_init.get_order()
-            orders.accept(order)
-            if print_order and order != "":
-                io_init.era_print("\n" + order + "\n")
-            if flag == "str":
-                if order.isdigit():
-                    order = str(int(order))
-                return order
-            if flag == "console":
-                exec(order)
-            if flag == "order":
-                if _cmd_valid(order):
-                    _cmd_deal(order)
-                    return None
-                else:
-                    tail_deal_cmd_func(int(order))
-                    return None
+        order = _next_order(flag, donot_return_null_str)
+        _remember(order)
+        orders.accept(order)
+        if print_order and order != "":
+            io_init.era_print("\n" + order + "\n")
+        if flag == "str":
+            if order.isdigit():
+                order = str(int(order))
+            return order
+        if flag == "console":
+            exec(order)
+        if flag == "order":
+            if _cmd_valid(order):
+                _cmd_deal(order)
+            else:
+                tail_deal_cmd_func(int(order))
+            return None
 
 
 def askfor_str(
     donot_return_null_str: bool = True, print_order: bool = False
 ) -> str:
     """
-    用于请求一个字符串为结果的输入
+    循环请求玩家输入字符串，按参数决定是否允许空字符串
 
     参数：
-    donot_return_null_str (bool) -- 不接受输入空字符串
-    print_order (bool) -- 是否将输入的order输出到屏幕上
+    donot_return_null_str (bool) -- 为 True 时忽略空输入直到收到非空文本
+    print_order (bool) -- 是否将输入内容回显到屏幕
 
-    返回值类型：str
-    功能描述：获取用户输入的字符串
+    返回值类型：str -- 玩家输入的字符串
     """
     while True:
-        if not donot_return_null_str and view.wframe_mouse.w_frame_up:
-            view.wframe_mouse.w_frame_up = 0
-            return ""
         order = order_deal("str", print_order, donot_return_null_str)
-        if donot_return_null_str and order != "":
-            return order
-        elif not donot_return_null_str:
+        if order != "" or not donot_return_null_str:
             return order
 
 
 def askfor_all(input_list: list, print_order: bool = False) -> str:
     """
-    用于请求一个位于列表中的输入，如果输入没有在列表中，则告知用户出错。
+    循环请求玩家从指定选项列表中选择并执行已绑定的命令
 
     参数：
-    input_list (list) -- 用于判断的列表内容
-    print_order (bool) -- 是否将输入的order输出到屏幕上
+    input_list (list) -- 允许接受的选项列表
+    print_order (bool) -- 是否在底层输入阶段回显输入
 
-    返回值类型：str
-    功能描述：获取用户在指定列表中选择的输入
+    返回值类型：str -- 命中的合法选项文本，输入 "999" 且未另行绑定时自动存档并结束会话
     """
     while 1:
-        order = order_deal("str", print_order)
+        with _offering(input_list):
+            order = order_deal("str", print_order)
         if order in input_list:
             io_init.era_print(order + "\n")
             if _cmd_valid(order):
@@ -387,14 +396,8 @@ def askfor_all(input_list: list, print_order: bool = False) -> str:
             elif order == "999":
                 from Script.Core import save_handle
 
-                # 保存到自动存档
                 save_handle.establish_save("auto")
-                # 退出游戏
-                parent = psutil.Process(os.getpid())
-                children = parent.children(recursive=True)
-                for process in children:
-                    process.send_signal(signal.SIGTERM)
-                os._exit(0)
+                io_init.end_session()
             return order
         elif order == "":
             continue
@@ -416,7 +419,8 @@ def askfor_int(list: list, print_order: bool = False) -> str:
     功能描述：获取用户在指定整数列表中的选择
     """
     while True:
-        order = order_deal("str", print_order)
+        with _offering(list):
+            order = order_deal("str", print_order)
         order = text_handle.full_to_half_text(order)
         if order in list:
             io_init.era_print(order + "\n\n")
@@ -431,23 +435,24 @@ def askfor_int(list: list, print_order: bool = False) -> str:
 
 def askfor_wait() -> None:
     """
-    用于请求一个暂停动作，输入任何数都可以继续
+    暂停流程等待玩家继续，处于基准模式时直接返回，否则通过 `order_deal("wait", False, False)` 经端口处理等待或跳过
 
     参数：无
-    返回值类型：无
-    功能描述：等待用户任意输入后继续
+
+    返回值类型：None
     """
-    # 基准模式下直接跳过等待，避免自动化流程阻塞
     if benchmark_mode:
         return
+    order_deal("wait", False, False)
 
-    view.wframe_mouse.w_frame_up = 0
-    while not view.wframe_mouse.w_frame_up:
-        re = askfor_str(donot_return_null_str=False)
-        if re == "":
-            break
-    # 等待结束后必须把标志位恢复为1
-    # 否则用回车结束等待时 w_frame_up 会遗留为0并跨界面残留（置1的唯一入口在鼠标路径上）
-    # 之后一次点在空白处的左键会被 mouse_left_check 的 w==0 分支误判为"推进等待"：
-    # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此永远收不到输入，游戏静默卡死
-    view.wframe_mouse.w_frame_up = 1
+
+def set_skip_pauses(enabled: bool) -> None:
+    """
+    委托 `io_init.set_skip_pauses` 开启或关闭跳过暂停模式
+
+    参数：
+    enabled (bool) -- 为 True 时跳过后续可跳过暂停，为 False 时恢复正常等待
+
+    返回值类型：None
+    """
+    io_init.set_skip_pauses(enabled)

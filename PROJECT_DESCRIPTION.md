@@ -159,9 +159,8 @@ Script/
 │   ├── constant_effect.py  # BehaviorEffect 结算 ID 常量
 │   ├── constant_promise.py # Premise 前提 ID 常量
 │   ├── game_init.py        # 游戏初始化 + 主流程异常兜底
-│   ├── flow_handle.py      # Tk 流程控制/命令绑定/输入
-│   ├── io_init.py          # Tk IO 与绘制输出
-│   ├── main_frame.py       # Tk 主窗口与事件总线
+│   ├── flow_handle.py      # 流程控制/命令绑定/输入
+│   ├── io_init.py          # 协议端口 IO 适配与绘制输出
 │   ├── save_handle.py      # 存档读写与跨版本兼容
 │   ├── mod_manager.py      # Mod 扫描/加载/函数替换
 │   ├── get_text.py         # gettext 翻译函数 `_`
@@ -170,13 +169,13 @@ Script/
 │   ├── json_handle.py      # JSON 读写
 │   ├── value_handle.py     # 数值处理
 │   ├── image_catalog.py    # 图片路径与角色索引（不依赖 Tk）
-│   ├── image_cache.py      # Tk 按需解码与 PhotoImage 缓存
 │   ├── image_path_index.py # 同名图片取舍与目录路径索引
 │   ├── dijkstra.py         # 寻路
-│   ├── key_listion_event.py# 键盘监听
 │   ├── py_cmd.py           # 命令/面板 ID 辅助
 │   ├── old_chara_to_new.py # 旧角色数据迁移
 │   └── perf_hook.py        # 性能埋点
+├── Frontend/Tk/            # Tk 图形前端包（窗口、渲染、字体、缓存、历史、门控与事件循环）
+├── Protocol/               # 游戏逻辑与前端之间的通信协议与端口实现
 ├── Design/                 # 游戏设计逻辑（最大层）
 │   ├── start_flow.py       # 主面板循环
 │   ├── character_behavior.py # 核心行为循环
@@ -386,7 +385,7 @@ Script/
 7. `map_config.init_map_data()` 加载地图
 8. `kernel_state.reset_clock(kernel_state.first_clock())` 把内核时钟拨到 config.ini 的开局时刻
 9. 若 `perf_monitor=1`：启用 `perf_hook` + `profiling.ui_perf_patch`
-10. `game_init.run(start_flow.start_frame)` 启动游戏
+10. 创建带随机令牌的 `ThreadedUiPort` 与 `TkFrontend(port, token)`，调用 `game_init.start(start_flow.start_frame, port, frontend.init_config)` 启动游戏线程，再由 `frontend.run()` 运行 Tk 主循环
 11. `start_flow.start_frame()` 进入主循环，每轮执行 `constant.panel_data[view.now_panel_id]()`
 12. 异常兜底：写入 `error.log`，自动保存 99 号档，给玩家“回到标题/退出”选项
 
@@ -745,10 +744,10 @@ Script/
 
 ### 19.2 Tk 模式
 
-- `Script/Core/io_init.py`：`era_print()`, `clear_screen()`, 命令绑定/输入事件，所有输出直接写入 Tk 文本组件
-- `Script/Core/flow_handle.py`：`askfor_all/askfor_str/askfor_int/askfor_wait`、命令处理
-- `Script/Core/main_frame.py`：主窗口与事件总线
-- 启动时有文本度量预热（`warm_up_text_metrics`）；`perf_monitor=1` 时启用性能埋点
+- `Script/Core/io_init.py`：`era_print()`、`clear_screen()` 与输入请求等接口，经由 `Script/Protocol` 端口发送渲染操作与接收玩家应答
+- `Script/Core/flow_handle.py`：`askfor_all`、`askfor_str`、`askfor_int`、`askfor_wait` 与命令处理
+- `Script/Frontend/Tk/`：Tk 图形前端包，负责主窗口（`window.py`）、渲染（`render.py`）、输入门控（`gate.py`）、事件循环（`app.py`）和图片按需缓存（`image_cache.py`）
+- 启动时由 `Script/Frontend/Tk/warmup.py` 的 `warm_up()` 执行常用字符度量预热，`perf_monitor=1` 时启用性能埋点
 
 ### 19.3 面板注册与切换
 
@@ -950,7 +949,7 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 | 存档兼容/损坏 | `Script/Core/save_handle.py` |
 | Mod 不生效 | `Script/Core/mod_manager.py`, `mod/*` |
 | AI 文本不生成 | `Script/Design/handle_chat_ai.py`, `ai_chat_api_key.csv`, `Ai_Chat_Setting.csv` |
-| Tk 渲染/输入 | `Script/Core/io_init.py`, `flow_handle.py`, `main_frame.py`, `UI/Moudle/draw.py` |
+| Tk 渲染/输入 | `Script/Core/io_init.py`, `flow_handle.py`, `Script/Frontend/Tk/*`, `UI/Moudle/draw.py` |
 
 ---
 

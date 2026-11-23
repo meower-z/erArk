@@ -1,46 +1,16 @@
 """
 界面的临时状态
 ==============
-Tk 界面在本进程里的临时状态：当前面板、鼠标与逐字输出、输入历史的浏览，以及几个面板自己的筛选、排序与列表。
-它们不属于游戏状态，不进 GameState，也不随存档。读档与新游戏不重设它们，例外只有两处：
-读档与新周目时面板回到场景面板、隐奸中显示非H指令的开关关掉，读档时鼠标状态从头开始。
-玩家要长期保留的选择不在这里，在全局设置（normal_config.system_setting）里。
+界面与面板在本进程里的临时状态，包括当前面板编号、最近输入记录，以及几个面板自己的筛选、排序与列表状态。
+它们不属于游戏状态，不进 GameState，也不随存档。读档与新游戏通常不重设它们，
+例外是读档与新周目时面板切回场景面板并关闭隐奸中显示非H指令的开关。
+玩家要长期保留的选择不在这里，存放在全局设置（normal_config.system_setting）里。
 """
-
-
-class WFrameMouse:
-    """鼠标状态结构体"""
-
-    w_frame_up: int = 2
-    """ 逐字输出状态 """
-    mouse_right: int = 0
-    """ 鼠标右键按下 """
-    w_frame_lines_up: int = 2
-    """ 逐行输出状态 """
-    w_frame_re_print: int = 0
-    """ 再次载入游戏界面 """
-    w_frame_lines_state: int = 2
-    """ 逐行输出状态 """
-    w_frame_mouse_next_line: int = 0
-    """ 等待玩家确认后逐行 """
-    w_frame_skip_wait_mouse: int = 0
-    """ 跳过等待输入后继续输出文本 """
-
 
 now_panel_id: int = 0
 """ 当前游戏面板id """
-wframe_mouse: WFrameMouse = WFrameMouse()
-""" 主页监听控制流程用变量组 """
-text_wait: float = 0
-""" 绘制文本输出等待时间 """
-input_position: int = 0
-""" 回溯输入记录用定位 """
 input_cache: list[str] = []
-""" 界面输入框的输入历史（最多保留 21 条，供上下键回溯与日志使用，不随存档） """
-input_cache_draft: str = ""
-""" 玩家正在编辑但尚未发送的输入草稿 """
-input_cache_browsing: bool = False
-""" 玩家是否正在浏览输入历史 """
+"""后端记录的最近非空玩家输入列表，用于异常回溯日志与诊断信息输出。"""
 show_non_h_in_hidden_sex: bool = False
 """ 是否在隐奸中显示非H类指令 """
 instruct_type_filter_cache: dict[int, bool] = {}

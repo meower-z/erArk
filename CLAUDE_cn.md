@@ -35,7 +35,7 @@ pip install -r requirements.txt
 ## 高层架构
 
 ### 核心游戏流程
-1. **入口点**：`game.py` - 自动构建配置数据（`auto_build_config`），初始化配置（`normal_config`、`game_config`），加载 mod 系统（`init_mod_system()`）、角色模板与地图数据，重置内核时钟（`kernel_state.reset_clock`），然后启动 Tkinter GUI（`game_init.run(start_flow.start_frame)`）
+1. **入口点**：`game.py` - 自动构建配置数据（`auto_build_config`），初始化配置（`normal_config`、`game_config`），加载 mod 系统（`init_mod_system()`）、角色模板与地图数据，重置内核时钟（`kernel_state.reset_clock`），创建带随机令牌的 `ThreadedUiPort` 与 `TkFrontend(port, token)`，调用 `game_init.start(start_flow.start_frame, port, frontend.init_config)` 启动游戏线程，再由 `frontend.run()` 运行 Tk 主循环
 2. **游戏初始化**：`Script/Core/game_init.py` - 设置游戏环境、样式和主流程
 3. **主框架循环**：`Script/Design/start_flow.py` - 包含 UI 处理和面板管理
 4. **主行为循环**：`Script/Design/character_behavior.py` - 实际的游戏模拟循环
@@ -215,14 +215,14 @@ GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 mast
    - `LineFeedWaitDraw`：在每个换行处等待
 
 2. **IO 操作**（`Script/Core/io_init.py`）：
-   - 使用 Tkinter 的 `main_frame` 进行显示
-   - 通过事件队列处理命令
-   - 直接渲染到 Tkinter 文本小部件
+   - 通过已配置的 `Script/Protocol` 端口发出渲染操作与清屏事件
+   - 通过端口阻塞请求选项、文本与暂停确认，不直接依赖 Tkinter
+   - 由 `Script/Frontend/Tk/` 前端包消费事件并渲染到 Tkinter 界面
 
 3. **流程控制**（`Script/Core/flow_handle.py`）：
    - `askfor_all()`：等待玩家从选项中选择
-   - `askfor_wait()`：简单等待玩家输入
-   - 通过 Tkinter 绑定直接处理事件
+   - `askfor_wait()`：在未开启跳过模式时等待玩家确认继续
+   - 通过 `io_init` 从端口接收玩家输入应答
 
 ### 开发注意事项
 

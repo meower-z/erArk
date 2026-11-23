@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import itertools
 import math
-import time
 from collections.abc import Sequence
 from types import FunctionType
-from Script.UI.Moudle import draw, view
+from Script.UI.Moudle import draw
 from Script.Core import (
     io_init,
     flow_handle,
@@ -320,10 +319,7 @@ class LeftDrawTextListWaitPanel(LeftDrawTextListPanel):
             for value in now_list:
                 value.draw()
             io_init.era_print("\n")
-        if not view.wframe_mouse.w_frame_skip_wait_mouse:
-            flow_handle.askfor_wait()
-        else:
-            time.sleep(0.001)
+        flow_handle.askfor_wait()
 
     def __len__(self) -> int:
         """获取面板的内容宽度"""

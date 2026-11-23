@@ -37,6 +37,15 @@ class UiPort(Protocol):
         返回值：None
         """
 
+    def flush(self) -> None:
+        """
+        将已缓冲的渲染指令立即发布为一条 `RenderChunk`，不触发暂停或输入请求，无缓冲时不发事件
+
+        参数：无
+
+        返回值类型：None -- 会话未处于打开状态时抛出 `SessionCancelled`
+        """
+
     def clear(self, target: ClearTarget) -> None:
         """
         先刷出已缓冲的渲染指令，再发出 Clear 事件清理目标区域。

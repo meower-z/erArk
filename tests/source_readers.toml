@@ -411,18 +411,6 @@ pattern = "__file__"
 why = "用 __file__ 定位游戏根目录，供资源路径使用"
 
 [[allow]]
-file = "Script/Core/main_frame.py"
-symbol = "get_resource_path"
-pattern = "__file__"
-why = "用 __file__ 定位游戏根目录，拼出资源文件路径"
-
-[[allow]]
-file = "Script/Core/main_frame.py"
-symbol = "load_local_fonts"
-pattern = "__file__"
-why = "用 __file__ 定位游戏根目录，读取字体文件"
-
-[[allow]]
 file = "Script/Core/mod_manager.py"
 symbol = "ModManager.get_mod_folder_path"
 pattern = "__file__"

@@ -1,7 +1,8 @@
 """
 玩家最近输入的暂存与写入
 ========================
-flow_handle.order_deal 从输入队列取出输入后调用 accept，把玩家输入交给本模块。
+flow_handle.order_deal 在协议端口收到 Choose 或 InputText 应答后调用 accept，
+把玩家输入交给本模块（暂停应答不进入 accept）。
 accept 忽略空字符串，把非空输入按先后暂存在 _unsettled 中。
 处于结算阶段（core.in_settlement()）时，accept 立即调用 settle 写入当前写缓冲区。
 玩家选行动时与一步之外，输入留在 _unsettled 中等待写入。

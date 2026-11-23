@@ -16,7 +16,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config, game_config, character_config
 from Script.Design import attr_calculation, character_handle, map_handle
-from Script.UI.Moudle import draw, view
+from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
@@ -850,11 +850,6 @@ def install_save(save_id: str, version: int) -> None:
     draw_text = _("\n检测完毕，共有{0}条数据完成了更新\n").format(update_count)
     finish_draw.text = draw_text
     finish_draw.draw()
-
-    # 鼠标状态是界面的临时状态，读档后从头开始：读档前留下的 w_frame_up 为0时，
-    # 之后第一次左键会被 mouse_left_check 误判为“推进等待”，
-    # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此收不到输入，游戏静默卡死
-    view.wframe_mouse = view.WFrameMouse()
 
     # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（须在读档导入完成后调用）
     old_chara_to_new.end_young_child_session(young_child_session)
