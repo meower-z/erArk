@@ -21,17 +21,13 @@ from Script.Modules.domains import abilities, action_info, activity, economy
 from Script.Modules.domains import h_state, kitchen, maintenance, modes
 from Script.Modules.domains import production, body_manage, inventory
 from Script.Modules.domains import chara_life, relations, identity, scene_state
-from Script.UI.Moudle import draw
+from Script.Modules.gameplay_resolution import ui_hooks
 
 if TYPE_CHECKING:
     from Script.Modules.npc_action_choice import choice
 
 _: FunctionType = get_text._
 """ 翻译api """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
 
 
 def general_movement_module(
@@ -101,10 +97,13 @@ def _movement_leg(character_id: int, target_scene: list) -> tuple[list, int]:
 
 def _draw_move_intent(character_id: int, target_scene_str: str) -> None:
     """
-    角色和玩家位于同一地点、NPC移动提示未屏蔽时，显示角色打算前往的地点
+    角色与玩家位于同一地点且绘制设置项 8（NPC 移动提示）为 1 时，
+    通过 ui_hooks.emit_notice 以默认显示选项发出该角色打算前往目标场景的提示文本。
     Keyword arguments:
-    character_id -- 角色id
-    target_scene_str -- 目标场景的路径字符串
+    character_id -- int，角色 id
+    target_scene_str -- str，目标场景的路径字符串
+    Return arguments:
+    None -- 无返回值
     """
     character_data: identity.Identity = identity.of(character_id)
     if (
@@ -112,11 +111,11 @@ def _draw_move_intent(character_id: int, target_scene_str: str) -> None:
         and normal_config.system_setting.draw_setting[8] == 1
     ):
         now_scene_data = constant.scene_data[target_scene_str]
-        now_draw = draw.NormalDraw()
-        now_draw.text = _("{0}打算前往{1}\n").format(
-            character_data.name, now_scene_data.scene_name
+        ui_hooks.emit_notice(
+            _("{0}打算前往{1}\n").format(
+                character_data.name, now_scene_data.scene_name
+            )
         )
-        now_draw.draw()
 
 
 def plan_movement(character_id: int, target_scene: list) -> None:
