@@ -9214,7 +9214,7 @@ def handle_put_into_prison_add_just(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    from Script.UI.Panel import confinement_and_training
+    from Script.Modules.gameplay_resolution import prison_service
 
     if not add_time:
         return
@@ -9230,7 +9230,7 @@ def handle_put_into_prison_add_just(
         move_target=activity.position(0),
     )
     # 对方数据结算
-    confinement_and_training.chara_become_prisoner(target_id)
+    prison_service.chara_become_prisoner(target_id)
     # 角色上线
     handle_chara_on_line(target_id, add_time, change_data, now_time)
     # 如果当时是时间停止H中，则刷新时停状态

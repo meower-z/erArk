@@ -141,12 +141,10 @@ def handle_settle_behavior(
             if handle_premise.handle_sex_assistant_on(
                 character_id
             ) and handle_premise.handle_t_work_is_not_warden(character_id):
-                from Script.UI.Panel import confinement_and_training
+                from Script.Modules.gameplay_resolution import prison_service
 
                 # 进行性爱助手结算
-                state_id = (
-                    confinement_and_training.get_behavior_id_of_sex_assistant()
-                )
+                state_id = prison_service.get_behavior_id_of_sex_assistant()
                 if state_id != "0":
                     from Script.Modules.gameplay_resolution import plan_queue
 

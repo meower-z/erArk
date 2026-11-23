@@ -206,7 +206,7 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
     Return arguments:\n
     [] -- 状态id列表
     """
-    from Script.System.Instruct_System import see_instruct_panel
+    from Script.Modules.gameplay_resolution import instruct_filter
 
     new_status_id_list: list[str] = []
     # 获取状态id列表
@@ -230,7 +230,7 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
             instruct_id = constant.behavior_id_to_instruct_id[status_id]
             # 检查指令是否可用
             filter_judge, now_premise_data = (
-                see_instruct_panel.judge_single_instruct_filter(
+                instruct_filter.judge_single_instruct_filter(
                     instruct_id,
                     now_premise_data,
                     constant.InstructType.SEX,

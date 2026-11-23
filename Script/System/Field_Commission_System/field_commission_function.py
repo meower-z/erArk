@@ -8,6 +8,8 @@ from Script.Design import game_time, attr_calculation, talk, handle_premise
 from Script.Modules.domains import abilities, achievement, activity, commission
 from Script.Modules.domains import country, flags, location, recruit, relations
 from Script.Modules.domains import roster, warehouse, identity, modes
+from Script.Modules.gameplay_resolution import equipment_service, prison_service
+from Script.Modules.gameplay_resolution import vehicle_service
 import random
 
 _: FunctionType = get_text._
@@ -101,14 +103,13 @@ def get_commission_demand_and_reward(
         # 抓捕
         elif "追捕" in commission_data.reward:
             from Script.Settle import default
-            from Script.UI.Panel import confinement_and_training
 
             fugitive_id = int(commission_data.reward.split("_")[1])
             # 需要有空房间
-            empty_room = confinement_and_training.get_unused_prison_dormitory()
+            empty_room = prison_service.get_unused_prison_dormitory()
             if empty_room != "":
                 activity.set_position(fugitive_id, ["关押", f"{empty_room}"])
-                confinement_and_training.chara_become_prisoner(fugitive_id)
+                prison_service.chara_become_prisoner(fugitive_id)
                 default.handle_chara_on_line(
                     fugitive_id,
                     1,
@@ -435,9 +436,8 @@ def judge_field_commission_finish() -> None:
     """
 
     from Script.Settle import default
-    from Script.UI.Panel import achievement_panel, equipmen_panel
+    from Script.UI.Panel import achievement_panel
     from Script.Design import second_behavior
-    from Script.UI.Panel import manage_vehicle_panel
 
     draw_text = ""
     for commision_id, now_commission in commission.ongoing().items():
@@ -478,13 +478,13 @@ def judge_field_commission_finish() -> None:
                 )
                 draw_text += f"{identity.of(character_id).name} "
             # 载具损坏与回收
-            vehicle_text = manage_vehicle_panel.settle_vehicle(commision_id)
+            vehicle_text = vehicle_service.settle_vehicle(commision_id)
             draw_text += vehicle_text
             # 判断是否会招募到新干员
             recruited_text = settle_recruit_new_chara(commision_id)
             # 装备损坏
             equipment_damage_text = (
-                equipmen_panel.settle_equipment_damage_in_commission(
+                equipment_service.settle_equipment_damage_in_commission(
                     commision_id
                 )
             )

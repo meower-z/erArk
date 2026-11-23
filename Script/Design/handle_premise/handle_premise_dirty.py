@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from Script.Core import constant_promise, get_text
-from Script.UI.Panel import dirty_panel
+from Script.Modules.gameplay_resolution import dirty_queries
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import activity, dirty
 from Script.Modules.domains import identity
@@ -390,7 +390,7 @@ def handle_vw_semen_g_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(character_id)
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(character_id)
     if all_semen_count > 1:
         return 1
     return 0
@@ -405,7 +405,7 @@ def handle_t_vw_semen_g_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(
         activity.target(character_id)
     )
     if all_semen_count > 1:
@@ -422,7 +422,7 @@ def handle_vw_semen_le_200(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(character_id)
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(character_id)
     if all_semen_count <= 200:
         return 1
     return 0
@@ -437,7 +437,7 @@ def handle_t_vw_semen_le_200(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(
         activity.target(character_id)
     )
     if all_semen_count <= 200:
@@ -454,7 +454,7 @@ def handle_vw_semen_g_200(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(character_id)
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(character_id)
     if all_semen_count > 200:
         return 1
     return 0
@@ -469,7 +469,7 @@ def handle_t_vw_semen_g_200(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(
         activity.target(character_id)
     )
     if all_semen_count > 200:
@@ -486,7 +486,7 @@ def handle_vw_semen_le_1000(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(character_id)
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(character_id)
     if all_semen_count <= 1000:
         return 1
     return 0
@@ -501,7 +501,7 @@ def handle_t_vw_semen_le_1000(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(
         activity.target(character_id)
     )
     if all_semen_count <= 1000:
@@ -518,7 +518,7 @@ def handle_vw_semen_g_1000(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(character_id)
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(character_id)
     if all_semen_count > 1000:
         return 1
     return 0
@@ -533,7 +533,7 @@ def handle_t_vw_semen_g_1000(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    all_semen_count = dirty_panel.get_v_and_w_semen_count(
+    all_semen_count = dirty_queries.get_v_and_w_semen_count(
         activity.target(character_id)
     )
     if all_semen_count > 1000:
