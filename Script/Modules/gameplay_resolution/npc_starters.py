@@ -134,8 +134,8 @@ def restock_shop(who: int, data: intent.Intent) -> None:
 
 
 def _find(
-    foods: Mapping[UUID, game_type.Food] | None, uid: object
-) -> tuple[UUID, game_type.Food] | None:
+    foods: Mapping[UUID, kitchen.FoodView] | None, uid: object
+) -> tuple[UUID, kitchen.FoodView] | None:
     """
     在食物uid到食物的表里按记成字符串的uid找食物
     Keyword arguments:

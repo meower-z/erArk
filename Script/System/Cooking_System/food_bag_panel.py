@@ -5,7 +5,7 @@
 import random
 from types import FunctionType
 from uuid import UUID
-from Script.Core import get_text, game_type, constant, flow_handle
+from Script.Core import get_text, constant, flow_handle
 from Script.UI.Moudle import panel, draw, view
 from Script.Design import attr_calculation, handle_premise
 from Script.Modules.tk_ui import player_pick
@@ -277,8 +277,7 @@ class FoodBagPanel:
         # 读取背包食物，按(recipe, special_seasoning)分组
         group_normal: dict = {}
         group_special: dict = {}
-        for i in inventory.foods(0):
-            food_data: game_type.Food = inventory.foods(0)[i]
+        for i, food_data in inventory.foods(0).items():
             recipe_data = game_config.config_recipes.get(food_data.recipe)
             # 如果是食用类型的食物，则跳过饮用类型的食物
             if (
@@ -386,7 +385,7 @@ class FoodGroupDraw:
         max_quality = 0
         for uid in uid_list:
             if uid in inventory.foods(0):
-                food_data: game_type.Food = inventory.foods(0)[uid]
+                food_data = inventory.foods(0)[uid]
                 if food_data.quality > max_quality:
                     max_quality = food_data.quality
 
@@ -496,7 +495,7 @@ class FoodGroupDraw:
             ]
 
             for uid in valid_uids:
-                food_data: game_type.Food = inventory.foods(0)[uid]
+                food_data = inventory.foods(0)[uid]
                 _quality_level, food_quality_str = (
                     attr_calculation.get_food_quality(food_data.quality)
                 )

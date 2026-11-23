@@ -350,7 +350,7 @@ def handle_self_cloth_back(
     if not add_time:
         return
     character_data: identity.Identity = identity.of(character_id)
-    cloth = wardrobe.of(character_id)
+    cloth = wardrobe.clone_mutable_snapshot(character_id)
 
     # 穿回脱下的衣服
     wear_flag = False
@@ -614,9 +614,7 @@ def handle_wear_to_shower_locker(
 
     for clothing_type in game_config.config_clothing_type:
         if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
-            tem_list = (
-                wardrobe.of(character_id).cloth_wear[clothing_type].copy()
-            )
+            tem_list = wardrobe.of(character_id).cloth_wear[clothing_type]
             for cloth_id in tem_list:
                 # 不转移首饰和必须穿着的衣服
                 if game_config.config_clothing_tem[
@@ -677,11 +675,9 @@ def handle_shower_locker_to_wear(
         # 如果某个服装类型的衣柜不为空
         if len(wardrobe.of(character_id).cloth_locker_in_shower[clothing_type]):
             # 复制该服装类型的衣柜列表
-            tem_list = (
-                wardrobe.of(character_id)
-                .cloth_locker_in_shower[clothing_type]
-                .copy()
-            )
+            tem_list = wardrobe.of(character_id).cloth_locker_in_shower[
+                clothing_type
+            ]
             # 遍历该服装类型的衣柜列表
             for cloth_id in tem_list:
                 # 将服装添加到穿着列表中
@@ -733,9 +729,7 @@ def handle_foot_cloth_to_shower_locker(
 
         for clothing_type in {10, 11}:
             if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
-                tem_list = (
-                    wardrobe.of(character_id).cloth_wear[clothing_type].copy()
-                )
+                tem_list = wardrobe.of(character_id).cloth_wear[clothing_type]
                 for cloth_id in tem_list:
                     # 不转移首饰和必须穿着的衣服
                     if game_config.config_clothing_tem[
@@ -795,7 +789,7 @@ def handle_shower_locker_to_dormitory_locker(
     wardrobe.set(
         character_id,
         "cloth_locker_in_dormitory",
-        wardrobe.of(character_id).cloth_locker_in_shower.copy(),
+        wardrobe.of(character_id).cloth_locker_in_shower,
     )
     wardrobe.set(
         character_id,
@@ -845,9 +839,7 @@ def handle_wear_to_dormitory_locker(
         # 遍历所有服装部位，把身上的衣服转移到宿舍衣柜里
         for clothing_type in game_config.config_clothing_type:
             if len(wardrobe.of(character_id).cloth_wear[clothing_type]):
-                tem_list = (
-                    wardrobe.of(character_id).cloth_wear[clothing_type].copy()
-                )
+                tem_list = wardrobe.of(character_id).cloth_wear[clothing_type]
                 for cloth_id in tem_list:
                     # 必穿项（抑制戒指、监测环、镣铐、戒指、项圈）留在身上，全局只保持一份
                     if cloth_id in special_cloth_list:
@@ -942,7 +934,7 @@ def handle_up_and_bra_to_tem(
     """
     if not add_time:
         return
-    cloth = wardrobe.of(character_id)
+    cloth = wardrobe.clone_mutable_snapshot(character_id)
 
     for i in [5, 6]:
         if len(cloth.cloth_wear[i]):
@@ -969,7 +961,7 @@ def handle_down_and_pan_to_tem(
     """
     if not add_time:
         return
-    cloth = wardrobe.of(character_id)
+    cloth = wardrobe.clone_mutable_snapshot(character_id)
 
     for i in [8, 9]:
         if len(cloth.cloth_wear[i]):
@@ -996,7 +988,7 @@ def handle_target_up_and_bra_to_tem(
     """
     if not add_time:
         return
-    cloth = wardrobe.of(activity.target(character_id))
+    cloth = wardrobe.clone_mutable_snapshot(activity.target(character_id))
 
     for i in [5, 6]:
         if len(cloth.cloth_wear[i]):
@@ -1023,7 +1015,7 @@ def handle_target_down_and_pan_to_tem(
     """
     if not add_time:
         return
-    cloth = wardrobe.of(activity.target(character_id))
+    cloth = wardrobe.clone_mutable_snapshot(activity.target(character_id))
 
     for i in [8, 9]:
         if len(cloth.cloth_wear[i]):

@@ -1142,7 +1142,7 @@ def update_chara_cloth(
     """
     from Script.Design import clothing
 
-    cloth = wardrobe.of(value.cid)
+    cloth = wardrobe.clone_mutable_snapshot(value.cid)
     # 数据长度不一致时，重置服装数据
     if len(cloth.cloth_wear) != len(game_config.config_clothing_type):
         cloth.cloth_wear = attr_calculation.get_cloth_wear_zero()

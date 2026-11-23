@@ -6,18 +6,19 @@ clothing_tem 是服装模板编号的列表。cloth_wear、cloth_off、cloth_loc
 是 {部位编号: 服装id的列表}。cloth_see 是 {部位编号: 能否被看见}。
 另有 stolen_panties_in_unconscious、stolen_socks_in_unconscious 与 equipment_condition。
 角色没有这一项时读 CLOTH() 的值。put 整值替换这个键，值与值的类型都没变时不写。
-of 读出的 CLOTH 是按存下的值新建的对象，改它不改服装。
-set、set_part、append、remove 各读一次当前值，改一处，再用 put 写回。
+of 返回带缓存的只读 ClothView。clone_mutable_snapshot 返回可修改的新 CLOTH。
+set、set_part、append、remove 各先取一份克隆，改一处后再用 put 写回。
 """
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, cast
 
 from Script.Core import game_type
 from Script.Kernel import core
 from Script.Modules.domains import counts
-from Script.Modules.gameplay_resolution import working
+from Script.Modules.gameplay_resolution import readonly, working
 
 KEY = "body.cloth"
 """ 服装在角色数据里的键 """
@@ -77,14 +78,54 @@ def encode(cloth: game_type.CLOTH) -> dict[str, core.JSON]:
 working.register(KEY, encode(game_type.CLOTH()))
 
 
-def of(cid: int, game: core.GameState | None = None) -> game_type.CLOTH:
+@dataclass(frozen=True, slots=True)
+class ClothView:
+    """角色服装的只读视图，包含与 CLOTH 相同的九个字段。容器字段为只读映射与元组，不可原地修改。"""
+
+    clothing_tem: tuple[int, ...]
+    cloth_wear: Mapping[int, tuple[int, ...]]
+    cloth_off: Mapping[int, tuple[int, ...]]
+    cloth_locker_in_shower: Mapping[int, tuple[int, ...]]
+    cloth_locker_in_dormitory: Mapping[int, tuple[int, ...]]
+    cloth_see: Mapping[int, bool]
+    stolen_panties_in_unconscious: bool
+    stolen_socks_in_unconscious: bool
+    equipment_condition: float
+
+
+def _viewed(value: core.JSON) -> Any:
+    if isinstance(value, Mapping):
+        return MappingProxyType({int(k): _viewed(v) for k, v in value.items()})
+    return value
+
+
+def _view(stored: core.JSON) -> ClothView:
+    table = cast(Mapping[str, core.JSON], stored)
+    return ClothView(**{name: _viewed(v) for name, v in table.items()})
+
+
+def of(cid: int, game: core.GameState | None = None) -> ClothView:
     """
-    角色的服装
+    读取角色服装的只读视图，原始值未变时复用缓存
     Keyword arguments:
     cid -- 角色id
-    game -- 给出时只读这个状态，没有时读当前缓冲区，含还没套用的写入
+    game -- 给出时只读该 GameState，为 None 时读当前缓冲区（含未套用的写入）
     Return arguments:
-    game_type.CLOTH -- 按存下的值新建的服装，字典的键换回 int，元组换回列表
+    ClothView -- 角色服装的只读视图，不可原地修改
+    """
+    return readonly.view(str(cid), KEY, _view, game)
+
+
+def clone_mutable_snapshot(
+    cid: int, game: core.GameState | None = None
+) -> game_type.CLOTH:
+    """
+    按当前存下的服装数据新建可修改的 CLOTH 副本，修改副本不影响存下的服装
+    Keyword arguments:
+    cid -- 角色id
+    game -- 给出时只读该 GameState，为 None 时读当前缓冲区（含未套用的写入）
+    Return arguments:
+    game_type.CLOTH -- 新建的可修改服装对象，字典键还原为 int，元组还原为 list
     """
     stored = cast(Mapping[str, core.JSON], working.get(str(cid), KEY, game))
     made = object.__new__(game_type.CLOTH)
@@ -112,7 +153,7 @@ def set(cid: int, field: str, value: Any) -> None:
     field -- 属性名
     value -- 新值
     """
-    cloth = of(cid)
+    cloth = clone_mutable_snapshot(cid)
     setattr(cloth, field, value)
     put(cid, cloth)
 
@@ -126,7 +167,7 @@ def set_part(cid: int, field: str, part: int, value: Any) -> None:
     part -- 部位编号
     value -- 新值
     """
-    cloth = of(cid)
+    cloth = clone_mutable_snapshot(cid)
     getattr(cloth, field)[part] = value
     put(cid, cloth)
 
@@ -140,7 +181,7 @@ def append(cid: int, field: str, part: int, cloth_id: int) -> None:
     part -- 部位编号
     cloth_id -- 服装id
     """
-    cloth = of(cid)
+    cloth = clone_mutable_snapshot(cid)
     getattr(cloth, field)[part].append(cloth_id)
     put(cid, cloth)
 
@@ -154,7 +195,7 @@ def remove(cid: int, field: str, part: int, cloth_id: int) -> None:
     part -- 部位编号
     cloth_id -- 服装id，列表里没有时报 ValueError
     """
-    cloth = of(cid)
+    cloth = clone_mutable_snapshot(cid)
     getattr(cloth, field)[part].remove(cloth_id)
     put(cid, cloth)
 

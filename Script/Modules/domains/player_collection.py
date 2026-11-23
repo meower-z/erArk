@@ -283,8 +283,22 @@ def set_first_panty(npc_id: int, text: str, cid: int = 0) -> None:
 
 def append_list_map(name: str, npc_id: int, item: Any, cid: int = 0) -> None:
     """向内裤或袜子映射表的 npc_id 列表末尾追加一项"""
+    extend_list_map(name, ((npc_id, item),), cid)
+
+
+def extend_list_map(
+    name: str, items: Iterable[tuple[int, Any]], cid: int = 0
+) -> None:
+    """
+    批量向内裤或袜子映射表追加条目，只读表一次并调用 put 写回一次
+    Keyword arguments:
+    name -- 收藏品列表映射字段名（内裤或袜子映射表）
+    items -- (干员id, 追加项) 二元组的可迭代对象，干员键不存在时先建空列表再按顺序追加
+    cid -- 收藏品所属角色id，默认 0
+    """
     table = cast(dict[int, list[Any]], get(name, cid))
-    table.setdefault(npc_id, []).append(item)
+    for npc_id, item in items:
+        table.setdefault(npc_id, []).append(item)
     put(name, table, cid)
 
 

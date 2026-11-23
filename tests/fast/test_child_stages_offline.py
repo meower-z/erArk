@@ -146,7 +146,7 @@ class ChildStagesOfflineTest(FastTestCase):
         self.assertTrue(h_id_set, "服装表里有情趣内衣")
         kernel_data.put(player_collection.init_zero, 0)
         kernel_data.put(player_collection.set_bonus, H_UNDERWEAR_BONUS_ID, True)
-        picked = set()
+        picked: set[int] = set()
         with mock.patch.object(
             attr_calculation, "get_character_fall_level", return_value=2
         ):

@@ -311,7 +311,7 @@ def start_undress(who: int, chosen: intent.Intent) -> None:
     """
     target_id = activity.target(who)
     choice = int(cast(int, _args(chosen)["choice"]))
-    cloth = wardrobe.of(target_id)
+    cloth = wardrobe.clone_mutable_snapshot(target_id)
     if choice == 0:
         for i in (5, 8):
             cloth.cloth_off[i].extend(cloth.cloth_wear[i])

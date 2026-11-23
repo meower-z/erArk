@@ -8,6 +8,7 @@
 """
 
 from collections.abc import Iterator, Mapping, MutableMapping
+from types import MappingProxyType
 from typing import Any, cast
 
 from Script.Kernel import core
@@ -45,7 +46,7 @@ def fold(old: core.JSON, op: str, operand: core.JSON) -> core.JSON:
     """
     if op == "replace":
         return dict(cast(Mapping[str, int], operand))
-    table = dict(cast(Mapping[str, int], old))
+    table = cast(MappingProxyType[str, int], old).copy()
     if op == "set":
         table.update(cast(Mapping[str, int], operand))
     elif op == "drop":

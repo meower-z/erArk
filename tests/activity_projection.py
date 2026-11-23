@@ -27,7 +27,7 @@ def project(state: dict[str, object]) -> None:
             "state": activity.state(cid),
             "last_behavior_id_list": activity.last_behaviors(cid),
             "behavior": activity.behavior(cid).as_dict(),
-            "second_behavior": activity.second_behaviors(cid),
+            "second_behavior": dict(activity.second_behaviors(cid)),
             "must_settle_second_behavior_id_list": activity.must_settle(cid),
             "must_show_second_behavior_id_list": activity.must_show(cid),
             "event": activity.event(cid).as_dict(),

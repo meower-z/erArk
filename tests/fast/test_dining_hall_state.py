@@ -71,9 +71,10 @@ class DiningHallStateTest(FastTestCase):
         data: intent.Intent = {"behavior_id": "buy", "minutes": 1, "args": args}
         npc_starters.buy_food(1, data)
         bag = inventory.foods(1)
-        self.assertEqual(vars(bag[food.uid]), vars(food))
+        self.assertEqual(kitchen.record(bag[food.uid]), kitchen.record(food))
         target = activity.behavior(1).target_food
-        self.assertEqual(vars(target), vars(bag[food.uid]))
+        self.assertEqual(target.uid, food.uid)
+        self.assertEqual(kitchen.record(target), kitchen.record(bag[food.uid]))
         self.assertEqual(kitchen.shelves(), {"7": {}})
 
     def test_sold_out_shelf_keeps_place(self) -> None:

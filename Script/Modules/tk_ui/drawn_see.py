@@ -45,9 +45,7 @@ def keep() -> None:
         return
     if not (flags.get(0, "is_h") or flags.get(cid, "is_h")):
         return
-    see = wardrobe.of(cid).cloth_see
-    see.update(seen)
-    wardrobe.set(cid, "cloth_see", see)
+    wardrobe.set(cid, "cloth_see", {**wardrobe.of(cid).cloth_see, **seen})
 
 
 @core.input_hook(core.start_action)

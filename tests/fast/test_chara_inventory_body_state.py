@@ -37,7 +37,7 @@ from Script.Design import attr_calculation, character, clothing, game_time
 from Script.Design import settle_behavior
 from Script.Kernel import core
 from Script.Core import constant, game_type
-from Script.Modules.domains import body_manage, flags, inventory, modes
+from Script.Modules.domains import body_manage, flags, inventory, kitchen, modes
 from Script.Modules.domains import player_collection, status, wardrobe
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.tk_ui import player_pick
@@ -158,7 +158,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         }
         kernel_data.written(clothing.get_cloth_wear_zero_except_need, 1)
         left = {p: ids for p, ids in wardrobe.of(1).cloth_wear.items() if ids}
-        self.assertEqual(left, {**jewelry, 13: [1301]})
+        self.assertEqual(left, {**jewelry, 13: (1301,)})
 
     def test_new_character_has_zero_tables(self) -> None:
         """init_attr 之后每种状态、道具与身体管理都有一项，值为 0"""
@@ -203,14 +203,16 @@ class CharaInventoryBodyStateTest(FastTestCase):
         self.assertEqual(dict(status.of(1)), {0: THIRD, 12: 7})
         self.assertEqual(dict(body_manage.of(1)), {24: 1})
         cloth = wardrobe.of(1)
-        self.assertEqual(cloth.cloth_wear, {5: [501]})
+        self.assertEqual(cloth.cloth_wear, {5: (501,)})
         self.assertEqual(cloth.equipment_condition, 0)
         self.assertFalse(hasattr(cloth, "retired_field"))
-        bag = inventory.foods(1)
+        bag = inventory.clone_mutable_snapshot_foods(1)
         self.assertEqual(list(bag), [stale.uid, fresh.uid])
         self.assertFalse(hasattr(bag[stale.uid], "milk_ml"))
         self.assertEqual(dict(status.of(8)), {})
-        self.assertEqual(vars(wardrobe.of(8)), vars(game_type.CLOTH()))
+        self.assertEqual(
+            vars(wardrobe.clone_mutable_snapshot(8)), vars(game_type.CLOTH())
+        )
         kernel_data.written(cooking._drop_old_format_food)
         self.assertEqual(list(inventory.foods(1)), [fresh.uid])
 
@@ -229,9 +231,12 @@ class CharaInventoryBodyStateTest(FastTestCase):
         self.assertEqual(status.of(1, after)[0], THIRD)
         self.assertIs(type(status.of(1, after)[0]), Fraction)
         self.assertEqual(dict(inventory.items(1, after))[100], 4)
-        self.assertEqual(vars(inventory.foods(1, after)[food.uid]), vars(food))
-        self.assertEqual(wardrobe.of(1, after).cloth_off[7], [751])
-        self.assertEqual(vars(wardrobe.of(1, after)), vars(wardrobe.of(1)))
+        self.assertEqual(
+            kitchen.record(inventory.foods(1, after)[food.uid]),
+            kitchen.record(food),
+        )
+        self.assertEqual(wardrobe.of(1, after).cloth_off[7], (751,))
+        self.assertEqual(wardrobe.of(1, after), wardrobe.of(1))
         self.assertEqual(
             dict(body_manage.of(1, after)), dict(body_manage.of(1))
         )
@@ -240,7 +245,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
         """读出再写回同一个值不产生效果。把状态 0 的值 0 换成 Fraction(0) 产生效果"""
         kernel_data.put(inventory.put_food, 1, _food(5))
         with working.based_on(core.state()) as buffer:
-            wardrobe.put(1, wardrobe.of(1))
+            wardrobe.put(1, wardrobe.clone_mutable_snapshot(1))
             status.replace(1, status.of(1))
             status.set(1, 0, status.of(1)[0])
             inventory.replace_items(1, inventory.items(1))
@@ -293,7 +298,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
 
         world_module.act(click_pan)
         self.assertEqual(wardrobe.of(1).cloth_see, {6: False, 9: True})
-        self.assertEqual(wardrobe.of(1).cloth_wear[9], [])
+        self.assertEqual(wardrobe.of(1).cloth_wear[9], ())
         self.assertIn(pan, wardrobe.of(1).cloth_off[9])
 
     def test_h_cloth_drawn_see_kept_by_next_action(self) -> None:
@@ -344,7 +349,7 @@ class CharaInventoryBodyStateTest(FastTestCase):
             ).switch_cloth()
 
         world_module.act(click_coat)
-        self.assertEqual(wardrobe.of(1).cloth_wear[5], [])
+        self.assertEqual(wardrobe.of(1).cloth_wear[5], ())
         self.assertIn(coat, wardrobe.of(1).cloth_off[5])
         self.assertEqual(wardrobe.of(1).cloth_see[6], True)
 
@@ -392,5 +397,5 @@ class CharaInventoryBodyStateTest(FastTestCase):
             check_locker_panel.FindDraw.get_pan(find)
             check_locker_panel.FindDraw.get_pan(find)
         self.assertEqual(find.now_locker[9], [])
-        self.assertEqual(wardrobe.of(1).cloth_locker_in_shower[9], [])
+        self.assertEqual(wardrobe.of(1).cloth_locker_in_shower[9], ())
         self.assertEqual(player_collection.get("npc_panties_tem")[1], [pan])

@@ -5,7 +5,7 @@ from types import FunctionType
 from Script.Core import game_type, get_text, num
 from Script.Config import game_config
 from Script.Design import instuct_judege, handle_premise
-from Script.Modules.domains import activity, needs
+from Script.Modules.domains import activity, kitchen, needs
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -133,7 +133,9 @@ def reduce_drunk_point(character_id: int, time: int) -> None:
     )
 
 
-def judge_accept_alcohol_food(character_id: int, food: game_type.Food) -> bool:
+def judge_accept_alcohol_food(
+    character_id: int, food: kitchen.FoodView
+) -> bool:
     """
     判断角色是否接受饮用酒类食物\n
     Keyword arguments:\n

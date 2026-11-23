@@ -7,7 +7,7 @@ from typing import cast
 from Script.Core import constant, flow_handle, game_type
 from Script.Core import get_text, py_cmd, text_handle
 from Script.Design import attr_text, clothing, handle_premise, map_handle
-from Script.Modules.domains import activity, dirty, identity
+from Script.Modules.domains import activity, dirty, identity, player_collection
 from Script.UI.Moudle import draw, panel, view
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import edits
@@ -170,6 +170,7 @@ class Check_locker_Panel:
         """结算：偷取所有内裤"""
         count = 0
         show_text = "\n"
+        stolen: list[tuple[int, int]] = []
         for npc_id in npc_id_list:
             character_data = identity.of(npc_id)
             locker_type = clothing.get_cloth_locker_type_by_scene(
@@ -177,21 +178,18 @@ class Check_locker_Panel:
             )
             now_locker = clothing.get_cloth_locker_by_type(npc_id, locker_type)
             if len(now_locker[9]):
-                from Script.Modules.domains import player_collection
-
                 for pan_id in now_locker[9]:
                     # 跳过序号不存在的服装
                     if pan_id not in game_config.config_clothing_tem:
                         continue
-                    player_collection.append_list_map(
-                        "npc_panties_tem", npc_id, pan_id
-                    )
+                    stolen.append((npc_id, pan_id))
                     pan_name = game_config.config_clothing_tem[pan_id].name
                     show_text += _("获得了{0}的{1}\n").format(
                         character_data.name, pan_name
                     )
                     count += 1
                 clothing.empty_cloth_locker_part(npc_id, locker_type, 9)
+        player_collection.extend_list_map("npc_panties_tem", stolen)
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.text = show_text + _(
@@ -205,6 +203,7 @@ class Check_locker_Panel:
         """结算：偷取所有袜子"""
         count = 0
         show_text = "\n"
+        stolen: list[tuple[int, int]] = []
         for npc_id in npc_id_list:
             character_data = identity.of(npc_id)
             locker_type = clothing.get_cloth_locker_type_by_scene(
@@ -212,21 +211,18 @@ class Check_locker_Panel:
             )
             now_locker = clothing.get_cloth_locker_by_type(npc_id, locker_type)
             if len(now_locker[10]):
-                from Script.Modules.domains import player_collection
-
                 for socks_id in now_locker[10]:
                     # 跳过序号不存在的服装
                     if socks_id not in game_config.config_clothing_tem:
                         continue
-                    player_collection.append_list_map(
-                        "npc_socks_tem", npc_id, socks_id
-                    )
+                    stolen.append((npc_id, socks_id))
                     socks_name = game_config.config_clothing_tem[socks_id].name
                     show_text += _("获得了{0}的{1}\n").format(
                         character_data.name, socks_name
                     )
                     count += 1
                 clothing.empty_cloth_locker_part(npc_id, locker_type, 10)
+        player_collection.extend_list_map("npc_socks_tem", stolen)
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.text = show_text + _(

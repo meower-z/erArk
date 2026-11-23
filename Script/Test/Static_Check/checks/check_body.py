@@ -105,7 +105,7 @@ def _cloth_locs(cid: int) -> list[tuple[str, dict]] | None:
     功能:
         统一取出穿着/脱下/大浴场衣柜/宿舍衣柜四个容器，供各服装检查复用
     """
-    cloth = wardrobe.of(cid)
+    cloth = wardrobe.clone_mutable_snapshot(cid)
     locs = []
     for attr_name in (
         "cloth_wear",
@@ -194,7 +194,7 @@ def check_cloth_container_keys() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_charas():
-        cloth = wardrobe.of(cid)
+        cloth = wardrobe.clone_mutable_snapshot(cid)
         for attr_name in (
             "cloth_wear",
             "cloth_off",
@@ -431,7 +431,7 @@ def check_cloth_see_shape() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        cloth = wardrobe.of(cid)
+        cloth = wardrobe.clone_mutable_snapshot(cid)
         see = getattr(cloth, "cloth_see", None)
         ok = (
             isinstance(see, dict)
@@ -463,7 +463,7 @@ def check_equipment_condition_bound() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        cloth = wardrobe.of(cid)
+        cloth = wardrobe.clone_mutable_snapshot(cid)
         val = getattr(cloth, "equipment_condition", 0)
         if not _num(val) or not (-4 <= val <= 2):
             failures.append(
@@ -495,7 +495,7 @@ def check_condom_decoration() -> list[CheckFailure]:
     failures = []
     for cid, chara in _iter_charas():
         dirty = dirty_domain.view(cid)
-        cloth = wardrobe.of(cid)
+        cloth = wardrobe.clone_mutable_snapshot(cid)
         deco = getattr(dirty, "condom_decoration", None)
         if deco is None:
             continue
@@ -1355,7 +1355,7 @@ def check_semen_flow_source_container() -> list[CheckFailure]:
     hits = []
     for cid, _chara in _iter_charas():
         dirty = dirty_domain.view(cid)
-        cloth = wardrobe.of(cid)
+        cloth = wardrobe.clone_mutable_snapshot(cid)
         flow = getattr(dirty, "semen_flow", None)
         wear = getattr(cloth, "cloth_wear", None)
         if not isinstance(flow, list) or not isinstance(wear, dict):
@@ -1478,7 +1478,7 @@ def check_clothing_tem_list() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_charas():
-        lst: object = wardrobe.of(cid).clothing_tem
+        lst: object = wardrobe.clone_mutable_snapshot(cid).clothing_tem
         if lst is None:
             continue
         if not isinstance(lst, list) or any(

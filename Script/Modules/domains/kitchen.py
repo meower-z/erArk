@@ -7,6 +7,8 @@
 """
 
 from collections.abc import Mapping
+from dataclasses import dataclass, field, fields
+from types import MappingProxyType
 from typing import Any, cast
 from uuid import UUID
 
@@ -27,14 +29,55 @@ def _stored(game: core.GameState | None = None) -> Shelves:
     return cast(Shelves, working.get(None, KEY, game))
 
 
-def record(food: game_type.Food) -> dict[str, core.JSON]:
+@dataclass(frozen=True, slots=True)
+class FoodView:
     """
-    食物记录：Food 对象除 uid 外的全部属性，原样抄下
+    食物的只读视图，使用 slots 且实例不可变。视图包含 uid 与 game_type.Food 的九个字段。
+    这九个字段的默认值与 Food() 相同。仅关键字字段 stored 原样保留原始存储记录，不参与比较与 repr。
+    """
+
+    uid: UUID
+    id: str = ""
+    name: str = ""
+    quality: int = 0
+    maker: str = ""
+    recipe: int = -1
+    special_seasoning: int = 0
+    special_seasoning_amount: int = 0
+    milk_ml: int = 0
+    urine_ml: int = 0
+    stored: Mapping[str, core.JSON] = field(
+        kw_only=True, compare=False, repr=False
+    )
+
+
+_VIEW_FIELDS = frozenset(f.name for f in fields(FoodView)) - {"stored"}
+
+
+def food_view(uid: str, stored: Mapping[str, core.JSON]) -> FoodView:
+    """
+    按食物记录构造只读的 FoodView。九个食物字段从记录同名键取值。stored 字段保留整条记录的只读副本
     Keyword arguments:
-    food -- 食物
+    uid -- 食物uid的字符串
+    stored -- 食物记录映射
     Return arguments:
-    dict -- 属性名到值
+    FoodView -- 对应的只读食物视图，uid 为 UUID(uid)，缺失的食物字段取 FoodView 默认值，stored 为整条记录的只读副本
     """
+    kept = {k: v for k, v in stored.items() if k in _VIEW_FIELDS}
+    frozen = MappingProxyType(dict(stored))
+    return FoodView(UUID(uid), **cast(Mapping[str, Any], kept), stored=frozen)
+
+
+def record(food: game_type.Food | FoodView) -> dict[str, core.JSON]:
+    """
+    取出食物记录字典。传入 Food 时原样复制除 uid 外的全部属性。传入 FoodView 时原样返回其 stored 记录的新字典副本
+    Keyword arguments:
+    food -- 食物对象或只读食物视图
+    Return arguments:
+    dict -- 食物记录字典（键名到值）
+    """
+    if isinstance(food, FoodView):
+        return dict(food.stored)
     return {name: v for name, v in vars(food).items() if name != "uid"}
 
 

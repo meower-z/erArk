@@ -100,9 +100,8 @@ def get_cloth_locker_by_type(character_id: int, locker_type: int) -> dict:
     Return arguments:
     dict -- 部位到衣服id列表，是按服装新建的副本，改它不改衣柜
     """
-    return getattr(
-        wardrobe.of(character_id), CLOTH_LOCKER_ATTR_NAME[locker_type]
-    )
+    cloth = wardrobe.clone_mutable_snapshot(character_id)
+    return getattr(cloth, CLOTH_LOCKER_ATTR_NAME[locker_type])
 
 
 def empty_cloth_locker_part(
@@ -154,7 +153,8 @@ def get_cloth_from_dormitory_locker(character_id: int) -> None:
             return  # 模板不存在时安全返回
         tem_cloth_list = tem_character.Cloth.copy()
         # 同居助理的宿舍地址即博士房间，因此她在博士房间起床时读到的也是这份宿舍衣柜
-        now_locker = wardrobe.of(character_id).cloth_locker_in_dormitory
+        cloth = wardrobe.clone_mutable_snapshot(character_id)
+        now_locker = cloth.cloth_locker_in_dormitory
         # 检查宿舍衣柜中是否有衣服
         wear_locker_flag = False
         for cloth_type in now_locker:

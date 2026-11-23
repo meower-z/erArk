@@ -38,8 +38,7 @@ def put_selfmade_food_in() -> None:
 
     # 读取背包食物，并只提取uid列表
     id_list_normal = []
-    for i in inventory.foods(0).copy():
-        food_data: game_type.Food = inventory.foods(0)[i]
+    for i, food_data in inventory.foods(0).items():
         if food_data.special_seasoning == 0:
             id_list_normal.append(i)
 

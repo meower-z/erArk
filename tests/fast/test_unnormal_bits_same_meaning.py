@@ -211,7 +211,7 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
             if talent_id in ca.talent(operator):
                 ca.talent(operator)[talent_id] = 1 if rng.random() < 0.15 else 0
         kernel_data.set_world(modes.set_time_stop, rng.random() < 0.2)
-        worn = wardrobe.of(operator.cid).cloth_wear
+        worn = wardrobe.clone_mutable_snapshot(operator.cid).cloth_wear
         for clothing_type in game_config.config_clothing_type:
             roll = rng.random()
             if roll < 0.45:

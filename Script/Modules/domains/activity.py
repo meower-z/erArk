@@ -153,16 +153,16 @@ def second_order() -> dict[str, int]:
 
 def second_behaviors(
     cid: int, game: core.GameState | None = None
-) -> dict[str, int]:
+) -> Mapping[str, int]:
     """
-    角色不为 0 的二段行为，新字典
+    角色不为 0 的二段行为，直接返回存下的只读映射
     Keyword arguments:
     cid -- 角色id
-    game -- 给出时只读这个 GameState，没有时读当前缓冲区
+    game -- 给出时只读该 GameState，为 None 时读当前缓冲区
     Return arguments:
-    dict -- 二段行为id 到值，按 second_order 的顺序，配置里没有的id排在后面、按写入的先后
+    Mapping[str, int] -- 二段行为id到值的只读映射，按 second_order 顺序排列，配置里没有的id排在后面并按写入先后排列
     """
-    return dict(_get(cid, SECOND, game))
+    return cast(Mapping[str, int], _get(cid, SECOND, game))
 
 
 def second_ids(cid: int, game: core.GameState | None = None) -> list[str]:
@@ -203,9 +203,7 @@ def set_second_behaviors(cid: int, values: Mapping[str, int]) -> None:
 
 def set_second_behavior(cid: int, behavior_id: str, value: int) -> None:
     """把角色一个二段行为的值换成 value，写进当前缓冲区"""
-    values = second_behaviors(cid)
-    values[behavior_id] = value
-    set_second_behaviors(cid, values)
+    set_second_behaviors(cid, {**second_behaviors(cid), behavior_id: value})
 
 
 def must_settle(cid: int, game: core.GameState | None = None) -> list[str]:

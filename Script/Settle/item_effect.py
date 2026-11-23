@@ -1401,8 +1401,7 @@ def handle_delete_all_food(
         return
     if activity.dead(character_id):
         return
-    for food_id in inventory.foods(character_id).copy():
-        food: game_type.Food = inventory.foods(character_id)[food_id]
+    for food in inventory.foods(character_id).values():
         inventory.drop_food(character_id, food.uid)
 
 

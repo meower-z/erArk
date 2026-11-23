@@ -247,7 +247,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         kd.put(h_state.set, 0, insert_position=2)
         kd.put(kd.domain("scene_state").set_close_flag, scene_of(0), 1)
         clothing_type = min(game_config.config_clothing_type)
-        cloth = kd.domain("wardrobe").of(child.cid)
+        cloth = kd.domain("wardrobe").clone_mutable_snapshot(child.cid)
         cloth.cloth_wear[clothing_type] = []
         cloth.cloth_off[clothing_type] = [min(game_config.config_clothing_tem)]
         kd.put(kd.domain("wardrobe").put, child.cid, cloth)
@@ -415,7 +415,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 ai.get(chara.cid, "carry_chara_id"),
                 repr(
                     (
-                        vars(kd.domain("wardrobe").of(chara.cid)),
+                        kd.domain("wardrobe").of(chara.cid),
                         hypnosis.degree(cid),
                         activity.event(chara.cid).event_id,
                         activity.must_settle(chara.cid),
@@ -923,7 +923,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 cloth.cloth_off[clothing_type],
                 cloth_id in cloth.cloth_wear[clothing_type],
             ),
-            (False, [], True),
+            (False, (), True),
             "孩子不在H中，穿回了脱下的衣服",
         )
         self.assertEqual(
