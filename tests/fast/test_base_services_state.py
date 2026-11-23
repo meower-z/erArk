@@ -32,12 +32,12 @@ from Script.Modules.domains import (
     recruit,
     roster,
 )
-from Script.Modules.gameplay_resolution import working
+from Script.Modules.gameplay_resolution import library_service, working
 from Script.Modules.save_load import kernel_state, upgrade
 from Script.System.Official_Event_System import official_event_handle
 from Script.System.Official_Event_System import ri_value
 from Script.Test.Static_Check.check_registry import get_all_checks
-from Script.UI.Panel import borrow_book_panel, recruit_panel
+from Script.UI.Panel import recruit_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.Modules.domains import chara_life, identity
@@ -197,11 +197,11 @@ class BaseServicesStateTest(FastTestCase):
             dict.fromkeys(game_config.config_book, library.FREE),
         )
         reader = self.operator(5)
-        self.assertEqual(borrow_book_panel.check_random_borrow_book(reader), 1)
+        self.assertEqual(library_service.check_random_borrow_book(reader), 1)
         (book,) = chara_life.borrow_book_id_set(reader)
         self.assertEqual(library.holders()[book], reader)
         chara_life.book_return_possibility.set(reader, 101)
-        self.assertEqual(borrow_book_panel.check_return_book(reader), 1)
+        self.assertEqual(library_service.check_return_book(reader), 1)
         self.assertEqual(library.holders()[book], library.FREE)
         self.assertEqual(chara_life.borrow_book_id_set(reader), set())
 

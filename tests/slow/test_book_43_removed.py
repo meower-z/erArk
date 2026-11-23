@@ -133,11 +133,8 @@ class Book43RemovedTest(SlowTestCase):
         """博士借着 43 号书、阅读推荐里有它的类型：读档后读书面板、借阅书籍面板与阅读推荐都照常显示，不算这本书"""
         from Script.Modules.domains import chara_life
         from Script.Modules.domains import library
-        from Script.UI.Panel import (
-            borrow_book_panel,
-            manage_library,
-            read_book_panel,
-        )
+        from Script.Modules.gameplay_resolution import library_service
+        from Script.UI.Panel import manage_library, read_book_panel
 
         borrow_book_id_set = chara_life.borrow_book_id_set(0)
         borrow_book_id_set.add(BOOK)
@@ -145,9 +142,7 @@ class Book43RemovedTest(SlowTestCase):
             chara_life.borrow_book_id_set.set, 0, borrow_book_id_set
         )
         kernel_data.put(chara_life.read_book_progress.set_item, 0, BOOK, 40)
-        kernel_data.written(
-            borrow_book_panel.add_borrow_history_record, 0, BOOK
-        )
+        kernel_data.written(library_service.add_borrow_history_record, 0, BOOK)
         kernel_data.put(library.set_holder, BOOK, 0)
         recommended = library.recommended() | {BOOK_TYPE}
         kernel_data.put(library.set_recommended, recommended)
@@ -201,7 +196,7 @@ class Book43RemovedTest(SlowTestCase):
         from Script.Config import game_config
         from Script.Core import constant
         from Script.Modules.domains import library
-        from Script.UI.Panel import borrow_book_panel
+        from Script.Modules.gameplay_resolution import library_service
 
         kernel_data.put(library.set_holder, BOOK, -1)
         kept = {
@@ -227,7 +222,7 @@ class Book43RemovedTest(SlowTestCase):
         )
         self.assertTrue(npc_list, "本局有干员")
         for character_id in npc_list:
-            borrow_book_panel.judge_can_get_read_book(character_id)
+            library_service.judge_can_get_read_book(character_id)
         self.read_as_entertainment(*npc_list)
         reader_count = 0
         for character_id in npc_list:
@@ -249,7 +244,8 @@ class Book43RemovedTest(SlowTestCase):
 
         from Script.Config import game_config
         from Script.Core import constant
-        from Script.UI.Panel import borrow_book_panel, manage_library
+        from Script.Modules.gameplay_resolution import library_service
+        from Script.UI.Panel import manage_library
 
         character_id = self.lend_and_read_book()
         self.save_and_load()
@@ -279,14 +275,14 @@ class Book43RemovedTest(SlowTestCase):
             new_read_book_progress,
         )
         self.assertFalse(
-            borrow_book_panel.judge_can_get_read_book(character_id),
+            library_service.judge_can_get_read_book(character_id),
             "读完了配置里的每本书：判定借不到书",
         )
         kernel_data.put(
             chara_life.read_book_progress.set, character_id, read_book_progress
         )
         self.assertTrue(
-            borrow_book_panel.judge_can_get_read_book(character_id),
+            library_service.judge_can_get_read_book(character_id),
             "还有没读完的书：判定借得到书",
         )
 
@@ -349,7 +345,7 @@ class Book43RemovedTest(SlowTestCase):
 
         from Script.Core import constant
         from Script.Modules.domains import library
-        from Script.UI.Panel import borrow_book_panel
+        from Script.Modules.gameplay_resolution import library_service
 
         character_id = min(
             cid for cid in kernel_data.domain("roster").active() if cid != 0
@@ -361,7 +357,7 @@ class Book43RemovedTest(SlowTestCase):
         )
         kernel_data.put(library.set_holder, BOOK, character_id)
         kernel_data.written(
-            borrow_book_panel.add_borrow_history_record, character_id, BOOK
+            library_service.add_borrow_history_record, character_id, BOOK
         )
         behave(character_id, constant.Behavior.READ_BOOK)
         kernel_data.put(
