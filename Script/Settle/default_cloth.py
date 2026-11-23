@@ -5,15 +5,13 @@ from types import FunctionType
 from Script.Design import attr_calculation, clothing, handle_premise
 from Script.Design import map_handle, settle_behavior
 from Script.Core import constant_effect, game_type, get_text
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Modules.domains import activity, dirty, identity, scene_state
-from Script.UI.Moudle import draw
 from Script.Modules.domains import flags, wardrobe
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -229,10 +227,7 @@ def handle_get_t_pan(
         return
     clothing.pl_get_chara_pan(activity.target(character_id))
     # 绘制一个空白的等待信息
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = "\n"
-    now_draw.draw()
+    ui_hooks.emit_notice("\n", wait=True, use_text_width=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -256,10 +251,7 @@ def handle_get_t_sock(
         return
     clothing.pl_get_chara_socks(activity.target(character_id))
     # 绘制一个空白的等待信息
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = "\n"
-    now_draw.draw()
+    ui_hooks.emit_notice("\n", wait=True, use_text_width=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -290,10 +282,7 @@ def handle_get_scene_t_pan(
         if chara_id > 0:
             clothing.pl_get_chara_pan(chara_id)
     # 绘制一个空白的等待信息
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = "\n"
-    now_draw.draw()
+    ui_hooks.emit_notice("\n", wait=True, use_text_width=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -324,10 +313,7 @@ def handle_get_scene_t_socks(
         if chara_id > 0:
             clothing.pl_get_chara_socks(chara_id)
     # 绘制一个空白的等待信息
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = "\n"
-    now_draw.draw()
+    ui_hooks.emit_notice("\n", wait=True, use_text_width=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -360,17 +346,13 @@ def handle_self_cloth_back(
             wear_flag = True
     wardrobe.put(character_id, cloth)
     if wear_flag:
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
         if flags.get(character_id, "unconscious_h"):
-            now_draw.text = _(
-                "\n给{0}穿上了脱下的衣服，并尽量整理成H前的样子\n"
-            ).format(character_data.name)
-        else:
-            now_draw.text = _("\n{0}穿回了脱下的衣服\n").format(
+            text = _("\n给{0}穿上了脱下的衣服，并尽量整理成H前的样子\n").format(
                 character_data.name
             )
-        now_draw.draw()
+        else:
+            text = _("\n{0}穿回了脱下的衣服\n").format(character_data.name)
+        ui_hooks.emit_notice(text, wait=True, use_text_width=True)
 
 
 @settle_behavior.add_settle_behavior_effect(

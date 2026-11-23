@@ -14,9 +14,8 @@ from Script.Design import (
     handle_npc_ai_in_h,
     attr_calculation,
 )
-from Script.UI.Moudle import draw
-from Script.Modules.gameplay_resolution import semen_dirty_service
-from Script.Config import game_config, normal_config
+from Script.Modules.gameplay_resolution import semen_dirty_service, ui_hooks
+from Script.Config import game_config
 from Script.Modules.domains import abilities, action_info, activity, dirty
 from Script.Modules.domains import entertainment, facility, flags, h_meters
 from Script.Modules.domains import h_state, modes, needs, player_ability
@@ -29,12 +28,6 @@ if TYPE_CHECKING:
 game_path = game_path_config.game_path
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
 
 _drunk_sex_common = None
 """ drunk_sex_common 模块的延迟导入缓存（规避循环导入，同时消除每角色每轮重复导入的开销） """
@@ -78,11 +71,11 @@ def judge_pl_real_time_data() -> None:
         ):
             # 输出提示信息
             room_name = [_("标间"), _("情趣主题房"), _("顶级套房")]
-            now_draw = draw.NormalDraw()
-            now_draw.text = _("\n您入住的{0}到退房时间了，已自动退房\n").format(
-                room_name[love_hotel_room_lv - 1]
+            ui_hooks.emit_notice(
+                _("\n您入住的{0}到退房时间了，已自动退房\n").format(
+                    room_name[love_hotel_room_lv - 1]
+                )
             )
-            now_draw.draw()
             # 结算
             entertainment.set_hotel_room(0)
             action_info.set(0, "check_out_time", datetime.datetime(1, 1, 1))
@@ -266,10 +259,7 @@ def settle_sex_class_notify(
         sex_class_handle.check_and_send_notify(max(start_time, since), now_time)
     )
     for now_text in text_list:
-        now_draw = draw.NormalDraw()
-        now_draw.width = normal_config.config_normal.text_width
-        now_draw.text = now_text
-        now_draw.draw()
+        ui_hooks.emit_notice(now_text, use_text_width=True)
 
 
 def get_true_add_time(
@@ -665,11 +655,12 @@ def break_arts() -> "core.Effects":
     """
     from Script.System.Instruct_System import handle_instruct
 
-    draw_wait = draw.WaitDraw()
-    draw_wait.width = window_width
-    draw_wait.style = "red"
-    draw_wait.text = _("\n理智值不足，开启的源石技艺已全部中断\n")
-    draw_wait.draw()
+    ui_hooks.emit_notice(
+        _("\n理智值不足，开启的源石技艺已全部中断\n"),
+        wait=True,
+        style="red",
+        use_text_width=True,
+    )
     needs.set(0, sanity=0)
     player_ability.set(0, visual=False)
     items: list[core.Effect] = []
