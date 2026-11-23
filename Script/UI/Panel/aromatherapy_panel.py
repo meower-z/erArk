@@ -1,11 +1,11 @@
-"""香薰疗愈面板与香薰疗愈次数的结算"""
+"""香薰疗愈界面面板"""
 
 from types import FunctionType
 from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, activity, facility, flags, tallies
+from Script.Modules.domains import abilities, activity, flags, tallies
 from Script.Modules.domains import warehouse
 from Script.Modules.domains import identity
 
@@ -17,22 +17,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def settle_aromatherapy_sessions() -> None:
-    """
-    结算香薰疗愈次数
-    """
-
-    level = facility.level(16)
-
-    # 刷新香薰疗愈次数
-    if level >= 5:
-        tallies.set(tallies.AROMATHERAPY, 3)
-    elif level == 4:
-        tallies.set(tallies.AROMATHERAPY, 2)
-    elif level <= 3:
-        tallies.set(tallies.AROMATHERAPY, 1)
 
 
 class Aromatherapy_Panel:

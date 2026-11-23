@@ -222,13 +222,12 @@ def update_base_resouce_newday() -> None:
     """
     from Script.UI.Panel import (
         invite_visitor_panel,
-        aromatherapy_panel,
         agriculture_production_panel,
         manage_assembly_line_panel,
-        physical_check_and_manage,
         confinement_and_training,
-        resource_exchange_panel,
     )
+    from Script.Modules.gameplay_resolution import daily_base_service
+    from Script.Modules.gameplay_resolution import trade_service
     from Script.System.Medical_System import medical_service
     from Script.System.Cooking_System import cooking
 
@@ -251,14 +250,15 @@ def update_base_resouce_newday() -> None:
     manage_assembly_line_panel.settle_assembly_line(newdayflag=True)
     # 结算访客抵达和离开
     invite_visitor_panel.settle_visitor_arrivals_and_departures()
-    # 结算资源的供需涨跌与自动交易
-    resource_exchange_panel.daily_supply_demand_fluctuation()
-    # 刷新香薰疗愈次数
-    aromatherapy_panel.settle_aromatherapy_sessions()
+    if trade_lines := trade_service.daily_supply_demand_fluctuation():
+        trade_draw = draw.WaitDraw()
+        trade_draw.text = "\n" + _("○贸易部结算：\n")
+        trade_draw.text += "\n".join(trade_lines) + "\n"
+        trade_draw.draw()
+    daily_base_service.settle_aromatherapy_sessions()
     # 结算粉红凭证
     settle_pink_certificate()
-    # 结算体检
-    physical_check_and_manage.settle_health_check()
+    daily_base_service.settle_health_check()
     # 刷新食堂食物
     cooking.init_food_shop_data(new_day_flag=True)
     # 囚犯逃跑结算
