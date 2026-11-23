@@ -5,3 +5,5 @@ pytest>=9.1,<9.2
 pytest-forked>=1.7
 # 量两层的测试覆盖到哪些模块
 coverage>=7.16
+# 解析每日测试工作流文件（tools/verify/test_ci_slow_shards.py）
+PyYAML>=6
