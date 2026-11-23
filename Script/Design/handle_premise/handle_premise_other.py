@@ -1684,61 +1684,6 @@ def handle_player_held_eggs_not_empty(character_id: int) -> int:
     return len(player_collection.get("held_eggs")) > 0
 
 
-# @add_premise(constant_promise.Premise.TARGET_AGE_SIMILAR)
-# def handle_target_age_similar(character_id: int) -> int:
-#     """
-#     校验角色目标对像是否与自己年龄相差不大
-#     Keyword arguments:
-#     character_id -- 角色id
-#     Return arguments:
-#     int -- 权重
-#     """
-#     character_data = cache.character_data[character_id]
-#     target_data = cache.character_data[character_data.target_character_id]
-#     if character_data.age >= target_data.age - 2 and character_data.age <= target_data.age + 2:
-#         return 1
-#     return 0
-
-
-# @add_premise(constant_promise.Premise.TARGET_AVERAGE_HEIGHT_SIMILAR)
-# def handle_target_average_height_similar(character_id: int) -> int:
-#     """
-#     校验角色目标身高是否与平均身高相差不大
-#     Keyword arguments:
-#     character_id -- 角色id
-#     Return arguments:
-#     int -- 权重
-#     """
-#     character_data = cache.character_data[character_id]
-#     target_data = cache.character_data[character_data.target_character_id]
-#     age_tem = attr_calculation.judge_age_group(target_data.age)
-#     average_height = cache.average_height_by_age[age_tem][target_data.sex]
-#     if (
-#         target_data.height.now_height >= average_height * 0.95
-#         and target_data.height.now_height <= average_height * 1.05
-#     ):
-#         return 1
-#     return 0
-
-
-# @add_premise(constant_promise.Premise.TARGET_AVERAGE_HEIGHT_LOW)
-# def handle_target_average_height_low(character_id: int) -> int:
-#     """
-#     校验角色目标的身高是否低于平均身高
-#     Keyword arguments:
-#     character_id -- 角色id
-#     Return arguments:
-#     int -- 权重
-#     """
-#     character_data = cache.character_data[character_id]
-#     target_data = cache.character_data[character_data.target_character_id]
-#     age_tem = attr_calculation.judge_age_group(target_data.age)
-#     average_height = cache.average_height_by_age[age_tem][target_data.sex]
-#     if target_data.height.now_height <= average_height * 0.95:
-#         return 1
-#     return 0
-
-
 @add_premise(constant_promise.Premise.TARGET_IS_PLAYER)
 def handle_target_is_player(character_id: int) -> int:
     """
@@ -2565,34 +2510,6 @@ def handle_can_manual_change_dormitory(character_id: int) -> int:
     if not handle_normal_7(character_id):
         return 0
     return 1
-
-
-# @add_premise(constant_promise.Premise.TARGET_IS_COLLECTION)
-# def handle_target_is_collection(character_id: int) -> int:
-#     """
-#     校验交互对象是否已被玩家收藏
-#     Keyword arguments:
-#     character_id -- 角色id
-#     Return arguments:
-#     int -- 权重
-#     """
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     player_data: game_type.Character = cache.character_data[0]
-#     return character_data.target_character_id in player_data.collection_character
-
-
-# @add_premise(constant_promise.Premise.TARGET_IS_NOT_COLLECTION)
-# def handle_target_is_not_collection(character_id: int) -> int:
-#     """
-#     校验交互对象是否未被玩家收藏
-#     Keyword arguments:
-#     character_id -- 角色id
-#     Return arguments:
-#     int -- 权重
-#     """
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     player_data: game_type.Character = cache.character_data[0]
-#     return character_data.target_character_id not in player_data.collection_character
 
 
 @add_premise(constant_promise.Premise.T_LUBRICATION_L_1)

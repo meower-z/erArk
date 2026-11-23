@@ -1,9 +1,9 @@
 """
 在编名册、禁用名单与已用干员姓名：全局键 roster.active、roster.forbidden 与 roster.names
 =====================================================================================
-roster.active 存按角色 id 升序排列的在编干员元组（原 Cache.npc_id_got）。
-roster.forbidden 存按角色 id 升序排列的禁用角色元组（原 Cache.forbidden_npc_id），新周目沿用。
-roster.names 存按字典序排列的已用干员姓名元组（原 Cache.npc_name_data），新周目沿用。
+roster.active 存按角色 id 升序排列的在编干员元组。
+roster.forbidden 存按角色 id 升序排列的禁用角色元组，新周目沿用。
+roster.names 存按字典序排列的已用干员姓名元组，新周目沿用。
 三个键缺省时均读空元组，写入整值替换对应键，值未变时不写。
 101（婴儿）与 102（幼女）阶段的角色禁止进入在编名册，由 require_eligible 统一把关。
 """

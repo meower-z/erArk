@@ -113,7 +113,7 @@ def check_roster_id_self_consistency() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 校验cache.npc_id_got中每个id都存在角色对象，且角色自身cid与名册键一致，这是后续全部名册检查的地基
+    功能: 校验roster.active()中每个id都存在于identity.table()，且角色自身cid与名册键一致，这是后续全部名册检查的地基
     """
     cd = identity.table()
     warn = _sev(False)

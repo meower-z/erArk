@@ -78,9 +78,6 @@ class Building_Panel:
             )
             money = str(warehouse.amount(1))
             resouce_text += _("\n  当前龙门币数量    ：{0}\n").format(money)
-            # 碳素建材的编号是15
-            # building_materials = str(cache.base_resouce.materials_resouce[15])
-            # resouce_text += f"\n  当前碳素建材数量  ：{building_materials}\n"
 
             resouce_draw.text = resouce_text
             resouce_draw.width = self.width
@@ -221,9 +218,6 @@ class Building_Panel:
                 ).format(power_consumption, power_generation)
                 money = str(warehouse.amount(1))
                 resouce_text += _("\n  当前龙门币数量    ：{0}\n").format(money)
-                # 碳素建材的编号是15
-                # building_materials = str(cache.base_resouce.materials_resouce[15])
-                # resouce_text += f"\n  当前碳素建材数量  ：{building_materials}\n"
 
                 resouce_draw.text = resouce_text
                 resouce_draw.width = self.width
@@ -248,11 +242,6 @@ class Building_Panel:
                 else:
                     up_info_draw.text += _("\n  升级需要更高的控制中枢等级")
                     level_up_flag = False
-                # 建材
-                # if cache.base_resouce.materials_resouce[15] - facility_data_next.resouce_use >= 0:
-                #     level_up_flag += 1
-                # else:
-                #     up_info_draw.text += "\n  升级所需碳素建材不足"
                 up_info_draw.width = self.width
 
                 if level_up_flag:

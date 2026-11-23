@@ -127,15 +127,6 @@ def handle_second_talk(
             common_behavior_id,
         )
 
-    # 交互对象
-    # if character_id == 0 and character_data.target_character_id:
-    #     target_character_id = character_data.target_character_id
-    #     target_character_data: game_type.Character = cache.character_data[target_character_id]
-    #     for second_behavior_id, behavior_data in target_character_data.second_behavior.items():
-    #         if behavior_data != 0:
-    #             now_talk_data = handle_talk_sub(target_character_id, second_behavior_id)
-    #             handle_talk_draw(target_character_id, now_talk_data, second_behavior_id)
-
 
 def handle_talk_sub(
     character_id: int,

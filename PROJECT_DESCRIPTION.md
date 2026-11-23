@@ -49,7 +49,7 @@
 
 | 目录 | Python 文件数 | 代码行数 | 职责 |
 | --- | ---: | ---: | --- |
-| `Script/Core` | 33 | 23,276 | 引擎层：缓存、类型、存档、IO、流程、Mod、常量、文本/富文本 |
+| `Script/Core` | 33 | 23,276 | 引擎层：类型、存档、IO、流程、Mod、常量、文本/富文本 |
 | `Script/Design` | 52 | 43,327 | 主游戏逻辑：行为循环、NPC AI、地图、口上、事件、前提、结算分发、角色/时间 |
 | `Script/Settle` | 10 | 18,772 | 结算实现：一段效果、二段效果、通用结算、道具、实时/过天/睡眠 |
 | `Script/System` | 52 | 26,755 | 垂直子系统：烹饪、宿舍、外勤、指令、医疗、性爱 |
@@ -427,7 +427,7 @@ Script/
 - `NpcTem`：角色模板（能力/经验/素质/服装/基础属性）
 - `Map` / `MapDraw` / `MapDrawLine` / `MapDrawText`：AA 地图与绘制
 - `Scene`：场景路径、名字、室内外、家具、门、面积、标签、角色列表、图片
-- 基地状态（旧存档中的 `Rhodes_Island` 对象经 `legacy_pickle.LegacyObject` 读入）：设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里，用 `Modules/domains/facility.py` 读写；各岗位干员名册与监狱长在 `base.work` 与 `base.warden` 里，用 `Modules/domains/work.py` 读写；生产线、工人名单与食堂货架在 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写；外勤委托与载具表在 `base.commission` 与 `base.vehicles` 里，用 `Modules/domains/commission.py` 读写；访客状态在 `base.visitor` 里，用 `Modules/domains/visitor.py` 读写（访客上限由 `visitor.capacity()` 按已开放客房算出）；罗德岛所在国家与移动在 `base.location` 里，用 `Modules/domains/location.py` 读写；招募、公务、外交、宿舍管理员与图书馆数据在 `base.recruit_lines`、`base.recruited`、`base.office_work`、`base.official_queue`、`base.official_history`、`base.diplomats`、`base.dormitory_managers`、`base.book_holders` 与 `base.book_recommend` 里，由 `recruit.py`、`official.py`、`diplomacy.py`、`dormitory.py` 与 `library.py` 读写；派对排期、旅馆房间档次、基地计数与冰箱在 `base.party_days`、`base.hotel_room`、`base.tallies` 与 `base.fridge` 里，由 `entertainment.py`、`tallies.py` 与 `fridge.py` 读写；医疗部数据在 `base.medical` 里，由 `medical.py` 读写；关押区囚犯名册与监禁调教设置在 `base.prisoners` 与 `base.prison_settings` 里，由 `prison.py` 读写；教育区全局课表、临时实操课与日程模板在 `base.class_schedule`、`base.temp_sex_class` 与 `base.child_schedule_template` 里，由 `education.py` 读写；设施损坏、检修与装备维护在 `base.facility_damage`、`base.maintenance_place`、`base.equipment_repair`、`base.equipment_setting` 与 `base.equipment_operators` 里，由 `maintenance.py` 读写；体检数据在七个 `base.exam_*` 全局键里，由 `physical_exam.py` 读写；干员人数上限与仓库容量按需由 `facility.people_max()` 与 `warehouse.capacity()` 算出
+- 基地状态（旧存档中的基地对象经 `legacy_pickle.LegacyObject` 读入）：设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里，用 `Modules/domains/facility.py` 读写；各岗位干员名册与监狱长在 `base.work` 与 `base.warden` 里，用 `Modules/domains/work.py` 读写；生产线、工人名单与食堂货架在 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写；外勤委托与载具表在 `base.commission` 与 `base.vehicles` 里，用 `Modules/domains/commission.py` 读写；访客状态在 `base.visitor` 里，用 `Modules/domains/visitor.py` 读写（访客上限由 `visitor.capacity()` 按已开放客房算出）；罗德岛所在国家与移动在 `base.location` 里，用 `Modules/domains/location.py` 读写；招募、公务、外交、宿舍管理员与图书馆数据在 `base.recruit_lines`、`base.recruited`、`base.office_work`、`base.official_queue`、`base.official_history`、`base.diplomats`、`base.dormitory_managers`、`base.book_holders` 与 `base.book_recommend` 里，由 `recruit.py`、`official.py`、`diplomacy.py`、`dormitory.py` 与 `library.py` 读写；派对排期、旅馆房间档次、基地计数与冰箱在 `base.party_days`、`base.hotel_room`、`base.tallies` 与 `base.fridge` 里，由 `entertainment.py`、`tallies.py` 与 `fridge.py` 读写；医疗部数据在 `base.medical` 里，由 `medical.py` 读写；关押区囚犯名册与监禁调教设置在 `base.prisoners` 与 `base.prison_settings` 里，由 `prison.py` 读写；教育区全局课表、临时实操课与日程模板在 `base.class_schedule`、`base.temp_sex_class` 与 `base.child_schedule_template` 里，由 `education.py` 读写；设施损坏、检修与装备维护在 `base.facility_damage`、`base.maintenance_place`、`base.equipment_repair`、`base.equipment_setting` 与 `base.equipment_operators` 里，由 `maintenance.py` 读写；体检数据在七个 `base.exam_*` 全局键里，由 `physical_exam.py` 读写；干员人数上限与仓库容量按需由 `facility.people_max()` 与 `warehouse.capacity()` 算出
 - `Country`：势力外交数据
 - `CharacterStatusChange` / `TargetChange`：结算数值变更累积器
 - `DIRTY`, `PREGNANCY`, `RELATIONSHIP`, `HYPNOSIS`, `CLOTH`, `BODY_H_STATE`, `FIRST_RECORD`, `ACTION_INFO`, `AUTHOR_FLAG` 等：角色各领域状态容器
@@ -475,7 +475,7 @@ Script/
 - 绘制事件/结算面板
 
 时间推进与完成判定：
-- `cache.game_time` 是当前游戏时间；行为有 `start_time + duration`
+- `game_time.now()`（`Script/Design/game_time.py`，由内核时钟换算）是当前游戏时间；行为有 `start_time + duration`
 - `judge_character_status_time_over()` 比较时间并处理跨天
 - 新一天 `past_day_settle.update_new_day()`
 

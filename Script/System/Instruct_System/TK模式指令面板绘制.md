@@ -249,8 +249,7 @@ if len_son_event_list:
     for event_id in son_event_list:
         count += 1
         event_data = game_config.config_event[event_id]
-        pl_character_data = cache.character_data[0]
-        target_character_data = cache.character_data[pl_character_data.target_character_id]
+        target_character_data = identity.of(activity.target(0))
         chara_adv = target_character_data.adv
         
         # 获取选项文本
@@ -354,15 +353,16 @@ def handle_instruct(self, instruct_id_or_cid):
     now_draw_1 = draw.NormalDraw()
     now_draw_1.text = f"{instruct_name}"
     
-    # 检测连续指令
-    if len(cache.pl_pre_behavior_instruce):
-        last_behavior_id = cache.pl_pre_behavior_instruce[-1]
-        if isinstance(last_behavior_id, int):
-            cache.pl_pre_behavior_instruce = []
-            last_behavior_id = "share_blankly"
-        last_behavior_data = game_config.config_behavior[last_behavior_id]
-        if instruct_name == last_behavior_data.name:
-            now_draw_1.text += _("(连续)")
+    # 如果是重复指令，则加上连续标记
+    if len(history.recent()):
+        last_behavior_id = history.recent()[-1]
+        # 旧存档里记的是行为的数字id，不算连续
+        if isinstance(last_behavior_id, str):
+            last_behavior_data = game_config.config_behavior[
+                last_behavior_id
+            ]
+            if instruct_name == last_behavior_data.name:
+                now_draw_1.text += _("(连续)")
     
     now_draw_1.text += "\n"
     now_draw_1.draw()
@@ -399,11 +399,8 @@ def handle_chara_diy_instruct(self, event_id: str):
     line = draw.LineDraw("-", self.width)
     line.draw()
     
-    # 设置事件标记并执行
-    pl_character_data = cache.character_data[0]
-    pl_character_data.event.event_id = event_id
-    pl_character_data.event.chara_diy_event_flag = True
-    handle_instruct.handle_instruct(constant.Instruct.CHARA_DIY_INSTRUCT)
+    # 指令结算
+    handle_instruct.handle_chara_diy_instruct(event_id)
 ```
 
 ---

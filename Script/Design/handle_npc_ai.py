@@ -868,7 +868,6 @@ def judge_interrupt_character_behavior(character_id: int) -> int:
             and handle_premise.handle_normal_all(character_id)
         ):
             end_now(character_id)
-            # print(f"debug {character_data.name}立刻结束工作或娱乐，当前时间={cache.game_time}")
             return 1
 
     return 0

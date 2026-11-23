@@ -82,13 +82,6 @@ class InScenePanel:
             character_list = character_behavior.scene_characters(scene_data)
             character_handle_panel.text_list = character_list
 
-            # if pl_character_data.dead:
-            #     cache.wframe_mouse.w_frame_skip_wait_mouse = 0
-            #     now_draw = draw.LineFeedWaitDraw()
-            #     now_draw.text = _("已死亡！")
-            #     now_draw.width = self.width
-            #     now_draw.draw()
-            #     continue
             # print("character_handle_panel.text_list :",character_handle_panel.text_list)
             # 游戏时间
             game_time_draw = game_info_panel.GameTimeInfoPanel(

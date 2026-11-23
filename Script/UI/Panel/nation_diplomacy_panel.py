@@ -640,7 +640,6 @@ class Nation_Diplomacy_Panel:
             info_draw_2.draw()
             npc_draw_count = 0
             chara_list = roster.active()
-            # 将当前派遣的外交官加入到角色列表里（此处为副本，不能影响cache.npc_id_got）
             now_diplomat_chara_id = diplomacy.of(country_id)["diplomat"]
             if now_diplomat_chara_id != 0:
                 chara_list.add(now_diplomat_chara_id)

@@ -511,3 +511,15 @@ reads = "Script 下全部 .py 里 f-string 字段、str() 参数、字符串 % �
 used_for = "测试：连续数值变成文字前经过 shown()"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R37"
+file = "tools/lint_comments.py"
+symbol = "scan"
+mechanism = "tokenize"
+reads = "受跟踪 Python 文件（不含 pyproject.toml 的 exclude 项）中的注释 token、纯字符串语句与模块/类/函数文档字符串"
+used_for = "检查注释数基线、文档字符串 500 字符上限以及 Script/ 中禁用的旧缓存类名称"
+when = "test"
+capture = "command"
+command = ["python", "tools/lint_comments.py"]
+outputs = []

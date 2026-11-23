@@ -148,7 +148,7 @@ Tip_Chara.csv → character文本信息 → 按adv_id分组 → 版本管理
 
 **作用：** 将剧情ID转换为游戏内角色ID
 
-**实现：** 遍历 `cache.character_data` 匹配 `adv` 字段
+**实现：** 通过 `identity.exists(adv_id)`（全局键 `identity.characters`，`Script/Modules/domains/identity.py`）判断该角色是否存在，存在则返回 `adv_id`，否则返回 `0`
 
 ## 用户交互流程
 

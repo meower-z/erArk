@@ -37,3 +37,5 @@ pip install -r requirements-lint.txt   # 可选，做棘轮检查时装。它也
 - 新函数必须完全没有违规。
 - 已有函数的各项指标（例如某条规则的违规数、最长一行的长度）不许超过基线里记的值。
 - 改代码时，基线只会变小。加严规则后重算的基线可能变大。
+
+快速测试 `tests/fast/test_comment_docstring_lint.py` 会运行 `tools/lint_comments.py`，因此在 PR CI 中自动检查受跟踪的 Python 文件与文档。该脚本限制每个文件的 `#` 注释数量不得超过 `tools/lint_comments_baseline.json` 记下的基线值（未列入基线的文件上限为 0，首行 shebang 与文件头编码声明除外）。它同时限制每个模块、类与函数的文档字符串经 `inspect.cleandoc` 处理后不得超过 500 字符（列入基线的条目不得超过所记长度）。它还禁止在 `Script/` 下的注释和文档字符串以及仓库主要文档中出现旧缓存类及其字段的名称。在仓库根目录运行 `python3 tools/lint_comments.py` 可查看违规项，删减注释或缩短文档字符串后运行 `python3 tools/lint_comments.py update-baseline` 可将基线下调到当前值。

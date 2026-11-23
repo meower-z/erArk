@@ -260,17 +260,6 @@ def character_sleep(character_id: int) -> choice.Plan:
     return plan
 
 
-# @handle_state_machine.add_state_machine(constant.StateMachine.FOLLOW)
-# def character_follow(character_id: int):
-#     """
-#     跟随玩家
-#     Keyword arguments:
-#     character_id -- 角色id
-#     """
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     character_data.talent[400] = 1
-
-
 @handle_state_machine.add_state_machine(constant.StateMachine.REST)
 def character_rest(character_id: int) -> choice.Plan:
     """
