@@ -120,6 +120,7 @@ from Script.Core import (
     flow_handle,
     game_type,
     get_text,
+    io_init,
     save_handle,
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
@@ -186,11 +187,7 @@ for _cls_name in dir(draw):
     if isinstance(_cls, type) and hasattr(_cls, "draw"):
         with contextlib.suppress(Exception):
             _cls.draw = _record_draw
-# askfor_all 默认返回第一个可选项，面板的按钮循环才退得出去；测试可自行替换
-flow_handle.askfor_all = lambda return_list, *a, **k: (
-    return_list[0] if return_list else ""
-)
-flow_handle.askfor_wait = lambda *a, **k: None
+io_init.configure(world.quiet_port())
 
 from Script.System.Education_System import (  # noqa: E402
     auto_schedule,

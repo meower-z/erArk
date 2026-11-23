@@ -12,8 +12,10 @@ from Script.Protocol.messages import (
     Choose,
     Continue,
     Exit,
+    ExitReason,
     InputText,
     Pause,
+    RenderOp,
     SubmitChoice,
     SubmitText,
     UiRequest,
@@ -70,20 +72,23 @@ def default_first_option(
     text: str | Callable[[InputText], str] = "",
 ) -> Responder:
     """
-    构造默认应答器，对 Pause 返回 Continue，对 Choose 选取首个候选编号并在无候选时返回空串，
+    构造默认应答器。
+    对 Pause 返回 Continue，对非空 Choose 选取首个候选编号，对空 Choose 抛出 ValueError，
     对 InputText 返回指定文本。
 
     参数：
     text (str | Callable[[InputText], str]) -- 应答文本输入请求的固定字符串或按请求生成文本的回调，
     默认为空字符串
 
-    返回值：Responder -- 可直接应答各类 UiRequest 的应答器
+    返回值：Responder -- 可应答各类 UiRequest 的应答器
     """
 
     def respond(request: UiRequest) -> UiResponse:
         match request:
             case Choose(valid_ids=(first, *_)):
                 return reply(request, first)
+            case Choose():
+                raise ValueError("Choose request offered no valid options")
             case InputText():
                 return reply(
                     request, text if isinstance(text, str) else text(request)
@@ -95,14 +100,23 @@ def default_first_option(
 
 class ScriptedUiPort(PortCore):
     """
-    运行在调用方同线程内的 UiPort 实现，不启动后台线程，适用于无界面自动化测试。
-    实例初始化即处于已接入状态且代次为 1，所有发出的后端事件按序记录在 events 列表中。
-    收到输入请求时同步调用应答器并执行校验，响应被拒时抛出 ValueError，
-    收到 Cancel 或会话关闭时抛出 SessionCancelled。
+    运行在调用方同线程内的 UiPort 实现，不启动后台线程。
+    实例初始化后即处于已接入状态且代次为 1。
+    未传 listener 时，端口把后端事件按序记入 events 列表。
+    传入 listener 时，端口把后端事件直接交给 listener，不写入 events。
+    此时 emit_op 仅在缓冲仍有未刷出操作时立即刷出。
+    finish 与 close 均先退出开放阶段，再把 Exit 事件交给 listener 或记入 events。
+    收到输入请求时，端口同步调用应答器并校验响应。
+    响应被拒时端口抛出 ValueError。
+    收到 Cancel 或会话关闭时端口抛出 SessionCancelled。
     """
 
     def __init__(
-        self, responder: Responder, *, session_id: str = "scripted"
+        self,
+        responder: Responder,
+        *,
+        session_id: str = "scripted",
+        listener: Callable[[BackendEvent], None] | None = None,
     ) -> None:
         """
         初始化同线程脚本驱动端口。
@@ -110,18 +124,42 @@ class ScriptedUiPort(PortCore):
         参数：
         responder (Responder) -- 接收 UiRequest 并同步返回 UiResponse 的应答回调
         session_id (str) -- 写入后端事件的会话标识，默认为 "scripted"
+        listener (Callable[[BackendEvent], None] | None) -- 接收后端事件的回调，默认为 None
 
         返回值：None
         """
         super().__init__(session_id)
         self._responder = responder
+        self._listener = listener
         self._epoch = 1
         self._attached = True
         self.events: list[BackendEvent] = []
 
     @override
+    def emit_op(self, op: RenderOp) -> None:
+        super().emit_op(op)
+        if self._listener is not None and self._ops:
+            self.flush()
+
+    @override
+    def finish(self, reason: ExitReason, save_slot: str | None = None) -> None:
+        with self._cond:
+            self._require_open()
+            self._flush()
+            self._require_open()
+            exit_event = Exit(
+                self._session_id, self._next_seq(), reason, save_slot
+            )
+            self._exit = exit_event
+            self._phase = Phase.FINISHED
+            self._publish(exit_event)
+
+    @override
     def _deliver(self, event: BackendEvent) -> None:
-        self.events.append(event)
+        if self._listener is None:
+            self.events.append(event)
+        else:
+            self._listener(event)
 
     @override
     def _wait_answer(self) -> None:
@@ -136,4 +174,5 @@ class ScriptedUiPort(PortCore):
 
     @override
     def _cancelled(self, exit_event: Exit) -> None:
-        self.events.append(exit_event)
+        self._phase = Phase.CLOSED
+        self._deliver(exit_event)
