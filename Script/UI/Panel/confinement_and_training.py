@@ -1,14 +1,13 @@
-"""监禁调教管理面板，以及囚犯每日结算、逃脱结果处理与调教前准备入口函数"""
+"""监禁调教管理面板与调教前准备入口函数 prepare_training"""
 
 import os
 from types import FunctionType
 from typing import NoReturn
-from Script.Core import game_type, get_text, flow_handle, constant
-from Script.Design import game_time
+from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import activity, chara_life
-from Script.Modules.domains import flags, inventory
+from Script.Modules.domains import inventory
 from Script.Modules.domains import prison
 from Script.Modules.gameplay_resolution import prison_service, training_prep
 from Script.Modules.tk_ui import player_pick
@@ -21,78 +20,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def settle_prisoners() -> None:
-    """
-    囚犯结算，先计算逃脱概率的增加，再判断是否能逃脱，最后处理失败与成功的情况。\n
-    """
-    for character_id in prison.prisoner_ids():
-        escape_probability = prison_service.calculate_escape_probability(
-            character_id
-        )
-        can_escape, _escape_value, _warden_value = (
-            prison_service.judge_can_escape(character_id)
-        )
-        # 逃脱成功
-        if can_escape:
-            escape_success(character_id)
-        # 逃脱对抗失败
-        elif escape_probability > 0:
-            escape_fail(character_id)
-
-
-def escape_success(character_id: int) -> None:
-    """
-    逃脱成功处理。\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    """
-    from Script.Settle import default
-    from Script.System.Field_Commission_System import field_commission_function
-
-    character_data = identity.of(character_id)
-    # 逃脱成功提示
-    escape_text = _("\n囚犯{0}逃脱成功，请尽快派遣外勤干员进行追捕！\n").format(
-        character_data.name
-    )
-    escape_draw = draw.WaitDraw()
-    escape_draw.text = escape_text
-    escape_draw.style = "warning"
-    escape_draw.width = window_width
-    escape_draw.draw()
-    # 进入逃跑中的状态
-    flags.set(character_id, escaping=True)
-    # 移除囚犯信息
-    prison.release(character_id)
-    # 囚犯离线
-    default.handle_chara_off_line(
-        character_id,
-        1,
-        change_data=game_type.CharacterStatusChange(),
-        now_time=game_time.now(),
-    )
-    field_commission_function.create_capture_fugitive_commission(character_id)
-
-
-def escape_fail(character_id: int) -> None:
-    """
-    逃脱失败处理。\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    """
-    character_data = identity.of(character_id)
-    # 逃脱失败提示
-    escape_text = _("囚犯{0}逃脱失败，监狱长已经加强了对其的监视！\n").format(
-        character_data.name
-    )
-    escape_draw = draw.NormalDraw()
-    escape_draw.text = escape_text
-    escape_draw.style = "gold_enrod"
-    escape_draw.width = window_width
-    escape_draw.draw()
-    # 囚犯逃脱值清零
-    prison.set_escape_probability(character_id, 0)
 
 
 def prepare_training() -> NoReturn:

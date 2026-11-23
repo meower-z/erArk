@@ -20,9 +20,9 @@ from Script.Modules.domains import work
 from Script.Modules.gameplay_resolution import agriculture_service
 from Script.Modules.gameplay_resolution import assembly_service
 from Script.Modules.gameplay_resolution import daily_base_service
+from Script.Modules.gameplay_resolution import prison_service
 from Script.Modules.gameplay_resolution import trade_service, working
 from Script.UI.Moudle import draw
-from Script.UI.Panel import confinement_and_training as prison_panel
 from tests import chara_abilities as ca
 from tests.fast.base import FastTestCase
 
@@ -314,7 +314,7 @@ class NewDayTradeNoticeTest(FastTestCase):
 
     def notices(self, lines: list[str]) -> list[str]:
         """
-        替身化其余面板结算并运行基地跨日结算，收集含贸易部结算抬头的绘制文本。
+        运行每日基地结算，断言囚犯结算桩被调用一次，并收集贸易部结算的 WaitDraw 绘制文本。
         Keyword arguments:
         lines -- list[str]，模拟 daily_supply_demand_fluctuation 返回的成交明细行列表
         Return arguments:
@@ -326,7 +326,7 @@ class NewDayTradeNoticeTest(FastTestCase):
         with (
             mock.patch.object(agriculture_service, "settle_agriculture_line"),
             mock.patch.object(assembly_service, "settle_assembly_line"),
-            mock.patch.object(prison_panel, "settle_prisoners"),
+            mock.patch.object(prison_service, "settle_prisoners") as settled,
             mock.patch.object(
                 trade_service,
                 "daily_supply_demand_fluctuation",
@@ -335,6 +335,7 @@ class NewDayTradeNoticeTest(FastTestCase):
             mock.patch.object(draw.WaitDraw, "draw", autospec=True) as drawn,
         ):
             basement.update_base_resouce_newday()
+        settled.assert_called_once_with()
         header = get_text._("○贸易部结算：\n")
         texts = [call.args[0].text for call in drawn.call_args_list]
         return [text for text in texts if header in text]
