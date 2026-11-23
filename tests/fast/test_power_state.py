@@ -17,7 +17,7 @@
 from Script.Kernel import core
 from Script.Modules.domains import power, power_supply, warehouse, work
 from Script.Modules.gameplay_resolution import working
-from Script.Modules.save_load import upgrade
+from Script.Modules.save_load import reset, upgrade
 from Script.System.Official_Event_System import ri_value
 from Script.Test.Static_Check import repair
 from Script.Test.Static_Check.check_registry import get_all_checks
@@ -66,6 +66,21 @@ class PowerStateTest(FastTestCase):
         power.set_storage(power.storage_max())
         power.change_battery(0, -1)
         self.assertEqual(power.storage(), 9 * self.caps[0])
+
+    def test_load_repairs(self) -> None:
+        """
+        运行读档修补步骤（repairs）：超限储能降到最大储能。动力区 1 级时副源石反应炉设为 3 台，
+        2 级时保持 5 台不变
+        """
+        repairs = next(step for step in reset.STEPS if step.name == "repairs")
+        for level, aux in ((1, 3), (2, 5)):
+            with self.subTest(level=level):
+                kernel_data.set_facility_level(1, level)
+                power.set_plant(aux_reactors=5, batteries=(1, 0, 0))
+                power.set_storage(self.caps[0] + 7)
+                repairs.run(core.state(), {"cause": "load"})
+                self.assertEqual(power.storage(), self.caps[0])
+                self.assertEqual(power.plant()["aux_reactors"], aux)
 
     def test_clean_limit(self) -> None:
         """动力区 1 级且没有扩展模块时，三类清洁能源设施合计最多 5 组。数量为 0 时减少不改数量"""

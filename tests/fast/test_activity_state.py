@@ -6,7 +6,7 @@
 - 读写：整值写入。行为与事件可以改给出的字段，也可以换成默认再改。读出的行为与事件只读，读出的列表是新列表。
 - 报错：未知的字段名报 AttributeError，不在整游戏分钟上的开始时间报 ValueError。
 - 二段行为：只存不为 0 的值，按配置的顺序排。second_ids 列出配置里的全部id，再接角色存着的其他id。
-- 给出 GameState 时只读那个 GameState。
+- 传入 GameState 只读该状态。target_as 块内读块内值。
 - 读档：旧存档角色对象上的十个属性写进状态，再从对象上删掉。整数的行为id与二段行为键换成名字。
   adopt_old_save 交回缺的二段行为配置项数。
 - 编解码：十个键经 kernel_state 往返后不变，写出的版本等于 upgrade.CURRENT 且不低于 22。
@@ -220,6 +220,14 @@ class ActivityStateTest(FastTestCase):
             self.assertEqual(activity.target(NPC), 7)
         self.assertEqual(activity.target(NPC), before)
         self.assertEqual(working.get(str(NPC), activity.TARGET), before)
+
+    def test_target_as_with_game(self) -> None:
+        """传入 GameState 读取交互对象时，在 target_as 块内返回块内值，退出块后返回存下的值"""
+        stored = activity.target(NPC, core.state())
+        self.assertNotEqual(stored, NOBODY)
+        with activity.target_as(NPC, NOBODY):
+            self.assertEqual(activity.target(NPC, core.state()), NOBODY)
+        self.assertEqual(activity.target(NPC, core.state()), stored)
 
     def test_codec_round_trip(self) -> None:
         """十个键经存档编解码往返后不变，写出的版本等于 upgrade.CURRENT 且不低于 22"""
