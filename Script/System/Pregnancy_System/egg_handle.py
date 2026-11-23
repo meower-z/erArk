@@ -5,18 +5,16 @@ from types import FunctionType
 from Script.Core import get_text
 from Script.Design import child_stage_gate, game_time, handle_premise
 from Script.Design import second_behavior, talk
-from Script.UI.Moudle import draw
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Modules.domains import abilities, activity, entertainment, flags
 from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import roster, chara_life, scene_state
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 
 def get_race_birth_type(character_id: int) -> int:
@@ -513,10 +511,7 @@ def npc_identify_eggs_settle(
             ).format(character_data.name, fertilized_count)
         draw_text += _("\n受精卵将一直放在育儿室中照料孵化\n")
         draw_text += "\n※※※※※※※※※\n"
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
 
 
 def check_egg_born(character_id: int) -> None:
@@ -573,10 +568,7 @@ def take_eggs_from_chara(target_character_id: int) -> int:
         draw_text = _("\n从{0}处拿走了{1}枚未鉴定的卵\n").format(
             target_data.name, take_count
         )
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
     return take_count
 
 
@@ -619,10 +611,7 @@ def identify_held_eggs_settle() -> None:
         )
         draw_text += _("\n受精卵将一直放在育儿室中进行孵化\n")
         draw_text += "\n※※※※※※※※※\n"
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
 
 
 def replace_entertainment_for_eggs(character_id: int) -> None:
