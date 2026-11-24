@@ -101,9 +101,9 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
         dict[str, list[str]] -- 部位记号: 排好序的行为id
         """
         from Script.Config import game_config
-        from Script.System.Sex_System import group_sex_panel
+        from Script.Modules.gameplay_resolution import group_sex_service
 
-        find = group_sex_panel.get_status_id_list_from_group_sex_body_part
+        find = group_sex_service.get_status_id_list_from_group_sex_body_part
         listed = {}
         for body_part in BODY_PARTS:
             listed[body_part] = sorted(

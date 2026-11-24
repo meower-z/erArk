@@ -1,14 +1,15 @@
-"""群交的结算、模板统计与清理，以及群交信息面板和群交行动编辑面板"""
+"""群交部位名称字典、群交信息面板（SeeGroupSexInfoPanel）与群交模板编辑面板（Edit_Group_Sex_Temple_Panel）。"""
 
 from collections.abc import Collection
 from types import FunctionType
 from Script.UI.Moudle import draw, panel, view
 from Script.Core import get_text, constant, flow_handle
 from Script.Config import game_config, normal_config
-from Script.Design import handle_premise, map_handle, virgin_break_gate
-from Script.Modules.domains import abilities, activity, flags, h_state, modes
+from Script.Design import handle_premise, map_handle
+from Script.Modules.domains import activity, flags, h_state, modes
 from Script.Modules.domains import roster, scene_state
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import group_sex_service
 
 panel_info_data: dict[str, object] = {}
 
@@ -30,285 +31,6 @@ body_part_name_dict = {
     "penis": _("阴茎"),
     "anal": _("肛门"),
 }
-
-
-def group_sex_settle(
-    character_id: int,
-    target_character_id: int,
-    behavior_id: str,
-) -> None:
-    """
-    群交结算
-    Keyword arguments:
-    character_id -- 角色id
-    target_character_id -- 目标角色id
-    """
-    # 如果是非群交模式，则返回
-    if not modes.group_sex():
-        return
-    # 非玩家或无交互对象返回
-    if character_id != 0 or target_character_id == character_id:
-        return
-    # 如果当前群交模板已锁死，则返回
-    if h_state.get(character_id, "group_sex_lock_flag"):
-        return
-    with h_state.editing(character_id) as hs:
-        now_template_data = hs.group_sex_body_template_dict["A"]
-        # 阴茎插入
-        if (
-            behavior_id
-            in game_config.config_behavior_id_list_of_group_sex_body_part[
-                "插入"
-            ]
-        ):
-            now_template_data[0]["penis"] = [target_character_id, behavior_id]
-            now_template_data[1] = [[-1], -1]
-        # 阴茎侍奉
-        elif (
-            behavior_id
-            in game_config.config_behavior_id_list_of_group_sex_body_part[
-                "侍奉"
-            ]
-        ):
-            now_template_data[0]["penis"] = [-1, -1]
-            # 如果新指令，则重置数据
-            if now_template_data[1][1] != behavior_id:
-                now_template_data[1] = [[target_character_id], behavior_id]
-            # 否则则只将角色id加进角色列表里
-            elif target_character_id not in now_template_data[1][0]:
-                now_template_data[1][0].append(target_character_id)
-        # 口
-        elif (
-            behavior_id
-            in game_config.config_behavior_id_list_of_group_sex_body_part["口"]
-        ):
-            now_template_data[0]["mouth"] = [target_character_id, behavior_id]
-        # 手
-        elif (
-            behavior_id
-            in game_config.config_behavior_id_list_of_group_sex_body_part["手"]
-        ):
-            # 如果L是空的，或当前对象是L对象，则赋给L
-            if (
-                now_template_data[0]["L_hand"][1] == -1
-                or now_template_data[0]["L_hand"][0] == target_character_id
-            ):
-                now_template_data[0]["L_hand"] = [
-                    target_character_id,
-                    behavior_id,
-                ]
-            # R同理
-            elif (
-                now_template_data[0]["R_hand"][1] == -1
-                or now_template_data[0]["R_hand"][0] == target_character_id
-            ):
-                now_template_data[0]["R_hand"] = [
-                    target_character_id,
-                    behavior_id,
-                ]
-            # 否则，全部更新，左等于右，右等于新
-            else:
-                now_template_data[0]["L_hand"] = now_template_data[0]["R_hand"]
-                now_template_data[0]["R_hand"] = [
-                    target_character_id,
-                    behavior_id,
-                ]
-        # 肛
-        elif (
-            behavior_id
-            in game_config.config_behavior_id_list_of_group_sex_body_part["肛"]
-        ):
-            now_template_data[0]["anal"] = [target_character_id, behavior_id]
-
-        # 特殊指令特殊处理
-        behavior_data = game_config.config_behavior[behavior_id]
-        if behavior_data.name == _("六九式"):
-            now_template_data[0]["mouth"] = [target_character_id, behavior_id]
-            now_template_data[1] = [[target_character_id], behavior_id]
-
-
-def count_group_sex_instruct_list() -> tuple[list[str], list[list]]:
-    """
-    统计群交指令列表\n
-    Return arguments:\n
-    [], [] -- 已去重的群交指令列表，[角色id列表，状态id]
-    """
-    # 变量定义
-    group_sex_instruct_list = []
-    full_list_of_target_id_and_state_id = []
-    # 获取全模板
-    tpl_dict = h_state.view(0).group_sex_body_template_dict
-    template_data_list = [tpl_dict["A"]]
-    if handle_premise.handle_all_group_sex_temple_run_on(0):
-        template_data_list.append(tpl_dict["B"])
-    # 遍历模板
-    for template_data in template_data_list:
-        # 对单
-        for body_part in template_data[0]:
-            target_chara_id = [template_data[0][body_part][0]]
-            state_id = template_data[0][body_part][1]
-            if state_id != -1:
-                group_sex_instruct_list.append(state_id)
-                full_list_of_target_id_and_state_id.append(
-                    [target_chara_id, state_id]
-                )
-        # 对多
-        target_chara_id_list = template_data[1][0]
-        state_id = template_data[1][1]
-        if state_id != -1:
-            group_sex_instruct_list.append(state_id)
-            full_list_of_target_id_and_state_id.append(
-                [target_chara_id_list, state_id]
-            )
-    # 去重
-    group_sex_instruct_list = list(set(group_sex_instruct_list))
-
-    # 返回
-    return group_sex_instruct_list, full_list_of_target_id_and_state_id
-
-
-def count_group_sex_character_list() -> list[int]:
-    """
-    统计群交模板中的角色列表\n
-    Return arguments:\n
-    [] -- 已去重的群交角色列表
-    """
-    # 变量定义
-    group_sex_chara_id_list = []
-    # 获取全模板
-    tpl_dict = h_state.view(0).group_sex_body_template_dict
-    template_data_list = [tpl_dict["A"]]
-    if handle_premise.handle_all_group_sex_temple_run_on(0):
-        template_data_list.append(tpl_dict["B"])
-    # 遍历模板
-    for template_data in template_data_list:
-        # 对单
-        for body_part in template_data[0]:
-            target_chara_id = template_data[0][body_part][0]
-            if target_chara_id != -1:
-                group_sex_chara_id_list.append(target_chara_id)
-        # 对多
-        target_chara_id_list = template_data[1][0]
-        if -1 not in target_chara_id_list:
-            group_sex_chara_id_list += target_chara_id_list
-    # 去重
-    group_sex_chara_id_list = list(set(group_sex_chara_id_list))
-
-    # 返回
-    return group_sex_chara_id_list
-
-
-def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
-    """
-    从群交部位获取状态id列表\n
-    Keyword arguments:\n
-    body_part -- 群交部位\n
-    Return arguments:\n
-    [] -- 状态id列表
-    """
-    from Script.Modules.gameplay_resolution import instruct_filter
-
-    new_status_id_list: list[str] = []
-    # 获取状态id列表
-    config_body_part = {
-        "mouth": "口",
-        "L_hand": "手",
-        "R_hand": "手",
-        "penis": "插入",
-        "侍奉": "侍奉",
-        "anal": "肛",
-    }[body_part]
-    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        config_body_part
-    ]
-    # 遍历状态id
-    now_premise_data: dict[str, float] = {}
-    new_status_id_list = []
-    for status_id in status_id_list:
-        if status_id in constant.behavior_id_to_instruct_id:
-            # 获取指令id
-            instruct_id = constant.behavior_id_to_instruct_id[status_id]
-            # 检查指令是否可用
-            filter_judge, now_premise_data = (
-                instruct_filter.judge_single_instruct_filter(
-                    instruct_id,
-                    now_premise_data,
-                    constant.InstructType.SEX,
-                    use_type_filter_flag=False,
-                )
-            )
-            # 去掉有破处判定且当前为处的
-            if filter_judge:
-                status_data = game_config.config_behavior[status_id]
-                status_tag_list = status_data.tag.split("|")
-                if activity.target(0) != 0:
-                    target_id = activity.target(0)
-                    # 如果NPC为处，则跳过破处类
-                    if virgin_break_gate.takes_kept_virginity(
-                        status_tag_list, abilities.talent(target_id)
-                    ):
-                        continue
-
-                # 加入到新列表中
-                new_status_id_list.append(status_id)
-
-    return new_status_id_list
-
-
-def get_now_template_part_list() -> tuple[list[str], list[str]]:
-    """
-    获取当前模板中空缺与非空缺的部位列表\n
-    Keyword arguments:\n
-    body_part -- 群交部位\n
-    Return arguments:\n
-    [], [] -- 空缺的部位列表，非空缺的部位列表
-    """
-
-    A_template_data = h_state.view(0).group_sex_body_template_dict["A"]
-
-    now_template_empty_part_list = []  # 空缺的部位列表
-    now_template_not_empty_part_list = []  # 非空缺的部位列表
-    wait_upon_flag = True  # 侍奉是否可选
-    wait_upon_state_id = A_template_data[1][1]  # 侍奉的状态id
-    # 对单
-    for body_part in A_template_data[0]:
-        state_id = A_template_data[0][body_part][1]
-        if state_id == -1:
-            # 如果不是阴茎，则直接加入
-            if body_part != "penis":
-                now_template_empty_part_list.append(body_part)
-            # 如果是阴茎，则需要未选侍奉
-            elif wait_upon_state_id == -1:
-                now_template_empty_part_list.append(body_part)
-        # 如果阴茎已选，则侍奉不可选
-        elif body_part == "penis":
-            wait_upon_flag = False
-        if state_id != -1:
-            now_template_not_empty_part_list.append(body_part)
-
-    # 侍奉
-    if wait_upon_flag:
-        target_chara_id_list = A_template_data[1][0]
-        if wait_upon_state_id == -1:
-            now_template_empty_part_list.append("侍奉")
-        elif wait_upon_state_id != -1:
-            now_template_not_empty_part_list.append("侍奉")
-            if len(target_chara_id_list) < 4:
-                now_template_empty_part_list.append(_("加入侍奉"))
-
-    return now_template_empty_part_list, now_template_not_empty_part_list
-
-
-def clear_character_data_in_group_sex_template(character_id: int) -> bool:
-    """
-    清除角色在玩家当前群交模板中的数据（A与B）
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    bool -- 是否找到并重置过该角色数据
-    """
-
-    return h_state.remove_from_group_sex_template(0, (character_id,)) > 0
 
 
 class SeeGroupSexInfoPanel:
@@ -666,7 +388,9 @@ class Edit_Group_Sex_Temple_Panel:
             scene_path_str
         )
         # 全模板中的角色id列表
-        group_sex_chara_id_list = count_group_sex_character_list()
+        group_sex_chara_id_list = (
+            group_sex_service.count_group_sex_character_list()
+        )
         # 获取已选的角色id
         tpl_entry = h_state.view(0).group_sex_body_template_dict[temple_id]
         if body_part != "侍奉":
@@ -771,8 +495,10 @@ class Edit_Group_Sex_Temple_Panel:
                 if -1 not in target_chara_id_list:
                     target_chara_id = target_chara_id_list[-1]
                     activity.set_target(pl, target_chara_id)
-            new_status_id_list = get_status_id_list_from_group_sex_body_part(
-                body_part
+            new_status_id_list = (
+                group_sex_service.get_status_id_list_from_group_sex_body_part(
+                    body_part
+                )
             )
         while 1:
             line = draw.LineDraw("-", self.width)

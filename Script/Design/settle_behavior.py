@@ -60,7 +60,7 @@ def handle_settle_behavior(
     now_time -- 结算时间
     event_flag -- 事件结算变量，0只事件不指令，1只指令不事件，2均结算
     """
-    from Script.System.Sex_System import group_sex_panel
+    from Script.Modules.gameplay_resolution import group_sex_service
 
     now_character_data: identity.Identity = identity.of(character_id)
     player_character_data: identity.Identity = identity.of(0)
@@ -98,7 +98,7 @@ def handle_settle_behavior(
             first_target_character_id = activity.target(now_character_data.cid)
             # 统计要执行的指令列表
             group_sex_instruct_list, full_list_of_target_id_and_state_id = (
-                group_sex_panel.count_group_sex_instruct_list()
+                group_sex_service.count_group_sex_instruct_list()
             )
             # 判定是否要进行当前行为的结算
             # 当前行为不在群P行为列表中，且不是等待行为时结算

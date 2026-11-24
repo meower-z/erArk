@@ -705,7 +705,7 @@ Script/
 
 | 系统 | 核心文件 | 说明 |
 | --- | --- | --- |
-| 群交 | `System/Sex_System/group_sex_panel.py` | 模板编辑、群体结算 |
+| 群交 | `Modules/gameplay_resolution/group_sex_service.py`, `System/Sex_System/group_sex_panel.py` | 模板结算与统计、信息与编辑面板 |
 | 隐奸 | `System/Sex_System/hidden_sex_panel.py` | 隐蔽值/发现度 |
 | 露出 | `System/Sex_System/exhibitionism_sex_panel.py` | 露出 H |
 | 绳艺 | `System/Sex_System/bondage_panel.py` | `Bondage.csv` |

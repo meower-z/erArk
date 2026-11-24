@@ -17,9 +17,8 @@ from Script.Design import game_time, handle_npc_ai_in_h, handle_premise
 from Script.Kernel import core
 from Script.Modules import load_order
 from Script.Modules.domains import flags, h_state
-from Script.Modules.gameplay_resolution import working
+from Script.Modules.gameplay_resolution import group_sex_service, working
 from Script.Settle import default as settle_default
-from Script.System.Sex_System import group_sex_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.Modules.save_load.legacy_pickle import LegacyObject
@@ -170,7 +169,7 @@ class HStateTest(FastTestCase):
                 return_value=False,
             ),
             mock.patch.object(
-                group_sex_panel,
+                group_sex_service,
                 "get_now_template_part_list",
                 side_effect=[
                     (["mouth"], []),
@@ -179,7 +178,7 @@ class HStateTest(FastTestCase):
                 ],
             ),
             mock.patch.object(
-                group_sex_panel,
+                group_sex_service,
                 "get_status_id_list_from_group_sex_body_part",
                 side_effect=[["ST_MOUTH"], ["ST_SERVE"]],
             ),
@@ -187,7 +186,9 @@ class HStateTest(FastTestCase):
             handle_npc_ai_in_h.npc_ai_in_group_sex(1)
             handle_npc_ai_in_h.npc_ai_in_group_sex(2)
             handle_npc_ai_in_h.npc_ai_in_group_sex(3)
-            participants = set(group_sex_panel.count_group_sex_character_list())
+            participants = set(
+                group_sex_service.count_group_sex_character_list()
+            )
             effects = buf.effects()
         next_state = core.preview(core.state(), effects)
         tpl = h_state.view(0, next_state).group_sex_body_template_dict["A"]

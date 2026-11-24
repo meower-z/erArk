@@ -178,10 +178,10 @@ class LanguageRun:
         aim(self.player.cid, AMIYA_ID)
         self.instruct(instruct.ASK_GROUP_SEX)
         behavior = self.config.config_behavior
-        panel = game("Script.System.Sex_System.group_sex_panel")
-        anal_status = panel.get_status_id_list_from_group_sex_body_part("anal")[
-            0
-        ]
+        service = game("Script.Modules.gameplay_resolution.group_sex_service")
+        anal_status = service.get_status_id_list_from_group_sex_body_part(
+            "anal"
+        )[0]
         no_chara = self.translate("未选择角色")
         no_status = self.translate("未选择指令")
         presses: tuple[str, ...] = (no_chara, f"[{AMIYA_ID:04d}]", no_status)
@@ -239,8 +239,10 @@ class LanguageRun:
 
     def group_sex_parts(self) -> dict[str, list[str]]:
         """群交各部位可选的行为id"""
-        panel: Any = game("Script.System.Sex_System.group_sex_panel")
-        find = panel.get_status_id_list_from_group_sex_body_part
+        service: Any = game(
+            "Script.Modules.gameplay_resolution.group_sex_service"
+        )
+        find = service.get_status_id_list_from_group_sex_body_part
         return {part: sorted(find(part)) for part in GROUP_SEX_PART_LIST}
 
     def sex_assistant(self) -> list[str]:
