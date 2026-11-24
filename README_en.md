@@ -10,8 +10,7 @@ Introduction
 R18 game, sex with Operators, pure romance, no NTR or guro.\
 Most contents refer to TW, as well as other eras like AM/YM/SQC/MGT, etc. It's not a coincidence if there are similarities in contents.\
 Solo development, updates at free time, it’s a creation of lifetime\
-Currently in the α testing phase, consisting of unimplemented functions.\
-All system code documentation: [README.md](docs/数据处理工作流/README.md)
+Currently in the α testing phase, consisting of unimplemented functions.
 
 Normal Non-developer Players
 ----

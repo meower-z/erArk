@@ -3,7 +3,7 @@
 [tool.black]
 line-length = 80
 # 只格式化根目录与下列顶层目录里的 .py；其他顶层目录（例如本机另放的仓库）不碰，新增含代码的顶层目录时加进来
-include = '^/((\.agents|mod|profiling|Script|tests|tools)/.*)?[^/]+\.pyi?$'
+include = '^/((mod|profiling|Script|tests|tools)/.*)?[^/]+\.pyi?$'
 # config_def.py 由 buildconfig.py 生成
 force-exclude = '^/Script/Config/config_def\.py$'
 
@@ -152,10 +152,6 @@ ignore = ["PLW0603"]
 "tests/education/test_sex_class.py" = ["E402"]
 # 模板按 game.py 的初始化顺序导入模块，或者在改动 sys.path 之后才导入。
 # 模板里没用上的导入只为构建数据或注册，或者留给复制模板的人在自己的测试里用。
-# repro_template 用 import * 取得 _bootstrap 的初始化与辅助函数。
-".agents/skills/headless-game-test/harness_template.py" = ["F401", "E402", "B010"]
-".agents/skills/headless-game-test/unit_test_template.py" = ["F401", "E402", "B010"]
-".agents/skills/system-review-round/repro_template.py" = ["E402", "F403", "F405"]
 "tools/verify/headless_harness_template.py" = ["E402"]
 "tools/verify/headless_unit_template.py" = ["F401", "E402"]
 # 这两个文件按 game.py 的顺序初始化游戏。
@@ -164,7 +160,7 @@ ignore = ["PLW0603"]
 "tests/world.py" = ["F401", "B010"]
 # 这些 setattr 调用替换方法或类，或者给对象加上类里没有声明的属性。
 # 改写成普通属性赋值后，pyrefly 在三个文件里新增报错：tests/world.py（所赋函数不能赋给属性声明的类型），以及 tests/education/test_save_compat.py 与 tests/fast/test_mod_loader.py（类或模块未定义该属性）。
-# 其余忽略 B010 的文件（tests/education/test_growth_event.py、tests/education/test_panels.py、.agents/skills/headless-game-test 下的两个模板、profiling/run_profile.py、profiling/ui_perf_patch.py 与两个 tests/slow 文件）改写后 pyrefly 不新增报错。
+# 其余忽略 B010 的文件（tests/education/test_growth_event.py、tests/education/test_panels.py、profiling/run_profile.py、profiling/ui_perf_patch.py 与两个 tests/slow 文件）改写后 pyrefly 不新增报错。
 "profiling/ui_perf_patch.py" = ["B010"]
 "tests/education/test_save_compat.py" = ["B010"]
 "tests/fast/test_mod_loader.py" = ["B010"]

@@ -88,34 +88,6 @@ print(sorted(official_event_check.load_effect_id_set()))
 outputs = []
 
 [[reader]]
-id = "R10"
-file = ".agents/skills/system-review-round/dead_code_scan.py"
-symbol = "collect_definitions"
-mechanism = "ast"
-reads = "目标目录里的顶层函数、类、方法、常量及其注册装饰器"
-used_for = "死代码候选报告"
-when = "dev-tool"
-capture = "command"
-command = ["python", ".agents/skills/system-review-round/dead_code_scan.py", "Script"]
-outputs = []
-compare = "no-line-numbers"
-why = "报告里的 文件:行号 只是定位，改动前后行号会移；候选清单本身逐项比较"
-
-[[reader]]
-id = "R11"
-file = ".agents/skills/system-review-round/dead_code_scan.py"
-symbol = "count_name_tokens"
-mechanism = "tokenize"
-reads = "全仓 .py 的 NAME token，分生产代码与测试代码计数"
-used_for = "死代码候选报告里的引用计数"
-when = "dev-tool"
-capture = "command"
-command = ["python", ".agents/skills/system-review-round/dead_code_scan.py", "Script"]
-outputs = []
-compare = "no-line-numbers"
-why = "报告里的 文件:行号 只是定位，改动前后行号会移；候选清单本身逐项比较"
-
-[[reader]]
 id = "R12"
 file = "tests/fast/test_child_stage_talk_not_sexual.py"
 symbol = "load_premise_categories"
@@ -397,24 +369,6 @@ pattern = "__file__"
 why = "用 __file__ 定位仓库根目录"
 
 [[allow]]
-file = ".agents/skills/system-review-round/dead_code_scan.py"
-symbol = "<module>"
-pattern = "tokenize"
-why = "模块顶层的 import tokenize；读源码的是 count_name_tokens（R11）"
-
-[[allow]]
-file = ".agents/skills/system-review-round/dead_code_scan.py"
-symbol = "main"
-pattern = "__file__"
-why = "用 __file__ 找仓库根目录，交给 collect_definitions（R10）与 count_name_tokens（R11）"
-
-[[allow]]
-file = ".agents/skills/system-review-round/wf_watch.py"
-symbol = "<module>"
-pattern = "open-py"
-why = "模块说明里写了 .py 用法；它读的是 Workflow 运行目录里的 jsonl 日志"
-
-[[allow]]
 file = "Script/Core/game_path_config.py"
 symbol = "<module>"
 pattern = "__file__"
@@ -553,8 +507,8 @@ id = "R45"
 file = "tests/fast/test_backend_achievement_callers.py"
 symbol = "template_notice"
 mechanism = "open+bytes"
-reads = "TEMPLATES 中两份模式 A 模板文件（.agents/skills/headless-game-test/unit_test_template.py 与 tools/verify/headless_unit_template.py）在截断标记之前的源码文本"
-used_for = "测试：两份模式 A 单元测试模板在子进程执行初始化段后，调用 achievement_service.settle_and_notify 均能达成成就 821 并记录一条提示"
+reads = "TEMPLATE 所指无头单元测试模板 tools/verify/headless_unit_template.py 在截断标记之前的源码文本"
+used_for = "测试：子进程执行无头单元测试模板初始化段后调用 achievement_service.settle_and_notify，能达成成就 821 并记录一条提示"
 when = "test"
 capture = "suite"
 
