@@ -1,4 +1,4 @@
-"""角色属性的初始化、输入角色名、校验角色时间是否过24点与按剧情id查角色id"""
+"""初始化角色属性、校验角色名、判断角色时间是否过24点与按剧情id查角色id"""
 
 import random
 import datetime
@@ -11,8 +11,6 @@ from Script.Design import (
     game_time,
     instuct_judege,
 )
-from Script.Config import normal_config
-from Script.UI.Moudle import panel, draw
 from Script.Modules.domains import (
     abilities,
     action_info,
@@ -29,12 +27,6 @@ from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 
 def init_attr(character_id: int) -> None:
@@ -125,44 +117,21 @@ def init_attr(character_id: int) -> None:
     # init_class(character_data)
 
 
-def input_name_func(ask_text: str) -> str:
+def validate_character_name(name: str) -> str | None:
     """
-    输入角色名函数
+    依次检查角色名是否为纯数字、系统保留字或与已有角色重名
     Keyword arguments:
-    ask_text -- 询问的文本
+    name -- 角色名
     Return arguments:
-    str -- 角色名
+    str | None -- 首个未通过检查的提示文本，三项均通过时返回 None
     """
-    ask_name_panel = panel.AskForOneMessage()
-    ask_name_panel.set(ask_text, 10)
-    line_feed.draw()
-    line = draw.LineDraw("=", width=window_width)
-    line.draw()
-    # 几种错误提示
-    not_num_error = draw.NormalDraw()
-    not_num_error.text = _("角色名不能为纯数字，请重新输入\n")
-    not_system_error = draw.NormalDraw()
-    not_system_error.text = _("角色名不能为系统保留字，请重新输入\n")
-    not_name_error = draw.NormalDraw()
-    not_name_error.text = _("已有角色使用该姓名，请重新输入\n")
-    # 返回的角色名
-    return_name = ""
-    # 开始循环
-    while 1:
-        now_name = ask_name_panel.draw()
-        if now_name.isdigit():
-            not_num_error.draw()
-            continue
-        if now_name in get_text.translation_values:
-            not_system_error.draw()
-            continue
-        if roster.has_name(now_name):
-            not_name_error.draw()
-            continue
-        return_name = now_name
-        break
-
-    return return_name
+    if name.isdigit():
+        return _("角色名不能为纯数字，请重新输入\n")
+    if name in get_text.translation_values:
+        return _("角色名不能为系统保留字，请重新输入\n")
+    if roster.has_name(name):
+        return _("已有角色使用该姓名，请重新输入\n")
+    return None
 
 
 def judge_character_time_over_24(character_id: int) -> int:

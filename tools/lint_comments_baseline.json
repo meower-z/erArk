@@ -28,7 +28,7 @@
   "Script/Core/text_handle.py": 8,
   "Script/Design/attr_calculation.py": 26,
   "Script/Design/basement.py": 86,
-  "Script/Design/character.py": 21,
+  "Script/Design/character.py": 18,
   "Script/Design/character_behavior.py": 30,
   "Script/Design/character_handle.py": 65,
   "Script/Design/character_image.py": 30,

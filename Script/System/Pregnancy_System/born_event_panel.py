@@ -262,7 +262,7 @@ class Born_Panel:
                 info_draw.draw()
                 line_feed.draw()
 
-                from Script.Design import character
+                from Script.UI.Panel import input_name_panel
 
                 for born_index in range(born_count):
                     # 取名询问文案：同卵双胞胎按姐姐/妹妹，多胞胎按序号，单胎沿用原文
@@ -278,7 +278,7 @@ class Born_Panel:
                         )
                     else:
                         ask_text = _(" 你决定给女儿取名为——")
-                    new_name = character.input_name_func(ask_text)
+                    new_name = input_name_panel.input_name_func(ask_text)
 
                     # 创建该角色，born_new_character 返回新角色的id
                     new_child_id = character_handle.born_new_character(

@@ -16,6 +16,7 @@ from Script.Modules.domains import npc_template, visitor, warehouse, work
 from Script.Modules.gameplay_resolution import vehicle_service, working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
+from Script.UI.Panel import input_name_panel as name_input
 from Script.Config import normal_config, game_config
 from Script.Modules.domains.playthrough import FIRST_BONUS, WORLD
 from Script.Modules.domains import chara_key, chara_profile, relations
@@ -175,12 +176,10 @@ def input_name_panel() -> bool:
     Return arguments:
     bool -- 完成角色创建校验
     """
-    identity.update(
-        0,
-        name=character.input_name_func(
-            _("你能回忆起自己的名字吗？（默认称呼为博士，此处仅输入姓名即可）")
-        ),
+    ask_text = _(
+        "你能回忆起自己的名字吗？（默认称呼为博士，此处仅输入姓名即可）"
     )
+    identity.update(0, name=name_input.input_name_func(ask_text))
     chara_profile.nick_name.set(0, _("博士"))
     return True
 
