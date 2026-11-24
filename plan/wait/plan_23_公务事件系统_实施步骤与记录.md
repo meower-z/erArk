@@ -50,7 +50,7 @@
 | `tools/ArkEditor/function.py` | 改 | token 反解链补 `Growth` 与 `RI` |
 | `tools/ArkEditor/csv/{Premise.csv,Facility.csv}` | 改/新增 | 同步两个新前提；新增部门参照表 |
 | `plan/done/plan_22_*` 三份 | 改 | 事件相关章节改为指向本 Plan |
-| `update.log` | 改 | 按 `update-changelog` 体例补条目 |
+| `update.log` | 改 | 按玩家视角补条目 |
 
 ---
 
@@ -119,7 +119,7 @@ git checkout -- data/po/           # 本机无 xgettext/polib，buildconfig 重�
 
 ## 4. 验证清单
 
-### 4.1 单元测试（实施方执行，按 `headless-game-test` 模式 A）
+### 4.1 单元测试（实施方执行，无头模式 A）
 
 - [ ] 构建产物：条数正确，`by_department` / `by_sub_key` 分桶正确，uid 带文件名前缀
 - [ ] 遍历全部事件：前提判定不抛异常；最坏情况（好感/信赖为 0）下每条至少 1 个可选选项
@@ -238,7 +238,7 @@ git checkout -- data/po/           # 本机无 xgettext/polib，buildconfig 重�
 
 ### 6.3 单元测试结果
 
-`headless-game-test` 模式 A，三组脚本合计 **102 条断言全部通过**：
+无头单元测试模式 A，三组脚本合计 **102 条断言全部通过**：
 
 | 脚本 | 断言 | 覆盖 |
 | --- | --- | --- |

@@ -4,7 +4,7 @@
 - 通过语法树检查 Script 下除 Script/UI/ 与 Script/Modules/tk_ui/callbacks.py 外的源码
   不导入成就面板（achievement_panel）。
 - 验证医疗部结算、干员催眠素质检查与人力发电三处调用经 achievement_service.settle_and_notify 结算并绘制金色提示。
-- 在子进程中运行两份模式 A 单元测试模板，验证 settle_and_notify 触发的成就提示写入各自的记录列表。
+- 在子进程中运行模式 A 单元测试模板，验证 settle_and_notify 触发的成就提示写入记录列表 wait_texts。
 """
 
 import ast
@@ -43,13 +43,8 @@ HUMAN_POWER_ID = 827
 OPERATOR = 1
 """ 测试用干员角色编号 """
 TEMPLATE_ID = 821
-""" 测试两份模式 A 模板所用的能源类成就编号（Achievement.csv 编号 821） """
+""" 测试模式 A 模板所用的能源类成就编号（Achievement.csv 编号 821） """
 TEMPLATES = (
-    (
-        ".agents/skills/headless-game-test/unit_test_template.py",
-        "# ==== 5. ",
-        "messages",
-    ),
     ("tools/verify/headless_unit_template.py", "# ==== 1. ", "wait_texts"),
 )
 """ 待测模式 A 模板清单，每项为 (模板路径, 截断标记, WaitDraw 记录列表名) """
@@ -272,10 +267,10 @@ def template_notice(
 
 
 class UnitTemplateNoticeTest(FastTestCase):
-    """验证两份模式 A 单元测试模板均会记录 settle_and_notify 触发的成就提示"""
+    """验证模式 A 单元测试模板会记录 settle_and_notify 触发的成就提示"""
 
     def test_unit_templates_record_achievement_notice(self) -> None:
-        """断言 TEMPLATES 中的两份模板执行 settle_and_notify 后均达成成就 821 且记录一条提示"""
+        """断言 TEMPLATES 中的模板执行 settle_and_notify 后达成成就 821 且记录一条提示"""
         for path, marker, recorder in TEMPLATES:
             with self.subTest(path=path):
                 self.assertEqual(

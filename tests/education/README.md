@@ -40,7 +40,7 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 | `test_save_compat.py` | `CHILD_GROWTH` 字段级回填（含 Plan 30 的 `skip_count` / `skip_caught_day` / `semester_base_work_type`、Plan 31 的 `skip_class_day` / `sex_class_count` 补默认值）与成绩单迁移、教育区娱乐编号 175~178→152~155 的读档迁移（模板 / 单孩覆盖 / 娱乐槽位）、`save/` 下全部真实存档只读载入后的结构、学期结算幂等、四个面板可画；Plan 32：L22 旧履历的萝莉 1 / 20 / 26 读档改名为期末 17 / 18 / 19（孩子与罗德岛两处、幂等、新 uid 已有记录不覆盖）；本机没有 `save/` 或没有存档时跳过真实存档一段；Plan 32 实施复审补：迁移前后的残留检查，真实存档载入后没有萝莉 1 / 20 / 26 的残留 |
 | `test_behavior_loop.py` | 模式 B：在女儿最多的真实存档上排课，从 08:40（到岗时间）起带护栏跑六轮行为循环，检查点落在每节课中段（节次交界处人人都在换教室）：收敛、学生岗的女儿进教室（课表只对学生岗生效，存档里改了岗的女儿不计入）、本节有课的教师在课表上那间教室授课、上午四节每人平均 ≥ 3 节出勤；再预约一节下午的实操课，断言开课时必修生都已离开上一节的教室、且已有人在实操教室等（路上撞上需求会晚到，所以不要求全员到场）；再跑一次跨天结算；Plan 32：L4 学生截短排在实时结算之前、截掉的那一段只算一遍（真实存档、真实行为循环）；本机没有 `save/` 或没有可读存档时整份跳过（PASS=0，行为循环的验收改看 `test_class_ai` 的循环段） |
 
-## fixture 陷阱（本套件新增的，通用的见 `.agents/skills/headless-game-test/SKILL.md`）
+## fixture 陷阱
 
 - 脚本从 `_bootstrap` 逐个导入用到的名字（含翻译函数 `_`），不用 `from _bootstrap import *`，因为 ruff 的 F403 规则会报出星号导入的那一行。
 - `behavior.start_time` 默认是公元 1 年，`get_class_period` 读的就是它——改游戏时间一律用 `set_time()`，它会同步全部角色。
@@ -63,7 +63,7 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 - 造「今天已翘课」的夹具要同时写 `skip_class_flag = True` 与 `skip_class_day = 当天的 toordinal()`（549 现在两样一起写）：只挂 flag 读作前一天的残留、不算今天翘课，翘课日的新路径一条都走不到（Plan 31 两份复现脚本改后核对时踩到）。
 - 按 cid 查 `game_config.config_talk` / `config_talk_premise_data` 时，口上的 cid 是「上级目录名_文件名 + cid」：`data/talk/daily/check_report_card.csv` 的 1014 是 `"daily_check_report_card1014"`（`buildconfig.build_csv_config`），只写文件名会静默落空。也别按前提串去找口上：前提一改就一条都找不到，`all([])` 恒真（Plan 31）。
 - 真实的成长结算（`pregnancy_handle._settle_baby_grow_up` / `check_grow_to_loli` / `check_grow_to_girl`）会调 `talk.must_show_talk_check` 画必显二段的口上，夹具里打桩成空函数、跑完还原；`_settle_baby_grow_up` 还读教师岗的岗位名册（`work.roster`，没有人时为空）、按幼女默认池重刷当天娱乐，先 `open_all_classroom()`、补派对日表（`test_prenatal_baby.py` 的写法）。
-- 学生赶去上课的截短（Plan 32 L4）已从 `judge_interrupt_character_behavior` 挪到 `handle_npc_ai.judge_student_leave_truncate`，由 `character_behavior` 的 NPC 分支在实时结算之前调：断言截出来的时长直接调它；探针只包 `judge_interrupt_character_behavior` 的会漏掉截短（`headless-game-test` 的包装已补）。
+- 学生赶去上课的截短由 `handle_npc_ai.judge_student_leave_truncate` 处理（经 `handle_npc_ai.early_end` 调用，与 `judge_interrupt_character_behavior` 分开）：断言截出来的时长直接调它；探针只包 `judge_interrupt_character_behavior` 会漏掉截短，`tools/verify/headless_harness_template.py` 同时包装了这两个函数。
 - 自建的行为循环（不经 `run_one_round`）要把参与的 NPC 的交互对象设回自己：`judge_character_status_time_over` 按「交互对象不在场」把行为的结束改写为这一步的结束，时间线会整段跳过（`test_behavior_loop.py` 的 L4 段）。
 - `_bootstrap` 导出的 `pl` 是建夹具时读出的 `identity.Identity`。读档（`save_handle.input_load_save`）会替换角色身份表。读档后通过 `identity.of(0)` 读取玩家身份。
 - 跑真实的开课效果（383 的 10010 / 10014）时，课上玩家的 H 动作（含 6021 下课）走 `settle_behavior` 的群交分支、读 `prison.setting(12)`；监禁调教设置默认全 0，无需手动初始化。
