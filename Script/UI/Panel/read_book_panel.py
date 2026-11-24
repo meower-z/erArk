@@ -1,11 +1,10 @@
-"""读书面板与书籍片段的绘制"""
+"""读书面板界面绘制模块。"""
 
 from types import FunctionType
 from Script.UI.Moudle import draw, view
 from Script.Core import get_text, flow_handle, constant
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
-import random
 from Script.Modules.domains import chara_life
 
 panel_info_data: dict[str, object] = {}
@@ -19,30 +18,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
-
-
-def draw_book_fragment(book_id: int) -> None:
-    """
-    根据书籍ID绘制书籍片段
-    参数:
-        book_id (int): 书籍的唯一ID
-    返回值:
-        None
-    功能描述:
-        从书籍数据库中选取对应书籍的片段，并将片段内容绘制给玩家
-    """
-    # 获取书籍数据
-    excerpt_list = game_config.config_book_excerpt_list.get(book_id)
-    if not excerpt_list:
-        return
-
-    # 随机选取一个片段
-    fragment = random.choice(excerpt_list)
-
-    # 绘制片段内容
-    fragment_draw = draw.NormalDraw()
-    fragment_draw.text = f"\n……{fragment}……\n"
-    fragment_draw.draw()
 
 
 class Read_Book_Panel:

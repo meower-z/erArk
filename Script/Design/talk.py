@@ -16,6 +16,7 @@ from Script.Design import game_time
 from Script.Modules.domains import action_info, activity, chara_profile, flags
 from Script.Modules.domains import inventory, wardrobe, scene_state
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import library_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -443,9 +444,7 @@ def handle_talk_draw(
             now_behavior_id = common_behavior_id
         # 玩家读书时额外绘制当前书籍的内容节选
         if character_id == 0 and now_behavior_id == constant.Behavior.READ_BOOK:
-            from Script.UI.Panel import read_book_panel
-
-            read_book_panel.draw_book_fragment(
+            library_service.draw_book_fragment(
                 activity.behavior(character_id).book_id
             )
         # 检测是否需要跳过
