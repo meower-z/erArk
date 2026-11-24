@@ -1,11 +1,11 @@
 """基地载具管理界面面板 Manage_Vehicle_Panel"""
 
+from collections.abc import Callable
 from types import FunctionType
 from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import commission, warehouse
-from Script.Modules.domains import facility
+from Script.Modules.gameplay_resolution import vehicle_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -15,6 +15,55 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
+
+
+def _text(
+    text: str,
+    width: int,
+    style: str = "standard",
+    kind: type[draw.NormalDraw] = draw.NormalDraw,
+) -> None:
+    """按指定文本、宽度、样式与绘制类创建并绘制单个文本对象。"""
+    now_draw = kind()
+    now_draw.text = text
+    now_draw.style = style
+    now_draw.width = width
+    now_draw.draw()
+
+
+def _button(
+    text: str,
+    return_text: str,
+    width: int,
+    ret: list[str],
+    cmd_func: Callable[..., object] | None = None,
+    args: tuple = (),
+    kind: type[draw.CenterButton] = draw.CenterButton,
+) -> draw.CenterButton:
+    """创建并绘制按钮，将其返回文本追加到选项列表并返回该按钮对象。"""
+    now_draw = kind(text, return_text, width, cmd_func=cmd_func, args=args)
+    now_draw.draw()
+    ret.append(now_draw.return_text)
+    return now_draw
+
+
+def _choices(
+    options: list[str],
+    chosen: str,
+    width: int,
+    cmd_func: Callable[[str], None],
+    ret: list[str],
+) -> None:
+    """等宽绘制一行选项按钮，高亮当前选中项并在行尾换行。"""
+    each = int(width / len(options))
+    for option in options:
+        if option == chosen:
+            _text(f"[{option}]", each, "onbutton", draw.CenterDraw)
+        else:
+            _button(
+                f"[{option}]", f"\n{option}", each, ret, cmd_func, (option,)
+            )
+    line_feed.draw()
 
 
 class Manage_Vehicle_Panel:
@@ -36,14 +85,15 @@ class Manage_Vehicle_Panel:
         """ 派遣人员列表 """
         self.vehicle_count = 0
         """ 当前拥有载具数量 """
-
-        # === 排序与翻页相关变量 ===
         self.sort_by = _("默认")
-        self.is_ascending = True  # 默认升序
+        """ 当前排序条件名称 """
+        self.is_ascending = True
+        """ 列表是否按升序排列 """
         self.current_page = 1
-        self.items_per_page = 10  # 设定中间固定行数（每页最大载具数）
+        """ 当前载具列表页码 """
+        self.items_per_page = 10
+        """ 每页显示的载具条数 """
 
-    # === 切换排序条件 ===
     def change_sort_by(self, sort_by_type: str) -> None:
         """
         切换载具列表的排序条件，并回到第一页
@@ -53,13 +103,11 @@ class Manage_Vehicle_Panel:
         self.sort_by = sort_by_type
         self.current_page = 1
 
-    # === 切换升降序 ===
     def change_sort_order(self) -> None:
         """切换载具列表的升序与降序，并回到第一页"""
         self.is_ascending = not self.is_ascending
         self.current_page = 1
 
-    # === 切换页数 ===
     def change_page(self, target_page: int) -> None:
         """
         切换载具列表当前所在的页数
@@ -72,300 +120,73 @@ class Manage_Vehicle_Panel:
         """绘制对象"""
         from Script.Design import attr_calculation
 
-        title_text = _("载具管理")
-        commission_type_list = [_("常规载具"), _("特殊载具")]
-
-        title_draw = draw.TitleLineDraw(title_text, self.width)
+        w = self.width
+        title_draw = draw.TitleLineDraw(_("载具管理"), w)
         while 1:
-            return_list = []
+            ret: list[str] = []
             title_draw.draw()
-
-            # 绘制面板类型切换
-            now_draw: draw.CenterDraw | draw.CenterButton
-            for commission_type in commission_type_list:
-                if commission_type == self.now_panel:
-                    now_draw = draw.CenterDraw()
-                    now_draw.text = f"[{commission_type}]"
-                    now_draw.style = "onbutton"
-                    now_draw.width = int(self.width / len(commission_type_list))
-                    now_draw.draw()
-                else:
-                    now_draw = draw.CenterButton(
-                        f"[{commission_type}]",
-                        f"\n{commission_type}",
-                        int(self.width / len(commission_type_list)),
-                        cmd_func=self.change_panel,
-                        args=(commission_type,),
-                    )
-                    now_draw.draw()
-                    return_list.append(now_draw.return_text)
-            line_feed.draw()
-            line = draw.LineDraw("+", self.width)
-            line.draw()
-
-            # 设施信息
-            facility_name = game_config.config_facility[14].name
-            now_level = str(facility.level(14))
-            facility_cid = game_config.config_facility_effect_data[
-                facility_name
-            ][int(now_level)]
-            vehicle_num_limit = str(
-                game_config.config_facility_effect[facility_cid].effect
-            )
-            # 载具数量
-            self.vehicle_count = 0
-            vehicles = commission.vehicles()
-            for vehicle_id in vehicles:
-                self.vehicle_count += vehicles[vehicle_id][0]
-            facility_info_text = ""
-            facility_info_text += _(
-                "○载具用于给执行外勤委托的干员提供交通和其他方面的辅助，提高委托效率\n"
-            )
-            facility_info_text += _(
-                "○当前机库等级：{0}，载具数量：{1}/{2}\n"
-            ).format(now_level, self.vehicle_count, vehicle_num_limit)
-
-            money = str(warehouse.amount(1))
-            facility_info_text += _("○当前龙门币数量：{0}\n").format(money)
-
-            facility_info_draw = draw.NormalDraw()
-            facility_info_draw.text = facility_info_text
-            facility_info_draw.width = self.width
-            facility_info_draw.draw()
-            line = draw.LineDraw("+", self.width)
-            line.draw()
-
-            # === 排序按钮 ===
-            sort_text_list = [
-                _("默认"),
-                _("持有量"),
-                _("价钱"),
-                _("速度"),
-                _("运载量"),
-            ]
-            for sort_type in sort_text_list:
-                if sort_type == self.sort_by:
-                    now_draw = draw.CenterDraw()
-                    now_draw.text = f"[{sort_type}]"
-                    now_draw.style = "onbutton"
-                    now_draw.width = int(self.width / len(sort_text_list))
-                    now_draw.draw()
-                else:
-                    now_draw = draw.CenterButton(
-                        f"[{sort_type}]",
-                        f"\n{sort_type}",
-                        int(self.width / len(sort_text_list)),
-                        cmd_func=self.change_sort_by,
-                        args=(sort_type,),
-                    )
-                    now_draw.draw()
-                    return_list.append(now_draw.return_text)
-            line_feed.draw()
-
-            # === 升序降序按钮 ===
-            order_text = (
+            panels = [_("常规载具"), _("特殊载具")]
+            _choices(panels, self.now_panel, w, self.change_panel, ret)
+            draw.LineDraw("+", w).draw()
+            status = vehicle_service.hangar_status()
+            self.vehicle_count = status.owned
+            _text(vehicle_service.hangar_text(status), w)
+            draw.LineDraw("+", w).draw()
+            sorts = [_("默认"), _("持有量"), _("价钱"), _("速度"), _("运载量")]
+            _choices(sorts, self.sort_by, w, self.change_sort_by, ret)
+            order = (
                 _("当前排序：升序")
                 if self.is_ascending
                 else _("当前排序：降序")
             )
-            order_draw = draw.CenterButton(
-                f"[{order_text}]",
-                _("\n点击切换升降序"),
-                self.width,
-                cmd_func=self.change_sort_order,
-            )
-            order_draw.draw()
-            return_list.append(order_draw.return_text)
+            flip = self.change_sort_order
+            _button(f"[{order}]", _("\n点击切换升降序"), w, ret, flip)
             line_feed.draw()
-            line = draw.LineDraw("+", self.width)
-            line.draw()
-
-            info_text_list = [
-                _("载具名称"),
-                _("外勤中数量/总持有量"),
-                _(" 价钱"),
-                _(" 载具速度"),
-                _(" 运载量"),
-                _(" 特殊效果(未实装)"),
-            ]
-            # 修正文本宽度
-            text_width = int((self.width) / (len(info_text_list)))
-            for info_text in info_text_list:
-                info_draw = draw.CenterDraw()
-                info_draw.text = info_text
-                info_draw.width = text_width
-                info_draw.draw()
+            draw.LineDraw("+", w).draw()
+            headers = [_("载具名称"), _("外勤中数量/总持有量"), _(" 价钱")]
+            headers += [_(" 载具速度"), _(" 运载量"), _(" 特殊效果(未实装)")]
+            cell = int((w) / (len(headers)))
+            for header in headers:
+                _text(header, cell, kind=draw.CenterDraw)
             line_feed.draw()
-            line = draw.LineDraw("~", self.width)
-            line.draw()
-
-            # 获取载具列表
-            all_vehicle_list = []
-            for cid in game_config.config_vehicle:
-                vehicle_data = game_config.config_vehicle[cid]
-                # 获得方式
-                acquire_way = vehicle_data.acquiring
-                vehicle_count = vehicles[cid][0]
-                if self.now_panel == _("常规载具") and acquire_way != _("基础"):
-                    continue
-                if self.now_panel == _("特殊载具"):
-                    if acquire_way == _("基础"):
-                        continue
-                    # 非基础的载具在未拥有时不显示
-                    elif acquire_way != _("基础") and vehicle_count == 0:
-                        continue
-                all_vehicle_list.append(cid)
-
-            # === 对列表进行排序逻辑处理 ===
-            def get_sort_key(cid_key: int) -> int:
-                if self.sort_by == _("持有量"):
-                    return commission.vehicles()[cid_key][0]
-                elif self.sort_by == _("价钱"):
-                    return game_config.config_vehicle[cid_key].price
-                elif self.sort_by == _("速度"):
-                    return game_config.config_vehicle[cid_key].speed
-                elif self.sort_by == _("运载量"):
-                    return game_config.config_vehicle[cid_key].capacity
-                else:
-                    return cid_key  # 默认按编号
-
-            all_vehicle_list.sort(
-                key=get_sort_key, reverse=not self.is_ascending
+            draw.LineDraw("~", w).draw()
+            rows = vehicle_service.listed_vehicles(
+                self.now_panel, self.sort_by, self.is_ascending
             )
-
-            # === 分页计算 ===
-            total_items = len(all_vehicle_list)
-            total_pages = max(
-                1,
-                (total_items + self.items_per_page - 1) // self.items_per_page,
+            page = vehicle_service.page_of(
+                rows, self.current_page, self.items_per_page
             )
-            if self.current_page > total_pages:
-                self.current_page = total_pages
-
-            start_idx = (self.current_page - 1) * self.items_per_page
-            end_idx = start_idx + self.items_per_page
-            display_list = all_vehicle_list[start_idx:end_idx]
-
-            # 绘制载具信息 (修改：只绘制当前页内容，并在中间加入价钱数据)
-            for vehicle_id in display_list:
-                vehicle_data = game_config.config_vehicle[vehicle_id]
-                vehicle_name = attr_calculation.pad_display_width(
-                    vehicle_data.name, text_width, "center"
-                )
-
-                # 新增读取并排版价钱
-                vehicle_price = attr_calculation.pad_display_width(
-                    str(vehicle_data.price), text_width, "center"
-                )
-
-                vehicle_speed = attr_calculation.pad_display_width(
-                    str(vehicle_data.speed), text_width, "center"
-                )
-                vehicle_capacity = attr_calculation.pad_display_width(
-                    str(vehicle_data.capacity), text_width, "center"
-                )
-                vehicle_special = attr_calculation.pad_display_width(
-                    vehicle_data.special, text_width, "center"
-                )
-                vehicle_count_str = (
-                    str(vehicles[vehicle_id][1])
-                    + "/"
-                    + str(vehicles[vehicle_id][0])
-                )
-                vehicle_count_str = attr_calculation.pad_display_width(
-                    vehicle_count_str, text_width, "center"
-                )
-
-                # 文本中加入 vehicle_price
-                vehicle_text = (
-                    f"{vehicle_name}{vehicle_count_str}{vehicle_price}{vehicle_speed}{vehicle_capacity}"
-                    f"{vehicle_special}"
-                )
-
-                # 可以进行的，绘制为按钮
-                vehicle_draw = draw.LeftButton(
-                    vehicle_text,
-                    "\n" + vehicle_name,
-                    self.width,
-                    cmd_func=self.vehicle_info,
-                    args=(vehicle_id,),
-                )
-                vehicle_draw.draw()
-                return_list.append(vehicle_draw.return_text)
+            self.current_page = page.page
+            for row in page.rows:
+                padded = [
+                    attr_calculation.pad_display_width(text, cell, "center")
+                    for text in vehicle_service.row_cells(row)
+                ]
+                info, args = self.vehicle_info, (row.cid,)
+                text = "".join(padded)
+                kind = draw.LeftButton
+                _button(text, "\n" + padded[0], w, ret, info, args, kind)
                 line_feed.draw()
-
-            # === 用空行填充剩余的总行数 ===
-            drawn_lines = len(display_list)
-            for _i in range(self.items_per_page - drawn_lines):
+            for _i in range(self.items_per_page - len(page.rows)):
                 line_feed.draw()
-
-            # === 返回上面加翻页和第几页 ===
-            line = draw.LineDraw("-", self.width)
-            line.draw()
-
-            if total_pages == 1:
-                # 只有一页时无法点击
-                page_text = _(" 第 {0} / {1} 页 ").format(
-                    self.current_page, total_pages
-                )
-                page_draw = draw.CenterDraw()
-                page_draw.text = page_text
-                page_draw.width = self.width
-                page_draw.draw()
-                line_feed.draw()
+            draw.LineDraw("-", w).draw()
+            page_text = _(" 第 {0} / {1} 页 ").format(page.page, page.total)
+            go, third = self.change_page, int(w / 3)
+            if page.total == 1:
+                _text(page_text, w, kind=draw.CenterDraw)
             else:
-                # 计算循环翻页的目标页
-                prev_page = (
-                    self.current_page - 1
-                    if self.current_page > 1
-                    else total_pages
+                _button(
+                    _("[上一页]"), _("\n上一页"), third, ret, go, (page.prev,)
                 )
-                next_page = (
-                    self.current_page + 1
-                    if self.current_page < total_pages
-                    else 1
+                _text(page_text, third, kind=draw.CenterDraw)
+                _button(
+                    _("[下一页]"), _("\n下一页"), third, ret, go, (page.next,)
                 )
-
-                # 始终绘制上一页按钮
-                prev_draw = draw.CenterButton(
-                    _("[上一页]"),
-                    _("\n上一页"),
-                    int(self.width / 3),
-                    cmd_func=self.change_page,
-                    args=(prev_page,),
-                )
-                prev_draw.draw()
-                return_list.append(prev_draw.return_text)
-
-                # 绘制页数
-                page_draw = draw.CenterDraw()
-                page_draw.text = _(" 第 {0} / {1} 页 ").format(
-                    self.current_page, total_pages
-                )
-                page_draw.width = int(self.width / 3)
-                page_draw.draw()
-
-                # 始终绘制下一页按钮
-                next_draw = draw.CenterButton(
-                    _("[下一页]"),
-                    _("\n下一页"),
-                    int(self.width / 3),
-                    cmd_func=self.change_page,
-                    args=(next_page,),
-                )
-                next_draw.draw()
-                return_list.append(next_draw.return_text)
-
-                line_feed.draw()
-
-            line = draw.LineDraw("-", self.width)
-            line.draw()
-
             line_feed.draw()
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
+            draw.LineDraw("-", w).draw()
+            line_feed.draw()
+            back_draw = _button(_("[返回]"), _("返回"), window_width, ret)
+            yrn = flow_handle.askfor_all(ret)
             if yrn == back_draw.return_text:
                 view.now_panel_id = constant.Panel.IN_SCENE
                 break
@@ -385,145 +206,36 @@ class Manage_Vehicle_Panel:
         Keyword arguments:
         vehicle_id -- 载具编号
         """
-
-        # 载具信息
-        vehicle_data = game_config.config_vehicle[vehicle_id]
-        vehicle_name = vehicle_data.name
-        vehicle_speed = str(vehicle_data.speed)
-        vehicle_capacity = str(vehicle_data.capacity)
-        vehicle_special = vehicle_data.special
-        vehicle_description = vehicle_data.description
-        vehicle_price = vehicle_data.price
-        vehicle_acquiring = vehicle_data.acquiring
-        # 将\n替换为换行符
-        if "\\n" in vehicle_description:
-            vehicle_description = vehicle_description.replace("\\n", "\n      ")
-
+        w, args = self.width, (vehicle_id,)
         while 1:
-            return_list = []
-
-            title_text = _("载具购买")
-            title_draw = draw.TitleLineDraw(title_text, self.width)
-            title_draw.draw()
-
-            # 绘制载具信息
-            info_draw = draw.NormalDraw()
-            info_draw.text = _("\n 载具名称：{0}").format(vehicle_name)
-            info_draw.text += _("\n 载具速度：{0}").format(vehicle_speed)
-            info_draw.text += _("\n 运载量：{0}").format(vehicle_capacity)
-            info_draw.text += _(
-                "\n 购入价格：{0}（出售价格为购入的0.8倍）"
-            ).format(vehicle_price)
-            info_draw.text += _("\n 特殊效果：{0}").format(vehicle_special)
-            info_draw.text += _("\n 介绍：{0}").format(vehicle_description)
-
-            owned_count, out_count = commission.vehicles()[vehicle_id]
-            info_draw.text += _("\n\n 该载具当前已拥有数量：{0}").format(
-                owned_count
-            )
-
-            money = str(warehouse.amount(1))
-            info_draw.text += _("\n 当前龙门币数量：{0}").format(money)
-            info_draw.width = self.width
-            info_draw.draw()
-
-            # 设施信息(提前获取设施上限以便计算空间)
-            facility_name = game_config.config_facility[14].name
-            now_level = facility.level(14)
-            facility_cid = game_config.config_facility_effect_data[
-                facility_name
-            ][now_level]
-            vehicle_num_limit = game_config.config_facility_effect[
-                facility_cid
-            ].effect
-
-            money_left_draw = draw.NormalDraw()
-            money_left = warehouse.amount(1) - vehicle_price
-            money_left_draw.text = _(" 购买后剩余龙门币数量：{0}").format(
-                money_left
-            )
-            if money_left < 0:
-                money_left_draw.style = "warning"
-            money_left_draw.draw()
-
+            ret: list[str] = []
+            draw.TitleLineDraw(_("载具购买"), w).draw()
+            trade = vehicle_service.trade_status(vehicle_id, self.vehicle_count)
+            _text(vehicle_service.detail_text(vehicle_id, trade), w)
+            left = _(" 购买后剩余龙门币数量：{0}").format(trade.money_left)
+            _text(left, 0, "warning" if trade.money_left < 0 else "standard")
             line_feed.draw()
-
-            space_left_draw = draw.NormalDraw()
-            space_left = int(vehicle_num_limit) - self.vehicle_count
-            space_left_draw.text = _(" 当前剩余载具空间：{0}").format(
-                space_left
-            )
-            if space_left <= 0:
-                space_left_draw.style = "warning"
-            space_left_draw.draw()
-
+            space = _(" 当前剩余载具空间：{0}").format(trade.space_left)
+            _text(space, 0, "warning" if trade.space_left <= 0 else "standard")
             line_feed.draw()
             line_feed.draw()
-            line = draw.LineDraw("-", self.width)
-            line.draw()
-
-            # 定义统一下方按钮的宽度基准
-            btn_width = int(self.width / 3)
-
-            # === 判断是否可购买 ===
-            buy_condition = (
-                vehicle_acquiring == _("基础")
-                and self.vehicle_count < int(vehicle_num_limit)
-                and money_left >= 0
-            )
-            buy_vehicle_draw: draw.CenterButton | draw.CenterDraw
-            if buy_condition:
-                buy_vehicle_draw = draw.CenterButton(
-                    _("【购买载具】"),
-                    _("\n【购买载具】"),
-                    btn_width,
-                    cmd_func=self.buy_vehicle,
-                    args=(vehicle_id,),
-                )
-                buy_vehicle_draw.draw()
-                return_list.append(buy_vehicle_draw.return_text)
+            draw.LineDraw("-", w).draw()
+            third = int(w / 3)
+            buy, sell = _("【购买载具】"), _("【出售载具】")
+            if trade.can_buy:
+                back = _("\n【购买载具】")
+                _button(buy, back, third, ret, self.buy_vehicle, args)
             else:
-                buy_vehicle_draw = draw.CenterDraw()
-                buy_vehicle_draw.text = _("【购买载具】")
-                buy_vehicle_draw.style = "deep_gray"  # 设置为灰色文字
-                buy_vehicle_draw.width = btn_width
-                buy_vehicle_draw.draw()
-
-            # === 判断是否可出售 ===
-            sell_condition = (
-                vehicle_acquiring == _("基础") and owned_count - out_count > 0
-            )
-            sell_vehicle_draw: draw.CenterButton | draw.CenterDraw
-            if sell_condition:
-                sell_vehicle_draw = draw.CenterButton(
-                    _("【出售载具】"),
-                    _("\n【出售载具】"),
-                    btn_width,
-                    cmd_func=self.sell_vehicle,
-                    args=(vehicle_id,),
-                )
-                sell_vehicle_draw.draw()
-                return_list.append(sell_vehicle_draw.return_text)
+                _text(buy, third, "deep_gray", draw.CenterDraw)
+            if trade.can_sell:
+                back = _("\n【出售载具】")
+                _button(sell, back, third, ret, self.sell_vehicle, args)
             else:
-                sell_vehicle_draw = draw.CenterDraw()
-                sell_vehicle_draw.text = _("【出售载具】")
-                sell_vehicle_draw.style = "deep_gray"  # 设置为灰色文字
-                sell_vehicle_draw.width = btn_width
-                sell_vehicle_draw.draw()
-
+                _text(sell, third, "deep_gray", draw.CenterDraw)
             line_feed.draw()
             line_feed.draw()
-
-            # === 返回按钮的宽度设定为上面两者的宽度之和 ===
-            back_btn_width = btn_width * 2
-            back_draw = draw.CenterButton(
-                _("[返回]"), _("返回"), back_btn_width
-            )
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-
-            yrn = flow_handle.askfor_all(return_list)
-            # 只有点击返回按钮时才 break 跳出载具信息页面
+            back_draw = _button(_("[返回]"), _("返回"), third * 2, ret)
+            yrn = flow_handle.askfor_all(ret)
             if yrn == back_draw.return_text:
                 break
 
@@ -536,22 +248,17 @@ class Manage_Vehicle_Panel:
         from Script.UI.Panel import achievement_panel
 
         vehicle_data = game_config.config_vehicle[vehicle_id]
-        vehicle_price = vehicle_data.price
         info_draw = draw.WaitDraw()
         info_draw.width = window_width
-        # 购买载具
-        if warehouse.amount(1) >= vehicle_price:
-            warehouse.add(1, -vehicle_price)
-            commission.add_vehicle(vehicle_id, owned=1)
+        if vehicle_service.buy_vehicle(vehicle_id):
             self.vehicle_count += 1
             info_draw.text = _("\n花费 {0} 龙门币购买了一个 {1}\n").format(
-                vehicle_price, vehicle_data.name
+                vehicle_data.price, vehicle_data.name
             )
         else:
             info_draw.text = _("\n资金不足，无法购买\n")
             info_draw.style = "red"
         info_draw.draw()
-        # 结算成就
         achievement_panel.achievement_flow(_("载具"))
 
     def sell_vehicle(self, vehicle_id: int) -> None:
@@ -560,16 +267,11 @@ class Manage_Vehicle_Panel:
         Keyword arguments:
         vehicle_id -- 载具编号
         """
-
-        vehicle_data = game_config.config_vehicle[vehicle_id]
-        vehicle_price = int(vehicle_data.price * 0.8)
-        # 出售载具
-        warehouse.add(1, vehicle_price)
-        commission.add_vehicle(vehicle_id, owned=-1)
+        price = vehicle_service.sell_vehicle(vehicle_id)
         self.vehicle_count -= 1
         info_draw = draw.WaitDraw()
         info_draw.width = window_width
         info_draw.text = _("\n出售了一个 {0}，获得了 {1} 龙门币\n").format(
-            vehicle_data.name, vehicle_price
+            game_config.config_vehicle[vehicle_id].name, price
         )
         info_draw.draw()
