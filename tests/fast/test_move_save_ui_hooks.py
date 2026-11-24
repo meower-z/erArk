@@ -52,22 +52,27 @@ _ = get_text._
 
 
 class HookCase(FastTestCase):
-    """界面回调测试基类，记录提示、面板切换以及回调内外的绘制与直接输出。"""
+    """界面回调测试基类，记录提示、分隔线、面板切换以及回调内外的绘制与直接输出。"""
 
     def setUp(self) -> None:
-        """初始化无钥匙玩家与地图面板，接管提示、面板切换、全部绘制类与 era_print。"""
+        """初始化无钥匙玩家与地图面板，接管提示、分隔线、面板切换、全部绘制类与 era_print。"""
         super().setUp()
         self.world.chara(0, "博士", position=CORRIDOR)
         for item_id in (COPY_KEY, MASTER_KEY):
             kernel_data.put(inventory.set_item, 0, item_id, 0)
         self.notices: list[Notice] = []
+        self.dividers: list[str] = []
         self.drawn: list[Drawn] = []
         self.direct: list[Drawn] = []
         self.panels: list[int] = []
         self.inside = False
         self.hooks = list(ui_hooks._notices)
+        self.divider_hooks = list(ui_hooks._dividers)
         self.enterContext(
             mock.patch.object(ui_hooks, "_notices", [self.forward])
+        )
+        self.enterContext(
+            mock.patch.object(ui_hooks, "_dividers", [self.forward_divider])
         )
         self.enterContext(
             mock.patch.object(
@@ -107,8 +112,18 @@ class HookCase(FastTestCase):
         finally:
             self.inside = False
 
+    def forward_divider(self, char: str) -> None:
+        """记录分隔线字符，再于回调标记开启期间依次调用测试前已登记的分隔线回调。"""
+        self.dividers.append(char)
+        self.inside = True
+        try:
+            for fn in self.divider_hooks:
+                fn(char)
+        finally:
+            self.inside = False
+
     def keep(self, now: object) -> None:
-        """按是否处于提示回调内，将绘制对象的类名、宽度、样式与文本记入对应列表。"""
+        """按是否处于回调内，将绘制对象的类名、宽度、样式与文本记入对应列表。"""
         drawn = (
             type(now).__name__,
             getattr(now, "width", 0),
@@ -123,34 +138,42 @@ class HookCase(FastTestCase):
         style: str | tuple[str, ...] = "standard",
         tooltip: str = "",
     ) -> None:
-        """在提示回调外直接调用 io_init.era_print 时将样式与文本记入直接输出列表。"""
+        """在回调外直接调用 io_init.era_print 时将样式与文本记入直接输出列表。"""
         if not self.inside:
             self.direct.append(("era_print", 0, str(style), string))
 
     def assert_notices(
-        self, *expected: Notice, direct: tuple[Drawn, ...] = ()
+        self,
+        *expected: Notice,
+        dividers: tuple[str, ...] = (),
+        direct: tuple[Drawn, ...] = (),
     ) -> None:
         """
-        依次核对 ui_hooks 记录的提示、回调外直接绘制与 Tk 回调绘出的绘制对象。
+        依次核对 ui_hooks 记录的分隔线与提示、回调外直接绘制及 Tk 回调绘出的绘制对象。
         Keyword arguments:
         expected -- Notice，按顺序预期的提示参数元组
-        direct -- tuple[Drawn, ...]，按顺序预期的提示回调之外的直接绘制记录
+        dividers -- tuple[str, ...]，按顺序预期的分隔线字符元组
+        direct -- tuple[Drawn, ...]，按顺序预期的回调之外的直接绘制记录
         Return arguments:
         None -- 无返回值
         """
         width = normal_config.config_normal.text_width
+        self.assertEqual(self.dividers, list(dividers))
         self.assertEqual(self.notices, list(expected))
         self.assertEqual(self.direct, list(direct))
         self.assertEqual(
             self.drawn,
             [
-                (
-                    "WaitDraw" if wait else "NormalDraw",
-                    width if use_text_width else 0,
-                    style or draw.NormalDraw.style,
-                    text,
-                )
-                for text, wait, style, use_text_width in expected
+                *[("LineDraw", width, "standard", char) for char in dividers],
+                *[
+                    (
+                        "WaitDraw" if wait else "NormalDraw",
+                        width if use_text_width else 0,
+                        style or draw.NormalDraw.style,
+                        text,
+                    )
+                    for text, wait, style, use_text_width in expected
+                ],
             ],
         )
 
@@ -202,26 +225,30 @@ class DoorNoticeTest(HookCase):
         return kernel_data.written(character_move.character_move, 0, DORM)[0]
 
     def test_copy_key_opens_door(self) -> None:
-        """验证持 1 层复制钥匙时返回 open、除直接门锁提醒外发出等待型开门提示并解锁房门。"""
+        """验证持 1 层复制钥匙时返回 open、经回调发出门锁提醒与开门提示并解锁房门。"""
         kernel_data.put(inventory.set_item, 0, COPY_KEY, 1)
         self.assertEqual(self.walk(), "open")
         text = _("\n  ●你拿出了该楼层的复制钥匙，悄悄打开了门\n\n")
-        self.assert_notices((text, True, None, False), direct=lock_warning())
+        self.assert_notices(
+            lock_notice(), (text, True, None, False), dividers=("-",)
+        )
         self.assertEqual(scene_state.close_flag(path_str(DORM)), 0)
 
     def test_master_key_is_spent(self) -> None:
-        """验证持一次性万能钥匙时返回 open、除直接门锁提醒外发出等待型开门提示、消耗钥匙并解锁。"""
+        """验证持一次性万能钥匙时返回 open、经回调发出门锁提醒与开门提示、消耗钥匙并解锁。"""
         kernel_data.put(inventory.set_item, 0, MASTER_KEY, 1)
         self.assertEqual(self.walk(), "open")
         text = _("\n  ●你拿出了一次性万能钥匙，悄悄打开了门\n\n")
-        self.assert_notices((text, True, None, False), direct=lock_warning())
+        self.assert_notices(
+            lock_notice(), (text, True, None, False), dividers=("-",)
+        )
         self.assertEqual(inventory.items(0)[MASTER_KEY], 0)
         self.assertEqual(scene_state.close_flag(path_str(DORM)), 0)
 
     def test_no_key_leaves_door_locked(self) -> None:
-        """验证无钥匙时返回 door_lock、仅产生直接门锁提醒、不发回调提示且门锁标记为 1。"""
+        """验证无钥匙时返回 door_lock、经回调仅发出门锁分隔线与提醒且门锁标记为 1。"""
         self.assertEqual(self.walk(), "door_lock")
-        self.assert_notices(direct=lock_warning())
+        self.assert_notices(lock_notice(), dividers=("-",))
         self.assertEqual(scene_state.close_flag(path_str(DORM)), 1)
 
 
@@ -363,21 +390,17 @@ def ui_imports(source: str | bytes, path: str) -> list[tuple[int, str]]:
     return sorted(found)
 
 
-def lock_warning() -> tuple[Drawn, ...]:
+def lock_notice() -> Notice:
     """
-    构造玩家走向锁着的 102 号宿舍门前时，进门判定在回调外直接绘制的门锁提醒记录。
+    构造玩家走向锁着的 102 号宿舍门前时，进门判定经 ui_hooks 发出的门锁提醒参数元组。
     Return arguments:
-    tuple[Drawn, ...] -- 分隔线的 LineDraw 记录与等待型 WaitDraw 门锁提醒记录
+    Notice -- 按配置文本宽度排版的等待型门锁提醒参数元组
     """
-    width = normal_config.config_normal.text_width
     name = constant.scene_data[path_str(DORM)].scene_name
     text = _(
         "\n  ●目标移动房间——{0}，当前门是锁着的，需要钥匙或其他方法进入\n"
     ).format(name)
-    return (
-        ("LineDraw", width, "standard", "-"),
-        ("WaitDraw", width, "standard", text),
-    )
+    return (text, True, None, True)
 
 
 def path_str(path: list[str]) -> str:

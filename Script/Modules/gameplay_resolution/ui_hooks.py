@@ -1,12 +1,10 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供六类回调的登记与调用入口。
-六类回调用于输出提示文本、输出数值变化、绘制图片、切换面板、向玩家确认提问，以及查询隐奸中显示非H指令的开关。
+本模块提供八类回调的登记与调用入口，分别用于输出提示文本、数值变化、图片、分隔线、富文本口上，
+以及切换面板、确认提问与查询隐奸中显示非H指令的开关。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，提示、数值变化、图片与面板切换四类调用入口不执行任何操作。
-未登记回调时，emit_confirm 返回 True。
-未登记回调时，hidden_sex_show_non_h 返回 False。
+未登记回调时，前六类输出与切换入口不执行操作，emit_confirm 返回 True，hidden_sex_show_non_h 返回 False。
 """
 
 from collections.abc import Callable
@@ -58,6 +56,29 @@ class Delta(Protocol):
         """
 
 
+class RichTalk(Protocol):
+    """富文本口上回调的函数签名协议。"""
+
+    def __call__(
+        self,
+        text: str,
+        *,
+        base_style: str,
+        wait_flag: bool,
+        trailing_wait: bool,
+    ) -> None:
+        """
+        接收一段含富文本标签的口上文本及其显示选项并完成输出。
+        Keyword arguments:
+        text -- str，要输出的富文本口上文本
+        base_style -- str，无行内标签时的基础样式名
+        wait_flag -- bool，为真时在换行处等待玩家确认
+        trailing_wait -- bool，为真时在末尾追加一次换行并等待玩家确认
+        Return arguments:
+        None -- 无返回值
+        """
+
+
 type PanelSwitch = Callable[[int], None]
 """ 面板切换回调函数类型，接收目标面板编号。 """
 _notices: list[Notice] = []
@@ -68,6 +89,12 @@ type Image = Callable[[str], None]
 """ 图片绘制回调函数类型，接收图片名。 """
 _images: list[Image] = []
 """ 按登记顺序保存的图片绘制回调列表。 """
+type Divider = Callable[[str], None]
+""" 分隔线绘制回调函数类型，接收用于平铺的分隔字符。 """
+_dividers: list[Divider] = []
+""" 按登记顺序保存的分隔线绘制回调列表。 """
+_rich_talks: list[RichTalk] = []
+""" 按登记顺序保存的富文本口上回调列表。 """
 _panel_switches: list[PanelSwitch] = []
 """ 按登记顺序保存的面板切换回调列表。 """
 type ToggleQuery = Callable[[], bool]
@@ -244,3 +271,65 @@ def emit_confirm(text: str) -> bool:
     bool -- 未登记回调时返回 True，全部已登记回调返回真值时也返回 True，任一回调返回假值时返回 False
     """
     return all(fn(text) for fn in _confirms)
+
+
+def on_divider(fn: Divider) -> Divider:
+    """
+    登记一个分隔线绘制回调，可作为装饰器使用。
+    Keyword arguments:
+    fn -- Divider，要登记的分隔线绘制回调函数
+    Return arguments:
+    Divider -- 原样返回传入的 fn
+    """
+    _dividers.append(fn)
+    return fn
+
+
+def emit_divider(char: str = "-") -> None:
+    """
+    按登记顺序调用已登记的分隔线绘制回调，未登记时不执行操作。
+    Keyword arguments:
+    char -- str，分隔线平铺字符，默认为 "-"
+    Return arguments:
+    None -- 无返回值
+    """
+    for fn in _dividers:
+        fn(char)
+
+
+def on_rich_talk(fn: RichTalk) -> RichTalk:
+    """
+    登记一个富文本口上回调，可作为装饰器使用。
+    Keyword arguments:
+    fn -- RichTalk，要登记的富文本口上回调函数
+    Return arguments:
+    RichTalk -- 原样返回传入的 fn
+    """
+    _rich_talks.append(fn)
+    return fn
+
+
+def emit_rich_talk(
+    text: str,
+    *,
+    base_style: str = "standard",
+    wait_flag: bool = True,
+    trailing_wait: bool = False,
+) -> None:
+    """
+    按登记顺序调用已登记的富文本口上回调，未登记时不执行操作。
+    Keyword arguments:
+    text -- str，要输出的富文本口上文本
+    base_style -- str，无行内标签时的基础样式名，默认为 "standard"
+    wait_flag -- bool，为真时在换行处等待玩家确认，默认为 True
+    trailing_wait -- bool，为真时在末尾追加一次换行并等待玩家确认，默认为 False
+    Return arguments:
+    None -- 无返回值
+    """
+    for fn in _rich_talks:
+        fn(
+            text,
+            base_style=base_style,
+            wait_flag=wait_flag,
+            trailing_wait=trailing_wait,
+        )
