@@ -10,13 +10,14 @@ import random
 from types import FunctionType
 
 from Script.Config import game_config
-from Script.Core import constant, game_type, get_text
+from Script.Core import constant, get_text
 from Script.Design import attr_calculation, basement, game_time, handle_premise
 from Script.Design import map_handle, virgin_break_gate
 from Script.Modules.domains import abilities, activity, body_manage, chara_life
 from Script.Modules.domains import facility, flags, identity, needs, prison
 from Script.Modules.domains import work
 from Script.Modules.gameplay_resolution import instruct_filter, ui_hooks
+from Script.Modules.gameplay_resolution import roster_lifecycle_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -131,7 +132,6 @@ def escape_success(character_id: int) -> None:
     Return arguments:
     None -- 无返回值
     """
-    from Script.Settle import default
     from Script.System.Field_Commission_System import field_commission_function
 
     character_data = identity.of(character_id)
@@ -143,12 +143,7 @@ def escape_success(character_id: int) -> None:
     )
     flags.set(character_id, escaping=True)
     prison.release(character_id)
-    default.handle_chara_off_line(
-        character_id,
-        1,
-        change_data=game_type.CharacterStatusChange(),
-        now_time=game_time.now(),
-    )
+    roster_lifecycle_service.chara_off_line(character_id)
     field_commission_function.create_capture_fugitive_commission(character_id)
 
 

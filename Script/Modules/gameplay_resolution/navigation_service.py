@@ -10,10 +10,11 @@
 from types import FunctionType
 
 from Script.Config import game_config
-from Script.Core import game_type, get_text
+from Script.Core import get_text
 from Script.Design import game_time
 from Script.Modules.domains import achievement, diplomacy, location, visitor
 from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
+from Script.Modules.gameplay_resolution import roster_lifecycle_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -31,8 +32,6 @@ def judge_arrive() -> bool:
     Return arguments:
     bool -- 本次调用完成抵达结算时返回 True，否则返回 False
     """
-    from Script.Settle import default
-
     going = location.move()
     if going is not None:
         target_scene_id, arrive_time = going
@@ -46,22 +45,16 @@ def judge_arrive() -> bool:
             if now_scene_id in diplomacy.table():
                 now_diplomat_chara_id = diplomacy.of(now_scene_id)["diplomat"]
                 if now_diplomat_chara_id != 0:
-                    default.handle_chara_off_line(
-                        now_diplomat_chara_id,
-                        1,
-                        change_data=game_type.CharacterStatusChange(),
-                        now_time=game_time.now(),
+                    roster_lifecycle_service.chara_off_line(
+                        now_diplomat_chara_id
                     )
             if target_scene_id in diplomacy.table():
                 target_diplomat_chara_id = diplomacy.of(target_scene_id)[
                     "diplomat"
                 ]
                 if target_diplomat_chara_id != 0:
-                    default.handle_chara_on_line(
-                        target_diplomat_chara_id,
-                        1,
-                        change_data=game_type.CharacterStatusChange(),
-                        now_time=game_time.now(),
+                    roster_lifecycle_service.chara_on_line(
+                        target_diplomat_chara_id, game_time.now()
                     )
             ui_hooks.emit_notice(
                 _("\n罗德岛已抵达目的地：{0}\n").format(target_scene_name),
