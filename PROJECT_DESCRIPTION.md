@@ -127,7 +127,7 @@ black .
 | `example/` | 模板/测试用例：事件、口上、外勤委托、富文本、纸娃娃文本 |
 | `save/` | 存档目录（被 gitignore） |
 | `.github/` | GitHub Actions 工作流、ISSUE 模板 |
-| `docs/` | 系统与工作流文档（`数据处理工作流/`，见 §30.2）、角色 ID 重构文档（`重构文档/`）、文本创作参考资料（`authoring/`，见 §30.4） |
+| `docs/` | 系统与工作流文档（`数据处理工作流/`，见 §30.2）、文本创作参考资料（`authoring/`，见 §30.4） |
 | `old_data/`, `profiling/`, `profiling_output/` | 历史数据、性能分析与补丁、profiling 结果 |
 | `dist/`, `build/` | PyInstaller 打包产物（被 gitignore） |
 | `update.log` | 完整更新日志 |
@@ -990,12 +990,10 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 
 ### 30.3 `Script/System/*` 内设计文档
 
-- `Cooking_System/烹饪系统说明文档.md`
-- `Dormitory_System/宿舍管理系统设计文档.md`, `实现步骤.md`
-- `Field_Commission_System/外勤委托系统.md`, `剧情总结工作流.md`, `剧情转外勤委托工作流.md`
-- `Instruct_System/指令系统整体逻辑.md`, `TK模式指令面板绘制.md`
-- `Medical_System/医疗经营系统.md`, `医疗经营系统实现流程.md`
-- `Sex_System/drunk_sex_plan.md`
+- `Script/System/Dormitory_System/宿舍管理系统设计文档.md`
+- `Script/System/Instruct_System/指令系统整体逻辑.md`
+- `Script/System/Instruct_System/TK模式指令面板绘制.md`
+- `Script/System/Item_System/道具系统设计文档.md`
 
 ### 30.4 `docs/authoring/` 文本创作参考资料
 

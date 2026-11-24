@@ -4,7 +4,7 @@
 对照基线 tools/lint_comments_baseline.json 检查未排除的 .py/.pyi 与文档：
 1. 每文件 # 注释数不超基线（未列入为 0），首行 shebang 与第 1/2 行编码声明豁免，抑制指令计入。
 2. 文档字符串经 inspect.cleandoc 清理后不超 500 字符，基线条目不超所记长度。
-3. Script/ 注释与文档字符串及 DOC_FILES（除 ARCHIVE）禁用旧缓存类及其字段名。
+3. Script/ 注释与文档字符串及 DOC_FILES 禁用旧缓存类及其字段名。
 
 用法：
   python3 tools/lint_comments.py [check]
@@ -32,7 +32,6 @@ CAP = 500
 DOC_FILES = tuple(
     "CLAUDE.md CLAUDE_cn.md CONTRIBUTING.md PROJECT_DESCRIPTION.md README*.md REVIEW.md docs/*.md Script/*.md".split()
 )
-ARCHIVE = ("docs/重构文档/*",)
 LEGACY_SCOPE = "Script/"
 CACHE_FIELDS = """
 achievement ai_chat_api_key ai_chat_setting ai_setting all_npc_position_panel_move_type
@@ -295,7 +294,7 @@ def measure(root: Path) -> Measure:
                     for hit, name in legacy_names(line, text):
                         result.legacy.append(f"{path}:{hit}: {name}")
     for path in files:
-        if _matches(path, DOC_FILES) and not _matches(path, ARCHIVE):
+        if _matches(path, DOC_FILES):
             text = (root / path).read_text(encoding="utf-8-sig")
             for hit, name in legacy_names(1, text):
                 result.legacy.append(f"{path}:{hit}: {name}")
