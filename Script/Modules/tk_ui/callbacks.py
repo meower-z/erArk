@@ -3,11 +3,12 @@ Tk 界面向后端登记的回调函数
 ===========================
 本模块向 playthrough 登记设定表补齐时的提示绘制函数。
 本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
-本模块向 gameplay_resolution.ui_hooks 登记提示文本、数值变化与图片的绘制函数。
-本模块向 gameplay_resolution.ui_hooks 登记面板切换函数与隐奸中显示非H指令的开关查询函数。
+本模块向 gameplay_resolution.ui_hooks 登记提示文本、数值变化与图片绘制函数，
+以及面板切换与隐奸中显示非H指令开关查询函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
 本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
 本模块向 gameplay_resolution.hidden_sex_service 登记隐奸被发现面板的绘制函数。
+本模块向 gameplay_resolution.pregnancy_hooks 登记生产与破壳面板绘制函数。
 本模块不登记内核钩子。
 load_order 导入本模块时完成上述登记。
 """
@@ -21,6 +22,7 @@ from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Modules.gameplay_resolution import hidden_sex_service
+from Script.Modules.gameplay_resolution import pregnancy_hooks
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
 from Script.Protocol.delta_events import DeltaEntry, DeltaEvent
@@ -213,4 +215,27 @@ def draw_hidden_sex_discovered(
         normal_config.config_normal.text_width,
         discoverer_id,
         from_hidden_sex_flag=from_hidden_sex_flag,
+    ).draw()
+
+
+@pregnancy_hooks.on_born
+def draw_born_event(
+    character_id: int,
+    *,
+    egg_mode: bool = False,
+    egg_id_list: list[int] | None = None,
+) -> None:
+    """
+    按传入参数构造 born_event_panel.Born_Panel 并调用其 draw 方法绘制生产或破壳事件面板。
+    Keyword arguments:
+    character_id -- int，母亲角色编号
+    egg_mode -- bool，为 True 时表示卵生破壳模式，默认为 False
+    egg_id_list -- list[int] | None，本次破壳的卵编号列表，默认为 None
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.System.Pregnancy_System import born_event_panel
+
+    born_event_panel.Born_Panel(
+        character_id, egg_mode=egg_mode, egg_id_list=egg_id_list
     ).draw()
