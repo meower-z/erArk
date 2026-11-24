@@ -11,9 +11,9 @@ from types import FunctionType
 
 from Script.Core import get_text
 from Script.Config import game_config
-from Script.UI.Moudle import draw
 from Script.System.Medical_System import medical_constant
 from Script.Modules.domains import medical
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -329,7 +329,7 @@ def _format_medical_report_entry(
 def render_medical_reports(
     reports: list[dict[str, Any]],
     *,
-    width: int,
+    width: int | None = None,
     draw_flag: bool = True,
     day_past_flag: bool = False,
     empty_message: str | None = None,
@@ -338,8 +338,10 @@ def render_medical_reports(
 
     参数:
         reports (List[Dict[str, Any]]): 需要渲染的日志条目列表。
-        width (int): 输出文本的宽度设置。
-        draw_flag (bool): 为 True 时立即绘制到界面，否则仅返回文本。
+        width (int | None): 接受但不读取的可选参数。需要自定义宽度的调用方应传
+            draw_flag=False 并自行绘制返回文本。
+        draw_flag (bool): 为 True 时经 ui_hooks.emit_notice 按配置文本宽度发出一条等待型提示，
+            为 False 时仅返回文本。
         day_past_flag (bool): 判断是否为每日结算日志。
         empty_message (Optional[str]): 日志为空时的提示文本。
     返回:
@@ -351,10 +353,7 @@ def render_medical_reports(
         fallback = empty_message or _("\n暂无医疗经营日志记录。\n")
         text = fallback if fallback.endswith("\n") else fallback + "\n"
         if draw_flag:
-            wait_draw = draw.WaitDraw()
-            wait_draw.width = width
-            wait_draw.text = text
-            wait_draw.draw()
+            ui_hooks.emit_notice(text, wait=True, use_text_width=True)
         return text
 
     # 逐条格式化日志并使用分隔线拼接，保持展示一致
@@ -365,10 +364,7 @@ def render_medical_reports(
     text = "\n" + "\n--------------------\n".join(sections) + "\n"
 
     if draw_flag:
-        wait_draw = draw.WaitDraw()
-        wait_draw.width = width
-        wait_draw.text = text
-        wait_draw.draw()
+        ui_hooks.emit_notice(text, wait=True, use_text_width=True)
 
     return text
 
