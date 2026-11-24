@@ -57,7 +57,7 @@
   "Script/Design/instuct_judege.py": 80,
   "Script/Design/map_handle.py": 34,
   "Script/Design/second_behavior.py": 120,
-  "Script/Design/settle_behavior.py": 151,
+  "Script/Design/settle_behavior.py": 127,
   "Script/Design/talk.py": 153,
   "Script/Design/talk_image.py": 3,
   "Script/Kernel/core.py": 3,

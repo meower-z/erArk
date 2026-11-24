@@ -197,7 +197,7 @@ Script/
 │   └── ...
 ├── Settle/                 # 结算实现
 │   ├── default.py          # 376 个一段结算处理函数
-│   ├── Second_effect.py    # 158 个二段结算处理函数
+│   ├── Second_effect.py    # 155 个二段结算处理函数
 │   ├── common_default.py   # 通用基础结算（HP/MP/状态/好感/信赖/高潮等）
 │   ├── default_cloth.py    # 服装结算
 │   ├── item_effect.py      # 道具效果
@@ -526,7 +526,7 @@ Script/
 ### 12.2 二段结算
 
 - `Script/Design/second_behavior.py::check_second_effect()`
-- `Script/Settle/Second_effect.py` 定义 158 个二段处理函数
+- `Script/Settle/Second_effect.py` 定义 155 个二段处理函数（`Nothing`、`Must_Show`、`Must_Settle` 三个空白标记效果在 `Script/Design/settle_behavior.py` 注册）
 - 用于事后连锁：刻印获得、初吻/初夜、高潮经验、多周目素质、特殊状态转变等
 - 玩家对 NPC 行动后额外对目标做二段结算；解除时停时对全部 NPC 做二段结算
 
