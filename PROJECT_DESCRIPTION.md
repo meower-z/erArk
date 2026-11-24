@@ -647,7 +647,7 @@ Script/
 | 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py`, `Modules/domains/production.py` | `ProductFormula.csv` |
 | 资源交易 | `UI/Panel/resource_exchange_panel.py`, `Modules/domains/economy.py`, `Modules/domains/warehouse.py` | `Resource.csv`, `Restaurant.csv` |
 | 装备维护 | `UI/Panel/equipmen_panel.py`, `Modules/domains/maintenance.py` | `Equipment_*` 系列 |
-| 载具管理 | `UI/Panel/manage_vehicle_panel.py`, `Modules/domains/commission.py` | `Vehicle.csv` |
+| 载具管理 | `UI/Panel/manage_vehicle_panel.py`, `Modules/gameplay_resolution/vehicle_service.py`, `Modules/domains/commission.py` | `Vehicle.csv` |
 | 宿舍管理 | `System/Dormitory_System/*`, `Modules/domains/dormitory.py` | 宿舍场景地图 |
 | 医疗经营 | `System/Medical_System/*`, `Modules/domains/medical.py`, `Modules/domains/medical_patient.py` | `Medical_*` 系列 |
 | 外勤委托 | `System/Field_Commission_System/*`, `Modules/domains/commission.py` | `Commission.csv` |
