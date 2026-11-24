@@ -117,7 +117,7 @@ Script/System/Field_Commission_System/field_commission_function.py	<module>	modu
 Script/System/Field_Commission_System/field_commission_panel.py	<module>	module-lines	lines=1513
 Script/System/First_Record_System/first_record_panel.py	<module>	module-lines	lines=661
 Script/System/Instruct_System/Instruct.py	<module>	module-lines	lines=868
-Script/System/Instruct_System/handle_instruct.py	<module>	module-lines	lines=4733
+Script/System/Instruct_System/handle_instruct.py	<module>	module-lines	lines=4546
 Script/System/Medical_System/clinic_doctor_service.py	<module>	module-lines	lines=637
 Script/System/Medical_System/clinic_patient_management.py	<module>	UP035	count=1
 Script/System/Medical_System/clinic_patient_management.py	<module>	module-lines	lines=896

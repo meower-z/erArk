@@ -13,8 +13,8 @@ from Script.Design import attr_calculation, attr_text, game_time
 from Script.Design import handle_premise, second_behavior, talk
 from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
-from Script.System.Instruct_System import handle_instruct
 from Script.Modules.gameplay_resolution import hypnosis_service
+from Script.Modules.gameplay_resolution import instruct_plan_service
 from Script.Modules.domains import abilities, action_info, activity
 from Script.Modules.domains import chara_profile, flags, h_meters, hypnosis
 from Script.Modules.domains import modes, needs, relations, roster, status, work
@@ -751,7 +751,7 @@ def handle_event_data(
                 A = effect_all_value_str.split("_", 1)[0]
                 behavior_id = effect_all_value_str.split("_", 1)[1]
                 effect_all_value_list = [A, behavior_id]
-                handle_instruct.handle_comprehensive_state_effect(
+                instruct_plan_service.handle_comprehensive_state_effect(
                     effect_all_value_list,
                     character_id,
                     add_time,
