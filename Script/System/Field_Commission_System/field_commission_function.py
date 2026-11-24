@@ -2,24 +2,17 @@
 
 from types import FunctionType
 from Script.Core import game_type, get_text
-from Script.UI.Moudle import draw
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
 from Script.Modules.domains import abilities, achievement, activity, commission
 from Script.Modules.domains import country, flags, location, recruit, relations
 from Script.Modules.domains import roster, warehouse, identity, modes
 from Script.Modules.gameplay_resolution import equipment_service, prison_service
-from Script.Modules.gameplay_resolution import vehicle_service
+from Script.Modules.gameplay_resolution import ui_hooks, vehicle_service
 import random
 
 _: FunctionType = get_text._
 """ 翻译api """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 
 def format_commission_reputation_for_display(value: float) -> str:
@@ -93,13 +86,14 @@ def get_commission_demand_and_reward(
     if demand_or_reward and deduction_or_increase:
         if commission_id == 1104:
             commission.add_vehicle(51, owned=1)
-            info_draw = draw.WaitDraw()
-            info_draw.text = _("\n获得了一辆新的载具：{0}\n").format(
-                game_config.config_vehicle[51].name
+            ui_hooks.emit_notice(
+                _("\n获得了一辆新的载具：{0}\n").format(
+                    game_config.config_vehicle[51].name
+                ),
+                wait=True,
+                style="gold_enrod",
+                use_text_width=True,
             )
-            info_draw.style = "gold_enrod"
-            info_draw.width = window_width
-            info_draw.draw()
         # 抓捕
         elif "追捕" in commission_data.reward:
             from Script.Settle import default
@@ -504,11 +498,9 @@ def judge_field_commission_finish() -> None:
 
     # 绘制完成委托
     if len(draw_text):
-        info_draw = draw.WaitDraw()
-        info_draw.text = draw_text
-        info_draw.style = "gold_enrod"
-        info_draw.width = window_width
-        info_draw.draw()
+        ui_hooks.emit_notice(
+            draw_text, wait=True, style="gold_enrod", use_text_width=True
+        )
 
 
 def settle_recruit_new_chara(commision_id: int) -> str:
