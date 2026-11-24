@@ -1,6 +1,6 @@
 # 生长养成系统回归测试
 
-覆盖 `Script/System/Education_System/` 及其全部外部挂接点（结算器、状态机、前提、面板、存档、口上与事件数据）的无头回归套件。系统说明见 `docs/数据处理工作流/生长养成系统.md` §16。
+覆盖 `Script/System/Education_System/` 及其全部外部挂接点（结算器、状态机、前提、面板、存档、口上与事件数据）的无头回归套件。
 
 本套件用自己的公共引导 `_bootstrap.py`。其他系统的新测试写进 `tests/fast/` 或 `tests/slow/`，不用 `_bootstrap.py`。
 
@@ -40,7 +40,7 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 | `test_save_compat.py` | `CHILD_GROWTH` 字段级回填（含 Plan 30 的 `skip_count` / `skip_caught_day` / `semester_base_work_type`、Plan 31 的 `skip_class_day` / `sex_class_count` 补默认值）与成绩单迁移、教育区娱乐编号 175~178→152~155 的读档迁移（模板 / 单孩覆盖 / 娱乐槽位）、`save/` 下全部真实存档只读载入后的结构、学期结算幂等、四个面板可画；Plan 32：L22 旧履历的萝莉 1 / 20 / 26 读档改名为期末 17 / 18 / 19（孩子与罗德岛两处、幂等、新 uid 已有记录不覆盖）；本机没有 `save/` 或没有存档时跳过真实存档一段；Plan 32 实施复审补：迁移前后的残留检查，真实存档载入后没有萝莉 1 / 20 / 26 的残留 |
 | `test_behavior_loop.py` | 模式 B：在女儿最多的真实存档上排课，从 08:40（到岗时间）起带护栏跑六轮行为循环，检查点落在每节课中段（节次交界处人人都在换教室）：收敛、学生岗的女儿进教室（课表只对学生岗生效，存档里改了岗的女儿不计入）、本节有课的教师在课表上那间教室授课、上午四节每人平均 ≥ 3 节出勤；再预约一节下午的实操课，断言开课时必修生都已离开上一节的教室、且已有人在实操教室等（路上撞上需求会晚到，所以不要求全员到场）；再跑一次跨天结算；Plan 32：L4 学生截短排在实时结算之前、截掉的那一段只算一遍（真实存档、真实行为循环）；本机没有 `save/` 或没有可读存档时整份跳过（PASS=0，行为循环的验收改看 `test_class_ai` 的循环段） |
 
-## fixture 陷阱（本套件新增的，通用的见 `.agents/skills/headless-game-test/SKILL.md`）
+## fixture 陷阱
 
 - 脚本从 `_bootstrap` 逐个导入用到的名字（含翻译函数 `_`），不用 `from _bootstrap import *`，因为 ruff 的 F403 规则会报出星号导入的那一行。
 - `behavior.start_time` 默认是公元 1 年，`get_class_period` 读的就是它——改游戏时间一律用 `set_time()`，它会同步全部角色。
@@ -63,7 +63,7 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 - 造「今天已翘课」的夹具要同时写 `skip_class_flag = True` 与 `skip_class_day = 当天的 toordinal()`（549 现在两样一起写）：只挂 flag 读作前一天的残留、不算今天翘课，翘课日的新路径一条都走不到（Plan 31 两份复现脚本改后核对时踩到）。
 - 按 cid 查 `game_config.config_talk` / `config_talk_premise_data` 时，口上的 cid 是「上级目录名_文件名 + cid」：`data/talk/daily/check_report_card.csv` 的 1014 是 `"daily_check_report_card1014"`（`buildconfig.build_csv_config`），只写文件名会静默落空。也别按前提串去找口上：前提一改就一条都找不到，`all([])` 恒真（Plan 31）。
 - 真实的成长结算（`pregnancy_handle._settle_baby_grow_up` / `check_grow_to_loli` / `check_grow_to_girl`）会调 `talk.must_show_talk_check` 画必显二段的口上，夹具里打桩成空函数、跑完还原；`_settle_baby_grow_up` 还读教师岗的岗位名册（`work.roster`，没有人时为空）、按幼女默认池重刷当天娱乐，先 `open_all_classroom()`、补派对日表（`test_prenatal_baby.py` 的写法）。
-- 学生赶去上课的截短（Plan 32 L4）已从 `judge_interrupt_character_behavior` 挪到 `handle_npc_ai.judge_student_leave_truncate`，由 `character_behavior` 的 NPC 分支在实时结算之前调：断言截出来的时长直接调它；探针只包 `judge_interrupt_character_behavior` 的会漏掉截短（`headless-game-test` 的包装已补）。
+- 学生赶去上课的截短（Plan 32 L4）已从 `judge_interrupt_character_behavior` 挪到 `handle_npc_ai.judge_student_leave_truncate`，由 `character_behavior` 的 NPC 分支在实时结算之前调：断言截出来的时长直接调它；探针只包 `judge_interrupt_character_behavior` 的会漏掉截短。
 - 自建的行为循环（不经 `run_one_round`）要把参与的 NPC 的交互对象设回自己：`judge_character_status_time_over` 按「交互对象不在场」把行为的结束改写为这一步的结束，时间线会整段跳过（`test_behavior_loop.py` 的 L4 段）。
 - `_bootstrap` 导出的 `pl` 是建夹具时读出的 `identity.Identity`。读档（`save_handle.input_load_save`）会替换角色身份表。读档后通过 `identity.of(0)` 读取玩家身份。
 - 跑真实的开课效果（383 的 10010 / 10014）时，课上玩家的 H 动作（含 6021 下课）走 `settle_behavior` 的群交分支、读 `prison.setting(12)`；监禁调教设置默认全 0，无需手动初始化。
@@ -74,3 +74,14 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 - 场景内角色列表由 `scene_state.occupants(path)` 按角色 id 升序返回，从场景里取角色当交互对象或按顺序断言时可依赖升序结果，但仍建议核对目标 cid 与预期一致。
 - 用真实循环让孩子翘课、挂上 flag 时，玩家别和她在同一个场景：她自己结算时就会当场派 623（翘课被抓），flag 清掉、记下被抓日期（Plan 32 重建复现脚本时踩到）。
 - `test_behavior_loop` 与 `test_save_compat` 的真实存档段要仓库根目录的 `save/` 里有存档。存档不入库，换机器、换目录后没有时 `test_behavior_loop` 整份 `skip()`，`test_save_compat` 打印「跳过」、只跳过真实存档那一段；先判目录再调 `save_handle.judge_save_file_exist`，它经 `get_save_dir_path` 会顺手建出 `save` 目录。
+
+### 通用陷阱
+
+- **全局系统设置（手写夹具时注意）**：默认的 `game_type.System_Setting()` 内部表为空，数值结算会直接读取其中的条目。手写夹具时需设置 `normal_config.system_setting = attr_calculation.get_system_setting_zero()`。本套件的 `_bootstrap.py` 已在引导阶段完成该项初始化。
+- **角色基础字段（手写夹具时注意）**：游戏代码对角色的多项字典直接按下标读取，而这些字典默认为空。本套件的 `make_character` 会预填好感度 `{0: 0}`、助理服务表、归零的能力与素质表、素质 `121 = 1`、岗位与宿舍，手写角色夹具时可照此补齐。
+- **真实场景路径**：场景路径须对应真实场景，经 `map_handle.get_map_system_path_str_for_list(path)` 转换后必须是 `constant.scene_data` 中的键。本套件的 `_bootstrap.py` 已提供 `SCENE_DORM` 与 `scene_str`。手写夹具时需自行保证路径有效。
+- **只读纪律**：`save_handle.establish_save()` 会写入 `save.json`。测试脚本不得自行调用该函数。行为循环测试通过内核 `core.step()` 推进游戏。玩家睡觉后的自动存档会在玩家下次选择行动时调用 `save_handle.establish_save`。跨越玩家睡觉前，测试须先将 `save_handle.establish_save` 替换为不写文件的桩函数。具体写法见 `tools/verify/headless_harness_template.py`。
+- **拦截临时外勤写盘**：`field_commission_function.create_temp_commission` 会向 `data/csv/Commission.csv` 追加新行。可能触发临时外勤的测试（如囚犯逃跑流程）必须隔离该写盘操作，以保持 `data/csv/Commission.csv` 不变。若测试需要检查临时委托已在内存中注册，应保留真实的 `create_temp_commission` 并只替换该模块的文件写入。具体写法见 `tools/verify/headless_harness_template.py`。
+- **结算器的 `add_time` 门控**：`Script/Settle/default.py` 中有大量结算函数在入口处检查 `if not add_time` 并直接返回。传入 `add_time = 0` 会让结算器直接跳过主体逻辑，可能使断言因错误原因通过。
+- **长耗时脚本输出**：运行耗时较长的测试脚本时，应将输出重定向到文件后再读取。不要通过管道直接接 `head` 或 `tail`，以免输出在进程退出前被缓冲隐藏。
+- **仓库内的通用无头模板**：在教育套件之外编写独立无头测试时，可参考两份自带头部用法说明的模板文件。`tools/verify/headless_unit_template.py` 基于 `tests/world.py` 的 `MinimalWorld`，面向不读存档的函数级单元测试。`tools/verify/headless_harness_template.py` 基于 `FullWorld`，面向读档后的行为循环测试。
