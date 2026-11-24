@@ -9287,7 +9287,7 @@ def handle_eat_add_just(
     """
     if not add_time:
         return
-    from Script.System.Cooking_System.food_bag_panel import (
+    from Script.Modules.gameplay_resolution.food_effects import (
         calculate_food_effects,
     )
     from Script.System.Sex_System.drunk_sex_common import add_drunk_point

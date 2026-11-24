@@ -1,8 +1,7 @@
 """
-食物背包面板：按食物分组显示背包里的食物，并结算食物对角色的影响
+食物背包面板：按页签与分组显示背包中的食物，供玩家展开选择并触发进食。
 """
 
-import random
 from types import FunctionType
 from uuid import UUID
 from Script.Core import get_text, constant, flow_handle
@@ -20,77 +19,6 @@ line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
-
-
-def calculate_food_effects(
-    character_id: int,
-    add_time: int,
-) -> tuple[int, int]:
-    """
-    食物结算，计算食物对角色的状态值和体力气力的影响\n
-    Keyword arguments:
-    character_id -- 角色id
-    add_time -- 结算时间
-    Return arguments:
-    state_add -- 状态值变更量
-    hpmp_add -- 体力气力变更量
-    """
-
-    # 获取角色数据
-    now_food = activity.behavior(character_id).target_food
-
-    # 根据食物品质获得调整系数
-    food_quality = now_food.quality if now_food is not None else 1
-    # 食谱等级大于8的按1级结算
-    if food_quality > 8:
-        food_quality = 1
-    # 品质最小为1
-    food_quality = max(food_quality, 1)
-    quality_adjust = (food_quality / 2) ** 2
-    # 获取食物菜谱难度等级
-    cook_difficulty = 1
-    if now_food is not None and now_food.recipe in game_config.config_recipes:
-        cook_difficulty = max(
-            game_config.config_recipes[now_food.recipe].difficulty, 1
-        )
-    # 时间加成
-    add_time_adjust: float = 1
-
-    # 检测是否是手制的食物
-    if now_food is not None:
-        # 手动制作的食物则额外加成
-        if len(now_food.maker):
-            quality_adjust *= 1.5
-        # 获取食谱id
-        food_recipe_id = now_food.recipe
-        # 获取食谱数据
-        if food_recipe_id in game_config.config_recipes:
-            food_recipe_data = game_config.config_recipes[food_recipe_id]
-            # 获取食谱的制作时间
-            food_recipe_time = food_recipe_data.time
-            # 如果时间为999，则按15分钟计算
-            if food_recipe_time == 999:
-                food_recipe_time = 15
-            # 根据该时间与60分钟的比例来计算加成时间
-            add_time_adjust = food_recipe_time / 60
-            # 封顶1.5倍加成
-            add_time_adjust = min(add_time_adjust, 1.5)
-
-    # 状态值变更
-    state_add = int(
-        add_time
-        * quality_adjust
-        * cook_difficulty
-        * add_time_adjust
-        * random.uniform(0.8, 1.2)
-    )
-
-    # 体力气力变更
-    hpmp_add = int(
-        25 * cook_difficulty * add_time_adjust * random.uniform(0.8, 1.2)
-    )
-
-    return state_add, hpmp_add
 
 
 class FoodBagPanel:
