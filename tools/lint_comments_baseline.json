@@ -1,10 +1,5 @@
 {
  "comments": {
-  ".agents/skills/headless-game-test/harness_template.py": 35,
-  ".agents/skills/headless-game-test/unit_test_template.py": 40,
-  ".agents/skills/system-review-round/dead_code_scan.py": 3,
-  ".agents/skills/system-review-round/repro_template.py": 3,
-  ".agents/skills/system-review-round/wf_watch.py": 5,
   "Script/Config/character_config.py": 40,
   "Script/Config/game_config.py": 105,
   "Script/Config/map_config.py": 56,
@@ -316,11 +311,6 @@
   "tools/verify/tk_probe.py": 2
  },
  "docstrings": {
-  ".agents/skills/headless-game-test/harness_template.py::<module>": 683,
-  ".agents/skills/headless-game-test/unit_test_template.py::<module>": 523,
-  ".agents/skills/system-review-round/dead_code_scan.py::<module>": 660,
-  ".agents/skills/system-review-round/repro_template.py::<module>": 579,
-  ".agents/skills/system-review-round/wf_watch.py::<module>": 624,
   "Script/Core/old_chara_to_new.py::migrate_age_and_body_type": 561,
   "Script/Core/save_handle.py::install_save": 505,
   "Script/Design/event.py::_get_event_index": 557,
@@ -381,7 +371,6 @@
   "profiling/loop_stats_patch.py::<module>": 564,
   "profiling/run_profile.py::<module>": 710,
   "profiling/ui_perf_patch.py::<module>": 592,
-  "tests/education/_bootstrap.py::<module>": 512,
   "tests/fast/test_ai_setting_global.py::<module>": 1110,
   "tests/fast/test_base_services_state.py::<module>": 602,
   "tests/fast/test_base_tallies_state.py::<module>": 555,

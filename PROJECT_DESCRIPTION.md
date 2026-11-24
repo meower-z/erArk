@@ -128,7 +128,6 @@ black .
 | `save/` | 存档目录（被 gitignore） |
 | `.github/` | GitHub Actions 工作流、ISSUE 模板 |
 | `docs/` | 系统与工作流文档（`数据处理工作流/`，见 §30.2）、角色 ID 重构文档（`重构文档/`）、文本创作参考资料（`authoring/`，见 §30.4） |
-| `.agents/skills/` | AI 代理按步骤执行的技能：`add-new-instruction`、`draw-aa-map`、`game-design-dialogue`、`headless-game-test`、`system-review-round`、`text_generation_for_instruction_code_generation`、`update-changelog` |
 | `old_data/`, `profiling/`, `profiling_output/` | 历史数据、性能分析与补丁、profiling 结果 |
 | `dist/`, `build/` | PyInstaller 打包产物（被 gitignore） |
 | `update.log` | 完整更新日志 |
