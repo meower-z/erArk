@@ -1,4 +1,4 @@
-"""二段结算中的高潮结算：解析部位绝顶行为，判断高潮的次数与程度，处理寸止的判定与解放"""
+"""二段结算中的高潮结算：判断高潮次数与高潮程度，处理寸止判定与寸止解放"""
 
 import random
 from types import FunctionType
@@ -13,40 +13,6 @@ from Script.Modules.domains import first_record, h_meters, h_state, status
 
 _: FunctionType = get_text._
 """ 翻译api """
-orgasm_degree_order = {"small": 0, "normal": 1, "strong": 2, "super": 3}
-""" 部位绝顶二段行为的程度排序，键为二段行为id中的程度后缀，值为程度序号，越大程度越高 """
-orgasm_part_to_state_id = {
-    "s": 0,
-    "b": 1,
-    "c": 2,
-    "p": 3,
-    "v": 4,
-    "a": 5,
-    "u": 6,
-    "w": 7,
-    "m": 21,
-    "f": 22,
-    "h": 23,
-}
-""" 部位绝顶二段行为的部位字母到快感状态id的反向映射 """
-
-
-def get_orgasm_part_and_degree(second_behavior_id: str) -> tuple:
-    """
-    从二段行为id中解析出部位绝顶行为所属的部位与绝顶程度
-    Keyword arguments:
-    second_behavior_id -- 二段行为id
-    Return arguments:
-    tuple -- (部位标识str, 程度序号int)，若不是部位绝顶行为则返回(None, -1)
-    """
-    # 部位绝顶行为的id格式为 {部位}_orgasm_{程度}，例如 v_orgasm_strong
-    # 由此排除掉 extra_orgasm、plural_orgasm_2、x_orgasm_edge、b_orgasm_to_milk 等非部位程度绝顶行为
-    id_split = second_behavior_id.split("_")
-    if len(id_split) != 3 or id_split[1] != "orgasm":
-        return None, -1
-    if id_split[2] not in orgasm_degree_order:
-        return None, -1
-    return id_split[0], orgasm_degree_order[id_split[2]]
 
 
 def orgasm_judge(
