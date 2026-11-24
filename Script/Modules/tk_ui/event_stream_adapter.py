@@ -1,5 +1,7 @@
 """
-叙事事件的 Tk 绘制适配器，通过 draw 绘制类输出 NarrativeEvent 与 SceneBreak。
+叙事事件的 Tk 绘制适配器，通过 draw 绘制类输出 NarrativeEvent、SceneBreak 与 DeltaEvent。
+DeltaEvent 先转为单段落 NarrativeEvent。
+summary_text 非 None 时用作段落文本，为 None 时按变化项逐行生成。
 无自定义颜色的 plain 文本段直接沿用块基础样式（标题块为 littletitle，段落块为事件 style）。
 其余角色或带 color 的文本段经 frame_style_def 注册派生样式，保留块基础样式的背景与字体。
 派生样式采用配置字号并合并基础样式与角色的加粗、下划线和斜体标记。
@@ -11,11 +13,13 @@ pause 为真时，适配器在最后一段非空文本使用 WaitDraw，各段�
 from Script.Config import game_config, normal_config
 from Script.Core import io_init
 from Script.Kernel import core
+from Script.Protocol.delta_events import DeltaEntry, DeltaEvent, DeltaValue
 from Script.Protocol.narrative_events import (
     EventMeta,
     NarrativeEvent,
     SceneBreak,
     SpanRole,
+    TextBlock,
     TextSpan,
 )
 from Script.UI.Moudle import draw
@@ -90,8 +94,49 @@ def _layout(event: NarrativeEvent) -> list[tuple[str, str | None] | str]:
     return items
 
 
+def _amount(value: DeltaValue, unit: str, signed: bool = False) -> str:
+    """
+    将一个数值变化字段格式化为带单位的文本。
+    Keyword arguments:
+    value -- DeltaValue，待格式化的取值
+    unit -- str，数值单位
+    signed -- bool，为真时正数前加 "+"，默认为 False
+    Return arguments:
+    str -- None 时返回 "—"（不带单位），其余返回取值文本加单位
+    """
+    if value is None:
+        return "\u2014"
+    if isinstance(value, str):
+        return value + unit
+    sign = "+" if signed and value > 0 else ""
+    return f"{sign}{value}{unit}"
+
+
+def _delta_text(entries: tuple[DeltaEntry, ...]) -> str:
+    """
+    按变化项逐行生成显示文本，每行以换行符结尾。
+    Keyword arguments:
+    entries -- tuple[DeltaEntry, ...]，数值变化项元组
+    Return arguments:
+    str -- 每项一行的文本，前后值均非 None 时在行尾附加前后值
+    """
+    lines: list[str] = []
+    for entry in entries:
+        line = (
+            f"{entry.target_label} {entry.field}："
+            f"{_amount(entry.delta, entry.unit, signed=True)}"
+        )
+        if entry.before is not None and entry.after is not None:
+            line += (
+                f"（{_amount(entry.before, entry.unit)} → "
+                f"{_amount(entry.after, entry.unit)}）"
+            )
+        lines.append(line + "\n")
+    return "".join(lines)
+
+
 class EventStreamAdapter:
-    """维护事件序号并将叙事事件与场景分隔绘制到 Tk 文本框的适配器。"""
+    """维护事件序号并将叙事事件、场景分隔与数值变化事件绘制到 Tk 文本框的适配器。"""
 
     def __init__(self) -> None:
         """初始化适配器并将事件序号计数器置为 0。"""
@@ -109,15 +154,29 @@ class EventStreamAdapter:
         self._seq += 1
         return meta
 
-    def render(self, event: NarrativeEvent | SceneBreak) -> None:
+    def render(self, event: NarrativeEvent | SceneBreak | DeltaEvent) -> None:
         """
-        将一条叙事事件或场景分隔经 LineDraw、NormalDraw 或 WaitDraw 绘制到界面。
-        非末块结尾无换行时补一次换行，pause 为真时在最后一段非空文本（全空时为末段）使用 WaitDraw。
+        将一条叙事事件、场景分隔或数值变化事件经 LineDraw、NormalDraw 或 WaitDraw 绘制到界面。
+        数值变化事件先转为不指定样式的单段落叙事事件。
+        非末块结尾无换行时补一次换行。
+        pause 为真时，最后一段非空文本使用 WaitDraw，各段全空时由末段使用 WaitDraw。
         Keyword arguments:
-        event -- NarrativeEvent | SceneBreak，待绘制的叙事事件或场景分隔
+        event -- NarrativeEvent | SceneBreak | DeltaEvent，待绘制的事件
         Return arguments:
         None -- 无返回值
         """
+        if isinstance(event, DeltaEvent):
+            text = (
+                event.summary_text
+                if event.summary_text is not None
+                else _delta_text(event.entries)
+            )
+            event = NarrativeEvent(
+                event.meta,
+                (TextBlock("paragraph", (TextSpan(text),)),),
+                pause=event.pause,
+                use_text_width=event.use_text_width,
+            )
         width = normal_config.config_normal.text_width
         if isinstance(event, SceneBreak):
             draw.LineDraw(event.char, width).draw()

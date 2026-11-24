@@ -25,6 +25,7 @@ from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import diplomacy_service
 from Script.Modules.gameplay_resolution import navigation_service
 from Script.Modules.gameplay_resolution import ui_hooks, working
+from Script.Protocol.delta_events import DeltaEntry
 from Script.Settle import past_day_settle
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
@@ -121,16 +122,18 @@ def bound_names(name: str) -> set[str]:
 
 
 class NoticeCase(FastTestCase):
-    """创建测试角色并记录提示与成就解锁回调的测试基类"""
+    """创建测试角色并记录提示、数值变化与成就解锁回调的测试基类"""
 
     def setUp(self) -> None:
-        """创建角色 0 与两名外交官，并接管提示回调与成就解锁回调列表"""
+        """创建角色 0 与两名外交官，并接管提示回调、数值变化回调与成就解锁回调列表"""
         super().setUp()
         self.world.chara(0, "博士")
         self.world.chara(DIPLOMAT, "外交官")
         self.world.chara(ENVOY, "驻外干员")
         self.notices: list[tuple[str, bool, str | None, bool]] = []
         self.enterContext(mock.patch.object(ui_hooks, "_notices", [self.note]))
+        self.deltas: list[tuple[str | None, bool, bool]] = []
+        self.enterContext(mock.patch.object(ui_hooks, "_deltas", [self.delta]))
         self.unlocked: list[list[int]] = []
         self.enterContext(
             mock.patch.object(
@@ -143,6 +146,18 @@ class NoticeCase(FastTestCase):
     ) -> None:
         """将提示回调收到的四元组参数追加到 self.notices"""
         self.notices.append((text, wait, style, use_text_width))
+
+    def delta(
+        self,
+        entries: tuple[DeltaEntry, ...],
+        *,
+        source: str,
+        summary_text: str | None,
+        wait: bool,
+        use_text_width: bool,
+    ) -> None:
+        """将数值变化回调收到的摘要文本、等待与宽度开关追加到 self.deltas"""
+        self.deltas.append((summary_text, wait, use_text_width))
 
 
 def reputation_notice(total: float) -> str:
@@ -177,7 +192,7 @@ class JudgeDiplomaticPolicyTest(NoticeCase):
                     random, "uniform", return_value=just * 10
                 ) as uniform,
             ):
-                self.notices.clear()
+                self.deltas.clear()
                 country.fill()
                 abilities.ability(DIPLOMAT)[40] = SKILL
                 diplomacy.set_post(COLUMBIA, diplomat=DIPLOMAT, policy=policy)
@@ -210,7 +225,7 @@ class JudgeDiplomaticPolicyTest(NoticeCase):
                         difficulty,
                     )
                 self.assertEqual(
-                    self.notices, [(reputation_notice(total), True, None, True)]
+                    self.deltas, [(reputation_notice(total), True, True)]
                 )
 
     def test_vacant_post_or_unset_policy_is_skipped(self) -> None:
@@ -235,9 +250,7 @@ class JudgeDiplomaticPolicyTest(NoticeCase):
             )
         self.assertEqual(after, before)
         uniform.assert_not_called()
-        self.assertEqual(
-            self.notices, [(reputation_notice(0), True, None, True)]
-        )
+        self.assertEqual(self.deltas, [(reputation_notice(0), True, True)])
 
 
 class SettleInfectionRateTest(NoticeCase):
@@ -257,10 +270,8 @@ class SettleInfectionRateTest(NoticeCase):
             if data.inmap and cid != LATERAN
         ]
 
-    def report(
-        self, average: str, now_change: float
-    ) -> tuple[str, bool, str | None, bool]:
-        """按平均总变化与所在国变化拼出感染率统计报告的提示参数四元组"""
+    def report(self, average: str, now_change: float) -> tuple[str, bool, bool]:
+        """按平均总变化与所在国变化拼出感染率统计报告的摘要文本、等待与宽度开关三元组"""
         text = (
             "\n"
             + get_text._("○源石病感染率统计报告：")
@@ -273,7 +284,7 @@ class SettleInfectionRateTest(NoticeCase):
                 round(now_change, 2),
             )
         )
-        return (text, True, None, True)
+        return (text, True, True)
 
     def test_first_week_updates_rates_and_reports_no_data(self) -> None:
         """验证首周结算更新大地图各国感染率与病人系数、跳过杜林与拉特兰感染率、清零治疗量并报暂无数据"""
@@ -305,20 +316,20 @@ class SettleInfectionRateTest(NoticeCase):
         )
         now_change = (start // 10 + 1) * 0.4
         no_data = self.report(get_text._("暂无数据\n"), now_change)
-        self.assertEqual(self.notices, [no_data])
+        self.assertEqual(self.deltas, [no_data])
 
     def test_later_week_reports_average_change(self) -> None:
         """验证已有上周总和时，统计报告写出参与结算各国感染率的平均变化"""
         diplomacy_service.settle_all_country_infection_rate()
         last = country.last_week_rate()
         start = country.infection_rate(location.START)
-        self.notices.clear()
+        self.deltas.clear()
         diplomacy_service.settle_all_country_infection_rate()
         average = (country.last_week_rate() - last) / len(self.counted())
         self.assertGreater(average, 0)
         now_change = (start // 10 + 1) * 0.5
         report = self.report(f"{round(average, 2)}%\n", now_change)
-        self.assertEqual(self.notices, [report])
+        self.assertEqual(self.deltas, [report])
 
 
 class JudgeArriveTest(NoticeCase):
