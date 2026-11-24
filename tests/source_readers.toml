@@ -137,7 +137,7 @@ capture = "suite"
 
 [[reader]]
 id = "R13"
-file = "tests/education/test_talk_data.py"
+file = "tests/education/_constant_doc.py"
 symbol = "read_constant_doc"
 mechanism = "ast"
 reads = "constant_promise.py 的 Premise 类和 constant_effect.py 的 BehaviorEffect 类里后面紧跟说明字符串的常量：常量值、常量名、说明字符串"

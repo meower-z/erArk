@@ -1255,6 +1255,7 @@ schedule_handle.set_selected_course(
 )
 for _cid in (0, 201, 202, 301, 303):
     move_to(_cid, classroom_path(ROOM_P))
+    kernel_data.set_needs(_cid, hit=100)
 ca.talent(pl)[332] = 0
 check(
     "L9 前置：成年学生排过性技教室课，但 H 模式实行值不足（好感为 0、玩家没有催眠补正），此刻过不了入课门槛",
@@ -1352,7 +1353,6 @@ move_to(303, SCENE_DORM)
 schedule_handle.clear_class_cell(ROOM_P, _l9_day, 8)
 schedule_handle.clear_selected_course(303, _l9_day, 8)
 education.clear_temp_classes()
-kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 
 section(
