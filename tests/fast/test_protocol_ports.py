@@ -140,7 +140,7 @@ class ProtocolPortsTest(FastTestCase):
         kinds: list[Any] = [k for k in exported if dataclasses.is_dataclass(k)]
         self.assertGreaterEqual(len(kinds), 21)
         for kind in kinds:
-            message = kind(*[None] * len(dataclasses.fields(kind)))
+            message = kind.__new__(kind)
             with self.subTest(kind.__name__):
                 with self.assertRaises(dataclasses.FrozenInstanceError):
                     setattr(message, dataclasses.fields(kind)[0].name, None)
