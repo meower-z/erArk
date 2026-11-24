@@ -4,13 +4,18 @@
 本模块验证部位绝顶行为标识解析规则与部位映射覆盖范围。
 本模块验证 character_get_second_behavior 在屏蔽 Script.Settle 及界面相关模块时可正常运行。
 本模块还在替换口上函数后验证 second_behavior_effect 按部位筛选绝顶口上。
+本模块同时验证三个空白标记效果在屏蔽或导入 Script.Settle 时均归属 settle_behavior，
+且屏蔽 Script.Settle 时 must_show_talk_check 可正常运行。
 """
 
+import importlib
+import inspect
 import json
 import re
 import subprocess
 import sys
 
+from Script.Core import constant, constant_effect
 from Script.Core.constant.SecondBehavior import SecondBehavior
 from Script.Modules.gameplay_resolution import orgasm_ids
 from tests.fast.base import FastTestCase
@@ -94,6 +99,20 @@ with working.based_on(core.state()):
     with mock.patch.object(talk, "handle_second_talk", lambda cid, bid: talked.append(bid)):
         sb.second_behavior_effect(1, game_type.CharacterStatusChange(), orgasm_settle_flag=True)
     out["effect"] = [sorted(talked), dict(activity.second_behaviors(1))]
+from Script.Core import constant, constant_effect
+sentinels = [
+    constant_effect.SecondEffect.Nothing,
+    constant_effect.SecondEffect.Must_Show,
+    constant_effect.SecondEffect.Must_Settle,
+]
+data = constant.settle_second_behavior_effect_data
+out["sentinels"] = [data[i].__wrapped__.__module__ if i in data else None for i in sentinels]
+with working.based_on(core.state()):
+    bid = "appoinnted_as_diplomat_local"
+    sb.character_get_second_behavior(1, bid)
+    queued = activity.must_show(1)
+    talk.must_show_talk_check(1)
+    out["show"] = [queued, activity.second_behavior(1, bid), activity.must_show(1)]
 out["loaded"] = sorted(m for m in set(sys.modules) - before if blocked(m) or m.startswith("Script.UI"))
 print(json.dumps(out, ensure_ascii=False))
 """
@@ -205,3 +224,29 @@ class SecondBehaviorUiFreeTest(FastTestCase):
         self.assertEqual(
             self.out["effect"], [["b_orgasm_small", "v_orgasm_strong"], {}]
         )
+
+    def test_must_show_talk_without_settle(self) -> None:
+        """
+        验证屏蔽 Script.Settle 时三个空白标记效果均注册自 settle_behavior，
+        且必显二段行为可经 must_show_talk_check 结算并清空。
+        """
+        design = "Script.Design.settle_behavior"
+        self.assertEqual(self.out["sentinels"], [design] * 3)
+        self.assertEqual(
+            self.out["show"], [["appoinnted_as_diplomat_local"], 0, []]
+        )
+
+    def test_sentinels_kept_after_settle_import(self) -> None:
+        """验证导入 Script.Settle.Second_effect 后三个空白标记效果的注册函数均归属 Script.Design.settle_behavior。"""
+        importlib.import_module("Script.Settle.Second_effect")
+        for effect_id in (
+            constant_effect.SecondEffect.Nothing,
+            constant_effect.SecondEffect.Must_Show,
+            constant_effect.SecondEffect.Must_Settle,
+        ):
+            with self.subTest(effect_id):
+                effect = constant.settle_second_behavior_effect_data[effect_id]
+                self.assertEqual(
+                    inspect.unwrap(effect).__module__,
+                    "Script.Design.settle_behavior",
+                )
