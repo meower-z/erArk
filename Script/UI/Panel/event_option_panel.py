@@ -2,17 +2,16 @@
 
 from types import FunctionType
 from Script.Core import (
-    game_type,
     get_text,
     flow_handle,
     text_handle,
     py_cmd,
 )
-from Script.Design import talk, handle_premise
+from Script.Design import talk
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import activity
-from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import event_option_service
+from Script.Protocol.modal_prompts import ChoiceResult
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -22,58 +21,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def check_son_event_list_from_event_list(
-    event_list: list,
-    character_id: int,
-    event_parent_chid_id: int,
-    event_parent_value: int,
-) -> list[str]:
-    """
-    检查事件列表中是否有子事件\n
-    Keyword arguments:\n
-    event_list -- 事件列表\n
-    character_id -- 角色id\n
-    event_parent_chid_id -- 子事件的序号id（非事件id）\n
-    event_parent_value -- 子事件的值\n
-    Return arguments:\n
-    son_event_list -- 子事件列表\n
-    """
-    son_event_list = []  # 子事件列表
-    # 已计算过的前提字典
-    calculated_premise_dict: dict[str, float] = {}
-
-    # 开始遍历当前行为的事件表
-    for event_id in event_list:
-        event_config = game_config.config_event[event_id]
-        # 需要含有综合数值前提中的子嵌套事件前提
-        son_premise = (
-            f"CVP_A1_Son|{event_parent_chid_id}_E_{event_parent_value}"
-        )
-        # 需要有该子事件的前提
-        if son_premise in event_config.premise:
-            premise_dict = event_config.premise.copy()
-            # 从前提集中去掉子事件前提
-            premise_dict.pop(son_premise)
-            # 如果前提集不为空
-            if len(premise_dict):
-                # 计算总权重
-                now_weight, calculated_premise_dict = (
-                    handle_premise.get_weight_from_premise_dict(
-                        premise_dict,
-                        character_id,
-                        calculated_premise_dict,
-                        unconscious_pass_flag=True,
-                    )
-                )
-                # 判定通过，加入到子事件的列表中
-                if now_weight:
-                    son_event_list.append(event_id)
-            # 前提集为空，直接加入到子事件的列表中
-            else:
-                son_event_list.append(event_id)
-    return son_event_list
 
 
 class Event_option_Panel:
@@ -94,40 +41,12 @@ class Event_option_Panel:
 
     def draw(self) -> None:
         """绘制对象"""
-        character_data: identity.Identity = identity.of(self.character_id)
-        behavior_id = activity.behavior(character_data.cid).behavior_id
-        father_event_id = activity.event(character_data.cid).event_id
-
-        # 获取父事件的前提信息
-        father_event_data: game_type.Event = game_config.config_event[
-            father_event_id
-        ]
-        father_promise = father_event_data.premise
-
-        son_event_list = []
-
-        # 开始遍历当前行为的事件表
-        if behavior_id in game_config.config_event_status_data:
-            for event_id in game_config.config_event_status_data[behavior_id]:
-                event_config = game_config.config_event[event_id]
-                son_flag = True
-                # 需要含有子事件前提
-                if (
-                    len(event_config.premise)
-                    and "option_son" in event_config.premise
-                ):
-                    for premise in father_promise:
-                        # 子事件的前提必须完全包含父事件的前提
-                        if premise not in event_config.premise:
-                            son_flag = False
-                            break
-                    # 加入到子事件的列表中
-                    if son_flag:
-                        son_event_list.append([event_id, self.character_id])
-
-        # 如果子事件列表为空，则直接返回
-        if not len(son_event_list):
+        prompt = event_option_service.build_son_event_prompt(self.character_id)
+        if prompt is None:
             return
+        son_event_list = [
+            [option.option_id, self.character_id] for option in prompt.options
+        ]
 
         line_feed.draw()
         self.handle_panel = panel.PageHandlePanel(
@@ -178,56 +97,19 @@ class multi_layer_event_option_Panel:
 
     def draw(self) -> None:
         """绘制对象"""
-        character_data: identity.Identity = identity.of(self.character_id)
-        target_character_data = identity.of(activity.target(character_data.cid))
-        behavior_id = activity.behavior(character_data.cid).behavior_id
-
-        tem_event_list = []  # 临时事件列表
-        son_event_list = []  # 子事件列表
-
-        # 开始遍历当前行为的事件表
-        if behavior_id in game_config.config_event_status_data_by_chara_adv:
-            if (
-                character_data.adv
-                in game_config.config_event_status_data_by_chara_adv[
-                    behavior_id
-                ]
-            ):
-                tem_event_list += (
-                    game_config.config_event_status_data_by_chara_adv[
-                        behavior_id
-                    ][character_data.adv]
-                )
-            if (
-                target_character_data.adv
-                in game_config.config_event_status_data_by_chara_adv[
-                    behavior_id
-                ]
-            ):
-                tem_event_list += (
-                    game_config.config_event_status_data_by_chara_adv[
-                        behavior_id
-                    ][target_character_data.adv]
-                )
-
-        # 从临时事件列表中筛选出子事件
-        son_event_list = check_son_event_list_from_event_list(
-            tem_event_list,
+        prompt = event_option_service.build_multi_layer_event_prompt(
             self.character_id,
             self.event_parent_chid_id,
             self.event_parent_value,
         )
-
-        # 如果没有子事件，直接返回
-        if len(son_event_list) == 0:
+        if prompt is None:
             return
 
         line_feed.draw()
-        draw_event_list = []
-        for son_event_id in son_event_list:
-            draw_event_list.append([son_event_id, self.character_id])
+        draw_event_list = [
+            [option.option_id, self.character_id] for option in prompt.options
+        ]
 
-        # 如果有子事件，继续绘制
         while 1:
             py_cmd.clr_cmd()
 
@@ -279,10 +161,9 @@ class SonEventDraw:
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
         name_draw: draw.NormalDraw | draw.CenterButton = draw.NormalDraw()
-        # print("text :",text)
-        option_text = self.son_event.text.split("|")[0]
         option_text = talk.code_text_to_draw_text(
-            option_text, self.character_id
+            event_option_service.option_label(self.son_event.text),
+            self.character_id,
         )
         if is_button:
             if num_button:
@@ -318,5 +199,9 @@ class SonEventDraw:
 
     def run_son_event(self) -> None:
         """点击后运行对应的子事件"""
-        character_data: identity.Identity = identity.of(self.character_id)
-        activity.update_event(character_data.cid, son_event_id=self.event_id)
+        event_option_service.apply_event_choice(
+            self.character_id,
+            ChoiceResult(
+                event_option_service.SON_EVENT_PROMPT_ID, self.event_id
+            ),
+        )
