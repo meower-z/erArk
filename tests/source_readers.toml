@@ -930,3 +930,13 @@ reads = "通过 banned_imports 读取 Script/Design/map_handle.py、Script/Desig
 used_for = "测试：上述三个模块遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R85"
+file = "tests/fast/test_talent_up_service.py"
+symbol = "ImportBoundaryTest.test_service_imports_no_ui"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Modules/gameplay_resolution/talent_up_service.py 的源码字节并解析其中的导入语句"
+used_for = "测试：Script/Modules/gameplay_resolution/talent_up_service.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
+when = "test"
+capture = "suite"
