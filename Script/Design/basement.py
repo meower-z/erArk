@@ -5,17 +5,13 @@ from types import FunctionType
 from Script.Core import get_text, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
-from Script.UI.Moudle import draw
 from Script.Modules.domains import flags, maintenance, physical_exam, production
 from Script.Modules.domains import abilities, chara_life, diplomacy, inventory
 from Script.Modules.domains import economy, facility, official, power, warehouse
 from Script.Modules.domains import fridge, recruit, roster, tallies, work
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import ui_hooks
 
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 _: FunctionType = get_text._
 """ 翻译api """
 
@@ -228,9 +224,6 @@ def update_base_resouce_newday() -> None:
     from Script.System.Medical_System import medical_service
     from Script.System.Cooking_System import cooking
 
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-
     # 按当前在编角色重建岗位人员数据，供后续岗位结算使用
     update_work_people()
     # 结算公务工作
@@ -248,10 +241,10 @@ def update_base_resouce_newday() -> None:
     # 结算访客抵达和离开
     visitor_service.settle_visitor_arrivals_and_departures()
     if trade_lines := trade_service.daily_supply_demand_fluctuation():
-        trade_draw = draw.WaitDraw()
-        trade_draw.text = "\n" + _("○贸易部结算：\n")
-        trade_draw.text += "\n".join(trade_lines) + "\n"
-        trade_draw.draw()
+        ui_hooks.emit_notice(
+            "\n" + _("○贸易部结算：\n") + "\n".join(trade_lines) + "\n",
+            wait=True,
+        )
     daily_base_service.settle_aromatherapy_sessions()
     # 结算粉红凭证
     settle_pink_certificate()
@@ -411,22 +404,24 @@ def settle_milk() -> None:
 
     # 输出提示信息
     if all_milk > 0:
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = _(
-            "\n今日共有{0}ml母乳未使用，已全部转化为【鲜母乳】\n"
-        ).format(all_milk)
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n今日共有{0}ml母乳未使用，已全部转化为【鲜母乳】\n").format(
+                all_milk
+            ),
+            wait=True,
+            use_text_width=True,
+        )
 
     # 检测是否超出仓库容量上限
     if warehouse.amount(31) > warehouse.capacity():
         warehouse.set(31, warehouse.capacity())
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = _(
-            "\n由于仓库容量不足，【鲜母乳】已达上限数量{0}\n"
-        ).format(warehouse.capacity())
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n由于仓库容量不足，【鲜母乳】已达上限数量{0}\n").format(
+                warehouse.capacity()
+            ),
+            wait=True,
+            use_text_width=True,
+        )
 
 
 def settle_semen() -> None:
@@ -440,22 +435,24 @@ def settle_semen() -> None:
 
     # 输出提示信息
     if today_semen:
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = _(
-            "\n今日共射出{0}ml精液，已全部转化为【矿石病药材】\n"
-        ).format(today_semen)
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n今日共射出{0}ml精液，已全部转化为【矿石病药材】\n").format(
+                today_semen
+            ),
+            wait=True,
+            use_text_width=True,
+        )
 
     # 检测是否超出仓库容量上限
     if warehouse.amount(12) > warehouse.capacity():
         warehouse.set(12, warehouse.capacity())
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = _(
-            "\n由于仓库容量不足，【矿石病药材】已达上限数量{0}\n"
-        ).format(warehouse.capacity())
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n由于仓库容量不足，【矿石病药材】已达上限数量{0}\n").format(
+                warehouse.capacity()
+            ),
+            wait=True,
+            use_text_width=True,
+        )
 
 
 def settle_office_work() -> None:
@@ -509,10 +506,7 @@ def settle_office_work() -> None:
     now_draw_text += _("因此今日罗德岛的各设施的总效率为{0}%\n").format(
         facility.effectiveness()
     )
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = now_draw_text
-    now_draw.draw()
+    ui_hooks.emit_notice(now_draw_text, wait=True, use_text_width=True)
 
 
 def settle_pink_certificate() -> None:
@@ -528,19 +522,13 @@ def settle_pink_certificate() -> None:
     # 结算陷落角色提供的的粉红凭证
     warehouse.add(4, fallen)
     # 输出提示信息
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = _(
-        "\n今日全角色总好感度上升为：{0}，折合为 {1} 粉红凭证\n"
-    ).format(
+    notice = _("\n今日全角色总好感度上升为：{0}，折合为 {1} 粉红凭证\n").format(
         int(favorability),
         pink_certificate_add,
     )
     if fallen:
-        now_draw.text += _("本周全陷落角色提供的粉红凭证为：{0}\n").format(
-            fallen
-        )
-    now_draw.draw()
+        notice += _("本周全陷落角色提供的粉红凭证为：{0}\n").format(fallen)
+    ui_hooks.emit_notice(notice, wait=True, use_text_width=True)
     # 清零计数
     tallies.set(tallies.FAVORABILITY, 0)
     tallies.set(tallies.FALLEN, 0)
@@ -594,11 +582,12 @@ def draw_todo() -> None:
 
     # 如果有待办事项，输出待办事项
     if draw_text:
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = "\n" + draw_text
-        now_draw.style = "gold_enrod"
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            "\n" + draw_text,
+            wait=True,
+            style="gold_enrod",
+            use_text_width=True,
+        )
 
 
 def find_facility_damage() -> str:
