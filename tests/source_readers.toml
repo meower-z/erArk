@@ -896,3 +896,13 @@ reads = "读取 Script/Modules/gameplay_resolution/food_effects.py 与 Script/Se
 used_for = "测试：food_effects.py 遵守后端界面边界守卫，default.py 不导入 Script.System.Cooking_System.food_bag_panel"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R78"
+file = "tests/fast/test_book_fragment_service.py"
+symbol = "BoundaryTest.test_talk_imports_no_read_book_panel"
+mechanism = "ast"
+reads = "读取 Script/Design/talk.py 的源码字节，经 ast 解析其中的全部 import 与 from ... import 语句"
+used_for = "测试：Script/Design/talk.py 不导入 Script.UI.Panel.read_book_panel 及其子路径"
+when = "test"
+capture = "suite"

@@ -1,8 +1,8 @@
 """
 图书馆借还书服务（library_service）
 ===================================
-提供图书馆的借书、还书、阅读能力门槛判定与借阅历史记录读写逻辑。
-不依赖界面模块，供行动开始、状态机、结算、课表与借书面板调用。
+提供图书馆的借书、还书、阅读能力门槛判定、借阅历史记录读写，以及玩家读书时的书籍摘录提示输出逻辑。
+不依赖界面模块，供行动开始、状态机、结算、口上、课表与借书面板调用。
 """
 
 import random
@@ -12,6 +12,7 @@ from Script.Config import game_config
 from Script.Core import get_text
 from Script.Design import game_time
 from Script.Modules.domains import abilities, activity, chara_life, library
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -234,3 +235,19 @@ def update_read_count_in_history(character_id: int, book_id: int) -> None:
             record["total_read_count"] += 1
             break
     chara_life.borrow_book_history.set(character_id, history)
+
+
+def draw_book_fragment(book_id: int) -> None:
+    """
+    随机选取指定书籍的一条摘录，并以默认选项经 ui_hooks.emit_notice 发出提示文本。
+    书籍在 config_book_excerpt_list 中无条目或摘录列表为空时直接返回，不调用随机数也不发出提示。
+    Keyword arguments:
+    book_id -- int，书籍配置编号
+    Return arguments:
+    None -- 通过 ui_hooks.emit_notice 发出格式为 "\\n……{fragment}……\\n" 的提示，无返回值
+    """
+    excerpt_list = game_config.config_book_excerpt_list.get(book_id)
+    if not excerpt_list:
+        return
+    fragment = random.choice(excerpt_list)
+    ui_hooks.emit_notice(f"\n……{fragment}……\n")
