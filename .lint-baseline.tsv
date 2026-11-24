@@ -144,7 +144,7 @@ Script/System/Official_Event_System/official_event_handle.py	<module>	module-lin
 Script/System/Pregnancy_System/born_event_panel.py	Born_Panel.draw	pyrefly:unbound-name	count=1
 Script/System/Pregnancy_System/egg_handle.py	<module>	module-lines	lines=647
 Script/System/Pregnancy_System/family_tree_draw.py	<module>	module-lines	lines=720
-Script/System/Pregnancy_System/pregnancy_handle.py	<module>	module-lines	lines=1142
+Script/System/Pregnancy_System/pregnancy_handle.py	<module>	module-lines	lines=1110
 Script/System/Pregnancy_System/pregnancy_panel.py	<module>	module-lines	lines=659
 Script/System/Sex_System/group_sex_panel.py	<module>	module-lines	lines=1078
 Script/System/Sex_System/hidden_sex_panel.py	<module>	module-lines	lines=679

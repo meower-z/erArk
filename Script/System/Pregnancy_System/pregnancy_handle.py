@@ -16,11 +16,10 @@ from Script.Design import (
     talk,
     second_behavior,
 )
-from Script.UI.Moudle import draw
-from Script.Modules.gameplay_resolution import achievement_service
+from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
 from Script.System.Pregnancy_System import born_event_panel
 from Script.System.Pregnancy_System import pregnancy_constant
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Modules.domains import activity, dirty, h_state, hypnosis
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.domains import abilities, chara_life, growth, npc_template
@@ -30,10 +29,6 @@ from Script.Modules.domains import identity
 game_path = game_path_config.game_path
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 
 
 def get_pregnancy_past_day(character_id: int) -> int:
@@ -519,10 +514,7 @@ def check_fertilization(character_id: int) -> int | None:
 
     # 绘制输出
     talk.must_show_talk_check(character_id)
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = draw_text
-    now_draw.draw()
+    ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
     # 结算成就
     if handle_premise.handle_fertilization_1(character_id):
         # 破处当天受精
@@ -571,10 +563,7 @@ def check_pregnancy(character_id: int) -> None:
             draw_text += _("\n{0}获得了[孕肚]\n").format(character_data.name)
             draw_text += _("\n{0}获得了[泌乳]\n").format(character_data.name)
             draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+            ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
 
 
 def check_near_born(character_id: int) -> None:
@@ -608,10 +597,7 @@ def check_near_born(character_id: int) -> None:
                 character_data.name
             )
             draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+            ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
 
 
 def check_born(character_id: int) -> None:
@@ -670,10 +656,7 @@ def check_rearing(character_id: int) -> None:
                 character_data.name
             )
             draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+            ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
 
 
 def _settle_baby_grow_up(character_id: int, child_id: int) -> None:
@@ -723,10 +706,7 @@ def _settle_baby_grow_up(character_id: int, child_id: int) -> None:
         child_character_data.name
     )
     draw_text += "\n※※※※※※※※※\n"
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = draw_text
-    now_draw.draw()
+    ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
 
 
 def check_rearing_complete(character_id: int) -> None:
@@ -798,10 +778,7 @@ def check_grow_to_loli(character_id: int) -> None:
                     "\n当前教育区没有进行授课工作的老师，请尽快安排一名干员负责教师工作\n"
                 )
             draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+            ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
 
 
 def check_grow_to_girl(character_id: int) -> None:
@@ -869,10 +846,7 @@ def check_grow_to_girl(character_id: int) -> None:
                 character_data.name
             )
             draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+            ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
 
 
 def check_all_pregnancy(character_id: int) -> None:
@@ -979,8 +953,6 @@ def chest_grow(character_id: int, print_flag: bool = False) -> str:
     # 根据flag判定是否要绘制输出
     old_name = game_config.config_talent[old_chest_id].name
     new_name = game_config.config_talent[new_chest_id].name
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
     if new_chest_id != old_chest_id:
         now_text = _("\n{0}的胸部从[{1}]成长为了[{2}]\n").format(
             character_data.name, old_name, new_name
@@ -990,8 +962,7 @@ def chest_grow(character_id: int, print_flag: bool = False) -> str:
             character_data.name, old_name
         )
     if print_flag:
-        now_draw.text = now_text
-        now_draw.draw()
+        ui_hooks.emit_notice(now_text, wait=True, use_text_width=True)
 
     # 返回胸部成长情况的文本
     return now_text
@@ -1051,10 +1022,7 @@ def body_part_grow(character_id: int, print_flag: bool = False) -> str:
 
     # 根据flag判定是否要绘制输出
     if print_flag:
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = now_text
-        now_draw.draw()
+        ui_hooks.emit_notice(now_text, wait=True, use_text_width=True)
 
     # 返回成长情况的文本
     return now_text

@@ -4,9 +4,8 @@ from types import FunctionType
 from Script.Design import attr_calculation, handle_premise
 from Script.System.First_Record_System import first_record_handle
 from Script.Core import get_text, num
-from Script.Config import game_config, normal_config
-from Script.UI.Moudle import draw
-from Script.Modules.gameplay_resolution import achievement_service
+from Script.Config import game_config
+from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
 from Script.Design import game_time
 from Script.Modules.domains import (
     abilities,
@@ -20,13 +19,6 @@ from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
-
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
-window_width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 
 
 def record_fall_talent_time(character_id: int, talent_id: int) -> None:
@@ -105,11 +97,12 @@ def gain_talent(
                 old_talent_id = gain_talent_data.replace_talent_id
                 talent[old_talent_id] = 0
 
-            now_draw_succed = draw.WaitDraw()
-            now_draw_succed.text = _("\n{0}获得了【{1}】\n").format(
-                character_data.name, talent_name
+            ui_hooks.emit_notice(
+                _("\n{0}获得了【{1}】\n").format(
+                    character_data.name, talent_name
+                ),
+                wait=True,
             )
-            now_draw_succed.draw()
     # print(f"debug {character_data.name}的睡觉结算素质结束，judge = {judge}")
 
     # 结算陷落素质的成就
@@ -260,11 +253,12 @@ def npc_gain_hypnosis_talent(character_id: int) -> None:
             #     old_talent_id = now_data.hypnosis_talent_id - 1
             #     character_data.talent[old_talent_id] = 0
             # 绘制获得素质提示
-            now_draw_succed = draw.WaitDraw()
-            now_draw_succed.text = _(
-                "\n○{0}的催眠深度达到{1}%，获得了[{2}]\n"
-            ).format(character_data.name, now_data.hypnosis_degree, talent_name)
-            now_draw_succed.draw()
+            ui_hooks.emit_notice(
+                _("\n○{0}的催眠深度达到{1}%，获得了[{2}]\n").format(
+                    character_data.name, now_data.hypnosis_degree, talent_name
+                ),
+                wait=True,
+            )
             break
     achievement_service.settle_and_notify(_("催眠"))
 
@@ -302,9 +296,7 @@ def npc_gain_and_lost_cumflation(character_id: int) -> None:
     if now_draw_text != "" and activity.position(
         character_id
     ) == activity.position(0):
-        now_draw_succed = draw.WaitDraw()
-        now_draw_succed.text = now_draw_text
-        now_draw_succed.draw()
+        ui_hooks.emit_notice(now_draw_text, wait=True)
 
 
 def npc_gain_semen_drinking_climax_talent(character_id: int) -> None:
@@ -327,9 +319,7 @@ def npc_gain_semen_drinking_climax_talent(character_id: int) -> None:
             "\n{0}因为经常性地在绝顶的同时被口内射精，因此以后尝到精液的味道就会条件反射性地绝顶了\n"
         ).format(character_data.name)
         now_draw_text += _("{0}获得了[饮精绝顶]\n").format(character_data.name)
-        now_draw_succed = draw.WaitDraw()
-        now_draw_succed.text = now_draw_text
-        now_draw_succed.draw()
+        ui_hooks.emit_notice(now_draw_text, wait=True)
 
 
 def npc_b_talent_change_for_lactation_flag(character_id: int) -> None:
@@ -431,15 +421,16 @@ def settle_favorite_sex_position(character_id: int) -> int:
         talent_id = favorite_position_id + 249
         talent[talent_id] = 1
         # 绘制获得素质提示
-        now_draw_succed = draw.WaitDraw()
         sex_position_name = game_config.config_sex_position_data[
             favorite_position_id
         ].name
         talent_name = game_config.config_talent[talent_id].name
-        now_draw_succed.text = _(
-            "\n○{0}因为经常使用{1}体位，获得了【{2}】\n"
-        ).format(character_data.name, sex_position_name, talent_name)
-        now_draw_succed.draw()
+        ui_hooks.emit_notice(
+            _("\n○{0}因为经常使用{1}体位，获得了【{2}】\n").format(
+                character_data.name, sex_position_name, talent_name
+            ),
+            wait=True,
+        )
     return favorite_position_id
 
 
@@ -463,9 +454,7 @@ def chara_settle_drink_talent(character_id: int) -> None:
         ).format(character_data.name)
         now_draw_text += _("{0}失去了[酒量差]\n").format(character_data.name)
         now_draw_text += _("{0}获得了[酒量差]\n").format(character_data.name)
-        now_draw_succed = draw.WaitDraw()
-        now_draw_succed.text = now_draw_text
-        now_draw_succed.draw()
+        ui_hooks.emit_notice(now_draw_text, wait=True)
     if (
         handle_premise.handle_self_have_bad_alcohol_tolerance(character_id)
         and experience[94] >= 100
@@ -475,9 +464,7 @@ def chara_settle_drink_talent(character_id: int) -> None:
             "\n{0}因为经常饮酒（饮酒经验>=100），因此对酒精的耐受力提高了\n"
         ).format(character_data.name)
         now_draw_text += _("{0}失去了[酒量差]\n").format(character_data.name)
-        now_draw_succed = draw.WaitDraw()
-        now_draw_succed.text = now_draw_text
-        now_draw_succed.draw()
+        ui_hooks.emit_notice(now_draw_text, wait=True)
     if (
         not handle_premise.handle_self_have_good_alcohol_tolerance(character_id)
         and experience[94] >= 300
@@ -487,6 +474,4 @@ def chara_settle_drink_talent(character_id: int) -> None:
             "\n{0}因为长期性地饮酒（饮酒经验>=300），因此对酒精的耐受力大大提高了\n"
         ).format(character_data.name)
         now_draw_text += _("{0}获得了[好酒量]\n").format(character_data.name)
-        now_draw_succed = draw.WaitDraw()
-        now_draw_succed.text = now_draw_text
-        now_draw_succed.draw()
+        ui_hooks.emit_notice(now_draw_text, wait=True)
