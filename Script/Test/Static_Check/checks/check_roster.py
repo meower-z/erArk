@@ -272,7 +272,7 @@ def check_offline_source_flag_matches_real_offline_state() -> (
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 装袋/外勤/越狱三条路径都是"置来源flag→handle_chara_off_line"的原子写法。
+    功能: 装袋/外勤经handle_chara_off_line、越狱经roster_lifecycle_service.chara_off_line，均"置来源flag→同一离线"。
     任一来源flag为真而角色仍在编、仍在某场景、或position未归零，即为半离线的幽灵。
     """
     cd = identity.table()
@@ -525,7 +525,7 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: escape_success依次置escaping→pop囚犯名册→handle_chara_off_line→创建追捕委托，
+    功能: escape_success依次置escaping→pop囚犯名册→roster_lifecycle_service.chara_off_line→创建追捕委托，
     并保留imprisonment。任一环缺失即为半态。position == ["0","0"]在此是离线的结果而非判据
     """
     cd = identity.table()

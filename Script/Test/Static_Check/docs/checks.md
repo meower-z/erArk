@@ -334,12 +334,12 @@ H 状态、群交模式、逆推、隐奸。
 | ROSTER-01 | 在编名册id自洽 | roster.active()中每个id都存在于identity.table()，且角色自身cid与名册键一致，这是后续全部名册检查的地基 |
 | ROSTER-02 | 玩家id不应长期留在NPC名册里 | npc_id_got语义上是NPC集合，但init_character_position/init_character_entertainment会对玩家本体add(0)， discard(0)只在基建/宿舍面板(玩家触发)里执行，回合主循环从不调用 |
 | ROSTER-03 | 在编干员与场景名册双向一致 | 在编NPC恰好出现在其position对应的那一个场景里，离线角色从所有场景消失，场景里不得有幽灵id |
-| ROSTER-04 | 离线来源flag必须对应真正的离线态 | 装袋/外勤/越狱三条路径都是"置来源flag→handle_chara_off_line"的原子写法 |
+| ROSTER-04 | 离线来源flag必须对应真正的离线态 | 装袋/外勤经handle_chara_off_line、越狱经roster_lifecycle_service.chara_off_line，均"置来源flag→同一离线" |
 | ROSTER-05 | 监禁flag的来源分区完整 | 带imprisonment的角色当且仅当是在册囚犯或逃跑中的前囚犯(escape_success故意保留imprisonment)； 囚犯与逃犯两个集合互斥 |
 | ROSTER-06 | 囚犯名册条目结构合法且本人在编 | base.prisoners每条记录形状为[入狱时间, 逃脱概率]，概率夹在0..100之间且非bool污染， 本人在编且sp_flag.imprisonment为True、escaping为False |
 | ROSTER-07 | 囚犯宿舍是互不重复的合法牢房 | 每名囚犯的dormitory都必须在PRISON_DORMS(全部Prison标签场景，即牢1..牢8)集合内，且互不重复 |
 | ROSTER-08 | 囚犯留在关押区且不得同时被装袋 | 囚犯cant_move，NPC AI会把不在牢房的囚犯瞬移回宿舍，合法的短暂离房只有"正在H(含调教室)"； 用position[0] == "关押"比对目录首段，不拼分隔符 |
-| ROSTER-09 | 逃跑者处于完整离线态 | escape_success依次置escaping→pop囚犯名册→handle_chara_off_line→创建追捕委托， 并保留imprisonment |
+| ROSTER-09 | 逃跑者处于完整离线态 | escape_success依次置escaping→pop囚犯名册→roster_lifecycle_service.chara_off_line→创建追捕委托， 并保留imprisonment |
 | ROSTER-10 | 逃跑者仍有一条可执行的追捕委托 | 每个escaping角色都应存在一条reward=="追捕_{cid}_1"且未标记完成的委托配置； 牢房全满时抓捕结算会静默跳过归案，委托却照样标完成并出表，逃犯从此永久滞留escaping |
 | ROSTER-11 | 监狱长缓存唯一且指向真实岗位 | 在编干员里最多只能有一名工作类型191的监狱长，监狱长(work.warden)非零时必须指向存在的角色， 不能与那名在编191冲突 |
 | ROSTER-12 | 监狱长身份软约束 | 期望状态：监狱长(work.warden)非零时该人在编、宿舍是关押区休息室、不是囚犯/访客、不在外勤 |

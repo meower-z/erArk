@@ -23,6 +23,7 @@ from Script.Modules.gameplay_resolution import equipment_service
 from Script.Modules.gameplay_resolution import hypnosis_service
 from Script.Modules.gameplay_resolution import semen_dirty_service
 from Script.Modules.gameplay_resolution import achievement_service
+from Script.Modules.gameplay_resolution import roster_lifecycle_service
 from Script.UI.Panel import event_option_panel
 from Script.Settle.common_default import base_chara_hp_mp_common_settle
 from Script.Settle.common_default import base_chara_state_common_settle
@@ -4570,11 +4571,7 @@ def handle_assistant_reset(
     """
     if not add_time:
         return
-    relations.assistant_services.set(
-        character_id, attr_calculation.get_assistant_services_zero()
-    )
-    if relations.assistant_character_id(0) == character_id:
-        relations.assistant_character_id.set(0, 0)
+    roster_lifecycle_service.clear_assistant(character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5014,26 +5011,7 @@ def handle_chara_off_line(
     """
     if not add_time:
         return
-    activity.set_behavior(character_id)  # 行动数据归零
-    activity.set_event(character_id)  # 事件数据归零
-    handle_assistant_reset(
-        character_id, add_time, change_data, now_time
-    )  # 助理数据归零
-    handle_dirty_reset(
-        character_id, add_time, change_data, now_time
-    )  # 污浊情况归零
-    h_state.reset(character_id)  # H状态数据归零
-    # 归零快感状态
-    for state_id in game_config.config_character_state:
-        if game_config.config_character_state[state_id].type == 0:
-            status.set(character_id, state_id, 0)
-    # 清零跟随数据
-    flags.set(character_id, is_follow=0)
-    # 从当前干员列表中移除
-    if roster.has(character_id):
-        roster.remove(character_id)
-    # 离开地图
-    activity.set_position(character_id, ["0", "0"])
+    roster_lifecycle_service.chara_off_line(character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5055,33 +5033,7 @@ def handle_chara_on_line(
     """
     if not add_time:
         return
-    # 基础属性重置
-    needs.set(character_id, hit=needs.of(character_id)["hit_max"])
-    needs.set(character_id, mana=needs.of(character_id)["mana_max"])
-    needs.set(character_id, hunger=0, tired=0, urine=0, sleep=0)
-    # 清零各特殊状态flag
-    old_imprisonment = flags.get(character_id, "imprisonment")
-    # 外交访问状态需要跨上线保留，否则外交官随罗德岛抵达驻在国回岛后会丢失驻在国信息
-    old_in_diplomatic_visit = flags.get(character_id, "in_diplomatic_visit")
-    flags.reset(character_id)
-    flags.set(character_id, in_diplomatic_visit=old_in_diplomatic_visit)
-    if old_imprisonment:
-        flags.set(character_id, imprisonment=True)
-    # 赋予默认行动数据：与内核加入角色时给的空闲一致，此刻开始、0分钟；已在内核里的角色当前的行动被打断
-    from Script.Modules.gameplay_resolution import plan_queue
-
-    activity.set_target(character_id, character_id)
-    activity.update_behavior(
-        character_id,
-        behavior_id=constant.Behavior.SHARE_BLANKLY,
-        start_time=now_time,
-        duration=0,
-    )
-    activity.set_state(character_id, constant.CharacterStatus.STATUS_ARDER)
-    plan_queue.interrupt(character_id)
-    # 加入当前干员列表
-    if not roster.has(character_id):
-        roster.add(character_id)
+    roster_lifecycle_service.chara_on_line(character_id, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(
