@@ -3,11 +3,9 @@
 from types import FunctionType
 from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, view
-from Script.Config import game_config, normal_config
+from Script.Config import normal_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, activity, flags, tallies
-from Script.Modules.domains import warehouse
-from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import aromatherapy_query
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -42,9 +40,11 @@ class Aromatherapy_Panel:
 
         title_text = _("香薰疗愈")
         title_draw = draw.TitleLineDraw(title_text, self.width)
-        target_character_data = identity.of(activity.target(0))
 
         while 1:
+            snapshot = aromatherapy_query.build_aromatherapy_snapshot(
+                self.now_choice_recipe_id
+            )
             return_list = []
             title_draw.draw()
 
@@ -52,55 +52,37 @@ class Aromatherapy_Panel:
             all_info_draw = draw.NormalDraw()
             all_info_draw.width = self.width
 
-            # 剩余调香次数
             now_text = ""
             now_text += _("\n  今日剩余调香次数    ：  {0}次").format(
-                tallies.get(tallies.AROMATHERAPY)
+                snapshot.remaining_today
             )
             all_info_draw.text = now_text
             all_info_draw.draw()
             line_feed.draw()
 
-            # 当前调香对象
             now_text = ""
             now_text += _("\n  当前调香对象        ：  {0}").format(
-                target_character_data.name
+                snapshot.target_name
             )
-            # 判断对方今日是否已调香
-            if flags.get(target_character_data.cid, "aromatherapy") != 0:
-                # 输出调香状态
+            if snapshot.target_today_recipe_name is not None:
                 now_text += _("(今日已调香-{0})").format(
-                    game_config.config_aromatherapy_recipes[
-                        flags.get(target_character_data.cid, "aromatherapy")
-                    ].name
+                    snapshot.target_today_recipe_name
                 )
             all_info_draw.text = now_text
             all_info_draw.draw()
             line_feed.draw()
 
-            # 资源信息
             now_text = ""
             now_text += _("\n  当前调香资源        ：")
-            for recipes_id in warehouse.stock():
-                recipes_data = game_config.config_resouce[recipes_id]
-                if recipes_data.name == _("香料") or recipes_data.type == _(
-                    "香水"
-                ):
-                    now_text += (
-                        f"  {recipes_data.name}：{warehouse.amount(recipes_id)}"
-                    )
+            for item in snapshot.resources:
+                now_text += f"  {item.name}：{item.amount}"
             all_info_draw.text = now_text
             all_info_draw.draw()
             line_feed.draw()
 
-            # 当前配方
             now_text = ""
             now_text += _("\n  当前选择的调香配方  ：")
-            now_text += "  {}".format(
-                game_config.config_aromatherapy_recipes[
-                    self.now_choice_recipe_id
-                ].name
-            )
+            now_text += f"  {snapshot.selected_recipe_name}"
             all_info_draw.text = now_text
             all_info_draw.draw()
             line_feed.draw()
@@ -121,15 +103,7 @@ class Aromatherapy_Panel:
             yes_draw = draw.CenterButton(
                 _("[确定]"), _("确定"), int(window_width / 2)
             )
-            # 判断是否可以进行调香，需要已选择配方，有剩余调香次数，对方今日未调香
-            yes_show_flag = False
-            if (
-                self.now_choice_recipe_id != 0
-                and tallies.get(tallies.AROMATHERAPY) > 0
-                and flags.get(target_character_data.cid, "aromatherapy") == 0
-            ):
-                yes_show_flag = True
-            if yes_show_flag:
+            if snapshot.can_confirm:
                 yes_draw.draw()
                 return_list.append(yes_draw.return_text)
             back_draw = draw.CenterButton(
@@ -149,8 +123,10 @@ class Aromatherapy_Panel:
 
     def select_recipe(self) -> None:
         """选择配方"""
-        target_character_data = identity.of(activity.target(0))
         while 1:
+            snapshot = aromatherapy_query.build_aromatherapy_snapshot(
+                self.now_choice_recipe_id
+            )
             line = draw.LineDraw("-", window_width)
             line.draw()
             all_info_draw = draw.NormalDraw()
@@ -161,65 +137,30 @@ class Aromatherapy_Panel:
             all_info_draw.text = now_text
             all_info_draw.draw()
 
-            for recipes_id in game_config.config_aromatherapy_recipes:
-                recipes_data = game_config.config_aromatherapy_recipes[
-                    recipes_id
-                ]
-                if recipes_id == 0:
-                    continue
+            for option in snapshot.recipes:
                 recipes_text = (
-                    f"[{str(recipes_id).rjust(3,'0')}]{recipes_data.name}"
+                    f"[{str(option.recipe_id).rjust(3,'0')}]{option.name}"
+                    + "".join(option.lock_reasons)
+                    + f"：{option.info}"
                 )
-                # 判断当前配方是否可以生产，未解锁则跳过
-                flag_open = True
-                # 农业等级判定
-                need_lv = recipes_data.difficulty * 2
-                if abilities.ability(0)[47] < need_lv:
-                    recipes_text += _("(需要[农业技能]等级>={0})").format(
-                        need_lv
-                    )
-                    flag_open = False
-                # 性别判定
-                if (
-                    target_character_data.sex == 0
-                    and recipes_data.sex_need == 1
-                ):
-                    recipes_text += _("(仅限女性调香对象)")
-                    flag_open = False
-                elif (
-                    target_character_data.sex == 1
-                    and recipes_data.sex_need == 0
-                ):
-                    recipes_text += _("(仅限男性调香对象)")
-                    flag_open = False
-                recipes_text += f"：{recipes_data.info}"
-
-                # 可以生产的话则输出
-                if flag_open:
+                if option.unlocked:
                     line_feed.draw()
                     button_draw = draw.LeftButton(
                         recipes_text,
-                        f"\n{recipes_id}",
+                        f"\n{option.recipe_id}",
                         window_width,
                         cmd_func=self.change_now_choice_recipe_id,
-                        args=(recipes_id),
+                        args=(option.recipe_id),
                     )
                     button_draw.draw()
                     return_list.append(button_draw.return_text)
                     line_feed.draw()
 
-                    formula_text = recipes_data.formula
                     now_text = _("     调香消耗：")
-                    # 以&为分割判定是否有多个需求
-                    if "&" not in formula_text:
-                        need_list = []
-                        need_list.append(formula_text)
-                    else:
-                        need_list = formula_text.split("&")
-                    for need_text in need_list:
-                        need_type = int(need_text.split("|")[0])
-                        need_value = int(need_text.split("|")[1])
-                        now_text += f"  {game_config.config_resouce[need_type].name}：{need_value}"
+                    for ingredient in option.ingredients:
+                        now_text += (
+                            f"  {ingredient.name}：{ingredient.required}"
+                        )
 
                     all_info_draw.text = now_text
                     all_info_draw.draw()
@@ -245,64 +186,14 @@ class Aromatherapy_Panel:
 
     def run_aromatherapy(self) -> None:
         """进行调香"""
-        # 检查是否有足够的资源
-        recipes_data = game_config.config_aromatherapy_recipes[
+        plan = aromatherapy_query.plan_aromatherapy_action(
             self.now_choice_recipe_id
-        ]
-        formula_text = recipes_data.formula
-        # 以&为分割判定是否有多个需求
-        if "&" not in formula_text:
-            need_list = []
-            need_list.append(formula_text)
-        else:
-            need_list = formula_text.split("&")
-        flag = True
-        for need_text in need_list:
-            need_type = int(need_text.split("|")[0])
-            need_value = int(need_text.split("|")[1])
-            if warehouse.amount(need_type) < need_value:
-                flag = False
-                break
-        if flag:
-            # 消耗资源、对方的调香效果与等待、成就在行动开始时结算
-            behavior_id, state = {
-                1: (
-                    constant.Behavior.AROMATHERAPY_1,
-                    constant.CharacterStatus.STATUS_AROMATHERAPY_1,
-                ),
-                2: (
-                    constant.Behavior.AROMATHERAPY_2,
-                    constant.CharacterStatus.STATUS_AROMATHERAPY_2,
-                ),
-                3: (
-                    constant.Behavior.AROMATHERAPY_3,
-                    constant.CharacterStatus.STATUS_AROMATHERAPY_3,
-                ),
-                4: (
-                    constant.Behavior.AROMATHERAPY_4,
-                    constant.CharacterStatus.STATUS_AROMATHERAPY_4,
-                ),
-                5: (
-                    constant.Behavior.AROMATHERAPY_5,
-                    constant.CharacterStatus.STATUS_AROMATHERAPY_5,
-                ),
-                6: (
-                    constant.Behavior.AROMATHERAPY_6,
-                    constant.CharacterStatus.STATUS_AROMATHERAPY_6,
-                ),
-                7: (
-                    constant.Behavior.AROMATHERAPY_7,
-                    constant.CharacterStatus.STATUS_AROMATHERAPY_7,
-                ),
-                8: (
-                    constant.Behavior.AROMATHERAPY_8,
-                    constant.CharacterStatus.STATUS_AROMATHERAPY_8,
-                ),
-            }[self.now_choice_recipe_id]
+        )
+        if plan.outcome.accepted and plan.behavior_id is not None:
             player_pick.choose(
-                behavior_id,
+                plan.behavior_id,
                 60,
                 kind="aromatherapy",
-                state=state,
-                args={"recipe_id": self.now_choice_recipe_id},
+                state=plan.state,
+                args={"recipe_id": plan.recipe_id},
             )

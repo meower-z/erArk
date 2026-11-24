@@ -706,3 +706,13 @@ reads = "Script/Settle/power_settle.py 与 Script/Settle/sleep_settle.py 源码�
 used_for = "测试：GUARDS 中两结算模块源码的任意作用域均不导入各自禁用的界面、Tk 或 io_init 模块"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R59"
+file = "tests/fast/test_boundary_snapshot_aromatherapy.py"
+symbol = "SnapshotImportBoundaryTest.test_snapshot_module_imports_stdlib_only"
+mechanism = "ast"
+reads = "Script/Protocol/boundary_snapshot.py 中的全部 import 与 from ... import 语句"
+used_for = "测试：Script/Protocol/boundary_snapshot.py 仅包含指向 Python 标准库的绝对导入"
+when = "test"
+capture = "suite"
