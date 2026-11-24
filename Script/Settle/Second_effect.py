@@ -8,8 +8,6 @@ from Script.Design import (
     handle_ability,
 )
 from Script.Core import constant_effect, game_type, get_text, num
-from Script.Config import normal_config
-from Script.UI.Moudle import draw
 from Script.Settle.common_default import (
     base_chara_experience_common_settle,
     base_chara_hp_mp_common_settle,
@@ -26,6 +24,7 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import h_meters, h_state, needs, player_collection
 from Script.Modules.domains import pregnancy, status, identity
+from Script.Modules.gameplay_resolution import ui_hooks
 
 
 def _bump_orgasm_count(character_id: int, part_id: int) -> None:
@@ -36,8 +35,6 @@ def _bump_orgasm_count(character_id: int, part_id: int) -> None:
 
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -3089,15 +3086,11 @@ def handle_milking_machine(
         milk_ml = activity.behavior(character_id).milk_ml
         activity.update_behavior(character_id, milk_ml=milk_ml + now_milk)
 
-        # 绘制信息
         if now_milk:
-            now_draw = draw.NormalDraw()
             now_text = _("\n{0}被搾乳机榨出了{1}ml的乳汁\n").format(
                 character_data.name, now_milk
             )
-            now_draw.text = now_text
-            now_draw.width = window_width
-            now_draw.draw()
+            ui_hooks.emit_notice(now_text, wait=False, use_text_width=True)
 
     """
     # 没有乳汁时停止榨乳
@@ -3146,15 +3139,11 @@ def handle_urine_collector(
         urine_ml = activity.behavior(character_id).urine_ml
         activity.update_behavior(character_id, urine_ml=urine_ml + now_urine)
 
-        # 绘制信息
         if now_urine:
-            now_draw = draw.NormalDraw()
             now_text = _("\n{0}被采尿器吸出了{1}ml的圣水\n").format(
                 character_data.name, now_urine
             )
-            now_draw.text = now_text
-            now_draw.width = window_width
-            now_draw.draw()
+            ui_hooks.emit_notice(now_text, wait=False, use_text_width=True)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -3201,11 +3190,7 @@ def handle_b_orgasm_to_milk(
                 "\n{0}在绝顶的同时喷出了{1}ml的乳汁，喷出的乳汁散落的到处都是\n"
             ).format(character_data.name, eject_milk)
 
-        # 绘制信息
-        now_draw = draw.NormalDraw()
-        now_draw.text = now_text
-        now_draw.width = window_width
-        now_draw.draw()
+        ui_hooks.emit_notice(now_text, wait=False, use_text_width=True)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -3248,11 +3233,7 @@ def handle_u_orgasm_to_pee(
                 "\n{0}在绝顶的同时漏出了{1}ml的尿液，漏出的尿液在地上汇成一滩\n"
             ).format(character_data.name, eject_urine)
 
-        # 绘制信息
-        now_draw = draw.NormalDraw()
-        now_draw.text = now_text
-        now_draw.width = window_width
-        now_draw.draw()
+        ui_hooks.emit_notice(now_text, wait=False, use_text_width=True)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -3298,14 +3279,10 @@ def handle_extra_orgasm(
             tenths_add=False,
             change_data=change_data,
         )
-        # 绘制信息
-        now_draw = draw.NormalDraw()
         now_text = _(
             "\n{0}因为第{1}次的连续额外绝顶而被迫感受到了更多的苦痛和恐怖\n"
         ).format(character_data.name, all_extra_count)
-        now_draw.text = now_text
-        now_draw.width = window_width
-        now_draw.draw()
+        ui_hooks.emit_notice(now_text, wait=False, use_text_width=True)
         # 额外高潮次数清零
         h_state.set(character_id, extra_orgasm_count=0)
 
