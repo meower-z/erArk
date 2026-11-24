@@ -1,16 +1,14 @@
 """
 Tk 界面向后端登记的回调函数
 ===========================
-本模块向 playthrough 登记设定表补齐时的提示绘制函数。
-本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
-本模块向 gameplay_resolution.ui_hooks 登记提示文本、数值变化与图片绘制函数，
-以及面板切换函数、确认提问函数与隐奸中显示非H指令开关查询函数。
-本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
-本模块向 gameplay_resolution.ejaculation_service 登记射精文本、忍耐询问与射精面板绘制函数。
-本模块向 gameplay_resolution.hidden_sex_service 登记隐奸被发现面板的绘制函数。
-本模块向 gameplay_resolution.pregnancy_hooks 登记生产与破壳面板绘制函数。
-本模块不登记内核钩子。
-load_order 导入本模块时完成上述登记。
+load_order 导入本模块时完成以下登记，本模块不登记内核钩子：
+- playthrough：设定表补齐提示。
+- save_load.reset：new_round 与 panel 界面实现。
+- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、面板切换、确认提问与隐奸非H开关查询。
+- achievement_service：新达成成就提示。
+- ejaculation_service：射精文本、忍耐询问与射精面板。
+- hidden_sex_service：隐奸被发现面板。
+- pregnancy_hooks：生产与破壳面板。
 """
 
 from collections.abc import Mapping
@@ -27,7 +25,7 @@ from Script.Modules.save_load import reset
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
 from Script.Protocol.delta_events import DeltaEntry, DeltaEvent
 from Script.Protocol.narrative_events import NarrativeEvent, TextBlock, TextSpan
-from Script.UI.Moudle import draw, view
+from Script.UI.Moudle import draw, rich_text_draw, view
 
 _ = get_text._
 """ 文本翻译函数，指向 get_text._。 """
@@ -136,6 +134,50 @@ def draw_image(img_name: str) -> None:
     None -- 无返回值
     """
     draw.ImageDraw(img_name).draw()
+
+
+@ui_hooks.on_divider
+def draw_divider(char: str = "-") -> None:
+    """
+    按当前配置文本宽度使用 draw.LineDraw 绘制分隔线。
+    Keyword arguments:
+    char -- str，分隔线平铺字符，默认为 "-"
+    Return arguments:
+    None -- 无返回值
+    """
+    draw.LineDraw(char, normal_config.config_normal.text_width).draw()
+
+
+@ui_hooks.on_rich_talk
+def draw_rich_talk(
+    text: str,
+    *,
+    base_style: str = "standard",
+    wait_flag: bool = True,
+    trailing_wait: bool = False,
+) -> None:
+    """
+    依次绘制空白换行、按配置文本宽度逐项绘制富文本口上片段，并在需要时追加换行等待。
+    Keyword arguments:
+    text -- str，要绘制的富文本口上文本
+    base_style -- str，无行内标签时的基础样式名，默认为 "standard"
+    wait_flag -- bool，为真时在换行处等待玩家确认，默认为 True
+    trailing_wait -- bool，为真时在末尾绘制一次带等待的 " \\n"，默认为 False
+    Return arguments:
+    None -- 无返回值
+    """
+    line_feed_draw = draw.NormalDraw()
+    line_feed_draw.text = "\n"
+    line_feed_draw.draw()
+    for rich_draw in rich_text_draw.get_rich_text_draw_list(
+        text, base_style=base_style, wait_flag=wait_flag
+    ):
+        rich_draw.width = normal_config.config_normal.text_width
+        rich_draw.draw()
+    if trailing_wait:
+        wait_draw = draw.LineFeedWaitDraw()
+        wait_draw.text = " \n"
+        wait_draw.draw()
 
 
 @ui_hooks.on_panel_switch

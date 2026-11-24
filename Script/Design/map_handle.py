@@ -3,19 +3,17 @@
 import os
 import json
 from Script.Core import game_type, get_text, constant
-from Script.Config import game_config, normal_config
-from Script.UI.Moudle import draw
+from Script.Config import game_config
 from types import FunctionType
 from Script.Modules.domains import activity, chara_life, facility, flags
 from Script.Modules.domains import relations, identity, scene_state
+from Script.Modules.gameplay_resolution import ui_hooks
 
 scene_path_edge_path = os.path.join("data", "ScenePath")
 """ 寻路路径配置文件路径 """
 # 值是 [本次移动到的位置, 移动耗时] 两项列表，两项类型不同，故不写元素类型
 scene_path_edge: dict[str, dict[str, list]] = {}
 """ 寻路路径 """
-width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -693,12 +691,8 @@ def judge_scene_accessible(
                             )
                             break
 
-                line = draw.LineDraw("-", width)
-                line.draw()
-                info_draw = draw.WaitDraw()
-                info_draw.text = info_text
-                info_draw.width = width
-                info_draw.draw()
+                ui_hooks.emit_divider("-")
+                ui_hooks.emit_notice(info_text, wait=True, use_text_width=True)
 
             return "wait_open"
 
@@ -742,19 +736,16 @@ def judge_scene_accessible(
             pass
         else:
             # 如果是玩家的话输出提示信息
-            if character_id == 0:
-                line = draw.LineDraw("-", width)
-                info_draw = draw.WaitDraw()
-                info_draw.width = width
-                info_draw.text = _(
-                    "\n  ●目标移动房间——{0}，当前门是锁着的，需要钥匙或其他方法进入\n"
-                ).format(now_scene_data.scene_name)
-                if draw_flag:
-                    line.draw()
-                    info_draw.draw()
-                return "door_lock"
-            else:
-                return "door_lock"
+            if character_id == 0 and draw_flag:
+                ui_hooks.emit_divider("-")
+                ui_hooks.emit_notice(
+                    _(
+                        "\n  ●目标移动房间——{0}，当前门是锁着的，需要钥匙或其他方法进入\n"
+                    ).format(now_scene_data.scene_name),
+                    wait=True,
+                    use_text_width=True,
+                )
+            return "door_lock"
 
     # 私密场所判断，仅限干员
     # 被邀请群交的角色可以进

@@ -10,13 +10,12 @@ from types import FunctionType
 from Script.Core import constant, game_type, get_text
 from Script.Core import value_handle
 from Script.Design import map_handle, handle_premise, talk_image
-from Script.UI.Moudle import draw, rich_text_draw
 from Script.Config import normal_config, game_config
 from Script.Design import game_time
 from Script.Modules.domains import action_info, activity, chara_profile, flags
 from Script.Modules.domains import inventory, wardrobe, scene_state
 from Script.Modules.domains import identity
-from Script.Modules.gameplay_resolution import library_service
+from Script.Modules.gameplay_resolution import library_service, ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -425,8 +424,6 @@ def handle_talk_draw(
     second_behavior_id -- 二段行为id，默认为""
     common_behavior_id -- 选择器生成纸娃娃地文时的行为ID，默认为None
     """
-    from Script.Design import handle_chat_ai
-
     character_data: identity.Identity = identity.of(character_id)
     # 二段结算前会单独绘制一个信息文本
     if second_behavior_id != "":
@@ -457,23 +454,16 @@ def handle_talk_draw(
         __, special_code = special_code_judge(talk_text)
         # 检测并绘制图片
         talk_text = talk_image.draw_image_in_talk(talk_text)
-        now_draw: draw.NormalDraw = draw.LineFeedWaitDraw()
-        # 跳过每次的等待
-        if special_code[0]:
-            now_draw = draw.NormalDraw()
         # 获取最终输出文本
         now_talk_text = code_text_to_draw_text(
             talk_text, character_id, common_behavior_id is not None
         )
-        now_draw.text = now_talk_text
-        now_draw.width = normal_config.config_normal.text_width
         # 角色口上
         final_color = "standard"
         if unusual_talk_flag:
             # 首选当前口上所对应的角色id的文本颜色
             talk_character_data = identity.of(unusual_talk_flag)
             if talk_character_data.text_color:
-                now_draw.style = talk_character_data.name
                 final_color = talk_character_data.name
             # 如果没有，则根据当前角色与交互对象来决定文本颜色
             else:
@@ -481,7 +471,6 @@ def handle_talk_draw(
                 text_color = character_data.text_color
                 # 优先选角色自己
                 if text_color:
-                    now_draw.style = character_data.name
                     final_color = character_data.name
                 # 如果还没有则选择交互对象
                 else:
@@ -490,20 +479,20 @@ def handle_talk_draw(
                     )
                     tar_text_color = target_character_data.text_color
                     if tar_text_color:
-                        now_draw.style = target_character_data.name
                         final_color = target_character_data.name
             # 翻译口上
             if (
                 normal_config.config_normal.language != "zh_CN"
                 and normal_config.ai_setting.ai_chat_translator_setting == 2
             ):
+                from Script.Design import handle_chat_ai
+
                 now_talk_text = handle_chat_ai.judge_use_text_ai(
                     character_id,
                     now_behavior_id,
                     now_talk_text,
                     translator=True,
                 )
-                now_draw.text = now_talk_text
         # 地文
         else:
             normal_config.ai_setting.ai_chat_setting.setdefault(1, 0)
@@ -512,40 +501,28 @@ def handle_talk_draw(
                 normal_config.config_normal.language != "zh_CN"
                 and normal_config.ai_setting.ai_chat_translator_setting >= 1
             ):
+                from Script.Design import handle_chat_ai
+
                 now_talk_text = handle_chat_ai.judge_use_text_ai(
                     character_id,
                     now_behavior_id,
                     now_talk_text,
                     translator=True,
                 )
-                now_draw.text = now_talk_text
             # 如果启用了文本生成ai
             elif normal_config.ai_setting.ai_chat_setting[1]:
-                now_draw = draw.LineFeedWaitDraw()
+                from Script.Design import handle_chat_ai
+
                 now_talk_text = handle_chat_ai.judge_use_text_ai(
                     character_id, now_behavior_id, now_talk_text
                 )
-                now_draw.width = normal_config.config_normal.text_width
-                now_draw.text = now_talk_text
 
-        # 进行原文本的绘制，现已被富文本绘制替代
-        # now_draw.draw()
-        # 先绘制一个空白的换行
-        line_feed_draw = draw.NormalDraw()
-        line_feed_draw.text = "\n"
-        line_feed_draw.draw()
-        # 进行富文本的绘制
-        rich_text_draw_list = rich_text_draw.get_rich_text_draw_list(
-            now_talk_text, base_style=final_color, wait_flag=True
+        ui_hooks.emit_rich_talk(
+            now_talk_text,
+            base_style=final_color,
+            wait_flag=True,
+            trailing_wait=special_code[0],
         )
-        for rich_draw in rich_text_draw_list:
-            rich_draw.width = normal_config.config_normal.text_width
-            rich_draw.draw()
-        # 在最后进行一次换行和等待
-        if special_code[0]:
-            wait_draw = draw.LineFeedWaitDraw()
-            wait_draw.text = " \n"
-            wait_draw.draw()
 
 
 def must_show_talk_check(character_id: int) -> None:
@@ -600,9 +577,8 @@ def second_behavior_info_text(
     """
     character_data: identity.Identity = identity.of(character_id)
     chara_name = character_data.name
-    info_draw = draw.WaitDraw()
     info_text = ""
-    info_draw.style = "standard"
+    style = "standard"
     # 多重绝顶
     if "plural_orgasm" in second_behavior_id:
         count_name_list = [
@@ -636,7 +612,7 @@ def second_behavior_info_text(
             else:
                 orgasm_degree = _("射精")
             info_text = f"\n{chara_name}{orgasm_degree}\n"
-            info_draw.style = "semen"
+            style = "semen"
         # NPC
         else:
             # 获取部位名称（按二段行为id的首字母）
@@ -687,43 +663,42 @@ def second_behavior_info_text(
         )
         # 如果是恐怖和反发刻印，则将绘制变成猩红
         if mark_name == _("恐怖") or mark_name == _("反发"):
-            info_draw.style = "crimson"
+            style = "crimson"
     # B绝顶喷乳
     elif second_behavior_id == "b_orgasm_to_milk":
         info_text = _("\n{0}因B绝顶而被迫喷乳\n").format(chara_name)
-        info_draw.style = "semen"
+        style = "semen"
     # U绝顶漏尿
     elif second_behavior_id == "u_orgasm_to_pee":
         info_text = _("\n{0}因U绝顶而被迫漏尿\n").format(chara_name)
-        info_draw.style = "khaki"
+        style = "khaki"
     # 初吻
     elif second_behavior_id == "first_kiss":
         info_text = _("\n{0}失去了【初吻】\n").format(chara_name)
-        info_draw.style = "gold_enrod"
+        style = "gold_enrod"
     # v处女
     elif second_behavior_id == "first_sex":
         info_text = _("\n{0}失去了【阴道处女】\n").format(chara_name)
-        info_draw.style = "gold_enrod"
+        style = "gold_enrod"
     # a处女
     elif second_behavior_id == "first_a_sex":
         info_text = _("\n{0}失去了【肛门处女】\n").format(chara_name)
-        info_draw.style = "gold_enrod"
+        style = "gold_enrod"
     # u处女
     elif second_behavior_id == "first_u_sex":
         info_text = _("\n{0}失去了【尿道处女】\n").format(chara_name)
-        info_draw.style = "gold_enrod"
+        style = "gold_enrod"
     # w处女
     elif second_behavior_id == "first_w_sex":
         info_text = _("\n{0}失去了【子宫处女】\n").format(chara_name)
-        info_draw.style = "gold_enrod"
+        style = "gold_enrod"
 
     # 最后补一个换行
     if info_text != "":
         info_text += "\n"
-        if info_draw.style == "standard":
-            info_draw.style = "gold_enrod"
-        info_draw.text = info_text
-        info_draw.draw()
+        if style == "standard":
+            style = "gold_enrod"
+        ui_hooks.emit_notice(info_text, wait=True, style=style)
 
     return info_text
 
