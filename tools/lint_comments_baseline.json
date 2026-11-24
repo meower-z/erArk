@@ -71,7 +71,7 @@
   "Script/Modules/domains/recruit.py": 1,
   "Script/Modules/domains/scene_state.py": 3,
   "Script/Modules/gameplay_resolution/intent.py": 1,
-  "Script/Settle/Second_effect.py": 60,
+  "Script/Settle/Second_effect.py": 55,
   "Script/Settle/__init__.py": 1,
   "Script/Settle/common_default.py": 189,
   "Script/Settle/default.py": 533,

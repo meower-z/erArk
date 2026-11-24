@@ -676,3 +676,13 @@ reads = "Script/Settle/item_effect.py、Script/Settle/realtime_settle.py 与 Scr
 used_for = "测试：这三个结算模块的任意作用域均不导入 BANNED 中的界面、Tk 与输入输出模块"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R53"
+file = "tests/fast/test_second_effect_draw_notices.py"
+symbol = "SecondEffectBoundaryTest.test_imports_ui_hooks_not_ui"
+mechanism = "ast"
+reads = "Script/Settle/Second_effect.py 中的全部 import 与 from ... import 语句"
+used_for = "测试：Script/Settle/Second_effect.py 导入 ui_hooks，且不导入 Script.UI、tkinter 或 Script.Core.io_init"
+when = "test"
+capture = "suite"
