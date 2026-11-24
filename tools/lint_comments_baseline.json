@@ -105,7 +105,7 @@
   "Script/System/First_Record_System/first_record_handle.py": 13,
   "Script/System/First_Record_System/first_record_panel.py": 25,
   "Script/System/Instruct_System/Instruct.py": 9,
-  "Script/System/Instruct_System/handle_instruct.py": 56,
+  "Script/System/Instruct_System/handle_instruct.py": 51,
   "Script/System/Instruct_System/reorganize_instruct_config.py": 33,
   "Script/System/Instruct_System/see_instruct_panel.py": 40,
   "Script/System/Item_System/condom_handle.py": 15,

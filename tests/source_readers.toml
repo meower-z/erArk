@@ -940,3 +940,13 @@ reads = "通过 banned_imports 读取 Script/Modules/gameplay_resolution/talent_
 used_for = "测试：Script/Modules/gameplay_resolution/talent_up_service.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R86"
+file = "tests/fast/test_instruct_plan_service.py"
+symbol = "ImportBoundaryTest.test_sources_import_no_ui_or_handle_instruct"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Modules/gameplay_resolution/instruct_plan_service.py 的源码字节，并通过 _imported_names 读取 Script/Design/settle_behavior.py 与 Script/Settle/realtime_settle.py 的源码字节以解析全部导入语句"
+used_for = "测试：instruct_plan_service.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束，且 settle_behavior.py 与 realtime_settle.py 不导入 Script.System.Instruct_System.handle_instruct"
+when = "test"
+capture = "suite"

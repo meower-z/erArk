@@ -653,7 +653,7 @@ def break_arts() -> "core.Effects":
     Return arguments:
     Effects -- 要交回内核的打断
     """
-    from Script.System.Instruct_System import handle_instruct
+    from Script.Modules.gameplay_resolution import instruct_plan_service as ips
 
     ui_hooks.emit_notice(
         _("\n理智值不足，开启的源石技艺已全部中断\n"),
@@ -665,7 +665,7 @@ def break_arts() -> "core.Effects":
     player_ability.set(0, visual=False)
     items: list[core.Effect] = []
     for behavior_id in _arts_ends_to_plan():
-        items.extend(handle_instruct.plan_instruct_common_settle(behavior_id))
+        items.extend(ips.plan_instruct_common_settle(behavior_id))
     return tuple(items)
 
 
