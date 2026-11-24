@@ -859,11 +859,11 @@ class FinanceReportSubPanel(_BaseSubPanel):
 
     def _show_recent_reports(self) -> None:
         """弹出最近几日的医疗经营日志"""
-
-        reports = medical_service.get_recent_medical_reports(limit=3)
-        medical_service.render_medical_reports(
-            reports,
-            width=self.width,
-            draw_flag=True,
+        wait_draw = draw.WaitDraw()
+        wait_draw.width = self.width
+        wait_draw.text = medical_service.render_medical_reports(
+            medical_service.get_recent_medical_reports(limit=3),
+            draw_flag=False,
             empty_message=_("\n暂无医疗经营日志记录。\n"),
         )
+        wait_draw.draw()

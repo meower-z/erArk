@@ -816,3 +816,13 @@ reads = "通过 ui_imports 读取 Script/Design/character_move.py 与 Script/Cor
 used_for = "测试：Script/Design/character_move.py 与 Script/Core/save_handle.py 均不导入 Script.UI 下的模块"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R69"
+file = "tests/fast/test_medical_log_draw_hooks.py"
+symbol = "MedicalImportBoundaryTest.test_non_panel_modules_import_no_ui"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/System/Medical_System 下除两个界面面板文件外各 .py 源码中的 import 与 from ... import 语句"
+used_for = "测试：Script/System/Medical_System 中界面面板以外的模块遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的同一导入约束"
+when = "test"
+capture = "suite"
