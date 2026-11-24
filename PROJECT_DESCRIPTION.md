@@ -686,7 +686,7 @@ Script/
 | 烹饪题库 | `data/csv/cook_question/*.csv` | 140 张题目表 -> `Cook_Question.json` |
 | 道具背包 | `UI/Panel/see_item_info_panel.py` | `Item.csv` |
 | 成人用品商店 | `UI/Panel/h_item_shop_panel.py` | H 道具 |
-| 礼物 | `UI/Panel/gift_panel.py` | `Gift_Items.csv` |
+| 礼物 | `UI/Panel/gift_panel.py`, `Modules/gameplay_resolution/gift_service.py` | `Gift_Items.csv` |
 | 香薰疗愈 | `UI/Panel/aromatherapy_panel.py` | `Aromatherapy_Recipes.csv` |
 | 泡咖啡（加料） | 面板 ID `MAKE_COFFEE_ADD=60` | 咖啡与特殊调料 |
 | 调酒 | 面板 ID `MIXOLOGY=66` | 酒类系统 |
