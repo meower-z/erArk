@@ -4,7 +4,7 @@ Tk 界面向后端登记的回调函数
 本模块向 playthrough 登记设定表补齐时的提示绘制函数。
 本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
 本模块向 gameplay_resolution.ui_hooks 登记提示文本、数值变化与图片绘制函数，
-以及面板切换与隐奸中显示非H指令开关查询函数。
+以及面板切换函数、确认提问函数与隐奸中显示非H指令开关查询函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
 本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
 本模块向 gameplay_resolution.hidden_sex_service 登记隐奸被发现面板的绘制函数。
@@ -16,7 +16,7 @@ load_order 导入本模块时完成上述登记。
 from collections.abc import Mapping
 
 from Script.Config import normal_config
-from Script.Core import constant
+from Script.Core import constant, flow_handle, get_text
 from Script.Kernel import core
 from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import achievement_service
@@ -28,6 +28,9 @@ from Script.Modules.tk_ui.event_stream_adapter import STREAM
 from Script.Protocol.delta_events import DeltaEntry, DeltaEvent
 from Script.Protocol.narrative_events import NarrativeEvent, TextBlock, TextSpan
 from Script.UI.Moudle import draw, view
+
+_ = get_text._
+""" 文本翻译函数，指向 get_text._。 """
 
 
 @playthrough.on_filled
@@ -155,6 +158,37 @@ def show_non_h_in_hidden_sex() -> bool:
     bool -- 当前开关状态对应的布尔值
     """
     return bool(view.show_non_h_in_hidden_sex)
+
+
+@ui_hooks.on_confirm
+def draw_confirm(text: str) -> bool:
+    """
+    依次使用 WaitDraw 绘制提问文本，并绘制两次换行、[确定]与[返回]两个居中按钮及一次换行。
+    两个居中按钮的宽度均取 int(normal_config.config_normal.text_width / 2)。
+    绘制完成后调用 flow_handle.askfor_all 等待玩家在两个按钮间选择。
+    Keyword arguments:
+    text -- str，要向玩家提问的文本
+    Return arguments:
+    bool -- 选中结果等于[确定]按钮响应文本时返回 True，否则返回 False
+    """
+    line_feed = draw.NormalDraw()
+    line_feed.text = "\n"
+    line_feed.width = 1
+    ask_draw = draw.WaitDraw()
+    ask_draw.text = text
+    ask_draw.draw()
+    line_feed.draw()
+    line_feed.draw()
+    width = normal_config.config_normal.text_width
+    yes_draw = draw.CenterButton(_("[确定]"), _("确定"), int(width / 2))
+    yes_draw.draw()
+    back_draw = draw.CenterButton(_("[返回]"), _("返回"), int(width / 2))
+    back_draw.draw()
+    line_feed.draw()
+    answer = flow_handle.askfor_all(
+        [yes_draw.return_text, back_draw.return_text]
+    )
+    return answer == yes_draw.return_text
 
 
 @achievement_service.on_unlocked
