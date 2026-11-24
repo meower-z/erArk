@@ -690,8 +690,8 @@ def check_assistant_services_key_set_complete() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        校验每个角色的assistant_services应恰好包含服务键2..10。级别为warning：assistant_panel.py与
-        handle_premise_assistant.py均用setdefault兜底缺键，老存档迁移可能暂时缺键
+        校验每个角色的assistant_services应恰好包含服务键2..10，级别为warning。老存档迁移可能缺键。
+        assistant_service.py用setdefault兜底非2号缺键。handle_premise_assistant.py对2与10号键用get。
     """
     failures = []
     character_data = identity.table()

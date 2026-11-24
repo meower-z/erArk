@@ -1,17 +1,15 @@
-"""助理面板，以及助理候选、选择与替换的处理"""
+"""
+助理选择与助理服务调整界面面板，负责界面绘制、输入交互及早晚安预定时间设置。
+"""
 
 from types import FunctionType
 from Script.Core import constant, flow_handle
 from Script.Core import get_text, py_cmd
-from Script.Design import attr_calculation, handle_premise, map_handle
-from Script.Design import second_behavior
 from Script.UI.Moudle import draw, panel, view
-from Script.Modules.domains import action_info, flags, roster, visitor, work
-from Script.Modules.domains import chara_life, relations, modes
-from Script.Modules.save_load import reset
+from Script.Modules.domains import action_info, relations
+from Script.Modules.gameplay_resolution import assistant_service
 from Script.Config import game_config, normal_config
 
-import random
 from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
@@ -22,29 +20,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def get_assistant_candidates() -> list[int]:
-    """
-    获取助理候选角色id列表
-    """
-    candidates = []
-    npc_id_got_list = list(roster.active_sorted())
-    for npc_id in npc_id_got_list:
-        # 跳过玩家
-        if npc_id == 0:
-            continue
-        # 跳过2、7异常
-        if handle_premise.handle_unnormal_27(npc_id):
-            continue
-        # 跳过监狱长
-        if npc_id == work.warden():
-            continue
-        # 跳过访客
-        if visitor.is_visitor(npc_id):
-            continue
-        candidates.append(npc_id)
-    return candidates
 
 
 def chose_assistant() -> None:
@@ -76,8 +51,12 @@ def chose_assistant() -> None:
         selected_id_list = [assistant_id]
         final_list = []
         # 遍历候选角色id
-        for npc_id in get_assistant_candidates():
-            now_list = [npc_id, assistant_replace, selected_id_list]
+        for npc_id in assistant_service.get_assistant_candidates():
+            now_list = [
+                npc_id,
+                assistant_service.assistant_replace,
+                selected_id_list,
+            ]
             final_list.append(now_list)
         now_draw_panel.text_list = final_list
 
@@ -91,114 +70,6 @@ def chose_assistant() -> None:
         yrn = flow_handle.askfor_all(return_list)
         if yrn in return_list and yrn not in other_return_list:
             break
-
-
-def select_random_assistant() -> None:
-    """
-    随机选择助理\n
-    Keyword arguments:
-    无\n
-    Return arguments:
-    无
-    """
-
-    # 随机选择
-    assistant_id = random.choice(get_assistant_candidates())
-    # 绘制提示信息
-    info_draw = draw.WaitDraw()
-    info_text = _("\n○本周抽签选中了{0}作为{1}的助理\n").format(
-        identity.of(assistant_id).name, identity.of(0).name
-    )
-    info_draw.text = info_text
-    info_draw.width = window_width
-    info_draw.draw()
-    # 开始替换助理
-    assistant_replace(assistant_id)
-
-
-def assistant_replace(new_assistant_id: int) -> None:
-    """
-    助理替换\n
-    Keyword arguments:
-    new_assistant_id -- 新助理角色id
-    """
-    old_id = relations.assistant_character_id(0)
-
-    # 判断是否有旧助理
-    old_assistant_data: identity.Identity | None = None
-    if old_id != 0:
-        # 去掉旧助理的跟随状态
-        old_assistant_data = identity.of(old_id)
-        flags.set(old_id, is_follow=0)
-        # 去掉旧助理的同居状态
-        if chara_life.dormitory(
-            old_id
-        ) == map_handle.get_map_system_path_str_for_list(["中枢", "博士房间"]):
-            from Script.System.Dormitory_System import (
-                common as dormitory_common,
-            )
-
-            dormitory_common.restore_character_dormitory(old_id)
-        # 重置旧助理的助理服务数据体
-        zero = attr_calculation.get_assistant_services_zero()
-        relations.assistant_services.set(old_id, zero)
-
-    line = draw.LineDraw("-", window_width)
-    line.draw()
-    info_draw = draw.WaitDraw()
-    info_text = ""
-
-    # 新助理是旧助理时，仅取消该助理
-    if new_assistant_id == old_id:
-        relations.assistant_character_id.set(0, 0)
-    # 新助理状态异常时，无法任命
-    elif handle_premise.handle_unnormal_27(new_assistant_id):
-        new_assistant_data: identity.Identity = identity.of(new_assistant_id)
-        info_text += _("\n{0}的状态异常，无法任命为助理干员\n").format(
-            new_assistant_data.name
-        )
-        old_assistant_data = None
-    # 正常情况下，设置新助理
-    else:
-        relations.assistant_character_id.set(0, new_assistant_id)
-        new_assistant_data = identity.of(new_assistant_id)
-        flags.set(new_assistant_id, is_follow=1)
-        relations.assistant_services.set_item(new_assistant_id, 2, 1)
-        second_behavior.character_get_second_behavior(
-            new_assistant_id, "not_as_assistant", reset=True
-        )
-        second_behavior.character_get_second_behavior(
-            new_assistant_id, "chosen_as_assistant"
-        )
-        info_text += _("\n{0}成为助理干员了，并默认开启智能跟随模式\n").format(
-            new_assistant_data.name
-        )
-        # 同步换助理的选项
-        if old_assistant_data is not None:
-            if relations.assistant_services(old_id).get(10) == 1:
-                relations.assistant_services.set_item(new_assistant_id, 10, 1)
-    # 取消旧助理的结算
-    if old_assistant_data is not None:
-        second_behavior.character_get_second_behavior(
-            new_assistant_id, "chosen_as_assistant", reset=True
-        )
-        second_behavior.character_get_second_behavior(
-            old_assistant_data.cid, "not_as_assistant"
-        )
-        info_text += _(
-            "\n\n{0}不再是助理干员了，已清零助理服务相关的设置\n\n"
-        ).format(old_assistant_data.name)
-    info_draw.text = info_text
-    info_draw.width = window_width
-    info_draw.draw()
-
-
-@reset.repair
-def repair_follow_flag() -> None:
-    """读档时修补：跟随状态超出 0-4 的角色归零"""
-    for character_data in identity.table().values():
-        if flags.get(character_data.cid, "is_follow") > 4:
-            flags.set(character_data.cid, is_follow=0)
 
 
 class Assistant_Panel:
@@ -246,7 +117,7 @@ class Assistant_Panel:
                 button_text,
                 self.width,
                 cmd_func=self.chose_button,
-                args=(0, 1),
+                args=(0,),
             )
             button_draw.draw()
             return_list.append(button_draw.return_text)
@@ -268,7 +139,6 @@ class Assistant_Panel:
                     service_option_text_now = service_option_text_all[
                         services.get(cid, 0)
                     ]
-                    service_option_len = len(service_option_text_all)
 
                     # 绘制输出文本
                     button_text = (
@@ -280,7 +150,7 @@ class Assistant_Panel:
                         button_text,
                         self.width,
                         cmd_func=self.chose_button,
-                        args=(cid, service_option_len),
+                        args=(cid,),
                     )
                     button_draw.draw()
                     return_list.append(button_draw.return_text)
@@ -339,167 +209,19 @@ class Assistant_Panel:
                 view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
-    def chose_button(self, service_cid: int, service_option_len: int) -> None:
-        """玩家点击了选项"""
-        assistant_id = relations.assistant_character_id(0)
-        assistant_data = identity.of(assistant_id)
-
-        # 选择助理
+    def chose_button(self, service_cid: int) -> None:
+        """
+        处理助理面板按钮点击。
+        编号为 0 时打开助理选择界面，非 0 时调用 assistant_service.cycle_service 切换对应服务档位。
+        Keyword arguments:
+        service_cid -- int，按钮对应的服务编号，0 表示选择助理
+        Return arguments:
+        None -- 无返回值
+        """
         if service_cid == 0:
             chose_assistant()
-        # 跟随服务
-        elif service_cid == 2:
-            with relations.assistant_services.editing(assistant_id) as services:
-                services[service_cid] = not services.get(service_cid, 0)
-            if (
-                flags.get(assistant_data.cid, "is_follow") == 1
-                or flags.get(assistant_data.cid, "is_follow") > 4
-            ):
-                flags.set(assistant_data.cid, is_follow=0)
-            else:
-                flags.set(
-                    assistant_data.cid,
-                    is_follow=flags.get(assistant_data.cid, "is_follow") + 1,
-                )
-        # 其他服务
         else:
-            with relations.assistant_services.editing(assistant_id) as services:
-                level = services.setdefault(service_cid, 0)
-            if level == service_option_len - 1:
-                relations.assistant_services.set_item(
-                    assistant_id, service_cid, 0
-                )
-            else:
-                # 判断是否符合解锁条件
-                service_option_data = (
-                    game_config.config_assistant_services_option[service_cid]
-                )
-                service_option_text_all = service_option_data[0]
-                service_option_text_next = service_option_text_all[level + 1]
-                service_require_text_all = service_option_data[1]
-                service_require_text_next = service_require_text_all[level + 1]
-                judge, reason = attr_calculation.judge_require(
-                    [service_require_text_next],
-                    assistant_id,
-                    hypnosis_replace_trust_flag=True,
-                )
-
-                if judge:
-                    relations.assistant_services.set_item(
-                        assistant_id, service_cid, level + 1
-                    )
-                # debug模式下不判断解锁条件
-                elif modes.debug():
-                    relations.assistant_services.set_item(
-                        assistant_id, service_cid, level + 1
-                    )
-                # 不符合解锁条件时输出提示信息并归零
-                else:
-                    info_draw = draw.WaitDraw()
-                    info_text = _("\n  ○更改失败，[{0}]{1}\n").format(
-                        service_option_text_next, reason
-                    )
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    relations.assistant_services.set_item(
-                        assistant_id, service_cid, 0
-                    )
-                    return
-
-            # 结算附带的属性变化
-            self.settlement_of_associated_attribute(
-                service_cid, service_option_len
-            )
-
-    def settlement_of_associated_attribute(
-        self, service_cid: int, service_option_len: int
-    ) -> None:
-        """结算附带的属性变化"""
-        # 跳过没有变化的
-        if service_cid in {10}:
-            return
-        assistant_id = relations.assistant_character_id(0)
-
-        # 去掉选助理的1号选项
-        if service_cid >= 2:
-            # 定义多选项行为前缀
-            behavior_prefixes = {
-                2: "ai_follow_",
-                4: "assistant_send_food_",
-                5: "morning_service_",
-                6: "night_service_",
-            }
-            # 定义二值开关行为前缀
-            binary_prefixes = {
-                3: "support_service_",
-                7: "cohabitation_",
-                8: "love_support_",
-            }
-
-            # 处理多选项行为
-            if service_cid in behavior_prefixes:
-                prefix = behavior_prefixes[service_cid]
-                # 清除同类所有二段结算标记
-                for i in range(service_option_len):
-                    key = f"{prefix}{i}"
-                    second_behavior.character_get_second_behavior(
-                        assistant_id, key, reset=True
-                    )
-                # 设置当前选项对应的二段结算
-                current_index = relations.assistant_services(assistant_id)[
-                    service_cid
-                ]
-                key_now = f"{prefix}{current_index}"
-                second_behavior.character_get_second_behavior(
-                    assistant_id, key_now
-                )
-            # 处理二值开关行为
-            elif service_cid in binary_prefixes:
-                prefix = binary_prefixes[service_cid]
-                # 清除“on”和“off”旧状态
-                key_on = f"{prefix}on"
-                key_off = f"{prefix}off"
-                second_behavior.character_get_second_behavior(
-                    assistant_id, key_on, reset=True
-                )
-                second_behavior.character_get_second_behavior(
-                    assistant_id, key_off, reset=True
-                )
-                # 根据当前服务开关状态赋值
-                if relations.assistant_services(assistant_id)[service_cid]:
-                    second_behavior.character_get_second_behavior(
-                        assistant_id, key_on
-                    )
-                else:
-                    second_behavior.character_get_second_behavior(
-                        assistant_id, key_off
-                    )
-
-            # 同居服务的宿舍改变
-            # 此处不可以用翻译地点
-            if service_cid == 7:
-                if relations.assistant_services(assistant_id)[service_cid] == 1:
-                    from Script.System.Dormitory_System import (
-                        common as dormitory_common,
-                    )
-
-                    dormitory_common.register_permanent_dormitory(assistant_id)
-                    chara_life.dormitory.set(
-                        assistant_id,
-                        map_handle.get_map_system_path_str_for_list(
-                            ["中枢", "博士房间"]
-                        ),
-                    )
-                elif chara_life.dormitory(
-                    assistant_id
-                ) == map_handle.get_map_system_path_str_for_list(
-                    ["中枢", "博士房间"]
-                ):
-                    from Script.System.Dormitory_System import (
-                        common as dormitory_common,
-                    )
-
-                    dormitory_common.restore_character_dormitory(assistant_id)
+            assistant_service.cycle_service(service_cid)
 
     def select_morning_salutation_time(self) -> None:
         """选择早安服务的时间"""
@@ -685,61 +407,3 @@ class Assistant_Panel:
                         0, "plan_to_sleep_time", 1, user_input
                     )
                 break
-
-
-class SeeNPCButtonList:
-    """
-    点击后可选择作为助理的NPC的按钮对象
-    Keyword arguments:
-    chara_id -- 角色id
-    width -- 最大宽度
-    is_button -- 绘制按钮
-    num_button -- 绘制数字按钮
-    button_id -- 数字按钮id
-    """
-
-    def __init__(
-        self,
-        chara_id: int,
-        width: int,
-        is_button: bool,
-        num_button: bool,
-        button_id: int,
-    ) -> None:
-        """初始化绘制对象"""
-
-        self.chara_id: int = chara_id
-        """ 角色id """
-        self.draw_text: str = ""
-        """ 绘制文本 """
-        self.width: int = width
-        """ 最大宽度 """
-        self.num_button: bool = num_button
-        """ 绘制数字按钮 """
-        self.button_id: int = button_id
-        """ 数字按钮的id """
-        self.button_return: str = str(button_id)
-        """ 按钮返回值 """
-
-        target_data: identity.Identity = identity.of(self.chara_id)
-        button_text = (
-            f"[{str(target_data.adv).rjust(4,'0')}]：{target_data.name}"
-        )
-
-        # 按钮绘制
-
-        name_draw = draw.LeftButton(
-            button_text,
-            self.button_return,
-            self.width,
-            cmd_func=assistant_replace,
-            args=(self.chara_id,),
-        )
-        # self.button_return = NPC_id
-        """ 绘制的对象 """
-        self.now_draw = name_draw
-        self.draw_text = button_text
-
-    def draw(self) -> None:
-        """绘制对象"""
-        self.now_draw.draw()

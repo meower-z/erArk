@@ -5,7 +5,7 @@
 ko_KR 的翻译里 1 号与 448 号角色的模板名字相同。
 - 开局：zh_CN 与 ko_KR 各在 fork 出的子进程里开新游戏（助理干员选 1 号），记下开局后已有的角色id
   （npc_id_got）、助理的角色id（assistant）与选助理面板列出的角色id（candidates，
-  assistant_panel.get_assistant_candidates），两种语言的每一项都相同。
+  assistant_service.get_assistant_candidates），两种语言的每一项都相同。
 - 读档：zh_CN 与 ko_KR 各在子进程里开新游戏（不选初期奖励），给 1 号与 448 号各设一个不同的好感度，
   经 save_handle 真实写盘、读档；读档后 1 号键与 448 号键下的角色 cid、adv 都是键本身，好感度是写盘前设的值。
 """
@@ -69,11 +69,13 @@ def collect_new_game(language: str) -> dict[str, list[int]]:
     from Script.Modules.domains import relations
 
     LanguageRun(language)
-    assistant_panel = game("Script.UI.Panel.assistant_panel")
+    assistant_service = game(
+        "Script.Modules.gameplay_resolution.assistant_service"
+    )
     return {
         "npc_id_got": sorted(kernel_data.domain("roster").active()),
         "assistant": [relations.assistant_character_id(0)],
-        "candidates": assistant_panel.get_assistant_candidates(),
+        "candidates": assistant_service.get_assistant_candidates(),
     }
 
 

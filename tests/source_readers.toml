@@ -970,3 +970,13 @@ reads = "通过 banned_imports 读取 Script/Modules/gameplay_resolution/cloth_p
 used_for = "测试：Script/Modules/gameplay_resolution/cloth_panel_service.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R88"
+file = "tests/fast/test_assistant_service.py"
+symbol = "ImportBoundaryTest.test_service_is_ui_free_and_settle_uses_it"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Modules/gameplay_resolution/assistant_service.py 的源码字节，并通过 names_in 读取 Script/Settle/past_day_settle.py 的源码文本以解析导入语句"
+used_for = "测试：assistant_service.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束，且 Script/Settle/past_day_settle.py 导入 Script.Modules.gameplay_resolution.assistant_service 而不导入 Script.UI.Panel.assistant_panel"
+when = "test"
+capture = "suite"
