@@ -250,7 +250,9 @@ class LanguageRun:
 
     def hidden_value(self) -> dict[str, int]:
         """隐奸中玩家做各项H行为后的被发现度"""
-        panel: Any = game("Script.System.Sex_System.hidden_sex_panel")
+        service: Any = game(
+            "Script.Modules.gameplay_resolution.hidden_sex_service"
+        )
         h_state_mod: Any = game("Script.Modules.domains.h_state")
         value_dict = {}
         now_behavior_id = activity.behavior(self.player.cid).behavior_id
@@ -263,7 +265,7 @@ class LanguageRun:
                     continue
                 behave(self.player.cid, behavior_id)
                 h_state_mod.set(0, hidden_sex_discovery_dregree=HIDDEN_START)
-                panel.settle_hidden_value_by_action(
+                service.settle_hidden_value_by_action(
                     0, now_duration=HIDDEN_DURATION
                 )
                 value_dict[behavior_id] = h_state_mod.get(

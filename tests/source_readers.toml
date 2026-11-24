@@ -846,3 +846,13 @@ reads = "读取 Script/Modules/gameplay_resolution/equipment_service.py 与 Scri
 used_for = "测试：equipment_service.py 不导入 Script.UI 及其子模块，default.py 不导入 Script.UI.Panel.equipmen_panel"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R73"
+file = "tests/fast/test_hidden_sex_service.py"
+symbol = "BoundaryTest"
+mechanism = "ast"
+reads = "读取 Script/Modules/gameplay_resolution/hidden_sex_service.py、Script/Design/character_behavior.py 与 Script/Settle/Second_effect.py 的源码字节，交由 banned_imports 和 imported_modules 解析其中的导入语句"
+used_for = "测试：hidden_sex_service.py 遵守后端界面边界守卫，character_behavior.py 与 Second_effect.py 导入 hidden_sex_service 且不导入 hidden_sex_panel 或 exhibitionism_sex_panel"
+when = "test"
+capture = "suite"
