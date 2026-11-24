@@ -97,7 +97,7 @@ class Make_food_Panel:
             [], SeeFoodListByFoodNameDraw, 50, 5, self.width, True, True, 0
         )
         while 1:
-            cooking.init_makefood_data()
+            view.makefood_data = cooking.build_makefood_data()
             py_cmd.clr_cmd()
             title_draw.draw()
             return_list = []
@@ -338,42 +338,7 @@ class Make_food_Panel:
             food_line = draw.LineDraw("-", self.width)
             food_line.draw()
 
-            food_name_list = cooking.get_filtered_sorted_cook_data(
-                self.now_panel
-            )
-            # 将调味、烹饪模式、做饭类型增加进去
-            food_name_list = [
-                (
-                    x[0],
-                    x[1],
-                    self.special_seasoning,
-                    self.cook_mode,
-                    self.make_food_type,
-                )
-                for x in food_name_list
-            ]
-
-            # 填满行数，保持翻页时高度一致（每页50个物品：10行5列）
-            pad_count = 50 - (len(food_name_list) % 50)
-            # 如果刚好是50的倍数且列表非空，则不需要填充
-            if pad_count == 50 and len(food_name_list) > 0:
-                pad_count = 0
-            if pad_count > 0:
-                # 使用 "-1" 作为 cid 标识空项，让 SeeFoodListByFoodNameDraw 绘制空白
-                food_name_list.extend(
-                    [
-                        (
-                            "-1",
-                            "",
-                            self.special_seasoning,
-                            self.cook_mode,
-                            self.make_food_type,
-                        )
-                    ]
-                    * pad_count
-                )
-
-            self.handle_panel.text_list = food_name_list
+            self.handle_panel.text_list = self.food_button_texts()
             self.handle_panel.update()
             self.handle_panel.draw()
 
@@ -415,39 +380,8 @@ class Make_food_Panel:
         """
         self.now_panel = food_type
 
-        food_name_list = cooking.get_filtered_sorted_cook_data(self.now_panel)
-        # 将调味、烹饪模式、做饭类型增加进去
-        food_name_list = [
-            (
-                x[0],
-                x[1],
-                self.special_seasoning,
-                self.cook_mode,
-                self.make_food_type,
-            )
-            for x in food_name_list
-        ]
-
-        # 同样在这里进行行数填充
-        pad_count = 50 - (len(food_name_list) % 50)
-        if pad_count == 50 and len(food_name_list) > 0:
-            pad_count = 0
-        if pad_count > 0:
-            food_name_list.extend(
-                [
-                    (
-                        "-1",
-                        "",
-                        self.special_seasoning,
-                        self.cook_mode,
-                        self.make_food_type,
-                    )
-                ]
-                * pad_count
-            )
-
         self.handle_panel = panel.PageHandlePanel(
-            food_name_list,
+            self.food_button_texts(),
             SeeFoodListByFoodNameDraw,
             50,
             5,
@@ -456,6 +390,49 @@ class Make_food_Panel:
             True,
             0,
         )
+
+    def food_button_texts(self) -> list[tuple[str, str, int, int, int]]:
+        """
+        按 view 中的菜谱映射、筛选与排序配置生成当前分类的菜谱按钮列表。
+        列表末尾用编号为 "-1" 的空白项补齐到 50 的倍数，以保持每页高度一致。
+        无菜谱时补齐为一整页 50 个空白项。
+        Return arguments:
+        list[tuple[str, str, int, int, int]] -- (菜谱编号文本, 菜谱名, 调味编号, 烹饪模式, 做饭类型) 列表
+        """
+        food_name_list = [
+            (
+                food_id,
+                food_name,
+                self.special_seasoning,
+                self.cook_mode,
+                self.make_food_type,
+            )
+            for food_id, food_name in cooking.get_filtered_sorted_cook_data(
+                view.makefood_data,
+                self.now_panel,
+                filter_type=view.makefood_filter_type,
+                filter_difficulty=view.makefood_filter_difficulty,
+                filter_time=view.makefood_filter_time,
+                sort_type=view.makefood_sort_type,
+                sort_order=view.makefood_sort_order,
+            )
+        ]
+        pad_count = 50 - (len(food_name_list) % 50)
+        if pad_count == 50 and len(food_name_list) > 0:
+            pad_count = 0
+        food_name_list.extend(
+            [
+                (
+                    "-1",
+                    "",
+                    self.special_seasoning,
+                    self.cook_mode,
+                    self.make_food_type,
+                )
+            ]
+            * pad_count
+        )
+        return food_name_list
 
     def choice_seasoning(self, seasoning_cid: int) -> None:
         """选择味道"""

@@ -2,6 +2,7 @@
 
 import random
 import uuid
+from collections.abc import Mapping, Sequence
 from types import FunctionType
 from Script.Core.game_type import Food
 from Script.Core import game_type, get_text
@@ -10,7 +11,6 @@ from Script.Design import handle_premise
 from Script.Modules.domains import abilities, achievement, economy, flags
 from Script.Modules.domains import inventory, kitchen, roster, identity
 from Script.Modules.save_load import reset
-from Script.UI.Moudle import view
 from Script.Modules.domains import relations
 
 _: FunctionType = get_text._
@@ -307,16 +307,18 @@ def get_character_cookable_recipes(
     return cookable_recipes_list
 
 
-def init_makefood_data() -> None:
+def build_makefood_data() -> dict[str, int]:
     """
-    初始化玩家做饭区内可制作的菜谱数据\n
-    延迟创建：此处仅记录玩家当前可制作的菜谱id，实际的食物对象在玩家选定菜谱并制作时才创建，\n
-    以减少不必要的内存占用和性能消耗。\n
+    构建玩家当前可制作的菜谱编号映射。
+    该函数只记录菜谱编号。
+    实际食物对象在玩家选定菜谱并制作时创建。
+    Return arguments:
+    dict[str, int] -- 菜谱编号文本到菜谱编号的映射
     """
-    view.makefood_data = {}
-    cookable_recipes_list = get_character_cookable_recipes()
-    for recipes_id in cookable_recipes_list:
-        view.makefood_data[str(recipes_id)] = recipes_id
+    return {
+        str(recipes_id): recipes_id
+        for recipes_id in get_character_cookable_recipes()
+    }
 
 
 def player_can_season(seasoning: int) -> bool:
@@ -423,75 +425,64 @@ def get_food_list_from_food_shop(
 
 
 def get_cook_from_makefood_data_by_food_type(
-    food_type: str,
+    makefood_data: Mapping[str, int], food_type: str
 ) -> dict[str, str]:
     """
-    按食物种类从做饭区获取可以烹饪的的食物列表
+    按食物类型名从给定映射中筛选菜谱。
+    制作时间大于等于 999 的菜谱会被跳过。
     Keyword arguments:
-    food_type -- 食物类型
+    makefood_data -- Mapping[str, int]，菜谱编号文本到菜谱编号的映射
+    food_type -- str，食物类型名，主食、零食、饮品、酒类、咖啡、其他以外的名称不限制类型
     Return arguments:
-    dict -- 食物列表 食物id:食物名字
+    dict[str, str] -- 菜谱编号文本到菜谱名称的映射，顺序与 makefood_data 一致
     """
+    recipe_type = {
+        _("主食"): 0,
+        _("零食"): 1,
+        _("饮品"): 2,
+        _("酒类"): 3,
+        _("咖啡"): 8,
+        _("其他"): 9,
+    }.get(food_type)
     food_list = {}
-    for food_id in view.makefood_data:
-        # 选择对应食物种类
-        if (
-            food_type == _("主食")
-            and game_config.config_recipes[int(food_id)].type != 0
-        ):
+    for food_id, recipe_id in makefood_data.items():
+        recipe = game_config.config_recipes[recipe_id]
+        if recipe_type is not None and recipe.type != recipe_type:
             continue
-        elif (
-            food_type == _("零食")
-            and game_config.config_recipes[int(food_id)].type != 1
-        ):
+        if recipe.time >= 999:
             continue
-        elif (
-            food_type == _("饮品")
-            and game_config.config_recipes[int(food_id)].type != 2
-        ):
-            continue
-        elif (
-            food_type == _("酒类")
-            and game_config.config_recipes[int(food_id)].type != 3
-        ):
-            continue
-        elif (
-            food_type == _("咖啡")
-            and game_config.config_recipes[int(food_id)].type != 8
-        ):
-            continue
-        elif (
-            food_type == _("其他")
-            and game_config.config_recipes[int(food_id)].type != 9
-        ):
-            continue
-
-        # 跳过时间为999的食谱
-        if game_config.config_recipes[int(food_id)].time >= 999:
-            continue
-
-        food_list[food_id] = game_config.config_recipes[int(food_id)].name
+        food_list[food_id] = recipe.name
     return food_list
 
 
-def get_filtered_sorted_cook_data(food_type: str) -> list:
+def get_filtered_sorted_cook_data(
+    makefood_data: Mapping[str, int],
+    food_type: str,
+    *,
+    filter_type: Sequence[int] = (),
+    filter_difficulty: int = -1,
+    filter_time: int = -1,
+    sort_type: int = 0,
+    sort_order: int = 0,
+) -> list[tuple[str, str]]:
     """
-    按食物种类从做饭区获取经过筛选和排序的食物列表
+    按食物类型获取可制作菜谱，并按条件筛选与排序。
     Keyword arguments:
-    food_type -- 食物类型
+    makefood_data -- Mapping[str, int]，菜谱编号文本到菜谱编号的映射
+    food_type -- str，食物类型名
+    filter_type -- Sequence[int]，允许的菜谱类型编号序列，空时不限
+    filter_difficulty -- int，难度筛选，-1 不限，0 为 0-3，1 为 4-6，2 为 7 及以上
+    filter_time -- int，时间筛选，-1 不限，0 为 0-30，1 为 31-60，2 为 61 及以上
+    sort_type -- int，排序依据，0 不排序，1 按难度，2 按时间，3 按类型
+    sort_order -- int，排序方向，0 升序，1 降序
     Return arguments:
-    list -- 食物列表 [(食物id, 食物名字), ...]
+    list[tuple[str, str]] -- (菜谱编号文本, 菜谱名称) 列表
     """
     # 获取基础食物列表
-    base_food_dict = get_cook_from_makefood_data_by_food_type(food_type)
+    base_food_dict = get_cook_from_makefood_data_by_food_type(
+        makefood_data, food_type
+    )
     food_list = list(base_food_dict.items())
-
-    # 获取筛选/排序配置
-    filter_type = view.makefood_filter_type
-    filter_difficulty = view.makefood_filter_difficulty
-    filter_time = view.makefood_filter_time
-    sort_type = view.makefood_sort_type
-    sort_order = view.makefood_sort_order
 
     # 应用筛选
     if filter_type or filter_difficulty != -1 or filter_time != -1:
