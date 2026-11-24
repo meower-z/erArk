@@ -257,7 +257,7 @@ The `docs/数据处理工作流` directory contains 63 detailed documentation fi
 - **[通用结算函数函数](docs/数据处理工作流/通用结算函数函数.md)** - Universal calculation functions
 - **[多周目结算与继承系统](docs/数据处理工作流/多周目结算与继承系统.md)** - Multi-playthrough data inheritance
 - **[新增指令工作流](docs/数据处理工作流/新增指令工作流.md)** - Complete workflow for adding a new player instruction (config, behavior, premise, settlement, talk)
-- **[系统复查工作流](docs/数据处理工作流/系统复查工作流.md)** - Repeated full review of an implemented system: baseline checks, timeline tracing, headless reproduction, dual-doc plans, regression and wrap-up
+- **[系统复查工作流](docs/数据处理工作流/系统复查工作流.md)** - Repeated full review of an implemented system: baseline checks, timeline tracing, headless reproduction, PR findings and decisions, regression and wrap-up
 - **[剧情总结工作流](docs/数据处理工作流/剧情总结工作流.md)** - Story summarization workflow
 - **[剧情转外勤委托工作流](docs/数据处理工作流/剧情转外勤委托工作流.md)** - Story-to-field-commission conversion workflow
 

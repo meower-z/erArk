@@ -53,7 +53,7 @@ check(
 )
 kernel_data.set_facility_level(education_constant.EDUCATION_ZONE_CID, 1)
 
-section("成长停滞（口径 27）")
+section("成长停滞（收益减半）")
 ca.ability(teacher)[45] = 4
 check("无停滞倍率 1.0", growth_handle.get_growth_stop_adjust(201) == 1.0)
 check("不存在的角色 1.0", growth_handle.get_growth_stop_adjust(999) == 1.0)

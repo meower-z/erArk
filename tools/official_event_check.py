@@ -723,7 +723,7 @@ class Checker:
             self.error(
                 path,
                 0,
-                f"条数 {count} 少于下限 {MIN_COUNT[name]}（供需推导见 plan_23 方案 §3.5）",
+                f"条数 {count} 少于下限 {MIN_COUNT[name]}（供需推导见 docs/数据处理工作流/生长养成系统.md §8）",
             )
 
     def print_stat(self) -> None:

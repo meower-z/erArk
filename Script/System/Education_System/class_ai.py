@@ -387,9 +387,9 @@ def get_course_stage(character_id: int) -> int:
     int -- COURSE_STAGE_* 之一
     功能: 待赴实操课（SEX_PENDING）优先于本节的一切：既有节次表首尾相接、没有课间（game_time.CLASS_PERIOD_START），
              9个节次里有7个的"提前10分钟"落在上一节课的最后10分钟内，命中时学生会**中止当前节次的课**转为移动
-             （口径62 提前退场）——这是有意为之，玩家踩着点到教室时人应该已经在了。
+             （提前退场）——这是有意为之，玩家踩着点到教室时人应该已经在了。
           提前退场的那一节**不算缺课**：绝不能在这条路上调 settle_absent()。那个函数用 last_absent_period
-             对「日期序数+节次」做去重，被提前退场占掉标记后，当天真正的缺课就再也记不上了（口径66）
+             对「日期序数+节次」做去重，被提前退场占掉标记后，当天真正的缺课就再也记不上了
           今天已翘课（judge_skip_class_today，flag 认日期，Plan 31 §3.6）的：本节有课判 SKIP；
           本节没课、下一节马上开课的不判 UPCOMING
              而判 NONE（Plan 31 §3.5）——开课那一刻她照样判翘课，去教室门口等一趟再掉头走是白跑，与截短规则 B 同口径
@@ -415,7 +415,7 @@ def get_course_stage(character_id: int) -> int:
         ) is not None and not judge_skip_class_today(character_id, now_time):
             return education_constant.COURSE_STAGE_UPCOMING
         return education_constant.COURSE_STAGE_NONE
-    # 必修实操课两道闸都跳过（口径 60 / 65）：体力不足也照常到场、不记缺课，只是到了教室不进H模板、在一边旁观；
+    # 必修实操课两道闸都跳过：体力不足也照常到场、不记缺课，只是到了教室不进H模板、在一边旁观；
     #    玩家点了名就不许翘
     if judge_must_attend_sex_class(character_id):
         return get_attend_or_join_stage(character_id, now_course)
@@ -642,7 +642,7 @@ def judge_student_pullable(student_id: int) -> bool:
     student_id -- 角色id
     Return arguments:
     bool -- 是否可拉
-    功能: 学生岗（口径 1）、活着、不在 H、不在睡觉、今天没翘课、此刻不在休息（体力缺课走的就是休息）。
+    功能: 学生岗（课表限学生岗）、活着、不在 H、不在睡觉、今天没翘课、此刻不在休息（体力缺课即休息）。
           睡觉看两样：要睡觉标记，或行为就是睡觉——
              当场爆睡（疲劳满、安眠药、烂醉 → 状态机 44）只改行为、不置标记，只判标记会把她拉起来听课
           今天翘没翘课走 judge_skip_class_today（Plan 31 §3.6）：flag 认日期，前一天挂上、跨天没清掉的不挡
@@ -726,7 +726,7 @@ def get_student_leave_time(character_id: int) -> datetime.datetime | None:
     datetime.datetime or None -- 应当结束的时刻，严格落在当前行为的开始与结束之间；不需要提前结束时为 None
     功能: NPC 只在发呆时做决策，听课截到节末、娱乐 10~120 分钟，都不会自己停下来，所以要从外面把行为截短：
             A 待赴实操课：之后开始的某一节是自己要上的实操课（必修或选修）、人不在那间教室
-               → 截到开课前 PRE_ARRIVE_MINUTE（口径 62 提前退场，上课中也截）；
+               → 截到开课前 PRE_ARRIVE_MINUTE（提前退场，上课中也截）；
                人已在那间教室的不截，开课时玩家把场景里能参加的学生一并拉进课堂
             B 马上开课：之后开始的某一节有课（已停课、上不成的个人式课都算没课）、
             开课前 UPCOMING_MINUTE 那一刻本节没课、今天没翘课
@@ -748,7 +748,7 @@ def get_student_leave_time(character_id: int) -> datetime.datetime | None:
           上课行的门槛 normal_all 不成立时不截——截了 AI 也派不出上课行。
           截出来的结束时刻严格晚于开始时刻（NPC 至少走一分钟），重新决策出的新行为开始于离开时刻，
           不会被再截一次，行为循环必然收敛。
-          截短不回退收益：NPC 的结算发生在行为开始时，被截短的那节课已按整节结算过，也不记缺课（口径 66）
+          截短不回退收益：NPC 的结算发生在行为开始时，被截短的那节课已按整节结算过，也不记缺课
     """
     import datetime
 

@@ -478,7 +478,7 @@ set_time(period_time(5))
 education.clear_temp_classes()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
-# 前置修习（口径 63 宽松版）：两个学生各排一节性技科目的教室课
+# 前置修习（宽松版）：两个学生各排一节性技科目的教室课
 schedule_handle.set_class_cell(ROOM_P, 2, 8, 74, -1)
 schedule_handle.set_selected_course(201, 2, 8, E.COURSE_TYPE_PRACTICE, ROOM_P)
 schedule_handle.set_selected_course(202, 2, 8, E.COURSE_TYPE_PRACTICE, ROOM_P)

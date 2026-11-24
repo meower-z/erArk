@@ -130,7 +130,7 @@ set_time(period_time(3))
 section("谁能参加")
 check("玩家自己不算", not sex_class_handle.judge_can_join_sex_class(0))
 check("不存在的角色不算", not sex_class_handle.judge_can_join_sex_class(999))
-# 前置修习（口径 63 宽松版，第五轮）：个人课表里没有性技科目的教室课就不能来
+# 前置修习（宽松版，第五轮）：个人课表里没有性技科目的教室课就不能来
 check(
     "没修过性技课：不能参加",
     not sex_class_handle.judge_has_sex_skill_course(201)

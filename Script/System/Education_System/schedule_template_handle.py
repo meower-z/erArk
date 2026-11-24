@@ -171,7 +171,7 @@ def apply_template(character_id: int, template_id: int) -> None:
 
 def batch_apply_template(character_id_list: list[int], template_id: int) -> int:
     """
-    把同一套模板批量套用到多个孩子（口径 4 的核心操作）
+    把同一套模板批量套用到多个孩子（多孩操作量不翻倍）
     Keyword arguments:
     character_id_list -- 角色id列表
     template_id -- 模板编号

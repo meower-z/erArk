@@ -88,7 +88,7 @@ def get_course_candidate_list() -> list[int]:
     无
     Return arguments:
     List[int] -- 角色id列表，按id升序
-    功能: 职业为学生（WorkType 152）的全部干员（Plan 24 口径 1：课表只对学生岗生效）。
+    功能: 职业为学生（WorkType 152）的全部干员（课表只对学生岗生效）。
           上课是工作链里学生岗的目标行（target.csv 组 08），改了岗的女儿不会再去上课，所以也不再列出；
              存档里她残留的个人课表不迁移、不清理，没有行会命中，改回学生岗后照常生效。
              女儿长到学员时会被自动置为学生岗，默认都在名单里。
@@ -183,7 +183,7 @@ def get_education_zone_adjust() -> float:
 
 def get_growth_stop_adjust(character_id: int) -> float:
     """
-    取成长停滞带来的学习收益倍率（总纲口径 27）
+    取成长停滞的学习收益倍率（停滞时收益减半）
     Keyword arguments:
     character_id -- 学生的角色id
     Return arguments:
@@ -212,7 +212,7 @@ def get_class_adjust(
     Return arguments:
     float -- 总倍率
     功能: 教室课 / 自习 / 实习课都经 settle_student_class_gain 走到这里，
-          所以成长停滞的减半（口径 27）放在这一处就覆盖了三种课
+          所以成长停滞的减半放在这一处就覆盖了三种课
     """
     zone_adjust = get_education_zone_adjust() * get_growth_stop_adjust(
         student_id
@@ -622,7 +622,7 @@ def get_career_suggestion_text(character_id: int) -> str:
     """
     按当前等级最高的科目反查岗位，给出职业倾向提示
 
-    **只提示、不自动任命**（口径 39）：毕业后成为普通干员、可任命到任何岗位，任命权在玩家手里。
+    **只提示、不自动任命**：毕业后成为普通干员、可任命到任何岗位，任命权在玩家手里。
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -878,7 +878,7 @@ def change_growth_value(
     改写养成数值，供 CVE_A1_Growth|N_G/L/E_值 结算使用
 
     只有性格倾向与照料值是可写的：出勤数由上课结算记账、胎教值由妊娠期写入，
-       让事件去改它们会让面板上的「听课N节」变成一个谁都对不上的数（口径33 也不允许事件动能力）
+       让事件去改它们会让面板上的「听课N节」变成一个谁都对不上的数
     已毕业的女儿改写性格倾向后即重选这一对素质
     Keyword arguments:
     character_id -- 角色id

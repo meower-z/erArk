@@ -58,7 +58,7 @@ check("找到了存档", best_id != "", best_id)
 if best_count <= 0:
     print("  没有任何存档里有在学的女儿，用最近的存档 + 自建女儿继续")
 save_handle.input_load_save(best_id)
-# 课表只对学生岗生效（Plan 24 口径 1）：存档里改了岗的女儿按新岗位上班、不去上课，上课检查只看学生岗的女儿。
+# 课表只对学生岗生效：存档里改了岗的女儿按新岗位上班、不去上课，上课检查只看学生岗的女儿。
 #    全部女儿的名单另留一份，只用来避免把女儿拉去当教师
 all_daughter_list = growth_handle.get_student_candidate_list()
 daughter_list = [

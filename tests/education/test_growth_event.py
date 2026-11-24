@@ -1405,7 +1405,7 @@ check(
     and not any(tip in one for one in _boot.drawn_text for tip in _od_tip),
     (_od_pick, _od_button),
 )
-# 界面口径 4（用户要求）：选项的出现顺序每次随机，画面上的编号只是显示序，结算认 CSV 原序号
+# 界面规则 4：选项的出现顺序每次随机，画面上的编号只是显示序，结算认 CSV 原序号
 _od_order = set()
 """ 连续弹出同一条事件时出现过的显示顺序（元素为选项原序号的元组） """
 _od_pick_list = []
@@ -1417,19 +1417,19 @@ for _round in range(60):
         (_od_shuffle.draw(), _od_shuffle.draw_option_list[0]["index"])
     )
 check(
-    "界面口径4 选项顺序每次随机：连续弹出同一条事件 60 次出现了多种显示顺序，每次都不重不漏地画出原有的四个选项",
+    "界面规则4 选项顺序每次随机：连续弹出同一条事件 60 次出现了多种显示顺序，每次都不重不漏地画出原有的四个选项",
     len(_od_order) > 1
     and all(sorted(one) == [1, 2, 3, 4] for one in _od_order),
     sorted(_od_order)[:5],
 )
 check(
-    "界面口径4 洗牌只动显示顺序：选中画面上的第一个按钮，拿回来的一律是它在 CSV 里的原序号（结算与履历据此不会串行）",
+    "界面规则4 洗牌只动显示顺序：选中画面上的第一个按钮，拿回来的一律是它在 CSV 里的原序号（结算与履历据此不会串行）",
     all(one[0] == one[1] for one in _od_pick_list)
     and len({one[0] for one in _od_pick_list}) > 1,
     _od_pick_list[:8],
 )
 check(
-    "界面口径4 option_list 保持原序：洗牌洗的是 draw_option_list 的副本，原列表仍是 1~4 的顺序",
+    "界面规则4 option_list 保持原序：洗牌洗的是 draw_option_list 的副本，原列表仍是 1~4 的顺序",
     [one["index"] for one in _od.option_list] == [1, 2, 3, 4],
     [one["index"] for one in _od.option_list],
 )

@@ -430,7 +430,7 @@ class Edit_Group_Sex_Temple_Panel:
             for chara_id in all_character_list:
                 character_data = identity.of(chara_id)
                 button_text = f"[{str(character_data.adv).rjust(4,'0')}]{character_data.name}"
-                # 性技实操课上，体力不足的学生只能站在一边旁观，不进模板（Plan 22 四期 口径65）。
+                # 性技实操课上，体力不足的学生只能站在一边旁观，不进模板。
                 # 只在课堂模式下生效：普通群交没有这条限制，把它一并管上会改掉既有玩法
                 if (
                     modes.sex_class()

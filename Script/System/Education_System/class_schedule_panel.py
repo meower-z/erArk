@@ -468,7 +468,7 @@ class Class_Schedule_Panel:
         输入类型: 无
         输出类型: 无
         功能: 只填空格，已有的排课一格不动，所以重复点击是幂等的。
-              排的是**全部教室**而不是当前这间——口径23立这个功能就是为了省下630格的操作量
+              排的是**全部教室**而不是当前这间——立这个功能就是为了省下630格的操作量
         """
         from Script.System.Education_System import auto_schedule
 
@@ -808,7 +808,7 @@ class Class_Schedule_Panel:
             count = 0
             for character_id in growth_handle.get_course_candidate_list():
                 character_data: identity.Identity = identity.of(character_id)
-                # 必修名单豁免前置修习（口径 63 宽松版）：点名本身就是玩家的决定，这里只做状态守卫
+                # 必修名单豁免前置修习（宽松版）：点名本身就是玩家的决定，这里只做状态守卫
                 if not sex_class_handle.judge_can_join_sex_class(
                     character_id, check_course=False
                 ):

@@ -425,7 +425,7 @@ child_growth(201).skip_class_flag = True
 child_growth(201).skip_class_day = game_time.now().toordinal()
 class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check(
-    "必修实操课：体力不足、翘课 flag、掷中翘课同时成立也是 ATTEND（口径 60 / 65）",
+    "必修实操课：体力不足、翘课 flag、掷中翘课同时成立也是 ATTEND",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_ATTEND,
 )
 class_ai.roll_skip_class = _orig_roll
@@ -440,7 +440,7 @@ check(
 schedule_handle.clear_selected_course(101, 0, 0)
 chara_life.work_type.set(student.cid, 21)
 check(
-    "非学生岗恒为 NONE：改了岗的女儿课表还在也不算（口径 1）",
+    "非学生岗恒为 NONE：改了岗的女儿课表还在也不算",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_NONE,
 )
 chara_life.work_type.set(student.cid, 152)
@@ -570,7 +570,7 @@ class_ai.roll_skip_class = lambda character_id, now_time=None: True
 move_to(201, classroom_path(ROOM_P))
 check("必修 + 掷中翘课：不翘课", dispatch(201) == SM.WORK_ATTENT_CLASS)
 class_ai.roll_skip_class = _orig_roll
-# 第五轮：必修生自己这节排的是别的课，也要留在临时课的教室（口径 60）
+# 第五轮：必修生自己这节排的是别的课，也要留在临时课的教室
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 now_course = schedule_handle.get_now_course(201)
 check(
@@ -781,7 +781,7 @@ check(
     not _intern_bad,
     _intern_bad,
 )
-# 实习的地点跟着人走（口径 53）：同一标签下有多间房的岗位，导师在哪间学徒就去哪间
+# 实习的地点跟着人走：同一标签下有多间房的岗位，导师在哪间学徒就去哪间
 _multi_work = next(
     (
         wid
@@ -1053,7 +1053,7 @@ schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 move_to(201, classroom_path(ROOM1))
 check(
-    "本节还在上理论课 → 提前退场去实操教室（口径 62）",
+    "本节还在上理论课 → 提前退场去实操教室",
     dispatch(201, _pending_time) == SM.MOVE_TO_CLASS_ROOM,
 )
 move_to(201, classroom_path(ROOM_P))
@@ -1169,7 +1169,7 @@ check(
 remove_character(301)
 remove_character(302)
 
-section("口径收窄：课表只对学生岗（Plan 24 口径 1）")
+section("规则收窄：课表只对学生岗")
 set_time(period_time(0))
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
@@ -1305,14 +1305,14 @@ move_to(201, classroom_path(ROOM1))
 begin(201, constant.Behavior.ATTENT_CLASS, period_time(0), _round_end, 45)
 _absent = child_growth(201).absent_count
 check(
-    "A 听课中、下一节是必修实操课 → 截到开课前 10 分钟（口径 62 提前退场；玩家一步跨过开课时刻也照截）",
+    "A 听课中、下一节是必修实操课 → 截到开课前 10 分钟（提前退场；玩家一步跨过开课时刻也照截）",
     handle_npc_ai.judge_student_leave_truncate(201) == 1
     and doing(student.cid) == constant.Behavior.ATTENT_CLASS
     and leave_minutes(201) == 35,
     leave_minutes(201),
 )
 check(
-    "A 提前退场不记缺课（口径 66）",
+    "A 提前退场不记缺课",
     child_growth(201).absent_count == _absent,
 )
 check(
@@ -1495,7 +1495,7 @@ schedule_handle.set_selected_course(301, 0, 5, E.COURSE_TYPE_PRACTICE, ROOM_P)
 move_to(301, classroom_path(ROOM_P))
 set_time(_late)
 check(
-    "不满足 H 模式实行值的成年学生 → 仍是 ATTEND，进不了课堂（口径 63 第二层）",
+    "不满足 H 模式实行值的成年学生 → 仍是 ATTEND，进不了课堂（第二层守卫）",
     class_ai.get_course_stage(301) == E.COURSE_STAGE_ATTEND,
 )
 remove_character(301)
@@ -1544,7 +1544,7 @@ class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check("本节掷中翘课的学生不拉", not teach_pull(201))
 class_ai.roll_skip_class = _orig_roll
 chara_life.work_type.set(student.cid, 21)
-check("课表有残留、已改岗的人不拉（口径 1）", not teach_pull(201))
+check("课表有残留、已改岗的人不拉", not teach_pull(201))
 chara_life.work_type.set(student.cid, 152)
 sex_class_handle.set_temp_class(
     period_time(0).date().toordinal(), 0, ROOM1, 70, must_attend=[201]
