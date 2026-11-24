@@ -17,6 +17,7 @@ from Script.System.Instruct_System import handle_instruct
 from Script.System.Instruct_System.common_behavior_utils import (
     get_last_valid_sex_behavior_id,
 )
+from Script.Modules.gameplay_resolution import drug_service
 from Script.Modules.gameplay_resolution import ejaculation_service
 from Script.Modules.gameplay_resolution import hypnosis_service
 from Script.Modules.gameplay_resolution import semen_dirty_service
@@ -8449,9 +8450,7 @@ def handle_give_gift_add_adjust(
     # 药物礼物
     elif gift_data.type == 11:
         # 这是药物ID，执行药物使用逻辑
-        from Script.UI.Panel import gift_panel
-
-        gift_panel.handle_drug_use_effect(
+        drug_service.handle_drug_use_effect(
             activity.target(character_id), gift_id
         )
     # 阴茎倒模

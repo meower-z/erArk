@@ -4,6 +4,7 @@
 本子系统（Script/System/Pregnancy_System）内的全部模块级常量集中在此定义、记录与管理，
 各模块通过 `from Script.System.Pregnancy_System import pregnancy_constant` 引用，
 子系统外的代码（礼物面板、前提、状态机等）同样从本文件引用，不得在各自文件内重复定义。
+本文件同时提供无界面依赖的共用日期格式化函数 format_season_date，供妊娠面板与药物服务调用。
 
 分组：
 1. 胎生孕程天数阈值
@@ -15,8 +16,10 @@
 7. 生育方式与多胎
 """
 
+import datetime
 from types import FunctionType
 from Script.Core import get_text
+from Script.Design import game_time
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -148,3 +151,16 @@ SOFT_EGG_FERTILIZED_SECOND_BEHAVIOR = "soft_egg_fertilized"
 """ 体外卵受精的二段行为id """
 SOFT_EGG_BORN_SECOND_BEHAVIOR = "soft_egg_born"
 """ 无壳卵孵化生产的二段行为id """
+
+
+def format_season_date(now_time: datetime.datetime) -> str:
+    """
+    按 game_time.get_month_text 提供的四季月名将游戏时间格式化为月日文本。
+    Keyword arguments:
+    now_time -- datetime.datetime，要格式化的游戏日期时间
+    Return arguments:
+    str -- 格式化后的月日文本
+    """
+    return _("{0}月{1}日").format(
+        game_time.get_month_text(now_time), now_time.day
+    )

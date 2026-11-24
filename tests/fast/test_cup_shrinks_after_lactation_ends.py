@@ -13,8 +13,7 @@ from typing import TYPE_CHECKING
 from Script.Design import handle_talent
 from Script.Kernel import core
 from Script.Modules.domains import needs, pregnancy
-from Script.Modules.gameplay_resolution import working
-from Script.UI.Panel import gift_panel
+from Script.Modules.gameplay_resolution import drug_service, working
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
 
@@ -68,7 +67,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         identity.Identity -- 角色身份
         """
         cd = self.make(cid, cup)
-        gift_panel.handle_drug_use_effect(cid, LACTATION_DRUG)
+        drug_service.handle_drug_use_effect(cid, LACTATION_DRUG)
         needs.set(cd.cid, milk=190)
         self.settle(cid)
         return cd
@@ -89,10 +88,10 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     def test_stop_lactation_shrinks_cup_once(self) -> None:
         """涨奶后用停乳药：罩杯缩回涨奶前的大小，只缩一次"""
         cd = self.make(1, 122)
-        gift_panel.handle_drug_use_effect(1, LACTATION_DRUG)
+        drug_service.handle_drug_use_effect(1, LACTATION_DRUG)
         needs.set(cd.cid, milk=190)
         self.assertEqual(self.settle(1), ([123], True))
-        gift_panel.handle_drug_use_effect(1, STOP_LACTATION_DRUG)
+        drug_service.handle_drug_use_effect(1, STOP_LACTATION_DRUG)
         self.assertEqual(ca.talent(cd)[27], 0)
         self.assertEqual(self.settle(1), ([122], False))
         self.assertEqual(self.settle(1), ([122], False))
@@ -108,28 +107,28 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     def test_largest_cup_unchanged(self) -> None:
         """罩杯已是爆乳时涨奶：没有变大也没有涨奶标记，停乳后保持爆乳"""
         cd = self.make(3, 125)
-        gift_panel.handle_drug_use_effect(3, LACTATION_DRUG)
+        drug_service.handle_drug_use_effect(3, LACTATION_DRUG)
         needs.set(cd.cid, milk=190)
         self.assertEqual(self.settle(3), ([125], False))
-        gift_panel.handle_drug_use_effect(3, STOP_LACTATION_DRUG)
+        drug_service.handle_drug_use_effect(3, STOP_LACTATION_DRUG)
         self.assertEqual(self.settle(3), ([125], False))
 
     def test_shrink_drug_during_engorgement(self) -> None:
         """涨奶期间用过缩胸药：停乳或奶量降到 79% 及以下后比涨奶前小一级，最小到绝壁"""
         self.engorge(4, 122)
-        gift_panel.handle_drug_use_effect(4, SHRINK_CHEST_DRUG)
+        drug_service.handle_drug_use_effect(4, SHRINK_CHEST_DRUG)
         self.assertEqual(self.settle(4), ([122], True))
-        gift_panel.handle_drug_use_effect(4, STOP_LACTATION_DRUG)
+        drug_service.handle_drug_use_effect(4, STOP_LACTATION_DRUG)
         self.assertEqual(self.settle(4), ([121], False))
 
         cd = self.engorge(7, 122)
-        gift_panel.handle_drug_use_effect(7, SHRINK_CHEST_DRUG)
+        drug_service.handle_drug_use_effect(7, SHRINK_CHEST_DRUG)
         needs.set(cd.cid, milk=100)
         self.assertEqual(self.settle(7), ([121], False))
 
         self.engorge(8, 121)
-        gift_panel.handle_drug_use_effect(8, SHRINK_CHEST_DRUG)
-        gift_panel.handle_drug_use_effect(8, STOP_LACTATION_DRUG)
+        drug_service.handle_drug_use_effect(8, SHRINK_CHEST_DRUG)
+        drug_service.handle_drug_use_effect(8, STOP_LACTATION_DRUG)
         self.assertEqual(self.settle(8), ([121], False))
 
     def test_unaffected_cases(self) -> None:
