@@ -1,17 +1,13 @@
-"""赠送礼物的界面面板模块，提供 Gift_Panel 面板类与模块级变量。"""
+"""赠送礼物的界面面板模块，提供 Gift_Panel 面板类以及模块级换行绘制对象 line_feed 与窗口宽度 window_width。"""
 
 from types import FunctionType
 from Script.UI.Moudle import draw, view
 from Script.Core import constant, flow_handle
 from Script.Core import get_text
-from Script.Config import game_config, normal_config
-from Script.Design import game_time, handle_premise
-from Script.Modules.domains import activity, pregnancy
-from Script.System.Pregnancy_System import pregnancy_constant
-from Script.Modules.domains import abilities, action_info, flags, inventory
+from Script.Config import normal_config
+from Script.Modules.domains import activity
 from Script.Modules.domains import identity
-
-panel_info_data: dict[str, object] = {}
+from Script.Modules.gameplay_resolution import gift_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -20,6 +16,23 @@ line_feed = draw.NormalDraw()
 line_feed.text = "\n"
 line_feed.width = 1
 window_width = normal_config.config_normal.text_width
+
+
+def _passes(reason: str | None) -> bool:
+    """
+    根据阻止原因返回是否放行的布尔值。
+    当 reason 不为 None 时绘制一条等待确认的提示文本。
+    Keyword arguments:
+    reason -- str | None，阻止原因文本，None 表示允许通过
+    Return arguments:
+    bool -- reason 为 None 时返回 True，否则返回 False
+    """
+    if reason is None:
+        return True
+    now_draw = draw.WaitDraw()
+    now_draw.text = reason
+    now_draw.draw()
+    return False
 
 
 class Gift_Panel:
@@ -39,10 +52,8 @@ class Gift_Panel:
         """
         self.width: int = width
         """ 绘制的最大宽度 """
-        self.draw_list: list[draw.NormalDraw] = []
-        """ 绘制的文本列表 """
         self.show_drug_gift: bool = False
-        # 药物类礼物展开/收起标志，默认为收起
+        """ 药物类礼物的展开状态标志，False 为收起，True 为展开 """
 
     def toggle_drug_gift(self) -> None:
         """
@@ -63,66 +74,33 @@ class Gift_Panel:
         while 1:
             return_list = []
             title_draw.draw()
-            # 是否已绘制药物类展开/收起按钮
-            drug_toggle_drawn = False
-            # 遍历礼物数据
-            for gift_id in game_config.config_gift_items:
-                gift_data = game_config.config_gift_items[gift_id]
-                # 检查是否到药物类分组的起始id
-                if gift_id == 21 and not drug_toggle_drawn:
-                    # 根据展开标志显示不同按钮
-                    if self.show_drug_gift:
-                        drug_toggle_text = _("▼药物类")
-                    else:
-                        drug_toggle_text = _("▶药物类")
-                    drug_toggle_button = draw.LeftButton(
-                        _(drug_toggle_text),
-                        _(drug_toggle_text),
+            for entry in gift_service.gift_menu(self.show_drug_gift):
+                if isinstance(entry, gift_service.DrugToggle):
+                    button_draw = draw.LeftButton(
+                        _(entry.text),
+                        _(entry.text),
                         self.width,
                         cmd_func=self.toggle_drug_gift,
                         args=(),
                     )
-                    return_list.append(drug_toggle_button.return_text)
-                    drug_toggle_button.draw()
-                    line_feed.draw()
-                    drug_toggle_drawn = True
-                # 如果是药物类礼物且未展开，则跳过显示
-                if gift_data.type == 11 and not self.show_drug_gift:
-                    continue
-                cant_flag = False
-                item_id = gift_data.item_id
-                item_data = game_config.config_item[item_id]
-                gift_id_text = str(gift_id).rjust(2, "0")
-                if gift_data.todo == 1:
-                    gift_text = f"[{gift_id_text}]{gift_data.info}"
-                    gift_text += _("(未实装)")
-                    cant_flag = True
-                else:
-                    gift_text = (
-                        f"[{gift_id_text}]{item_data.name}：{item_data.info}"
-                    )
-                if inventory.items(0)[item_id] <= 0:
-                    gift_text += _("(未拥有)")
-                    cant_flag = True
-
-                # 如果未拥有或者未实装则不显示按钮，仅打印灰色文本
-                if cant_flag:
-                    text_draw = draw.NormalDraw()
-                    text_draw.text = gift_text
-                    text_draw.style = "deep_gray"
-                    text_draw.draw()
-                else:
+                    return_list.append(button_draw.return_text)
+                    button_draw.draw()
+                elif entry.selectable:
                     button_draw = draw.LeftButton(
-                        _(gift_text),
-                        _(str(gift_id)),
+                        _(entry.text),
+                        _(str(entry.gift_id)),
                         self.width,
                         cmd_func=self.select_gift,
-                        args=(gift_id,),
+                        args=(entry.gift_id,),
                     )
                     return_list.append(button_draw.return_text)
                     button_draw.draw()
+                else:
+                    text_draw = draw.NormalDraw()
+                    text_draw.text = entry.text
+                    text_draw.style = "deep_gray"
+                    text_draw.draw()
                 line_feed.draw()
-
             line_feed.draw()
             line_feed.draw()
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
@@ -137,42 +115,26 @@ class Gift_Panel:
     def select_gift(self, gift_id: int) -> None:
         """礼物的确认选择"""
         from Script.System.Instruct_System import handle_instruct
+        from Script.System.Pregnancy_System import pregnancy_handle
 
-        gift_data = game_config.config_gift_items[gift_id]
-
-        # 检查是否可以赠送礼物
         if not self.check_gift_available(gift_id):
             return
-
-        # 礼物id与选中的卵、婴儿在行动开始时写进玩家的行为数据
         fields: dict[str, object] = {"behavior.gift_id": gift_id}
-        # 孵化加速药需要先选择目标卵（玩家取消则不送出）
         if gift_id == 36:
             egg_id = self.select_target_egg()
             if egg_id is None:
                 return
             fields["behavior.gift_egg_id"] = egg_id
-        # 成长加速药送给母亲时需要先选择目标婴儿（玩家取消则不送出）；送给幼女/学员女儿时对本人生效，无需选择
-        if gift_id == 39:
-            from Script.System.Pregnancy_System import pregnancy_handle
-
-            if not pregnancy_handle.is_growth_drug_self_target(
-                activity.target(0)
-            ):
-                child_id = self.select_target_baby()
-                if child_id is None:
-                    return
-                fields["behavior.gift_child_id"] = child_id
-
-        # 药剂礼物需要轻度猥亵条件，阴茎倒模需要严重猥亵条件
-        judge = ""
-        if gift_data.type == 11:
-            judge = _("初级骚扰")
-        elif gift_data.type == 13:
-            judge = _("严重骚扰")
+        if gift_id == 39 and not pregnancy_handle.is_growth_drug_self_target(
+            activity.target(0)
+        ):
+            child_id = self.select_target_baby()
+            if child_id is None:
+                return
+            fields["behavior.gift_child_id"] = child_id
         handle_instruct.chara_handle_instruct_common_settle(
             constant.Behavior.GIVE_GIFT,
-            judge=judge,
+            judge=gift_service.gift_judge(gift_id),
             force_taget_wait=True,
             fields=fields,
         )
@@ -184,54 +146,10 @@ class Gift_Panel:
         Returns:\n
         int | None -- 选中的卵编号（None为玩家取消或无可选卵）
         """
-        from Script.System.Pregnancy_System import egg_handle, pregnancy_panel
-
-        target_character_data: identity.Identity = identity.of(
-            activity.target(0)
-        )
-        accelerable_eggs = egg_handle.get_accelerable_hatching_eggs(
-            target_character_data.cid
-        )
-        if not len(accelerable_eggs):
-            return None
-        # 仅一枚可加速卵时跳过选择直接选中
-        if len(accelerable_eggs) == 1:
-            return next(iter(accelerable_eggs))
-        # 多枚卵时绘制选择列表
-        title_draw = draw.TitleLineDraw(_("选择要加速孵化的卵"), self.width)
-        while 1:
-            return_list = []
-            title_draw.draw()
-            for egg_id, egg_data in accelerable_eggs.items():
-                hatch_day = egg_handle.get_hatch_day(egg_data)
-                acc_day = int(egg_data.get("acceleration_days", 0))
-                born_time = game_time.get_predict_date(
-                    pregnancy_constant.HATCH_TOTAL_DAY - acc_day,
-                    egg_data["lay_time"],
-                )
-                egg_text = _(
-                    "[{0}号卵] 孵化第{1}天（已加速{2}，预计{3}破壳）"
-                ).format(
-                    egg_id,
-                    hatch_day,
-                    game_time.get_duration_text(acc_day),
-                    pregnancy_panel.get_date_text(born_time),
-                )
-                button_draw = draw.LeftButton(egg_text, str(egg_id), self.width)
-                return_list.append(button_draw.return_text)
-                button_draw.draw()
-                line_feed.draw()
-            line_feed.draw()
-            back_draw = draw.CenterButton(
-                _("[返回]"), _("返回选卵"), window_width
-            )
-            back_draw.draw()
-            line_feed.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                return None
-            return int(yrn)
+        pick = gift_service.egg_pick(identity.of(activity.target(0)).cid)
+        if not pick.options:
+            return pick.chosen
+        return self._pick(pick.options, _("选择要加速孵化的卵"), _("返回选卵"))
 
     def select_target_baby(self) -> int | None:
         """
@@ -240,61 +158,46 @@ class Gift_Panel:
         Returns:\n
         int | None -- 选中的婴儿角色id（None为玩家取消或无可选婴儿）
         """
-        from Script.System.Pregnancy_System import (
-            pregnancy_handle,
-            pregnancy_panel,
+        pick = gift_service.baby_pick(identity.of(activity.target(0)).cid)
+        if not pick.options:
+            return pick.chosen
+        return self._pick(
+            pick.options, _("选择要加速成长的婴儿"), _("返回选婴儿")
         )
 
-        target_character_data: identity.Identity = identity.of(
-            activity.target(0)
-        )
-        accelerable_babies = pregnancy_handle.get_accelerable_babies(
-            target_character_data.cid
-        )
-        if not len(accelerable_babies):
-            return None
-        # 仅一名可加速婴儿时跳过选择直接选中
-        if len(accelerable_babies) == 1:
-            return accelerable_babies[0]
-        # 多名婴儿时绘制选择列表
-        title_draw = draw.TitleLineDraw(_("选择要加速成长的婴儿"), self.width)
-        while 1:
-            return_list = []
-            title_draw.draw()
-            for child_id in accelerable_babies:
-                child_character_data: identity.Identity = identity.of(child_id)
-                grow_day = pregnancy_handle.get_child_grow_day(child_id)
-                child_preg = pregnancy.of(child_id)
-                acc_day = int(child_preg.growth_acceleration_days)
-                grow_time = game_time.get_predict_date(
-                    pregnancy_constant.REARING_COMPLETE_DAY - acc_day,
-                    child_preg.born_time,
-                )
-                baby_text = _(
-                    "[{0}] 出生第{1}天（已加速{2}，预计{3}成长为幼女）"
-                ).format(
-                    child_character_data.name,
-                    grow_day,
-                    game_time.get_duration_text(acc_day),
-                    pregnancy_panel.get_date_text(grow_time),
-                )
-                button_draw = draw.LeftButton(
-                    baby_text, str(child_id), self.width
-                )
-                return_list.append(button_draw.return_text)
-                button_draw.draw()
-                line_feed.draw()
-            line_feed.draw()
-            back_draw = draw.CenterButton(
-                _("[返回]"), _("返回选婴儿"), window_width
+    def _pick(
+        self,
+        options: tuple[gift_service.PickOption, ...],
+        title: str,
+        back_text: str,
+    ) -> int | None:
+        """
+        绘制候选选项列表与返回按钮，并等待玩家选择一项或返回。
+        Keyword arguments:
+        options -- tuple[gift_service.PickOption, ...]，待绘制的候选按钮元组
+        title -- str，列表标题文本
+        back_text -- str，返回按钮的回传文本
+        Return arguments:
+        int | None -- 选中项的整型编号，选择返回时为 None
+        """
+        draw.TitleLineDraw(title, self.width).draw()
+        return_list = []
+        for option in options:
+            button_draw = draw.LeftButton(
+                option.text, str(option.choice_id), self.width
             )
-            back_draw.draw()
+            return_list.append(button_draw.return_text)
+            button_draw.draw()
             line_feed.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                return None
-            return int(yrn)
+        line_feed.draw()
+        back_draw = draw.CenterButton(_("[返回]"), back_text, window_width)
+        back_draw.draw()
+        line_feed.draw()
+        return_list.append(back_draw.return_text)
+        yrn = flow_handle.askfor_all(return_list)
+        if yrn == back_draw.return_text:
+            return None
+        return int(yrn)
 
     def check_gift_available(self, gift_id: int) -> bool:
         """
@@ -304,82 +207,8 @@ class Gift_Panel:
         Returns:\n
         bool -- 是否可以赠送\n
         """
-        from Script.Design import second_behavior
-
-        target_character_data: identity.Identity = identity.of(
-            activity.target(0)
-        )
-        gift_data = game_config.config_gift_items[gift_id]
-        # 药物礼物的情况
-        if gift_data.type == 11:
-            if not self.is_drug_effective(gift_id, target_character_data):
-                return False
-        # 好感礼物的情况
-        elif gift_data.type == 3:
-            last_gift_time = action_info.get(
-                target_character_data.cid, "last_gift_time"
-            )
-            days_diff = game_time.count_day_for_datetime(
-                last_gift_time, game_time.now()
-            )
-            # 如果和今天是同一天，则不能重复赠送
-            if days_diff <= 0:
-                now_draw = draw.WaitDraw()
-                draw_text = _(
-                    "\n  {0}今天已经收过好感礼物了，不能重复赠送\n"
-                ).format(target_character_data.name)
-                now_draw.text = draw_text
-                now_draw.draw()
-                return False
-        # 道歉礼物的情况
-        elif gift_data.type == 2:
-            hate_count, _hate_count_text = (
-                second_behavior.get_now_state_all_value_and_text_from_mark_up_data(
-                    51, activity.target(0)
-                )
-            )
-            if abilities.ability(target_character_data.cid)[18] >= 2:
-                now_draw = draw.WaitDraw()
-                draw_text = _(
-                    "\n  {0}的反发刻印大于等于2级，道歉礼物无效，需要先降低到1级\n"
-                ).format(target_character_data.name)
-                now_draw.text = draw_text
-                now_draw.draw()
-                return False
-            elif abilities.ability(target_character_data.cid)[
-                18
-            ] == 0 and not flags.get(
-                target_character_data.cid, "angry_with_player"
-            ):
-                now_draw = draw.WaitDraw()
-                draw_text = _("\n  {0}没有生气，不需要赠送道歉礼物\n").format(
-                    target_character_data.name
-                )
-                now_draw.text = draw_text
-                now_draw.draw()
-                return False
-            # 如果负面状态数值太高也无效
-            elif hate_count >= 10000:
-                now_draw = draw.WaitDraw()
-                draw_text = _(
-                    "\n  {0}的反感、恐怖、苦痛等负面状态值过高，无法赠送道歉礼物，需要先降低负面状态值\n"
-                ).format(target_character_data.name)
-                now_draw.text = draw_text
-                now_draw.draw()
-                return False
-        # 阴茎倒模的情况
-        elif gift_data.type == 13:
-            # 检查对方是否已经拥有
-            if handle_premise.handle_target_have_penis_mold(0):
-                now_draw = draw.WaitDraw()
-                draw_text = _(
-                    "\n  {0}已经拥有了你的阴茎倒模，不能重复赠送\n"
-                ).format(target_character_data.name)
-                now_draw.text = draw_text
-                now_draw.draw()
-                return False
-        # 否则返回True
-        return True
+        target = identity.of(activity.target(0))
+        return _passes(gift_service.gift_block_reason(gift_id, target))
 
     def is_drug_effective(
         self, drug_id: int, target_character_data: identity.Identity
@@ -390,262 +219,5 @@ class Gift_Panel:
         drug_id -- 药物ID
         target_character_data -- 目标角色数据
         """
-        talent = abilities.talent(target_character_data.cid)
-        effective_flag = True
-        draw_text = ""
-        # 丰胸药：如果目标已是爆乳则无效
-        if drug_id == 21:
-            effective_flag = not talent[125]
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}已经是最大的【爆乳】了，无法使用丰胸药\n"
-                ).format(target_character_data.name)
-        # 缩胸药：如果目标已是绝壁则无效
-        elif drug_id == 22:
-            effective_flag = not talent[121]
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}已经是最小的【绝壁】了，无法使用缩胸药\n"
-                ).format(target_character_data.name)
-        # 丰臀药：如果目标已是巨臀则无效
-        elif drug_id == 23:
-            effective_flag = not talent[128]
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}已经是最大的【巨臀】了，无法使用丰臀药\n"
-                ).format(target_character_data.name)
-        # 缩臀药：如果目标已是小臀则无效
-        elif drug_id == 24:
-            effective_flag = not talent[126]
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}已经是最小的【小臀】了，无法使用缩臀药\n"
-                ).format(target_character_data.name)
-        # 丰腿药：如果目标已是肉腿则无效
-        elif drug_id == 25:
-            effective_flag = not talent[130]
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}已经是【肉腿】了，无法使用丰腿药\n"
-                ).format(target_character_data.name)
-        # 瘦腿药：如果目标已是细腿则无效
-        elif drug_id == 26:
-            effective_flag = not talent[129]
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}已经是【细腿】了，无法使用瘦腿药\n"
-                ).format(target_character_data.name)
-        # 丰足药：如果目标已是长足则无效
-        elif drug_id == 27:
-            effective_flag = not talent[132]
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}已经是【长足】了，无法使用丰足药\n"
-                ).format(target_character_data.name)
-        # 瘦足药：如果目标已是小足则无效
-        elif drug_id == 28:
-            effective_flag = not talent[131]
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}已经是【小足】了，无法使用瘦足药\n"
-                ).format(target_character_data.name)
-        # 泌乳药：如果目标已有泌乳素质则无效
-        elif drug_id == 33:
-            effective_flag = not handle_premise.handle_lactation_1(
-                target_character_data.cid
-            )
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}已经在【泌乳】了，无法使用泌乳药\n"
-                ).format(target_character_data.name)
-        # 停乳药：如果目标没有泌乳素质则无效
-        elif drug_id == 34:
-            effective_flag = bool(
-                handle_premise.handle_lactation_1(target_character_data.cid)
-            )
-            if not effective_flag:
-                draw_text = _("\n  {0}没有在【泌乳】，无法使用停乳药\n").format(
-                    target_character_data.name
-                )
-        # 妊娠加速药：仅对受精或妊娠状态的胎生干员有效，且未达加速上限
-        elif drug_id == 35:
-            from Script.System.Pregnancy_System import (
-                pregnancy_handle,
-                egg_handle,
-            )
-
-            if not (
-                handle_premise.handle_fertilization_1(target_character_data.cid)
-                or handle_premise.handle_pregnancy_1(target_character_data.cid)
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}没有处于受精或妊娠状态，无法使用妊娠加速药\n"
-                ).format(target_character_data.name)
-            elif not egg_handle.is_viviparous(target_character_data.cid):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}的种族不是胎生，无法使用妊娠加速药\n"
-                ).format(target_character_data.name)
-            elif (
-                pregnancy_handle.get_pregnancy_acceleration_amount(
-                    target_character_data.cid
-                )
-                <= 0
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}的孕期已经加速到极限了，无法继续使用妊娠加速药\n"
-                ).format(target_character_data.name)
-        # 孵化加速药：玩家需在育儿室（受精卵均存放于育儿室孵化），且目标持有可加速的孵化中卵
-        elif drug_id == 36:
-            from Script.System.Pregnancy_System import egg_handle
-
-            if not handle_premise.handle_in_nursery(0):
-                effective_flag = False
-                draw_text = _("\n  只能在育儿室使用孵化加速药\n")
-            elif not len(
-                egg_handle.get_hatching_eggs(target_character_data.cid)
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}没有正在孵化中的卵，无法使用孵化加速药\n"
-                ).format(target_character_data.name)
-            elif not len(
-                egg_handle.get_accelerable_hatching_eggs(
-                    target_character_data.cid
-                )
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}的卵都已经加速到极限了，无法继续使用孵化加速药\n"
-                ).format(target_character_data.name)
-        # 假孕药：仅对不处于任何怀孕相关状态的胎生干员有效
-        elif drug_id == 37:
-            from Script.System.Pregnancy_System import egg_handle
-
-            if not egg_handle.is_viviparous(target_character_data.cid):
-                effective_flag = False
-                draw_text = _("\n  {0}的种族不是胎生，无法使用假孕药\n").format(
-                    target_character_data.name
-                )
-            else:
-                # 受精/妊娠/临盆/产后/育儿/假孕孕肚/孕肚外观 任一为真即处于怀孕相关状态
-                pregnancy_premise_list = [
-                    handle_premise.handle_fertilization_1,
-                    handle_premise.handle_pregnancy_1,
-                    handle_premise.handle_parturient_1,
-                    handle_premise.handle_postpartum_1,
-                    handle_premise.handle_rearing_1,
-                    handle_premise.handle_fake_inflation_1,
-                    handle_premise.handle_inflation_1,
-                ]
-                for premise_func in pregnancy_premise_list:
-                    if premise_func(target_character_data.cid):
-                        effective_flag = False
-                        draw_text = _(
-                            "\n  {0}正处于怀孕相关状态中，无法使用假孕药\n"
-                        ).format(target_character_data.name)
-                        break
-        # 假孕终止药：仅对处于假孕状态的干员有效
-        elif drug_id == 38:
-            effective_flag = bool(
-                handle_premise.handle_fake_inflation_1(
-                    target_character_data.cid
-                )
-            )
-            if not effective_flag:
-                draw_text = _(
-                    "\n  {0}没有处于假孕状态，不需要使用假孕终止药\n"
-                ).format(target_character_data.name)
-        # 成长加速药：目标为幼女/学员阶段的女儿时对本人生效（需未到加速极限）；
-        # 否则目标视为母亲：玩家需在育儿室，且目标名下有可加速的婴儿
-        elif drug_id == 39:
-            from Script.System.Pregnancy_System import pregnancy_handle
-
-            if pregnancy_handle.is_growth_drug_self_target(
-                target_character_data.cid
-            ):
-                if (
-                    pregnancy_handle.get_child_growth_acceleration_amount(
-                        target_character_data.cid
-                    )
-                    <= 0
-                ):
-                    effective_flag = False
-                    draw_text = _(
-                        "\n  {0}已经快要成长到下一阶段了，无法使用成长加速药\n"
-                    ).format(target_character_data.name)
-            elif not handle_premise.handle_in_nursery(0):
-                effective_flag = False
-                draw_text = _("\n  只能在育儿室对母亲使用成长加速药\n")
-            elif not len(
-                pregnancy_handle.get_baby_id_list(target_character_data.cid)
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}没有正在婴儿期的孩子，无法使用成长加速药\n"
-                ).format(target_character_data.name)
-            elif not len(
-                pregnancy_handle.get_accelerable_babies(
-                    target_character_data.cid
-                )
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}的孩子都已经快要长成幼女了，无法使用成长加速药\n"
-                ).format(target_character_data.name)
-        # 成长停滞药：仅对处于幼女或学员阶段、且未处于成长停滞的女儿有效
-        elif drug_id == 40:
-            if not handle_premise.handle_self_is_player_daughter(
-                target_character_data.cid
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}不是博士的女儿，无法使用成长停滞药\n"
-                ).format(target_character_data.name)
-            elif not (
-                handle_premise.handle_self_is_child(target_character_data.cid)
-                or handle_premise.handle_self_is_loli(target_character_data.cid)
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}不处于幼女或学员阶段，无法使用成长停滞药\n"
-                ).format(target_character_data.name)
-            elif handle_premise.handle_growth_stop_1(target_character_data.cid):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}已经处于【成长停滞】状态了，无法重复使用成长停滞药\n"
-                ).format(target_character_data.name)
-        # 成长继续药：仅对处于幼女或学员阶段、且已处于成长停滞的女儿有效
-        elif drug_id == 41:
-            if not handle_premise.handle_self_is_player_daughter(
-                target_character_data.cid
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}不是博士的女儿，无法使用成长继续药\n"
-                ).format(target_character_data.name)
-            elif not (
-                handle_premise.handle_self_is_child(target_character_data.cid)
-                or handle_premise.handle_self_is_loli(target_character_data.cid)
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}不处于幼女或学员阶段，无法使用成长继续药\n"
-                ).format(target_character_data.name)
-            elif not handle_premise.handle_growth_stop_1(
-                target_character_data.cid
-            ):
-                effective_flag = False
-                draw_text = _(
-                    "\n  {0}没有处于【成长停滞】状态，不需要使用成长继续药\n"
-                ).format(target_character_data.name)
-
-        # 如果药物无效，则绘制提示信息
-        if not effective_flag:
-            now_draw = draw.WaitDraw()
-            now_draw.text = draw_text
-            now_draw.draw()
-
-        return effective_flag
+        reason = gift_service.drug_block_reason(drug_id, target_character_data)
+        return _passes(reason)
