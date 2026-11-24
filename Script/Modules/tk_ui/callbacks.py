@@ -3,7 +3,8 @@ Tk 界面向后端登记的回调函数
 ===========================
 本模块向 playthrough 登记设定表补齐时的提示绘制函数。
 本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
-本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制函数、面板切换函数与隐奸中显示非H指令的开关查询函数。
+本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制函数与分隔线绘制函数。
+本模块同时向 gameplay_resolution.ui_hooks 登记面板切换函数与隐奸中显示非H指令的开关查询函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
 本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
 本模块不登记内核钩子。
@@ -80,6 +81,18 @@ def draw_notice(
     if style is not None:
         now_draw.style = style
     now_draw.draw()
+
+
+@ui_hooks.on_divider
+def draw_divider(char: str) -> None:
+    """
+    按 normal_config.config_normal.text_width 构造 LineDraw 并绘制一条分隔线。
+    Keyword arguments:
+    char -- str，用于重复绘制分隔线的字符
+    Return arguments:
+    None -- 无返回值
+    """
+    draw.LineDraw(char, normal_config.config_normal.text_width).draw()
 
 
 @ui_hooks.on_panel_switch

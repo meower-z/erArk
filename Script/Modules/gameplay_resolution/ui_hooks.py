@@ -1,9 +1,9 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供三类回调的登记与调用入口：输出提示文本、切换面板、只读查询隐奸中显示非H指令的开关。
+本模块提供四类回调入口：输出提示文本、输出分隔线、切换面板与只读查询隐奸中显示非H指令的开关。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，提示输出与面板切换函数不执行任何操作。
+未登记回调时，提示输出、分隔线输出与面板切换函数不执行任何操作。
 未登记回调时，开关查询函数返回 False。
 """
 
@@ -33,6 +33,10 @@ type PanelSwitch = Callable[[int], None]
 """ 面板切换回调函数类型，接收目标面板编号。 """
 _notices: list[Notice] = []
 """ 按登记顺序保存的提示文本回调列表。 """
+type Divider = Callable[[str], None]
+""" 分隔线回调函数类型，接收用于绘制分隔线的字符。 """
+_dividers: list[Divider] = []
+""" 按登记顺序保存的分隔线回调列表。 """
 _panel_switches: list[PanelSwitch] = []
 """ 按登记顺序保存的面板切换回调列表。 """
 type ToggleQuery = Callable[[], bool]
@@ -72,6 +76,30 @@ def emit_notice(
     """
     for fn in _notices:
         fn(text, wait=wait, style=style, use_text_width=use_text_width)
+
+
+def on_divider(fn: Divider) -> Divider:
+    """
+    登记一个分隔线回调，可作为装饰器使用。
+    Keyword arguments:
+    fn -- Divider，要登记的分隔线回调函数
+    Return arguments:
+    Divider -- 原样返回传入的 fn
+    """
+    _dividers.append(fn)
+    return fn
+
+
+def emit_divider(char: str = "-") -> None:
+    """
+    按登记顺序调用已登记的分隔线回调，未登记时不执行操作。
+    Keyword arguments:
+    char -- str，用于绘制分隔线的字符，默认为 "-"
+    Return arguments:
+    None -- 无返回值
+    """
+    for fn in _dividers:
+        fn(char)
 
 
 def on_panel_switch(fn: PanelSwitch) -> PanelSwitch:

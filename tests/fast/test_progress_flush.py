@@ -40,7 +40,7 @@ NEW_DAY_IMPORTS = (
     "Script.System.Cooking_System.cooking",
     "Script.Modules.gameplay_resolution.diplomacy_service",
     "Script.Modules.gameplay_resolution.navigation_service",
-    "Script.UI.Panel.assistant_panel",
+    "Script.Modules.gameplay_resolution.assistant_service",
     "Script.System.Pregnancy_System.pregnancy_handle",
     "Script.System.Pregnancy_System.egg_handle",
     "Script.System.Education_System.schedule_template_handle",

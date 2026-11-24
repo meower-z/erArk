@@ -1,17 +1,17 @@
-"""助理面板，以及助理候选、选择与替换的处理"""
+"""助理管理界面面板、助理选择界面与读档时的跟随标记修补。"""
 
 from types import FunctionType
 from Script.Core import constant, flow_handle
 from Script.Core import get_text, py_cmd
-from Script.Design import attr_calculation, handle_premise, map_handle
+from Script.Design import attr_calculation, map_handle
 from Script.Design import second_behavior
 from Script.UI.Moudle import draw, panel, view
-from Script.Modules.domains import action_info, flags, roster, visitor, work
+from Script.Modules.domains import action_info, flags
 from Script.Modules.domains import chara_life, relations, modes
+from Script.Modules.gameplay_resolution import assistant_service
 from Script.Modules.save_load import reset
 from Script.Config import game_config, normal_config
 
-import random
 from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
@@ -22,29 +22,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def get_assistant_candidates() -> list[int]:
-    """
-    获取助理候选角色id列表
-    """
-    candidates = []
-    npc_id_got_list = list(roster.active_sorted())
-    for npc_id in npc_id_got_list:
-        # 跳过玩家
-        if npc_id == 0:
-            continue
-        # 跳过2、7异常
-        if handle_premise.handle_unnormal_27(npc_id):
-            continue
-        # 跳过监狱长
-        if npc_id == work.warden():
-            continue
-        # 跳过访客
-        if visitor.is_visitor(npc_id):
-            continue
-        candidates.append(npc_id)
-    return candidates
 
 
 def chose_assistant() -> None:
@@ -76,8 +53,12 @@ def chose_assistant() -> None:
         selected_id_list = [assistant_id]
         final_list = []
         # 遍历候选角色id
-        for npc_id in get_assistant_candidates():
-            now_list = [npc_id, assistant_replace, selected_id_list]
+        for npc_id in assistant_service.get_assistant_candidates():
+            now_list = [
+                npc_id,
+                assistant_service.assistant_replace,
+                selected_id_list,
+            ]
             final_list.append(now_list)
         now_draw_panel.text_list = final_list
 
@@ -91,106 +72,6 @@ def chose_assistant() -> None:
         yrn = flow_handle.askfor_all(return_list)
         if yrn in return_list and yrn not in other_return_list:
             break
-
-
-def select_random_assistant() -> None:
-    """
-    随机选择助理\n
-    Keyword arguments:
-    无\n
-    Return arguments:
-    无
-    """
-
-    # 随机选择
-    assistant_id = random.choice(get_assistant_candidates())
-    # 绘制提示信息
-    info_draw = draw.WaitDraw()
-    info_text = _("\n○本周抽签选中了{0}作为{1}的助理\n").format(
-        identity.of(assistant_id).name, identity.of(0).name
-    )
-    info_draw.text = info_text
-    info_draw.width = window_width
-    info_draw.draw()
-    # 开始替换助理
-    assistant_replace(assistant_id)
-
-
-def assistant_replace(new_assistant_id: int) -> None:
-    """
-    助理替换\n
-    Keyword arguments:
-    new_assistant_id -- 新助理角色id
-    """
-    old_id = relations.assistant_character_id(0)
-
-    # 判断是否有旧助理
-    old_assistant_data: identity.Identity | None = None
-    if old_id != 0:
-        # 去掉旧助理的跟随状态
-        old_assistant_data = identity.of(old_id)
-        flags.set(old_id, is_follow=0)
-        # 去掉旧助理的同居状态
-        if chara_life.dormitory(
-            old_id
-        ) == map_handle.get_map_system_path_str_for_list(["中枢", "博士房间"]):
-            from Script.System.Dormitory_System import (
-                common as dormitory_common,
-            )
-
-            dormitory_common.restore_character_dormitory(old_id)
-        # 重置旧助理的助理服务数据体
-        zero = attr_calculation.get_assistant_services_zero()
-        relations.assistant_services.set(old_id, zero)
-
-    line = draw.LineDraw("-", window_width)
-    line.draw()
-    info_draw = draw.WaitDraw()
-    info_text = ""
-
-    # 新助理是旧助理时，仅取消该助理
-    if new_assistant_id == old_id:
-        relations.assistant_character_id.set(0, 0)
-    # 新助理状态异常时，无法任命
-    elif handle_premise.handle_unnormal_27(new_assistant_id):
-        new_assistant_data: identity.Identity = identity.of(new_assistant_id)
-        info_text += _("\n{0}的状态异常，无法任命为助理干员\n").format(
-            new_assistant_data.name
-        )
-        old_assistant_data = None
-    # 正常情况下，设置新助理
-    else:
-        relations.assistant_character_id.set(0, new_assistant_id)
-        new_assistant_data = identity.of(new_assistant_id)
-        flags.set(new_assistant_id, is_follow=1)
-        relations.assistant_services.set_item(new_assistant_id, 2, 1)
-        second_behavior.character_get_second_behavior(
-            new_assistant_id, "not_as_assistant", reset=True
-        )
-        second_behavior.character_get_second_behavior(
-            new_assistant_id, "chosen_as_assistant"
-        )
-        info_text += _("\n{0}成为助理干员了，并默认开启智能跟随模式\n").format(
-            new_assistant_data.name
-        )
-        # 同步换助理的选项
-        if old_assistant_data is not None:
-            if relations.assistant_services(old_id).get(10) == 1:
-                relations.assistant_services.set_item(new_assistant_id, 10, 1)
-    # 取消旧助理的结算
-    if old_assistant_data is not None:
-        second_behavior.character_get_second_behavior(
-            new_assistant_id, "chosen_as_assistant", reset=True
-        )
-        second_behavior.character_get_second_behavior(
-            old_assistant_data.cid, "not_as_assistant"
-        )
-        info_text += _(
-            "\n\n{0}不再是助理干员了，已清零助理服务相关的设置\n\n"
-        ).format(old_assistant_data.name)
-    info_draw.text = info_text
-    info_draw.width = window_width
-    info_draw.draw()
 
 
 @reset.repair
@@ -732,7 +613,7 @@ class SeeNPCButtonList:
             button_text,
             self.button_return,
             self.width,
-            cmd_func=assistant_replace,
+            cmd_func=assistant_service.assistant_replace,
             args=(self.chara_id,),
         )
         # self.button_return = NPC_id

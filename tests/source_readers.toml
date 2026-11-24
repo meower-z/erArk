@@ -716,3 +716,13 @@ reads = "Script/Protocol/boundary_snapshot.py 中的全部 import 与 from ... i
 used_for = "测试：Script/Protocol/boundary_snapshot.py 仅包含指向 Python 标准库的绝对导入"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R54"
+file = "tests/fast/test_assistant_service.py"
+symbol = "AssistantBoundaryTest"
+mechanism = "ast"
+reads = "Script/Settle/past_day_settle.py 的导入语句与 Script/UI/Panel/assistant_panel.py 模块作用域绑定名"
+used_for = "测试：每日结算导入 assistant_service 而非面板，且助理面板模块级不暴露三函数、* 与 __getattr__"
+when = "test"
+capture = "suite"
