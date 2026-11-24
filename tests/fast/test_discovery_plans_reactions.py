@@ -15,6 +15,7 @@ from unittest import mock
 from Script.Core import constant
 from Script.Design import character_behavior, handle_npc_ai
 from Script.Kernel import core
+from Script.Modules.gameplay_resolution import hidden_sex_service
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Sex_System import sex_be_discovered_panel
 from tests.fast.base import FastTestCase
@@ -53,7 +54,7 @@ class DiscoveryPlansReactionsTest(FastTestCase):
                 (activity.behavior(player.cid).behavior_id, core.state().clock)
             )
             if len(player_starts) == 1:
-                sex_be_discovered_panel.plan_discovery(FINDER)
+                hidden_sex_service.plan_discovery(FINDER)
 
         def settle(character_id: int) -> int:
             """
