@@ -593,12 +593,12 @@ def handle_settle_behavior(
             now_text_time = "\n"
         if now_text_list:
             now_text_list.append(now_text_time)
-        # now_panel = panel.LeftDrawTextListPanel()
+        from Script.UI.Moudle import rich_text_draw
+
         now_text = "".join(now_text_list)
-        now_panel = rich_text.get_rich_text_draw_panel(now_text)
+        now_panel = rich_text_draw.get_rich_text_draw_panel(now_text)
         now_panel.width = width
         now_panel.column = 8
-
         return now_panel
     return None
 

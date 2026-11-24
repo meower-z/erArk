@@ -1,10 +1,10 @@
 """角色身体污秽状况展示面板 SeeCharacterBodyPanel"""
 
 from types import FunctionType
-from Script.Core import get_text, rich_text, num
+from Script.Core import get_text, num
 from Script.Design import clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, rich_text_draw
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import (
     abilities,
@@ -458,9 +458,9 @@ class SeeCharacterBodyPanel:
                     all_part_text += "\n"
 
         # 获取富文本绘制对象
-        rich_text_draw_list = rich_text.get_rich_text_draw_list(all_part_text)
+        draw_list = rich_text_draw.get_rich_text_draw_list(all_part_text)
         # 加入到绘制列表中
-        self.draw_list.extend(rich_text_draw_list)
+        self.draw_list.extend(draw_list)
 
     def get_dirty_diff_text_cid(
         self, body_part_index: int, semen_level: int

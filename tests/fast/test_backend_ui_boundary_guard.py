@@ -13,6 +13,7 @@ from tests.fast.base import FastTestCase
 ROOT = Path(__file__).resolve().parents[2]
 """ 仓库根目录路径 """
 BACKEND_UI_FREE_DIRS = (
+    "Script/Config",
     "Script/Design/handle_premise",
     "Script/Kernel",
     "Script/Modules/domains",

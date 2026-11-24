@@ -7,10 +7,10 @@ import random
 import re
 from types import FunctionType
 
-from Script.Core import constant, game_type, get_text, rich_text
+from Script.Core import constant, game_type, get_text
 from Script.Core import value_handle
 from Script.Design import map_handle, handle_premise, talk_image
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, rich_text_draw
 from Script.Config import normal_config, game_config
 from Script.Design import game_time
 from Script.Modules.domains import action_info, activity, chara_profile, flags
@@ -535,12 +535,12 @@ def handle_talk_draw(
         line_feed_draw.text = "\n"
         line_feed_draw.draw()
         # 进行富文本的绘制
-        rich_text_draw_list = rich_text.get_rich_text_draw_list(
+        rich_text_draw_list = rich_text_draw.get_rich_text_draw_list(
             now_talk_text, base_style=final_color, wait_flag=True
         )
-        for rich_text_draw in rich_text_draw_list:
-            rich_text_draw.width = normal_config.config_normal.text_width
-            rich_text_draw.draw()
+        for rich_draw in rich_text_draw_list:
+            rich_draw.width = normal_config.config_normal.text_width
+            rich_draw.draw()
         # 在最后进行一次换行和等待
         if special_code[0]:
             wait_draw = draw.LineFeedWaitDraw()
