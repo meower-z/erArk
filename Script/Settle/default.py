@@ -19,6 +19,7 @@ from Script.System.Instruct_System.common_behavior_utils import (
 )
 from Script.Modules.gameplay_resolution import drug_service
 from Script.Modules.gameplay_resolution import ejaculation_service
+from Script.Modules.gameplay_resolution import equipment_service
 from Script.Modules.gameplay_resolution import hypnosis_service
 from Script.Modules.gameplay_resolution import semen_dirty_service
 from Script.Modules.gameplay_resolution import achievement_service
@@ -8491,14 +8492,13 @@ def handle_maintain_equipment_add_adjust(
     """
     if not add_time:
         return
-    from Script.UI.Panel import equipmen_panel
 
     # 如果和玩家在同一个地方，则触发绘制信息
     draw_flag = False
     if handle_premise.handle_in_player_scene(character_id):
         draw_flag = True
     # 进行装备维护
-    equipmen_panel.smith_maintain_equipment_once(character_id, draw_flag)
+    equipment_service.smith_maintain_equipment_once(character_id, draw_flag)
 
 
 @settle_behavior.add_settle_behavior_effect(
