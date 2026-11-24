@@ -7,9 +7,8 @@ from Script.Core import get_text, flow_handle, constant
 from Script.Design import handle_talent, handle_premise
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, dirty, hypnosis, player_ability
-from Script.Modules.domains import player_collection, roster, status, warehouse
-from Script.Modules.domains import relations, identity, modes
+from Script.Modules.domains import abilities, identity, modes
+from Script.Modules.gameplay_resolution import originium_arts_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -87,8 +86,8 @@ class Originium_Arts_Panel:
 
             if handle_talent.have_hypnosis_talent():
                 button3_text = _("[003]催眠系能力：")
-                now_type_id = player_ability.get(
-                    self.pl_character_data.cid, "hypnosis_type"
+                now_type_id = originium_arts_service.get_hypnosis_type(
+                    self.pl_character_data.cid
                 )
                 now_type_name = game_config.config_hypnosis_type[
                     now_type_id
@@ -282,7 +281,6 @@ class Originium_Arts_Panel:
         self, condition: bool, draw_text: str, cid: int, return_list: list[str]
     ) -> list[str]:
         """绘制升级按钮"""
-        # 如果满足条件则绘制按钮，否则绘制灰色文本
         now_draw: draw.LeftButton | draw.NormalDraw
         if condition:
             now_draw = draw.LeftButton(
@@ -302,306 +300,143 @@ class Originium_Arts_Panel:
         line_feed.draw()
         return return_list
 
+    def _format_condition_text(
+        self, condition: originium_arts_service.ArtConditionProgress
+    ) -> str:
+        """按条件类型将解锁进度格式化为界面展示文案。"""
+        kind = condition.kind
+        if kind == "max_favorability_trust":
+            return _(
+                "：需要单干员最高好感度≥{0}（当前{1}），最高信赖度≥{2}（当前{3}）"
+            ).format(
+                condition.required_primary,
+                condition.current_primary,
+                condition.required_secondary,
+                condition.current_secondary,
+            )
+        if kind == "total_favorability_fall":
+            return _(
+                "：需要全干员总好感度≥{0}（当前{1}），已进入任意陷落路线的干员人数≥{2}（当前{3}）"
+            ).format(
+                condition.required_primary,
+                condition.current_primary,
+                condition.required_secondary,
+                condition.current_secondary,
+            )
+        if kind == "total_favorability_deep_fall":
+            return _(
+                "：需要全干员总好感度≥{0}（当前{1}），陷落程度为[爱侣]或[奴隶]的干员人数≥{2}（当前{3}）"
+            ).format(
+                condition.required_primary,
+                condition.current_primary,
+                condition.required_secondary,
+                condition.current_secondary,
+            )
+        if kind == "panty_collection_total":
+            return _("：需要全干员内裤收藏总数量≥{0}（当前{1}）").format(
+                condition.required_primary, condition.current_primary
+            )
+        if kind == "internal_semen_orgasm_exp":
+            return _(
+                "：需要全干员的体内部位被射精总量≥{0}ml（当前{1}ml），全干员总绝顶经验≥{2}（当前{3}）"
+            ).format(
+                condition.required_primary,
+                condition.current_primary,
+                condition.required_secondary,
+                condition.current_secondary,
+            )
+        if kind == "child_count":
+            return _("：需要生育孩子数量≥{0}（当前{1}）").format(
+                condition.required_primary, condition.current_primary
+            )
+        if kind == "unconscious_sex_orgasm_exp":
+            return _(
+                "：需要全干员无意识性交经验≥{0}（当前{1}），全干员总无意识绝顶经验≥{2}（当前{3}）"
+            ).format(
+                condition.required_primary,
+                condition.current_primary,
+                condition.required_secondary,
+                condition.current_secondary,
+            )
+        if kind == "time_stop_sex_orgasm_exp":
+            return _(
+                "：需要对干员的时姦经验≥{0}（当前{1}），全干员总无意识绝顶经验≥{2}（当前{3}）"
+            ).format(
+                condition.required_primary,
+                condition.current_primary,
+                condition.required_secondary,
+                condition.current_secondary,
+            )
+        if kind == "sleep_sex_exp":
+            return _("：需要对干员的睡姦经验≥{0}（当前{1}）").format(
+                condition.required_primary, condition.current_primary
+            )
+        return _(
+            "：需要博士催眠经验≥{0}（当前{1}），需要全干员总催眠深度≥{2}%（当前{3}%）"
+        ).format(
+            condition.required_primary,
+            condition.current_primary,
+            condition.required_secondary,
+            condition.current_secondary,
+        )
+
     def gain_and_upgrade_ability(self) -> None:
         """能力获得与升级"""
-        experience = abilities.experience(0)
         while 1:
             return_list: list[str] = []
             line_draw = draw.LineDraw("-", self.width)
             line_draw.draw()
             info_draw = draw.NormalDraw()
-            info_text = ""
-            info_text += _(
+            info_text = _(
                 "\n能力可以直接消耗至纯源石或满足特定条件解锁，当前至纯源石：{0}\n"
-            ).format(warehouse.amount(3))
+            ).format(originium_arts_service.originite_prime_amount())
             info_text += _("\n当前可以获得/升级的能力有：\n\n")
             info_draw.text = _(info_text)
             info_draw.draw()
-            # 遍历输出该能力的全素质
             now_draw: draw.NormalDraw | draw.LeftButton
-            for cid in game_config.config_talent_of_arts:
-                talent_of_arts_data = game_config.config_talent_of_arts[cid]
-                # 检查是否已经获得
-                if abilities.talent(0)[talent_of_arts_data.talent_id]:
-                    continue
-                # 检查是否有前置素质
-                if talent_of_arts_data.need_id:
-                    if not abilities.talent(0)[talent_of_arts_data.need_id]:
-                        continue
-                talent_id = talent_of_arts_data.talent_id
-                talent_name = game_config.config_talent[talent_id].name
-                talent_info = game_config.config_talent[talent_id].info
+            for option in originium_arts_service.list_upgradeable_arts():
+                talent_name = game_config.config_talent[option.talent_id].name
+                talent_info = game_config.config_talent[option.talent_id].info
                 draw_text = f"  [{talent_name}]"
-                # 通用的源石获得方式，花费为10的cost次方
-                money_cost = 10 ** (talent_of_arts_data.level - 1)
-                if talent_of_arts_data.todo:
+                if option.todo:
                     now_draw = draw.NormalDraw()
                     draw_text += _("(未实装)：{0}\n").format(talent_info)
                     now_draw.text = _(draw_text)
                     now_draw.style = "deep_gray"
                     now_draw.draw()
-                elif warehouse.amount(3) < money_cost:
+                elif not option.can_buy_with_prime:
                     now_draw = draw.NormalDraw()
                     draw_text += _("({0}至纯源石-当前源石不足)：{1}\n").format(
-                        money_cost, talent_info
+                        option.money_cost, talent_info
                     )
                     now_draw.text = _(draw_text)
                     now_draw.style = "deep_gray"
                     now_draw.draw()
                 else:
                     draw_text += _("( {0} 至纯源石)：{1}").format(
-                        money_cost, talent_info
+                        option.money_cost, talent_info
                     )
                     now_draw = draw.LeftButton(
                         _(draw_text),
-                        _(str(cid)),
+                        _(str(option.cid)),
                         window_width,
                         cmd_func=self.gain_and_upgrade_ability_which,
-                        args=(cid,),
+                        args=(option.cid,),
                     )
                     return_list.append(now_draw.return_text)
                     now_draw.draw()
                     line_feed.draw()
 
-                # 其他方式获得
-                draw_text = f"  [{talent_name}]"
-                # 博士信息素
-                if talent_id == 304:
-                    # 好感度与信赖度
-                    now_favorability_count, now_trust_count = 0, 0
-                    for chara_id in roster.active():
-                        character_data = identity.of(chara_id)
-                        if (
-                            relations.favorability(character_data.cid)[0]
-                            > now_favorability_count
-                        ):
-                            now_favorability_count = int(
-                                relations.favorability(character_data.cid)[0]
-                            )
-                        if (
-                            relations.trust(character_data.cid)
-                            > now_trust_count
-                        ):
-                            now_trust_count = int(
-                                relations.trust(character_data.cid)
-                            )
-                    # 绘制
-                    draw_text += _(
-                        "：需要单干员最高好感度≥{0}（当前{1}），最高信赖度≥{2}（当前{3}）"
-                    ).format(
-                        talent_of_arts_data.lv_up_value1,
-                        now_favorability_count,
-                        talent_of_arts_data.lv_up_value2,
-                        now_trust_count,
-                    )
-                    now_contion = (
-                        now_favorability_count
-                        >= talent_of_arts_data.lv_up_value1
-                        and now_trust_count >= talent_of_arts_data.lv_up_value2
+                if option.condition is not None:
+                    cond_text = (
+                        f"  [{talent_name}]"
+                        f"{self._format_condition_text(option.condition)}"
                     )
                     return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
-                    )
-                # 博士信息素集组
-                elif talent_id == 305:
-                    # 总好感度与总陷落角色
-                    now_favorability_count, now_fall_count = 0, 0
-                    for chara_id in roster.active():
-                        now_fall_count += handle_premise.handle_self_fall(
-                            chara_id
-                        )
-                        character_data = identity.of(chara_id)
-                        now_favorability_count += int(
-                            relations.favorability(character_data.cid)[0]
-                        )
-                    # 绘制
-                    draw_text += _(
-                        "：需要全干员总好感度≥{0}（当前{1}），已进入任意陷落路线的干员人数≥{2}（当前{3}）"
-                    ).format(
-                        talent_of_arts_data.lv_up_value1,
-                        now_favorability_count,
-                        talent_of_arts_data.lv_up_value2,
-                        now_fall_count,
-                    )
-                    now_contion = (
-                        now_favorability_count
-                        >= talent_of_arts_data.lv_up_value1
-                        and now_fall_count >= talent_of_arts_data.lv_up_value2
-                    )
-                    return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
-                    )
-                # 博士信息素阵列
-                elif talent_id == 306:
-                    # 总好感度与总陷落角色
-                    now_favorability_count, now_fall_count = 0, 0
-                    for chara_id in roster.active():
-                        character_data = identity.of(chara_id)
-                        now_favorability_count += int(
-                            relations.favorability(character_data.cid)[0]
-                        )
-                        for talent_id in [204, 214]:
-                            if abilities.talent(chara_id)[talent_id]:
-                                now_fall_count += 1
-                                break
-                    # 绘制
-                    draw_text += _(
-                        "：需要全干员总好感度≥{0}（当前{1}），陷落程度为[爱侣]或[奴隶]的干员人数≥{2}（当前{3}）"
-                    ).format(
-                        talent_of_arts_data.lv_up_value1,
-                        now_favorability_count,
-                        talent_of_arts_data.lv_up_value2,
-                        now_fall_count,
-                    )
-                    now_contion = (
-                        now_favorability_count
-                        >= talent_of_arts_data.lv_up_value1
-                        and now_fall_count >= talent_of_arts_data.lv_up_value2
-                    )
-                    return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
-                    )
-                # 内衣透视
-                elif talent_id == 307:
-                    # 总内裤数量
-                    now_pan_count = 0
-                    for items in player_collection.get("npc_panties").values():
-                        now_pan_count += len(items)
-                    # 绘制
-                    draw_text += _(
-                        "：需要全干员内裤收藏总数量≥{0}（当前{1}）"
-                    ).format(talent_of_arts_data.lv_up_value1, now_pan_count)
-                    now_contion = (
-                        now_pan_count >= talent_of_arts_data.lv_up_value1
-                    )
-                    return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
-                    )
-                # 腔内透视
-                elif talent_id == 308:
-                    # 计算体内被射精总量和总绝顶经验
-                    now_semen_count, now_exp_count = 0, 0
-                    for chara_id in roster.active():
-                        character_data = identity.of(chara_id)
-                        body_semen = dirty.view(chara_id).body_semen
-                        for part_id in [2, 6, 7, 8, 9, 15]:
-                            now_semen_count += body_semen[part_id][3]
-                        now_exp_count += abilities.experience(chara_id)[20]
-                    # 绘制
-                    draw_text += _(
-                        "：需要全干员的体内部位被射精总量≥{0}ml（当前{1}ml），全干员总绝顶经验≥{2}（当前{3}）"
-                    ).format(
-                        talent_of_arts_data.lv_up_value1,
-                        now_semen_count,
-                        talent_of_arts_data.lv_up_value2,
-                        now_exp_count,
-                    )
-                    now_contion = (
-                        now_semen_count >= talent_of_arts_data.lv_up_value1
-                        and now_exp_count >= talent_of_arts_data.lv_up_value2
-                    )
-                    return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
-                    )
-                # 生理透视
-                elif talent_id == 309:
-                    # 计算体内被射精总量和总绝顶经验
-                    now_child_count = len(relations.child_id_list(0))
-                    # 绘制
-                    draw_text += _("：需要生育孩子数量≥{0}（当前{1}）").format(
-                        talent_of_arts_data.lv_up_value1, now_child_count
-                    )
-                    now_contion = (
-                        now_child_count >= talent_of_arts_data.lv_up_value1
-                    )
-                    return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
-                    )
-                # 窄域时停
-                elif talent_id == 316:
-                    # 计算全干员无意识经验
-                    now_orgasm_exp_count, now_sex_exp_count = 0, 0
-                    for chara_id in roster.active():
-                        npc_experience = abilities.experience(chara_id)
-                        now_orgasm_exp_count += npc_experience[78]
-                        now_sex_exp_count += npc_experience[79]
-                    # 绘制
-                    draw_text += _(
-                        "：需要全干员无意识性交经验≥{0}（当前{1}），全干员总无意识绝顶经验≥{2}（当前{3}）"
-                    ).format(
-                        talent_of_arts_data.lv_up_value1,
-                        now_sex_exp_count,
-                        talent_of_arts_data.lv_up_value2,
-                        now_orgasm_exp_count,
-                    )
-                    now_contion = (
-                        now_sex_exp_count >= talent_of_arts_data.lv_up_value1
-                        and now_orgasm_exp_count
-                        >= talent_of_arts_data.lv_up_value2
-                    )
-                    return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
-                    )
-                # 广域时停
-                elif talent_id == 317:
-                    # 计算全干员无意识经验
-                    now_time_stop_sex_exp_count, now_orgasm_exp_count = 0, 0
-                    now_time_stop_sex_exp_count = experience[124]
-                    for chara_id in roster.active():
-                        npc_experience = abilities.experience(chara_id)
-                        now_orgasm_exp_count += npc_experience[78]
-                    # 绘制
-                    draw_text += _(
-                        "：需要对干员的时姦经验≥{0}（当前{1}），全干员总无意识绝顶经验≥{2}（当前{3}）"
-                    ).format(
-                        talent_of_arts_data.lv_up_value1,
-                        now_time_stop_sex_exp_count,
-                        talent_of_arts_data.lv_up_value2,
-                        now_orgasm_exp_count,
-                    )
-                    now_contion = (
-                        now_time_stop_sex_exp_count
-                        >= talent_of_arts_data.lv_up_value1
-                        and now_orgasm_exp_count
-                        >= talent_of_arts_data.lv_up_value2
-                    )
-                    return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
-                    )
-                # 猥亵催眠
-                elif talent_id == 331:
-                    # 绘制
-                    draw_text += _(
-                        "：需要对干员的睡姦经验≥{0}（当前{1}）"
-                    ).format(talent_of_arts_data.lv_up_value1, experience[120])
-                    now_contion = (
-                        experience[120] >= talent_of_arts_data.lv_up_value1
-                    )
-                    return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
-                    )
-                # 其他催眠系
-                elif talent_id in game_config.config_hypnosis_talent_of_pl:
-                    up_data = game_config.config_hypnosis_talent_of_pl[
-                        talent_id
-                    ]
-                    need_exp = up_data.pl_experience
-                    now_exp = experience[122]
-                    need_degree = up_data.npc_hypnosis_degree
-                    now_degree: float = 0
-                    # 计算全获得干员的催眠深度
-                    for chara_id in roster.active():
-                        now_degree += hypnosis.degree(chara_id)
-                    now_degree = int(now_degree)
-                    # 绘制
-                    draw_text += _(
-                        "：需要博士催眠经验≥{0}（当前{1}），需要全干员总催眠深度≥{2}%（当前{3}%）"
-                    ).format(need_exp, now_exp, need_degree, now_degree)
-                    now_contion = (
-                        now_exp >= need_exp and now_degree >= need_degree
-                    )
-                    return_list = self.draw_lv_up_button(
-                        now_contion, draw_text, cid, return_list
+                        option.condition.satisfied,
+                        cond_text,
+                        option.cid,
+                        return_list,
                     )
             line_feed.draw()
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
@@ -614,29 +449,20 @@ class Originium_Arts_Panel:
 
     def change_hypnosis_type(self, hypnosis_type_cid: int) -> None:
         """改变当前的催眠类型"""
-        player_ability.set(
-            self.pl_character_data.cid, hypnosis_type=hypnosis_type_cid
+        originium_arts_service.set_hypnosis_type(
+            hypnosis_type_cid, character_id=self.pl_character_data.cid
         )
 
     def gain_and_upgrade_ability_which(
         self, cid: int, no_cost_flag: bool = False
     ) -> None:
         """获得或升级能力"""
-        talent_of_arts_data = game_config.config_talent_of_arts[cid]
-        talent_id = talent_of_arts_data.talent_id
-        talent_name = game_config.config_talent[talent_id].name
-        # 花费为10的cost次方
-        money_cost = 10 ** (talent_of_arts_data.level - 1)
-        # 不消耗直接获得或升级
-        if no_cost_flag:
-            pass
-        else:
-            # 花费大于当前拥有的至纯源石则返回
-            if warehouse.amount(3) < money_cost:
-                return
-            warehouse.add(3, -money_cost)
-        # 升级或获得能力
-        abilities.talent(0)[talent_id] = 1
+        result = originium_arts_service.learn_or_upgrade_art(
+            cid, no_cost_flag=no_cost_flag
+        )
+        if not result.success:
+            return
+        talent_name = game_config.config_talent[result.talent_id].name
         info_text = _("\n习得了{0}\n").format(talent_name)
         info_draw = draw.WaitDraw()
         info_draw.text = _(info_text)
@@ -689,13 +515,12 @@ class Down_Negative_Talent_Panel:
 
     def draw(self) -> None:
         """绘制对象"""
-
-        self.ability_id_list = [15, 17, 18]
+        self.ability_id_list = list(
+            originium_arts_service.NEGATIVE_MARK_ABILITY_IDS
+        )
 
         while 1:
             return_list = []
-
-            # 输出提示信息
             info_draw = draw.NormalDraw()
             info_text = _(
                 "\n当前拥有苦痛刻印、反发刻印或恐怖刻印的角色有：\n\n"
@@ -703,32 +528,26 @@ class Down_Negative_Talent_Panel:
             info_draw.text = info_text
             info_draw.draw()
 
-            chara_exist_flag = False
-
-            # 遍历备选人物名字并输出按钮
-            for chara_id in roster.active():
+            eligible_ids = (
+                originium_arts_service.list_negative_mark_characters()
+            )
+            for chara_id in eligible_ids:
                 character_data = identity.of(chara_id)
+                name = character_data.name
+                adv_id = character_data.adv
+                button_text = f"[{str(adv_id).rjust(4, '0')}]:{name} "
+                button_draw = draw.LeftButton(
+                    _(button_text),
+                    _(str(adv_id)),
+                    self.width,
+                    cmd_func=self.choice_down_which,
+                    args=(chara_id,),
+                )
+                return_list.append(button_draw.return_text)
+                button_draw.draw()
+                line_feed.draw()
 
-                for ability_id in self.ability_id_list:
-                    if abilities.ability(chara_id)[ability_id]:
-                        chara_exist_flag = True
-                        name = character_data.name
-                        adv_id = character_data.adv
-                        button_text = f"[{str(adv_id).rjust(4,'0')}]:{name} "
-
-                        button_draw = draw.LeftButton(
-                            _(button_text),
-                            _(str(adv_id)),
-                            self.width,
-                            cmd_func=self.choice_down_which,
-                            args=(chara_id,),
-                        )
-                        return_list.append(button_draw.return_text)
-                        button_draw.draw()
-                        line_feed.draw()
-                        break  # 单角色满足条件则只出现一次
-
-            if not chara_exist_flag:
+            if not eligible_ids:
                 info_draw = draw.NormalDraw()
                 info_text = _("  没有符合条件的角色\n")
                 info_draw.text = info_text
@@ -744,18 +563,15 @@ class Down_Negative_Talent_Panel:
 
     def choice_down_which(self, chara_id: int) -> None:
         """选择降低哪一个"""
-        ability = abilities.ability(chara_id)
         character_data = identity.of(chara_id)
         self.chara_id = chara_id
         name = character_data.name
 
         while 1:
             return_list = []
-
-            # 输出提示信息
             info_draw = draw.NormalDraw()
-            panties_count = len(
-                player_collection.get("npc_panties").get(self.chara_id, ())
+            panties_count = originium_arts_service.get_npc_panties_count(
+                self.chara_id
             )
             info_text = _(
                 "\n要降低[{0}]的哪个刻印呢？(需要消耗该角色已收藏至藏品馆的5条内裤，当前共{1}条，优先消耗重复款式)\n\n"
@@ -765,22 +581,22 @@ class Down_Negative_Talent_Panel:
             info_draw.text = info_text
             info_draw.draw()
 
-            for ability_id in self.ability_id_list:
-                if ability[ability_id]:
-                    ability_name = game_config.config_ability[ability_id].name
-                    ability_lv = ability[ability_id]
-                    button_text = f"  {ability_name}[lv{ability_lv}]"
-
-                    button_draw = draw.LeftButton(
-                        _(button_text),
-                        _(str(ability_id)),
-                        self.width,
-                        cmd_func=self.settle_down,
-                        args=(ability_id,),
-                    )
-                    return_list.append(button_draw.return_text)
-                    button_draw.draw()
-                    line_feed.draw()
+            for (
+                ability_id,
+                ability_lv,
+            ) in originium_arts_service.list_character_negative_marks(chara_id):
+                ability_name = game_config.config_ability[ability_id].name
+                button_text = f"  {ability_name}[lv{ability_lv}]"
+                button_draw = draw.LeftButton(
+                    _(button_text),
+                    _(str(ability_id)),
+                    self.width,
+                    cmd_func=self.settle_down,
+                    args=(ability_id,),
+                )
+                return_list.append(button_draw.return_text)
+                button_draw.draw()
+                line_feed.draw()
 
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
             back_draw.draw()
@@ -794,46 +610,10 @@ class Down_Negative_Talent_Panel:
         """结算刻印降低"""
         info_draw = draw.NormalDraw()
         character_data = identity.of(self.chara_id)
-        ability = abilities.ability(character_data.cid)
-
-        # 计算当前该角色的胖次数量，大于五则成功，不足则弹出失败提示
-        panties = list(
-            player_collection.get("npc_panties").get(self.chara_id, ())
+        result = originium_arts_service.reduce_negative_mark(
+            character_data.cid, ability_id
         )
-        if len(panties) >= 5 or modes.debug():
-            # debug模式下不消耗内裤
-            if not modes.debug():
-                # 先统计每种内裤的数量
-                pan_counts: dict[str, int] = {}
-                for pan in panties:
-                    pan_counts[pan] = pan_counts.get(pan, 0) + 1
-                # 遍历全部内裤，优先删除重复款式的内裤，如果删除的数量不够5个，则从前往后删除
-                pop_pan_count = 0
-                for pan, count in pan_counts.items():
-                    if count > 1:
-                        remove_count = min(count - 1, 5 - pop_pan_count)
-                        for _tem in range(remove_count):
-                            panties.remove(pan)
-                        pop_pan_count += remove_count
-                        if pop_pan_count >= 5:
-                            break
-                # 从前往后删除
-                while pop_pan_count < 5:
-                    panties.pop(0)
-                    pop_pan_count += 1
-                player_collection.set_list_map_entry(
-                    "npc_panties", self.chara_id, panties
-                )
-
-            # 降低刻印
-            ability[ability_id] -= 1
-            # 也降低刻印对应的主状态值
-            if ability_id == 15:
-                status.set(character_data.cid, 17, 0)
-            elif ability_id == 17:
-                status.set(character_data.cid, 18, 0)
-            elif ability_id == 18:
-                status.set(character_data.cid, 20, 0)
+        if result.success:
             info_text = _("  随着一阵火焰，5条内裤化为一缕青烟，消散在空中\n")
             info_text += _(
                 "  {0}感觉心里轻松了很多，对{1}的印象有些改观了，{2}下降到了{3}级\n"
@@ -841,7 +621,7 @@ class Down_Negative_Talent_Panel:
                 character_data.name,
                 identity.of(0).name,
                 game_config.config_ability[ability_id].name,
-                ability[ability_id],
+                result.new_level,
             )
         else:
             info_text = _("  内裤数量不足\n")
