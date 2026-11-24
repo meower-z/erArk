@@ -16,7 +16,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config, game_config, character_config
 from Script.Design import attr_calculation, character_handle, map_handle
-from Script.UI.Moudle import draw
+from Script.Modules.gameplay_resolution import ui_hooks
 from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
@@ -629,26 +629,19 @@ def install_save(save_id: str, version: int) -> None:
     for domain in (maintenance, physical_exam, bookmarks):
         update_count += domain.adopt_old_save(loaded_dict, version)
 
-    now_draw = draw.LeftDraw()
-    now_draw.text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
-    now_draw.draw()
+    ui_hooks.emit_notice(_("\n开始检测存档的数据结构是否需要跨版本更新\n"))
     io_init.flush()
 
     # 检测是否为旧版存档（npc_tem_data是List而不是Dict）
     if isinstance(loaded_dict.get("npc_tem_data"), list):
-        now_draw = draw.LeftDraw()
-        now_draw.text = _("\n检测到旧版存档，开始迁移角色ID系统...\n")
-        now_draw.draw()
+        ui_hooks.emit_notice(_("\n检测到旧版存档，开始迁移角色ID系统...\n"))
         io_init.flush()
 
         migrate_count = old_chara_to_new.migrate_old_save_data(loaded_dict)
 
-        draw_text = _("\n角色ID迁移完成，共处理{0}条数据\n").format(
-            migrate_count
+        ui_hooks.emit_notice(
+            _("\n角色ID迁移完成，共处理{0}条数据\n").format(migrate_count)
         )
-        now_draw = draw.LeftDraw()
-        now_draw.text = draw_text
-        now_draw.draw()
         update_count += migrate_count
 
     for chara_domain in (flags, action_info, player_ability, player_collection):
@@ -677,9 +670,7 @@ def install_save(save_id: str, version: int) -> None:
             break
 
     if need_migration:
-        now_draw = draw.LeftDraw()
-        now_draw.text = _("\n检测到需要进行角色替换迁移...\n")
-        now_draw.draw()
+        ui_hooks.emit_notice(_("\n检测到需要进行角色替换迁移...\n"))
         io_init.flush()
 
         migration_count = old_chara_to_new.migrate_character_replacement(
@@ -687,12 +678,11 @@ def install_save(save_id: str, version: int) -> None:
         )
 
         if migration_count > 0:
-            draw_text = _("\n角色替换迁移完成，共迁移{0}个角色\n").format(
-                migration_count
+            ui_hooks.emit_notice(
+                _("\n角色替换迁移完成，共迁移{0}个角色\n").format(
+                    migration_count
+                )
             )
-            now_draw = draw.LeftDraw()
-            now_draw.text = draw_text
-            now_draw.draw()
             update_count += migration_count
 
     preferences = upgrade.drop_ui_fields(loaded_dict)
@@ -756,22 +746,16 @@ def install_save(save_id: str, version: int) -> None:
             prison.imprison(key, game_time.now(), 0)
             update_count += 1
     if cloth_update_count:
-        now_draw = draw.LeftDraw()
-        draw_text = _("\n共有{0}个角色的服装数据已重置\n").format(
-            cloth_update_count
+        ui_hooks.emit_notice(
+            _("\n共有{0}个角色的服装数据已重置\n").format(cloth_update_count)
         )
-        now_draw.text = draw_text
-        now_draw.draw()
 
     # 更新字体颜色
     if color_update_count:
         io_init.init_style()
-        now_draw = draw.LeftDraw()
-        draw_text = _("\n共有{0}个角色的口上颜色已更新\n").format(
-            color_update_count
+        ui_hooks.emit_notice(
+            _("\n共有{0}个角色的口上颜色已更新\n").format(color_update_count)
         )
-        now_draw.text = draw_text
-        now_draw.draw()
 
     # 库存里没有的配置资源记为 0
     for all_cid in game_config.config_resouce:
@@ -846,10 +830,9 @@ def install_save(save_id: str, version: int) -> None:
     medical_service.update_medical_save_data_structure(loaded_dict)
 
     # 最后输出
-    finish_draw = draw.NormalDraw()
-    draw_text = _("\n检测完毕，共有{0}条数据完成了更新\n").format(update_count)
-    finish_draw.text = draw_text
-    finish_draw.draw()
+    ui_hooks.emit_notice(
+        _("\n检测完毕，共有{0}条数据完成了更新\n").format(update_count)
+    )
 
     # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（须在读档导入完成后调用）
     old_chara_to_new.end_young_child_session(young_child_session)
@@ -949,10 +932,7 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
                         cid, [*position[:-1], "约翰老妈汉堡店"]
                     )
         update_count += len(saved.keys() - constant.scene_data.keys())
-        now_draw = draw.LeftDraw()
-        draw_text = _("\n游戏地图已更新\n")
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(_("\n游戏地图已更新\n"))
 
     # 把站在不存在的场景里的角色挪回来
     # 地图改建会移除旧场景（例如把单间「教室」拆成多间理论教室、实践教室与大礼堂），
@@ -976,12 +956,12 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
         update_count += 1
         move_back_count += 1
     if move_back_count:
-        now_draw = draw.LeftDraw()
-        now_draw.text = _(
-            "\n有{0}名角色所在的房间已不存在（地图改建），已将她们移动到所属区块的入口\n"
-        ).format(move_back_count)
-        now_draw.style = "gold_enrod"
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _(
+                "\n有{0}名角色所在的房间已不存在（地图改建），已将她们移动到所属区块的入口\n"
+            ).format(move_back_count),
+            style="gold_enrod",
+        )
 
     return update_count
 
@@ -1007,20 +987,18 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
         global_text_version[key] = character_text_version[key]
     if missing:
         update_count += len(missing)
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n角色口上选择设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n角色口上选择设置已更新，如有需要请手动修改\n"),
+            style="gold_enrod",
+        )
     # 弹出 ai_setting 交给 adopt_ai 准备并待 Reset 生效，补全项不计入存档更新数
     from Script.Modules.save_load import settings
 
     if settings.adopt_ai(loaded_dict.pop("ai_setting", None)):
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n文本生成AI设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n文本生成AI设置已更新，如有需要请手动修改\n"),
+            style="gold_enrod",
+        )
     # 更新体检设置
     zero_physical_exam_setting = (
         attr_calculation.get_physical_exam_setting_zero()
@@ -1032,21 +1010,18 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
                 exam_setting[key] = zero_physical_exam_setting[key]
                 update_count += 1
         physical_exam.set_settings(exam_setting)
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n体检设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n体检设置已更新，如有需要请手动修改\n"), style="gold_enrod"
+        )
     # 更新监禁调教设置
     if len(prison.settings()) != len(
         game_config.config_confinement_training_setting
     ):
         update_count += prison.fill_missing_settings()
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n监禁调教设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n监禁调教设置已更新，如有需要请手动修改\n"),
+            style="gold_enrod",
+        )
     return update_count
 
 
