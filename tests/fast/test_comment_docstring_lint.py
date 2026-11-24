@@ -210,6 +210,7 @@ class RepositoryTest(FastTestCase):
             "docs/live.md": live,
             "docs/重构文档/record.md": "Rhodes_Island\n",
             "README_en.md": "Rhodes_Island\n",
+            "REVIEW.md": "Rhodes_Island\n",
             "plan/old.md": "Rhodes_Island\n",
         }
         with tempfile.TemporaryDirectory() as tmp:
@@ -264,8 +265,8 @@ class RepositoryTest(FastTestCase):
 
     def test_legacy_names_fail_in_script_text_and_docs(self) -> None:
         """
-        验证 LEGACY 全部名称在 Script/ 文档字符串中被检出，且 Script/ 注释、Script/ 与 docs/ 文档、
-        README_en.md 及紧邻中文字符处的命中均被报告。
+        验证 LEGACY 全部名称在 Script/ 文档字符串中被检出，且 Script/ 注释、Script/ 文档、docs/ 文档、
+        README_en.md、REVIEW.md 及紧邻中文字符处的命中均被报告。
         """
         self.assertEqual(
             sorted(self.legacy("Script/stale.py:")), sorted(LEGACY)
@@ -276,6 +277,7 @@ class RepositoryTest(FastTestCase):
             ("Script/notes.md:", "cache.game_time"),
             ("docs/flow.md:", "cache.debug_mode"),
             ("README_en.md:", "Rhodes_Island"),
+            ("REVIEW.md:", "Rhodes_Island"),
         ):
             with self.subTest(path=path):
                 self.assertEqual(self.legacy(path), [name])
