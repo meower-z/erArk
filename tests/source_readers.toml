@@ -866,3 +866,13 @@ reads = "通过 banned_imports 读取 Script/Design/character.py 源码中的 im
 used_for = "测试：Script/Design/character.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的同一导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R75"
+file = "tests/fast/test_pregnancy_born_hooks.py"
+symbol = "ImportBoundaryTest.test_sources_import_no_ui_or_pregnancy_panels"
+mechanism = "ast"
+reads = "读取 Script/System/Pregnancy_System 下六个非面板模块（__init__.py、egg_handle.py、family_tree_draw.py、pregnancy_constant.py、pregnancy_handle.py、soft_egg_handle.py）与 Script/Modules/gameplay_resolution/pregnancy_hooks.py 的源码字节，交由 banned_imports 与 panel_imports 解析导入语句"
+used_for = "测试：这七个模块遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束，且不直接导入 born_event_panel 或 pregnancy_panel"
+when = "test"
+capture = "suite"

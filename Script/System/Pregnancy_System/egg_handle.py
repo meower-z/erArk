@@ -11,7 +11,7 @@ from Script.Modules.domains import abilities, activity, entertainment, flags
 from Script.Modules.domains import player_collection, playthrough, pregnancy
 from Script.Modules.domains import roster, chara_life, scene_state
 from Script.Modules.domains import identity
-from Script.Modules.gameplay_resolution import ui_hooks
+from Script.Modules.gameplay_resolution import pregnancy_hooks, ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -520,8 +520,6 @@ def check_egg_born(character_id: int) -> None:
     Keyword arguments:
     character_id -- 角色id
     """
-    from Script.System.Pregnancy_System import born_event_panel
-
     soft_flag = is_egg_soft(character_id)
     due_egg_id_list = []
     single_due_egg: int | None = None
@@ -537,14 +535,14 @@ def check_egg_born(character_id: int) -> None:
                     break
                 due_egg_id_list.append(egg_id)
     if single_due_egg is not None:
-        born_event_panel.Born_Panel(
+        pregnancy_hooks.emit_born(
             character_id, egg_mode=True, egg_id_list=[single_due_egg]
-        ).draw()
+        )
         return
     if due_egg_id_list:
-        born_event_panel.Born_Panel(
+        pregnancy_hooks.emit_born(
             character_id, egg_mode=True, egg_id_list=due_egg_id_list
-        ).draw()
+        )
 
 
 def take_eggs_from_chara(target_character_id: int) -> int:
