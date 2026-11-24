@@ -916,3 +916,13 @@ reads = "读取 Script/Modules/gameplay_resolution/ 下每个 .py 文件的源�
 used_for = "测试：Script/Modules/gameplay_resolution/ 下的 .py 文件不导入名称中含有以 _panel 结尾的段的模块或成员"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R79"
+file = "tests/fast/test_instruct_judge_ui_hooks.py"
+symbol = "ImportBoundaryTest.test_sources_import_no_ui"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Design/instuct_judege.py 与 Script/Modules/gameplay_resolution/ui_hooks.py 的源码字节并解析导入语句，并通过 imports_in 读取 Script/Design/instuct_judege.py 的源码文本并解析导入语句"
+used_for = "测试：这两个模块遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束，且 Script/Design/instuct_judege.py 不导入 Script.Core.flow_handle"
+when = "test"
+capture = "suite"

@@ -4,25 +4,19 @@
 
 import datetime
 from types import FunctionType
-from Script.Core import flow_handle, get_text, num
+from Script.Core import get_text, num
 from Script.Core import text_handle
 from Script.Design import attr_calculation, handle_ability, handle_premise
 from Script.Design import handle_talent, map_handle
-from Script.Config import game_config, normal_config
-from Script.UI.Moudle import draw
+from Script.Config import game_config
 from Script.Modules.domains import abilities, action_info, activity, identity
 from Script.Modules.domains import modes, scene_state
 from Script.Modules.domains import entertainment, flags, h_state, needs
 from Script.Modules.domains import player_ability, relations, status
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 
 def init_character_behavior_start_time(
@@ -548,9 +542,7 @@ def calculation_instuct_judege(
         # 正常直接判定，并输出文本
         if judge_data_type != "V":
             calculation_text += " = " + str(judge) + "\n"
-            now_draw = draw.WaitDraw()
-            now_draw.text = calculation_text
-            now_draw.draw()
+            ui_hooks.emit_notice(calculation_text, wait=True)
 
         # 合意获得的结算，大前提是1.5倍实行值、有意识、非监禁
         if (
@@ -558,7 +550,6 @@ def calculation_instuct_judege(
             and handle_premise.handle_unconscious_flag_0(target_character_id)
             and handle_premise.handle_imprisonment_0(target_character_id)
         ):
-            agree_draw = draw.WaitDraw()
             draw_text = ""
             if instruct_name == _("亲吻") and talent[11] == 0:
                 talent[11] = 1
@@ -615,8 +606,7 @@ def calculation_instuct_judege(
                     target_data.name
                 )
             if len(draw_text):
-                agree_draw.text = draw_text
-                agree_draw.draw()
+                ui_hooks.emit_notice(draw_text, wait=True)
 
     # 返回判定结果
     return [final_judge, judge, judge_rate]
@@ -725,13 +715,15 @@ def ask_judge(
     character_id: int, target_character_id: int, instruct_name: str
 ) -> bool:
     """
-    选择时先问玩家（ask_text 不为空时画出来，[确定]或[返回]）。只判不写数据，判定与代价在行动开始时
+    选择指令时按需向玩家发起确认提问，执行过程中只读取游戏数据而不写入。
+    目标角色为玩家时直接返回 True，ask_text 返回空字符串时也直接返回 True。
+    存在提问文本时调用 ui_hooks.emit_confirm 派发并返回其结果。
     Keyword arguments:
-    character_id -- 角色id
-    target_character_id -- 目标角色id
-    instruct_name -- 指令名字
+    character_id -- int，行动角色编号
+    target_character_id -- int，目标角色编号
+    instruct_name -- str，指令名称
     Return arguments:
-    bool -- 玩家确定或不用问时为真，[返回]时为假
+    bool -- 无需提问时返回 True，发起提问时返回 ui_hooks.emit_confirm 的布尔结果
     """
     if target_character_id == 0:
         return True
@@ -747,17 +739,4 @@ def ask_judge(
     )
     if not text:
         return True
-    ask_draw = draw.WaitDraw()
-    ask_draw.text = text
-    ask_draw.draw()
-    line_feed.draw()
-    line_feed.draw()
-    yes_draw = draw.CenterButton(_("[确定]"), _("确定"), int(window_width / 2))
-    yes_draw.draw()
-    back_draw = draw.CenterButton(_("[返回]"), _("返回"), int(window_width / 2))
-    back_draw.draw()
-    line_feed.draw()
-    answer = flow_handle.askfor_all(
-        [yes_draw.return_text, back_draw.return_text]
-    )
-    return answer == yes_draw.return_text
+    return ui_hooks.emit_confirm(text)

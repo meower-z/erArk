@@ -1,11 +1,12 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供五类回调的登记与调用入口。
-五类回调用于输出提示文本、输出数值变化、绘制图片、切换面板，以及查询隐奸中显示非H指令的开关。
+本模块提供六类回调的登记与调用入口。
+六类回调用于输出提示文本、输出数值变化、绘制图片、切换面板、向玩家确认提问，以及查询隐奸中显示非H指令的开关。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，提示输出、数值变化输出、图片绘制与面板切换函数不执行任何操作。
-未登记回调时，开关查询函数返回 False。
+未登记回调时，提示、数值变化、图片与面板切换四类调用入口不执行任何操作。
+未登记回调时，emit_confirm 返回 True。
+未登记回调时，hidden_sex_show_non_h 返回 False。
 """
 
 from collections.abc import Callable
@@ -73,6 +74,10 @@ type ToggleQuery = Callable[[], bool]
 """ 只读开关查询回调函数类型，不接收参数并返回布尔值。 """
 _show_non_h_queries: list[ToggleQuery] = []
 """ 按登记顺序保存的回调列表，用于只读查询隐奸中显示非H指令的开关。 """
+type Confirm = Callable[[str], bool]
+""" 确认提问回调函数类型，接收提问文本，返回布尔值表示是否确认。 """
+_confirms: list[Confirm] = []
+""" 按登记顺序保存的确认提问回调列表。 """
 
 
 def on_notice(fn: Notice) -> Notice:
@@ -216,3 +221,26 @@ def hidden_sex_show_non_h() -> bool:
     bool -- 任一已登记回调返回真值时返回 True，未登记或全部返回假值时返回 False
     """
     return any(fn() for fn in _show_non_h_queries)
+
+
+def on_confirm(fn: Confirm) -> Confirm:
+    """
+    登记一个确认提问回调，可作为装饰器使用。
+    Keyword arguments:
+    fn -- Confirm，要登记的确认提问回调函数
+    Return arguments:
+    Confirm -- 原样返回传入的 fn
+    """
+    _confirms.append(fn)
+    return fn
+
+
+def emit_confirm(text: str) -> bool:
+    """
+    按登记顺序将提问文本传给已登记的确认提问回调，并在首个回调返回假值时停止。
+    Keyword arguments:
+    text -- str，要向玩家提问的文本
+    Return arguments:
+    bool -- 未登记回调时返回 True，全部已登记回调返回真值时也返回 True，任一回调返回假值时返回 False
+    """
+    return all(fn(text) for fn in _confirms)
