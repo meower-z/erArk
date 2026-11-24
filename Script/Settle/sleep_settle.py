@@ -10,9 +10,8 @@ from Script.Design import (
     handle_ability,
 )
 from Script.System.Pregnancy_System import pregnancy_handle
-from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.gameplay_resolution import achievement_service
+from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
 from Script.Modules.domains import (
     abilities,
     action_info,
@@ -27,12 +26,6 @@ from Script.Modules.domains import identity
 game_path = game_path_config.game_path
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
 
 
 def update_sleep() -> None:
@@ -44,10 +37,9 @@ def update_sleep() -> None:
     无
     """
 
-    now_draw = draw.NormalDraw()
-    now_draw.width = window_width
-    now_draw.text = _("\n博士入睡，开始结算各种数据\n")
-    now_draw.draw()
+    ui_hooks.emit_notice(
+        _("\n博士入睡，开始结算各种数据\n"), use_text_width=True
+    )
     io_init.flush()
     id_list = roster.active()
     id_list.add(0)
@@ -92,7 +84,7 @@ def update_sleep() -> None:
             # 检查是否有可以升级的能力
             if normal_config.system_setting.base_setting[1]:
                 handle_ability.gain_ability(character_id)
-            line_feed.draw()
+            ui_hooks.emit_notice("\n")
         else:
             # 清零并随机重置生气程度
             needs.set(character_id, angry=random.randrange(1, 35))
@@ -163,9 +155,6 @@ def settle_character_juel(character_id: int) -> int:
                     juel_down // 2, game_config.config_juel[i].name
                 )
         draw_text += _("，剩余{0}个反发珠\n").format(juel[20])
-        now_draw = draw.NormalDraw()
-        now_draw.text = draw_text
-        # now_draw.draw()
     return 1
 
 
@@ -179,19 +168,17 @@ def update_save() -> None:
     """
     from Script.Core import save_handle
 
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = _("\n全部结算完毕，开始自动保存\n")
+    draw_text = _("\n全部结算完毕，开始自动保存\n")
     # 播放一条提示信息
     info_list = []
     for i in game_config.config_tip_data:
         info_list.append(i)
     info_id = random.choice(info_list)
     info_text = game_config.config_tip_data[info_id].info
-    now_draw.text += _(
-        "\n请博士在保存时阅读今日的小贴士：\n\n  {0}\n\n\n"
-    ).format(info_text)
-    now_draw.draw()
+    draw_text += _("\n请博士在保存时阅读今日的小贴士：\n\n  {0}\n\n\n").format(
+        info_text
+    )
+    ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
     save_handle.establish_save("auto")
 
 
@@ -214,12 +201,13 @@ def sanity_point_grow() -> None:
             sanity_max=min(needs.of(character_data.cid)["sanity_max"], 9999),
         )
         # 绘制说明信息
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = _(
-            "\n在刻苦的锻炼下，博士理智最大值成长了{0}点\n"
-        ).format(grow_value)
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n在刻苦的锻炼下，博士理智最大值成长了{0}点\n").format(
+                grow_value
+            ),
+            wait=True,
+            use_text_width=True,
+        )
 
 
 def refresh_temp_semen_max() -> None:
@@ -238,13 +226,10 @@ def refresh_temp_semen_max() -> None:
         # 获得浓厚精液
         talent[33] = 1 if new_extra >= limit else 0
         # 绘制说明信息
-        now_draw = draw.NormalDraw()
-        now_draw.width = window_width
         draw_text = _(
             "\n在充足的睡眠下，今日未消耗的 {0}ml 精液转化为了 {1}ml 次日额外精液"
         ).format(now_semen, now_semen // 2)
         if new_extra >= limit:
             draw_text += _("，额外精液量已达上限，并获得了为期一天的[浓厚精液]")
         draw_text += "\n"
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(draw_text, use_text_width=True)

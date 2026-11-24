@@ -5,15 +5,14 @@
 
 from types import FunctionType
 
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Core import get_text
 from Script.Modules.domains import achievement, power, power_supply
 from Script.Modules.domains import status
-from Script.UI.Moudle import draw
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
-window_width: int = normal_config.config_normal.text_width
 
 
 def settle_power_system(draw_flag: bool = True) -> tuple[float, str]:
@@ -69,10 +68,7 @@ def settle_power_system(draw_flag: bool = True) -> tuple[float, str]:
             day["overflow"],
         )
     if draw_flag:
-        draw_text = draw.WaitDraw()
-        draw_text.width = window_width
-        draw_text.text = text
-        draw_text.draw()
+        ui_hooks.emit_notice(text, wait=True, use_text_width=True)
     generated = int(day["generated"])
     achievement_service.get_achievement_judge_by_value(821, generated)
     achievement_service.get_achievement_judge_by_value(822, generated)
@@ -102,21 +98,19 @@ def store_power_by_human_power(
     status.set(character_id, 12, int(status.of(character_id)[12] / 2))
     power.store(per_degree)
     if draw_flag:
-        draw_text = draw.WaitDraw()
-        draw_text.width = window_width
         if climax_degree <= 4:
             if character_id == 0:
-                draw_text.text = _("\n在{0}射精的同时，").format(character.name)
+                draw_text = _("\n在{0}射精的同时，").format(character.name)
             else:
-                draw_text.text = _("\n在{0}绝顶的同时，").format(character.name)
+                draw_text = _("\n在{0}绝顶的同时，").format(character.name)
         else:
-            draw_text.text = _("\n在{0}{1}重绝顶的同时，").format(
+            draw_text = _("\n在{0}{1}重绝顶的同时，").format(
                 character.name, climax_degree - 3
             )
-        draw_text.text += _("性爱发电装置产生了 {0:.1f} 单位电量\n").format(
+        draw_text += _("性爱发电装置产生了 {0:.1f} 单位电量\n").format(
             per_degree
         )
-        draw_text.draw()
+        ui_hooks.emit_notice(draw_text, wait=True, use_text_width=True)
     if not achievement.done(827):
         achievement_data = game_config.config_achievement[827]
         if per_degree >= achievement_data.value:
