@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent
 BASELINE = "tools/lint_comments_baseline.json"
 CAP = 500
 DOC_FILES = tuple(
-    "CLAUDE.md CLAUDE_cn.md CONTRIBUTING.md PROJECT_DESCRIPTION.md README*.md docs/*.md Script/*.md".split()
+    "CLAUDE.md CLAUDE_cn.md CONTRIBUTING.md PROJECT_DESCRIPTION.md README*.md REVIEW.md docs/*.md Script/*.md".split()
 )
 ARCHIVE = ("docs/重构文档/*",)
 LEGACY_SCOPE = "Script/"
