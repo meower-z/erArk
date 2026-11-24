@@ -6,7 +6,7 @@ Tk 界面向后端登记的回调函数
 本模块向 gameplay_resolution.ui_hooks 登记提示文本、数值变化与图片绘制函数，
 以及面板切换函数、确认提问函数与隐奸中显示非H指令开关查询函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
-本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
+本模块向 gameplay_resolution.ejaculation_service 登记射精文本、忍耐询问与射精面板绘制函数。
 本模块向 gameplay_resolution.hidden_sex_service 登记隐奸被发现面板的绘制函数。
 本模块向 gameplay_resolution.pregnancy_hooks 登记生产与破壳面板绘制函数。
 本模块不登记内核钩子。
@@ -229,6 +229,32 @@ def draw_banner(text: str) -> None:
     now_draw.draw()
     line_feed.draw()
     line_feed.draw()
+
+
+@ejaculation_service.on_endure_panel
+def draw_endure_ejaculation_panel() -> bool:
+    """
+    调用 ejaculation_panel.show_endure_ejaculation_panel 询问并结算是否忍住射精。
+    Return arguments:
+    bool -- 原样返回 show_endure_ejaculation_panel 的结果，True 为忍住
+    """
+    from Script.UI.Panel import ejaculation_panel
+
+    return ejaculation_panel.show_endure_ejaculation_panel()
+
+
+@ejaculation_service.on_ejaculation_panel
+def draw_ejaculation_panel() -> None:
+    """
+    按配置文本宽度绘制 ejaculation_panel.Ejaculation_Panel 面板，随后绘制同宽的分隔线。
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.UI.Panel import ejaculation_panel
+
+    width = normal_config.config_normal.text_width
+    ejaculation_panel.Ejaculation_Panel(width).draw()
+    draw.LineDraw("-", width).draw()
 
 
 @hidden_sex_service.on_discovered

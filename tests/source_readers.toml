@@ -946,3 +946,13 @@ reads = "读取 Script/Core/rich_text.py 的源码字节，交由 banned_imports
 used_for = "测试：Script/Core/rich_text.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束且不暴露界面绘制构造函数"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R81"
+file = "tests/fast/test_orgasm_ejaculation_hooks.py"
+symbol = "ImportBoundaryTest.test_sources_import_no_ui"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Modules/gameplay_resolution/ejaculation_service.py、Script/Settle/orgasm_settle.py 与 Script/Settle/common_default.py 的源码字节并解析导入语句"
+used_for = "测试：上述三个模块遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束（包含 Script.UI 及 Script.UI.Panel.ejaculation_panel）"
+when = "test"
+capture = "suite"
