@@ -2,16 +2,11 @@
 
 from Script.Core import constant, get_text
 from Script.Design import map_handle, update
-from Script.UI.Moudle import draw, view
 from Script.Modules.domains import action_info, activity, flags, inventory, plan
 from types import FunctionType
 from Script.Modules.domains import chara_profile, scene_state
 from Script.Modules.domains import identity
-
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -48,10 +43,10 @@ def own_charcter_move(
             activity.set_target(0, 0)
         # 继续留在地图页面
         if move_now in ["Null", "wait_open", "door_lock"]:
-            view.now_panel_id = constant.Panel.SEE_MAP
+            ui_hooks.switch_panel(constant.Panel.SEE_MAP)
         # 回到主页面
         else:
-            view.now_panel_id = constant.Panel.IN_SCENE
+            ui_hooks.switch_panel(constant.Panel.IN_SCENE)
 
 
 def continue_player_route() -> None:
@@ -148,7 +143,7 @@ def _player_leg(
         return move_now
     from Script.Modules.tk_ui import player_pick
 
-    view.now_panel_id = constant.Panel.IN_SCENE
+    ui_hooks.switch_panel(constant.Panel.IN_SCENE)
     player_pick.choose(
         behavior_id, now_need_time, state=state, fields=fields, args=args
     )
@@ -206,11 +201,10 @@ def character_move(
                 "Dormitory" in now_scene_data.scene_tag
                 and check_have_move_target_room_key(0, target_scene_str)
             ):
-                info_draw = draw.WaitDraw()
-                info_draw.text = _(
-                    "\n  ●你拿出了该楼层的复制钥匙，悄悄打开了门\n\n"
+                ui_hooks.emit_notice(
+                    _("\n  ●你拿出了该楼层的复制钥匙，悄悄打开了门\n\n"),
+                    wait=True,
                 )
-                info_draw.draw()
                 scene_state.set_close_flag(target_scene_str, 0)
                 access_type = "open"
             # 如果这是宿舍或客房，且玩家持有一次性钥匙则消耗钥匙并解锁
@@ -218,11 +212,10 @@ def character_move(
                 "Dormitory" in now_scene_data.scene_tag
                 or "Guest_Room" in now_scene_data.scene_tag
             ) and inventory.items(character_id)[152] >= 1:
-                info_draw = draw.WaitDraw()
-                info_draw.text = _(
-                    "\n  ●你拿出了一次性万能钥匙，悄悄打开了门\n\n"
+                ui_hooks.emit_notice(
+                    _("\n  ●你拿出了一次性万能钥匙，悄悄打开了门\n\n"),
+                    wait=True,
                 )
-                info_draw.draw()
                 inventory.add_item(character_id, 152, -1)
                 scene_state.set_close_flag(target_scene_str, 0)
                 access_type = "open"
@@ -346,6 +339,6 @@ def settle_private_move(character_id: int, outcome: str) -> None:
         flags.set(character_id, is_follow=0)
     elif outcome == "give_up":
         flags.set(character_id, npc_masturebate_for_player=False)
-    now_draw = draw.NormalDraw()
-    now_draw.text = _private_move_text(outcome).format(character_data.name)
-    now_draw.draw()
+    ui_hooks.emit_notice(
+        _private_move_text(outcome).format(character_data.name)
+    )

@@ -806,3 +806,13 @@ reads = "读取 Script/Modules/gameplay_resolution/drug_service.py 与 Script/Se
 used_for = "测试：drug_service.py 遵守后端界面边界守卫且不导入 Script.UI 或 pregnancy_panel，default.py 不导入 Script.UI.Panel.gift_panel"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R68"
+file = "tests/fast/test_move_save_ui_hooks.py"
+symbol = "ImportBoundaryTest.test_sources_import_no_ui"
+mechanism = "ast"
+reads = "通过 ui_imports 读取 Script/Design/character_move.py 与 Script/Core/save_handle.py 源码中的全部 import 与 from ... import 语句"
+used_for = "测试：Script/Design/character_move.py 与 Script/Core/save_handle.py 均不导入 Script.UI 下的模块"
+when = "test"
+capture = "suite"
