@@ -19,7 +19,7 @@ from Script.Design import (
 )
 from Script.Kernel import core
 from Script.Modules.domains import h_state, scene_state
-from Script.Modules.gameplay_resolution import ui_hooks
+from Script.Modules.gameplay_resolution import hidden_sex_service, ui_hooks
 from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, realtime_settle
@@ -335,11 +335,7 @@ def judge_before_pl_behavior() -> None:
         handle_premise.handle_hidden_sex_mode_ge_1(0)
         and activity.behavior(0).behavior_id != constant.Behavior.END_H
     ):
-        from Script.System.Sex_System import hidden_sex_panel
-
-        hidden_sex_panel.handle_hidden_sex_flow()
+        hidden_sex_service.handle_hidden_sex_flow()
     # 露出的模式更新
     if handle_premise.handle_exhibitionism_sex_mode_ge_1(0):
-        from Script.System.Sex_System import exhibitionism_sex_panel
-
-        exhibitionism_sex_panel.update_exhibiionism_sex_mode()
+        hidden_sex_service.update_exhibiionism_sex_mode()

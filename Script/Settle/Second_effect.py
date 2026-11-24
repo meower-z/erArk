@@ -24,7 +24,7 @@ from Script.Modules.domains import (
 )
 from Script.Modules.domains import h_meters, h_state, needs, player_collection
 from Script.Modules.domains import pregnancy, status, identity
-from Script.Modules.gameplay_resolution import ui_hooks
+from Script.Modules.gameplay_resolution import hidden_sex_service, ui_hooks
 
 
 def _bump_orgasm_count(character_id: int, part_id: int) -> None:
@@ -3369,9 +3369,7 @@ def handle_exposed_orgasm_small_in_hidden_sex(
     # 不在隐奸中则返回
     if handle_premise.handle_hidden_sex_mode_0(character_id):
         return
-    from Script.System.Sex_System import hidden_sex_panel
-
-    hidden_sex_panel.handle_hidden_sex_flow(
+    hidden_sex_service.handle_hidden_sex_flow(
         character_id=0, add_flag=True, now_duration=5, now_intensity=2
     )
 
@@ -3392,9 +3390,7 @@ def handle_exposed_orgasm_normal_in_hidden_sex(
     # 不在隐奸中则返回
     if handle_premise.handle_hidden_sex_mode_0(character_id):
         return
-    from Script.System.Sex_System import hidden_sex_panel
-
-    hidden_sex_panel.handle_hidden_sex_flow(
+    hidden_sex_service.handle_hidden_sex_flow(
         character_id=0, add_flag=True, now_duration=6, now_intensity=3
     )
 
@@ -3415,9 +3411,7 @@ def handle_exposed_orgasm_strong_in_hidden_sex(
     # 不在隐奸中则返回
     if handle_premise.handle_hidden_sex_mode_0(character_id):
         return
-    from Script.System.Sex_System import hidden_sex_panel
-
-    hidden_sex_panel.handle_hidden_sex_flow(
+    hidden_sex_service.handle_hidden_sex_flow(
         character_id=0, add_flag=True, now_duration=7, now_intensity=4
     )
 
@@ -3438,9 +3432,7 @@ def handle_exposed_orgasm_super_in_hidden_sex(
     # 不在隐奸中则返回
     if handle_premise.handle_hidden_sex_mode_0(character_id):
         return
-    from Script.System.Sex_System import hidden_sex_panel
-
-    hidden_sex_panel.handle_hidden_sex_flow(
+    hidden_sex_service.handle_hidden_sex_flow(
         character_id=0, add_flag=True, now_duration=10, now_intensity=5
     )
 

@@ -7,6 +7,7 @@ Tk 界面向后端登记的回调函数
 本模块向 gameplay_resolution.ui_hooks 登记面板切换函数与隐奸中显示非H指令的开关查询函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
 本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
+本模块向 gameplay_resolution.hidden_sex_service 登记隐奸被发现面板的绘制函数。
 本模块不登记内核钩子。
 load_order 导入本模块时完成上述登记。
 """
@@ -19,6 +20,7 @@ from Script.Kernel import core
 from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
+from Script.Modules.gameplay_resolution import hidden_sex_service
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
 from Script.Protocol.delta_events import DeltaEntry, DeltaEvent
@@ -191,3 +193,24 @@ def draw_banner(text: str) -> None:
     now_draw.draw()
     line_feed.draw()
     line_feed.draw()
+
+
+@hidden_sex_service.on_discovered
+def draw_hidden_sex_discovered(
+    discoverer_id: int, from_hidden_sex_flag: bool
+) -> None:
+    """
+    按配置文本宽度创建并绘制 sex_be_discovered_panel.Sex_Be_Discovered_Panel 面板。
+    Keyword arguments:
+    discoverer_id -- int，发现者角色编号
+    from_hidden_sex_flag -- bool，是否由隐奸被发现触发
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.System.Sex_System import sex_be_discovered_panel
+
+    sex_be_discovered_panel.Sex_Be_Discovered_Panel(
+        normal_config.config_normal.text_width,
+        discoverer_id,
+        from_hidden_sex_flag=from_hidden_sex_flag,
+    ).draw()

@@ -1,4 +1,4 @@
-"""露出H模式的更新与选择面板"""
+"""露出H模式选择面板 Select_Exhibitionism_Sex_Mode_Panel。"""
 
 from types import FunctionType
 from Script.System.Sex_System.hidden_sex_panel import _settle_instruct
@@ -7,7 +7,6 @@ from Script.Core import get_text, flow_handle, constant
 from Script.Config import normal_config
 from Script.Design import handle_premise, map_handle
 from Script.Modules.domains import achievement, activity, flags, modes
-from Script.Modules.domains import identity
 
 panel_info_data: dict[str, object] = {}
 
@@ -20,42 +19,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
-
-
-def update_exhibiionism_sex_mode() -> None:
-    """更新露出H模式"""
-    # 如果不在露出模式则直接返回
-    if flags.get(0, "exhibitionism_sex_mode") == 0:
-        return
-    # 如果当前周围有人
-    if handle_premise.handle_scene_over_two(0):
-        # 如果当前周围有人清醒
-        if handle_premise.handle_scene_others_conscious(0):
-            new_mode = 3
-        # 否则
-        else:
-            new_mode = 4
-    # 如果当前周围无人
-    else:
-        # 如果在室外
-        if handle_premise.handle_place_outdoor(0):
-            new_mode = 2
-        # 否则在室内
-        else:
-            new_mode = 1
-    # 更新模式
-    flags.set(0, exhibitionism_sex_mode=new_mode)
-    # 获取场景内露出对象
-    now_scene_character_list = map_handle.get_chara_now_scene_all_chara_id_list(
-        0, remove_own_character=True
-    )
-    for chara_id in now_scene_character_list:
-        target_character_data: identity.Identity = identity.of(chara_id)
-        if flags.get(target_character_data.cid, "exhibitionism_sex_mode") != 0:
-            flags.set(
-                target_character_data.cid, exhibitionism_sex_mode=new_mode
-            )
-            break
 
 
 class Select_Exhibitionism_Sex_Mode_Panel:
