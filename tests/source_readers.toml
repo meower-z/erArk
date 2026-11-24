@@ -716,3 +716,13 @@ reads = "Script/Protocol/boundary_snapshot.py 中的全部 import 与 from ... i
 used_for = "测试：Script/Protocol/boundary_snapshot.py 仅包含指向 Python 标准库的绝对导入"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R60"
+file = "tests/fast/test_modal_choice_prompts.py"
+symbol = "ModalPromptsBoundaryTest.test_imports_only_stdlib"
+mechanism = "ast"
+reads = "Script/Protocol/modal_prompts.py 中的全部 import 与 from ... import 语句"
+used_for = "测试：Script/Protocol/modal_prompts.py 的每项导入均属于 Python 标准库模块"
+when = "test"
+capture = "suite"
