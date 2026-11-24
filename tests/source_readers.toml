@@ -786,3 +786,13 @@ reads = "通过 banned_imports 读取 Script/Design/basement.py 源码中的 imp
 used_for = "测试：Script/Design/basement.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的同一导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R62"
+file = "tests/fast/test_delta_events.py"
+symbol = "DeltaBoundaryTest.test_imports_only_stdlib_and_narrative_events"
+mechanism = "ast"
+reads = "Script/Protocol/delta_events.py 中的全部 import 与 from ... import 语句"
+used_for = "测试：Script/Protocol/delta_events.py 只导入 Python 标准库模块与 Script.Protocol.narrative_events"
+when = "test"
+capture = "suite"

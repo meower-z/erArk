@@ -3,7 +3,8 @@ Tk 界面向后端登记的回调函数
 ===========================
 本模块向 playthrough 登记设定表补齐时的提示绘制函数。
 本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
-本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制函数、面板切换函数与隐奸中显示非H指令的开关查询函数。
+本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制函数与数值变化绘制函数。
+本模块向 gameplay_resolution.ui_hooks 登记面板切换函数与隐奸中显示非H指令的开关查询函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
 本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
 本模块不登记内核钩子。
@@ -20,6 +21,7 @@ from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
+from Script.Protocol.delta_events import DeltaEntry, DeltaEvent
 from Script.Protocol.narrative_events import NarrativeEvent, TextBlock, TextSpan
 from Script.UI.Moudle import draw, view
 
@@ -82,6 +84,37 @@ def draw_notice(
             pause=wait,
             style=style,
             use_text_width=use_text_width,
+        )
+    )
+
+
+@ui_hooks.on_delta
+def draw_delta(
+    entries: tuple[DeltaEntry, ...],
+    *,
+    source: str,
+    summary_text: str | None,
+    wait: bool,
+    use_text_width: bool,
+) -> None:
+    """
+    将数值变化项包装为 DeltaEvent 并交由 STREAM 绘制。
+    Keyword arguments:
+    entries -- tuple[DeltaEntry, ...]，数值变化项元组
+    source -- str，事件来源标识
+    summary_text -- str | None，整段显示文本，为 None 时由适配器按变化项生成
+    wait -- bool，为真时使用 WaitDraw 等待玩家确认，否则使用 NormalDraw
+    use_text_width -- bool，为真时将绘制宽度设为 normal_config.config_normal.text_width
+    Return arguments:
+    None -- 无返回值
+    """
+    STREAM.render(
+        DeltaEvent(
+            STREAM.meta(source),
+            entries,
+            pause=wait,
+            use_text_width=use_text_width,
+            summary_text=summary_text,
         )
     )
 
