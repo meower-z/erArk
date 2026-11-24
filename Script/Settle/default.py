@@ -4803,7 +4803,7 @@ def handle_self_h_state_reset(
     """
     if not add_time:
         return
-    from Script.System.Sex_System import group_sex_panel
+    from Script.Modules.gameplay_resolution import group_sex_service
 
     # H状态数据归零
     h_state.reset(character_id)
@@ -4818,7 +4818,7 @@ def handle_self_h_state_reset(
     # 清零前往群交
     flags.set(character_id, go_to_join_group_sex=False)
     # 清零自己在群交模板中的数据
-    group_sex_panel.clear_character_data_in_group_sex_template(character_id)
+    group_sex_service.clear_character_data_in_group_sex_template(character_id)
     # 清零隐奸模式
     flags.set(character_id, hidden_sex_mode=0)
     # 清零露出模式

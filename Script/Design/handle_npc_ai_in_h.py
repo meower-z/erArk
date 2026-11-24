@@ -708,13 +708,13 @@ def npc_ai_in_group_sex(character_id: int) -> None:
     Keyword arguments:\n
     character_id -- 角色id\n
     """
-    from Script.System.Sex_System import group_sex_panel
+    from Script.Modules.gameplay_resolution import group_sex_service
 
     # 玩家或幼年阶段角色则返回
     if character_id == 0 or child_stage_gate.is_child_stage(character_id):
         return
     # 如果自己已在群交模板中，则返回
-    if character_id in group_sex_panel.count_group_sex_character_list():
+    if character_id in group_sex_service.count_group_sex_character_list():
         return
 
     # 如果不是H状态+群交，则返回
@@ -733,7 +733,7 @@ def npc_ai_in_group_sex(character_id: int) -> None:
         return
 
     # 获取当前模板的空缺部位；没有空缺时自己进入要自慰状态
-    empty_parts, __ = group_sex_panel.get_now_template_part_list()
+    empty_parts, __ = group_sex_service.get_now_template_part_list()
     if not empty_parts:
         flags.set(character_id, masturebate=3)
         return
@@ -748,7 +748,7 @@ def npc_ai_in_group_sex(character_id: int) -> None:
     activity.set_target(0, character_id)
     try:
         new_status_id_list = (
-            group_sex_panel.get_status_id_list_from_group_sex_body_part(
+            group_sex_service.get_status_id_list_from_group_sex_body_part(
                 body_part
             )
         )

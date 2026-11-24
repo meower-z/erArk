@@ -876,3 +876,13 @@ reads = "读取 Script/System/Pregnancy_System 下六个非面板模块（__init
 used_for = "测试：这七个模块遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束，且不直接导入 born_event_panel 或 pregnancy_panel"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R74"
+file = "tests/fast/test_group_sex_service.py"
+symbol = "ImportBoundaryTest"
+mechanism = "ast"
+reads = "读取 Script/Modules/gameplay_resolution/group_sex_service.py 与 CALLERS 中五个后端调用方文件的源码字节，交由 imported 和 forbidden 解析其中的导入语句"
+used_for = "测试：group_sex_service.py 与五个后端调用方共六个文件均不导入 Script.System.Sex_System.group_sex_panel 及其成员"
+when = "test"
+capture = "suite"

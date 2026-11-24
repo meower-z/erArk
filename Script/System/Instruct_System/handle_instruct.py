@@ -20,6 +20,7 @@ from Script.Config import normal_config, game_config
 from Script.UI.Moudle import draw, view
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import achievement_service
+from Script.Modules.gameplay_resolution import group_sex_service
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import (
@@ -389,15 +390,13 @@ def start_instruct(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    from Script.System.Sex_System import group_sex_panel
-
     args = chosen.get("args", {})
     target = chosen.get("target", who)
     if args.get(TARGET_WAIT) and target != who:
         _plan_target_wait(target, chosen["minutes"])
     if CLOSE_DOOR in args:
         _close_door(who, bool(args[CLOSE_DOOR]))
-    group_sex_panel.group_sex_settle(who, target, chosen["behavior_id"])
+    group_sex_service.group_sex_settle(who, target, chosen["behavior_id"])
     part = args.get(START)
     if isinstance(part, str):
         _start_parts[part](who, chosen)
@@ -543,7 +542,6 @@ def plan_instruct_common_settle(
     tuple -- 空元组：排下的打断由计划队列在这一步交给内核
     """
     from Script.Modules.gameplay_resolution import plan_queue
-    from Script.System.Sex_System import group_sex_panel
 
     if target_character_id == 0:
         target_character_id = activity.target(character_id)
@@ -553,7 +551,9 @@ def plan_instruct_common_settle(
     duration = _instruct_duration(judged, duration)
     if target_character_id != character_id and force_taget_wait:
         _plan_target_wait(target_character_id, duration)
-    group_sex_panel.group_sex_settle(character_id, target_character_id, judged)
+    group_sex_service.group_sex_settle(
+        character_id, target_character_id, judged
+    )
     plan_queue.plan_next(
         character_id,
         judged,

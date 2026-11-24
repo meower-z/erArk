@@ -1126,11 +1126,11 @@ def get_watcher_list() -> list[int]:
     Return arguments:
     List[int] -- 旁观学生的角色id列表
     """
-    from Script.System.Sex_System import group_sex_panel
+    from Script.Modules.gameplay_resolution import group_sex_service
 
     if not modes.sex_class():
         return []
-    in_template_list = group_sex_panel.count_group_sex_character_list()
+    in_template_list = group_sex_service.count_group_sex_character_list()
     return [
         student_id
         for student_id in get_class_member_list()
