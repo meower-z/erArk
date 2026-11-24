@@ -4,11 +4,10 @@ from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw, view
 from Script.Core import get_text, game_type, flow_handle, constant
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Design import handle_premise, instuct_judege
 from Script.Settle import default
-from Script.Modules.gameplay_resolution import achievement_service, starts
-from Script.Modules.gameplay_resolution.intent import Intent
+from Script.Modules.gameplay_resolution import achievement_service
 from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, activity, flags
 from Script.Modules.domains import identity
@@ -22,8 +21,6 @@ line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
-window_width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 
 
 class Sex_Be_Discovered_Panel:
@@ -356,37 +353,3 @@ class Sex_Be_Discovered_Panel:
             interrupt=True,
         )
         self.discoverer_reaction_settled = True
-
-
-DISCOVERY = "Discovery"
-""" 发现者目睹H的行动的种类：开始时打开被发现面板 """
-
-
-@starts.starter(DISCOVERY)
-def start_discovery(who: int, intent: Intent) -> None:
-    """
-    发现者目睹H的行动开始：打开被发现面板，玩家的选择把各方的后续行动排进计划队列
-    Keyword arguments:
-    who -- 发现者的角色id
-    intent -- 行动的意图
-    """
-    now_panel = Sex_Be_Discovered_Panel(window_width, who)
-    now_panel.draw()
-
-
-def plan_discovery(character_id: int) -> None:
-    """
-    把发现者目睹H的行动（原地等待1分钟）排进他的计划队列，打断他当前的行动
-    Keyword arguments:
-    character_id -- 发现者的角色id
-    """
-    from Script.Modules.gameplay_resolution import plan_queue
-
-    plan_queue.plan_next(
-        character_id,
-        constant.Behavior.WAIT,
-        1,
-        kind=DISCOVERY,
-        state=constant.CharacterStatus.STATUS_WAIT,
-        interrupt=True,
-    )

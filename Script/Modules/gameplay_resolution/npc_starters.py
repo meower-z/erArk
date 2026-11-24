@@ -14,7 +14,8 @@ from Script.Core import constant, game_type
 from Script.Kernel import core
 from Script.Modules.domains import activity, economy, kitchen
 from Script.Modules.domains import maintenance as engineering
-from Script.Modules.gameplay_resolution import intent, library_service, starts
+from Script.Modules.gameplay_resolution import hidden_sex_service, intent
+from Script.Modules.gameplay_resolution import library_service, starts
 from Script.Modules.domains import medical, medical_patient, physical_exam
 from Script.Modules.domains import inventory, chara_life
 from Script.Modules.domains import identity
@@ -82,9 +83,7 @@ def private_move(who: int, data: intent.Intent) -> None:
 @starts.starter("see_h")
 def see_h(who: int, data: intent.Intent) -> None:
     """目睹H：发现的结算排进自己的计划队列"""
-    from Script.System.Sex_System import sex_be_discovered_panel
-
-    sex_be_discovered_panel.plan_discovery(who)
+    hidden_sex_service.plan_discovery(who)
 
 
 @starts.starter("read_book")
