@@ -776,3 +776,13 @@ reads = "通过 banned_imports 读取 Script/System/Field_Commission_System/fiel
 used_for = "测试：Script/System/Field_Commission_System/field_commission_function.py 与 Script/Design/character_behavior.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的同一导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R65"
+file = "tests/fast/test_basement_draw_hooks.py"
+symbol = "BasementImportBoundaryTest.test_basement_imports_no_ui"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Design/basement.py 源码中的 import 与 from ... import 语句"
+used_for = "测试：Script/Design/basement.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的同一导入约束"
+when = "test"
+capture = "suite"
