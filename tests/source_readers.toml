@@ -796,3 +796,13 @@ reads = "Script/Protocol/delta_events.py 中的全部 import 与 from ... import
 used_for = "测试：Script/Protocol/delta_events.py 只导入 Python 标准库模块与 Script.Protocol.narrative_events"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R67"
+file = "tests/fast/test_drug_service.py"
+symbol = "ImportBoundaryTest"
+mechanism = "ast"
+reads = "读取 Script/Modules/gameplay_resolution/drug_service.py 与 Script/Settle/default.py 的源码字节，交由 banned_imports 和 forbidden_imports 解析其中的导入语句"
+used_for = "测试：drug_service.py 遵守后端界面边界守卫且不导入 Script.UI 或 pregnancy_panel，default.py 不导入 Script.UI.Panel.gift_panel"
+when = "test"
+capture = "suite"

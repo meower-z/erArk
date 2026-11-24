@@ -60,9 +60,7 @@ def get_date_text(now_time: datetime.datetime) -> str:
     Return arguments:
     str -- 格式化文本
     """
-    return _("{0}月{1}日").format(
-        game_time.get_month_text(now_time), now_time.day
-    )
+    return pregnancy_constant.format_season_date(now_time)
 
 
 def get_fetus_count_text(character_id: int) -> str:
