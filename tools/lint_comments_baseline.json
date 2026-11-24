@@ -172,7 +172,7 @@
   "Script/UI/Panel/agriculture_production_panel.py": 16,
   "Script/UI/Panel/all_npc_position_panel.py": 42,
   "Script/UI/Panel/aromatherapy_panel.py": 1,
-  "Script/UI/Panel/assistant_panel.py": 53,
+  "Script/UI/Panel/assistant_panel.py": 35,
   "Script/UI/Panel/body_info_panel.py": 36,
   "Script/UI/Panel/borrow_book_panel.py": 28,
   "Script/UI/Panel/building_panel.py": 24,

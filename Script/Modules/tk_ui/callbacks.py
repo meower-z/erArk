@@ -3,7 +3,7 @@ Tk 界面向后端登记的回调函数
 ===========================
 本模块向 playthrough 登记设定表补齐时的提示绘制函数。
 本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
-本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制函数、面板切换函数与隐奸中显示非H指令的开关查询函数。
+本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制、分隔线绘制、面板切换与隐奸中显示非H指令开关查询函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
 本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
 本模块不登记内核钩子。
@@ -20,7 +20,8 @@ from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
-from Script.Protocol.narrative_events import NarrativeEvent, TextBlock, TextSpan
+from Script.Protocol.narrative_events import NarrativeEvent, SceneBreak
+from Script.Protocol.narrative_events import TextBlock, TextSpan
 from Script.UI.Moudle import draw, view
 
 
@@ -84,6 +85,19 @@ def draw_notice(
             use_text_width=use_text_width,
         )
     )
+
+
+@ui_hooks.on_divider
+def draw_divider(char: str = "-") -> None:
+    """
+    将分隔线字符包装为 SceneBreak 并交由 STREAM 按配置文本宽度绘制。
+    char 须经 SceneBreak 显示宽度校验，否则抛出 ValueError。
+    Keyword arguments:
+    char -- str，分隔线字符，默认为 "-"
+    Return arguments:
+    None -- 无返回值
+    """
+    STREAM.render(SceneBreak(STREAM.meta("ui_hooks.divider"), char=char))
 
 
 @ui_hooks.on_panel_switch

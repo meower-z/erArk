@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-from types import FunctionType
+from types import FunctionType, ModuleType
 from Script.Core import constant, game_type, get_text, num
-from Script.Design import game_time, handle_premise, settle_behavior, talk
+from Script.Design import game_time, handle_premise, talk
 from Script.System.First_Record_System import first_record_handle
 from Script.Config import game_config
-from typing import TYPE_CHECKING
 from Script.Modules.domains import abilities, activity, identity
 from Script.Modules.domains import first_record as first_record_domain, flags
 from Script.Modules.domains import growth, h_state, status
 from Script.Modules.gameplay_resolution import ui_hooks
-
-if TYPE_CHECKING:
-    from types import ModuleType
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -304,6 +300,8 @@ def second_behavior_effect(
                 # 如果effect_id是str类型，则说明是综合数值结算
                 if isinstance(effect_id, str) and "CVE" in effect_id:
                     effect_all_value_list = effect_id.split("_")[1:]
+                    from Script.Design import settle_behavior
+
                     settle_behavior.handle_comprehensive_value_effect(
                         character_id, effect_all_value_list, change_data
                     )
@@ -346,6 +344,8 @@ def must_settle_check(character_id: int) -> None:
             # 如果effect_id是str类型，则说明是综合数值结算
             if isinstance(effect_id, str) and "CVE" in effect_id:
                 effect_all_value_list = effect_id.split("_")[1:]
+                from Script.Design import settle_behavior
+
                 settle_behavior.handle_comprehensive_value_effect(
                     character_id, effect_all_value_list, change_data
                 )

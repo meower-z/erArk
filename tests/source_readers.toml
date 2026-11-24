@@ -756,3 +756,13 @@ reads = "Script/Protocol/narrative_events.py 中的全部 import 与 from ... im
 used_for = "测试：Script/Protocol/narrative_events.py 仅导入 Python 标准库模块"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R66"
+file = "tests/fast/test_assistant_service.py"
+symbol = "AssistantServiceBoundaryTest"
+mechanism = "ast"
+reads = "经 banned_imports 读取 Script/Modules/gameplay_resolution/assistant_service.py 的导入语句，以及 Script/Settle/past_day_settle.py 各作用域按 Script.Settle 展开相对导入后的 import 与 from ... import 模块及成员名"
+used_for = "测试：assistant_service.py 不导入界面与输入输出模块，且 past_day_settle.py 各作用域展开相对导入后均不导入 Script.UI.Panel 及其成员"
+when = "test"
+capture = "suite"
