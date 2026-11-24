@@ -1,4 +1,6 @@
-"""邀请访客面板，以及访客的抵达、离开与留下的结算"""
+"""
+邀请访客面板，负责访客状态展示、邀请目标选择与提前去留结算界面。
+"""
 
 import os
 from types import FunctionType
@@ -8,17 +10,15 @@ from Script.Design import (
     attr_calculation,
     map_handle,
     game_time,
-    character_handle,
-    instuct_judege,
     handle_ability,
 )
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.UI.Panel import manage_basement_panel, recruit_panel
-import random
-from Script.Modules.domains import abilities, activity, chara_life, facility
-from Script.Modules.domains import flags, location, relations, roster, visitor
+from Script.UI.Panel import manage_basement_panel
+from Script.Modules.domains import abilities, chara_life, facility
+from Script.Modules.domains import location, relations, roster, visitor
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import recruit_service, visitor_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -28,267 +28,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def get_empty_guest_room_id() -> int | bool:
-    """
-    判断是否有空闲客房，如果有的话返回客房id
-    """
-    # 遍历全部客房
-    guest_rooms = [
-        room_id for room_id in facility.opens() if 2000 < room_id < 2100
-    ]
-    for room_id in guest_rooms:
-        # 跳过未开放的客房
-        if not facility.is_open(room_id):
-            continue
-        room_name = game_config.config_facility_open[room_id].name
-        # 遍历全部访客
-        have_visitor_flag = False
-        for chara_id in visitor.visitors():
-            # 如果该房间已经有访客，则跳过
-            if chara_life.dormitory(chara_id) == room_name:
-                have_visitor_flag = True
-                break
-        if have_visitor_flag:
-            continue
-        # 发现没有人住的房间，返回客房id
-        return room_id
-    # 如果没有空闲客房，则返回False
-    return False
-
-
-def sort_guest_room_key(room_path: str) -> int:
-    """
-    按照客房编号进行数字排序的函数
-    Keyword arguments:
-    room_path -- 客房路径字符串，例如 "访客\\客房10"
-    return: int -- 提取的客房编号，如果无法解析则返回999
-    """
-    # 提取客房编号，例如从 "访客\\客房10" 中提取 10
-    room_name = room_path.split(os.sep)[-1]
-    if "客房" in room_name:
-        try:
-            room_number = int(room_name.replace("客房", ""))
-            return room_number
-        except BaseException:
-            return 999  # 如果无法解析，返回一个大数字
-    return 999
-
-
-def update_invite_visitor() -> None:
-    """刷新邀请访客栏位"""
-
-    target, progress = visitor.invite()
-    # 未选择邀请目标则跳过
-    if target == 0:
-        return
-
-    # 如果超过100则进行结算
-    if progress >= 100:
-
-        # 成功邀请时
-        if settle_visitor_arrivals(visitor_id=target):
-            visitor.set_invite(0)
-
-
-def visitor_to_operator(character_id: int) -> None:
-    """
-    访客留下成为干员
-    Keyword arguments:
-    character_id -- 角色id
-    """
-    from Script.System.Dormitory_System import common as dormitory_common
-
-    character_data = identity.of(character_id)
-
-    # flag置为已访问
-    flags.set(character_id, vistor=2)
-
-    # 从访客列表中移除
-    visitor.leave(character_id)
-
-    # 如果满足设施开放的前提条件，则开放该设施
-    for open_cid in game_config.config_facility_open:
-        if (
-            game_config.config_facility_open[open_cid].NPC_id
-            and game_config.config_facility_open[open_cid].NPC_id
-            == character_data.adv
-        ):
-            facility.set_open(open_cid, True)
-
-    # 重新分配角色宿舍
-    dormitory_common.new_character_get_dormitory(character_id)
-
-
-def settle_visitor_arrivals(visitor_id: int = 0) -> int:
-    """
-    结算访客抵达
-    visitor_id = 0 时，随机抽取一名访客
-    return 0 时，没有访客抵达
-    return 1 时，有访客抵达
-    """
-    from Script.UI.Panel import recruit_panel, achievement_panel
-
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.style = "gold_enrod"
-
-    # 判断是否有空闲客房
-    if len(visitor.visitors()) >= visitor.capacity():
-        # 输出提示信息
-        now_draw.text = _(
-            "\n ●由于没有空闲的客房，罗德岛没有接待到一名新抵达的访客\n"
-        )
-        now_draw.draw()
-        return 0
-    else:
-        # 随机抽取一名访客
-        if visitor_id == 0:
-            # 未招募的干员id列表
-            not_recruit_npc_id_list = recruit_panel.find_recruitable_npc()
-            # 根据当前基地的位置筛选出同国度且没有招募的干员
-            now_country_id = location.country()
-            now_country_npc_id_list = []
-            # 开始筛选
-            for npc_id in not_recruit_npc_id_list:
-                if relations.birthplace(npc_id) == now_country_id:
-                    now_country_npc_id_list.append(npc_id)
-            # 随机抽取一名访客
-            if len(now_country_npc_id_list):
-                visitor_id = random.choice(now_country_npc_id_list)
-            else:
-                return 0
-        # 处理获得新访客
-        character_handle.get_new_character(visitor_id, True)
-        # 输出提示信息
-        now_draw.text = _("\n ○【{0}】作为临时访客抵达了罗德岛\n").format(
-            identity.of(visitor_id).name
-        )
-        now_draw.draw()
-        # 结算访客成就
-        achievement_panel.achievement_flow(_("访客"))
-        return 1
-
-
-def visitor_leave(character_id: int) -> None:
-    """
-    访客离开
-    Keyword arguments:
-    character_id -- 角色id
-    """
-
-    # flag置为已访问
-    flags.set(character_id, vistor=2)
-
-    # 从访客列表中移除
-    visitor.leave(character_id)
-
-    # 从已有干员列表中移除
-    roster.discard(character_id)
-
-    # 位置初始化
-    activity.set_position(character_id, ["0", "0"])
-
-
-def settle_visitor_arrivals_and_departures() -> None:
-    """
-    结算访客抵达和离开
-    """
-
-    # 因罗德岛移动而产生的访客
-    if visitor.moved():
-        # 将flag重置为False
-        visitor.set_moved(False)
-        settle_visitor_arrivals()
-
-    # 根据时间而产生的访客
-    add_day = game_time.count_day_for_datetime(
-        visitor.last_arrival(), game_time.now()
-    )
-    visitor_come_possibility = add_day * 3
-    if random.randint(1, 100) <= visitor_come_possibility:
-        # 刷新访客来访时间
-        visitor.set_last_arrival(game_time.now())
-        settle_visitor_arrivals()
-
-    # 访客离开
-    # 遍历全部访客
-    for visitor_id, leave_time in visitor.visitors().items():
-        # 判断是否已经超过停留时间
-        if game_time.judge_date_big_or_small(game_time.now(), leave_time):
-            judge_visitor_if_leave(visitor_id)
-
-
-def judge_visitor_if_leave(visitor_id: int) -> None:
-    """
-    判断访客是否离开
-    Keyword arguments:
-    visitor_id -- 角色id
-    """
-    # 输出提示信息
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.style = "gold_enrod"
-    # 获得访客角色数据
-    character_data: identity.Identity = identity.of(visitor_id)
-    # 计算访客留下概率
-    _tem_1, _tem_2, stay_posibility = instuct_judege.calculation_instuct_judege(
-        0, visitor_id, _("访客留下")
-    )
-    # 遍历所有留下态度
-    # 获得留下态度对应的文本
-    stay_text = next(
-        attitude_data.name
-        for attitude_data in game_config.config_visitor_stay_attitude.values()
-        if stay_posibility < attitude_data.rate
-    )
-    now_draw.text = _(
-        "\n 访客【{0}】预定的停留期限到了，她当前的留下意愿为：【{1}】"
-    ).format(character_data.name, stay_text)
-    # 随机计算访客是否留下
-    if random.random() < stay_posibility:
-        # 访客留下
-        visitor_to_operator(visitor_id)
-        # 输出提示信息
-        now_draw.text += _(
-            "\n ○【{0}】决定放弃离开，留在罗德岛成为一名正式干员\n"
-        ).format(character_data.name)
-        now_draw.draw()
-    else:
-        # 访客离开
-        visitor_leave(visitor_id)
-        # 输出提示信息
-        now_draw.text += _("\n ●【{0}】打包好行李，离开了罗德岛\n").format(
-            character_data.name
-        )
-        now_draw.draw()
-
-
-def get_today_departing_visitors() -> list[int]:
-    """
-    检查今天是否有要离开的访客
-    return: List[int] -- 所有今天要离开的访客的角色id
-    """
-    departing_visitors = []
-    # 遍历全部访客
-    for visitor_id, leave_time in visitor.visitors().items():
-        # 判断时间为明天0点
-        judge_time = game_time.get_sub_date(day=1)
-        judge_time = judge_time.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        # 判定今天结束后是否要离开
-        if game_time.judge_date_big_or_small(judge_time, leave_time):
-            # 计算访客留下概率
-            _tem_1, _tem_2, stay_posibility = (
-                instuct_judege.calculation_instuct_judege(
-                    0, visitor_id, _("访客留下")
-                )
-            )
-            if stay_posibility < 0.5:
-                departing_visitors.append(visitor_id)
-    return departing_visitors
 
 
 class Invite_Visitor_Panel:
@@ -507,7 +246,7 @@ class Invite_Visitor_Panel:
                 )
 
             # 可邀请目标
-            recruitable_npc_id_list = recruit_panel.find_recruitable_npc()
+            recruitable_npc_id_list = recruit_service.find_recruitable_npc()
             target_id_list = []
             for chara_id in recruitable_npc_id_list:
                 # 本地
@@ -605,7 +344,7 @@ class Invite_Visitor_Panel:
                     button_text,
                     button_text,
                     int(len(button_text) * 2),
-                    cmd_func=judge_visitor_if_leave,
+                    cmd_func=visitor_service.judge_visitor_if_leave,
                     args=visitor_id,
                 )
                 button_draw.draw()

@@ -726,3 +726,13 @@ reads = "Script/Protocol/modal_prompts.py 中的全部 import 与 from ... impor
 used_for = "测试：Script/Protocol/modal_prompts.py 的每项导入均属于 Python 标准库模块"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R56"
+file = "tests/fast/test_visitor_recruit_services.py"
+symbol = "source_tree"
+mechanism = "ast"
+reads = "BACKEND_FILES 三文件的导入语句，以及两个面板文件各作用域的函数、类、导入与赋值绑定名"
+used_for = "测试：三个后端调用方均不导入 Script.UI.Panel，且两个面板文件不绑定十五个服务函数名"
+when = "test"
+capture = "suite"

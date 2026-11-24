@@ -33,11 +33,11 @@ from Script.Modules.domains import (
     roster,
 )
 from Script.Modules.gameplay_resolution import library_service, working
+from Script.Modules.gameplay_resolution import recruit_service
 from Script.Modules.save_load import kernel_state, upgrade
 from Script.System.Official_Event_System import official_event_handle
 from Script.System.Official_Event_System import ri_value
 from Script.Test.Static_Check.check_registry import get_all_checks
-from Script.UI.Panel import recruit_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.Modules.domains import chara_life, identity
@@ -90,12 +90,12 @@ class BaseServicesStateTest(FastTestCase):
         recruit.open_lines([0, 1])
         recruit.set_line(0, progress=100, strategy=1)
         recruit.set_line(1, progress=40.5, strategy=1)
-        self.assertEqual(recruit_panel.find_recruitable_npc(), [candidate])
-        recruit_panel.update_recruit()
+        self.assertEqual(recruit_service.find_recruitable_npc(), [candidate])
+        recruit_service.update_recruit()
         self.assertEqual(recruit.pending(), {candidate})
         self.assertEqual(recruit.lines()[0], {**recruit.IDLE, "strategy": 1})
         self.assertEqual(recruit.lines()[1]["progress"], 40.5)
-        self.assertEqual(recruit_panel.find_recruitable_npc(), [])
+        self.assertEqual(recruit_service.find_recruitable_npc(), [])
 
     def test_main_recruiter(self) -> None:
         """同一人任命到另一条线时从原线撤下。换了岗位的主招聘专员在刷新岗位时撤下"""
@@ -118,7 +118,7 @@ class BaseServicesStateTest(FastTestCase):
         recruit.open_lines([0, 1])
         recruit.set_line(0, progress=30, strategy=11)
         recruit.set_line(1, progress=30, strategy=1)
-        recruit_panel.repair_recruit_lines()
+        recruit_service.repair_recruit_lines()
         self.assertEqual(recruit.pending(), {kept})
         progress = [v["progress"] for v in recruit.lines().values()]
         self.assertEqual(progress, [0, 30])

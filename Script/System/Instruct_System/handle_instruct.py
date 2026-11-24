@@ -2837,9 +2837,9 @@ def handle_recruit() -> None:
 @add_instruct(constant.Instruct.CONFIM_RECRUIT)
 def handle_confim_recruit() -> None:
     """处理确认已招募干员指令：有空余宿舍与待确认的干员时定下 5 分钟的等待，开始时招募（开始代码 recruit）"""
-    from Script.UI.Panel import recruit_panel
+    from Script.Modules.gameplay_resolution import recruit_service
 
-    if recruit_panel.can_recruit():
+    if recruit_service.can_recruit():
         chara_handle_instruct_common_settle(
             constant.Behavior.WAIT, duration=5, start="recruit"
         )
@@ -2853,9 +2853,9 @@ def _start_recruit(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    from Script.UI.Panel import recruit_panel
+    from Script.Modules.gameplay_resolution import recruit_service
 
-    recruit_panel.recruit_new_chara()
+    recruit_service.recruit_new_chara()
 
 
 @add_instruct(constant.Instruct.MAINTENANCE_FACILITIES)

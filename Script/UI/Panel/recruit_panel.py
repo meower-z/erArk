@@ -1,22 +1,23 @@
-"""招募面板，以及招募栏位的刷新、招募线效率与新干员的招募"""
+"""
+招募面板，负责招募线策略设置、招聘专员任命与待确认干员列表展示。
+"""
 
 from __future__ import annotations
 
 from types import FunctionType
 from Script.Core import constant, flow_handle
 from Script.Core import get_text
-from Script.Design import attr_calculation, basement, handle_ability
-from Script.Design import handle_premise, handle_talent
+from Script.Design import attr_calculation, basement
+from Script.Design import handle_talent
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import diplomacy, facility, flags, location
-from Script.Modules.domains import recruit, roster, visitor, work
-from Script.Modules.save_load import reset
+from Script.Modules.domains import facility, location
+from Script.Modules.domains import recruit, work
 
-import random
 from typing import TYPE_CHECKING
-from Script.Modules.domains import abilities, npc_template, relations
+from Script.Modules.domains import abilities, relations
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import recruit_service
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -31,356 +32,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-@reset.repair
-def repair_recruit_lines() -> None:
-    """旧存档修补：待确认招募里不存在的角色id去掉，停止招募（策略 11）的线进度归 0"""
-    recruit.set_pending(
-        cid for cid in recruit.pending() if cid and identity.exists(cid)
-    )
-    lines = recruit.lines()
-    for line in lines.values():
-        if line["strategy"] == 11:
-            line["progress"] = 0
-    recruit.put_lines(lines)
-
-
-def can_recruit() -> bool:
-    """
-    是否可以确认招募：有空余宿舍且有待确认的干员；宿舍已满时绘制提示。只读
-    Return arguments:
-    bool -- 可以招募时为 True
-    """
-    if roster.count() >= facility.people_max():
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.style = "gold_enrod"
-        now_draw.text = _("\n\n   ※ 空余宿舍不足，无法招募 ※\n\n")
-        now_draw.draw()
-        return False
-    return bool(recruit.pending())
-
-
-def recruit_new_chara() -> bool:
-    """
-    招募新干员\n
-    输入：无\n
-    返回：bool，是否招募成功\n
-    说明：\n
-    - 如果宿舍已满，则提示宿舍不足，无法招募\n
-    - 如果有待确认的招募干员，则随机招募一名新干员，并更新游戏状态\n
-    - 如果没有待确认的招募干员，则提示没有可招募的干员\n
-    """
-    from Script.Design import character_handle
-    from Script.UI.Panel import achievement_panel
-
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.style = "gold_enrod"
-    now_draw.text = ""
-
-    if roster.count() >= facility.people_max():
-        now_draw.text += _("\n\n   ※ 空余宿舍不足，无法招募 ※\n\n")
-        now_draw.draw()
-        return False
-
-    elif pending := recruit.pending():
-        # 从待招募的干员中选择
-        new_chara_id = pending.pop()
-        recruit.set_pending(pending)
-        # 招募该干员
-        character_handle.get_new_character(new_chara_id)
-        character_data = identity.of(new_chara_id)
-        now_draw.text += _("\n\n   ※ 成功招募了{0} ※\n\n").format(
-            character_data.name
-        )
-        now_draw.draw()
-        # 招募成就结算
-        achievement_panel.achievement_flow(_("招募"))
-        return True
-    else:
-        return False
-
-
-def find_recruitable_npc() -> list[int]:
-    """
-    查找可招募的NPC\n
-    Returns：\n
-    List[int]: 可招募的NPC列表
-    """
-
-    recruitable_npc_id_list = []
-
-    # 收集所有已被任命为各国外交官的干员id
-    # 外派期间的外交官会被移出npc_id_got，无法靠“已在罗德岛”排除，故在此单独收集
-    diplomat_id_set = set()
-    for post in diplomacy.table().values():
-        if post["diplomat"]:
-            diplomat_id_set.add(post["diplomat"])
-    pending = recruit.pending()
-
-    for adv_id, tem_data in npc_template.table().items():
-        chara_id = adv_id
-        # 跳过玩家
-        if chara_id == 0:
-            continue
-        # 跳过已有的
-        if roster.has(chara_id):
-            continue
-        # 跳过已在待确认招募列表中的
-        if chara_id in pending:
-            continue
-        # 跳过女儿
-        if tem_data.Mother_id != 0 or tem_data.AdvNpc > 9000:
-            continue
-        # 跳过不存在的
-        if not identity.exists(chara_id):
-            continue
-        # 跳过访客
-        if flags.get(chara_id, "vistor") == 1:
-            continue
-        # 跳过离线异常
-        if not handle_premise.handle_normal_7(chara_id):
-            continue
-        # 跳过已被任命为外交官的干员
-        if chara_id in diplomat_id_set:
-            continue
-        # 跳过特殊NPC
-        if identity.of(chara_id).adv in constant.ban_NPC_adv_set:
-            continue
-        # 如果设置了禁止，则跳过禁止干员
-        if normal_config.system_setting.base_setting[7]:
-            if roster.is_forbidden(chara_id):
-                continue
-        recruitable_npc_id_list.append(chara_id)
-
-    return recruitable_npc_id_list
-
-
-def update_recruit() -> None:
-    """刷新招募栏位"""
-
-    from Script.UI.Panel import recruit_panel
-
-    # 遍历全招募栏
-    for recruit_line_id, line in recruit.lines().items():
-
-        # 如果超过100则进行结算
-        if line["progress"] >= 100:
-            recruit.set_line(recruit_line_id, progress=0)
-
-            # 招募策略
-            recruitment_strategy = line["strategy"]
-
-            # 绘制信息
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.style = "gold_enrod"
-
-            # 开始获得招募npc的id
-            recruitable_npc_id_list = recruit_panel.find_recruitable_npc()
-            wait_id_list = []
-            # 主招募专员
-            line_main_chara_id = line["main"]
-            line_main_chara_data = identity.of(line_main_chara_id)
-            for chara_id in recruitable_npc_id_list:
-                if (
-                    chara_id == 0
-                    and recruitment_strategy != 0
-                    and recruitment_strategy != 1
-                ):
-                    break
-
-                # 本地招募
-                if recruitment_strategy == 0:
-                    character_data = identity.of(chara_id)
-                    # 筛选出出生地是当前罗德岛所在地的角色
-                    if (
-                        relations.birthplace(character_data.cid)
-                        != location.country()
-                    ):
-                        continue
-                    wait_id_list.append(chara_id)
-                # 全泰拉招募
-                elif recruitment_strategy == 1:
-                    wait_id_list.append(chara_id)
-                # 同势力干员
-                elif recruitment_strategy == 2:
-                    character_data = identity.of(chara_id)
-                    # 筛选出势力相同的角色
-                    if relations.nation(character_data.cid) != relations.nation(
-                        line_main_chara_id
-                    ):
-                        continue
-                    wait_id_list.append(chara_id)
-                # 同出身地干员
-                elif recruitment_strategy == 3:
-                    character_data = identity.of(chara_id)
-                    # 筛选出出身地相同的角色
-                    if relations.birthplace(
-                        character_data.cid
-                    ) != relations.birthplace(line_main_chara_id):
-                        continue
-                    wait_id_list.append(chara_id)
-                # 同职业干员
-                elif recruitment_strategy == 4:
-                    character_data = identity.of(chara_id)
-                    # 筛选出职业相同的角色
-                    if (
-                        character_data.profession
-                        != line_main_chara_data.profession
-                    ):
-                        continue
-                    wait_id_list.append(chara_id)
-                # 同种族干员
-                elif recruitment_strategy == 5:
-                    character_data = identity.of(chara_id)
-                    # 筛选出种族相同的角色
-                    if character_data.race != line_main_chara_data.race:
-                        continue
-                    wait_id_list.append(chara_id)
-                # 同外表年龄干员
-                elif recruitment_strategy == 6:
-                    talent = abilities.talent(chara_id)
-                    line_main_chara_age_talent = handle_talent.have_age_talent(
-                        line_main_chara_id
-                    )
-                    # 筛选出外表年龄相同的角色
-                    if talent[line_main_chara_age_talent] != 1:
-                        continue
-                    wait_id_list.append(chara_id)
-                # 同胸部大小干员
-                elif recruitment_strategy == 7:
-                    talent = abilities.talent(chara_id)
-                    line_main_chara_bust_talent = (
-                        handle_talent.have_chest_talent(line_main_chara_id)
-                    )
-                    # 筛选出胸部大小相同的角色
-                    if talent[line_main_chara_bust_talent] != 1:
-                        continue
-                    wait_id_list.append(chara_id)
-                # 同臀部大小干员
-                elif recruitment_strategy == 8:
-                    talent = abilities.talent(chara_id)
-                    line_main_chara_hip_talent = handle_talent.have_hip_talent(
-                        line_main_chara_id
-                    )
-                    # 筛选出臀部大小相同的角色
-                    if talent[line_main_chara_hip_talent] != 1:
-                        continue
-                    wait_id_list.append(chara_id)
-            if len(wait_id_list):
-                choice_id = random.choice(wait_id_list)
-                recruit.set_pending(recruit.pending() | {choice_id})
-
-                now_draw.text = _(
-                    "\n\n   ※ 招募到了新的干员，请前往博士办公室确认 ※\n\n"
-                )
-                # 检查该角色是否是正在邀请的访客
-                if choice_id == visitor.invite()[0]:
-                    now_draw.text += _(
-                        "   ※ 招募到的新干员是正在邀请的访客，已自动停止邀请 ※\n\n"
-                    )
-                    visitor.set_invite(0)
-                now_draw.draw()
-            else:
-                now_draw.text = _(
-                    "\n\n   ※ 当前招募策略无可招募npc，招募失败，已自动停止招募，请调整招募策略 ※\n\n"
-                )
-                now_draw.style = "warning"
-                now_draw.draw()
-                recruit.set_line(recruit_line_id, strategy=11)
-
-
-def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
-    """
-    计算某条招募线的效率，并返回描述字符串和效率值
-    Keyword arguments:
-    line_id -- 招募线id
-    Returns:
-    detail_str -- 描述字符串
-    total_bonus -- 效率值
-    """
-    lines = recruit.lines()
-    if line_id not in lines:
-        return _("无此招募线"), 0.0
-
-    recruitment_strategy_id = lines[line_id]["strategy"]
-    recruitment_strategy_data = game_config.config_recruitment_strategy.get(
-        recruitment_strategy_id
-    )
-    if not recruitment_strategy_data:
-        return _("未知策略"), 0.0
-    # 11号则直接返回
-    if recruitment_strategy_id == 11:
-        return _("已停止招募"), 0.0
-
-    # 当前设施效率
-    facility_effect = basement.calc_facility_efficiency(7)
-
-    # 招募效率(使用主/副招聘专员机制)
-    line_main_id = lines[line_id]["main"]
-    main_name = (
-        identity.of(line_main_id).name
-        if identity.exists(line_main_id)
-        else _("空缺")
-    )
-    # 全部主招聘专员
-    main_ids = {line["main"] for line in lines.values()}
-    # 计算加成
-    total_bonus = 0.0
-    sub_bonus = 0.0
-    # 文本
-    hr_parts_str = "["
-    # 遍历所有招聘专员
-    for chara_id in work.roster(work.HR_WORK):
-        if not identity.exists(chara_id):
-            continue
-        # 跳过玩家
-        if chara_id == 0:
-            continue
-        base_effect = 2 * handle_ability.get_ability_adjust(
-            abilities.ability(chara_id).get(40, 0)
-        )
-        if chara_id == line_main_id:
-            total_bonus += base_effect
-            hr_parts_str += _("主:{0}(话术lv{1}:{2}%)").format(
-                main_name,
-                abilities.ability(chara_id).get(40, 0),
-                round(base_effect, 1),
-            )
-        elif chara_id not in main_ids:
-            sub_bonus += base_effect / 5
-    # 如果文本为空，说明没有主招聘专员
-    if hr_parts_str == "[":
-        hr_parts_str += _("主:空缺(基础1.0%)")
-        total_bonus = 1.0
-    # 副专员
-    total_bonus += sub_bonus
-    hr_parts_str += _("，副:{0}%]").format(round(sub_bonus, 1))
-
-    # 乘以策略难度调整
-    total_bonus *= recruitment_strategy_data.adjust
-    strategy_str = _(" * 策略调整系数{0}%").format(
-        int(recruitment_strategy_data.adjust * 100)
-    )
-
-    # 乘以设施效率
-    total_bonus *= facility_effect
-    facility_effect_str = _("* 设施效率调整{0}%").format(
-        round(facility_effect * 100, 1)
-    )
-
-    # 停止招募则为0
-    if recruitment_strategy_id == 11:
-        total_bonus = 0.0
-        hr_parts_str += _("，已停止招募")
-
-    detail_str = _("当前效率加成：{0} {1} {2} = {3}%").format(
-        hr_parts_str, strategy_str, facility_effect_str, round(total_bonus, 1)
-    )
-    return detail_str, total_bonus
 
 
 class Recruit_Panel:
@@ -420,7 +71,7 @@ class Recruit_Panel:
         line_count = len(recruit.lines())
 
         # 开始获得招募npc的id
-        recruitable_npc_id_list = find_recruitable_npc()
+        recruitable_npc_id_list = recruit_service.find_recruitable_npc()
 
         while 1:
             return_list = []
@@ -580,8 +231,10 @@ class Recruit_Panel:
                     detail_draw.draw()
 
                 # 计算本线当前效率
-                detail_str, _total_bonus = calculate_recruit_line_efficiency(
-                    recruit_line_id
+                detail_str, _total_bonus = (
+                    recruit_service.calculate_recruit_line_efficiency(
+                        recruit_line_id
+                    )
                 )
 
                 # 绘制效率加成文本，并将"空缺"标为橘色（warning样式）

@@ -59,12 +59,14 @@ def collect(language: str) -> dict[str, Any]:
         tuple(translate(text) for text in ("访客区", "【升级】", "返回")),
     )
     visitor_list = sorted(
-        game("Script.UI.Panel.recruit_panel").find_recruitable_npc()
+        game(
+            "Script.Modules.gameplay_resolution.recruit_service"
+        ).find_recruitable_npc()
     )[:VISITOR_COUNT]
-    invite_visitor_panel: Any = game("Script.UI.Panel.invite_visitor_panel")
+    visitors: Any = game("Script.Modules.gameplay_resolution.visitor_service")
     with kernel_data.writing():
         for visitor_id in visitor_list:
-            invite_visitor_panel.settle_visitor_arrivals(visitor_id)
+            visitors.settle_visitor_arrivals(visitor_id)
     chara_life: Any = game("Script.Modules.domains.chara_life")
     return {
         "guest_rooms": constant.place_data["Guest_Room"],
