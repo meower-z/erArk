@@ -736,3 +736,13 @@ reads = "BACKEND_FILES 三文件的导入语句，以及两个面板文件各作
 used_for = "测试：三个后端调用方均不导入 Script.UI.Panel，且两个面板文件不绑定十五个服务函数名"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R58"
+file = "tests/fast/test_narrative_event_stream.py"
+symbol = "ProtocolBoundaryTest.test_imports_only_stdlib"
+mechanism = "ast"
+reads = "Script/Protocol/narrative_events.py 中的全部 import 与 from ... import 语句"
+used_for = "测试：Script/Protocol/narrative_events.py 仅导入 Python 标准库模块"
+when = "test"
+capture = "suite"

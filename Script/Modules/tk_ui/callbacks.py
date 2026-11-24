@@ -19,6 +19,8 @@ from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Modules.save_load import reset
+from Script.Modules.tk_ui.event_stream_adapter import STREAM
+from Script.Protocol.narrative_events import NarrativeEvent, TextBlock, TextSpan
 from Script.UI.Moudle import draw, view
 
 
@@ -64,7 +66,7 @@ def draw_notice(
     text: str, *, wait: bool, style: str | None, use_text_width: bool
 ) -> None:
     """
-    按参数构造 WaitDraw 或 NormalDraw 并绘制一条提示文本。
+    将提示文本包装为单段落 NarrativeEvent 并交由 STREAM 绘制。
     Keyword arguments:
     text -- str，要绘制的提示文本
     wait -- bool，为真时使用 WaitDraw 等待玩家确认，否则使用 NormalDraw
@@ -73,13 +75,15 @@ def draw_notice(
     Return arguments:
     None -- 无返回值
     """
-    now_draw = draw.WaitDraw() if wait else draw.NormalDraw()
-    if use_text_width:
-        now_draw.width = normal_config.config_normal.text_width
-    now_draw.text = text
-    if style is not None:
-        now_draw.style = style
-    now_draw.draw()
+    STREAM.render(
+        NarrativeEvent(
+            STREAM.meta("ui_hooks.notice"),
+            (TextBlock("paragraph", (TextSpan(text),)),),
+            pause=wait,
+            style=style,
+            use_text_width=use_text_width,
+        )
+    )
 
 
 @ui_hooks.on_panel_switch
