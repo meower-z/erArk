@@ -126,6 +126,16 @@ when = "test"
 capture = "suite"
 
 [[reader]]
+id = "R61"
+file = "tests/fast/test_source_readers_registry.py"
+symbol = "unresolved"
+mechanism = "ast"
+reads = "tests/source_readers.toml 中 reader 与 allow 记录所指文件里的函数、异步函数与类定义名"
+used_for = "测试：源码读取者清单里每条 reader 与 allow 记录都能解析到对应文件与符号定义"
+when = "test"
+capture = "suite"
+
+[[reader]]
 id = "R13"
 file = "tests/education/test_talk_data.py"
 symbol = "read_constant_doc"
