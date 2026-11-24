@@ -10,43 +10,28 @@
 
 import importlib
 import inspect
-import json
 import re
-import subprocess
-import sys
 
 from Script.Core import constant, constant_effect
 from Script.Core.constant.SecondBehavior import SecondBehavior
 from Script.Modules.gameplay_resolution import orgasm_ids
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT
+from tests.ui_free_subprocess import ChildRun, run_ui_free
 
 PART_ORGASM_ID = re.compile(r"[a-z]_orgasm_(small|normal|strong|super)")
 """匹配单字母部位绝顶二段行为 id 的正则表达式。"""
 BLOCKED_RUN = """
-import importlib.abc, json, sys
+import sys
 from unittest import mock
-BLOCKED = (
-    "Script.Settle",
-    "Script.UI.Panel",
-    "Script.System.Instruct_System.handle_instruct",
-    "tkinter",
-    "_tkinter",
-    "PIL.ImageTk",
-)
-def blocked(name):
-    return any(name == b or name.startswith(b + ".") for b in BLOCKED)
-class Block(importlib.abc.MetaPathFinder):
-    def find_spec(self, fullname, path, target=None):
-        if blocked(fullname):
-            raise ImportError(fullname)
-        return None
-sys.meta_path.insert(0, Block())
-from tests.fast.base import FastTestCase
-case = FastTestCase()
-case.setUp()
+from Script.Modules.domains import identity
+from tests import chara_abilities, kernel_data
+from tests.chara_activity import place
+from tests.world import DEFAULT_SCENE, start_time
+kernel_data.reset_clock(start_time(), {})
 for cid in (0, 1):
-    case.world.chara(cid, str(cid))
+    kernel_data.put(identity.put, identity.Identity(cid, name=str(cid), sex=1))
+    chara_abilities.zero_tables(cid)
+    place(cid, DEFAULT_SCENE)
 from Script.Config import game_config
 from Script.Core import game_type
 from Script.Design import second_behavior as sb, talk
@@ -113,10 +98,10 @@ with working.based_on(core.state()):
     queued = activity.must_show(1)
     talk.must_show_talk_check(1)
     out["show"] = [queued, activity.second_behavior(1, bid), activity.must_show(1)]
-out["loaded"] = sorted(m for m in set(sys.modules) - before if blocked(m) or m.startswith("Script.UI"))
-print(json.dumps(out, ensure_ascii=False))
+out["loaded"] = sorted(m for m in set(sys.modules) - before if m.startswith("Script.UI"))
+payload.update(out)
 """
-"""子进程脚本：屏蔽 Script.Settle 与界面相关模块后运行二段行为流程并打印 JSON 结果。"""
+"""子进程片段：重置游戏时钟并初始化角色 0、1 的身份、零值能力表与默认位置后运行二段行为流程并写入 payload。"""
 
 
 class OrgasmIdsTest(FastTestCase):
@@ -174,26 +159,22 @@ class SecondBehaviorUiFreeTest(FastTestCase):
     """二段行为登记与结算在屏蔽 Script.Settle 及界面相关模块时的运行结果测试。"""
 
     out: dict
+    child: ChildRun
 
     @classmethod
     def setUpClass(cls) -> None:
-        """在独立子进程中执行 BLOCKED_RUN 并解析末行 JSON 作为本测试类的共享结果。"""
-        result = subprocess.run(
-            [sys.executable, "-c", BLOCKED_RUN],
-            cwd=ROOT,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
-        if result.returncode != 0:
-            raise AssertionError(result.stderr[-2000:])
-        cls.out = json.loads(result.stdout.splitlines()[-1])
+        """以 boot=True 及默认拦截集合通过 run_ui_free 执行 BLOCKED_RUN 并缓存结果供类内用例共享。"""
+        cls.child = run_ui_free(BLOCKED_RUN, boot=True)
+        cls.out = cls.child.payload
 
     def test_no_ui_or_settle_loaded(self) -> None:
-        """验证初始化后未加载 Script.Settle 且二段行为调用期间未新增被屏蔽模块或 Script.UI 模块。"""
+        """
+        验证子进程初始化后未加载 Script.Settle、流程未新增 Script.UI 模块，
+        且全部默认受限模块的加载与尝试列表均为空。
+        """
         self.assertFalse(self.out["settle_before"])
         self.assertEqual(self.out["loaded"], [])
+        self.assertEqual((self.child.loaded, self.child.attempted), ([], []))
 
     def test_ordinary_and_must_lists(self) -> None:
         """验证普通二段行为写入、必结与必显列表登记以及 reset 重置后的状态均符合预期。"""

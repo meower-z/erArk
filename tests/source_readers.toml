@@ -363,6 +363,12 @@ pattern = "__file__"
 why = "用 __file__ 定位仓库根目录"
 
 [[allow]]
+file = "tests/ui_free_subprocess.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录作为子进程工作目录"
+
+[[allow]]
 file = "tests/education/_bootstrap.py"
 symbol = "<module>"
 pattern = "__file__"
