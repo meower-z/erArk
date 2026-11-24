@@ -208,7 +208,6 @@ class RepositoryTest(FastTestCase):
             "tests/old.py": '"""cache_control"""\n',
             "docs/flow.md": "reads `cache.debug_mode`\n",
             "docs/live.md": live,
-            "docs/重构文档/record.md": "Rhodes_Island\n",
             "README_en.md": "Rhodes_Island\n",
             "REVIEW.md": "Rhodes_Island\n",
             "plan/old.md": "Rhodes_Island\n",
@@ -283,12 +282,11 @@ class RepositoryTest(FastTestCase):
                 self.assertEqual(self.legacy(path), [name])
 
     def test_live_names_code_literals_and_out_of_scope_files_pass(self) -> None:
-        """验证 LIVE 中的现用名称、代码中的字符串字面量以及归档目录、plan/ 与 tests/ 下的文件不报错。"""
+        """验证 LIVE 中的现用名称、代码中的字符串字面量以及 plan/ 与 tests/ 下的文件不报错。"""
         for path in (
             "Script/live.py",
             "Script/code.py",
             "docs/live.md",
-            "docs/重构文档",
             "plan/",
             "tests/",
         ):
