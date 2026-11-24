@@ -198,7 +198,6 @@ Script/UI/Panel/play_gomoku_panel.py	Gomoku_Cache	D101	count=1
 Script/UI/Panel/play_gomoku_panel.py	ZobristCache	D101	count=1
 Script/UI/Panel/prts_panel.py	<module>	module-lines	lines=550
 Script/UI/Panel/prts_panel.py	ShowCharaNameDraw.get_chara_version_sizes	E401	count=1
-Script/UI/Panel/recruit_panel.py	<module>	module-lines	lines=758
 Script/UI/Panel/resource_exchange_panel.py	<module>	module-lines	lines=1210
 Script/UI/Panel/see_character_info_panel.py	<module>	module-lines	lines=1798
 Script/UI/Panel/see_character_info_panel.py	CharacterExperienceText.__init__	pyrefly:incompatible-comparison	count=1

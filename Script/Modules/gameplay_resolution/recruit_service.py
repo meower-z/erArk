@@ -2,18 +2,21 @@
 招募服务（recruit_service）
 ===========================
 提供招募线读档修复、招募条件检查、待确认干员入职、可招募角色筛选、招募结算与招募线效率计算。
+另提供招募线候选预览、可选策略列表、策略写入、专员表格单元格、副专员排序与主专员任命。
 提示文本经 ui_hooks.emit_notice 发出，成就结算经 achievement_service.settle_and_notify 派发。
 repair_recruit_lines 经 reset.repair 登记为读档修复函数。
 本模块不直接导入界面模块，供招募面板、访客服务、访客邀请面板、指令系统、行为结算与外勤委托系统调用。
 """
 
 import random
+from collections.abc import Callable
+from dataclasses import dataclass
 from types import FunctionType
 
 from Script.Config import game_config, normal_config
 from Script.Core import constant, get_text
-from Script.Design import basement, handle_ability, handle_premise
-from Script.Design import handle_talent
+from Script.Design import attr_calculation, basement, handle_ability
+from Script.Design import handle_premise, handle_talent
 from Script.Modules.domains import abilities, diplomacy, facility, flags
 from Script.Modules.domains import identity, location, npc_template, recruit
 from Script.Modules.domains import relations, roster, visitor, work
@@ -22,6 +25,25 @@ from Script.Modules.save_load import reset
 
 _: FunctionType = get_text._
 """ 翻译api """
+
+_TRAITS: tuple[tuple[str, Callable[[int], int]], ...] = (
+    ("config_nation", relations.nation),
+    ("config_birthplace", relations.birthplace),
+    ("config_profession", lambda cid: identity.of(cid).profession),
+    ("config_race", lambda cid: identity.of(cid).race),
+    ("config_talent", handle_talent.have_age_talent),
+    ("config_talent", handle_talent.have_chest_talent),
+    ("config_talent", handle_talent.have_hip_talent),
+)
+""" 按策略 2 至 8 顺序排列的七项特征配置表名与取值函数对（势力、出生地、职业、种族、年龄、胸部与臀部）。 """
+
+
+@dataclass(frozen=True, slots=True)
+class StrategyOption:
+    """单条可选招募策略的只读数据项，包含策略编号 cid 与完整按钮文本 text。"""
+
+    cid: int
+    text: str
 
 
 @reset.repair
@@ -335,3 +357,91 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
         hr_parts_str, strategy_str, facility_effect_str, round(total_bonus, 1)
     )
     return detail_str, total_bonus
+
+
+def line_candidates(
+    strategy_id: int, main_id: int, recruitable: list[int]
+) -> list[int]:
+    """
+    按策略 strategy_id 与主专员 main_id 从 recruitable 依次只读筛选候选编号，返回 list[int]。
+    策略 0 匹配所在国出生地，1 返回副本，2 至 8 需非零主专员并匹配同属性或素质值为 1，其余情况返回空列表。
+    """
+    if strategy_id == 0:
+        country = location.country()
+        return [c for c in recruitable if relations.birthplace(c) == country]
+    if strategy_id == 1:
+        return list(recruitable)
+    if not 2 <= strategy_id <= 8 or not main_id:
+        return []
+    key = _TRAITS[strategy_id - 2][1]
+    if strategy_id <= 5:
+        return [c for c in recruitable if key(c) == key(main_id)]
+    return [
+        c for c in recruitable if abilities.talent(c).get(key(main_id)) == 1
+    ]
+
+
+def strategy_options(line_id: int) -> list[StrategyOption]:
+    """
+    只读返回招募线 line_id 在当前设施 7 等级下可选的 list[StrategyOption]，按策略配置顺序排列。
+    文案含两位编号、名称、调整系数与说明，策略 0 追加所在国出生地名，策略 2 至 8 在有主专员时追加其对应特征名。
+    """
+    main_id = recruit.lines()[line_id]["main"]
+    level = facility.level(7)
+    options = []
+    for cid, data in game_config.config_recruitment_strategy.items():
+        if level < data.lv:
+            continue
+        text = f"[{str(cid).rjust(2, '0')}]"
+        text += attr_calculation.pad_display_width(data.name, 24)
+        text += _("(调整系数{0})").format(data.adjust) + "：" + data.introduce
+        if cid == 0:
+            birthplace = game_config.config_birthplace[location.country()]
+            text += _("（{0}）").format(birthplace.name)
+        elif 2 <= cid <= 8 and main_id != 0:
+            table, key = _TRAITS[cid - 2]
+            trait = getattr(game_config, table)[key(main_id)]
+            text += _("（{0}）").format(trait.name)
+        options.append(StrategyOption(cid, text))
+    return options
+
+
+def set_line_strategy(line_id: int, strategy_id: int) -> None:
+    """将招募线 line_id 的策略设为 strategy_id，策略为 11 时同步将进度清零，无返回值。"""
+    recruit.set_line(line_id, strategy=strategy_id)
+    if strategy_id == 11:
+        recruit.set_line(line_id, progress=0)
+
+
+def hr_cells(chara_id: int, is_main: bool) -> tuple[str, ...]:
+    """
+    只读生成角色 chara_id 在专员表中职位列后的 10 个单元格元组，chara_id 为 0 时返回空缺与九个 -。
+    其余依次为名字、按 is_main 计算的加成（副专员取五分之一）、话术评级与等级及七项特征名，缺配置项填 -。
+    """
+    if chara_id == 0:
+        return (_("空缺"),) + ("-",) * 9
+    name = identity.of(chara_id).name
+    level = abilities.ability(chara_id).get(40, 0)
+    base_effect = 2 * handle_ability.get_ability_adjust(level)
+    bonus = base_effect if is_main else base_effect / 5
+    traits = []
+    for table, key in _TRAITS:
+        config, trait_id = getattr(game_config, table), key(chara_id)
+        traits.append(config[trait_id].name if trait_id in config else "-")
+    grade = f"{attr_calculation.judge_grade(level)} {level}"
+    return (name, f"{round(bonus, 1)}%", grade, *traits)
+
+
+def sub_hr_ids() -> list[int]:
+    """只读返回人事名册中排除 0 与各线主专员后的副专员列表，按话术等级降序且同级保原序。"""
+    main_ids = {line["main"] for line in recruit.lines().values()}
+    hr_ids = [c for c in work.roster(work.HR_WORK) if c and c not in main_ids]
+    return sorted(
+        hr_ids, key=lambda c: abilities.ability(c).get(40, 0), reverse=True
+    )
+
+
+def appoint_main_hr(line_id: int, chara_id: int) -> None:
+    """当 chara_id 在人事名册内时通过 recruit.appoint 任命或撤销 line_id 的主专员，否则忽略。"""
+    if chara_id in work.roster(work.HR_WORK):
+        recruit.appoint(line_id, chara_id)

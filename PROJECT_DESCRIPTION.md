@@ -651,7 +651,7 @@ Script/
 | 宿舍管理 | `System/Dormitory_System/*`, `Modules/domains/dormitory.py` | 宿舍场景地图 |
 | 医疗经营 | `System/Medical_System/*`, `Modules/domains/medical.py`, `Modules/domains/medical_patient.py` | `Medical_*` 系列 |
 | 外勤委托 | `System/Field_Commission_System/*`, `Modules/domains/commission.py` | `Commission.csv` |
-| 招募 | `UI/Panel/recruit_panel.py`, `Modules/domains/recruit.py` | `Recruitment_Strategy.csv` |
+| 招募 | `UI/Panel/recruit_panel.py`, `Modules/gameplay_resolution/recruit_service.py`, `Modules/domains/recruit.py` | `Recruitment_Strategy.csv` |
 | 邀请访客 | `UI/Panel/invite_visitor_panel.py`, `Modules/domains/visitor.py` | 访客设施 |
 | 势力外交 | `UI/Panel/nation_diplomacy_panel.py`, `Modules/domains/diplomacy.py` | `Nation.csv`, `Diplomatic_Policy.csv` |
 | 助理 | `UI/Panel/assistant_panel.py` | `AssistantServices.csv` |
