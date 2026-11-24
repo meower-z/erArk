@@ -41,10 +41,10 @@ class VisitorSettleTest(SlowTestCase):
         game_type = game("Script.Core.game_type")
         game_time = game("Script.Design.game_time")
         settle = game("Script.Settle.default").handle_invite_visitor_add_adjust
-        panel = game("Script.UI.Panel.invite_visitor_panel")
-        recruit_panel = game("Script.UI.Panel.recruit_panel")
+        visitors = game("Script.Modules.gameplay_resolution.visitor_service")
+        recruits = game("Script.Modules.gameplay_resolution.recruit_service")
         self.assertGreater(visitor.capacity(), 0, "前提：开新游戏后有客房")
-        target = min(recruit_panel.find_recruitable_npc())
+        target = min(recruits.find_recruitable_npc())
         aim(0, min(kernel_data.domain("roster").active() - {0}))
         change = game_type.CharacterStatusChange()
         with kernel_data.writing():
@@ -54,14 +54,14 @@ class VisitorSettleTest(SlowTestCase):
         self.assertGreater(progress, 0, "话术结算加了进度")
         with kernel_data.writing():
             visitor.set_invite(target, 100)
-            panel.update_invite_visitor()
+            visitors.update_invite_visitor()
         self.assertEqual(visitor.invite(), (0, 0), "抵达后邀请清掉")
         leave = visitor.visitors()[target]
         self.assertGreater(leave, game_time.now(), "离开时刻在之后")
         world.set_clock(leave + datetime.timedelta(minutes=5))
         with kernel_data.writing():
             visitor.set_moved(True)
-            panel.settle_visitor_arrivals_and_departures()
+            visitors.settle_visitor_arrivals_and_departures()
         self.assertFalse(visitor.is_visitor(target), "过了离开时刻后不是访客")
         self.assertFalse(visitor.moved(), "抵达过别处的一记清掉")
 

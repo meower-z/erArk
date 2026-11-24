@@ -7,7 +7,6 @@
 - 基地跨日提示（basement.update_base_resouce_newday）：有自动交易成交时绘制一条贸易部结算提示，无成交时不绘制。
 """
 
-import sys
 from unittest import mock
 
 from Script.Config import game_config
@@ -22,6 +21,7 @@ from Script.Modules.gameplay_resolution import assembly_service
 from Script.Modules.gameplay_resolution import daily_base_service
 from Script.Modules.gameplay_resolution import prison_service
 from Script.Modules.gameplay_resolution import trade_service, working
+from Script.Modules.gameplay_resolution import visitor_service
 from Script.UI.Moudle import draw
 from tests import chara_abilities as ca
 from tests.fast.base import FastTestCase
@@ -34,8 +34,6 @@ SELL_LINE = "  · 自动卖出{0} x {1}，单价{2}，总计{3}"
 """ 自动卖出成交明细的格式化模板 """
 BUY_LINE = "  · 自动买入{0} x {1}，单价{2}，总计{3}"
 """ 自动买入成交明细的格式化模板 """
-VISITOR_PANEL = "Script.UI.Panel.invite_visitor_panel"
-""" 访客面板模块的完整导入路径 """
 
 
 def _plain_resource() -> int:
@@ -314,15 +312,12 @@ class NewDayTradeNoticeTest(FastTestCase):
 
     def notices(self, lines: list[str]) -> list[str]:
         """
-        运行每日基地结算，断言囚犯结算桩被调用一次，并收集贸易部结算的 WaitDraw 绘制文本。
+        运行每日基地结算并打桩访客抵达与离开结算，断言囚犯结算桩被调用一次，收集贸易部结算的 WaitDraw 文本。
         Keyword arguments:
         lines -- list[str]，模拟 daily_supply_demand_fluctuation 返回的成交明细行列表
         Return arguments:
         list[str] -- 所有包含「○贸易部结算：」抬头的 WaitDraw 绘制文本列表
         """
-        self.assertNotIn(VISITOR_PANEL, sys.modules)
-        sys.modules[VISITOR_PANEL] = mock.MagicMock()
-        self.addCleanup(sys.modules.pop, VISITOR_PANEL)
         with (
             mock.patch.object(agriculture_service, "settle_agriculture_line"),
             mock.patch.object(assembly_service, "settle_assembly_line"),
@@ -331,6 +326,9 @@ class NewDayTradeNoticeTest(FastTestCase):
                 trade_service,
                 "daily_supply_demand_fluctuation",
                 return_value=lines,
+            ),
+            mock.patch.object(
+                visitor_service, "settle_visitor_arrivals_and_departures"
             ),
             mock.patch.object(draw.WaitDraw, "draw", autospec=True) as drawn,
         ):

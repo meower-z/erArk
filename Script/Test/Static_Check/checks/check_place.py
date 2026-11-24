@@ -861,7 +861,7 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
             continue
         vistor = flags.get(cid, "vistor")
         known_bug_note = (
-            "；已知缺陷：访客到期离开(invite_visitor_panel.visitor_leave)未清is_follow，若vistor==2大概率是该已知路径"
+            "；已知缺陷：访客到期离开(visitor_service.visitor_leave)未清is_follow，若vistor==2大概率是该已知路径"
             if vistor == 2
             else ""
         )

@@ -220,7 +220,7 @@ def update_base_resouce_newday() -> None:
     Return arguments:
     无
     """
-    from Script.UI.Panel import invite_visitor_panel
+    from Script.Modules.gameplay_resolution import visitor_service
     from Script.Modules.gameplay_resolution import agriculture_service
     from Script.Modules.gameplay_resolution import assembly_service
     from Script.Modules.gameplay_resolution import daily_base_service
@@ -246,7 +246,7 @@ def update_base_resouce_newday() -> None:
     # 结算流水线
     assembly_service.settle_assembly_line(newdayflag=True)
     # 结算访客抵达和离开
-    invite_visitor_panel.settle_visitor_arrivals_and_departures()
+    visitor_service.settle_visitor_arrivals_and_departures()
     if trade_lines := trade_service.daily_supply_demand_fluctuation():
         trade_draw = draw.WaitDraw()
         trade_draw.text = "\n" + _("○贸易部结算：\n")
@@ -550,7 +550,7 @@ def draw_todo() -> None:
     """
     绘制待办事项
     """
-    from Script.UI.Panel import invite_visitor_panel
+    from Script.Modules.gameplay_resolution import visitor_service
     from Script.Modules.gameplay_resolution import agriculture_service
     from Script.Modules.gameplay_resolution import assembly_service
     from Script.Modules.domains import power_supply
@@ -588,7 +588,7 @@ def draw_todo() -> None:
         draw_text += now_text[1:] + " "
 
     # 检查今日是否有访客离开
-    departing_visitors = invite_visitor_panel.get_today_departing_visitors()
+    departing_visitors = visitor_service.get_today_departing_visitors()
     if len(departing_visitors):
         draw_text += _("  今日有访客要离开罗德岛，且其留下意愿较低\n")
 

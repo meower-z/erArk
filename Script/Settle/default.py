@@ -7160,7 +7160,7 @@ def handle_recruit_add_just(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    from Script.UI.Panel import recruit_panel
+    from Script.Modules.gameplay_resolution import recruit_service
 
     if not add_time:
         return
@@ -7229,7 +7229,7 @@ def handle_recruit_add_just(
     # 增加对应槽的招募值，并进行结算
     progress = recruit_lines[select_index]["progress"] + now_add_lust
     recruit.set_line(select_index, progress=progress)
-    recruit_panel.update_recruit()
+    recruit_service.update_recruit()
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -7249,7 +7249,7 @@ def handle_invite_visitor_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    from Script.UI.Panel import invite_visitor_panel
+    from Script.Modules.gameplay_resolution import visitor_service
 
     if not add_time:
         return
@@ -7310,7 +7310,7 @@ def handle_invite_visitor_add_adjust(
 
     # 增加对应槽的邀请值，并进行结算
     visitor.set_invite(target, progress + now_add_lust)
-    invite_visitor_panel.update_invite_visitor()
+    visitor_service.update_invite_visitor()
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13214,8 +13214,8 @@ def handle_official_event_accept_recruit(
     公务事件用：接收一名待确认的招募干员（Plan 23）
 
     这类效果没法用数值 token 表达（要建角色、分宿舍、发成就），所以走纯数字结算id这条路。
-    直接复用招募面板的 recruit_new_chara：宿舍已满或没有待确认干员时它自己会给提示并返回，
-       不要在这里另写一套判定，否则两处的门槛迟早会对不上
+    直接复用 recruit_service.recruit_new_chara，宿舍已满时由它发出提示并返回，无待确认干员时直接返回。
+    不要在这里另写一套判定，以免两处的招募门槛不一致。
     Keyword arguments:
     character_id -- 角色id
     add_time -- 结算时间
@@ -13226,9 +13226,9 @@ def handle_official_event_accept_recruit(
     """
     if not add_time:
         return
-    from Script.UI.Panel import recruit_panel
+    from Script.Modules.gameplay_resolution import recruit_service
 
-    recruit_panel.recruit_new_chara()
+    recruit_service.recruit_new_chara()
 
 
 @settle_behavior.add_settle_behavior_effect(

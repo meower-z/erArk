@@ -24,10 +24,10 @@ class RecruitAtStartTest(SlowTestCase):
         super().setUp()
         from Script.Kernel import core
         from Script.Modules.domains import recruit
-        from Script.UI.Panel import recruit_panel
+        from Script.Modules.gameplay_resolution import recruit_service
         from tests import kernel_data
 
-        self.new_id = recruit_panel.find_recruitable_npc()[0]
+        self.new_id = recruit_service.find_recruitable_npc()[0]
         kernel_data.put(recruit.set_pending, {self.new_id})
         self.started: list[core.Action] = []
         saved = core._bodies["kernel.StartAction"]

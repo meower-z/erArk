@@ -519,14 +519,14 @@ def settle_recruit_new_chara(commision_id: int) -> str:
     Return arguments:
     recruited_text -- 招募信息
     """
-    from Script.UI.Panel import recruit_panel
+    from Script.Modules.gameplay_resolution import recruit_service
 
     recruited_text = ""
     # 招募概率与等级相关
     base_rate = 0.01 * game_config.config_commission[commision_id].level
     recruited_text = ""
     if random.random() < base_rate:
-        recruitable_npc_id_list = recruit_panel.find_recruitable_npc()
+        recruitable_npc_id_list = recruit_service.find_recruitable_npc()
         wait_id_list = []
         # 只能招募到当地的干员
         for chara_id in recruitable_npc_id_list:

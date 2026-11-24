@@ -228,7 +228,7 @@ EVENT_PROVIDER: Dict[int, Callable] = {}
 
 | 结算id | 常量 | 作用 |
 | --- | --- | --- |
-| 3002 | `OFFICIAL_EVENT_ACCEPT_RECRUIT` | 接收一名待确认的招募干员（复用 `recruit_panel.recruit_new_chara`） |
+| 3002 | `OFFICIAL_EVENT_ACCEPT_RECRUIT` | 接收一名待确认的招募干员（复用 `recruit_service.recruit_new_chara`） |
 | 3003 | `OFFICIAL_EVENT_TEMP_COMMISSION` | 生成一条突发的临时外勤委托（复用 `create_temp_commission`） |
 
 **`create_temp_commission` 会把新委托追加写进 `data/csv/Commission.csv`**（不是只改内存），

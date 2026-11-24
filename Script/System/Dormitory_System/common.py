@@ -457,7 +457,7 @@ def new_character_get_dormitory(character_id: int) -> None:
     character_data = identity.of(character_id)
     # 分为访客和普通干员
     if visitor.is_visitor(character_id):
-        from Script.UI.Panel import invite_visitor_panel
+        from Script.Modules.gameplay_resolution import visitor_service
 
         guest_room = {
             key: constant.place_data[key]
@@ -468,7 +468,7 @@ def new_character_get_dormitory(character_id: int) -> None:
         # 按照客房编号进行数字排序
         guest_room_sorted = sorted(
             guest_room["Guest_Room"],
-            key=invite_visitor_panel.sort_guest_room_key,
+            key=visitor_service.sort_guest_room_key,
         )
 
         final_room_list = []

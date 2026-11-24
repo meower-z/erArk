@@ -101,7 +101,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
     def test_recruit_progress(self) -> None:
         """[008] 改一条招募线的进度，进度满 100 时招募刷新把它清零"""
         from Script.Modules.domains import recruit
-        from Script.UI.Panel import recruit_panel
+        from Script.Modules.gameplay_resolution import recruit_service
 
         line = recruit.lines()[RECRUIT_LINE]
         self.use_panel(
@@ -114,7 +114,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
             {**line, "progress": 100},
             "招募线只改进度一项",
         )
-        kernel_data.written(recruit_panel.update_recruit)
+        kernel_data.written(recruit_service.update_recruit)
         self.assertEqual(
             recruit.lines()[RECRUIT_LINE]["progress"],
             0,
@@ -124,7 +124,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
     def test_recruited_id(self) -> None:
         """[009] 输入一名干员为已招募待确认，确认招募后这名干员入职"""
         from Script.Modules.domains import recruit
-        from Script.UI.Panel import recruit_panel
+        from Script.Modules.gameplay_resolution import recruit_service
 
         chara_id = min(
             cid
@@ -138,7 +138,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
         )
         self.assertEqual(recruit.pending(), {chara_id}, "待确认的只有这一名")
         with kernel_data.writing():
-            recruited = recruit_panel.recruit_new_chara()
+            recruited = recruit_service.recruit_new_chara()
         self.assertTrue(recruited, "确认招募成功")
         self.assertIn(
             chara_id,
