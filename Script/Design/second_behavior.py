@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from Script.Modules.domains import abilities, activity, identity
 from Script.Modules.domains import first_record as first_record_domain, flags
 from Script.Modules.domains import growth, h_state, status
-from Script.Modules.gameplay_resolution import ui_hooks
+from Script.Modules.gameplay_resolution import orgasm_ids, ui_hooks
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -84,12 +84,11 @@ def character_get_second_behavior(
             )
         # ——履历记录：二段行为类统一分发（一处覆盖全部来源，dict去重使重复置1零成本）——
         # (1) 部位绝顶行为则记录初次强/超强绝顶（超强同时回填空缺的强绝顶记录）
-        orgasm_settle_module = _get_orgasm_settle()
-        part_str, degree = orgasm_settle_module.get_orgasm_part_and_degree(
+        part_str, degree = orgasm_ids.get_orgasm_part_and_degree(
             second_behavior_id
         )
         if part_str is not None and degree >= 2:
-            state_id = orgasm_settle_module.orgasm_part_to_state_id[part_str]
+            state_id = orgasm_ids.orgasm_part_to_state_id[part_str]
             with first_record_domain.editing(character_id) as fr:
                 if state_id not in fr.first_strong_orgasm_dict:
                     fr.first_strong_orgasm_dict[state_id] = [
@@ -231,9 +230,6 @@ def second_behavior_effect(
     orgasm_settle_flag -- 是否为高潮结算调用，为True时按部位统计部位绝顶行为，每个部位仅程度最高的触发口上，
     其余仅结算效果，默认为False
     """
-    # 延迟导入，避免与Script.Settle包的循环导入
-    orgasm_settle = _get_orgasm_settle()
-
     # 如果没有任何二段行为，则直接返回
     if not activity.second_behaviors(character_id):
         return
@@ -255,8 +251,8 @@ def second_behavior_effect(
                 and second_behavior_id not in second_behavior_list
             ):
                 continue
-            orgasm_part, orgasm_degree = (
-                orgasm_settle.get_orgasm_part_and_degree(second_behavior_id)
+            orgasm_part, orgasm_degree = orgasm_ids.get_orgasm_part_and_degree(
+                second_behavior_id
             )
             # 跳过非部位绝顶行为
             if orgasm_part is None:
@@ -276,7 +272,7 @@ def second_behavior_effect(
             # 高潮结算时，同一部位内非最高程度的绝顶行为仅结算效果，不触发口上
             if part_max_degree_dict:
                 orgasm_part, orgasm_degree = (
-                    orgasm_settle.get_orgasm_part_and_degree(second_behavior_id)
+                    orgasm_ids.get_orgasm_part_and_degree(second_behavior_id)
                 )
                 if (
                     orgasm_part is not None
