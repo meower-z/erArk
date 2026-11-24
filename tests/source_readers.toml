@@ -766,3 +766,13 @@ reads = "通过 banned_imports 读取 Script/Design/handle_talent.py 与 Script/
 used_for = "测试：Script/Design/handle_talent.py 与 Script/System/Pregnancy_System/pregnancy_handle.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的同一导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R64"
+file = "tests/fast/test_commission_behavior_draw_hooks.py"
+symbol = "ImportBoundaryTest.test_sources_pass_backend_guard"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/System/Field_Commission_System/field_commission_function.py 与 Script/Design/character_behavior.py 源码中的 import 与 from ... import 语句"
+used_for = "测试：Script/System/Field_Commission_System/field_commission_function.py 与 Script/Design/character_behavior.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的同一导入约束"
+when = "test"
+capture = "suite"

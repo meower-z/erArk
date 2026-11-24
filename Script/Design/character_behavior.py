@@ -17,9 +17,9 @@ from Script.Design import (
     map_handle,
     handle_talent,
 )
-from Script.UI.Moudle import draw
 from Script.Kernel import core
 from Script.Modules.domains import h_state, scene_state
+from Script.Modules.gameplay_resolution import ui_hooks
 from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, realtime_settle
@@ -36,12 +36,6 @@ from Script.Modules.domains import identity
 game_path = game_path_config.game_path
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
 
 
 def settle_start(character_id: int, minutes: int) -> None:
@@ -246,10 +240,7 @@ def judge_character_status(character_id: int) -> int:
             second_settle_panel.draw()
         # 暂停一次让玩家看输出信息，非玩家角色是否暂停由 draw_setting[19] 决定
         if character_id == 0 or normal_config.system_setting.draw_setting[19]:
-            wait_draw = draw.WaitDraw()
-            wait_draw.text = "\n"
-            wait_draw.width = window_width
-            wait_draw.draw()
+            ui_hooks.emit_notice("\n", wait=True, use_text_width=True)
 
     return 1
 

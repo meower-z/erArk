@@ -118,7 +118,7 @@ Script/System/Education_System/schedule_template_panel.py	<module>	module-lines	
 Script/System/Education_System/schedule_template_panel.py	Schedule_Template_Panel._select_activity.<locals>.draw_activity	B023	count=2
 Script/System/Education_System/semester_handle.py	<module>	module-lines	lines=551
 Script/System/Education_System/sex_class_handle.py	<module>	module-lines	lines=1249
-Script/System/Field_Commission_System/field_commission_function.py	<module>	module-lines	lines=633
+Script/System/Field_Commission_System/field_commission_function.py	<module>	module-lines	lines=625
 Script/System/Field_Commission_System/field_commission_panel.py	<module>	module-lines	lines=1513
 Script/System/First_Record_System/first_record_panel.py	<module>	module-lines	lines=661
 Script/System/Instruct_System/Instruct.py	<module>	module-lines	lines=868
