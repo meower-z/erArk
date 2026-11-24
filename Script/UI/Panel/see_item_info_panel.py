@@ -404,7 +404,7 @@ class ItemNameDraw:
 
     def use_consumables(self) -> None:
         """使用消耗品"""
-        from Script.Design import character
+        from Script.UI.Panel import input_name_panel
 
         pl_character_data = identity.of(0)
         item_data = game_config.config_item[self.item_id]
@@ -429,7 +429,7 @@ class ItemNameDraw:
         # 消耗品效果
         # 改名卡
         if self.item_id == 161:
-            new_name = character.input_name_func(
+            new_name = input_name_panel.input_name_func(
                 _(
                     "你能回忆起自己的名字吗？（默认称呼为博士，此处仅输入姓名即可）"
                 )

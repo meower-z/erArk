@@ -155,7 +155,7 @@ class CharacterSetting:
 
     def change_setting(self, cid: int, option_len: int) -> None:
         """修改设置"""
-        from Script.Design import character
+        from Script.UI.Panel import input_name_panel
 
         character_data = identity.of(self.character_id)
         with chara_profile.chara_setting.editing(
@@ -178,7 +178,7 @@ class CharacterSetting:
             if chara_profile.chara_setting(character_data.cid)[cid] == 1:
                 chara_profile.nick_name_to_pl.set(
                     character_data.cid,
-                    character.input_name_func(
+                    input_name_panel.input_name_func(
                         _("请输入该角色对玩家的专属称呼")
                     ),
                 )
@@ -189,7 +189,7 @@ class CharacterSetting:
             if chara_profile.chara_setting(character_data.cid)[cid] == 1:
                 chara_profile.nick_name.set(
                     character_data.cid,
-                    character.input_name_func(
+                    input_name_panel.input_name_func(
                         _("请输入玩家对该角色的专属称呼")
                     ),
                 )

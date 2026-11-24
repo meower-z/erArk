@@ -856,3 +856,13 @@ reads = "读取 Script/Modules/gameplay_resolution/hidden_sex_service.py、Scrip
 used_for = "测试：hidden_sex_service.py 遵守后端界面边界守卫，character_behavior.py 与 Second_effect.py 导入 hidden_sex_service 且不导入 hidden_sex_panel 或 exhibitionism_sex_panel"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R72"
+file = "tests/fast/test_character_input_name.py"
+symbol = "CharacterImportBoundaryTest.test_character_imports_no_ui"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Design/character.py 源码中的 import 与 from ... import 语句"
+used_for = "测试：Script/Design/character.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的同一导入约束"
+when = "test"
+capture = "suite"

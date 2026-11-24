@@ -148,7 +148,8 @@ born_event_panel.Born_Panel(mother_id).draw()
 
 # ③ 输入框：记录询问文案并按序返回名字（可顺带断言"第N个女儿/姐姐/妹妹"之类的询问措辞）
 asks = []; names = iter(["长女", "次女"])
-character.input_name_func = lambda ask_text: (asks.append(ask_text), next(names))[1]
+from Script.UI.Panel import input_name_panel
+input_name_panel.input_name_func = lambda ask_text: (asks.append(ask_text), next(names))[1]
 
 # ④ settle_by_type 每次都会经 warehouse.amount(1) 读 base.stock，缺资源 1 时会报 KeyError: '1'。可先调用 kernel_data.written(warehouse.ensure, 1) 为缺失的资源 1 补 0（不覆盖已有库存），或替换共享的 achievement_service.settle_by_type 以覆盖全部成就入口。
 born_event_panel.achievement_service.settle_by_type = lambda *a, **k: []
@@ -167,7 +168,7 @@ def stub_born(mother_id, name):
 born_event_panel.character_handle.born_new_character = stub_born
 ```
 
-打桩的通用原则：`from X import Y` 进来的名字要打在**使用它的模块**上（`born_event_panel.character_handle.xxx`），改 `character_handle.xxx` 本体也行（同一模块对象），但 `from Script.Design import character` 后 `character.input_name_func` 这种模块属性就必须改模块属性本身。
+打桩的通用原则：对通过 `from X import Y` 导入的名字，测试应打在**使用它的模块**上（例如 `born_event_panel.character_handle.xxx`）。当 `Y` 为模块对象时，测试也可以直接替换该模块上的属性（例如 `character_handle.xxx`）。调用方在调用时经模块属性 `input_name_panel.input_name_func` 访问取名输入框。因此打桩必须替换该模块属性本身。
 
 ### 新增数据后必须重建
 
