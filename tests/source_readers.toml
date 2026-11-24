@@ -696,3 +696,13 @@ reads = "通过 banned_imports 读取 Script/System/Cooking_System/cooking.py �
 used_for = "测试：Script/System/Cooking_System/cooking.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的同一导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R57"
+file = "tests/fast/test_power_sleep_settle_notices.py"
+symbol = "PowerSleepImportBoundaryTest.test_settle_modules_skip_ui_imports"
+mechanism = "ast"
+reads = "Script/Settle/power_settle.py 与 Script/Settle/sleep_settle.py 源码中的 import 与 from ... import 语句"
+used_for = "测试：GUARDS 中两结算模块源码的任意作用域均不导入各自禁用的界面、Tk 或 io_init 模块"
+when = "test"
+capture = "suite"

@@ -80,7 +80,7 @@
   "Script/Settle/orgasm_settle.py": 102,
   "Script/Settle/past_day_settle.py": 37,
   "Script/Settle/realtime_settle.py": 104,
-  "Script/Settle/sleep_settle.py": 38,
+  "Script/Settle/sleep_settle.py": 36,
   "Script/StateMachine/__init__.py": 1,
   "Script/StateMachine/default.py": 152,
   "Script/System/Cooking_System/cook_question_panel.py": 15,
