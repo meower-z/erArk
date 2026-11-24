@@ -2,10 +2,10 @@
 
 from types import FunctionType
 from Script.Core import constant, flow_handle
-from Script.Core import get_text, py_cmd, rich_text, text_handle
+from Script.Core import get_text, py_cmd, text_handle
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise
-from Script.UI.Moudle import draw, panel, view
+from Script.UI.Moudle import draw, panel, rich_text_draw, view
 from Script.Modules.gameplay_resolution import cloth_see
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import abilities, activity, dirty, modes
@@ -201,7 +201,7 @@ class SeeCharacterClothPanel:
         if count != 0 and handle_premise.handle_is_h(0):
             now_text += off_text
         # 获取富文本绘制对象
-        rich_text_draw_list = rich_text.get_rich_text_draw_list(now_text)
+        rich_text_draw_list = rich_text_draw.get_rich_text_draw_list(now_text)
         self.draw_list.extend(rich_text_draw_list)
 
     def draw(self) -> None:
@@ -510,10 +510,10 @@ class SwitchCharacterClothPanel:
                         semen_draw_text = (
                             f"<semen>({dirty_text_context})</semen>"
                         )
-                        get_rich_text_draw_list = (
-                            rich_text.get_rich_text_draw_list(semen_draw_text)
+                        draw_items = rich_text_draw.get_rich_text_draw_list(
+                            semen_draw_text
                         )
-                        now_row.extend(get_rich_text_draw_list)
+                        now_row.extend(draw_items)
             # 下衣8无衣服时换行
             if clothing_type == 8 and len(cloth.cloth_wear[8]) == 0:
                 if now_row:
