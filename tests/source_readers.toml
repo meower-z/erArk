@@ -886,3 +886,13 @@ reads = "读取 Script/Modules/gameplay_resolution/group_sex_service.py 与 CALL
 used_for = "测试：group_sex_service.py 与五个后端调用方共六个文件均不导入 Script.System.Sex_System.group_sex_panel 及其成员"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R76"
+file = "tests/fast/test_food_effects_service.py"
+symbol = "BoundaryTest"
+mechanism = "ast"
+reads = "读取 Script/Modules/gameplay_resolution/food_effects.py 与 Script/Settle/default.py 的源码字节，分别交由 banned_imports 和 ast.parse 解析其中的导入语句"
+used_for = "测试：food_effects.py 遵守后端界面边界守卫，default.py 不导入 Script.System.Cooking_System.food_bag_panel"
+when = "test"
+capture = "suite"
