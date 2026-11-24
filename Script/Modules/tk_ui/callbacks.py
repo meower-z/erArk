@@ -3,7 +3,7 @@ Tk 界面向后端登记的回调函数
 ===========================
 本模块向 playthrough 登记设定表补齐时的提示绘制函数。
 本模块向 save_load.reset 登记 new_round 与 panel 两步的界面实现。
-本模块向 gameplay_resolution.ui_hooks 登记提示文本绘制函数与数值变化绘制函数。
+本模块向 gameplay_resolution.ui_hooks 登记提示文本、数值变化与图片的绘制函数。
 本模块向 gameplay_resolution.ui_hooks 登记面板切换函数与隐奸中显示非H指令的开关查询函数。
 本模块向 gameplay_resolution.achievement_service 登记新达成成就的提示绘制函数。
 本模块向 gameplay_resolution.ejaculation_service 登记射精文本的绘制函数。
@@ -117,6 +117,18 @@ def draw_delta(
             summary_text=summary_text,
         )
     )
+
+
+@ui_hooks.on_image
+def draw_image(img_name: str) -> None:
+    """
+    使用 draw.ImageDraw 绘制指定图片。
+    Keyword arguments:
+    img_name -- str，要绘制的图片名
+    Return arguments:
+    None -- 无返回值
+    """
+    draw.ImageDraw(img_name).draw()
 
 
 @ui_hooks.on_panel_switch

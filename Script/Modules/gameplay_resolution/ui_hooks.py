@@ -1,10 +1,10 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供四类回调的登记与调用入口。
-四类回调用于输出提示文本、输出数值变化、切换面板，以及查询隐奸中显示非H指令的开关。
+本模块提供五类回调的登记与调用入口。
+五类回调用于输出提示文本、输出数值变化、绘制图片、切换面板，以及查询隐奸中显示非H指令的开关。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，提示输出、数值变化输出与面板切换函数不执行任何操作。
+未登记回调时，提示输出、数值变化输出、图片绘制与面板切换函数不执行任何操作。
 未登记回调时，开关查询函数返回 False。
 """
 
@@ -63,6 +63,10 @@ _notices: list[Notice] = []
 """ 按登记顺序保存的提示文本回调列表。 """
 _deltas: list[Delta] = []
 """ 按登记顺序保存的数值变化回调列表。 """
+type Image = Callable[[str], None]
+""" 图片绘制回调函数类型，接收图片名。 """
+_images: list[Image] = []
+""" 按登记顺序保存的图片绘制回调列表。 """
 _panel_switches: list[PanelSwitch] = []
 """ 按登记顺序保存的面板切换回调列表。 """
 type ToggleQuery = Callable[[], bool]
@@ -143,6 +147,30 @@ def emit_delta(
             wait=wait,
             use_text_width=use_text_width,
         )
+
+
+def on_image(fn: Image) -> Image:
+    """
+    登记一个图片绘制回调，可作为装饰器使用。
+    Keyword arguments:
+    fn -- Image，要登记的图片绘制回调函数
+    Return arguments:
+    Image -- 原样返回传入的 fn
+    """
+    _images.append(fn)
+    return fn
+
+
+def emit_image(img_name: str) -> None:
+    """
+    按登记顺序调用已登记的图片绘制回调，未登记时不执行操作。
+    Keyword arguments:
+    img_name -- str，要绘制的图片名
+    Return arguments:
+    None -- 无返回值
+    """
+    for fn in _images:
+        fn(img_name)
 
 
 def on_panel_switch(fn: PanelSwitch) -> PanelSwitch:
