@@ -5,7 +5,7 @@
 > 用途：本文档是 erArk 仓库的一份自包含、可持续维护的完整项目描述，供后续 AI/开发者快速建立上下文。
 > 生成时间：2026-08-18；代码快照：`master @ b17d1b1ba`；游戏版本：`v0.66 / package.json = 2026.8.18`。
 > 若代码发生大版本变更，应先更新本文档，再基于本文档工作。
-> 更细的系统级文档索引见最后一节“文档导航”；仓库自带的 `CLAUDE.md` / `CLAUDE_cn.md` 也需结合阅读。
+> 更细的系统级文档索引见 §30“文档导航”；仓库自带的 `CLAUDE.md` / `CLAUDE_cn.md` 也需结合阅读。
 
 ---
 
@@ -127,7 +127,7 @@ black .
 | `example/` | 模板/测试用例：事件、口上、外勤委托、富文本、纸娃娃文本 |
 | `save/` | 存档目录（被 gitignore） |
 | `.github/` | GitHub Actions 工作流、ISSUE 模板 |
-| `docs/` | 系统与工作流文档（`数据处理工作流/`，见 §30.2）、角色 ID 重构文档（`重构文档/`）、文本创作参考资料（`authoring/`，见 §30.4） |
+| `docs/` | 系统与工作流文档（`数据处理工作流/`，见 §30.2）、文本创作参考资料（`authoring/`，见 §30.4） |
 | `old_data/`, `profiling/`, `profiling_output/` | 历史数据、性能分析与补丁、profiling 结果 |
 | `dist/`, `build/` | PyInstaller 打包产物（被 gitignore） |
 | `update.log` | 完整更新日志 |
@@ -635,7 +635,7 @@ Script/
 
 ## 18. 子系统清单
 
-> 每个系统均有对应文档；代码文件为该系统主要实现，可能与其他面板/结算模块交叉。
+> 代码文件为该系统主要实现，可能与其他面板/结算模块交叉。
 
 ### 18.1 罗德岛经营
 
@@ -990,12 +990,9 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 
 ### 30.3 `Script/System/*` 内设计文档
 
-- `Cooking_System/烹饪系统说明文档.md`
-- `Dormitory_System/宿舍管理系统设计文档.md`, `实现步骤.md`
-- `Field_Commission_System/外勤委托系统.md`, `剧情总结工作流.md`, `剧情转外勤委托工作流.md`
+- `Dormitory_System/宿舍管理系统设计文档.md`
 - `Instruct_System/指令系统整体逻辑.md`, `TK模式指令面板绘制.md`
-- `Medical_System/医疗经营系统.md`, `医疗经营系统实现流程.md`
-- `Sex_System/drunk_sex_plan.md`
+- `Item_System/道具系统设计文档.md`
 
 ### 30.4 `docs/authoring/` 文本创作参考资料
 
