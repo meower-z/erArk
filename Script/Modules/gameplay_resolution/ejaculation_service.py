@@ -1,9 +1,9 @@
 """
 射精结算服务（ejaculation_service）
 ===================================
-提供忍耐射精判定、通用射精结算、射精总流程以及射精文本回调的登记与触发入口。
+提供忍耐射精判定、通用射精结算、射精总流程，以及射精文本、忍耐询问与射精面板回调的登记与触发入口。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，射精文本触发函数不执行操作。
+未登记回调时，射精文本与射精面板触发函数不执行操作，忍耐询问触发函数返回 False。
 """
 
 import random
@@ -50,6 +50,65 @@ def emit_banner(text: str) -> None:
     """
     for fn in _banners:
         fn(text)
+
+
+type EndurePanel = Callable[[], bool]
+""" 忍耐射精询问回调函数类型，返回 True 表示忍住射精。 """
+_endure_panel: EndurePanel | None = None
+""" 当前登记的忍耐射精询问回调，未登记时为 None。 """
+
+
+def on_endure_panel(fn: EndurePanel) -> EndurePanel:
+    """
+    登记忍耐射精询问回调，可作为装饰器使用，后登记的回调覆盖先前的回调。
+    Keyword arguments:
+    fn -- EndurePanel，询问是否忍住射精并返回结果的回调函数
+    Return arguments:
+    EndurePanel -- 原样返回传入的 fn
+    """
+    global _endure_panel
+    _endure_panel = fn
+    return fn
+
+
+def emit_endure_panel() -> bool:
+    """
+    调用当前登记的忍耐射精询问回调。
+    Return arguments:
+    bool -- 已登记时返回回调的布尔结果，未登记时返回 False
+    """
+    if _endure_panel is None:
+        return False
+    return bool(_endure_panel())
+
+
+type EjaculationPanel = Callable[[], None]
+""" 射精面板回调函数类型，不接收参数。 """
+_ejaculation_panel: EjaculationPanel | None = None
+""" 当前登记的射精面板回调，未登记时为 None。 """
+
+
+def on_ejaculation_panel(fn: EjaculationPanel) -> EjaculationPanel:
+    """
+    登记射精面板回调，可作为装饰器使用，后登记的回调覆盖先前的回调。
+    Keyword arguments:
+    fn -- EjaculationPanel，绘制射精面板的回调函数
+    Return arguments:
+    EjaculationPanel -- 原样返回传入的 fn
+    """
+    global _ejaculation_panel
+    _ejaculation_panel = fn
+    return fn
+
+
+def emit_ejaculation_panel() -> None:
+    """
+    调用当前登记的射精面板回调，未登记时不执行操作。
+    Return arguments:
+    None -- 无返回值
+    """
+    if _ejaculation_panel is not None:
+        _ejaculation_panel()
 
 
 def judge_endure_ejaculation(endure_rate: int) -> bool:

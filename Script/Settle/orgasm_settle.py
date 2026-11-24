@@ -4,16 +4,13 @@ import random
 from types import FunctionType
 from Script.Core import game_type, get_text
 from Script.Design import attr_calculation, handle_premise, second_behavior
-from Script.UI.Moudle import draw
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Modules.gameplay_resolution import achievement_service
-from Script.UI.Panel import ejaculation_panel
+from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Design import game_time
 from Script.Modules.domains import abilities, achievement, activity, identity
 from Script.Modules.domains import first_record, h_meters, h_state, status
 
-width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 _: FunctionType = get_text._
 """ 翻译api """
 orgasm_degree_order = {"small": 0, "normal": 1, "strong": 2, "super": 3}
@@ -84,9 +81,7 @@ def orgasm_judge(
             else:
                 # 忍住射精
                 if not skip_undure:
-                    endure_flag = (
-                        ejaculation_panel.show_endure_ejaculation_panel()
-                    )
+                    endure_flag = ejaculation_service.emit_endure_panel()
                     if endure_flag:
                         return
                 endure_cnt = h_state.get(0, "endure_not_shot_count")
@@ -106,10 +101,7 @@ def orgasm_judge(
                         0, "p_orgasm_normal"
                     )
             h_meters.set(0, eja=0)
-            now_draw = ejaculation_panel.Ejaculation_Panel(width)
-            now_draw.draw()
-            line = draw.LineDraw("-", width)
-            line.draw()
+            ejaculation_service.emit_ejaculation_panel()
     else:
         normal_orgasm_dict = {}  # 高潮结算字典
         extra_orgasm_dict = {}  # 额外高潮结算字典
@@ -590,7 +582,5 @@ def judge_orgasm_edge_success(
                 "成功寸止了{0}的绝顶，但已经超过了能控制住的极限，随时都可能释放出来\n"
             ).format(character_data.name)
     # 绘制提示信息
-    info_draw = draw.NormalDraw()
-    info_draw.text = info_draw_text
-    info_draw.draw()
+    ui_hooks.emit_notice(info_draw_text)
     return orgasm_edge_success_flag

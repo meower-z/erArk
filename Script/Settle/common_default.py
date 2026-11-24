@@ -6,10 +6,9 @@ from Script.Design import attr_calculation, character_handle, game_time
 from Script.Design import handle_ability, handle_premise, map_handle
 from Script.System.First_Record_System import first_record_handle
 from Script.Core import constant, game_type, get_text, num
-from Script.Config import game_config, normal_config
-from Script.UI.Moudle import draw
-from Script.UI.Panel import ejaculation_panel
+from Script.Config import game_config
 from Script.Modules.gameplay_resolution import difficulty_service
+from Script.Modules.gameplay_resolution import ejaculation_service
 import math
 import random
 from Script.Modules.domains import (
@@ -26,10 +25,6 @@ from Script.Modules.domains import scene_state
 
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 
 
 def base_chara_hp_mp_common_settle(
@@ -1142,10 +1137,7 @@ def base_chara_climix_common_settle(
     # 触发射精面板
     if part_id == 3:
         h_meters.set(character_id, eja=0)
-        now_draw = ejaculation_panel.Ejaculation_Panel(width)
-        now_draw.draw()
-        line = draw.LineDraw("-", width)
-        line.draw()
+        ejaculation_service.emit_ejaculation_panel()
 
 
 def base_chara_experience_common_settle(
