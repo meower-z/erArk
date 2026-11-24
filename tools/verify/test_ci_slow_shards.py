@@ -21,8 +21,10 @@ from tools import ci_slow_shards
 WORKFLOW = ci_slow_shards.ROOT / ".github" / "workflows" / "daily-tests.yml"
 """ 每日测试工作流文件 .github/workflows/daily-tests.yml 的路径。 """
 
-DRAFT_GATE = "github.event.pull_request.draft == false"
-""" 工作流条件中用于跳过草稿 PR 的表达式片段。 """
+SUITE_CONDITION = (
+    "${{ github.event_name != 'workflow_dispatch' || inputs.test_path == '' }}"
+)
+""" 四个完整测试套件作业共用的 if 条件表达式。 """
 
 
 def run_main(argv: list[str], root: pathlib.Path) -> tuple[int, list[str]]:
@@ -217,17 +219,19 @@ class DailyTestsWorkflow(unittest.TestCase):
         self.jobs = doc["jobs"]
 
     def test_pull_request_runs_when_marked_ready(self) -> None:
-        """检查 pull_request 触发类型包含打开、同步、重开与 ready_for_review。"""
-        types = self.triggers["pull_request"]["types"]
-        for kind in ("opened", "synchronize", "reopened", "ready_for_review"):
-            self.assertIn(kind, types)
+        """检查 pull_request 触发类型恰好为 opened、synchronize、reopened 与 ready_for_review。"""
+        self.assertEqual(
+            self.triggers["pull_request"]["types"],
+            ["opened", "synchronize", "reopened", "ready_for_review"],
+        )
 
-    def test_only_slow_and_education_wait_for_ready(self) -> None:
-        """检查 slow 与 education 带草稿过滤，且 typecheck 与 fast-and-verify 不带。"""
-        for name in ("slow", "education"):
-            self.assertIn(DRAFT_GATE, self.jobs[name]["if"])
-        for name in ("typecheck", "fast-and-verify"):
-            self.assertNotIn("draft", self.jobs[name]["if"])
+    def test_suite_jobs_share_one_condition(self) -> None:
+        """检查四个套件作业的 if 条件均等于 SUITE_CONDITION 且不含 draft。"""
+        for name in ("typecheck", "fast-and-verify", "slow", "education"):
+            with self.subTest(job=name):
+                condition = self.jobs[name]["if"]
+                self.assertEqual(condition, SUITE_CONDITION)
+                self.assertNotIn("draft", condition)
 
     def test_slow_matrix_matches_shard_total(self) -> None:
         """检查 slow 作业关闭 fail-fast，且矩阵分片编号与 --total 4 一致。"""

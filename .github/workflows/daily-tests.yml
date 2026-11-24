@@ -81,7 +81,7 @@ jobs:
           retention-days: 7
 
   slow:
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.test_path == '') && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.test_path == '' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -140,7 +140,7 @@ jobs:
           retention-days: 7
 
   education:
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.test_path == '') && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.test_path == '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
