@@ -38,54 +38,6 @@ _: FunctionType = get_text._
 
 
 @settle_behavior.add_settle_second_behavior_effect(
-    constant_effect.SecondEffect.Nothing
-)
-def handle_nothing(
-    character_id: int,
-    change_data: game_type.CharacterStatusChange,
-) -> None:
-    """
-    空白结算
-    Keyword arguments:
-    character_id -- 角色id
-    change_data -- 状态变更信息记录对象
-    """
-    _ = 1
-
-
-@settle_behavior.add_settle_second_behavior_effect(
-    constant_effect.SecondEffect.Must_Show
-)
-def handle_must_show(
-    character_id: int,
-    change_data: game_type.CharacterStatusChange,
-) -> None:
-    """
-    必须显示的空白结算
-    Keyword arguments:
-    character_id -- 角色id
-    change_data -- 状态变更信息记录对象
-    """
-    _ = 1
-
-
-@settle_behavior.add_settle_second_behavior_effect(
-    constant_effect.SecondEffect.Must_Settle
-)
-def handle_must_settle(
-    character_id: int,
-    change_data: game_type.CharacterStatusChange,
-) -> None:
-    """
-    必须计算但不必须显示的空白结算
-    Keyword arguments:
-    character_id -- 角色id
-    change_data -- 状态变更信息记录对象
-    """
-    _ = 1
-
-
-@settle_behavior.add_settle_second_behavior_effect(
     constant_effect.SecondEffect.ADD_1_NClimax_EXPERIENCE
 )
 def handle_add_1_nclimax_experience(

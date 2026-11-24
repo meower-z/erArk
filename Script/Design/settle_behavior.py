@@ -219,8 +219,6 @@ def handle_settle_behavior(
         change_data, target_change = target_change, change_data
         now_character_data = player_character_data
         character_id = 0
-    # elif character_id:
-    #     return
     if change_data.mana_point:
         now_judge = True
         PC_information_flag = 1
@@ -363,15 +361,6 @@ def handle_settle_behavior(
                     f"{attr_text.get_value_text(int(change_data.experience[experience_id]))}</medium_spring_green>"
                 )
 
-        # 非常见结算输出
-        # if status_data.money:
-        #     now_text_list.extend(
-        #         [
-        #             _("\n\n  获得龙门币:")
-        #             + text_handle.number_to_symbol_string(status_data.money)
-        #         ]
-        #     )
-
         # 最后补个回车
         if now_text != "":
             now_text += "\n"
@@ -488,14 +477,6 @@ def handle_settle_behavior(
                         + f"%</{hypnosis_color}>"
                     )
                     judge = 1
-                # if target_change.new_social != target_change.old_social:
-                #     now_text += (
-                #         " "
-                #         + game_config.config_social_type[target_change.old_social].name
-                #         + "->"
-                #         + game_config.config_social_type[target_change.new_social].name
-                #     )
-                #     judge = 1
                 # 状态的结算输出
                 if len(target_change.status_data):
                     # 获取排序后的状态列表，按 type 排序（快感 type==0 在前）
@@ -822,6 +803,25 @@ def add_settle_second_behavior_effect(
     return decorator
 
 
+def _noop_second_effect(
+    character_id: int, change_data: game_type.CharacterStatusChange
+) -> None:
+    """
+    注册给 Nothing、Must_Show、Must_Settle 共用的二段行为空白结算函数，仅用于占位或标记列表，不执行结算操作
+    Keyword arguments:
+    character_id -- 角色id
+    change_data -- 状态变更信息记录对象
+    """
+
+
+for sentinel_id in (
+    constant_effect.SecondEffect.Nothing,
+    constant_effect.SecondEffect.Must_Show,
+    constant_effect.SecondEffect.Must_Settle,
+):
+    add_settle_second_behavior_effect(sentinel_id)(_noop_second_effect)
+
+
 def get_cut_down_favorability_for_consume_time(consume_time: int) -> int:
     """
     从经过的时间计算出扣除的好感度
@@ -863,14 +863,11 @@ def change_character_talkcount_for_time(
             ),
         )
         action_info.set(target_data.cid, "talk_time", now_time)
-        # print("检测到时间前进了至少一小时，聊天计数器-1")
     elif now_time.day != action_info.get(target_data.cid, "talk_time").day:
         action_info.set(target_data.cid, "talk_count", 0)
         action_info.set(target_data.cid, "talk_time", now_time)
-        # print("检测到时间前进了至少一天，聊天计数器归零")
     if action_info.get(target_data.cid, "talk_count") < 0:
         action_info.set(target_data.cid, "talk_count", 0)
-    # print("target_data.action_info.talk_count :",target_data.action_info.talk_count)
 
 
 def get_favorability_social(favorability: int) -> int:
@@ -981,8 +978,6 @@ def handle_comprehensive_value_effect(
     from Script.UI.Panel import event_option_panel
     from Script.Design import character
 
-    # print(f"debug character_id = {character_id}, effect_all_value_list = {effect_all_value_list}")
-
     # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
     # A2、A3 的变化记在结算记录里该角色的交互对象一栏
     final_character_id = character_id
@@ -1052,7 +1047,6 @@ def handle_comprehensive_value_effect(
     ):
         # 获取属性名
         attribute_name = attribute_mapping[attribute]
-        # print(f"debug attribute_name = {attribute_name}, operation = {operation}")
 
         # 特殊处理
         # 养成数值（Plan 22 三期）：性格倾向与照料值，编号见 education_constant.GROWTH_VALUE_*
@@ -1127,7 +1121,6 @@ def handle_comprehensive_value_effect(
                     )
         # 父子嵌套事件
         elif attribute_name == "father":
-            # print(f"debug effect_all_value_list = {effect_all_value_list}")
             now_draw = event_option_panel.multi_layer_event_option_Panel(
                 character_id, width, type_son_id, int(effect_all_value_list[3])
             )
