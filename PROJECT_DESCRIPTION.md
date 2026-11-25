@@ -628,7 +628,7 @@ Script/
 - 同图/跨图移动（`identical_map_move` / `difference_map_move`）
 - 寻路：`map_config` 在加载地图时用 `Script/Core/dijkstra.py` 预计算各节点最短路存入 `Map.sorted_path`；运行时由 `map_handle.get_path_finding()` 直接查询
 - 场景可达性、门/锁判定、场景内角色列表、场景满员
-- 导航面板：`Script/UI/Panel/navigation_panel.py`、`see_map_panel.py`
+- 导航面板：`Script/UI/Panel/navigation_panel.py`、`see_map_panel.py`（地图查看后端服务：`Script/Modules/gameplay_resolution/world_view_service.py`）
 - 罗德岛所在的国家与移动：GameState 的全局键 `base.location`，用 `Script/Modules/domains/location.py` 读写
 
 ---
