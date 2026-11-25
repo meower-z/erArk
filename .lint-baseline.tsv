@@ -179,7 +179,6 @@ Script/UI/Panel/manage_basement_panel.py	<module>	module-lines	lines=1780
 Script/UI/Panel/manage_power_system_panel.py	<module>	module-lines	lines=826
 Script/UI/Panel/nation_diplomacy_panel.py	<module>	module-lines	lines=663
 Script/UI/Panel/new_round.py	<module>	module-lines	lines=1443
-Script/UI/Panel/originium_arts.py	<module>	module-lines	lines=631
 Script/UI/Panel/physical_check_and_manage.py	<module>	module-lines	lines=1435
 Script/UI/Panel/play_gomoku_panel.py	<module>	module-lines	lines=2123
 Script/UI/Panel/play_gomoku_panel.py	Evaluate	D101	count=1
