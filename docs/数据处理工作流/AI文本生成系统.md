@@ -76,7 +76,7 @@ erArk游戏的AI文本生成系统是一个完整的AI集成解决方案，支�
 - **功能**: 提供玩家主动与AI对话的指令
 
 #### 系统设置集成 (`Script/UI/Panel/system_setting.py`)
-- **集成点**: `chat_ai_setting_panel_draw()` 函数（68-76, 104-108行）
+- **集成点**: `System_Setting_Panel.chat_ai_setting_panel_draw()` 方法
 - **功能**: 在系统设置菜单中添加AI设置入口
 
 ## 数据流程
