@@ -241,7 +241,7 @@ The game uses Tkinter for GUI rendering:
 
 ## Data Processing Workflow Documentation
 
-The `docs/数据处理工作流` directory contains 63 detailed documentation files (62 system/workflow docs plus a README). These documents explain the relationships between different systems and code components. When working on related features, refer to these documents for understanding system interconnections, dependencies, and data flow.
+The `docs/数据处理工作流` directory contains 60 detailed documentation files (59 system/workflow docs plus a README). These documents explain the relationships between different systems and code components. Code-derivable design and plan documents are being pruned rather than rewritten in this repository; for systems without a dedicated doc page (such as the Education and Official Event systems), source code, docstrings, and tests are the authoritative reference.
 
 ### 🏗️ Core System Architecture Documents
 - **[角色行为系统](docs/数据处理工作流/角色行为系统.md)** - Core behavior loop, time management, status changes
@@ -257,7 +257,6 @@ The `docs/数据处理工作流` directory contains 63 detailed documentation fi
 - **[通用结算函数函数](docs/数据处理工作流/通用结算函数函数.md)** - Universal calculation functions
 - **[多周目结算与继承系统](docs/数据处理工作流/多周目结算与继承系统.md)** - Multi-playthrough data inheritance
 - **[新增指令工作流](docs/数据处理工作流/新增指令工作流.md)** - Complete workflow for adding a new player instruction (config, behavior, premise, settlement, talk)
-- **[系统复查工作流](docs/数据处理工作流/系统复查工作流.md)** - Repeated full review of an implemented system: baseline checks, timeline tracing, headless reproduction, dual-doc plans, regression and wrap-up
 - **[剧情总结工作流](docs/数据处理工作流/剧情总结工作流.md)** - Story summarization workflow
 - **[剧情转外勤委托工作流](docs/数据处理工作流/剧情转外勤委托工作流.md)** - Story-to-field-commission conversion workflow
 
@@ -277,7 +276,6 @@ The `docs/数据处理工作流` directory contains 63 detailed documentation fi
 ### 👥 Character Creation & Growth
 - **[角色创建流程](docs/数据处理工作流/角色创建流程.md)** - Character creation workflow
 - **[能力升级面板](docs/数据处理工作流/能力升级面板.md)** - Ability upgrade interface
-- **[生长养成系统](docs/数据处理工作流/生长养成系统.md)** - Child-raising chain: prenatal education, infant care, timetables & six course types, semesters & report cards, daily schedules, growth events, sex-skill practical class (`Script/System/Education_System`)
 - **[成就系统](docs/数据处理工作流/成就系统.md)** - Achievement system
 
 ### 👗 Appearance & Decoration Systems
