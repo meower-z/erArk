@@ -1,14 +1,14 @@
 """资源交易界面面板"""
 
+from collections.abc import Callable
 from types import FunctionType
-from Script.Core import get_text, flow_handle, constant
-from Script.Design import attr_calculation
-from Script.Modules.domains import abilities, economy, location
-from Script.UI.Moudle import draw, view
+
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import warehouse
-from Script.Modules.domains import identity
-from Script.Modules.gameplay_resolution import trade_service
+from Script.Core import constant, flow_handle, get_text
+from Script.Design import attr_calculation
+from Script.Modules.domains import economy
+from Script.Modules.gameplay_resolution import resource_exchange_service as svc
+from Script.UI.Moudle import draw, view
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -18,6 +18,68 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
+pad = attr_calculation.pad_display_width
+""" 按显示宽度对齐文本的辅助函数别名。 """
+SKY = "light_sky_blue"
+""" 天蓝色高亮样式名称常量。 """
+GOLD = "gold_enrod"
+""" 金黄色警示与确认样式名称常量。 """
+
+
+def _types() -> list[str]:
+    """按调用时翻译结果返回六类可交易资源类型列表。"""
+    return [_("材料"), _("药剂"), _("乳制品"), _("香水"), _("基建"), _("特产")]
+
+
+def _action(quantity: int) -> str:
+    """按交易数量正负返回买入、卖出或无的本地化词。"""
+    if quantity > 0:
+        return _("买入")
+    return _("卖出") if quantity < 0 else _("无")
+
+
+def _signed(percent: float, zero: str) -> str:
+    """将价格波动百分比格式化为带符号标签，零值返回 zero。"""
+    if percent > 0:
+        return f"(+{percent:.1f}%)"
+    if percent < 0:
+        return f"({percent:.1f}%)"
+    return zero
+
+
+def draw_text(text: str, style: str = "", width: float = 0) -> None:
+    """绘制单段普通文本，仅在指定样式名时设置样式。"""
+    text_draw = draw.NormalDraw()
+    text_draw.text = text
+    text_draw.width = width
+    if style:
+        text_draw.style = style
+    text_draw.draw()
+
+
+def draw_button(
+    keys: list[str],
+    text: str,
+    key: str,
+    func: Callable[..., object] | None = None,
+    args: object = (),
+    width: float | None = None,
+    **style: str,
+) -> None:
+    """绘制居中按钮并将返回键追加到 keys 列表。"""
+    size = len(text) * 2 if width is None else width
+    button = draw.CenterButton(
+        text, key, size, cmd_func=func, args=args, **style
+    )
+    keys.append(button.return_text)
+    button.draw()
+
+
+def draw_back(keys: list[str], width: int) -> bool:
+    """绘制返回按钮并等待输入，选中返回时返回真。"""
+    draw_button(keys, _("[返回]"), _("返回"), width=width)
+    line_feed.draw()
+    return flow_handle.askfor_all(keys) == _("返回")
 
 
 class Resource_Exchange_Line_Panel:
@@ -31,21 +93,8 @@ class Resource_Exchange_Line_Panel:
         """初始化绘制对象"""
         self.width: int = width
         """ 绘制的最大宽度 """
-        self.now_panel = _("资源交易")
-        """ 当前绘制的页面 """
-        self.draw_list: list[draw.NormalDraw] = []
-        """ 绘制的文本列表 """
-        self.show_resource_type_dict: dict = {
-            _("材料"): False,
-            _("药剂"): False,
-            _("乳制品"): False,
-            _("香水"): False,
-            _("基建"): False,
-            _("特产"): False,
-        }
+        self.show_resource_type_dict: dict = dict.fromkeys(_types(), False)
         """ 显示的资源类型 """
-        self.buy_or_sell_flag = True
-        """ 交易状态，True为买入，False为卖出 """
         self.now_select_resouce_id = 11
         """ 当前选择的资源id，默认为11号资源（普通药材） """
         self.quantity_of_resouce = 0
@@ -53,1097 +102,270 @@ class Resource_Exchange_Line_Panel:
 
     def draw(self) -> None:
         """绘制对象"""
-
-        title_text = _("资源交易")
-        title_draw = draw.TitleLineDraw(title_text, self.width)
-
-        while 1:
+        title_draw = draw.TitleLineDraw(_("资源交易"), self.width)
+        while True:
             line_feed.draw()
-            return_list = []
+            keys: list[str] = []
             title_draw.draw()
-
-            # 资源数据
-            resouce_data = game_config.config_resouce[
-                self.now_select_resouce_id
-            ]  # 资源数据
-            now_resouce_stock = warehouse.amount(
-                self.now_select_resouce_id
-            )  # 当前资源库存
-            warehouse_capacity = warehouse.capacity()  # 仓库容量
-            cant_buy_flag = (
-                True if resouce_data.cant_buy == 1 else False
-            )  # 检测该商品是否可以购买
-            money = warehouse.amount(1)  # 当前龙门币数量
-
-            # 提取价格与加成数据用于显示
-            buy_price, buy_percent = trade_service.get_resouce_price(
-                self.now_select_resouce_id, True
-            )
-            sell_price, sell_percent = trade_service.get_resouce_price(
-                self.now_select_resouce_id, False
-            )
-            _multiplier, main_bonus, sub_bonus = (
-                trade_service.calculate_trade_multiplier(
-                    self.now_select_resouce_id, True
-                )
-            )
-
-            # =======================================[ 资产与库存 ]=======================================
-            info_title_draw = draw.NormalDraw()
-            info_title_draw.text = _("【 资产与库存 】\n")
-            info_title_draw.draw()
-            line_feed.draw()
-
-            info_draw = draw.NormalDraw()
-            info_draw.text += _("  当前龙门币 : {0}\n").format(money)
-            info_draw.draw()
-            # 绘制交易信息与按钮对齐
-            res_text = _("  交易资源   : {0}").format(resouce_data.name)
-            res_draw = draw.NormalDraw()
-            res_draw.text = attr_calculation.pad_display_width(
-                res_text, int(self.width / 3)
-            )
-            res_draw.draw()
-
-            button_text = _(" [更改交易资源] ")
-            button_draw = draw.CenterButton(
-                _(button_text),
-                _("{0}").format(button_text),
-                len(button_text) * 2,
-                cmd_func=self.select_exchange_resouce,
-            )
-            return_list.append(button_draw.return_text)
-            button_draw.draw()
-            line_feed.draw()
-
-            stock_draw = draw.NormalDraw()
-            stock_draw.text = _("  库存状态   : 当前 {0} / 上限 {1}\n").format(
-                now_resouce_stock, warehouse_capacity
-            )
-            if now_resouce_stock >= warehouse_capacity:
-                stock_draw.style = "gold_enrod"
-            stock_draw.draw()
-
-            # 自动交易信息
-            auto_draw = draw.NormalDraw()
-            res_type_key = trade_service._get_resource_type_key(
-                self.now_select_resouce_id
-            )
-            settings = economy.auto_trade(self.now_select_resouce_id)
-            main_id = economy.main_trader(res_type_key)
-
-            auto_text = _("  自动交易   : ")
-            if main_id:
-                if settings["buy_on"]:
-                    auto_text += _("买入至 {0}% / ").format(
-                        settings["buy_price_percent"]
-                    )
-                else:
-                    auto_text += _("未设置自动买入 / ")
-                if settings["sell_on"]:
-                    auto_text += _("卖出至 {0}%").format(
-                        settings["sell_price_percent"]
-                    )
-                else:
-                    auto_text += _("未设置自动卖出")
-            else:
-                auto_text += _("未任命主交易员无法设置")
-                auto_draw.style = "gold_enrod"
-
-            auto_draw.text = attr_calculation.pad_display_width(
-                auto_text, int(self.width / 3)
-            )
-            auto_draw.draw()
-
-            if main_id:
-                auto_button_text = _(" [自动交易设置] ")
-                auto_button = draw.CenterButton(
-                    auto_button_text,
-                    auto_button_text,
-                    len(auto_button_text) * 2,
-                    cmd_func=self.auto_trade_setting,
-                    args=(self.now_select_resouce_id,),
-                )
-                return_list.append(auto_button.return_text)
-                auto_button.draw()
-            line_feed.draw()
-
-            # ---------------------------------------------------------------------------------------------
+            rid, qty = self.now_select_resouce_id, self.quantity_of_resouce
+            quote = svc.quote(rid, qty)
+            self._draw_assets(keys, quote)
             draw.LineDraw("-", window_width).draw()
-
-            # =======================================[ 交易员与倍率分析 ]=======================================
-            header_text = _("【 交易员与倍率分析 】")
-            header_draw = draw.NormalDraw()
-            header_draw.text = attr_calculation.pad_display_width(
-                header_text, int(self.width / 3)
-            )
-            header_draw.draw()
-
-            manage_button_text = _(" [交易员管理] ")
-            manage_button = draw.CenterButton(
-                manage_button_text,
-                manage_button_text,
-                len(manage_button_text) * 2,
-                cmd_func=self.manage_trade_operator,
-            )
-            return_list.append(manage_button.return_text)
-            manage_button.draw()
-            line_feed.draw()
-            line_feed.draw()
-
-            trade_type_draw = draw.NormalDraw()
-            trade_type_draw.text = _("  交易种类 : {0}").format(
-                resouce_data.type
-            )
-            trade_type_draw.draw()
-            line_feed.draw()
-
-            main_trader_info = draw.NormalDraw()
-            if main_id > 0:
-                main_name = identity.of(main_id).name
-            else:
-                main_name = _("空缺")
-                main_trader_info.style = "warning"
-
-            main_trader_info.text = _(
-                "  主交易员 : {0} (基础加成: +{1:.1f}%)"
-            ).format(main_name, main_bonus * 100)
-            main_trader_info.draw()
-            line_feed.draw()
-
-            sub_ops = [
-                cid
-                for cid in economy.trade_operator_ids()
-                if cid != main_id and identity.exists(cid)
-            ]
-            sub_trader_info = draw.NormalDraw()
-            sub_trader_info.text = _(
-                "  副交易员 : 共 {0} 人 (基础加成: +{1:.1f}%)\n"
-            ).format(len(sub_ops), sub_bonus * 100)
-
-            if sub_ops:
-                sub_names = [identity.of(cid).name for cid in sub_ops]
-                sub_trader_info.text += _("    - {0}\n").format(
-                    ", ".join(sub_names)
-                )
-            else:
-                sub_trader_info.text += _("    - 暂无\n")
-            sub_trader_info.draw()
-            line_feed.draw()
-
-            trade_info = draw.NormalDraw()
-            trade_info.text += _(
-                "  综合倍率 : 买入 {0:+.1f}% / 卖出 {1:+.1f}%\n"
-            ).format(buy_percent, sell_percent)
-            trade_info.draw()
-
-            # ---------------------------------------------------------------------------------------------
+            self._draw_traders(keys, quote)
             draw.LineDraw("-", window_width).draw()
-
-            # =======================================[ 交易详情与预算 ]=======================================
-            budget_info_Title = draw.NormalDraw()
-            budget_info_Title.text = _("【 交易详情与预算 】")
-            budget_info_Title.draw()
-            line_feed.draw()
-            line_feed.draw()
-
-            abs_qty = abs(self.quantity_of_resouce)
-            action_str = (
-                _("买入")
-                if self.quantity_of_resouce > 0
-                else _("卖出") if self.quantity_of_resouce < 0 else _("无")
-            )
-
-            # 1. 当前交易数量
-            qty_label = draw.NormalDraw()
-            qty_label.text = _("  当前交易数量 : ")
-            qty_label.draw()
-
-            qty_value = draw.NormalDraw()
-            qty_value.text = _("{0} {1}\n").format(action_str, abs_qty)
-            qty_value.style = "light_sky_blue"
-            qty_value.draw()
-
-            # 2. 预计库存变化
-            new_stock = now_resouce_stock + self.quantity_of_resouce
-            sign = "+" if self.quantity_of_resouce >= 0 else "-"
-
-            stock_label = draw.NormalDraw()
-            stock_label.text = _("  预计库存变化 : ")
-            stock_label.draw()
-
-            stock_value = draw.NormalDraw()
-            stock_value.text = _("{0} {1} {2}  =>  {3} / {4}\n\n").format(
-                now_resouce_stock, sign, abs_qty, new_stock, warehouse_capacity
-            )
-            stock_value.draw()
-
-            # 3. 买入价与卖出价
-            buy_str = (
-                f"(+{buy_percent:.1f}%)"
-                if buy_percent > 0
-                else f"({buy_percent:.1f}%)" if buy_percent < 0 else "(0%)"
-            )
-            sell_str = (
-                f"(+{sell_percent:.1f}%)"
-                if sell_percent > 0
-                else f"({sell_percent:.1f}%)" if sell_percent < 0 else "(0%)"
-            )
-
-            price_buy = draw.NormalDraw()
-            price_buy.text = _("  买入价: {0} 龙门币 {1}").format(
-                buy_price, buy_str
-            )
-            if self.quantity_of_resouce > 0:
-                price_buy.style = "light_sky_blue"
-            price_buy.draw()
-
-            price_mid = draw.NormalDraw()
-            price_mid.text = _("  |  ")
-            price_mid.draw()
-
-            price_sell = draw.NormalDraw()
-            price_sell.text = _("卖出价: {0} 龙门币 {1}\n").format(
-                sell_price, sell_str
-            )
-            if self.quantity_of_resouce < 0:
-                price_sell.style = "light_sky_blue"
-            price_sell.draw()
-
-            # 4. 预计交易总价
-            total_label = draw.NormalDraw()
-            total_value_count = draw.NormalDraw()
-            total_value = draw.NormalDraw()
-            total_value.style = "light_sky_blue"
-
-            if self.quantity_of_resouce > 0:
-                total_label.text = _("  预计买入总价: ")
-                total_value_count.text = _("{0} * {1} = ").format(
-                    buy_price, abs_qty, buy_price * abs_qty
-                )
-                total_value.text = _("{2} 龙门币").format(
-                    buy_price, abs_qty, buy_price * abs_qty
-                )
-            elif self.quantity_of_resouce < 0:
-                total_label.text = _("  预计卖出总价: ")
-                total_value_count.text = _("{0} * {1} = ").format(
-                    sell_price, abs_qty, sell_price * abs_qty
-                )
-                total_value.text = _("{2} 龙门币").format(
-                    sell_price, abs_qty, sell_price * abs_qty
-                )
-            else:
-                total_label.text = _("  预计交易总价: ")
-                total_value_count.text = _("0 * 0 = ").format(money)
-                total_value.text = _("0 龙门币")
-
-            total_label.draw()
-            total_value_count.draw()
-            total_value.draw()
-            line_feed.draw()
-
-            money_left_text = draw.NormalDraw()
-            money_left_text.text = _("  交易后剩余龙门币: ")
-            money_left_text.draw()
-
-            money_left_value = draw.NormalDraw()
-            if self.quantity_of_resouce > 0:
-                money_left = money - buy_price * abs_qty
-                money_left_value.text = _("{0} - {1} = {2} 龙门币").format(
-                    money, buy_price * abs_qty, money_left
-                )
-            elif self.quantity_of_resouce < 0:
-                money_left = money + sell_price * abs_qty
-                money_left_value.text = _("{0} + {1} = {2} 龙门币").format(
-                    money, sell_price * abs_qty, money_left
-                )
-            else:
-                money_left = money
-                money_left_value.text = _("{0} - 0 = {1} 龙门币").format(
-                    money, money_left
-                )
-            money_left_value.draw()
-            line_feed.draw()
-
-            budget_warn = draw.NormalDraw()
-            budget_warn.style = "gold_enrod"
-
-            # 输出特殊提示
-            if self.quantity_of_resouce > 0 and buy_price * abs_qty > money:
-                budget_warn.text += _("  ●龙门币不足，无法以当前数量买入")
-            # 如果是不可购买的则显示提示
-            if cant_buy_flag:
-                budget_warn.text += _("  ●该资源无法购买，只能卖出")
-
-            budget_warn.draw()
-            line_feed.draw()
-
-            # =============================================================================================
+            self._draw_budget(quote)
             draw.LineDraw("=", window_width).draw()
-
-            # =======================================[ 数量调节 ]=======================================
-            adjust_draw = draw.NormalDraw()
-            adjust_draw.text = _("【 数量调节 】\n  ")
-            adjust_draw.draw()
-            line_feed.draw()
-
-            max_sell_btn = draw.CenterButton(
-                _("[ ==================== 最大卖出 =================== ] "),
-                _("最大卖出"),
-                self.width / 3 - 3,
-                cmd_func=self.settle_max_sell,
-            )
-            return_list.append(max_sell_btn.return_text)
-            max_sell_btn.draw()
-
-            qty_value = draw.NormalDraw()
-            qty_value.text = _("    {0} {1}").format(action_str, abs_qty)
-            qty_value.text = attr_calculation.pad_display_width(
-                qty_value.text, int(self.width / 12)
-            )
-            qty_value.style = "light_sky_blue"
-            qty_value.draw()
-
-            max_buy_btn = draw.CenterButton(
-                _("  [ =================== 最大买入 =================== ] "),
-                _("最大买入"),
-                self.width / 3 - 3,
-                cmd_func=self.settle_max_buy,
-            )
-            return_list.append(max_buy_btn.return_text)
-            max_buy_btn.draw()
-
-            line_feed.draw()
-            line_feed.draw()
-
-            button_text_list = [
-                " [ -1000 ] ",
-                " [ -100 ] ",
-                " [ -10 ] ",
-                " [ -1 ] ",
-            ]
-            for btn_text in button_text_list:
-                btn = draw.CenterButton(
-                    _(btn_text),
-                    _("{0}").format(btn_text),
-                    self.width / 12,
-                    cmd_func=self.settle_quantity,
-                    args=(btn_text,),
-                )
-                return_list.append(btn.return_text)
-                btn.draw()
-
-            button_text = _(" [ 重   置 ] ")
-            reset_button = draw.CenterButton(
-                _(button_text),
-                _("{0}").format(button_text),
-                self.width / 12,
-                cmd_func=self.reset_quantity,
-            )
-            return_list.append(reset_button.return_text)
-            reset_button.draw()
-
-            button_text_list = [
-                " [ +1 ] ",
-                " [ +10 ] ",
-                " [ +100 ] ",
-                " [ +1000 ] ",
-            ]
-            for btn_text in button_text_list:
-                btn = draw.CenterButton(
-                    _(btn_text),
-                    _("{0}").format(btn_text),
-                    self.width / 12,
-                    cmd_func=self.settle_quantity,
-                    args=(btn_text,),
-                )
-                return_list.append(btn.return_text)
-                btn.draw()
-            line_feed.draw()
-            line_feed.draw()
-
-            # 以下情况绘制确认买入按钮
-            # 钱足够且该资源可以买入
-            if self.quantity_of_resouce > 0:
-                if money >= buy_price * abs_qty and not cant_buy_flag:
-                    buy_button = draw.CenterButton(
-                        _("[确认买入]"),
-                        _("确认买入"),
-                        self.width,
-                        cmd_func=self.execute_trade,
-                        normal_style="gold_enrod",
-                    )
-                    buy_button.draw()
-                    return_list.append(buy_button.return_text)
-
-            # 以下情况绘制确认卖出按钮
-            # 库存大于等于预定卖出的资源数量，且卖出资源不是特产或不是本地特产
-            elif self.quantity_of_resouce < 0:
-                if (now_resouce_stock >= abs_qty) and (
-                    resouce_data.type != _("特产")
-                    or resouce_data.specialty == location.country()
-                ):
-                    sell_button = draw.CenterButton(
-                        _("[确认卖出]"),
-                        _("确认卖出"),
-                        self.width,
-                        cmd_func=self.execute_trade,
-                        normal_style="gold_enrod",
-                    )
-                    sell_button.draw()
-                    return_list.append(sell_button.return_text)
-
-            line_feed.draw()
-
-            # =============================================================================================
+            self._draw_adjust(keys, quote)
             draw.LineDraw("=", window_width).draw()
-
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), self.width)
-            back_draw.draw()
-            line_feed.draw()
-            return_list.append(back_draw.return_text)
-
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
+            if draw_back(keys, self.width):
                 view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
-    def execute_trade(self, buy_or_sell_flag: bool | None = None) -> None:
+    def _draw_assets(self, keys: list[str], quote: svc.Quote) -> None:
+        """绘制主界面的资产、库存与自动交易摘要区块。"""
+        third = int(self.width / 3)
+        draw_text(_("【 资产与库存 】\n"))
+        line_feed.draw()
+        draw_text(_("  当前龙门币 : {0}\n").format(quote.money))
+        draw_text(pad(_("  交易资源   : {0}").format(quote.name), third))
+        text = _(" [更改交易资源] ")
+        func = self.select_exchange_resouce
+        draw_button(
+            keys, _(text), _("{0}").format(text), func, width=len(text) * 2
+        )
+        line_feed.draw()
+        text = _("  库存状态   : 当前 {0} / 上限 {1}\n")
+        full = GOLD if quote.stock >= quote.capacity else ""
+        draw_text(text.format(quote.stock, quote.capacity), full)
+        settings = economy.auto_trade(self.now_select_resouce_id)
+        text = _("  自动交易   : ")
+        if not quote.main_id:
+            draw_text(pad(text + _("未任命主交易员无法设置"), third), GOLD)
+            line_feed.draw()
+            return
+        if settings["buy_on"]:
+            text += _("买入至 {0}% / ").format(settings["buy_price_percent"])
+        else:
+            text += _("未设置自动买入 / ")
+        if settings["sell_on"]:
+            text += _("卖出至 {0}%").format(settings["sell_price_percent"])
+        else:
+            text += _("未设置自动卖出")
+        draw_text(pad(text, third))
+        text = _(" [自动交易设置] ")
+        args = (self.now_select_resouce_id,)
+        draw_button(keys, text, text, self.auto_trade_setting, args)
+        line_feed.draw()
+
+    def _draw_traders(self, keys: list[str], quote: svc.Quote) -> None:
+        """绘制主界面的交易员名单、基础加成与综合倍率区块。"""
+        draw_text(pad(_("【 交易员与倍率分析 】"), int(self.width / 3)))
+        text = _(" [交易员管理] ")
+        draw_button(keys, text, text, self.manage_trade_operator)
+        line_feed.draw()
+        line_feed.draw()
+        draw_text(_("  交易种类 : {0}").format(quote.kind))
+        line_feed.draw()
+        text = _("  主交易员 : {0} (基础加成: +{1:.1f}%)")
+        if quote.main_name is None:
+            draw_text(text.format(_("空缺"), quote.main_bonus * 100), "warning")
+        else:
+            draw_text(text.format(quote.main_name, quote.main_bonus * 100))
+        line_feed.draw()
+        text = _("  副交易员 : 共 {0} 人 (基础加成: +{1:.1f}%)\n")
+        text = text.format(len(quote.sub_names), quote.sub_bonus * 100)
+        if quote.sub_names:
+            text += _("    - {0}\n").format(", ".join(quote.sub_names))
+        else:
+            text += _("    - 暂无\n")
+        draw_text(text)
+        line_feed.draw()
+        text = _("  综合倍率 : 买入 {0:+.1f}% / 卖出 {1:+.1f}%\n")
+        draw_text(text.format(quote.buy_percent, quote.sell_percent))
+
+    def _draw_budget(self, quote: svc.Quote) -> None:
+        """绘制主界面的交易数量、单价、总价与余额警示区块。"""
+        qty, total, money = abs(quote.quantity), quote.total, quote.money
+        draw_text(_("【 交易详情与预算 】"))
+        line_feed.draw()
+        line_feed.draw()
+        draw_text(_("  当前交易数量 : "))
+        draw_text(_("{0} {1}\n").format(_action(quote.quantity), qty), SKY)
+        draw_text(_("  预计库存变化 : "))
+        sign = "+" if quote.quantity >= 0 else "-"
+        after = quote.stock + quote.quantity
+        text = _("{0} {1} {2}  =>  {3} / {4}\n\n")
+        draw_text(text.format(quote.stock, sign, qty, after, quote.capacity))
+        text = _("  买入价: {0} 龙门币 {1}")
+        buy = _signed(quote.buy_percent, "(0%)")
+        style = SKY if quote.quantity > 0 else ""
+        draw_text(text.format(quote.buy_price, buy), style)
+        draw_text(_("  |  "))
+        text = _("卖出价: {0} 龙门币 {1}\n")
+        sell = _signed(quote.sell_percent, "(0%)")
+        style = SKY if quote.quantity < 0 else ""
+        draw_text(text.format(quote.sell_price, sell), style)
+        if quote.quantity:
+            if quote.quantity > 0:
+                draw_text(_("  预计买入总价: "))
+                price = quote.buy_price
+            else:
+                draw_text(_("  预计卖出总价: "))
+                price = quote.sell_price
+            draw_text(_("{0} * {1} = ").format(price, qty, total))
+            draw_text(_("{2} 龙门币").format(price, qty, total), SKY)
+        else:
+            draw_text(_("  预计交易总价: "))
+            draw_text(_("0 * 0 = "))
+            draw_text(_("0 龙门币"), SKY)
+        line_feed.draw()
+        draw_text(_("  交易后剩余龙门币: "))
+        left = quote.money_left
+        if quote.quantity > 0:
+            text = _("{0} - {1} = {2} 龙门币").format(money, total, left)
+        elif quote.quantity < 0:
+            text = _("{0} + {1} = {2} 龙门币").format(money, total, left)
+        else:
+            text = _("{0} - 0 = {1} 龙门币").format(money, money)
+        draw_text(text)
+        line_feed.draw()
+        text = ""
+        if quote.quantity > 0 and total > money:
+            text += _("  ●龙门币不足，无法以当前数量买入")
+        if quote.cant_buy:
+            text += _("  ●该资源无法购买，只能卖出")
+        draw_text(text, GOLD)
+        line_feed.draw()
+
+    def _draw_adjust(self, keys: list[str], quote: svc.Quote) -> None:
+        """绘制主界面的最大买卖、步进、重置与确认交易按钮区块。"""
+        wide, small = self.width / 3 - 3, self.width / 12
+        draw_text(_("【 数量调节 】\n  "))
+        line_feed.draw()
+        text = _("[ ==================== 最大卖出 =================== ] ")
+        draw_button(keys, text, _("最大卖出"), self.settle_max_sell, width=wide)
+        text = _("    {0} {1}")
+        text = text.format(_action(quote.quantity), abs(quote.quantity))
+        draw_text(pad(text, int(small)), SKY)
+        text = _("  [ =================== 最大买入 =================== ] ")
+        draw_button(keys, text, _("最大买入"), self.settle_max_buy, width=wide)
+        line_feed.draw()
+        line_feed.draw()
+        for label in (" [ -1000 ] ", " [ -100 ] ", " [ -10 ] ", " [ -1 ] "):
+            self._step_button(keys, label)
+        text = _(" [ 重   置 ] ")
+        func = self.reset_quantity
+        draw_button(keys, _(text), _("{0}").format(text), func, width=small)
+        for label in (" [ +1 ] ", " [ +10 ] ", " [ +100 ] ", " [ +1000 ] "):
+            self._step_button(keys, label)
+        line_feed.draw()
+        line_feed.draw()
+        if quote.confirm:
+            if quote.quantity > 0:
+                text, key = _("[确认买入]"), _("确认买入")
+            else:
+                text, key = _("[确认卖出]"), _("确认卖出")
+            func = self.execute_trade
+            draw_button(
+                keys, text, key, func, width=self.width, normal_style=GOLD
+            )
+        line_feed.draw()
+
+    def _step_button(self, keys: list[str], label: str) -> None:
+        """绘制单个带符号数量步进按钮。"""
+        func, width = self.settle_quantity, self.width / 12
+        draw_button(
+            keys, _(label), _("{0}").format(label), func, (label,), width
+        )
+
+    def execute_trade(self) -> None:
         """
         执行资源交易
         输入: 无
         输出: 无
         功能: 根据当前买入/卖出状态和数量，结算资源与龙门币变动
         """
-        if self.quantity_of_resouce == 0:
+        deal = svc.trade(self.now_select_resouce_id, self.quantity_of_resouce)
+        if deal is None:
             return
-
-        buy_or_sell_flag = self.quantity_of_resouce > 0
-        actual_req_quantity = abs(self.quantity_of_resouce)
-
-        trade_result = trade_service.perform_trade(
-            self.now_select_resouce_id, actual_req_quantity, buy_or_sell_flag
-        )
-        if not trade_result:
-            info_draw = draw.WaitDraw()
-            info_draw.text = _("\n交易未能执行，请检查资金、仓库或库存限制。\n")
-            info_draw.draw()
-            line_feed.draw()
-            return
-
-        actual_quantity = trade_result["quantity"]
-        total_price = trade_result["total_price"]
-        money_delta = (
-            "-" + str(total_price)
-            if buy_or_sell_flag
-            else "+" + str(total_price)
-        )
-        resource_delta = (
-            "+" + str(actual_quantity)
-            if buy_or_sell_flag
-            else "-" + str(actual_quantity)
-        )
-
         info_draw = draw.WaitDraw()
-        info_draw_text = _(
-            "\n交易成功！\n当前龙门币数量：{0}({1})\n资源{2}数量：{3}/{4}({5})\n"
-        ).format(
-            warehouse.amount(1),
-            money_delta,
-            game_config.config_resouce[self.now_select_resouce_id].name,
-            warehouse.amount(self.now_select_resouce_id),
-            warehouse.capacity(),
-            resource_delta,
-        )
-        if actual_quantity != actual_req_quantity:
-            info_draw_text += _("(本次实际成交{0}单位)\n").format(
-                actual_quantity
-            )
-        info_draw.text = info_draw_text
+        info_draw.text = deal.text
         info_draw.draw()
         line_feed.draw()
-        self.quantity_of_resouce = 0
+        if deal.done:
+            self.quantity_of_resouce = 0
 
     def manage_trade_operator(self) -> None:
         """交易员管理界面"""
+        from Script.UI.Panel import trade_setting_panel
 
-        from Script.Design import basement
-        from Script.UI.Panel import manage_basement_panel
-
-        while 1:
-            basement.update_work_people()
-            title = draw.TitleLineDraw(_("交易员管理"), self.width)
-            title.draw()
-            return_list = []
-
-            info = draw.NormalDraw()
-            info.text = _("当前交易相关干员数量：{0}").format(
-                len(economy.trade_operator_ids())
-            )
-            info.draw()
-            line_feed.draw()
-
-            adjust_button_text = _("[交易员增减]")
-            adjust_button = draw.CenterButton(
-                adjust_button_text,
-                adjust_button_text,
-                len(adjust_button_text) * 2,
-                cmd_func=manage_basement_panel.change_npc_work_out,
-                args=(self.width, [111]),
-            )
-            return_list.append(adjust_button.return_text)
-            adjust_button.draw()
-            line_feed.draw()
-            line_feed.draw()
-
-            trade_types = trade_service.get_trade_resource_types()
-            main_ids = set()
-            for res_type in trade_types:
-                # 跳过无效或货币类资源
-                if res_type in {_("无"), _("货币")}:
-                    continue
-                res_type_name = attr_calculation.pad_display_width(
-                    res_type, 8, align="center"
-                )
-                main_id = economy.main_trader(res_type)
-                if main_id:
-                    main_ids.add(main_id)
-                main_name = (
-                    identity.of(main_id).name if main_id > 0 else _("空缺")
-                )
-                abi_lv = abilities.ability(main_id).get(40, 0)
-                abi_lv_text = (
-                    _("(话术lv{0})").format(abi_lv) if main_id != 0 else ""
-                )
-                row = draw.NormalDraw()
-                row.text = _("{0} 主交易员：{1}").format(
-                    res_type_name, main_name, abi_lv_text
-                )
-                row.draw()
-
-                assign_button = draw.CenterButton(
-                    _("[任命]"),
-                    f"assign_{res_type}",
-                    len(_("[任命]")) * 2,
-                    cmd_func=self.assign_main_trader,
-                    args=(res_type,),
-                )
-                return_list.append(assign_button.return_text)
-                assign_button.draw()
-
-                clear_button = draw.CenterButton(
-                    _("[清空]"),
-                    f"clear_{res_type}",
-                    len(_("[清空]")) * 2,
-                    cmd_func=self.clear_main_trader,
-                    args=(res_type,),
-                )
-                return_list.append(clear_button.return_text)
-                clear_button.draw()
-                line_feed.draw()
-
-            line_feed.draw()
-            other_ops = [
-                cid
-                for cid in economy.trade_operator_ids()
-                if cid not in main_ids and identity.exists(cid)
-            ]
-            sub_draw = draw.NormalDraw()
-            if other_ops:
-                other_names = []
-                for c in other_ops:
-                    chara = identity.of(c)
-                    abi_lv = abilities.ability(c).get(40, 0)
-                    other_names.append(
-                        _("{chara_name}(话术lv{abi_lv})").format(
-                            chara_name=chara.name, abi_lv=abi_lv
-                        )
-                    )
-                sub_draw.text = _("副交易员：") + "、".join(other_names) + "\n"
-            else:
-                sub_draw.text = _("副交易员：暂无\n")
-            sub_draw.draw()
-            line_feed.draw()
-
-            back_button = draw.CenterButton(_("[返回]"), _("返回"), self.width)
-            return_list.append(back_button.return_text)
-            back_button.draw()
-            line_feed.draw()
-
-            choice = flow_handle.askfor_all(return_list)
-            if choice == back_button.return_text:
-                break
-
-    def clear_main_trader(self, res_type: str) -> None:
-        """清空指定资源类型的主交易员"""
-
-        economy.set_main_trader(res_type, 0)
-
-    def assign_main_trader(self, res_type: str) -> None:
-        """任命指定资源类型的主交易员"""
-
-        from Script.Design import basement
-        from Script.UI.Panel import common_select_NPC
-        from Script.UI.Moudle import panel
-
-        basement.update_work_people()
-        target_type = res_type
-        current_main = economy.main_trader(target_type)
-
-        def _make(chara_id: int) -> None:
-            self._do_assign_main_trader(target_type, chara_id)
-
-        npc_panel: panel.PageHandlePanel = panel.PageHandlePanel(
-            [],
-            common_select_NPC.CommonSelectNPCButtonList,
-            50,
-            5,
-            window_width,
-            True,
-            False,
-            0,
-        )
-        select_state: dict[str, int | str] = {}
-
-        while 1:
-            info_text = _("请选择一名交易员担任【{0}】的主交易员：\n").format(
-                _(target_type)
-            )
-            candidate_list = []
-            for npc_id in economy.trade_operator_ids():
-                if npc_id == 0:
-                    continue
-                candidate_list.append([npc_id, _make, [current_main]])
-            if not candidate_list:
-                info_text += _(
-                    "当前没有可任命的交易员，请先安排干员担任贸易相关工作。\n"
-                )
-            npc_panel.text_list = candidate_list
-            return_list, _other_return_list, select_state = (
-                common_select_NPC.common_select_npc_button_list_func(
-                    npc_panel,
-                    _("任命主交易员"),
-                    info_text,
-                    select_state,
-                )
-            )
-            choice = flow_handle.askfor_all(return_list)
-            if choice == _("返回"):
-                break
-            current_main = economy.main_trader(target_type)
-
-    def _do_assign_main_trader(self, res_type: str, chara_id: int) -> None:
-        """执行主交易员任命/撤销操作"""
-
-        if chara_id not in economy.trade_operator_ids():
-            return
-        current = economy.main_trader(res_type)
-        economy.set_main_trader(
-            res_type, 0 if current == chara_id else chara_id
-        )
+        trade_setting_panel.manage_traders(self.width)
 
     def auto_trade_setting(self, res_id: int) -> None:
         """调整一种资源的自动交易设置"""
+        from Script.UI.Panel import trade_setting_panel
 
-        target_type = trade_service._get_resource_type_key(res_id)
-        resource_data = game_config.config_resouce[res_id]
-        while 1:
-            settings = economy.auto_trade(res_id)
-            title = draw.TitleLineDraw(
-                _("自动交易设置 - {0}").format(resource_data.name), self.width
-            )
-            title.draw()
-            return_list = []
-
-            main_id = economy.main_trader(target_type)
-            info_draw = draw.NormalDraw()
-            if not main_id:
-                info_draw.text = _(
-                    "当前资源类型尚未任命主交易员，无法配置自动交易。\n"
-                )
-                info_draw.draw()
-                back_button = draw.CenterButton(
-                    _("[返回]"), _("返回"), self.width
-                )
-                return_list.append(back_button.return_text)
-                back_button.draw()
-                line_feed.draw()
-                choice = flow_handle.askfor_all(return_list)
-                if choice == back_button.return_text:
-                    break
-                continue
-
-            # 显示当前资源的名称与库存量
-            current_stock = warehouse.stock().get(res_id, 0)
-            stock_draw = draw.NormalDraw()
-            stock_draw.text = _("当前资源：{0}，库存量：{1}\n").format(
-                resource_data.name, current_stock
-            )
-            stock_draw.draw()
-            line_feed.draw()
-
-            # 按钮列表
-            stock_buttons = [
-                (" [-1000] ", -1000),
-                (" [-100] ", -100),
-                (" [-10] ", -10),
-                (" [-1] ", -1),
-                (" [+1] ", 1),
-                (" [+10] ", 10),
-                (" [+100] ", 100),
-                (" [+1000] ", 1000),
-            ]
-            price_buttons = [
-                (" [-20%] ", -20),
-                (" [-5%] ", -5),
-                (" [-1%] ", -1),
-                (" [+1%] ", 1),
-                (" [+5%] ", 5),
-                (" [+20%] ", 20),
-            ]
-
-            # 自动买入开关
-            buy_on_button_text = _("[自动买入：{0}]").format(
-                _("开启") if settings["buy_on"] else _("关闭")
-            )
-            buy_on_button = draw.CenterButton(
-                buy_on_button_text,
-                f"{res_id}_buy_on_toggle",
-                len(buy_on_button_text) * 2,
-                cmd_func=self.toggle_auto_trade,
-                args=(res_id, "buy_on"),
-            )
-            return_list.append(buy_on_button.return_text)
-            buy_on_button.draw()
-            line_feed.draw()
-            # 如果买入开启，显示买入设置
-            if settings["buy_on"]:
-                # 买入库存
-                stock_buy_draw = draw.NormalDraw()
-                stock_buy_draw.text = ("{}：").format(
-                    attr_calculation.pad_display_width(
-                        _("自动买入目标库存"), 20, align="center"
-                    )
-                )
-                stock_buy_draw.text += str(settings["buy_stock"])
-                stock_buy_draw.draw()
-                for label, delta in stock_buttons:
-                    button = draw.CenterButton(
-                        _(label),
-                        f"{res_id}_buy_stock_{label.strip()}",
-                        len(label) * 2,
-                        cmd_func=self.adjust_auto_trade_value,
-                        args=(res_id, "buy_stock", delta, False, False),
-                    )
-                    return_list.append(button.return_text)
-                    button.draw()
-                reset_button = draw.CenterButton(
-                    _("[重置]"),
-                    f"{res_id}_buy_stock_reset",
-                    len(_("[重置]")) * 2,
-                    cmd_func=self.adjust_auto_trade_value,
-                    args=(res_id, "buy_stock", 0, False, True),
-                )
-                return_list.append(reset_button.return_text)
-                reset_button.draw()
-                line_feed.draw()
-
-                # 买入价格
-                price_buy_draw = draw.NormalDraw()
-                price_buy_draw.text = ("{}：").format(
-                    attr_calculation.pad_display_width(
-                        _("自动买入触发价格"), 20, align="center"
-                    )
-                )
-                price_buy_draw.text += ("{}%").format(
-                    settings["buy_price_percent"]
-                )
-                price_buy_draw.draw()
-                for label, delta in price_buttons:
-                    button = draw.CenterButton(
-                        _(label),
-                        f"{res_id}_buy_price_{label.strip()}",
-                        len(label) * 2,
-                        cmd_func=self.adjust_auto_trade_value,
-                        args=(res_id, "buy_price_percent", delta, True, False),
-                    )
-                    return_list.append(button.return_text)
-                    button.draw()
-                reset_button = draw.CenterButton(
-                    _("[重置]"),
-                    f"{res_id}_buy_price_reset",
-                    len(_("[重置]")) * 2,
-                    cmd_func=self.adjust_auto_trade_value,
-                    args=(res_id, "buy_price_percent", 100, True, True),
-                )
-                return_list.append(reset_button.return_text)
-                reset_button.draw()
-                line_feed.draw()
-
-                # 显示要进行的买入操作预览，当库存低于目标且价格低于触发价时，将买入至目标库存
-                preview_buy_draw = draw.NormalDraw()
-                preview_buy_draw_text = _("{0}：").format(
-                    attr_calculation.pad_display_width(
-                        "买入操作预览", 20, align="center"
-                    )
-                )
-                preview_buy_draw_text += _(
-                    "在0点结算时，如果库存低于 {0} 且买价低于基准价的 {1}% 时，买入至库存为 {0} 。\n"
-                ).format(settings["buy_stock"], settings["buy_price_percent"])
-                preview_buy_draw.text = preview_buy_draw_text
-                preview_buy_draw.draw()
-            line_feed.draw()
-
-            # 自动卖出开关
-            sell_on_button_text = _("[自动卖出：{0}]").format(
-                _("开启") if settings["sell_on"] else _("关闭")
-            )
-            sell_on_button = draw.CenterButton(
-                sell_on_button_text,
-                f"{res_id}_sell_on_toggle",
-                len(sell_on_button_text) * 2,
-                cmd_func=self.toggle_auto_trade,
-                args=(res_id, "sell_on"),
-            )
-            return_list.append(sell_on_button.return_text)
-            sell_on_button.draw()
-            line_feed.draw()
-            # 如果卖出开启，显示卖出设置
-            if settings["sell_on"]:
-                # 卖出库存
-                stock_sell_draw = draw.NormalDraw()
-                stock_sell_draw.text = ("{}：").format(
-                    attr_calculation.pad_display_width(
-                        _("自动卖出目标库存"), 20, align="center"
-                    )
-                )
-                stock_sell_draw.text += str(settings["sell_stock"])
-                stock_sell_draw.draw()
-                for label, delta in stock_buttons:
-                    button = draw.CenterButton(
-                        _(label),
-                        f"{res_id}_sell_stock_{label.strip()}",
-                        len(label) * 2,
-                        cmd_func=self.adjust_auto_trade_value,
-                        args=(res_id, "sell_stock", delta, False, False),
-                    )
-                    return_list.append(button.return_text)
-                    button.draw()
-                reset_button = draw.CenterButton(
-                    _("[重置]"),
-                    f"{res_id}_sell_stock_reset",
-                    len(_("[重置]")) * 2,
-                    cmd_func=self.adjust_auto_trade_value,
-                    args=(res_id, "sell_stock", 0, False, True),
-                )
-                return_list.append(reset_button.return_text)
-                reset_button.draw()
-                line_feed.draw()
-
-                # 卖出价格
-                price_sell_draw = draw.NormalDraw()
-                price_sell_draw.text = ("{}：").format(
-                    attr_calculation.pad_display_width(
-                        _("自动卖出触发价格"), 20, align="center"
-                    )
-                )
-                price_sell_draw.text += ("{}%").format(
-                    settings["sell_price_percent"]
-                )
-                price_sell_draw.draw()
-                for label, delta in price_buttons:
-                    button = draw.CenterButton(
-                        _(label),
-                        f"{res_id}_sell_price_{label.strip()}",
-                        len(label) * 2,
-                        cmd_func=self.adjust_auto_trade_value,
-                        args=(res_id, "sell_price_percent", delta, True, False),
-                    )
-                    return_list.append(button.return_text)
-                    button.draw()
-                reset_button = draw.CenterButton(
-                    _("[重置]"),
-                    f"{res_id}_sell_price_reset",
-                    len(_("[重置]")) * 2,
-                    cmd_func=self.adjust_auto_trade_value,
-                    args=(res_id, "sell_price_percent", 100, True, True),
-                )
-                return_list.append(reset_button.return_text)
-                reset_button.draw()
-                line_feed.draw()
-                # 显示要进行的卖出操作预览，当库存高于目标且价格高于触发价时，将卖出至目标库存
-                preview_sell_draw = draw.NormalDraw()
-                preview_sell_draw_text = _("{0}：").format(
-                    attr_calculation.pad_display_width(
-                        "卖出操作预览", 20, align="center"
-                    )
-                )
-                preview_sell_draw_text += _(
-                    "在0点结算时，如果库存高于 {0} 且卖价高于基准价的 {1}% 时，卖出至库存为 {0} 。\n"
-                ).format(settings["sell_stock"], settings["sell_price_percent"])
-                preview_sell_draw.text = preview_sell_draw_text
-                preview_sell_draw.draw()
-
-            line_feed.draw()
-            back_button = draw.CenterButton(_("[返回]"), _("返回"), self.width)
-            return_list.append(back_button.return_text)
-            back_button.draw()
-            line_feed.draw()
-
-            choice = flow_handle.askfor_all(return_list)
-            if choice == back_button.return_text:
-                break
-
-    def toggle_auto_trade(self, res_id: int, key: str) -> None:
-        """切换自动交易配置的开关状态"""
-
-        settings = economy.auto_trade(res_id)
-        settings[key] = not settings.get(key, False)
-        economy.set_auto_trade(res_id, settings)
-
-    def adjust_auto_trade_value(
-        self,
-        res_id: int,
-        key: str,
-        delta: int,
-        is_percent: bool = False,
-        reset: bool = False,
-    ) -> None:
-        """调整自动交易配置的单个数值"""
-
-        settings = economy.auto_trade(res_id)
-        if reset:
-            settings[key] = 0
-            economy.set_auto_trade(res_id, settings)
-            return
-
-        new_value = settings.get(key, 0) + delta
-        if new_value < 0:
-            new_value = 0
-        if is_percent:
-            new_value = min(300, new_value)
-        else:
-            max_capacity = warehouse.capacity()
-            if max_capacity > 0:
-                new_value = min(max_capacity, new_value)
-        settings[key] = new_value
-        economy.set_auto_trade(res_id, settings)
+        trade_setting_panel.auto_trade_setting(self.width, res_id)
 
     def select_exchange_resouce(self) -> None:
         """选择交易资源"""
-        while 1:
-
-            line = draw.LineDraw("-", window_width)
-            line.draw()
+        while True:
+            draw.LineDraw("-", window_width).draw()
             line_feed.draw()
-            info_draw = draw.NormalDraw()
-            info_draw.width = window_width
-            return_list = []
-
-            resouce_now_data = game_config.config_resouce[
-                self.now_select_resouce_id
-            ]
-
-            info_text = _("当前的交易资源为：{0}").format(resouce_now_data.name)
-            info_text += _("\n当前可以交易的资源有：\n")
-            info_draw.text = info_text
-            info_draw.draw()
+            keys: list[str] = []
+            name = game_config.config_resouce[self.now_select_resouce_id].name
+            text = _("当前的交易资源为：{0}").format(name)
+            draw_text(
+                text + _("\n当前可以交易的资源有：\n"), width=window_width
+            )
             line_feed.draw()
-
-            # 遍历全资源类型
-            resouce_list = [
-                _("材料"),
-                _("药剂"),
-                _("乳制品"),
-                _("香水"),
-                _("基建"),
-                _("特产"),
-            ]
-            for resouce_type in resouce_list:
-
-                # 判断是否显示该类型的资源
-                if self.show_resource_type_dict[resouce_type]:
-                    draw_text = f" ▼[{resouce_type}]"
-                else:
-                    draw_text = f" ▶[{resouce_type}]"
-                button_draw = draw.LeftButton(
-                    f"{draw_text}",
-                    f"{resouce_type}",
-                    len(draw_text) * 2,
-                    cmd_func=self.settle_show_resource_type,
-                    args=(resouce_type),
+            types = _types()
+            for res_type in types:
+                shown = self.show_resource_type_dict[res_type]
+                text = f" {'▼' if shown else '▶'}[{res_type}]"
+                func = self.settle_show_resource_type
+                button = draw.LeftButton(
+                    text,
+                    res_type,
+                    len(text) * 2,
+                    cmd_func=func,
+                    args=(res_type),
                 )
-                button_draw.draw()
-                return_list.append(button_draw.return_text)
+                button.draw()
+                keys.append(button.return_text)
                 line_feed.draw()
-
-                # 遍历该类型的资源
-                if not self.show_resource_type_dict[resouce_type]:
-                    continue
-                for resouce_id in game_config.config_resouce:
-                    resouce_data = game_config.config_resouce[resouce_id]
-                    if resouce_data.type == resouce_type:
-                        # 特产商品仅在当地可以买入，其他地方只能卖出
-                        if resouce_data.type == _("特产"):
-                            if (
-                                warehouse.amount(resouce_id) == 0
-                                and resouce_data.specialty != location.country()
-                            ):
-                                continue
-                        button_draw = draw.LeftButton(
-                            f" [{str(resouce_id).rjust(3,'0')}]{resouce_data.name}：{resouce_data.info}",
-                            f"\n{resouce_id}",
-                            window_width,
-                            cmd_func=self.settle_now_select_resouce_id,
-                            args=(resouce_id),
-                        )
-                        button_draw.draw()
-                        return_list.append(button_draw.return_text)
-
-                        now_text = _("\n      当前存量：{0}/{1}").format(
-                            warehouse.amount(resouce_id),
-                            warehouse.capacity(),
-                        )
-                        # 判断是否可以买入卖出
-                        if resouce_data.cant_buy == 0:
-                            price_buy, percent_buy = (
-                                trade_service.get_resouce_price(
-                                    resouce_id, True
-                                )
-                            )
-                            if percent_buy > 0:
-                                percent_str_buy = f"(+{percent_buy:.1f}%)"
-                            elif percent_buy < 0:
-                                percent_str_buy = f"({percent_buy:.1f}%)"
-                            else:
-                                percent_str_buy = "(0%)"
-                            now_text += _("   买入:{0}龙门币/1单位 {1}").format(
-                                price_buy, percent_str_buy
-                            )
-                        # 如果是卖出
-                        price_sell, percent_sell = (
-                            trade_service.get_resouce_price(resouce_id, False)
-                        )
-                        if percent_sell > 0:
-                            percent_str_sell = f"(+{percent_sell:.1f}%)"
-                        elif percent_sell < 0:
-                            percent_str_sell = f"({percent_sell:.1f}%)"
-                        else:
-                            percent_str_sell = ""
-                        now_text += _("   卖出:{0}龙门币/1单位 {1}\n").format(
-                            price_sell, percent_str_sell
-                        )
-                        info_draw.text = now_text
-                        info_draw.draw()
-
+                if shown:
+                    self._draw_listings(keys, res_type)
             line_feed.draw()
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
             back_draw.draw()
             line_feed.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn in return_list and yrn not in resouce_list:
+            keys.append(back_draw.return_text)
+            choice = flow_handle.askfor_all(keys)
+            if choice in keys and choice not in types:
                 break
+
+    def _draw_listings(self, keys: list[str], res_type: str) -> None:
+        """绘制资源选择页中指定类型下各资源的按钮与价格行。"""
+        func = self.settle_now_select_resouce_id
+        for item in svc.listings(res_type):
+            rid = item.resource_id
+            text = f" [{str(rid).rjust(3,'0')}]{item.name}：{item.info}"
+            button = draw.LeftButton(
+                text, f"\n{rid}", window_width, cmd_func=func, args=(rid)
+            )
+            button.draw()
+            keys.append(button.return_text)
+            text = _("\n      当前存量：{0}/{1}")
+            text = text.format(item.stock, item.capacity)
+            if item.buy is not None:
+                price, percent = item.buy
+                line = _("   买入:{0}龙门币/1单位 {1}")
+                text += line.format(price, _signed(percent, "(0%)"))
+            price, percent = item.sell
+            line = _("   卖出:{0}龙门币/1单位 {1}\n")
+            text += line.format(price, _signed(percent, ""))
+            draw_text(text, width=window_width)
 
     def settle_now_select_resouce_id(self, resouce_id: int) -> None:
         """结算要交易的资源"""
@@ -1151,60 +373,23 @@ class Resource_Exchange_Line_Panel:
 
     def settle_quantity(self, button_text: str) -> None:
         """结算交易数量变更"""
-        add_num = int(button_text[2:-2])
-        self.quantity_of_resouce += add_num
-
-        capacity_left = warehouse.capacity() - warehouse.amount(
-            self.now_select_resouce_id
-        )
-        now_stock = warehouse.amount(self.now_select_resouce_id)
-
-        # 交易数量最大买入上限
-        if self.quantity_of_resouce > capacity_left:
-            self.quantity_of_resouce = capacity_left
-        # 交易数量最大卖出下限 (负数)
-        if self.quantity_of_resouce < -now_stock:
-            self.quantity_of_resouce = -now_stock
+        rid, qty = self.now_select_resouce_id, self.quantity_of_resouce
+        self.quantity_of_resouce = svc.step(rid, qty, int(button_text[2:-2]))
 
     def settle_max_buy(self) -> None:
         """结算最大买入数量"""
-        resouce_data = game_config.config_resouce[self.now_select_resouce_id]
-        # 如果是不可购买的商品则直接跳过
-        if resouce_data.cant_buy == 1:
-            return
-
-        buy_price, _ = trade_service.get_resouce_price(
-            self.now_select_resouce_id, True
-        )
-        if buy_price <= 0:
-            return
-
-        money = warehouse.amount(1)
-        capacity_left = warehouse.capacity() - warehouse.amount(
-            self.now_select_resouce_id
-        )
-
-        affordable = money // buy_price
-        self.quantity_of_resouce = min(affordable, capacity_left)
-        if self.quantity_of_resouce < 0:
-            self.quantity_of_resouce = 0
+        rid, qty = self.now_select_resouce_id, self.quantity_of_resouce
+        self.quantity_of_resouce = svc.max_buy(rid, qty)
 
     def settle_max_sell(self) -> None:
         """结算最大卖出数量"""
-        self.quantity_of_resouce = -warehouse.amount(self.now_select_resouce_id)
+        self.quantity_of_resouce = svc.max_sell(self.now_select_resouce_id)
 
-    def reset_quantity(
-        self,
-    ) -> None:
+    def reset_quantity(self) -> None:
         """重置资源交易数量"""
         self.quantity_of_resouce = 0
 
-    def settle_buy_or_sell(self) -> None:
-        """切换买入和卖出"""
-        self.buy_or_sell_flag = not self.buy_or_sell_flag
-
     def settle_show_resource_type(self, resouce_type: str) -> None:
         """设置显示的资源类型"""
-        self.show_resource_type_dict[resouce_type] = (
-            not self.show_resource_type_dict[resouce_type]
-        )
+        shown = self.show_resource_type_dict[resouce_type]
+        self.show_resource_type_dict[resouce_type] = not shown
