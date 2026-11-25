@@ -9,11 +9,11 @@ from __future__ import annotations
 from typing import Any, cast
 from types import FunctionType
 from Script.Core import get_text, flow_handle, constant
-from Script.Config import game_config, normal_config
-from Script.Design import attr_calculation, handle_ability
+from Script.Config import normal_config
 from Script.UI.Moudle import draw, view
 from Script.System.Medical_System import medical_constant, medical_service
-from Script.Modules.domains import abilities, facility, medical, identity
+from Script.Modules.gameplay_resolution import medical_department_service
+from Script.Modules.gameplay_resolution import medical_management_service
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -22,6 +22,20 @@ window_width: int = normal_config.config_normal.text_width
 line_feed = draw.NormalDraw()
 line_feed.text = "\n"
 line_feed.width = 1
+
+
+def _draw_text(text: str, width: int) -> None:
+    """按指定宽度创建普通文本绘制对象并立即绘制。"""
+    now_draw = draw.NormalDraw()
+    now_draw.width = width
+    now_draw.text = text
+    now_draw.draw()
+
+
+def _draw_feedback(text: str, width: int) -> None:
+    """反馈文本非空时前后补换行并按指定宽度绘制。"""
+    if text:
+        _draw_text(f"\n{text}\n", width)
 
 
 class Medical_Department_Panel:
@@ -65,7 +79,6 @@ class Medical_Department_Panel:
             return_list: list[str] = []
             title_draw.draw()
 
-            # 绘制导航标签
             for panel_name in self.panel_order:
                 if panel_name == self.current_panel:
                     now_draw = draw.CenterDraw()
@@ -89,7 +102,6 @@ class Medical_Department_Panel:
             draw.LineDraw("+", self.width).draw()
             line_feed.draw()
 
-            # 绘制当前子面板内容
             sub_panel = self.sub_panels[self.current_panel]
             sub_return_list = sub_panel.draw()
             return_list.extend(sub_return_list)
@@ -136,97 +148,20 @@ class OverviewSubPanel(_BaseSubPanel):
     """经营概览子面板，汇总医疗部关键指标"""
 
     def draw(self) -> list[str]:
-        return_list: list[str] = []
-
-        outpatient_table = medical_service.get_patient_table(hospitalized=False)
-        hospital_table = medical_service.get_patient_table(hospitalized=True)
-        patients_today = list(outpatient_table.values())
-        hospitalized = list(hospital_table.values())
-        bed_limit = int(medical.state().bed_limit)
-        bed_occupied = len(hospital_table)
-        price_ratio = medical_service.get_medical_price_ratio()
-        priority_mode = medical_service.get_patient_priority_mode()
-
-        pending_queue = sum(
-            1
-            for patient in patients_today
-            if patient.state in medical_constant.WAITING_QUEUE_STATE_SET
-        )
-        waiting_medication = sum(
-            1
-            for patient in patients_today
-            if patient.state
-            == medical_constant.MedicalPatientState.WAITING_MEDICATION
-        )
-
-        overview_draw = draw.NormalDraw()
-        overview_draw.width = self.width
-        overview_draw.text = _(
-            "收费系数：{0:.2f} 倍 | 接诊优先策略：{1}\n"
-        ).format(
-            price_ratio, medical_constant.translate_priority(priority_mode)
-        )
-        overview_draw.text += _(
-            "门诊医生：{0} 人（医疗能力总和 {1}） | 住院医生：{2} 人（医疗能力总和 {3}）\n"
-        ).format(
-            len(medical.state().clinic_doctor_ids),
-            int(medical.state().clinic_doctor_power or 0),
-            len(medical.state().hospital_doctor_ids),
-            int(medical.state().hospital_doctor_power or 0),
-        )
-        overview_draw.text += _(
-            "门诊排队 {0} 人 | 等待用药 {1} 人 | 住院 {2}/{3} 张床位 | 今日收入 {4} 龙门币\n"
-        ).format(
-            pending_queue,
-            waiting_medication,
-            bed_occupied,
-            bed_limit,
-            int(medical.state().income_today),
-        )
-        overview_draw.draw()
-
+        """绘制经营概览页的摘要、状态统计与药品扣除缓存文本。"""
+        _draw_text(medical_department_service.overview_text(), self.width)
         line_feed.draw()
-
-        state_counter: dict[medical_constant.MedicalPatientState, int] = {
-            state: 0 for state in medical_constant.MedicalPatientState
-        }
-        for patient in patients_today:
-            state_counter[patient.state] += 1
-        for patient in hospitalized:
-            state_counter[patient.state] += 1
-
-        state_draw = draw.NormalDraw()
-        state_draw.width = self.width
-        state_draw.text = _("病人状态统计：\n")
-        for state in medical_constant.MedicalPatientState:
-            state_draw.text += f"  {medical_constant.get_state_display_name(state)}：{state_counter.get(state, 0)} 人\n"
-        state_draw.draw()
-
+        _draw_text(medical_department_service.overview_state_text(), self.width)
         line_feed.draw()
-
-        accumulator_draw = draw.NormalDraw()
-        accumulator_draw.width = self.width
-        accumulator_draw.text = _("药品扣除缓存：\n")
-        if medical.state().accumulator:
-            for resource_id, progress in sorted(
-                medical.state().accumulator.items()
-            ):
-                resource_name = game_config.config_resouce.get(resource_id)
-                name = getattr(resource_name, "name", str(resource_id))
-                accumulator_draw.text += _("  {0}({1})：{2:.2f}\n").format(
-                    name, resource_id, float(progress)
-                )
-        else:
-            accumulator_draw.text += _("  暂无扣除记录\n")
-        accumulator_draw.draw()
-
-        return return_list
+        _draw_text(medical_department_service.overview_cache_text(), self.width)
+        return []
 
 
 class DoctorManagementSubPanel(_BaseSubPanel):
     """医生管理子面板，提供手动调配与分科"""
 
     def __init__(self, width: int) -> None:
+        """初始化医生管理子面板并置空操作反馈文本。"""
         super().__init__(width)
         self.feedback_text: str = ""
 
@@ -234,34 +169,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         """绘制医生管理页面并返回所有按钮的返回值列表"""
 
         return_list: list[str] = []
-
-        clinic_ids = medical_service.list_role_doctors(
-            medical_constant.SPECIALIZATION_ROLE_CLINIC
-        )
-        hospital_ids = medical_service.list_role_doctors(
-            medical_constant.SPECIALIZATION_ROLE_HOSPITAL
-        )
-        bed_limit = int(medical.state().bed_limit)
-        hospital_table = medical_service.get_patient_table(hospitalized=True)
-        bed_occupied = len(hospital_table)
-
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw.text = _("门诊医生：{0} 人 | 医疗能力总和 {1}\n").format(
-            len(clinic_ids), int(medical.state().clinic_doctor_power or 0)
-        )
-        info_draw.text += _("住院医生：{0} 人 | 医疗能力总和 {1}\n").format(
-            len(hospital_ids), int(medical.state().hospital_doctor_power or 0)
-        )
-        info_draw.text += _("床位上限 {0} 张，当前占用 {1} 张\n").format(
-            bed_limit, bed_occupied
-        )
-        estimated_hours = self._estimate_remaining_hours()
-        info_draw.text += _(
-            "按当前排班预计完成全部门诊耗时约 {0:.2f} 小时\n"
-        ).format(estimated_hours)
-        info_draw.draw()
-
+        _draw_text(medical_management_service.doctor_text(), self.width)
         line_feed.draw()
 
         from Script.UI.Panel import manage_basement_panel
@@ -285,12 +193,10 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         line_feed.draw()
 
         priority_mode = medical_service.get_patient_priority_mode()
-        priority_title = draw.NormalDraw()
-        priority_title.text = _("当前接诊优先策略：{0}\n").format(
-            medical_constant.translate_priority(priority_mode)
+        _draw_text(
+            medical_management_service.priority_text(priority_mode),
+            self.width,
         )
-        priority_title.width = self.width
-        priority_title.draw()
         for mode, label in medical_constant.PRIORITY_OPTIONS:
             if mode == priority_mode:
                 now_draw = draw.CenterDraw()
@@ -311,30 +217,24 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         line_feed.draw()
         line_feed.draw()
 
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw.text = _(
-            "○全科医生看诊与治疗所有病人，但效率较低，专科医生仅看诊与治疗对应分科病人，效率更高。\n"
+        _draw_text(
+            _(
+                "○全科医生看诊与治疗所有病人，但效率较低，专科医生仅看诊与治疗对应分科病人，效率更高。\n"
+            ),
+            self.width,
         )
-        info_draw.draw()
         line_feed.draw()
         self._draw_specialization_section(
             medical_constant.SPECIALIZATION_ROLE_CLINIC, return_list
         )
         line_feed.draw()
-        # 仅在医疗区的等级大于等于3级时再显示住院医生分科
-        if facility.level(medical_constant.MEDICAL_FACILITY_ID, 0) >= 3:
+        if medical_management_service.shows_hospital_specialties():
             self._draw_specialization_section(
                 medical_constant.SPECIALIZATION_ROLE_HOSPITAL, return_list
             )
             line_feed.draw()
 
-        if self.feedback_text:
-            feedback_draw = draw.NormalDraw()
-            feedback_draw.width = self.width
-            feedback_draw.text = f"\n{self.feedback_text}\n"
-            feedback_draw.draw()
-
+        _draw_feedback(self.feedback_text, self.width)
         return return_list
 
     def _draw_specialization_section(
@@ -342,59 +242,23 @@ class DoctorManagementSubPanel(_BaseSubPanel):
     ) -> None:
         """绘制指定岗位的医生分科信息并提供分配按钮"""
 
-        overview = medical_service.get_doctor_specialization_overview(role_key)
-        role_name = medical_constant.ROLE_DISPLAY_NAME.get(role_key, role_key)
-        header_draw = draw.NormalDraw()
-        header_draw.width = self.width
-        header_draw.text = _("{0}科室情况：\n").format(role_name)
-        header_draw.draw()
-
-        for category in overview:
-            doctor_details = category.get("doctor_details", [])
-            doctor_texts = [
-                _("{0}(Lv{1},x{2:.2f})").format(
-                    detail.get("name", str(detail.get("id"))),
-                    detail.get("ability_level", 0),
-                    detail.get("bonus_multiplier", 1.0),
-                )
-                for detail in doctor_details
-            ]
-            category_draw = draw.NormalDraw()
-            category_draw.width = self.width
-            category_name = category.get(
-                "category_name", category.get("category_key", "-")
-            )
-            category_draw.text = _("  {0}（{1} 人，平均倍率 x{2:.2f}）").format(
-                attr_calculation.pad_display_width(category_name, 16),
-                category.get("doctor_count", 0),
-                category.get("average_bonus_multiplier", 1.0),
-            )
-            category_draw.draw()
-
-            action_label = _("分配到{0}").format(category_name)
+        rows = medical_management_service.specialty_rows(role_key)
+        _draw_text(
+            medical_management_service.specialty_heading(role_key), self.width
+        )
+        for row in rows:
+            _draw_text(row.summary, self.width)
             button_text = _("[分配]")
             assign_button = draw.CenterButton(
                 button_text,
-                role_key + action_label,
+                row.return_text,
                 max(len(button_text) * 2, 10),
                 cmd_func=self._prompt_assign,
-                args=(
-                    role_key,
-                    category.get(
-                        "category_key",
-                        medical_constant.SPECIALIZATION_GENERAL_KEY,
-                    ),
-                ),
+                args=(role_key, row.category_key),
             )
             assign_button.draw()
             return_list.append(assign_button.return_text)
-
-            # 绘制医生名字列表
-            category_draw.text = _("：{0}").format(
-                "、".join(doctor_texts) if doctor_texts else _("空缺"),
-            )
-            category_draw.draw()
-
+            _draw_text(row.doctors, self.width)
             line_feed.draw()
 
     def _prompt_assign(self, role_key: str, category_key: str) -> None:
@@ -405,16 +269,9 @@ class DoctorManagementSubPanel(_BaseSubPanel):
             self.feedback_text = get_text._("当前岗位没有可分配的医生。")
             return
 
-        categories = medical_service.get_specialization_categories()
-        category_name = next(
-            (
-                item["name"]
-                for item in categories
-                if item.get("key") == category_key
-            ),
-            category_key,
+        target = medical_management_service.assign_target(
+            role_key, category_key
         )
-        role_name = medical_constant.ROLE_DISPLAY_NAME.get(role_key, role_key)
 
         from Script.UI.Panel import common_select_NPC
         from Script.UI.Moudle import panel
@@ -430,46 +287,25 @@ class DoctorManagementSubPanel(_BaseSubPanel):
             0,
         )
         select_state: dict[str, Any] = {}
-
-        overview = medical_service.get_doctor_specialization_overview(role_key)
-        assigned_ids = set()
-        for category in overview:
-            if category.get("category_key") == category_key:
-                assigned_ids = set(category.get("doctor_ids", []))
-                break
-
         result_holder: dict[str, bool] = {"done": False}
 
         def _assign(doctor_id: int) -> None:
-            result = medical_service.assign_doctor_specialization(
-                role_key, doctor_id, category_key
+            self.feedback_text = medical_management_service.assign_doctor(
+                target, doctor_id
             )
-            if result.get("success"):
-                character = identity.get(doctor_id)
-                doctor_name = getattr(character, "name", str(doctor_id))
-                self.feedback_text = get_text._(
-                    "已将 {0} 调整至「{1}」({2})"
-                ).format(doctor_name, category_name, role_name)
-            else:
-                self.feedback_text = get_text._("分配失败：{0}").format(
-                    result.get("reason", "unknown")
-                )
             result_holder["done"] = True
 
         while True:
             entries: list[list[Any]] = [
-                [doctor_id, _assign, list(assigned_ids)]
+                [doctor_id, _assign, list(target.assigned_ids)]
                 for doctor_id in doctor_ids
             ]
             select_panel.text_list = cast(list[Any], entries)
-            info_text = get_text._("请选择一名{0}分配至「{1}」：\n").format(
-                role_name, category_name
-            )
             return_options, _, select_state = (
                 common_select_NPC.common_select_npc_button_list_func(
                     select_panel,
                     get_text._("分配医生"),
-                    info_text,
+                    medical_management_service.assign_prompt(target),
                     select_state,
                 )
             )
@@ -487,47 +323,12 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         """切换病人接诊优先策略并提示结果"""
         medical_service.set_patient_priority_mode(mode)
 
-    def _estimate_remaining_hours(self) -> float:
-        """估算当前门诊病人需要的剩余工时"""
-
-        outpatient_table = medical_service.get_patient_table(
-            hospitalized=False,
-        )
-
-        total_remaining = 0.0
-        for patient in outpatient_table.values():
-            if patient.state not in medical_constant.WAITING_QUEUE_STATE_SET:
-                continue
-            severity_config = game_config.config_medical_severity.get(
-                patient.severity_level
-            )
-            if severity_config is None:
-                continue
-            base_hours = float(severity_config.base_hours)
-            remaining = max(base_hours - float(patient.diagnose_progress), 0.0)
-            total_remaining += remaining
-
-        total_speed = 0.0
-        for doctor_id in medical.state().clinic_doctor_ids:
-            character = identity.get(doctor_id)
-            if character is None:
-                continue
-            ability_level = abilities.ability(character.cid).get(
-                medical_constant.MEDICAL_ABILITY_ID, 0
-            )
-            speed = max(
-                float(handle_ability.get_ability_adjust(ability_level)), 0.25
-            )
-            total_speed += speed
-        if total_speed <= 0:
-            total_speed = 0.25
-        return total_remaining / total_speed
-
 
 class PriceSettingSubPanel(_BaseSubPanel):
     """收费设置子面板，维护医疗价格与预测信息"""
 
     def __init__(self, width: int) -> None:
+        """初始化收费设置子面板并置空操作反馈文本。"""
         super().__init__(width)
         self.feedback_text: str = ""
 
@@ -535,38 +336,9 @@ class PriceSettingSubPanel(_BaseSubPanel):
         """绘制收费设置面板并返回交互按钮列表"""
 
         return_list: list[str] = []
-        current_ratio = medical_service.get_medical_price_ratio()
-        new_ratio = medical_service.get_new_medical_price_ratio()
-        level = facility.level(6, 0)
-        # 使用当前生效的收费系数进行预测
-        preview = medical_service.predict_medical_patient_refresh(
-            price_ratio=current_ratio, level=level
-        )
-
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw.text = _("当前收费系数：{0:.2f} 倍 ({1:.0f}%)\n").format(
-            current_ratio, current_ratio * 100
-        )
-        # 如果有待调整的收费系数，显示提示
-        if new_ratio > 0:
-            info_draw.text += _(
-                "  └ 待调整系数：{0:.2f} 倍（明日生效）\n"
-            ).format(new_ratio)
-        info_draw.text += _("预计刷新病人数：{0:.0f} 人/日\n").format(
-            preview.get("predicted_count", 0.0)
-        )
-        info_draw.text += _(
-            "刷新倍率修正：{0:.2f} | 收入倍率：{1:.2f}\n"
-        ).format(
-            preview.get("refresh_multiplier", 1.0),
-            preview.get("income_multiplier", 1.0),
-        )
-        info_draw.text += _("收费系数越高，病人刷新量越低，但单次收入越高。\n")
-        info_draw.draw()
+        _draw_text(medical_management_service.price_text(), self.width)
         line_feed.draw()
 
-        # 百分比调节按钮
         adjust_options = [
             (-10, _("-10%")),
             (-5, _("-5%")),
@@ -596,34 +368,20 @@ class PriceSettingSubPanel(_BaseSubPanel):
         return_list.append(reset_button.return_text)
         line_feed.draw()
 
-        if self.feedback_text:
-            feedback_draw = draw.NormalDraw()
-            feedback_draw.width = self.width
-            feedback_draw.text = f"\n{self.feedback_text}\n"
-            feedback_draw.draw()
-
+        _draw_feedback(self.feedback_text, self.width)
         return return_list
 
     def _adjust_ratio(self, delta_percent: int) -> None:
         """按百分比调整收费系数并刷新提示"""
 
-        # 如果有待调整的收费系数，基于待调整系数进行调整；否则基于当前系数
-        new_ratio = medical_service.get_new_medical_price_ratio()
-        if new_ratio > 0:
-            base_ratio = new_ratio
-        else:
-            base_ratio = medical_service.get_medical_price_ratio()
-        resolved_ratio = max(base_ratio + delta_percent / 100.0, 0.10)
-        medical_service.set_medical_price_ratio(resolved_ratio)
-        self.feedback_text = _("已调整收费系数至 {0:.2f} 倍，明天生效").format(
-            resolved_ratio
+        self.feedback_text = medical_management_service.adjust_price_ratio(
+            delta_percent
         )
 
     def _reset_ratio(self) -> None:
         """将收费系数重置为 1.0"""
 
-        medical_service.set_medical_price_ratio(1.0)
-        self.feedback_text = _("收费系数已重置为 1.00 倍，明天生效")
+        self.feedback_text = medical_management_service.reset_price_ratio()
 
 
 class MedicalDetailSubPanel(_BaseSubPanel):
@@ -632,66 +390,12 @@ class MedicalDetailSubPanel(_BaseSubPanel):
     def draw(self) -> list[str]:
         """绘制医疗明细并返回交互按钮列表"""
 
-        return_list: list[str] = []
-
-        state_counter: dict[medical_constant.MedicalPatientState, int] = {
-            state: 0 for state in medical_constant.MedicalPatientState
-        }
-        outpatient_table = medical_service.get_patient_table(hospitalized=False)
-        hospital_table = medical_service.get_patient_table(hospitalized=True)
-
-        for patient in outpatient_table.values():
-            state_counter[patient.state] += 1
-        for patient in hospital_table.values():
-            state_counter[patient.state] += 1
-
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw.text = _("病人状态概览：\n")
-        for state, count in state_counter.items():
-            info_draw.text += f"  {medical_constant.get_state_display_name(state)}：{count} 人\n"
-        info_draw.draw()
+        _draw_text(medical_department_service.detail_state_text(), self.width)
         line_feed.draw()
-
-        # 仅展示前若干名病人摘要，避免输出过长
-        preview_draw = draw.NormalDraw()
-        preview_draw.width = self.width
-        preview_draw.text = _("在诊病人示例：\n")
-        pending_patients = [
-            patient
-            for patient in outpatient_table.values()
-            if patient.state in medical_constant.WAITING_QUEUE_STATE_SET
-        ]
-        pending_patients.sort(key=lambda p: (-p.severity_level, p.patient_id))
-        for patient in pending_patients[:6]:
-            severity_name = patient.severity_name or str(patient.severity_level)
-            preview_draw.text += _(
-                "  病例#{0} 等级：{1} | 状态：{2} | 并发症数：{3}\n"
-            ).format(
-                patient.patient_id,
-                severity_name,
-                medical_constant.get_state_display_name(patient.state),
-                len(patient.complications),
-            )
-        if not pending_patients:
-            preview_draw.text += _("  当前无待诊病人\n")
-        preview_draw.draw()
+        _draw_text(medical_department_service.pending_text(), self.width)
         line_feed.draw()
-
-        accumulator_draw = draw.NormalDraw()
-        accumulator_draw.width = self.width
-        accumulator_draw.text = _("药品扣除缓存：\n")
-        for resource_id, progress in sorted(
-            medical.state().accumulator.items()
-        ):
-            resource_name = game_config.config_resouce.get(resource_id)
-            name = getattr(resource_name, "name", str(resource_id))
-            accumulator_draw.text += (
-                f"  {name}({resource_id})：{progress:.2f}\n"
-            )
-        accumulator_draw.draw()
-
-        return return_list
+        _draw_text(medical_department_service.detail_cache_text(), self.width)
+        return []
 
 
 class SurgeryManagementSubPanel(_BaseSubPanel):
@@ -700,54 +404,10 @@ class SurgeryManagementSubPanel(_BaseSubPanel):
     def draw(self) -> list[str]:
         """绘制手术管理界面"""
 
-        return_list: list[str] = []
-
-        hospital_table = medical_service.get_patient_table(hospitalized=True)
-        waiting_patients = [
-            patient
-            for patient in hospital_table.values()
-            if patient.need_surgery
-        ]
-        waiting_patients.sort(key=lambda p: (-p.severity_level, p.patient_id))
-
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw.text = _("待手术病人：{0} 人\n").format(len(waiting_patients))
-        for patient in waiting_patients[:8]:
-            severity_name = patient.severity_name or str(patient.severity_level)
-            block_reason = patient.last_surgery_result or "-"
-            info_draw.text += _(
-                "  病例#{0} 等级：{1} | 阻塞：{2} | 需手术：{3}\n"
-            ).format(
-                patient.patient_id,
-                severity_name,
-                block_reason,
-                "是" if patient.need_surgery else "否",
-            )
-        if not waiting_patients:
-            info_draw.text += _("  当前无待手术病人\n")
-        info_draw.draw()
+        _draw_text(medical_department_service.surgery_text(), self.width)
         line_feed.draw()
-
-        record_draw = draw.NormalDraw()
-        record_draw.width = self.width
-        record_draw.text = _("近期手术记录：\n")
-        for record in medical.state().surgery_records[-10:]:
-            doctor_data = identity.get(record.get("doctor_id", 0))
-            doctor_name = getattr(doctor_data, "name", "-")
-            record_draw.text += _(
-                "  时间：{0} | 病例#{1} | 医生：{2} | 结果：{3}\n"
-            ).format(
-                str(record.get("time", "-")),
-                record.get("patient_id", "-"),
-                doctor_name or "-",
-                record.get("status", "-"),
-            )
-        if not medical.state().surgery_records:
-            record_draw.text += _("  暂无手术记录\n")
-        record_draw.draw()
-
-        return return_list
+        _draw_text(medical_department_service.surgery_record_text(), self.width)
+        return []
 
 
 class FinanceReportSubPanel(_BaseSubPanel):
@@ -756,94 +416,9 @@ class FinanceReportSubPanel(_BaseSubPanel):
     def draw(self) -> list[str]:
         """绘制财务报表信息"""
 
-        return_list: list[str] = []
-
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw.text = _("今日医疗收入：{0} 龙门币\n").format(
-            int(medical.state().income_today)
-        )
-        info_draw.text += _("累计医疗收入：{0} 龙门币\n").format(
-            int(medical.state().income_total)
-        )
-
-        counters = medical_constant.MedicalDailyCounters.from_mapping(
-            medical.state().daily_counters
-        )
-        counter_dict = counters.as_dict()
-        if counter_dict:
-            info_draw.text += _("今日统计：\n")
-            for key, value in counter_dict.items():
-                if value is None:
-                    continue
-                display_name = medical_constant.DISPLAY_NAME_MAPPING.get(
-                    key, key
-                )
-                if key == "medicine_consumed":
-                    consumption_map = medical_constant.MedicalDailyCounters._coerce_consumption_mapping(
-                        value
-                    )
-                    total_units = sum(
-                        float(amount or 0.0)
-                        for amount in consumption_map.values()
-                    )
-                    info_draw.text += _("  {0}：总计 {1:.2f} 单位\n").format(
-                        display_name, total_units
-                    )
-                    has_detail = False
-                    for resource_id in sorted(consumption_map.keys()):
-                        units = float(
-                            consumption_map.get(resource_id, 0.0) or 0.0
-                        )
-                        if abs(units) <= medical_constant.FLOAT_EPSILON:
-                            continue
-                        resource_config = game_config.config_resouce.get(
-                            resource_id
-                        )
-                        resource_name = (
-                            getattr(resource_config, "name", str(resource_id))
-                            if resource_config
-                            else str(resource_id)
-                        )
-                        info_draw.text += _(
-                            "    {0}({1})：{2:.2f} 单位\n"
-                        ).format(resource_name, resource_id, units)
-                        has_detail = True
-                    if not has_detail:
-                        info_draw.text += _("    暂无药品消耗记录\n")
-                    continue
-                info_draw.text += _("  {0}：{1}\n").format(display_name, value)
-        else:
-            info_draw.text += _("今日尚无额外统计数据\n")
-        info_draw.draw()
+        _draw_text(medical_department_service.finance_text(), self.width)
         line_feed.draw()
-
-        # 预估后续药品需求
-        need_draw = draw.NormalDraw()
-        need_draw.width = self.width
-        need_draw.text = _("待诊/住院病人尚需药品：\n")
-        aggregated: dict[int, float] = {}
-        outpatient_table = medical_service.get_patient_table(hospitalized=False)
-        hospital_table = medical_service.get_patient_table(hospitalized=True)
-        for group in (outpatient_table.values(), hospital_table.values()):
-            for patient in group:
-                if (
-                    patient.state
-                    == medical_constant.MedicalPatientState.REFRESHED
-                ):
-                    continue
-                for resource_id, amount in patient.need_resources.items():
-                    aggregated[resource_id] = aggregated.get(
-                        resource_id, 0.0
-                    ) + float(amount)
-        for resource_id, amount in sorted(aggregated.items()):
-            resource = game_config.config_resouce.get(resource_id)
-            name = getattr(resource, "name", str(resource_id))
-            need_draw.text += _("  {0}({1})：{2:.2f}\n").format(
-                name, resource_id, amount
-            )
-        need_draw.draw()
-
+        _draw_text(medical_department_service.medicine_need_text(), self.width)
         line_feed.draw()
         log_button = draw.LeftButton(
             _("[401]查看最近经营日志"),
@@ -853,17 +428,11 @@ class FinanceReportSubPanel(_BaseSubPanel):
         )
         log_button.draw()
         line_feed.draw()
-        return_list.append(log_button.return_text)
-
-        return return_list
+        return [log_button.return_text]
 
     def _show_recent_reports(self) -> None:
         """弹出最近几日的医疗经营日志"""
         wait_draw = draw.WaitDraw()
         wait_draw.width = self.width
-        wait_draw.text = medical_service.render_medical_reports(
-            medical_service.get_recent_medical_reports(limit=3),
-            draw_flag=False,
-            empty_message=_("\n暂无医疗经营日志记录。\n"),
-        )
+        wait_draw.text = medical_department_service.recent_reports_text()
         wait_draw.draw()
