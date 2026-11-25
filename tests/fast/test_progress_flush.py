@@ -38,9 +38,9 @@ SLOT = "progress_flush"
 """读档迁移用例在临时存档目录中写入与读取的存档槽位标识"""
 NEW_DAY_IMPORTS = (
     "Script.System.Cooking_System.cooking",
+    "Script.Modules.gameplay_resolution.assistant_service",
     "Script.Modules.gameplay_resolution.diplomacy_service",
     "Script.Modules.gameplay_resolution.navigation_service",
-    "Script.UI.Panel.assistant_panel",
     "Script.System.Pregnancy_System.pregnancy_handle",
     "Script.System.Pregnancy_System.egg_handle",
     "Script.System.Education_System.schedule_template_handle",
