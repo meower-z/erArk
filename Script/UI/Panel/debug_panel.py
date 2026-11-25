@@ -1,296 +1,55 @@
-"""debug 界面面板，以及口上快速测试和数据重建工具"""
+"""
+调试与口上快速测试界面面板。
+本模块负责 debug 面板与快速测试口上界面的绘制和输入循环。
+口上测试与全局修改委托给 talk_test_service 与 debug_world_service。
+角色调试子界面委托给 debug_chara_panel。
+"""
 
-import datetime
-from dataclasses import replace
-from typing import Any, cast
-from types import FunctionType, MappingProxyType
-from Script.Core import get_text, flow_handle, constant, py_cmd, num, io_init
-from Script.Design import (
-    basement,
-    character_handle,
-    handle_premise,
-    attr_calculation,
-    clothing,
-    map_handle,
+from types import FunctionType
+
+from Script.Config import normal_config
+from Script.Core import constant, flow_handle, get_text, io_init, py_cmd
+from Script.Design import character_handle
+from Script.Modules.domains import activity, identity, npc_template
+from Script.Modules.gameplay_resolution import debug_world_service as world
+from Script.Modules.gameplay_resolution import talk_test_service as talk_test
+from Script.Modules.gameplay_resolution.talk_test_service import (
+    build_chara_talk,
 )
-from Script.UI.Moudle import draw, panel, view
-from Script.Config import game_config, normal_config
-import os
-import json
-import csv
-from Script.Design import game_time
-from Script.Kernel import core
-from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import (
-    action_info,
-    activity,
-    entertainment,
-    npc_template,
-    physical_exam,
-)
-from Script.Modules.domains import abilities, chara_life, dirty, h_state, roster
-from Script.Modules.domains import flags, needs, pregnancy, relations, warehouse
-from Script.Modules.domains import facility, h_meters, hypnosis, recruit, status
-from Script.Modules.domains import identity
+from Script.UI.Moudle import draw, view
+from Script.UI.Moudle.draw import Drawable, NormalDraw
+from Script.UI.Panel import debug_chara_panel
+from Script.UI.Panel.debug_chara_panel import ask, ask_value, line_feed
 
 _: FunctionType = get_text._
-""" 翻译api """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
+""" 本地化翻译函数。 """
 window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
+""" 全局配置的界面文本宽度。 """
 
 
-def set_clock(new_time: datetime.datetime) -> None:
-    """
-    调试：把游戏时钟改到 new_time，只调用一次 core.reset_state，在选行动里调用时这次选择中止。
-    从新时刻起每 5 分钟结算一次；往后跳过了 0 点，新时刻先结算一次新的一天，往前跳不结算；
-    跳过的时间不做连续结算，进行中的行动保留原来的开始时刻
-    Keyword arguments:
-    new_time -- 新的游戏时间
-    """
-    game = core.state()
-    clock = game_time.minutes(new_time)
-    settled_day = cast(int, game.data[actions.SETTLED_DAY])
-    data = {
-        **game.data,
-        actions.TICKED: clock,
-        actions.SETTLED_DAY: min(settled_day, game_time.day(clock)),
-    }
-    core.reset_state(
-        replace(game, clock=clock, data=MappingProxyType(data)),
-        {"cause": "clock"},
-    )
-
-
-def build_csv_config(
-    file_path: str, file_name: str, chara_adv_id: int, character_talk_data: dict
-) -> None:
-    """
-    输入：
-        file_path (str): 文件路径
-        file_name (str): 文件名
-        talk (bool): 是否为talk
-        target (bool): 是否为target
-    返回：None
-    功能：读取csv并更新全局配置数据
-    """
-    with open(file_path, encoding="utf-8") as now_file:
-        now_read = csv.DictReader(now_file)
-        now_docstring_data = {}
-        now_type_data = {}
-        get_text_data = {}
-        file_id = file_name.split(".")[0]
-        path_list = file_path.split(os.sep)
-        file_id = path_list[-2] + "_" + file_id
-        i = 0
-        type_text = file_id
-        type_text = "Talk"
-        if "premise" in file_name:
-            type_text = "TalkPremise"
-        character_talk_data.setdefault(type_text, {})
-        character_talk_data[type_text].setdefault("data", [])
-        character_talk_data[type_text].setdefault("gettext", {})
-        for row in now_read:
-            if not i:
-                for k in row:
-                    now_docstring_data[k] = row[k]
-                i += 1
-                continue
-            elif i == 1:
-                for k in row:
-                    now_type_data[k] = row[k]
-                i += 1
-                continue
-            elif i == 2:
-                for k in row:
-                    get_text_data[k] = int(row[k])
-                i += 1
-                continue
-            elif i == 3:
-                i += 1
-                continue
-            # 跳过非指定角色的行
-            if int(row["adv_id"]) != chara_adv_id:
-                continue
-            for k in now_type_data:
-                now_type = now_type_data[k]
-                if not len(row[k]):
-                    del row[k]
-                    continue
-                if now_type == "int":
-                    row[k] = int(row[k])
-                elif now_type == "str":
-                    row[k] = str(row[k]).replace(
-                        '"', '\\"'
-                    )  # 转义引号防止造成po文件混乱
-                elif now_type == "bool":
-                    row[k] = int(row[k])
-                elif now_type == "float":
-                    row[k] = float(row[k])
-                if k == "cid":
-                    row[k] = file_id + row[k]
-            # 设置版本号，默认为1
-            row["version"] = 1
-            # 如果口上的文件名中存在下划线标记的版本号，则将最后一个下划线之后的数字记录为版本号
-            if int(row["adv_id"]) != 0 and file_id.count("_") == 3:
-                row["version"] = int(file_id.rsplit("_", 1)[-1])
-            # 记录口上数据
-            character_talk_data[type_text]["data"].append(row)
-        get_text_data["version"] = 0
-        character_talk_data[type_text]["gettext"] = get_text_data
-
-
-def build_chara_talk(chara_adv_id: int = 0) -> None:
-    """ "
-    "构建角色对话数据"
-    """
-    talk_dir = os.path.join("data", "talk")
-    character_talk_data_path = os.path.join("data", "Character_Talk.json")
-    # 在开始时读取 JSON，若读取失败则用空对象
-    try:
-        if chara_adv_id == 0:
-            character_talk_data = {}
-        else:
-            with open(character_talk_data_path, encoding="utf-8") as f:
-                character_talk_data = json.load(f)
-            # 如果指定了特定角色，则将该角色重置
-            for key in character_talk_data["Talk"]["data"].copy():
-                if key["adv_id"] == chara_adv_id:
-                    character_talk_data["Talk"]["data"].remove(key)
-    except BaseException:
-        character_talk_data = {}
-
-    talk_file_list = os.listdir(talk_dir)
-    # 遍历 talk 文件夹下的所有文件和子目录
-    for i in talk_file_list:
-        # 跳过 ai 文件夹
-        if i == "ai":
-            continue
-        now_dir = os.path.join(talk_dir, i)
-        # 判断当前路径是否为目录
-        if os.path.isdir(now_dir):
-            # 如果是目录，则递归遍历子目录
-            for root, _dirs, files in os.walk(now_dir):
-                for talk_file in files:
-                    now_f = os.path.join(root, talk_file)
-                    build_csv_config(
-                        now_f, talk_file, chara_adv_id, character_talk_data
-                    )
-        else:
-            # 如果不是目录，直接处理文件
-            build_csv_config(now_dir, i, chara_adv_id, character_talk_data)
-    # 写入 talk 数据
-    with open(
-        character_talk_data_path, "w", encoding="utf-8"
-    ) as talk_data_file:
-        json.dump(character_talk_data, talk_data_file, ensure_ascii=False)
+def _wait(text: str) -> None:
+    """使用等待绘制控件输出提示或报告文本。"""
+    now_draw = draw.WaitDraw()
+    now_draw.text = text
+    now_draw.draw()
 
 
 class TALK_QUICK_TEST:
-    """
-    用于快速测试口上的面板对象
-    Keyword arguments:
-    width -- 绘制宽度
-    """
+    """快速测试口上面板类，负责菜单绘制、输入采集与结果展示。"""
 
     def __init__(self, width: int) -> None:
-        """初始化绘制对象"""
+        """初始化快速测试口上面板宽度。"""
         self.width: int = width
-        """ 绘制的最大宽度 """
-        self.now_panel = _("快速测试口上")
-        """ 当前绘制的页面 """
-        self.draw_list: list[draw.NormalDraw] = []
-        """ 绘制的文本列表 """
+        """ 面板内容绘制宽度。 """
 
     def draw(self) -> None:
-        """绘制对象"""
-
-        title_text = _("快速测试口上")
-        title_draw = draw.TitleLineDraw(title_text, self.width)
-
-        # 当前测试模式：False为单条测试，True为批量测试
-        batch_mode = False
-
-        while 1:
-            return_list = []
-            title_draw.draw()
-            info_draw = draw.NormalDraw()
-            info_draw.width = self.width
-
-            info_text = _(
-                "本功能用于快速测试当前数据情况下，指定角色的指定id口上的触发情况，包括触发者与交互对象、是否能够触发、每个前提是否满足、最终输出文本等\n\n"
-            )
-            info_text += _(
-                "刷新口上文件，用于在不重启游戏的情况，重新刷新并读取发生了变更的口上文件。即可以在编辑器中写完新的条目、保存，然后在游戏中点击该刷新按钮，读取刚写好的条目并进行测试\n\n"
-            )
-            info_text += _(
-                "批量测试时，口上id支持逗号分隔（如1,3,5）和区间（如95-98）\n\n\n"
-            )
-            info_draw.text = info_text
-            info_draw.draw()
-
-            button_text = _("[001]刷新口上文件后测试")
-            button1_draw = draw.LeftButton(
-                button_text,
-                button_text,
-                len(button_text) * 2,
-                cmd_func=self.refresh_talk_file,
-            )
-            button1_draw.draw()
-            return_list.append(button1_draw.return_text)
-            line_feed.draw()
-
-            button_text = _("[002]直接开始测试")
-            button2_draw = draw.LeftButton(
-                button_text,
-                button_text,
-                len(button_text) * 2,
-                cmd_func=self.nothing,
-            )
-            button2_draw.draw()
-            return_list.append(button2_draw.return_text)
-            line_feed.draw()
-
-            button_text = _("[003]批量测试多条口上")
-            button3_draw = draw.LeftButton(
-                button_text,
-                button_text,
-                len(button_text) * 2,
-                cmd_func=self.nothing,
-            )
-            button3_draw.draw()
-            return_list.append(button3_draw.return_text)
-            line_feed.draw()
-
-            line_feed.draw()
-            back_draw = draw.CenterButton(
-                _("[返回]"), _("返回"), window_width / 4
-            )
-            back_draw.draw()
-            line_feed.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                view.now_panel_id = constant.Panel.IN_SCENE
-                return
-            elif (
-                yrn == button1_draw.return_text
-                or yrn == button2_draw.return_text
-            ):
-                batch_mode = False
-                break
-            elif yrn == button3_draw.return_text:
-                batch_mode = True
-                break
-
+        """运行快速测试口上的主交互循环。"""
+        batch_mode = self._menu()
+        if batch_mode is None:
+            return
         while 1:
             py_cmd.clr_cmd()
-            return_list = []
-            line = draw.LineDraw("-", window_width)
-            line.draw()
+            draw.LineDraw("-", window_width).draw()
             info_draw = draw.NormalDraw()
             info_draw.width = self.width
             if batch_mode:
@@ -298,2356 +57,327 @@ class TALK_QUICK_TEST:
             else:
                 info_draw.text = _("\n\n测试开始\n\n")
             info_draw.draw()
-            # 获取角色id
-            change_value_panel = panel.AskForOneMessage()
-            change_value_panel.set(_("请输入角色id"), 100)
-            chara_adv_id = int(change_value_panel.draw())
-            target_chara_id = 0
-            for tem_chara_id in identity.table():
-                tem_character_data = identity.of(tem_chara_id)
-                if tem_character_data.adv == chara_adv_id:
-                    target_chara_id = tem_chara_id
-                    break
+            target_chara_id = talk_test.chara_by_adv(
+                int(ask(_("请输入角色id")))
+            )
             line_feed.draw()
-            # 获取口上id
-            change_value_panel = panel.AskForOneMessage()
             if batch_mode:
-                change_value_panel.set(
-                    _("请输入口上id（支持1,3,5或95-98）"), 100
-                )
+                talk_id_text = ask(_("请输入口上id（支持1,3,5或95-98）"))
             else:
-                change_value_panel.set(_("请输入口上id"), 100)
-            talk_id_text = change_value_panel.draw()
+                talk_id_text = ask(_("请输入口上id"))
             line_feed.draw()
-
-            # 开始打印测试结果
             line_feed.draw()
-            line_draw = draw.LineDraw("-", self.width)
-            line_draw.draw()
-
+            draw.LineDraw("-", self.width).draw()
             if batch_mode:
-                # 解析批量口上id列表
-                talk_id_list = self.parse_talk_id_list(talk_id_text)
-                if not talk_id_list:
-                    now_draw = draw.WaitDraw()
-                    now_draw.text = _(
-                        "\n未输入有效的口上id，请重新进入面板输入\n"
-                    )
-                    now_draw.draw()
-                elif len(talk_id_list) > 10:
-                    # 数量超过10条时，按每10条一组分批测试和显示
-                    self.run_batch_talk_test_in_groups(
-                        target_chara_id, talk_id_list
-                    )
-                else:
-                    report_lines = []
-                    pass_count = 0
-                    fail_count = 0
-                    pass_id_list = []
-                    fail_id_list = []
-                    with activity.target_as(0, activity.target(0)):
-                        for talk_index, talk_id in enumerate(talk_id_list, 1):
-                            report_text, pass_flag = self.test_single_talk(
-                                target_chara_id, talk_id
-                            )
-                            # 在每条测试信息前打印编号，方便用户按编号追溯
-                            report_lines.append(
-                                _(
-                                    "\n===== 第 {0} 条 / 共 {1} 条（口上id：{2}） ====="
-                                ).format(talk_index, len(talk_id_list), talk_id)
-                            )
-                            report_lines.append(report_text)
-                            if pass_flag:
-                                pass_count += 1
-                                pass_id_list.append(talk_id)
-                            else:
-                                fail_count += 1
-                                fail_id_list.append(talk_id)
-                    # 输出汇总信息
-                    report_lines.append(
-                        _(
-                            "\n汇总：共测试 {0} 条，通过 {1} 条，未通过 {2} 条"
-                        ).format(len(talk_id_list), pass_count, fail_count)
-                    )
-                    if pass_id_list:
-                        report_lines.append(
-                            _("\n通过的口上id：{0}").format(
-                                "、".join(
-                                    str(talk_id) for talk_id in pass_id_list
-                                )
-                            )
-                        )
-                    else:
-                        report_lines.append(_("\n通过的口上id：无"))
-                    if fail_id_list:
-                        report_lines.append(
-                            _("未通过的口上id：{0}\n").format(
-                                "、".join(
-                                    str(talk_id) for talk_id in fail_id_list
-                                )
-                            )
-                        )
-                    else:
-                        report_lines.append(_("未通过的口上id：无\n"))
-                    now_draw = draw.WaitDraw()
-                    now_draw.text = "\n".join(report_lines)
-                    now_draw.draw()
+                self._batch(target_chara_id, talk_id_text)
             else:
-                # 单条测试模式
-                try:
-                    talk_id = int(talk_id_text)
-                except ValueError:
-                    talk_id = -1
-                if talk_id < 0:
-                    now_draw = draw.WaitDraw()
-                    now_draw.text = _("\n口上id输入错误，请重新进入面板输入\n")
-                    now_draw.draw()
-                else:
-                    report_text, pass_flag = self.test_single_talk(
-                        target_chara_id, talk_id
-                    )
-                    now_draw = draw.WaitDraw()
-                    now_draw.text = report_text
-                    now_draw.draw()
-
+                self._single(target_chara_id, talk_id_text)
             line_feed.draw()
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
             back_draw.draw()
             line_feed.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
+            if flow_handle.askfor_all([back_draw.return_text]) == (
+                back_draw.return_text
+            ):
                 view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
-    def test_single_talk(
-        self, target_chara_id: int, talk_id: int
-    ) -> tuple[str, bool]:
-        """
-        测试单条角色口上并返回文本化的测试报告
-        Keyword arguments:
-        target_chara_id -- 目标角色的运行时character_id
-        talk_id -- 口上数字id
-        Return arguments:
-        tuple[str, bool] -- 测试报告文本和是否通过
-        """
-        from Script.Design import talk
-
-        target_character_data = identity.of(target_chara_id)
-        # 在chara_adv_id前面补零为4位数
-        full_adv_id = str(target_character_data.adv).rjust(4, "0")
-        chara_name = target_character_data.name
-        full_talk_id = f"chara_{full_adv_id}_{chara_name}{talk_id}"
-        # 获取口上数据
-        find_talk_flag = full_talk_id in game_config.config_talk
-
-        draw_text = "\n"
-        if target_chara_id == 0:
-            draw_text += _("未找到该角色，请确认是否输入正确\n")
-            return draw_text, False
-        if not find_talk_flag:
-            draw_text += _(
-                "未找到该口上（id={0}），请确认是否输入正确\n"
-            ).format(talk_id)
-            return draw_text, False
-
-        pass_flag = True
-        # 输出角色信息
-        draw_text += _("测试角色：{0}\n").format(target_character_data.name)
-        draw_text += _("口上id：{0}\n").format(full_talk_id)
-        # 是否已获得该角色
-        if not roster.has(target_chara_id):
-            draw_text += _("  博士未获得该角色(X)\n")
-            pass_flag = False
-        else:
-            draw_text += _("  博士已获得该角色(√)\n")
-        # 当前交互对象是否是该角色
-        if activity.target(0) != target_chara_id:
-            draw_text += _("  博士当前交互对象不是该角色(X)\n")
-            pass_flag = False
-        else:
-            draw_text += _("  博士当前交互对象是该角色(√)\n")
-        # 指令状态
-        now_behavior_id = game_config.config_talk[full_talk_id].behavior_id
-        draw_text += _("\n指令状态：{0}\n").format(
-            game_config.config_behavior[now_behavior_id].name
-        )
-        # 判断触发人与交互对象
-        draw_text += _("\n触发人与交互对象：\n")
-        if "sys_0" in game_config.config_talk_premise_data[full_talk_id]:
-            draw_text += _("  触发人：博士\n")
-            start_chara_id = 0
-        elif "sys_1" in game_config.config_talk_premise_data[full_talk_id]:
-            draw_text += _("  触发人：NPC\n")
-            start_chara_id = target_chara_id
-        else:
-            if game_config.config_behavior[now_behavior_id].trigger == "npc":
-                draw_text += _("  触发人：未填写，本测试中默认选择为NPC\n")
-                start_chara_id = target_chara_id
-            else:
-                draw_text += _("  触发人：未填写，本测试中默认选择为博士\n")
-                start_chara_id = 0
-        if "二段结算" in game_config.config_behavior[now_behavior_id].tag:
-            draw_text += _(
-                "  交互对象：同触发人，二段结算的交互对象只能是触发人自己\n"
+    def _menu(self) -> bool | None:
+        """绘制模式选择菜单，返回是否进入批量测试或返回时的 None。"""
+        title_draw = draw.TitleLineDraw(_("快速测试口上"), self.width)
+        while 1:
+            title_draw.draw()
+            info_draw = draw.NormalDraw()
+            info_draw.width = self.width
+            info_draw.text = (
+                _(
+                    "本功能用于快速测试当前数据情况下，指定角色的指定id口上的触发情况，包括触发者与交互对象、是否能够触发、每个前提是否满足、最终输出文本等\n\n"
+                )
+                + _(
+                    "刷新口上文件，用于在不重启游戏的情况，重新刷新并读取发生了变更的口上文件。即可以在编辑器中写完新的条目、保存，然后在游戏中点击该刷新按钮，读取刚写好的条目并进行测试\n\n"
+                )
+                + _(
+                    "批量测试时，口上id支持逗号分隔（如1,3,5）和区间（如95-98）\n\n\n"
+                )
             )
-            end_chara_id = start_chara_id
-        elif "sys_4" in game_config.config_talk_premise_data[full_talk_id]:
-            draw_text += _("  交互对象：博士\n")
-            end_chara_id = 0
-        elif "sys_5" in game_config.config_talk_premise_data[full_talk_id]:
-            draw_text += _("  交互对象：NPC\n")
-            end_chara_id = target_chara_id
-        else:
-            if start_chara_id == 0:
-                draw_text += _("  交互对象：未填写，本测试中默认选择为NPC\n")
-                end_chara_id = target_chara_id
-            else:
-                draw_text += _("  交互对象：未填写，本测试中默认选择为博士\n")
-                end_chara_id = 0
-        # 设置交互对象
-        with activity.target_as(start_chara_id, end_chara_id):
-
-            # 输出口上文本
-            talk_context = game_config.config_talk[full_talk_id].context
-            draw_text += _("\n口上原文本：\n  {0}\n").format(talk_context)
-            draw_text += _("口上输出文本：\n  {0}\n").format(
-                talk.code_text_to_draw_text(talk_context, start_chara_id)
+            info_draw.draw()
+            modes = {}
+            for text, func, batch in (
+                (_("[001]刷新口上文件后测试"), self.refresh_talk_file, False),
+                (_("[002]直接开始测试"), self.nothing, False),
+                (_("[003]批量测试多条口上"), self.nothing, True),
+            ):
+                button_draw = draw.LeftButton(
+                    text, text, len(text) * 2, cmd_func=func
+                )
+                button_draw.draw()
+                modes[button_draw.return_text] = batch
+                line_feed.draw()
+            line_feed.draw()
+            back_draw = draw.CenterButton(
+                _("[返回]"), _("返回"), window_width / 4
             )
-            # 遍历前提条件
-            draw_text += _("\n前提条件：\n")
-            for premise in game_config.config_talk_premise_data[full_talk_id]:
-                # 综合数值前提判定
-                if "CVP" in premise:
-                    premise_all_value_list = premise.split("_")[1:]
-                    now_add_weight: float = (
-                        handle_premise.handle_comprehensive_value_premise(
-                            start_chara_id, premise_all_value_list
-                        )
-                    )
-                # 其他正常口上判定
-                else:
-                    now_add_weight = constant.handle_premise_data[premise](
-                        start_chara_id
-                    )
-                if now_add_weight:
-                    draw_text += _("  {0}：满足(√)\n").format(premise)
-                else:
-                    draw_text += _("  {0}：不满足(X)\n").format(premise)
-                    pass_flag = False
+            back_draw.draw()
+            line_feed.draw()
+            yrn = flow_handle.askfor_all([*modes, back_draw.return_text])
+            if yrn == back_draw.return_text:
+                view.now_panel_id = constant.Panel.IN_SCENE
+                return None
+            if yrn in modes:
+                return modes[yrn]
 
-            # 输出测试结果
-            if pass_flag:
-                draw_text += _("\n最终结果：\n  测试通过，该口上可以触发\n")
-            else:
-                draw_text += _("\n最终结果：\n  测试未通过，该口上无法触发\n")
+    def _single(self, target_chara_id: int, talk_id_text: str) -> None:
+        """解析单条口上编号并展示测试结果或错误提示。"""
+        try:
+            talk_id = int(talk_id_text)
+        except ValueError:
+            talk_id = -1
+        if talk_id < 0:
+            _wait(_("\n口上id输入错误，请重新进入面板输入\n"))
+        else:
+            _wait(talk_test.test_single_talk(target_chara_id, talk_id)[0])
 
-            return draw_text, pass_flag
+    def _batch(self, target_chara_id: int, talk_id_text: str) -> None:
+        """解析批量口上编号并在单组或分组模式下展示汇总结果。"""
+        talk_id_list = talk_test.parse_talk_id_list(talk_id_text)
+        if not talk_id_list:
+            _wait(_("\n未输入有效的口上id，请重新进入面板输入\n"))
+        elif len(talk_id_list) > talk_test.GROUP_SIZE:
+            self.run_batch_talk_test_in_groups(target_chara_id, talk_id_list)
+        else:
+            with activity.target_as(0, activity.target(0)):
+                lines, passed, failed = talk_test.run_tests(
+                    target_chara_id, talk_id_list, 1, len(talk_id_list)
+                )
+            lines += talk_test.summary_lines(passed, failed)
+            _wait("\n".join(lines))
 
     def run_batch_talk_test_in_groups(
         self, target_chara_id: int, talk_id_list: list[int]
     ) -> None:
-        """
-        按每10条一组分批测试口上，每组显示后等待用户手动选择是否继续
-        Keyword arguments:
-        target_chara_id -- 目标角色的运行时character_id
-        talk_id_list -- 待测试的口上id列表
-        Return arguments:
-        无
-        """
-        total_count = len(talk_id_list)
-        group_size = 10
-        group_count = (total_count + group_size - 1) // group_size
-        all_pass_id_list = []
-        all_fail_id_list = []
-        test_stopped = False
+        """按每组固定条数分页执行批量口上测试并支持中途停止。"""
+        total = len(talk_id_list)
+        size = talk_test.GROUP_SIZE
+        all_passed: list[int] = []
+        all_failed: list[int] = []
+        stopped = False
         with activity.target_as(0, activity.target(0)):
-            for group_index in range(group_count):
-                start_index = group_index * group_size
-                end_index = min(start_index + group_size, total_count)
-                group_talk_id_list = talk_id_list[start_index:end_index]
-                report_lines = []
-                for talk_index, talk_id in enumerate(
-                    group_talk_id_list, start_index + 1
-                ):
-                    report_text, pass_flag = self.test_single_talk(
-                        target_chara_id, talk_id
-                    )
-                    # 在每条测试信息前打印全局编号，方便用户按编号追溯
-                    report_lines.append(
-                        _(
-                            "\n===== 第 {0} 条 / 共 {1} 条（口上id：{2}） ====="
-                        ).format(talk_index, total_count, talk_id)
-                    )
-                    report_lines.append(report_text)
-                    if pass_flag:
-                        all_pass_id_list.append(talk_id)
-                    else:
-                        all_fail_id_list.append(talk_id)
-                # 非最后一组：显示本轮结果后，等待用户手动选择继续下一轮或停止测试
-                if group_index < group_count - 1:
-                    report_lines.append(
-                        _(
-                            "\n本轮已测试第 {0}-{1} 条，请确认后选择是否继续下一轮"
-                        ).format(start_index + 1, end_index)
-                    )
-                    now_draw = draw.WaitDraw()
-                    now_draw.text = "\n".join(report_lines)
-                    now_draw.draw()
-                    line_feed.draw()
-                    continue_draw = draw.CenterButton(
-                        _("[继续下一轮测试]"),
-                        _("继续下一轮测试"),
-                        window_width / 3,
-                    )
-                    continue_draw.draw()
-                    stop_draw = draw.CenterButton(
-                        _("[停止测试并查看汇总]"),
-                        _("停止测试并查看汇总"),
-                        window_width / 3,
-                    )
-                    stop_draw.draw()
-                    line_feed.draw()
-                    yrn = flow_handle.askfor_all(
-                        [continue_draw.return_text, stop_draw.return_text]
-                    )
-                    if yrn == stop_draw.return_text:
-                        test_stopped = True
-                        break
-                else:
-                    # 最后一组：显示本轮结果，随后统一显示最终汇总
-                    now_draw = draw.WaitDraw()
-                    now_draw.text = "\n".join(report_lines)
-                    now_draw.draw()
-        # 输出最终汇总信息
-        pass_count = len(all_pass_id_list)
-        fail_count = len(all_fail_id_list)
-        summary_lines = []
-        if test_stopped:
-            summary_lines.append(_("\n测试已停止，以下是已测试部分的汇总"))
-        summary_lines.append(
-            _("\n汇总：共测试 {0} 条，通过 {1} 条，未通过 {2} 条").format(
-                pass_count + fail_count, pass_count, fail_count
-            )
+            for start in range(0, total, size):
+                end = min(start + size, total)
+                lines, passed, failed = talk_test.run_tests(
+                    target_chara_id, talk_id_list[start:end], start + 1, total
+                )
+                all_passed += passed
+                all_failed += failed
+                if end == total:
+                    _wait("\n".join(lines))
+                    break
+                lines.append(talk_test.group_prompt(start + 1, end))
+                _wait("\n".join(lines))
+                line_feed.draw()
+                continue_draw = draw.CenterButton(
+                    _("[继续下一轮测试]"),
+                    _("继续下一轮测试"),
+                    window_width / 3,
+                )
+                continue_draw.draw()
+                stop_draw = draw.CenterButton(
+                    _("[停止测试并查看汇总]"),
+                    _("停止测试并查看汇总"),
+                    window_width / 3,
+                )
+                stop_draw.draw()
+                line_feed.draw()
+                yrn = flow_handle.askfor_all(
+                    [continue_draw.return_text, stop_draw.return_text]
+                )
+                if yrn == stop_draw.return_text:
+                    stopped = True
+                    break
+        _wait(
+            "\n".join(talk_test.summary_lines(all_passed, all_failed, stopped))
         )
-        if all_pass_id_list:
-            summary_lines.append(
-                _("\n通过的口上id：{0}").format(
-                    "、".join(str(talk_id) for talk_id in all_pass_id_list)
-                )
-            )
-        else:
-            summary_lines.append(_("\n通过的口上id：无"))
-        if all_fail_id_list:
-            summary_lines.append(
-                _("未通过的口上id：{0}\n").format(
-                    "、".join(str(talk_id) for talk_id in all_fail_id_list)
-                )
-            )
-        else:
-            summary_lines.append(_("未通过的口上id：无\n"))
-        now_draw = draw.WaitDraw()
-        now_draw.text = "\n".join(summary_lines)
-        now_draw.draw()
-
-    def parse_talk_id_list(self, input_text: str) -> list[int]:
-        """
-        将输入解析为口上id列表
-        Keyword arguments:
-        input_text -- 面板输入的字符串
-        Return arguments:
-        List[int] -- 去重后的口上id列表
-        """
-        result: list[int] = []
-        for raw_part in input_text.replace("，", ",").split(","):
-            part = raw_part.strip()
-            if not part:
-                continue
-            if "-" in part:
-                range_list = part.split("-")
-                if (
-                    len(range_list) == 2
-                    and range_list[0].strip().isdigit()
-                    and range_list[1].strip().isdigit()
-                ):
-                    start_id = int(range_list[0].strip())
-                    end_id = int(range_list[1].strip())
-                    if start_id > end_id:
-                        start_id, end_id = end_id, start_id
-                    result.extend(range(start_id, end_id + 1))
-            elif part.isdigit():
-                result.append(int(part))
-        # 去重并保持输入顺序
-        seen_id_set = set()
-        output_list = []
-        for talk_id in result:
-            if talk_id not in seen_id_set:
-                seen_id_set.add(talk_id)
-                output_list.append(talk_id)
-        return output_list
 
     def refresh_talk_file(self) -> None:
-        """刷新口上文件"""
-
-        # 要求输入角色的id
-        change_value_panel = panel.AskForOneMessage()
-        change_value_panel.set(_("请输入角色id"), 100)
-        chara_adv_id = int(change_value_panel.draw())
-
-        line = draw.LineDraw("-", window_width)
-        line.draw()
+        """刷新指定角色的口上文件、重载配置并展示前后条目统计。"""
+        chara_adv_id = int(ask(_("请输入角色id")))
+        draw.LineDraw("-", window_width).draw()
         now_draw = draw.NormalDraw()
         now_draw.text = _("\n\n开始刷新口上文件，请稍等\n")
         now_draw.draw()
         for _i in range(5):
             line_feed.draw()
-
         io_init.flush()
         build_chara_talk(chara_adv_id)
-
-        # 旧的口上数据计数
-        all_count_old = 0
-        for i in game_config.config_talk_data:
-            all_count_old += len(game_config.config_talk_data[i])
-
-        game_config.reload_talk_data()
-
-        # 新的口上数据计数
-        all_count_new = 0
-        for i in game_config.config_talk_data:
-            all_count_new += len(game_config.config_talk_data[i])
-
-        now_draw = draw.WaitDraw()
-        draw_text = _("\n口上文件刷新完毕\n")
-        draw_text += _(
-            "原数据总数为{0}，新数据总数为{1}，新增数据总数为{2}\n\n"
-        ).format(all_count_old, all_count_new, all_count_new - all_count_old)
-        now_draw.text = draw_text
-        now_draw.draw()
+        _wait(talk_test.refresh_text(*talk_test.reload_talk()))
 
     def nothing(self) -> None:
-        """[002] 与 [003] 两个测试按钮的点击回调，不做任何事"""
+        """直接测试与批量测试按钮绑定的空回调。"""
 
 
 class Debug_Panel:
-    """
-    用于显示debug界面面板对象
-    Keyword arguments:
-    width -- 绘制宽度
-    """
+    """debug 面板主类，协调常用更改、全局变量与 NPC 角色分页绘制。"""
 
     def __init__(self, width: int) -> None:
-        """初始化绘制对象"""
+        """初始化 debug 面板宽度、默认分页与绘制列表。"""
         self.width: int = width
-        """ 绘制的最大宽度 """
+        """ 面板内容绘制宽度。 """
         self.now_panel = _("常用更改")
-        """ 当前绘制的页面 """
+        """ 当前激活的分页名称。 """
         self.draw_list: list[draw.Drawable] = []
-        """ 绘制的文本列表 """
+        """ 当前分页待绘制的控件列表。 """
 
     def draw(self) -> None:
-        """绘制对象"""
-
-        title_text = "debug面板"
-        department_type_list = [_("常用更改"), _("全局变量"), _("NPC角色")]
-
-        title_draw = draw.TitleLineDraw(title_text, self.width)
-
+        """运行 debug 面板主循环并处理分页切换与返回。"""
+        tabs = [_("常用更改"), _("全局变量"), _("NPC角色")]
+        title_draw = draw.TitleLineDraw("debug面板", self.width)
         while 1:
             return_list = []
             title_draw.draw()
-
-            # 绘制主面板
-            for department_type in department_type_list:
-                if department_type == self.now_panel:
+            for tab in tabs:
+                if tab == self.now_panel:
                     tab_draw = draw.CenterDraw()
-                    tab_draw.text = f"[{department_type}]"
+                    tab_draw.text = f"[{tab}]"
                     tab_draw.style = "onbutton"
-                    tab_draw.width = self.width / len(department_type_list)
+                    tab_draw.width = self.width / len(tabs)
                     tab_draw.draw()
                 else:
                     tab_button = draw.CenterButton(
-                        f"[{department_type}]",
-                        f"\n{department_type}",
-                        self.width / len(department_type_list),
+                        f"[{tab}]",
+                        f"\n{tab}",
+                        self.width / len(tabs),
                         cmd_func=self.change_panel,
-                        args=(department_type,),
+                        args=(tab,),
                     )
                     tab_button.draw()
                     return_list.append(tab_button.return_text)
             line_feed.draw()
-            line = draw.LineDraw("+", self.width)
-            line.draw()
-
-            # 本页依次绘制的单个绘制对象
-            draw_items: list[draw.Drawable] = []
-
-            # 全局变量
-            if self.now_panel == _("全局变量"):
-
-                all_info_draw = draw.NormalDraw()
-                all_info_text = _("全局变量一览：")
-                all_info_draw.text = all_info_text
-                all_info_draw.width = self.width
-                draw_items.append(all_info_draw)
-
-                draw_items.append(line_feed)
-
-                # 要输出的变量名称以及注释
-                draw_text_list = []
-                draw_text_list.append(f"[000]:游戏时间：{game_time.now()}")
-                draw_text_list.append(
-                    f"[001]:已拥有的干员id列表：{roster.active()}"
-                )
-                draw_text_list.append("[002]:全干员id列表（太长了无法显示）")
-                draw_text_list.append(f"[003]:龙门币：{warehouse.amount(1)}")
-                draw_text_list.append(f"[004]:合成玉：{warehouse.amount(2)}")
-                draw_text_list.append(f"[005]:粉红凭证：{warehouse.amount(4)}")
-                draw_text_list.append("[006]:基地当前所有待开放设施的开放情况")
-                draw_text_list.append(
-                    f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{entertainment.party_days()}"
-                )
-                draw_text_list.append(f"[008]:当前招募进度：{recruit.lines()}")
-                draw_text_list.append(
-                    f"[009]:已招募待确认的干员id：{recruit.pending()}"
-                )
-
-                for i in range(len(draw_text_list)):
-
-                    button_draw = draw.LeftButton(
-                        draw_text_list[i],
-                        f"\n{i}",
-                        self.width,
-                        cmd_func=self.change_value,
-                        args=i,
-                    )
-                    draw_items.append(button_draw)
-                    draw_items.append(line_feed)
-                    return_list.append(button_draw.return_text)
-
-            elif self.now_panel == _("常用更改"):
-
-                all_info_draw = draw.NormalDraw()
-                all_info_text = _(
-                    "！！！特别注意事项！！！\n！debug前请一定要进行存档备份，不正确和过大的数值修改可能会出现数据超限、跳过中间值结算、数据类型错误和长度错误等问题\n！这些问题会导致游戏的部分结算和功能无法运行和使用，进而坏档\n！总之请一定要进行存档备份，存档数据很珍贵的，坏档了就太痛了\n！！！特别注意事项！！！\n\n"
-                )
-                all_info_text += _("玩家的各项属性")
-                all_info_draw.text = all_info_text
-                all_info_draw.width = self.width
-                draw_items.append(all_info_draw)
-
-                draw_items.append(line_feed)
-
-                # 要输出的变量名称以及注释
-                draw_text_list = []
-                draw_text_list.append(
-                    f"[000]:当前HP：{num.shown(needs.of(0)['hit'])}"
-                )
-                draw_text_list.append(f"[001]:最大HP：{needs.of(0)['hit_max']}")
-                draw_text_list.append(
-                    f"[002]:当前MP：{num.shown(needs.of(0)['mana'])}"
-                )
-                draw_text_list.append(
-                    f"[003]:最大MP：{needs.of(0)['mana_max']}"
-                )
-                draw_text_list.append(
-                    f"[004]:当前射精槽：{num.shown(h_meters.of(0)['eja'])}"
-                )
-                draw_text_list.append(
-                    f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(needs.of(0)['tired'])}"
-                )
-                draw_text_list.append(
-                    f"[006]:尿意值 1m=1点，4h=240点(max)：{num.shown(needs.of(0)['urine'])}"
-                )
-                draw_text_list.append(
-                    f"[007]:饥饿值 1m=1点，4h=240点(max)：{num.shown(needs.of(0)['hunger'])}"
-                )
-                draw_text_list.append("[008]:全源石技艺全开，理智9999")
-                draw_text_list.append("[009]:资源全99999")
-                draw_text_list.append("[010]:设施全满级、全开放")
-                draw_text_list.append("[011]:重置全角色特殊flag")
-                draw_text_list.append("[012]:重置全角色服装")
-                draw_text_list.append("[013]:重置全角色位置至宿舍")
-                draw_text_list.append("[014]:重置文职部的招募数据")
-                draw_text_list.append("[015]:交互对象全部位快感增加")
-                draw_text_list.append("[016]:招募指定adv_id的干员")
-                draw_text_list.append("[017]:重置全角色娱乐")
-
-                for i in range(len(draw_text_list)):
-
-                    button_draw = draw.LeftButton(
-                        draw_text_list[i],
-                        f"\n{i}",
-                        self.width,
-                        cmd_func=self.change_value,
-                        args=i,
-                    )
-                    draw_items.append(button_draw)
-                    draw_items.append(line_feed)
-                    return_list.append(button_draw.return_text)
-
-            elif self.now_panel == _("NPC角色"):
-
-                all_info_draw = draw.NormalDraw()
-                all_info_text = "选择角色："
-                all_info_draw.text = all_info_text
-                all_info_draw.width = self.width
-                draw_items.append(all_info_draw)
-
-                draw_items.append(line_feed)
-
-                id_list = npc_template.ids()
-                id_list.append(0)
-                npc_count = 0
-
-                for NPC_id in id_list:
-                    target_data: identity.Identity = identity.of(NPC_id)
-                    button_text = f"[{str(target_data.adv).rjust(4,'0')}]：{target_data.name}"
-                    draw_style = "standard"
-                    # 如果有口上颜色的话，则显示颜色
-                    if target_data.text_color != "":
-                        draw_style = target_data.name
-
-                    button_draw = draw.LeftButton(
-                        button_text,
-                        f"\n{NPC_id}",
-                        int(self.width / 6),
-                        cmd_func=self.change_target_character,
-                        args=NPC_id,
-                        normal_style=draw_style,
-                    )
-                    draw_items.append(button_draw)
-                    return_list.append(button_draw.return_text)
-                    npc_count += 1
-                    if npc_count % 6 == 0:
-                        draw_items.append(line_feed)
-                draw_items.append(line_feed)
-
-            self.draw_list = []
-            """ 绘制的文本列表 """
-            self.draw_list.extend(draw_items)
-
-            for label in self.draw_list:
-                if isinstance(label, list):
-                    for value in label:
-                        value.draw()
-                    line_feed.draw()
-                else:
-                    label.draw()
-
+            draw.LineDraw("+", self.width).draw()
+            self.draw_list = self._tab_items(return_list)
+            debug_chara_panel.draw_all(self.draw_list)
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
             back_draw.draw()
             return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
+            if flow_handle.askfor_all(return_list) == back_draw.return_text:
                 view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
-    def change_panel(self, department_type: str) -> None:
-        """
-        切换当前面板显示
-        Keyword arguments:
-        department_type -- 要切换的面板类型
-        """
+    def _tab_items(self, return_list: list[str]) -> list[Drawable]:
+        """按当前分页构造提示文本与按钮控件列表。"""
+        items: list[Drawable] = []
+        info_draw = draw.NormalDraw()
+        info_draw.width = self.width
+        if self.now_panel == _("NPC角色"):
+            info_draw.text = "选择角色："
+            items += [info_draw, line_feed]
+            id_list = npc_template.ids()
+            id_list.append(0)
+            for count, npc_id in enumerate(id_list, 1):
+                target = identity.of(npc_id)
+                button_draw = draw.LeftButton(
+                    f"[{str(target.adv).rjust(4, '0')}]：{target.name}",
+                    f"\n{npc_id}",
+                    int(self.width / 6),
+                    cmd_func=self.change_target_character,
+                    args=npc_id,
+                    normal_style=(
+                        "standard" if target.text_color == "" else target.name
+                    ),
+                )
+                items.append(button_draw)
+                return_list.append(button_draw.return_text)
+                if count % 6 == 0:
+                    items.append(line_feed)
+            return items + [line_feed]
+        if self.now_panel == _("全局变量"):
+            info_draw.text = _("全局变量一览：")
+            lines = world.global_lines()
+        elif self.now_panel == _("常用更改"):
+            info_draw.text = _(
+                "！！！特别注意事项！！！\n！debug前请一定要进行存档备份，不正确和过大的数值修改可能会出现数据超限、跳过中间值结算、数据类型错误和长度错误等问题\n！这些问题会导致游戏的部分结算和功能无法运行和使用，进而坏档\n！总之请一定要进行存档备份，存档数据很珍贵的，坏档了就太痛了\n！！！特别注意事项！！！\n\n"
+            ) + _("玩家的各项属性")
+            lines = world.player_lines()
+        else:
+            return items
+        items += [info_draw, line_feed]
+        for i, text in enumerate(lines):
+            button_draw = draw.LeftButton(
+                text, f"\n{i}", self.width, cmd_func=self.change_value, args=i
+            )
+            items += [button_draw, line_feed]
+            return_list.append(button_draw.return_text)
+        return items
 
+    def change_panel(self, department_type: str) -> None:
+        """切换当前激活的分页名称。"""
         self.now_panel = department_type
 
     def change_target_character(self, NPC_id: int) -> None:
-        """
-        选择目标角色
-        """
-        self.target_character_id = NPC_id
-
-        while 1:
-            line = draw.LineDraw("-", self.width)
-            line.draw()
-
-            info_draw = draw.NormalDraw()
-            info_draw.width = self.width
-            return_list = []
-            # 本页依次绘制的单个绘制对象
-            draw_items: list[draw.Drawable] = []
-
-            target_data: identity.Identity = identity.of(
-                self.target_character_id
-            )
-            info_text = (
-                f"[{str(target_data.adv).rjust(4,'0')}]：{target_data.name}\n\n"
-            )
-            info_draw.text = info_text
-            info_draw.draw()
-
-            # 要输出的变量名称以及注释
-            draw_text_list = []
-            draw_text_list.append("[000]:基础属性（已实装）")
-            draw_text_list.append("[001]:道具")
-            draw_text_list.append("[002]:衣服")
-            draw_text_list.append("[003]:当前行为状态")
-            draw_text_list.append("[004]:当前二段行为状态（已实装）")
-            draw_text_list.append("[005]:当前事件状态")
-            draw_text_list.append("[006]:状态（已实装）")
-            draw_text_list.append("[007]:能力（已实装）")
-            draw_text_list.append("[008]:经验（已实装）")
-            draw_text_list.append("[009]:宝珠（已实装）")
-            draw_text_list.append("[010]:素质（已实装）")
-            draw_text_list.append("[011]:初次状态记录")
-            draw_text_list.append("[012]:污浊（已实装）")
-            draw_text_list.append("[013]:本次H（已实装）")
-            draw_text_list.append("[014]:助理情况（已实装）")
-            draw_text_list.append("[015]:行动记录")
-            draw_text_list.append("[016]:工作")
-            draw_text_list.append("[017]:娱乐（已实装）")
-            draw_text_list.append("[018]:怀孕（已实装）")
-            draw_text_list.append("[019]:社会关系（已实装）")
-            draw_text_list.append("[020]:特殊flag（已实装）")
-            draw_text_list.append("[021]:催眠（已实装）")
-
-            for i in range(len(draw_text_list)):
-
-                button_draw = draw.LeftButton(
-                    draw_text_list[i],
-                    f"\n{i}",
-                    self.width,
-                    cmd_func=self.change_target_value,
-                    args=i,
-                )
-                draw_items.append(button_draw)
-                draw_items.append(line_feed)
-                return_list.append(button_draw.return_text)
-
-            self.draw_list = []
-            """ 绘制的文本列表 """
-            self.draw_list.extend(draw_items)
-
-            for label in self.draw_list:
-                if isinstance(label, list):
-                    for value in label:
-                        value.draw()
-                    line_feed.draw()
-                else:
-                    label.draw()
-
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                break
+        """打开指定角色的调试编辑子面板。"""
+        debug_chara_panel.DebugCharaPanel(self.width, NPC_id).draw()
 
     def change_value(self, key_index: int) -> None:
-        """
-        调整该变量的值
-        """
-
+        """按当前分页执行所选全局变量或常用更改项的编辑流程。"""
         while 1:
-            line = draw.LineDraw("-", self.width)
-            line.draw()
-
+            draw.LineDraw("-", self.width).draw()
             info_draw = draw.NormalDraw()
             info_draw.width = self.width
-
             if self.now_panel == "全局变量":
-                if key_index == 0:
-                    info_text = f"[000]:游戏时间：{game_time.now()}      年月日分别为0,1,2"
-                    info_draw.text = info_text
+                if not self._edit_global(key_index, info_draw):
+                    info_draw.text = debug_chara_panel.FORMAT_ERROR
                     info_draw.draw()
-                    line_feed.draw()
-
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    # 先是输入的字符串，再按有无逗号转成 int 列表或 int；
-                    # 各项分支按提示要求的格式取用它，实际类型随玩家输入而定，故用 Any
-                    value_index: Any = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    # 根据第几项更改对应值
-                    if len(value_index) == 1:
-                        info_draw.text = "\n输出格式错误，请重试\n"
-                        info_draw.draw()
-                        continue
-                    if value_index[1] == 0:
-                        set_clock(game_time.now().replace(year=new_value))
-                    elif value_index[1] == 1:
-                        set_clock(game_time.now().replace(month=new_value))
-                    elif value_index[1] == 2:
-                        set_clock(game_time.now().replace(day=new_value))
-
-                elif key_index == 1:
-                    info_text = "[001]:已拥有的干员id列表：\n"
-                    for chara_id in roster.active():
-                        name = identity.of(chara_id).name
-                        info_text += f"{chara_id}:{name} "
-                    info_text += "\n\n全干员id列表：\n"
-                    for adv_id in npc_template.ids():
-                        chara_id = adv_id
-                        if not identity.exists(chara_id):
-                            continue
-                        name = identity.of(chara_id).name
-                        info_text += f"{chara_id}:{name} "
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    line_feed.draw()
-
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入要改变第几号角色，以及这一项变成0或者1，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    if len(value_index) == 1:
-                        info_draw.text = "\n输出格式错误，请重试\n"
-                        info_draw.draw()
-                        continue
-                    elif value_index[1] == 0:
-                        roster.discard(value_index[0])
-                    elif value_index[1] == 1:
-                        character_handle.get_new_character(value_index[0])
-                elif key_index == 3:
-                    info_text = f"[003]:龙门币：{warehouse.amount(1)}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    warehouse.set(1, new_value)
-                elif key_index == 4:
-                    info_text = f"[004]:合成玉：{warehouse.amount(2)}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    warehouse.set(2, new_value)
-                elif key_index == 5:
-                    info_text = f"[005]:粉红凭证：{warehouse.amount(4)}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    warehouse.set(4, new_value)
-                elif key_index == 6:
-                    info_text = "[006]:基地当前所有待开放设施的开放情况"
-                    info_text += f"{facility.opens()}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                elif key_index == 7:
-                    info_text = f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{entertainment.party_days()}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变的项目，如果是列表则输入要改变第几号数据，以及这一项变成几，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    # 输入「星期,娱乐id」，改这一天的派对娱乐
-                    week_day, entertainment_id = map(
-                        int, value_index_panel.draw().split(",")
-                    )
-                    entertainment.set_party_day(week_day, entertainment_id)
-                elif key_index == 8:
-                    info_text = f"[008]:当前招募进度：{recruit.lines()}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变的项目，如果是列表则输入要改变第几号数据，以及这一项变成几，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    # 输入「招募线id,招募进度」，改这条招募线的招募进度
-                    line_id, progress = map(
-                        int, value_index_panel.draw().split(",")
-                    )
-                    recruit.set_line(line_id, progress=progress)
-                elif key_index == 9:
-                    info_text = (
-                        f"[009]:已招募待确认的干员id：{recruit.pending()}"
-                    )
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    recruit.set_pending({new_value})
-
+                    continue
             elif self.now_panel == "常用更改":
-
-                # 当前HP
-                if key_index == 0:
-                    info_text = f"[000]:当前HP：{num.shown(needs.of(0)['hit'])}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    needs.set(0, hit=new_value)
-                # 最大HP
-                elif key_index == 1:
-                    info_text = f"[001]:最大HP：{needs.of(0)['hit_max']}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    needs.set(0, hit_max=new_value)
-                # 当前MP
-                elif key_index == 2:
-                    info_text = (
-                        f"[002]:当前MP：{num.shown(needs.of(0)['mana'])}"
-                    )
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    needs.set(0, mana=new_value)
-                # 最大MP
-                elif key_index == 3:
-                    info_text = f"[003]:最大MP：{needs.of(0)['mana_max']}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    needs.set(0, mana_max=new_value)
-                # 当前射精槽
-                elif key_index == 4:
-                    info_text = (
-                        f"[004]:当前射精槽：{num.shown(h_meters.of(0)['eja'])}"
-                    )
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    h_meters.set(0, eja=new_value)
-                # 疲劳值
-                elif key_index == 5:
-                    info_text = f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(needs.of(0)['tired'])}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    needs.set(0, tired=new_value)
-                # 尿意值
-                elif key_index == 6:
-                    info_text = (
-                        "[006]:尿意值 1m=1点，4h=240点(max)："
-                        f"{num.shown(needs.of(0)['urine'])}"
-                    )
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    needs.set(0, urine=new_value)
-                # 饥饿值
-                elif key_index == 7:
-                    info_text = f"[007]:饥饿值 1m=1点，4h=240点(max)：{num.shown(needs.of(0)['hunger'])}"
-                    info_draw.text = info_text
-                    info_draw.draw()
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    needs.set(0, hunger=new_value)
-                # 全源石技艺全开，理智9999
-                elif key_index == 8:
-                    for talent_id in {
-                        304,
-                        305,
-                        306,
-                        307,
-                        308,
-                        309,
-                        310,
-                        311,
-                        312,
-                        316,
-                        317,
-                        318,
-                        331,
-                        332,
-                        333,
-                        334,
-                    }:
-                        abilities.talent(0)[talent_id] = 1
-                        needs.set(0, sanity=9999, sanity_max=9999)
-                # 资源全99999
-                elif key_index == 9:
-                    for material_id in warehouse.stock():
-                        warehouse.set(material_id, 99999)
-                # 设施全满级、全开放
-                elif key_index == 10:
-                    for all_cid in facility.levels():
-                        facility.set_level(all_cid, 5)
-                        for cid in facility.opens():
-                            facility.set_open(cid, True)
-                        basement.get_base_updata()
-                # 重置全角色特殊flag
-                elif key_index == 11:
-                    roster.discard(0)
-                    for chara_id in roster.active():
-                        character_data = identity.of(chara_id)
-                        flags.reset(character_data.cid)
-                # 重置全角色服装
-                elif key_index == 12:
-                    roster.discard(0)
-                    for chara_id in roster.active():
-                        clothing.get_npc_cloth(chara_id)
-                # 重置全角色位置至宿舍
-                elif key_index == 13:
-                    roster.discard(0)
-                    for chara_id in roster.active():
-                        character_data = identity.of(chara_id)
-                        # 将字符串中的"01区"替换为"1区"
-                        chara_life.dormitory.set(
-                            character_data.cid,
-                            chara_life.dormitory(character_data.cid).replace(
-                                "01区", "1区"
-                            ),
-                        )
-                        activity.set_position(
-                            character_data.cid,
-                            map_handle.get_map_system_path_for_str(
-                                chara_life.dormitory(character_data.cid)
-                            ),
-                        )
-                # 重置文职部的招募数据
-                elif key_index == 14:
-                    for i in range(len(recruit.lines())):
-                        recruit.set_line(i, **recruit.IDLE)
-                    recruit.set_pending(())
-                # 交互对象全部位快感增加
-                elif key_index == 15:
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-                    target_id = activity.target(0)
-                    for state_id in game_config.config_character_state:
-                        if (
-                            game_config.config_character_state[state_id].type
-                            == 0
-                        ):
-                            status.add(target_id, state_id, new_value)
-                # 招募指定adv_id的干员
-                elif key_index == 16:
-                    from Script.Design import character
-
-                    line_feed.draw()
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入adv_id"), 100)
-                    new_value = int(change_value_panel.draw())
-                    character_id = character.get_character_id_from_adv(
-                        new_value
-                    )
-                    if not roster.has(character_id):
-                        recruit.set_pending(recruit.pending() | {character_id})
-                        info_draw.text = _("\n招募成功\n")
-                    else:
-                        info_draw.text = _("\n已招募过\n")
-                    info_draw.draw()
-                    line_feed.draw()
-                # 重置全角色娱乐
-                elif key_index == 17:
-                    from Script.Design import handle_npc_ai
-
-                    roster.discard(0)
-                    for chara_id in roster.active():
-                        handle_npc_ai.get_chara_entertainment(chara_id)
-
+                self._edit_player(key_index, info_draw)
             line_feed.draw()
             break
 
-    def change_target_value(self, key_index: int) -> None:
-        """
-        调整目标角色变量的值
-        """
-
-        change_draw_flag = True
-
-        while 1:
-            line = draw.LineDraw("-", self.width)
-            line.draw()
-
-            target_data: identity.Identity = identity.of(
-                self.target_character_id
-            )
-            talent = abilities.talent(target_data.cid)
-            juel = abilities.juel(target_data.cid)
-            experience = abilities.experience(target_data.cid)
-            ability = abilities.ability(target_data.cid)
-            name_draw, info_draw = draw.NormalDraw(), draw.NormalDraw()
-            name_draw.text = (
-                f"[{str(target_data.adv).rjust(4,'0')}]：{target_data.name}\n\n"
-            )
-            name_draw.width = self.width
-            name_draw.draw()
-            return_list = []
-
-            # 基础属性
-            if key_index == 0:
-                draw_text_list = []
-                draw_text_list.append(
-                    f"[000]:当前HP：{num.shown(needs.of(target_data.cid)['hit'])}"
-                )
-                draw_text_list.append(
-                    f"[001]:最大HP：{needs.of(target_data.cid)['hit_max']}"
-                )
-                draw_text_list.append(
-                    f"[002]:当前MP：{num.shown(needs.of(target_data.cid)['mana'])}"
-                )
-                draw_text_list.append(
-                    f"[003]:最大MP：{needs.of(target_data.cid)['mana_max']}"
-                )
-                draw_text_list.append(
-                    f"[004]:当前理智：{num.shown(needs.of(target_data.cid)['sanity'])}"
-                )
-                draw_text_list.append(
-                    f"[005]:最大理智：{needs.of(target_data.cid)['sanity_max']}"
-                )
-                draw_text_list.append(
-                    f"[011]:疲劳值 6m=1点，16h=160点(max)：{num.shown(needs.of(target_data.cid)['tired'])}"
-                )
-                draw_text_list.append(
-                    f"[012]:尿意值 1m=1点，4h=240点(max)：{num.shown(needs.of(target_data.cid)['urine'])}"
-                )
-                draw_text_list.append(
-                    f"[013]:饥饿值 1m=1点，4h=240点(max)：{num.shown(needs.of(target_data.cid)['hunger'])}"
-                )
-                draw_text_list.append(
-                    f"[014]:熟睡值 1m=10点，10min=100点(max)：{num.shown(needs.of(target_data.cid)['sleep'])}"
-                )
-                draw_text_list.append(
-                    f"[015]:愤怒槽：{needs.of(target_data.cid)['angry']}"
-                )
-                draw_text_list.append(
-                    f"[016]:射精槽：{num.shown(h_meters.of(target_data.cid)['eja'])}"
-                )
-                draw_text_list.append(
-                    f"[017]:对玩家的好感度：{relations.favorability(target_data.cid)[0]}"
-                )
-                draw_text_list.append(
-                    f"[018]:信赖度：{relations.trust(target_data.cid)}"
-                )
-                draw_text_list.append(
-                    f"[019]:乳汁量：{num.shown(needs.of(target_data.cid)['milk'])}"
-                )
-                draw_text_list.append(
-                    f"[020]:乳汁上限：{pregnancy.milk_max(target_data.cid)}"
-                )
-                draw_text_list.append(
-                    f"[021]:欲望值：{needs.of(target_data.cid)['desire']}"
-                )
-                draw_text_list.append(
-                    f"[022]:精液值：{num.shown(h_meters.of(target_data.cid)['semen'])}"
-                )
-                draw_text_list.append(
-                    f"[023]:精液值上限：{h_meters.of(target_data.cid)['semen_max']}"
-                )
-                draw_text_list.append(
-                    f"[024]:醉酒值 0~100点(max)：{num.shown(needs.of(target_data.cid)['drunk'])}"
-                )
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    # 先是输入的字符串，再按有无逗号转成 int 列表或 int；
-                    # 各项分支按提示要求的格式取用它，实际类型随玩家输入而定，故用 Any
-                    value_index: Any = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    if value_index == 0:
-                        needs.set(target_data.cid, hit=new_value)
-                    elif value_index == 1:
-                        needs.set(target_data.cid, hit_max=new_value)
-                    elif value_index == 2:
-                        needs.set(target_data.cid, mana=new_value)
-                    elif value_index == 3:
-                        needs.set(target_data.cid, mana_max=new_value)
-                    elif value_index == 4:
-                        needs.set(target_data.cid, sanity=new_value)
-                    elif value_index == 5:
-                        needs.set(target_data.cid, sanity_max=new_value)
-                    elif value_index == 11:
-                        needs.set(target_data.cid, tired=new_value)
-                    elif value_index == 12:
-                        needs.set(target_data.cid, urine=new_value)
-                    elif value_index == 13:
-                        needs.set(target_data.cid, hunger=new_value)
-                    elif value_index == 14:
-                        needs.set(target_data.cid, sleep=new_value)
-                    elif value_index == 15:
-                        needs.set(target_data.cid, angry=new_value)
-                    elif value_index == 16:
-                        h_meters.set(target_data.cid, eja=new_value)
-                    elif value_index == 17:
-                        relations.favorability.set_item(
-                            target_data.cid, 0, new_value
-                        )
-                    elif value_index == 18:
-                        relations.trust.set(target_data.cid, new_value)
-                    elif value_index == 19:
-                        needs.set(target_data.cid, milk=new_value)
-                    elif value_index == 20:
-                        pregnancy.set_milk_max(target_data.cid, new_value)
-                    elif value_index == 21:
-                        needs.set(target_data.cid, desire=new_value)
-                    elif value_index == 22:
-                        h_meters.set(target_data.cid, semen=new_value)
-                    elif value_index == 23:
-                        h_meters.set(target_data.cid, semen_max=new_value)
-                    elif value_index == 24:
-                        needs.set(target_data.cid, drunk=new_value)
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 二段状态数据
-            elif key_index == 4:
-                draw_text_list = []
-                info_text = "\n"
-                for behavior_cid in activity.second_ids(target_data.cid):
-                    name = game_config.config_behavior[behavior_cid].name
-                    info_text += f"({behavior_cid}){name}:{activity.second_behavior(target_data.cid, behavior_cid)}  "
-                    if behavior_cid % 5 == 0:
-                        info_text += "\n"
-                draw_text_list.append(f"[000]:二段行为列表：\n{info_text}")
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    activity.set_second_behavior(
-                        target_data.cid, value_index, new_value
-                    )
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-            # 状态数据
-            elif key_index == 6:
-                draw_text_list = []
-                info_text = "\n"
-                for cid in game_config.config_character_state:
-                    name = game_config.config_character_state[cid].name
-                    info_text += f"{cid}:{name}={num.shown(status.of(target_data.cid)[cid])} "
-                draw_text_list.append(f"[000]:状态列表：\n{info_text}")
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    status.set(target_data.cid, value_index, new_value)
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-            # 能力数据
-            elif key_index == 7:
-                draw_text_list = []
-                info_text = "\n"
-                for cid in game_config.config_ability:
-                    name = game_config.config_ability[cid].name
-                    info_text += f"{cid}:{name}={ability[cid]} "
-                draw_text_list.append(f"[000]:能力列表：\n{info_text}")
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    ability[value_index] = new_value
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 经验数据
-            elif key_index == 8:
-                draw_text_list = []
-                info_text = "\n"
-                for cid in experience:
-                    # 如果不存在该id，则跳过
-                    if cid not in game_config.config_experience:
-                        continue
-                    name = game_config.config_experience[cid].name
-                    info_text += f"{cid}:{name}={experience[cid]} "
-                draw_text_list.append(f"[000]:经验列表：\n{info_text}")
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    experience[value_index] = new_value
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 宝珠数据
-            elif key_index == 9:
-                draw_text_list = []
-                info_text = "\n"
-                for cid in juel:
-                    name = game_config.config_juel[cid].name
-                    info_text += f"{cid}:{name}={juel[cid]} "
-                draw_text_list.append(f"[000]:宝珠列表：\n{info_text}")
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    juel[value_index] = new_value
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 素质数据
-            elif key_index == 10:
-                draw_text_list = []
-                info_text = "\n"
-                for cid in talent:
-                    name = game_config.config_talent[cid].name
-                    info_text += f"{cid}:{name}={talent[cid]} "
-                draw_text_list.append(f"[000]:素质列表：\n{info_text}")
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    talent[value_index] = new_value
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 污浊数据
-            elif key_index == 12:
-                draw_text_list = []
-                d_view = dirty.view(target_data.cid)
-                shown_body_semen = {
-                    part: [slot[0], num.shown(slot[1]), *slot[2:]]
-                    for part, slot in d_view.body_semen.items()
-                }
-                draw_text_list.append(
-                    f"[000]:身体精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{shown_body_semen}"
-                )
-                draw_text_list.append(
-                    f"\n[001]:服装精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{d_view.cloth_semen}"
-                )
-                draw_text_list.append(
-                    f"\n[002]:衣柜里的服装精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{d_view.cloth_locker_semen}"
-                )
-                draw_text_list.append(
-                    f"\n[003]:A是否干净 [0脏污,1灌肠中,2已灌肠,3精液灌肠中,4已精液灌肠]：{d_view.a_clean}"
-                )
-                draw_text_list.append(
-                    "[004]:身体部位:当前精液量int，输入4,0,5即可把0号部位的精液量改为5"
-                )
-                draw_text_list.append(
-                    "[005]:身体部位:当前精液等级int，输入5,0,1即可把0号部位的精液等级改为1"
-                )
-                draw_text_list.append(
-                    "[006]:服装部位:当前精液量int，输入6,1,5即可把1号服装的精液量改为5"
-                )
-                draw_text_list.append(
-                    "[007]:服装部位:当前精液等级int，输入7,1,1即可把1号服装的精液等级改为1"
-                )
-                draw_text_list.append(
-                    "[008]:增加身体、服装、衣柜服装全部位精液量int"
-                )
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    # 根据第几项更改对应值
-                    with dirty.editing(target_data.cid) as d:
-                        if value_index == 3:
-                            d.a_clean = new_value
-                        elif value_index == 8:
-                            for i in range(len(d.body_semen)):
-                                d.body_semen[i][1] += new_value
-                                d.body_semen[i][2] = (
-                                    attr_calculation.get_semen_now_level(
-                                        d.body_semen[i][1], i, 0
-                                    )
-                                )
-                            for i in range(len(d.cloth_semen)):
-                                d.cloth_semen[i][1] += new_value
-                                d.cloth_semen[i][2] = (
-                                    attr_calculation.get_semen_now_level(
-                                        d.cloth_semen[i][1], i, 1
-                                    )
-                                )
-                            for i in range(len(d.cloth_locker_semen)):
-                                d.cloth_locker_semen[i][1] += new_value
-                                d.cloth_locker_semen[i][2] = (
-                                    attr_calculation.get_semen_now_level(
-                                        d.cloth_locker_semen[i][1], i, 2
-                                    )
-                                )
-                        elif value_index[0] in (0, 1, 2):
-                            tbl = (
-                                d.body_semen,
-                                d.cloth_semen,
-                                d.cloth_locker_semen,
-                            )[value_index[0]]
-                            tbl[value_index[1]][value_index[2]] = new_value
-                        elif value_index[0] == 4:
-                            d.body_semen[value_index[1]][1] = new_value
-                            d.body_semen[value_index[1]][2] = (
-                                attr_calculation.get_semen_now_level(
-                                    new_value, value_index[1], 0
-                                )
-                            )
-                        elif value_index[0] == 5:
-                            d.body_semen[value_index[1]][2] = new_value
-                        elif value_index[0] == 6:
-                            d.cloth_semen[value_index[1]][1] = new_value
-                            d.cloth_semen[value_index[1]][2] = (
-                                attr_calculation.get_semen_now_level(
-                                    new_value, value_index[1], 1
-                                )
-                            )
-                        elif value_index[0] == 7:
-                            d.cloth_semen[value_index[1]][2] = new_value
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 本次H数据
-            elif key_index == 13:
-                draw_text_list = []
-                hs_view = h_state.view(target_data.cid)
-                draw_text_list.append(
-                    f"[000]:身体道具情况:编号int:[道具名str,当前有无bool,状态的结束时间datetime.datetime]：\n{hs_view.body_item}"
-                )
-                draw_text_list.append(
-                    f"\n[001]:绳子捆绑情况:编号int：{hs_view.bondage}"
-                )
-                draw_text_list.append(
-                    f"\n[002]:阴茎插入位置，int，-1为未插入，其他同身体部位：{hs_view.insert_position}"
-                )
-                draw_text_list.append(
-                    f"\n[003]:身体上的射精位置，int，-1为未射精，其他同身体部位：{hs_view.shoot_position_body}"
-                )
-                draw_text_list.append(
-                    f"\n[004]:衣服上的射精位置，int，-1为未射精，其他同衣服部位：{hs_view.shoot_position_cloth}"
-                )
-                draw_text_list.append(
-                    f"\n[005]:高潮程度记录，每3级一个循环，1为小绝顶，2为普绝顶，3为强绝顶：\n{hs_view.orgasm_level}"
-                )
-                draw_text_list.append(
-                    f"\n[006]:衣服上的射精位置，int，-1为未射精，其他同衣服部位：\n{hs_view.orgasm_count}"
-                )
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    # 根据第几项更改对应值
-                    with h_state.editing(target_data.cid) as hs:
-                        if value_index == 1:
-                            hs.bondage = new_value
-                        elif value_index == 2:
-                            hs.insert_position = new_value
-                        elif value_index == 3:
-                            hs.shoot_position_body = new_value
-                        elif value_index == 4:
-                            hs.shoot_position_cloth = new_value
-                        elif value_index[0] == 0:
-                            hs.body_item[value_index[1]][
-                                value_index[2]
-                            ] = new_value
-                        elif value_index[0] == 5:
-                            hs.orgasm_level[value_index[1]] = new_value
-                        elif value_index[0] == 6:
-                            hs.orgasm_count[value_index[1]][
-                                value_index[2]
-                            ] = new_value
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 助理数据
-            elif key_index == 14:
-                draw_text_list = []
-                info_text = "\n"
-                for cid in relations.assistant_services(target_data.cid):
-                    name = game_config.config_assistant_services[cid].name
-                    info_text += f"{cid}:{name}={relations.assistant_services(target_data.cid)[cid]} "
-                draw_text_list.append(f"[000]:服务列表：\n{info_text}")
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    line_feed.draw()
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    relations.assistant_services.set_item(
-                        target_data.cid, value_index, new_value
-                    )
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 娱乐数据
-            elif key_index == 17:
-                info_text = f"[000]:娱乐活动的类型：{chara_life.entertainment_type(target_data.cid)}\n"
-                info_text += f"[001]:借的书的id：{chara_life.borrow_book_id_set(target_data.cid)}\n"
-                info_text += (
-                    f"[002]:归还当前阅读书籍的可能性比例："
-                    f"{chara_life.book_return_possibility(target_data.cid)}"
-                    f"\n"
-                )
-                info_draw.text = info_text
-                info_draw.draw()
-                line_feed.draw()
-                line_feed.draw()
-
-                if change_draw_flag:
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变的项目，中间用英文小写逗号隔开。娱乐活动输入三个int；借还书则先输入0为删除1为增加，然后再输入书籍编号；可能性直接输入对应数字"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    if value_index[0] == 0:
-                        chara_life.entertainment_type.set(
-                            target_data.cid,
-                            [
-                                value_index[1],
-                                value_index[2],
-                                value_index[3],
-                            ],
-                        )
-                    elif value_index[0] == 1:
-                        if value_index[1] == 1:
-                            with chara_life.borrow_book_id_set.editing(
-                                target_data.cid
-                            ) as borrow_book_id_set:
-                                borrow_book_id_set.add(value_index[2])
-                        else:
-                            with chara_life.borrow_book_id_set.editing(
-                                target_data.cid
-                            ) as borrow_book_id_set:
-                                borrow_book_id_set.remove(value_index[2])
-                    elif value_index[0] == 2:
-                        chara_life.book_return_possibility.set(
-                            target_data.cid, value_index[1]
-                        )
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 怀孕数据
-            elif key_index == 18:
-                preg = pregnancy.of(target_data.cid)
-                draw_text_list = []
-                draw_text_list.append(
-                    f"[000]:受精概率：{preg.fertilization_rate}"
-                )
-                reproduction_period = preg.reproduction_period
-                now_reproduction_period_type = (
-                    game_config.config_reproduction_period[
-                        reproduction_period
-                    ].type
-                )
-                period_cid = f"生理期{now_reproduction_period_type}"
-                reproduction_text = game_config.ui_text_data["h_state"][
-                    period_cid
-                ]
-                draw_text_list.append(
-                    f"[001]:生殖周期的第几天(0安全1普通2危险3排卵，0110232)：{preg.reproduction_period},{reproduction_text}"
-                )
-                draw_text_list.append(
-                    f"[002]:开始受精的时间：{preg.fertilization_time}      年月日分别为0,1,2"
-                )
-                draw_text_list.append(
-                    f"[003]:当前妊娠素质：0受精-{talent[20]}，1妊娠-{talent[21]}，2临盆-{talent[22]}，3产后-{talent[23]}，4育儿-{talent[24]}"
-                )
-                draw_text_list.append(
-                    f"[004]:出生的时间：{preg.born_time}      年月日分别为0,1,2"
-                )
-                draw_text_list.append("[005]:一键触发生产事件")
-                draw_text_list.append("[006]:一键触发育儿+育儿完成事件")
-                draw_text_list.append(
-                    f"[007]:角色当前乳汁量：{num.shown(needs.of(target_data.cid)['milk'])}"
-                )
-                draw_text_list.append(
-                    f"[008]:角色最大乳汁量：{pregnancy.milk_max(target_data.cid)}"
-                )
-
-                # 进行显示
-                for i in range(len(draw_text_list)):
-                    info_draw.text = draw_text_list[i]
-                    info_draw.draw()
-                    line_feed.draw()
-                line_feed.draw()
-
-                # 如果需要输入，则进行两次输入
-                if change_draw_flag:
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    change_value_panel = panel.AskForOneMessage()
-                    change_value_panel.set(_("输入改变后的值"), 100)
-                    new_value = int(change_value_panel.draw())
-
-                    # 根据第几项更改对应值
-                    if value_index == 0:
-                        pregnancy.update(
-                            target_data.cid, fertilization_rate=new_value
-                        )
-                    elif value_index == 1:
-                        pregnancy.update(
-                            target_data.cid, reproduction_period=new_value
-                        )
-                    elif value_index == 5:
-                        talent[22] = 1
-                        now_t = game_time.now()
-                        pregnancy.update(
-                            target_data.cid,
-                            fertilization_time=now_t.replace(
-                                year=now_t.year - 1
-                            ),
-                        )
-                    elif value_index == 6:
-                        child_id = relations.child_id_list(target_data.cid)[-1]
-                        with pregnancy.editing(child_id) as child_preg:
-                            child_preg.born_time = child_preg.born_time.replace(
-                                year=child_preg.born_time.year - 1
-                            )
-                    elif value_index == 7:
-                        needs.set(target_data.cid, milk=new_value)
-                    elif value_index == 8:
-                        pregnancy.set_milk_max(target_data.cid, new_value)
-                    elif value_index[0] == 2:
-                        if len(value_index) == 1:
-                            info_draw.text = "\n输出格式错误，请重试\n"
-                            info_draw.draw()
-                            continue
-                        with pregnancy.editing(target_data.cid) as p:
-                            if value_index[1] == 0:
-                                p.fertilization_time = (
-                                    p.fertilization_time.replace(year=new_value)
-                                )
-                            elif value_index[1] == 1:
-                                p.fertilization_time = (
-                                    p.fertilization_time.replace(
-                                        month=new_value
-                                    )
-                                )
-                            elif value_index[1] == 2:
-                                p.fertilization_time = (
-                                    p.fertilization_time.replace(day=new_value)
-                                )
-                    elif value_index[0] == 3:
-                        if len(value_index) == 1:
-                            info_draw.text = "\n输出格式错误，请重试\n"
-                            info_draw.draw()
-                            continue
-                        talent[20 + value_index[1]] = new_value
-                        pregnancy.update(
-                            target_data.cid, fertilization_time=game_time.now()
-                        )
-                    elif value_index[0] == 4:
-                        if len(value_index) == 1:
-                            info_draw.text = "\n输出格式错误，请重试\n"
-                            info_draw.draw()
-                            continue
-                        with pregnancy.editing(target_data.cid) as p:
-                            if value_index[1] == 0:
-                                p.born_time = p.born_time.replace(
-                                    year=new_value
-                                )
-                            elif value_index[1] == 1:
-                                p.born_time = p.born_time.replace(
-                                    month=new_value
-                                )
-                            elif value_index[1] == 2:
-                                p.born_time = p.born_time.replace(day=new_value)
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 社会关系数据
-            elif key_index == 19:
-                info_text = (
-                    f"[000]:父亲id：{relations.father_id(target_data.cid)}\n"
-                )
-                info_text += (
-                    f"[001]:母亲id：{relations.mother_id(target_data.cid)}\n"
-                )
-                info_text += f"[002]:孩子id列表：{relations.child_id_list(target_data.cid)}\n"
-                info_draw.text = info_text
-                info_draw.draw()
-                line_feed.draw()
-                line_feed.draw()
-
-                if change_draw_flag:
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变的项目，如果是列表则输入要改变第几号数据，以及这一项变成0或者1，中间用英文小写逗号隔开。列表的内容元素0为删除1为增加"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        value_index = int(value_index)
-                    if value_index[0] == 0:
-                        relations.father_id.set(target_data.cid, value_index[1])
-                    elif value_index[0] == 1:
-                        relations.mother_id.set(target_data.cid, value_index[1])
-                    elif value_index[0] == 2:
-                        if value_index[1] == 1:
-                            with relations.child_id_list.editing(
-                                target_data.cid
-                            ) as child_id_list:
-                                child_id_list.append(value_index[2])
-                        else:
-                            with relations.child_id_list.editing(
-                                target_data.cid
-                            ) as child_id_list:
-                                child_id_list.remove(value_index[2])
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 特殊flag数据
-            elif key_index == 20:
-                info_text = "1~7异常状态：正常为1"
-                info_text += (
-                    f"    \n1:基础生理需求：睡觉、休息、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰："
-                    f"{handle_premise.handle_normal_1(self.target_character_id)}"
-                )
-                info_text += (
-                    f"    \n2:AI行动基本停止：临盆、产后、监禁："
-                    f"{handle_premise.handle_normal_2(self.target_character_id)}"
-                )
-                info_text += (
-                    f"    \n3:高优先级AI：助理、跟随、体检："
-                    f"{handle_premise.handle_normal_3(self.target_character_id)}"
-                )
-                info_text += (
-                    f"    \n4:服装异常：大致全裸、全裸："
-                    f"{handle_premise.handle_normal_4(self.target_character_id)}"
-                )
-                info_text += (
-                    f"    \n5:意识模糊，或弱交互：醉酒，平然："
-                    f"{handle_premise.handle_normal_5(self.target_character_id)}"
-                )
-                info_text += (
-                    f"    \n6:完全意识不清醒，或无交互：睡眠（熟睡或完全深眠），时停，空气："
-                    f"{handle_premise.handle_normal_6(self.target_character_id)}"
-                )
-                info_text += (
-                    f"    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中："
-                    f"{handle_premise.handle_normal_7(self.target_character_id)}"
-                )
-                info_text += "\n\n"
-                info_text += f"[000]:在H模式中：{flags.get(self.target_character_id, "is_h")}\n"
-                tid = self.target_character_id
-                info_text += f"[001]:AI行动里的原地发呆判定：{flags.get(tid, 'wait_flag')}\n"
-                info_text += (
-                    f"[002]:跟随玩家，int [0不跟随,1智能跟随,2强制跟随,3前往博士办公室,4前往博士当前位置]："
-                    f"{flags.get(tid, 'is_follow')}\n"
-                )
-                info_text += (
-                    f"[003]:疲劳状态（HP=1）：{flags.get(tid, 'tired')}\n"
-                )
-                info_text += f"[004]:被玩家惹生气：{flags.get(tid, 'angry_with_player')}\n"
-                info_text += (
-                    f"[005]:角色停止移动：{flags.get(tid, 'move_stop')}\n"
-                )
-                info_text += (
-                    f"[006]:被装袋搬走状态：{flags.get(tid, 'be_bagged')}\n"
-                )
-                info_text += f"[007]:玩家正在装袋搬走的角色的id：{flags.get(tid, 'bagging_chara_id')}\n"
-                info_text += (
-                    f"[008]:被监禁状态：{flags.get(tid, 'imprisonment')}\n"
-                )
-                info_text += (
-                    f"[009]:洗澡状态，int [0无,1要更衣,2要洗澡,3要披浴巾,"
-                    f"4洗完澡]：{flags.get(tid, 'shower')}\n"
-                )
-                info_text += f"[010]:吃饭状态，int [0无,1要取餐,2要吃饭]：{flags.get(tid, 'eat_food')}\n"
-                info_text += f"[011]:要睡觉状态：{flags.get(tid, 'sleep')}\n"
-                info_text += f"[012]:要休息状态：{flags.get(tid, 'rest')}\n"
-                info_text += f"[013]:要撒尿状态：{flags.get(tid, 'pee')}\n"
-                info_text += f"[014]:发现食物不对劲：{flags.get(tid, 'find_food_weird')}\n"
-                info_text += f"[015]:游泳状态，int [0无,1要换泳衣,2要游泳]：{flags.get(tid, 'swim')}\n"
-                info_text += (
-                    f"[016]:要检修状态：{flags.get(tid, 'work_maintenance')}\n"
-                )
-                info_text += (
-                    f"[017]:帮忙买午饭状态，int [0无,1要买饭,2要买第二份饭,3要送饭]："
-                    f"{flags.get(tid, 'help_buy_food')}\n"
-                )
-                info_text += f"[018]:帮忙做饭状态，int [0无,1要做饭,2要送饭]：{flags.get(tid, 'help_make_food')}\n"
-                info_text += (
-                    f"[019]:早安问候状态，int [0无,1要问候,2已问候]："
-                    f"{flags.get(tid, 'morning_salutation')}\n"
-                )
-                info_text += f"[020]:晚安问候状态，int [0无,1要问候,2已问候]：{flags.get(tid, 'night_salutation')}\n"
-                info_text += (
-                    f"[021]:大浴场娱乐状态，int [0无,1要更衣,2要娱乐]："
-                    f"{flags.get(tid, 'bathhouse_entertainment')}\n"
-                )
-                info_text += f"[022]:要挤奶状态：{flags.get(tid, 'milk')}\n"
-                info_text += (
-                    f"[023]:要自慰状态：{flags.get(tid, 'masturebate')}\n"
-                )
-                info_text += f"[024]:访客状态，int [0无,1访问中,2访问过]：{flags.get(tid, 'vistor')}\n"
-                info_text += (
-                    f"[025]:香薰疗愈状态，int [0无,1回复,2习得,3反感,4快感,5好感,6催眠]："
-                    f"{flags.get(tid, 'aromatherapy')}\n"
-                )
-                info_text += (
-                    f"[026]:外勤委托状态，0为未外勤，否则为对应外勤委托编号"
-                    f"：{flags.get(tid, 'field_commission')}\n"
-                )
-                info_text += f"[027]:要找玩家逆推来自慰的状态：{flags.get(tid, 'npc_masturebate_for_player')}\n"
-                info_text += (
-                    f"[028]:正在等待体检状态（仅查看，无法修改）："
-                    f"{physical_exam.has(physical_exam.WAITING, tid)}\n"
-                )
-                info_text += (
-                    f"[029]:今天体检时间，[0不需要，1上午，2下午，3新干员立刻体检]："
-                    f"{action_info.get(tid, 'health_check_today')}\n"
-                )
-                info_draw.text = info_text
-                info_draw.draw()
-                line_feed.draw()
-                line_feed.draw()
-
-                if change_draw_flag:
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变的项目，如果是列表则输入要改变第几号数据，以及这一项变成几，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        info_draw.text = "\n输出格式错误，请重试\n"
-                        info_draw.draw()
-                        continue
-                    debug_flags = (
-                        "is_h",
-                        "wait_flag",
-                        "is_follow",
-                        "tired",
-                        "angry_with_player",
-                        "move_stop",
-                        "be_bagged",
-                        "bagging_chara_id",
-                        "imprisonment",
-                        "shower",
-                        "eat_food",
-                        "sleep",
-                        "rest",
-                        "pee",
-                        "find_food_weird",
-                        "swim",
-                        "work_maintenance",
-                        "help_buy_food",
-                        "help_make_food",
-                        "morning_salutation",
-                        "night_salutation",
-                        "bathhouse_entertainment",
-                        "milk",
-                        "masturebate",
-                        "vistor",
-                        "aromatherapy",
-                        "field_commission",
-                        "npc_masturebate_for_player",
-                    )
-                    if 0 <= value_index[0] < len(debug_flags):
-                        flags.set(
-                            target_data.cid,
-                            **{debug_flags[value_index[0]]: value_index[1]},
-                        )
-                    elif value_index[0] == 29:
-                        action_info.set(
-                            target_data.cid,
-                            "health_check_today",
-                            value_index[1],
-                        )
-
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
-            # 催眠数据
-            elif key_index == 21:
-                hyp_view = hypnosis.view(target_data.cid)
-                info_text = ""
-                info_text += f"[000]:催眠程度：{hyp_view.hypnosis_degree}\n"
-                info_text += f"[001]:体控-敏感度提升：{hyp_view.increase_body_sensitivity}\n"
-                info_text += (
-                    f"[002]:体控-强制排卵：{hyp_view.force_ovulation}\n"
-                )
-                info_text += f"[003]:体控-木头人：{hyp_view.blockhead}\n"
-                info_text += f"[004]:体控-逆推：{hyp_view.active_h}\n"
-                info_text += f"[005]:心控-角色扮演，0为无，其他见Roleplay.csv：{hyp_view.roleplay}\n"
-                info_draw.text = info_text
-                info_draw.draw()
-                line_feed.draw()
-                line_feed.draw()
-
-                if change_draw_flag:
-                    value_index_panel = panel.AskForOneMessage()
-                    value_index_panel.set(
-                        _(
-                            "输入改变的项目，如果是列表则输入要改变第几号数据，以及这一项变成几，中间用英文小写逗号隔开"
-                        ),
-                        100,
-                    )
-                    value_index = value_index_panel.draw()
-                    if "," in value_index:  # 转成全int的list
-                        value_index = list(map(int, value_index.split(",")))
-                    else:
-                        info_draw.text = "\n输出格式错误，请重试\n"
-                        info_draw.draw()
-                        continue
-                    if value_index[0] == 0:
-                        hypnosis.set(
-                            target_data.cid, hypnosis_degree=value_index[1]
-                        )
-                    elif value_index[0] == 1:
-                        hypnosis.set(
-                            target_data.cid,
-                            increase_body_sensitivity=bool(value_index[1]),
-                        )
-                    elif value_index[0] == 2:
-                        hypnosis.set(
-                            target_data.cid,
-                            force_ovulation=bool(value_index[1]),
-                        )
-                    elif value_index[0] == 3:
-                        hypnosis.set(
-                            target_data.cid, blockhead=bool(value_index[1])
-                        )
-                    elif value_index[0] == 4:
-                        hypnosis.set(
-                            target_data.cid, active_h=bool(value_index[1])
-                        )
-                    elif value_index[0] == 5:
-                        hypnosis.set_roleplay(
-                            target_data.cid,
-                            [*hyp_view.roleplay, value_index[1]],
-                        )
-                    # 接着刷新一遍显示新内容
-                    change_draw_flag = False
-                    continue
-
+    def _edit_global(self, key: int, info_draw: NormalDraw) -> bool:
+        """展示全局变量项说明、采集输入并委托服务写入状态。"""
+        kind = world.GLOBAL_KINDS.get(key)
+        if kind is None:
+            return True
+        info_draw.text = world.global_info(key)
+        info_draw.draw()
+        line_feed.draw()
+        entry, value = None, 0
+        if kind == "date":
+            entry = world.parse_index(ask(debug_chara_panel.index_prompt()))
+            value = ask_value()
+        elif kind == "roster":
             line_feed.draw()
-            back_draw = draw.CenterButton(
-                _("[返回]"), _("返回"), window_width / 2
+            entry = world.parse_index(
+                ask(
+                    _(
+                        "输入要改变第几号角色，以及这一项变成0或者1，中间用英文小写逗号隔开"
+                    )
+                )
             )
-            back_draw.draw()
-            again_draw = draw.CenterButton(
-                _("[继续修改]"), _("继续修改"), window_width / 2
-            )
-            again_draw.draw()
-            return_list.append(again_draw.return_text)
-            line_feed.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                break
-            else:
-                change_draw_flag = True
-                continue
-
-
-class ChangeWorkButtonList:
-    """
-    点击后可选择NPC的工作的按钮对象
-    Keyword arguments:
-    text -- 选项名字
-    width -- 最大宽度
-    is_button -- 绘制按钮
-    num_button -- 绘制数字按钮
-    button_id -- 数字按钮id
-    """
-
-    def __init__(
-        self,
-        NPC_id: int,
-        width: int,
-        is_button: bool,
-        num_button: bool,
-        button_id: int,
-    ) -> None:
-        """初始化绘制对象"""
-
-        self.NPC_id: int = NPC_id
-        """ 指令名字绘制文本 """
-        self.draw_text: str = ""
-        """ 绘制文本 """
-        self.width: int = width
-        """ 最大宽度 """
-        self.num_button: bool = num_button
-        """ 绘制数字按钮 """
-        self.button_id: int = button_id
-        """ 数字按钮的id """
-        self.button_return: str = str(button_id)
-        """ 按钮返回值 """
-
-        target_data: identity.Identity = identity.of(NPC_id)
-        button_text = f"[{target_data.adv}：{target_data.name}]"
-        self.button_return = str(NPC_id)
-
-        # 按钮绘制
-
-        name_draw = draw.CenterButton(
-            button_text, self.button_return, self.width, cmd_func=self.button_0
+        elif kind == "pair":
+            entry = ask(debug_chara_panel.pair_prompt())
+        else:
+            value = ask_value()
+        return world.edit_global(
+            key, entry, value, character_handle.get_new_character
         )
-        self.now_draw = name_draw
-        self.draw_text = button_text
 
-        """ 绘制的对象 """
-        self.now_draw = name_draw
-
-    def button_0(self) -> None:
-        """选项1"""
-
-        while 1:
-
-            line = draw.LineDraw("-", window_width)
-            line.draw()
-            line_feed.draw()
-            info_draw = draw.NormalDraw()
-            info_draw.width = window_width
-            return_list = []
-
-            target_data: identity.Identity = identity.of(self.NPC_id)
-            info_text = f"{target_data.name}的当前工作为："
-            if chara_life.work_type(target_data.cid) == 61:
-                info_text += "坐诊(玩家属性)"
-            elif chara_life.work_type(target_data.cid) == 71:
-                info_text += "招募(NPC角色)"
-            elif chara_life.work_type(target_data.cid) == 101:
-                info_text += "图书馆管理员(图书馆)"
-            else:
-                info_text += "无"
-            info_text += "\n 可指派的新工作有：\n"
-            info_draw.text = info_text
+    def _edit_player(self, key: int, info_draw: NormalDraw) -> None:
+        """按常用更改项类型采集输入、委托服务修改并输出提示。"""
+        kind = world.PLAYER_KINDS.get(key)
+        value = 0
+        if kind == "stat":
+            info_draw.text = world.player_info(key)
             info_draw.draw()
-
-            # 遍历工作列表，获取每个工作的信息
-            for cid in game_config.config_work_type.keys():
-                if cid:
-                    work_cid = game_config.config_work_type[cid].cid
-                    work_name = game_config.config_work_type[cid].name
-                    work_place = game_config.config_work_type[cid].place
-                    work_describe = game_config.config_work_type[cid].describe
-
-                    button_draw = draw.LeftButton(
-                        f"[{str(work_cid).rjust(3,'0')}]{work_name}({work_place})：{work_describe}",
-                        f"\n{work_cid}",
-                        window_width,
-                        cmd_func=self.select_new_work,
-                        args=work_cid,
-                    )
-                    button_draw.draw()
-                    return_list.append(button_draw.return_text)
-                    line_feed.draw()
-
             line_feed.draw()
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            back_draw.draw()
+            value = ask_value()
+        elif kind == "value":
             line_feed.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn in return_list:
-                break
-
-    def draw(self) -> None:
-        """绘制对象"""
-        self.now_draw.draw()
-
-    def select_new_work(self, work_id: int) -> None:
-        """赋予新的工作id"""
-        target_data: identity.Identity = identity.of(self.NPC_id)
-        chara_life.work_type.set(target_data.cid, work_id)
-        basement.update_work_people()
+            value = ask_value()
+        elif kind == "adv":
+            line_feed.draw()
+            value = int(ask(_("输入adv_id")))
+        message = world.edit_player(key, value) if kind else ""
+        if kind == "adv":
+            info_draw.text = message
+            info_draw.draw()
+            line_feed.draw()

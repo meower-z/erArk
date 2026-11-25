@@ -547,7 +547,7 @@ Script/
 - 支持：连锁口上（`handle_second_talk`）、必须显示/必须结算口上、特殊口上权重、口上跳绘判定、富文本代码转绘制文本
 - 口上按角色 `adv_id` 索引：`game_config.config_talk_data_by_chara_adv`
 - 通用口上类型由目录生成，如 `action_part_eat_A`
-- 快速测试口上面板 `debug_panel.TALK_QUICK_TEST`
+- 快速测试口上面板 `debug_panel.TALK_QUICK_TEST`，口上测试报告与重建由 `Modules/gameplay_resolution/talk_test_service.py` 提供
 
 ---
 
