@@ -355,12 +355,12 @@ Script/
 | `debug` | 1 | 调试模式开关 |
 | `perf_monitor` | 0 | Tk 渲染性能埋点 |
 | `language` | zh_CN | gettext 语言 |
-| `window_width/height`, `textbox_*`, `text_*`, `inputbox_*`, `font_size`, `tk_dpi` | 窗口/文本/输入框尺寸 |
+| `window_width` / `window_hight`, `textbox_width` / `textbox_hight`, `text_width` / `text_hight`, `inputbox_width`, `font_size`, `tk_dpi` | 见 `config.ini` | 窗口/文本/输入框尺寸（键名拼作 `hight`） |
 | `year/month/day/hour/minute` | 2019-03-01 06:00 | 新游戏起始时间 |
 | `max_save`, `save_page` | 100 / 10 | 存档数量与每页条数 |
 | `text_wait` | 0 | 文本等待选项 |
 | `font`, `font_url` | 等距更纱黑体 SC | 字体 |
-| `home_url`, `licenses_url`, `origin_author`, `origin_url` | 主页/许可/原项目信息 |
+| `home_url`, `licenses_url`, `origin_author`, `origin_url` | 见 `config.ini` | 主页/许可/原项目信息 |
 
 ### 7.2 运行时配置加载
 
@@ -962,7 +962,7 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 - `update.log`：版本更新日志
 - `todo list.txt`：作者待办与未实装系统规划
 
-### 30.2 `docs/数据处理工作流/`（60 个文档）
+### 30.2 `docs/数据处理工作流/`（62 个文档）
 
 核心架构：
 `角色行为系统`, `前提系统`, `结算系统`, `口上系统`, `事件系统`, `通用结算函数函数`, `CSV数据加载机制说明`, `多周目结算与继承系统`
@@ -977,7 +977,7 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 `角色创建流程`, `能力升级面板`, `成就系统`, `服装系统说明`, `衣柜检查功能`, `收藏品系统`, `角色图片系统`, `身体信息面板系统`, `射精面板系统`, `妊娠系统`
 
 罗德岛部门/经营：
-`管理罗德岛系统`, `助理系统`, `基建系统`, `动力系统`, `农业生产系统`, `工业生产系统`, `装备维护系统`, `医疗经营系统`, `资源交易系统`, `招募系统`, `外勤委托系统`, `邀请访客系统`, `势力外交系统`, `载具管理系统`, `读书系统`, `身体检查与管理系统`
+`管理罗德岛系统`, `助理系统`, `基建系统`, `动力系统`, `农业生产系统`, `工业生产系统`, `装备维护系统`, `医疗经营系统`, `资源交易系统`, `招募系统`, `外勤委托系统`, `邀请访客系统`, `势力外交系统`, `载具管理系统`, `读书系统`, `身体检查与管理系统`, `公务事件系统`
 
 物品：
 `道具背包系统`, `礼物系统`, `食物系统`

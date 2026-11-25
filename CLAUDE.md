@@ -294,6 +294,7 @@ The `docs/数据处理工作流` directory contains 63 detailed documentation fi
 
 ### 🎯 Rhodes Island Department Systems
 - **[管理罗德岛系统](docs/数据处理工作流/管理罗德岛系统.md)** - Rhodes Island base management
+- **[公务事件系统](docs/数据处理工作流/公务事件系统.md)** - Official-duty event queue, providers, deduplication, RI global values, and CSV checker
 - **[助理系统](docs/数据处理工作流/助理系统.md)** - Assistant character functions
 - **[基建系统](docs/数据处理工作流/基建系统.md)** - Construction and building management
 - **[动力系统](docs/数据处理工作流/动力系统.md)** - Power system
