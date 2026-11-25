@@ -649,7 +649,7 @@ Script/
 | 装备维护 | `UI/Panel/equipmen_panel.py`, `Modules/domains/maintenance.py` | `Equipment_*` 系列 |
 | 载具管理 | `UI/Panel/manage_vehicle_panel.py`, `Modules/gameplay_resolution/vehicle_service.py`, `Modules/domains/commission.py` | `Vehicle.csv` |
 | 宿舍管理 | `System/Dormitory_System/*`, `Modules/gameplay_resolution/dormitory_room_service.py`, `Modules/gameplay_resolution/dormitory_manager_service.py`, `Modules/domains/dormitory.py` | 宿舍场景地图 |
-| 医疗经营 | `System/Medical_System/*`, `Modules/domains/medical.py`, `Modules/domains/medical_patient.py` | `Medical_*` 系列 |
+| 医疗经营 | `System/Medical_System/*`, `Modules/gameplay_resolution/medical_department_service.py`, `Modules/gameplay_resolution/medical_management_service.py`, `Modules/domains/medical.py`, `Modules/domains/medical_patient.py` | `Medical_*` 系列 |
 | 外勤委托 | `System/Field_Commission_System/*`, `Modules/gameplay_resolution/field_commission_service.py`, `Modules/gameplay_resolution/commission_roster_service.py`, `Modules/domains/commission.py` | `Commission.csv` |
 | 招募 | `UI/Panel/recruit_panel.py`, `Modules/gameplay_resolution/recruit_service.py`, `Modules/domains/recruit.py` | `Recruitment_Strategy.csv` |
 | 邀请访客 | `UI/Panel/invite_visitor_panel.py`, `Modules/domains/visitor.py` | 访客设施 |
