@@ -13,7 +13,7 @@ from tests.education._skip import skip
 from Script.Design import clothing
 from Script.Kernel import core
 from Script.Settle import past_day_settle, realtime_settle
-from Script.UI.Panel import character_info_head
+from Script.Modules.gameplay_resolution import class_tip_service
 from tests import kernel_data, world
 from tests.chara_activity import aim, behave, doing, scene_of, stand, status
 from Script.Modules.domains import action_info, activity, chara_life, flags
@@ -217,7 +217,7 @@ for index, minute in enumerate((40, 45, 45, 45, 45, 45)):
     in_class = 0
     for cid in daughter_list:
         cd = identity.of(cid)
-        tip = character_info_head.get_now_class_tip(cid)
+        tip = class_tip_service.get_now_class_tip(cid)
         if (
             doing(cd.cid)
             in (

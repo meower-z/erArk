@@ -17,12 +17,12 @@ from Script.Modules import load_order
 from Script.Modules.domains import abilities, activity, flags, hypnosis
 from Script.Modules.domains import identity, player_ability, scene_state
 from Script.Modules.gameplay_resolution import hypnosis_service, ui_hooks
-from Script.Modules.gameplay_resolution import working
+from Script.Modules.gameplay_resolution import status_tag_service, working
 from Script.Settle import default as settle_default
 from Script.System.First_Record_System import first_record_panel
 from Script.System.Sex_System import h_mode_common
 from Script.UI.Moudle import draw
-from Script.UI.Panel import character_info_head, hypnosis_panel
+from Script.UI.Panel import hypnosis_panel
 from tests import chara_abilities as ca
 from tests.fast.base import FastTestCase
 
@@ -52,7 +52,7 @@ CALLERS = (
     settle_default,
     first_record_panel,
     h_mode_common,
-    character_info_head,
+    status_tag_service,
 )
 """ 调用 hypnosis_service 的五个模块元组 """
 
