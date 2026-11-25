@@ -7,8 +7,6 @@
 import ast
 import datetime
 import random
-import subprocess
-import sys
 from importlib.util import resolve_name
 from unittest import mock
 
@@ -21,6 +19,7 @@ from tests import kernel_data
 from tests.chara_activity import aim, behave
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.ui_free_subprocess import BLOCKED, run_ui_free
 
 SERVICE_PATH = "Script/Modules/gameplay_resolution/food_effects.py"
 """ 进食效果计算模块的仓库相对路径。 """
@@ -34,17 +33,8 @@ UNKNOWN = 987655
 """ 测试使用的未配置菜谱编号（987655）。 """
 NOW = datetime.datetime(2026, 1, 1, 12, 0)
 """ 进食结算测试使用的固定当前时间 datetime(2026, 1, 1, 12, 0)。 """
-BLOCKED_RUN = """
-import importlib.abc, random, sys
-BLOCKED = ("Script.UI", "Script.System.Cooking_System.food_bag_panel",
-    "tkinter", "_tkinter", "Script.Core.io_init")
-def blocked(name):
-    return any(name == root or name.startswith(root + ".") for root in BLOCKED)
-class Block(importlib.abc.MetaPathFinder):
-    def find_spec(self, fullname, path, target=None):
-        if blocked(fullname):
-            raise ImportError(fullname)
-sys.meta_path.insert(0, Block())
+FOOD_RUN = """
+import random
 from Script.Config import config_def, game_config
 from Script.Core import game_type
 from Script.Kernel import core
@@ -58,10 +48,9 @@ food.quality, food.maker, food.recipe = 4, "maker", 7
 random.uniform = lambda low, high: 1.0
 with working.based_on(core.state()):
     activity.set_behavior(0, target_food=food)
-    print(food_effects.calculate_food_effects(0, 60))
-print(sorted(name for name in sys.modules if blocked(name)))
+    payload["effects"] = list(food_effects.calculate_food_effects(0, 60))
 """
-""" 在拦截界面、Tk、io_init 与食物背包面板导入的子进程中运行 calculate_food_effects 的测试脚本。 """
+"""在无界面子进程中配置测试菜谱与食物、运行 calculate_food_effects 并将结果写入 payload 的代码片段。"""
 
 
 def recipe(difficulty: int, time: int) -> config_def.Recipes:
@@ -304,16 +293,9 @@ class BoundaryTest(FastTestCase):
 
     def test_runs_with_ui_blocked(self) -> None:
         """
-        拦截界面、Tk、io_init 与食物背包面板导入的子进程可正常导入运行 food_effects，
-        输出 (180, 12) 且未加载被拦截模块。
+        验证拦截默认受限模块与食物背包面板时，子进程执行 FOOD_RUN 返回 payload 为 {"effects": [180, 12]}。
+        同时验证子进程的 loaded 与 attempted 均为空列表。
         """
-        result = subprocess.run(
-            [sys.executable, "-c", BLOCKED_RUN],
-            cwd=ROOT,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr[-2000:])
-        self.assertEqual(result.stdout.splitlines()[-2:], ["(180, 12)", "[]"])
+        run = run_ui_free(FOOD_RUN, blocked=BLOCKED | {PANEL})
+        self.assertEqual(run.payload, {"effects": [180, 12]})
+        self.assertEqual((run.loaded, run.attempted), ([], []))
