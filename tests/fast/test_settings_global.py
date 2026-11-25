@@ -23,9 +23,8 @@ from Script.Config import game_config, normal_config
 from Script.Core import game_type
 from Script.Design import attr_calculation, game_time
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import actions
+from Script.Modules.gameplay_resolution import actions, debug_world_service
 from Script.Modules.save_load import settings
-from Script.UI.Panel import debug_panel
 from tests.fast.base import FastTestCase
 
 START = game_time.to_game_time(datetime.datetime(2020, 12, 22, 10, 0))
@@ -236,7 +235,7 @@ class DebugClockEdit(SettingsTestCase):
         with mock.patch.object(
             core, "reset_state", wraps=core.reset_state
         ) as reset_state:
-            debug_panel.set_clock(new_time)
+            debug_world_service.set_clock(new_time)
         reset_state.assert_called_once()
         return core.state()
 
