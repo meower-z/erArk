@@ -37,10 +37,10 @@ def update_new_day() -> None:
     """
     from Script.System.Cooking_System import cooking
     from Script.Modules.gameplay_resolution import (
+        assistant_service,
         diplomacy_service,
         navigation_service,
     )
-    from Script.UI.Panel import assistant_panel
     from Script.System.Pregnancy_System import pregnancy_handle, egg_handle
     from Script.System.Education_System import (
         schedule_template_handle,
@@ -154,7 +154,7 @@ def update_new_day() -> None:
         game_time.now().weekday() == 0
         and handle_premise.handle_pl_assistant_change_every_week_on(0)
     ):
-        assistant_panel.select_random_assistant()
+        assistant_service.select_random_assistant()
     # 今天过生日的女儿把生日事件插到队首（Plan 32 §3.3）。必须在下面的日常派发之前：
     #    推入之后它已在队列里，日常随机派发不会再抽到它；只靠日常派发的话，当天抽中的机会只有百分之一二
     growth_event_handle.push_birthday_event()
