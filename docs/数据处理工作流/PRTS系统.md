@@ -31,6 +31,20 @@ PRTS系统是erArk游戏中的一个帮助与教程系统，模拟明日方舟�
 - 处理角色口上信息展示
 - 支持多版本文本选择
 
+### 3. 后端服务
+
+**主要模块：** `prts_service` (`Script/Modules/gameplay_resolution/prts_service.py`)
+
+**数据结构：** 常量 `TEXT_DIRS`（`data/talk/chara`、`data/event/chara`），以及只读数据类 `Question`（`son_type`、`text`）与 `VersionOption`（`tip_cid`、`version_id`、`title`、`text`）。本模块不执行界面绘制，也不导入 `Script.UI`、`Script.Settle` 或 Tk 模块。
+
+**公开函数：**
+- `questions(father_type)`：返回指定父分类下的 `list[Question]`，问题文本附带左补零至三位的子分类编号前缀
+- `answer_text(father_type, son_type)`：返回按字面量 `\n` 拆行并添加前置空格与换行符的回答文本 `str`
+- `version_sizes(adv_id)`：扫描当前工作目录下 `TEXT_DIRS` 中的口上与事件文件，返回版本编号到 KB 体积的映射 `dict[int, int]`
+- `version_label(adv_id)`：返回角色当前所选版本的展示标签 `str`（无扫描结果或扫描异常时回退至角色 `talk_size`，多版本时追加版本数量）
+- `version_options(adv_id)`：返回角色全部可选版本的 `list[VersionOption]`，标题含版本编号、作者名、可选 KB 体积与当前版本标记
+- `choose_version(adv_id, version_id)`：向内存配置 `normal_config.system_setting.character_text_version[adv_id]` 写入所选版本编号（`0` 表示不使用版本）
+
 ## 数据结构
 
 ### 1. PRTS教程数据
@@ -78,8 +92,8 @@ class Tip_Chara:
 **流程：**
 1. 显示普瑞赛斯欢迎界面
 2. 展示主要分类选项（系统、日常、攻略、H、经营等）
-3. 进入子分类选择 (`select_question`)
-4. 显示具体问答内容 (`show_answer`)
+3. 进入子分类选择 (`select_question`，通过 `prts_service.questions` 获取问题列表)
+4. 显示具体问答内容 (`show_answer`，通过 `prts_service.answer_text` 格式化回答文本)
 
 **分类说明：**
 - 0: 系统相关（UI问题、刻印、催眠等）
@@ -111,10 +125,10 @@ class Tip_Chara:
 **存储位置：** `normal_config.system_setting.character_text_version[adv_id]`
 
 **切换机制：**
-1. 显示角色所有可用版本
-2. 显示当前选择版本
-3. 允许切换到其他版本或不使用版本
-4. 实时更新显示状态
+1. 通过 `prts_service.version_options` 获取角色全部可用版本并显示当前选中标记
+2. 通过 `prts_service.version_label` 在角色列表行展示当前选择版本与版本数量
+3. 点击版本按钮或不使用版本按钮时通过 `prts_service.choose_version` 写入内存设置
+4. 刷新界面显示状态
 
 ## 数据流程
 
@@ -206,6 +220,11 @@ Character.csv ──→ 角色基础数据 ──→ character.py ──→ ID�
 
 ```
 prts_panel.py
+├── prts_service (无界面后端服务)
+│   ├── game_config (数据配置)
+│   ├── normal_config (系统设置)
+│   ├── identity (角色身份视图)
+│   └── get_text (翻译API)
 ├── game_config (数据配置)
 ├── character (角色处理)
 ├── draw (UI绘制)
