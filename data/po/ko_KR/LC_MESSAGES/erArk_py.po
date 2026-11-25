@@ -6304,9 +6304,14 @@ msgstr ""
 
 #: .\Script\UI\Panel\chat_ai_setting.py:92
 msgid ""
-"   包含调用、输送数据在内的完整代码，见游戏源码文件路径 Script/UI/Panel/"
-"chat_ai_setting.py ，可以根据自己的需要进行调整，调整后需自行打包\n"
-msgstr "   API 호출 및 데이터 전달 관련 전체 코드는 Script/UI/Panel/chat_ai_setting.py 에 있으며, 필요 시 수정 후 직접 패키징이 필요합니다\n"
+"   相关源码文件路径如下。"
+"Script/UI/Panel/chat_ai_setting.py 负责设置界面绘制与输入。"
+"Script/Modules/gameplay_resolution/chat_ai_setting_service.py"
+" 负责设置规则、发送数据选项、API密钥存取（ai_chat_api_key.csv）、客户端构造与模型测试。"
+"Script/Design/handle_chat_ai.py 负责游玩时按所选发送数据构造提示词并调用模型。"
+"可以根据自己的需要进行调整，调整后需自行打包\n"
+msgstr ""
+"   관련 소스코드 파일 경로는 다음과 같습니다. Script/UI/Panel/chat_ai_setting.py 는 설정 화면 표시와 입력을 담당합니다. Script/Modules/gameplay_resolution/chat_ai_setting_service.py 는 설정 규칙, 전송 데이터 옵션, API 키 저장(ai_chat_api_key.csv), 클라이언트 구성 및 모델 테스트를 담당합니다. Script/Design/handle_chat_ai.py 는 플레이 중 선택한 전송 데이터로 프롬프트를 구성하고 모델을 호출합니다. 필요에 따라 수정할 수 있으며, 수정 후 직접 패키징해야 합니다\n"
 
 #: .\Script\UI\Panel\chat_ai_setting.py:126
 msgid " [调整发送的数据] "

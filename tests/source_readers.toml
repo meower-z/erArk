@@ -387,12 +387,6 @@ pattern = "__file__"
 why = "用 __file__ 定位 mod 目录"
 
 [[allow]]
-file = "Script/UI/Panel/chat_ai_setting.py"
-symbol = "Chat_Ai_Setting_Panel.draw"
-pattern = "open-py"
-why = "界面说明文字里提到源码路径 Script/UI/Panel/…；同一函数打开的是 ai_chat_api_key.csv"
-
-[[allow]]
 file = "buildata.py"
 symbol = "constand_2_handle"
 pattern = "open-py"
