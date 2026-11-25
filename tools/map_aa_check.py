@@ -4,8 +4,8 @@
 
 背景说明：
     `data/map/*/Map` 里的 AA 地图，最终排版由**字体的实际字宽**决定，而不是由
-    `wcwidth.wcswidth` 决定。原因是 `Script/UI/Panel/see_map_panel.py:97-109`
-    只用全局 `max_width` 算出一个**所有行共用**的空格前缀，之后把每一段文本原样输出，
+    `wcwidth.wcswidth` 决定。原因是 `world_view_service.map_view` 用全局 `max_width`
+    算出各行共用空格前缀，`SeeMapPanel.draw_rows` 原样输出每段，
     所以行内对齐完全取决于每个字符在字体里的实际推进宽度。
 
     在 `等距更纱黑体 SC` 下，字符分成两个互不通约的度量族：

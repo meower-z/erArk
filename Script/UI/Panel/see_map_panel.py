@@ -1,20 +1,21 @@
-"""查看当前地图的面板、快捷移动菜单，以及场景名列表与各类快捷寻路按钮列表"""
+"""地图查看面板模块，提供地图界面绘制、快捷移动菜单、场景名列表与收藏地点面板的交互展示。"""
 
+from collections.abc import Callable
 from types import FunctionType
 from Script.UI.Moudle import draw, panel, view
 from Script.Core import (
     get_text,
-    game_type,
     flow_handle,
     value_handle,
     text_handle,
     constant,
     py_cmd,
 )
-from Script.Design import map_handle, attr_text, character_move, handle_premise
+from Script.Design import character_move
 from Script.Config import game_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import activity, bookmarks, identity, scene_state
+from Script.Modules.domains import activity
+from Script.Modules.gameplay_resolution import world_view_service as svc
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -22,6 +23,35 @@ line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
+
+
+def move_now(scene_path: list[str]) -> None:
+    """
+    清屏并控制玩家角色移动到指定场景。
+    Keyword arguments:
+    scene_path -- list[str]，目标场景路径
+    """
+    py_cmd.clr_cmd()
+    line_feed.draw()
+    flow_handle.set_skip_pauses(True)
+    character_move.own_charcter_move(scene_path)
+
+
+def _draw_grid(draw_list: list, per_row: int, width: int) -> None:
+    """
+    按每行最多 per_row 个对象分组，按最长行均分宽度后逐行绘制。
+    Keyword arguments:
+    draw_list -- list，待绘制的对象列表
+    per_row -- int，每行最多绘制个数
+    width -- int，面板绘制宽度
+    """
+    draw_group = value_handle.list_of_groups(draw_list, per_row)
+    now_width = width / max(len(group) for group in draw_group)
+    for now_draw_list in draw_group:
+        for now_draw in now_draw_list:
+            now_draw.width = now_width
+            now_draw.draw()
+        line_feed.draw()
 
 
 class SeeMapPanel:
@@ -35,9 +65,7 @@ class SeeMapPanel:
         """初始化绘制对象"""
         self.width: int = width
         """ 绘制的最大宽度 """
-        self.now_map: list[str] = map_handle.get_map_for_path(
-            activity.position(0)
-        )
+        self.now_map: list[str] = svc.parent_map(activity.position(0))
         """ 当前查看的地图坐标 """
 
     def draw(self) -> None:
@@ -47,8 +75,6 @@ class SeeMapPanel:
         ] = {
             0: MapSceneNameDraw(self.now_map, self.width),
             1: CollectionSceneNamePanel(self.now_map, self.width),
-            # 1: UsefulSceneNamePanel(self.now_map, self.width),
-            # 2: entertainmentSceneNamePanel(self.now_map, self.width),
         }
         move_menu_panel = MoveMenuPanel(self.width)
         first_position = activity.position(0)
@@ -56,256 +82,128 @@ class SeeMapPanel:
             line_feed.draw()
             if view.now_panel_id != constant.Panel.SEE_MAP:
                 break
-            if len(self.now_map) >= 2 and self.now_map[-1] == "0":
-                self.now_map.pop()
-            # 更新当前地图
-            if activity.position(0) != first_position and len(self.now_map):
-                self.now_map = map_handle.get_map_for_path(activity.position(0))
-            # 获取当前地图数据
-            map_path_str = map_handle.get_map_system_path_str_for_list(
-                self.now_map
-            )
-            map_data: game_type.Map = constant.map_data[map_path_str]
-            map_name = attr_text.get_map_path_text(self.now_map)
-            # 绘制标题
+            self.now_map = svc.settle_view(self.now_map, first_position)
+            map_view = svc.map_view(self.now_map, self.width)
             title_draw = draw.TitleLineDraw(
-                _("当前区块:") + _(map_name), self.width
+                _("当前区块:") + _(map_view.name), self.width
             )
             title_draw.draw()
-            # 绘制tips
-            now_facility_id = -1
-            for facility_id in game_config.config_facility:
-                facility_data = game_config.config_facility[facility_id]
-                if facility_data.name == map_name:
-                    now_facility_id = facility_id
-                    break
-            if (
-                now_facility_id != -1
-                and now_facility_id in game_config.config_tip_data_by_facility
-            ):
-                now_facility_tip_list = game_config.config_tip_data_by_facility[
-                    now_facility_id
-                ]
-                random_tip_id = player_pick.ui_random.choice(
-                    now_facility_tip_list
-                )
-                now_tip_text = game_config.config_tip_data[random_tip_id].info
+            if map_view.tips:
                 tip_draw = draw.CenterDraw()
-                tip_draw.text = "○" + now_tip_text
+                tip_draw.text = "○" + player_pick.ui_random.choice(
+                    map_view.tips
+                )
                 tip_draw.width = self.width
                 line_feed.draw()
                 tip_draw.draw()
                 line_feed.draw()
                 line_feed.draw()
-            now_draw_list: game_type.MapDraw = map_data.map_draw
-            character_scene_name = map_handle.get_map_scene_id_for_scene_path(
-                self.now_map, activity.position(0)
-            )
-            return_list = []
-            index = 0
-            # 使用地图最大行宽来计算统一的居中偏移，使所有行左对齐
-            # 兼容旧存档：如果 max_width 属性不存在，则动态计算
-            if hasattr(now_draw_list, "max_width"):
-                map_max_width = now_draw_list.max_width
-            else:
-                map_max_width = max(
-                    (line.width for line in now_draw_list.draw_text), default=0
-                )
-            fix_width = int((self.width - map_max_width) / 2)
-            for now_draw_line in now_draw_list.draw_text:
-                fix_text = " " * fix_width
-                fix_draw = draw.NormalDraw()
-                fix_draw.text = fix_text
-                fix_draw.width = fix_width
-                # print("fix_width:",fix_width)
-                fix_draw.draw()
-                for draw_text in now_draw_line.draw_list:
-                    # print(f"debug draw_text.text = {draw_text.text}")
-
-                    # 首先需要是地点按钮
-                    if (
-                        "is_button" in draw_text.__dict__
-                        and draw_text.is_button
-                    ):
-
-                        # 获取地点路径
-                        scene_path = map_handle.get_scene_path_for_map_scene_id(
-                            self.now_map, draw_text.text
-                        )
-                        full_scene_str = (
-                            map_handle.get_map_system_path_str_for_list(
-                                scene_path
-                            )
-                        )
-
-                        # 如果不是玩家所在的地点，则绘制按钮
-                        if draw_text.text != character_scene_name:
-                            # 如果当前地点可以进入则正常绘制
-                            if (
-                                map_handle.judge_scene_accessible(
-                                    full_scene_str, 0, False
-                                )
-                                == "open"
-                            ):
-                                now_draw: draw.Button | draw.NormalDraw
-                                now_draw = draw.Button(
-                                    draw_text.text,
-                                    draw_text.text,
-                                    cmd_func=self.move_now,
-                                    args=(scene_path,),
-                                )
-                                # 如果是有NPC在那么显示为绿色
-                                if len(scene_state.occupants(full_scene_str)):
-                                    now_draw.normal_style = "green"
-                            # 如果当前地点不可进入则绘制灰色按钮
-                            else:
-                                now_draw = draw.Button(
-                                    draw_text.text,
-                                    draw_text.text,
-                                    normal_style="deep_gray",
-                                    cmd_func=self.move_now,
-                                    args=(scene_path,),
-                                )
-                            now_draw.width = self.width
-                            now_draw.draw()
-                            return_list.append(now_draw.return_text)
-
-                        else:
-                            # 如果是玩家所在的地点，则高亮显示文本
-                            now_draw = draw.NormalDraw()
-                            now_draw.style = "gold_enrod"
-                            now_draw.text = draw_text.text
-                            # now_draw.width = self.width
-                            now_draw.draw()
-                    # 如果不是地点按钮，则正常绘制文本
-                    else:
-                        now_draw = draw.NormalDraw()
-                        now_draw.style = draw_text.style
-                        now_draw.text = draw_text.text
-                        # now_draw.width = self.width
-                        now_draw.draw()
-                line_feed.draw()
-            path_edge = map_data.path_edge
-            # scene_path = path_edge[character_scene_name].copy()
-            # if character_scene_name in scene_path:
-            #     del scene_path[character_scene_name]
-
-            # 当前位置相邻地点
-            # scene_path_list = list(scene_path.keys())
-            # if len(scene_path_list):
-            #     line = draw.LineDraw(".", self.width)
-            #     line.draw()
-            #     message_draw = draw.NormalDraw()
-            #     message_draw.text = _("你可以从这里前往:\n")
-            #     message_draw.width = self.width
-            #     message_draw.draw()
-            #     draw_list = []
-            #     for scene in scene_path_list:
-            #         load_scene_data = map_handle.get_scene_data_for_map(map_path_str, scene)
-            #         now_scene_path = map_handle.get_map_system_path_for_str(load_scene_data.scene_path)
-            #         now_draw = draw.CenterButton(
-            #             f"[{load_scene_data.scene_name}]",
-            #             load_scene_data.scene_name,
-            #             self.width / 4,
-            #             cmd_func=self.move_now,
-            #             args=(now_scene_path,),
-            #         )
-            #         return_list.append(now_draw.return_text)
-            #         draw_list.append(now_draw)
-            #     draw_group = value_handle.list_of_groups(draw_list, 8)
-            #     for now_draw_list in draw_group:
-            #         for now_draw in now_draw_list:
-            #             now_draw.draw()
-            #         line_feed.draw()
-
-            scene_id_list = list(path_edge.keys())
-            now_index = len(scene_id_list)
-            index = now_index
+            return_list = self.draw_rows(map_view)
+            now_index = map_view.scene_count
             move_menu_panel.update()
             move_menu_panel.draw()
             return_list.extend(move_menu_panel.return_list)
             if move_menu_panel.now_type in move_menu_panel_data:
                 now_move_menu = move_menu_panel_data[move_menu_panel.now_type]
-                now_move_menu.update(self.now_map, index)
+                now_move_menu.update(self.now_map)
                 now_move_menu.draw()
                 now_index = now_move_menu.end_index + 1
                 return_list.extend(now_move_menu.return_list)
             line = draw.LineDraw("=", self.width)
             line.draw()
-            # 查看上级地图
-            if self.now_map != []:
-                now_id = text_handle.id_index(now_index)
-                now_text = now_id + _("查看上级地图")
-                up_button = draw.CenterButton(
-                    now_text,
-                    str(now_index),
-                    self.width / 4,
-                    cmd_func=self.up_map,
+            if map_view.can_go_up:
+                now_index = self.draw_button(
+                    now_index, _("查看上级地图"), return_list, self.up_map
                 )
-                up_button.draw()
-                return_list.append(up_button.return_text)
-                now_index += 1
             else:
                 now_draw = draw.NormalDraw()
                 now_draw.text = " " * int(self.width / 4)
                 now_draw.width = self.width / 4
                 now_draw.draw()
-            # 返回按钮
-            back_id = text_handle.id_index(now_index)
-            now_text = back_id + _("返回")
-            back_button = draw.CenterButton(
-                now_text, str(now_index), self.width / 4
-            )
-            back_button.draw()
-            return_list.append(back_button.return_text)
-            now_index += 1
-            # 查看下级地图
-            character_map = map_handle.get_map_for_path(activity.position(0))
-            if character_map != self.now_map:
-                now_id = text_handle.id_index(now_index)
-                now_text = now_id + _("查看下级地图")
-                down_button = draw.CenterButton(
-                    now_text,
-                    str(now_index),
-                    self.width / 4,
-                    cmd_func=self.down_map,
+            back_text = str(now_index)
+            now_index = self.draw_button(now_index, _("返回"), return_list)
+            if map_view.can_go_down:
+                now_index = self.draw_button(
+                    now_index, _("查看下级地图"), return_list, self.down_map
                 )
-                down_button.draw()
-                return_list.append(down_button.return_text)
-                now_index += 1
-            # 干员位置一览
-            now_id = text_handle.id_index(now_index)
-            now_text = now_id + _("干员位置一览")
-            character_position_button = draw.CenterButton(
-                now_text,
-                str(now_index),
-                self.width / 4,
-                cmd_func=self.all_npc_position,
+            self.draw_button(
+                now_index, _("干员位置一览"), return_list, self.all_npc_position
             )
-            character_position_button.draw()
-            return_list.append(character_position_button.return_text)
-            now_index += 1
             line_feed.draw()
             yrn = flow_handle.askfor_all(return_list)
             py_cmd.clr_cmd()
-            if yrn == back_button.return_text:
+            if yrn == back_text:
                 view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
+    def draw_rows(self, map_view: svc.MapView) -> list[str]:
+        """
+        按行绘制居中缩进与地图格子，返回地点按钮的返回值列表。
+        Keyword arguments:
+        map_view -- MapView，地图查看数据
+        Return arguments:
+        list[str] -- 地点按钮的返回值列表
+        """
+        return_list = []
+        for row in map_view.rows:
+            fix_draw = draw.NormalDraw()
+            fix_draw.text = " " * map_view.indent
+            fix_draw.width = map_view.indent
+            fix_draw.draw()
+            for cell in row:
+                if cell.kind in (svc.CellKind.OPEN, svc.CellKind.CLOSED):
+                    now_draw = draw.Button(
+                        cell.text,
+                        cell.text,
+                        normal_style=cell.style,
+                        cmd_func=self.move_now,
+                        args=(cell.scene_path,),
+                    )
+                    now_draw.width = self.width
+                    now_draw.draw()
+                    return_list.append(now_draw.return_text)
+                else:
+                    text_draw = draw.NormalDraw()
+                    text_draw.style = cell.style
+                    text_draw.text = cell.text
+                    text_draw.draw()
+            line_feed.draw()
+        return return_list
+
+    def draw_button(
+        self,
+        now_index: int,
+        text: str,
+        return_list: list[str],
+        cmd_func: Callable[[], None] | None = None,
+    ) -> int:
+        """
+        绘制宽为面板四分之一的编号居中按钮并加入监听列表。
+        Keyword arguments:
+        now_index (int)、text (str) -- 按钮编号与显示文本
+        return_list (list[str])、cmd_func (Callable[[], None] | None) -- 监听列表与回调
+        Return arguments:
+        int -- 下一个按钮编号
+        """
+        button = draw.CenterButton(
+            text_handle.id_index(now_index) + text,
+            str(now_index),
+            self.width / 4,
+            cmd_func=cmd_func,
+        )
+        button.draw()
+        return_list.append(button.return_text)
+        return now_index + 1
+
     def up_map(self) -> None:
-        """将当前地图切换为上级地图"""
+        """清屏并将当前查看地图切换为上级地图。"""
         py_cmd.clr_cmd()
-        up_map_path = map_handle.get_map_for_path(self.now_map)
-        self.now_map = up_map_path
+        self.now_map = svc.parent_map(self.now_map)
 
     def down_map(self) -> None:
-        """将当前地图切换为下级地图"""
+        """清屏并将当前查看地图切换为朝向玩家所在位置的下级地图。"""
         py_cmd.clr_cmd()
-        character_position = activity.position(0)
-        down_map_scene_id = map_handle.get_map_scene_id_for_scene_path(
-            self.now_map, character_position
-        )
-        self.now_map.append(down_map_scene_id)
+        self.now_map = svc.child_map(self.now_map)
 
     def all_npc_position(self) -> None:
         """查看所有干员位置"""
@@ -317,19 +215,16 @@ class SeeMapPanel:
 
     def move_now(self, scene_path: list[str]) -> None:
         """
-        控制角色移动至指定场景
+        清屏并控制玩家角色移动，跨区块进入入口场景时保持地图开启。
         Keyword arguments:
-        scene_path -- 目标场景路径
+        scene_path -- list[str]，目标场景路径
         """
         py_cmd.clr_cmd()
         line_feed.draw()
         flow_handle.set_skip_pauses(True)
-        flag_map_open = False
-        # 从大地图移动到另一个区块时，不关闭地图面板，且切换到下级地图面板
-        if activity.position(0)[-2] != scene_path[-2] and scene_path[-1] == "0":
-            flag_map_open = True
-        # 从大地图移动到另一个区块时，每一段移动开始后仍打开地图面板，面板按玩家的新位置显示下级地图
-        character_move.own_charcter_move(scene_path, open_map=flag_map_open)
+        character_move.own_charcter_move(
+            scene_path, open_map=svc.opens_map(scene_path)
+        )
 
 
 class MoveMenuPanel:
@@ -419,299 +314,43 @@ class MapSceneNameDraw:
         self.end_index: int = 0
         """ 结束按钮id """
 
-    def update(self, now_map: list[str], start_index: int) -> None:
+    def update(self, now_map: list[str]) -> None:
         """
-        更新当前面板对象
+        更新面板当前查看的地图路径。
         Keyword arguments:
-        now_map -- 当前地图
-        start_index -- 起始按钮id
+        now_map -- list[str]，当前查看的地图路径
         """
         self.now_map = now_map
 
     def draw(self) -> None:
-        """绘制面板"""
+        """按当前地图场景列表绘制每行最多 8 个的快捷移动按钮，玩家所在场景以金色文本展示。"""
         self.return_list = []
-        map_path_str = map_handle.get_map_system_path_str_for_list(self.now_map)
-        map_data: game_type.Map = constant.map_data[map_path_str]
-        path_edge = map_data.path_edge
-        scene_id_list = list(path_edge.keys())
-        if len(scene_id_list):
-            character_scene_id = map_handle.get_map_scene_id_for_scene_path(
-                self.now_map, activity.position(0)
-            )
-            scene_path = path_edge[character_scene_id].copy()
-            if character_scene_id in scene_path:
-                del scene_path[character_scene_id]
-            draw_list = []
-            for scene_id in scene_id_list:
-                load_scene_data = map_handle.get_scene_data_for_map(
-                    map_path_str, scene_id
+        entries = svc.scene_entries(self.now_map)
+        draw_list: list[draw.LeftDraw | draw.LeftButton] = []
+        for entry in entries:
+            if entry.scene_id == "0":
+                now_id_text = f"→0:{_(entry.name)}"
+            else:
+                now_id_text = f"→{_(entry.name)}"
+            now_draw: draw.LeftDraw | draw.LeftButton
+            if entry.here:
+                now_draw = draw.LeftDraw()
+                now_draw.text = now_id_text
+                now_draw.width = self.width
+                now_draw.style = "gold_enrod"
+            else:
+                now_draw = draw.LeftButton(
+                    now_id_text,
+                    now_id_text,
+                    self.width,
+                    cmd_func=move_now,
+                    args=(entry.scene_path,),
                 )
-                now_scene_path = map_handle.get_map_system_path_for_str(
-                    load_scene_data.scene_path
-                )
-
-                # now_id_text = f"{scene_id}:{load_scene_data.scene_name}"
-                # 如果编号=0的话为出口，单独标注，其他的不标注序号
-                if scene_id == "0":
-                    now_id_text = f"→0:{_(load_scene_data.scene_name)}"
-                else:
-                    now_id_text = f"→{_(load_scene_data.scene_name)}"
-                # 如果是当前位置则标注当前
-                if scene_id == character_scene_id:
-                    text_flag = True
-                else:
-                    text_flag = False
-
-                # 绘制
-                if text_flag:
-                    now_draw: draw.LeftDraw | draw.LeftButton
-                    now_draw = draw.LeftDraw()
-                    now_draw.text = now_id_text
-                    now_draw.width = self.width
-                    now_draw.style = "gold_enrod"
-                else:
-                    now_draw = draw.LeftButton(
-                        now_id_text,
-                        now_id_text,
-                        self.width,
-                        cmd_func=self.move_now,
-                        args=(now_scene_path,),
-                    )
-                    self.return_list.append(now_draw.return_text)
-                draw_list.append(now_draw)
-            draw_group = value_handle.list_of_groups(draw_list, 8)
-            now_width_index = 0
-            for now_draw_list in draw_group:
-                if len(now_draw_list) > now_width_index:
-                    now_width_index = len(now_draw_list)
-            now_width = self.width / now_width_index
-            for now_draw_list in draw_group:
-                for now_draw in now_draw_list:
-                    now_draw.width = now_width
-                    now_draw.draw()
-                line_feed.draw()
-        self.end_index = len(scene_id_list) - 1
-
-    def move_now(self, scene_path: list[str]) -> None:
-        """
-        控制角色移动至指定场景
-        Keyword arguments:
-        scene_path -- 目标场景路径
-        """
-        py_cmd.clr_cmd()
-        line_feed.draw()
-        flow_handle.set_skip_pauses(True)
-        character_move.own_charcter_move(scene_path)
-
-
-class UsefulSceneNamePanel:
-    """
-    绘制功能地点快捷寻路场景按钮列表
-    Keyword arguments:
-    now_map -- 地图路径
-    width -- 绘制宽度
-    """
-
-    def __init__(self, now_map: list[str], width: int) -> None:
-        """
-        初始化功能地点快捷寻路按钮列表，并创建按场景路径分页的绘制面板
-        Keyword arguments:
-        now_map -- 地图路径
-        width -- 绘制宽度
-        """
-        self.width: int = width
-        """ 绘制的最大宽度 """
-        self.now_map: list[str] = now_map
-        """ 当前查看的地图坐标 """
-        self.return_list: list[str] = []
-        """ 当前面板的按钮返回 """
-        self.end_index: int = 0
-        """ 结束按钮id """
-        self.handle_panel = panel.PageHandlePanel(
-            self.get_path_list(), ScenePathNameMoveDraw, 20, 3, self.width, True
-        )
-        self.end_index = self.handle_panel.end_index
-
-    def get_path_list(self) -> list:
-        """
-        获取功能地点场景路径列表
-        Return arguments:
-        list -- 路径列表
-        """
-        # if character_data.classroom == "":
-        #     class_room_path = []
-        # else:
-        #     class_room_path = map_handle.get_map_system_path_for_str(character_data.classroom)
-        # office_room_path = character_data.officeroom
-        # square_path = ["2"]
-        # swim_path = ["14", "0"]
-        # big_restaurant_path = ["10", "0", "0"]
-        # small_restaurant_path = ["16", "0", "0"]
-        # multi_media_class_room_a_path = ["1", "3", "1"]
-        # multi_media_class_room_b_path = ["1", "3", "2"]
-        # music_class_room_path = ["1", "4", "1"]
-        # shop_path = ["11"]
-        # dormitory_path = map_handle.get_map_system_path_for_str(character_data.dormitory)
-        path_list: list[list[str]] = [
-            # dormitory_path,
-            # class_room_path,
-            # office_room_path,
-            # square_path,
-            # swim_path,
-            # big_restaurant_path,
-            # small_restaurant_path,
-            # multi_media_class_room_a_path,
-            # multi_media_class_room_b_path,
-            # music_class_room_path,
-            # shop_path,
-        ]
-        path_list = [i for i in path_list if len(i)]
-        return path_list
-
-    def update(self, now_map: list[str], start_index: int) -> None:
-        """
-        更新当前面板对象
-        Keyword arguments:
-        now_map -- 当前地图
-        start_index -- 起始按钮id
-        """
-        self.now_map = now_map
-        self.handle_panel.text_list = self.get_path_list()
-        self.handle_panel.button_start_id = start_index
-        self.handle_panel.update()
-        self.end_index = self.handle_panel.end_index
-
-    def draw(self) -> None:
-        """绘制面板"""
-        self.handle_panel.draw()
-        self.return_list = self.handle_panel.return_list
-
-
-class ScenePathNameMoveDraw:
-    """
-    按场景路径绘制场景名和移动按钮
-    Keyword arguments:
-    text -- 场景路径
-    width -- 最大宽度
-    is_button -- 绘制按钮
-    num_button -- 绘制数字按钮
-    button_id -- 数字按钮的id
-    """
-
-    def __init__(
-        self,
-        text: list[str],
-        width: int,
-        is_button: bool,
-        num_button: bool,
-        button_id: int,
-    ) -> None:
-        """初始化绘制对象"""
-        self.draw_text = ""
-        """ 场景路径绘制的文本 """
-        self.width: int = width
-        """ 最大宽度 """
-        self.is_button: bool = is_button
-        """ 绘制按钮 """
-        self.num_button: bool = num_button
-        """ 绘制数字按钮 """
-        self.button_id: int = button_id
-        """ 数字按钮的id """
-        self.button_return: str = str(button_id)
-        """ 按钮返回值 """
-        self.draw_list: list[draw.NormalDraw] = []
-        """ 绘制的对象列表 """
-        self.scene_path: list[str] = text
-        """ 对应场景路径 """
-        path_text = attr_text.get_scene_path_text(text)
-        button_text = f"[{path_text}]"
-        button_text = text_handle.align(button_text, text_width=width)
-        name_draw = draw.Button(button_text, path_text, cmd_func=self.move_now)
-        self.draw_text = button_text
-        name_draw.width = width
-        self.now_draw = name_draw
-        """ 绘制的对象 """
-        self.button_return = path_text
-
-    def draw(self) -> None:
-        """绘制对象"""
-        self.now_draw.draw()
-
-    def move_now(self) -> None:
-        """
-        控制角色移动至指定场景
-        Keyword arguments:
-        scene_path -- 目标场景路径
-        """
-        py_cmd.clr_cmd()
-        line_feed.draw()
-        flow_handle.set_skip_pauses(True)
-        character_move.own_charcter_move(self.scene_path)
-
-
-class SocialSceneNameDraw:
-    """
-    按角色id绘制角色所在场景名和移动按钮
-    Keyword arguments:
-    text -- 角色id
-    width -- 最大宽度
-    is_button -- 绘制按钮
-    num_button -- 绘制数字按钮
-    button_id -- 数字按钮的id
-    """
-
-    def __init__(
-        self,
-        text: int,
-        width: int,
-        is_button: bool,
-        num_button: bool,
-        button_id: int,
-    ) -> None:
-        """初始化绘制对象"""
-        self.draw_text = ""
-        """ 场景路径绘制文本 """
-        self.width: int = width
-        """ 最大宽度 """
-        self.is_button: bool = is_button
-        """ 绘制按钮 """
-        self.num_button: bool = num_button
-        """ 绘制数字按钮 """
-        self.button_id: int = button_id
-        """ 数字按钮的id """
-        self.button_return: str = str(button_id)
-        """ 按钮返回值 """
-        self.draw_list: list[draw.NormalDraw] = []
-        """ 绘制的对象列表 """
-        character_data: identity.Identity = identity.of(text)
-        self.scene_path: list[str] = activity.position(text)
-        """ 角色所在场景 """
-        path_text = attr_text.get_scene_path_text(self.scene_path)
-        button_text = f"{character_data.name}:[{path_text}]"
-        button_text = text_handle.align(button_text, text_width=width)
-        name_draw = draw.Button(
-            button_text, character_data.name, cmd_func=self.move_now
-        )
-        name_draw.width = width
-        self.now_draw = name_draw
-        """ 绘制的对象 """
-        self.button_return = character_data.name
-
-    def draw(self) -> None:
-        """绘制对象"""
-        self.now_draw.draw()
-
-    def move_now(self) -> None:
-        """
-        控制角色移动至指定场景
-        Keyword arguments:
-        scene_path -- 目标场景路径
-        """
-        py_cmd.clr_cmd()
-        line_feed.draw()
-        flow_handle.set_skip_pauses(True)
-        character_move.own_charcter_move(self.scene_path)
+                self.return_list.append(now_draw.return_text)
+            draw_list.append(now_draw)
+        if draw_list:
+            _draw_grid(draw_list, 8, self.width)
+        self.end_index = len(entries) - 1
 
 
 class CollectionSceneNamePanel:
@@ -737,122 +376,63 @@ class CollectionSceneNamePanel:
         """ 当前面板的按钮返回 """
         self.end_index: int = 0
         """ 结束按钮id """
-        # self.handle_panel = panel.PageHandlePanel(
-        #     list(character_data.collection_character),
-        #     SocialSceneNameDraw,
-        #     10,
-        #     2,
-        #     self.width,
-        #     1,
-        # )
-        # self.end_index = self.handle_panel.end_index
-        """ 结束按钮id """
 
-    def update(self, now_map: list[str], start_index: int) -> None:
+    def update(self, now_map: list[str]) -> None:
         """
-        更新当前面板对象
+        更新面板记录的当前地图路径。
         Keyword arguments:
-        now_map -- 当前地图
-        start_index -- 起始按钮id
+        now_map -- list[str]，当前查看的地图路径
         """
         self.now_map = now_map
-        # self.handle_panel.button_start_id = start_index
-        # self.handle_panel.update()
-        # self.end_index = self.handle_panel.end_index
 
     def draw(self) -> None:
-        """绘制面板"""
-        # self.handle_panel.draw()
-        # self.return_list = self.handle_panel.return_list
+        """存在收藏地点时绘制每行最多 4 个的快捷移动按钮与收藏切换按钮，无收藏地点时不绘制。"""
         self.return_list = []
-        draw_list = []
-
-        scene_id_list = bookmarks.places()
-        if len(scene_id_list):
-            self.end_index = len(scene_id_list) - 1
-            for collect_position in scene_id_list:
-                # 标记当前位置
-                text_flag = False
-                if collect_position == activity.position(0):
-                    text_flag = True
-                scene_position_str = (
-                    map_handle.get_map_system_path_str_for_list(
-                        collect_position
-                    )
-                )
-                # 绘制
-                draw_text = f"→{scene_position_str}"
-                if text_flag:
-                    collect_scene_name_draw: draw.LeftDraw | draw.LeftButton
-                    collect_scene_name_draw = draw.LeftDraw()
-                    collect_scene_name_draw.text = _(draw_text)
-                    collect_scene_name_draw.width = self.width
-                    collect_scene_name_draw.style = "gold_enrod"
-                else:
-                    collect_scene_name_draw = draw.LeftButton(
-                        _(draw_text),
-                        draw_text,
-                        self.width,
-                        cmd_func=self.move_now,
-                        args=(collect_position,),
-                    )
-                    self.return_list.append(collect_scene_name_draw.return_text)
-                draw_list.append(collect_scene_name_draw)
-
-            # 将绘制对象分组为每行最多4个
-            draw_group = value_handle.list_of_groups(draw_list, 4)
-            now_width_index = 0
-            for now_draw_list in draw_group:
-                if len(now_draw_list) > now_width_index:
-                    now_width_index = len(now_draw_list)
-            now_width = self.width / now_width_index
-            for now_draw_list in draw_group:
-                for now_draw in now_draw_list:
-                    now_draw.width = now_width
-                    now_draw.draw()
-                line_feed.draw()
-
-            line_feed.draw()
-            # 根据玩家当前位置判断是否已收藏，决定显示“收藏当前地点”或“取消收藏当前地点”按钮
-            if handle_premise.handle_place_in_collection_list(0):
-                # 当前地点已收藏，设置按钮显示文字为“取消收藏当前地点”
-                btn_text: str = _(" [取消收藏当前地点] ")
-                collect_flag = False
+        entries = svc.bookmark_entries()
+        if not entries:
+            return
+        self.end_index = len(entries) - 1
+        draw_list: list[draw.LeftDraw | draw.LeftButton] = []
+        for entry in entries:
+            draw_text = f"→{entry.label}"
+            now_draw: draw.LeftDraw | draw.LeftButton
+            if entry.here:
+                now_draw = draw.LeftDraw()
+                now_draw.text = _(draw_text)
+                now_draw.width = self.width
+                now_draw.style = "gold_enrod"
             else:
-                btn_text = _(" [收藏当前地点] ")
-                collect_flag = True
-            # 绘制按钮
-            draw_collection_button = draw.CenterButton(
-                btn_text,  # 按钮显示文字
-                btn_text,  # 按钮返回值
-                self.width / 4,  # 按钮宽度
-                cmd_func=self.settle_collection_place,  # 点击按钮后执行的函数
-                args=(collect_flag,),  # 函数参数
-            )
-            draw_collection_button.draw()  # 绘制按钮到界面上
-            self.return_list.append(
-                draw_collection_button.return_text
-            )  # 添加按钮返回值到监听列表
-            line_feed.draw()
-
-    def move_now(self, scene_path: list[str]) -> None:
-        """
-        控制角色移动至指定场景
-        Keyword arguments:
-        scene_path -- 目标场景路径
-        """
-        py_cmd.clr_cmd()
+                now_draw = draw.LeftButton(
+                    _(draw_text),
+                    draw_text,
+                    self.width,
+                    cmd_func=move_now,
+                    args=(entry.scene_path,),
+                )
+                self.return_list.append(now_draw.return_text)
+            draw_list.append(now_draw)
+        _draw_grid(draw_list, 4, self.width)
         line_feed.draw()
-        flow_handle.set_skip_pauses(True)
-        character_move.own_charcter_move(scene_path)
+        collect_flag = not svc.here_bookmarked()
+        if collect_flag:
+            btn_text = _(" [收藏当前地点] ")
+        else:
+            btn_text = _(" [取消收藏当前地点] ")
+        collection_button = draw.CenterButton(
+            btn_text,
+            btn_text,
+            self.width / 4,
+            cmd_func=self.settle_collection_place,
+            args=(collect_flag,),
+        )
+        collection_button.draw()
+        self.return_list.append(collection_button.return_text)
+        line_feed.draw()
 
     def settle_collection_place(self, collect_flag: bool) -> None:
         """
-        收藏或取消收藏当前地点
+        收藏或取消收藏玩家当前所在地点。
         Keyword arguments:
-        collect_flag -- 是否收藏当前地点
+        collect_flag -- bool，为 True 时加入收藏，为 False 时取消收藏
         """
-        if collect_flag:
-            bookmarks.add(activity.position(0))
-        else:
-            bookmarks.remove(activity.position(0))
+        svc.bookmark_here(collect_flag)

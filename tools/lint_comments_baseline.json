@@ -198,7 +198,6 @@
   "Script/UI/Panel/resource_exchange_panel.py": 49,
   "Script/UI/Panel/see_character_info_panel.py": 80,
   "Script/UI/Panel/see_item_info_panel.py": 36,
-  "Script/UI/Panel/see_map_panel.py": 112,
   "Script/UI/Panel/see_save_info_panel.py": 15,
   "Script/UI/Panel/sleep_panel.py": 20,
   "auto_build_config.py": 64,

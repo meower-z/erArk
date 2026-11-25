@@ -197,7 +197,6 @@ Script/UI/Panel/see_item_info_panel.py	ItemInfoDraw.draw	UP030	count=1
 Script/UI/Panel/see_item_info_panel.py	ItemInfoDraw.draw	UP032	count=1
 Script/UI/Panel/see_item_info_panel.py	use_drug	UP030	count=2
 Script/UI/Panel/see_item_info_panel.py	use_drug	UP032	count=2
-Script/UI/Panel/see_map_panel.py	<module>	module-lines	lines=858
 auto_build_config.py	<module>	module-lines	lines=748
 buildata.py	constand_2_handle	pyrefly:unbound-name	count=1
 buildconfig.py	<module>	module-lines	lines=890
