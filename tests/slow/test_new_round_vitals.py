@@ -33,7 +33,7 @@ class NewRoundVitalsTest(SlowTestCase):
         npc_template = game("Script.Modules.domains.npc_template")
         kernel_data.set_needs(0, hit_max=3000, mana_max=2600, sanity_max=300)
         handle = new_round.New_Round_Handle()
-        handle.pl_extra_growth_count = 2
+        handle.levels[2] = 2
         self.world.player.press("醒来")
         world.act(handle.start_new_round)
         self.world.player.check_done()

@@ -768,8 +768,8 @@ Script/
 - 全局设置：系统设置与文本生成 AI 设置存在游戏根目录 `settings.json`，不随存档写入
 
 多周目：
-- `New_Round_Inherit.csv` 定义继承项；`UI/Flow/creator_character_flow.py` 处理角色创建与多周目开局
-- 继承内容包括点数花费、好感信赖、催眠进度等（详见工作流文档）
+- 结算界面与玩家交互由 `UI/Panel/new_round.py` 负责。点数汇总、消耗计算与选项快照位于 `Modules/gameplay_resolution/new_round_service.py`。新周目继承重建与宿舍开放位于 `Modules/gameplay_resolution/new_round_inherit_service.py`。
+- 继承配置定义于 `New_Round_Inherit.csv`。角色创建与开局初始化流程位于 `UI/Flow/creator_character_flow.py`。继承内容涵盖源石技艺、属性上限、收藏品、好感信赖与催眠进度等（详见 `docs/数据处理工作流/多周目结算与继承系统.md`）。
 
 ---
 

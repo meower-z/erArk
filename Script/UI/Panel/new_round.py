@@ -1,22 +1,16 @@
-"""新周目面板：选择继承到新周目的玩家与干员数据，并显示角色能力与经验"""
+"""多周目点数结算面板：负责界面绘制、玩家交互、重置入口与唤醒报告展示。"""
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from types import FunctionType
-from typing import cast
 from Script.Core import flow_handle, get_text
-from Script.Core.num import Num
 from Script.UI.Moudle import draw, panel
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import normal_config, game_config
-from Script.Design import child_stage_gate, handle_talent, character_handle
 from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
-from Script.Modules.domains import abilities, facility, first_record, h_meters
-from Script.Modules.domains import hypnosis, needs, npc_template
-from Script.Modules.domains import player_collection, modes
-from Script.Modules.domains import playthrough, roster, chara_life, relations
-from Script.Modules.domains import identity
-from Script.Core import constant
+from Script.Modules.domains import abilities, identity, playthrough, roster
+from Script.Modules.gameplay_resolution import new_round_inherit_service
+from Script.Modules.gameplay_resolution import new_round_service as svc
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -32,10 +26,7 @@ awakening: tuple[str, tuple[int, ...]] = ("", ())
 
 
 class New_Round_Handle:
-    """
-    角色创建页面对象
-    Keyword arguments:
-    """
+    """周目点数结算面板控制器，管理继承等级选择与新周目启动交互。"""
 
     def __init__(self) -> None:
         """初始化绘制对象"""
@@ -43,28 +34,12 @@ class New_Round_Handle:
         """ 屏幕宽度 """
         self.return_list: list[str] = []
         """ 当前面板监听的按钮列表 """
-        self.pl_abi_and_exp_count = 0
-        """ 继承玩家能力和经验 """
-        self.pl_originium_arts_count = 0
-        """ 继承玩家源石技艺 """
-        self.pl_extra_growth_count = 0
-        """ 继承玩家属性上限成长 """
-        self.pl_collection_count = 0
-        """ 继承玩家收藏品 """
-        self.chara_fon_and_trust_count = 0
-        """ 继承干员好感和信任 """
-        self.chara_abi_and_exp_count = 0
-        """ 继承干员能力和经验 """
-        self.chara_hypnosis_count = 0
-        """ 继承干员催眠程度 """
-        self.round_point_all = 0
-        """ 总周目点数 """
-        self.round_point_cost = 0
-        """ 周目点数消耗 """
+        self.levels = [0] * len(svc.KEYS)
+        """ 按继承类型编号 0 至 6 排列的当前继承等级列表。 """
         self.show_npc_flag = False
         """ 干员显示 """
-        self.show_panel_flag_list = [False, False, False, False, False, False]
-        """ 面板显示列表 """
+        self.show_panel_flag_list = [False, False]
+        """ 源石技艺与博士能力经验两块详情区的展开标志列表。 """
         self.all_fall_chara_list: list[int] = []
         """ 所有陷落干员列表 """
         self.farewell_npc_id = 0
@@ -76,771 +51,241 @@ class New_Round_Handle:
         )
         """ 新周目的世界设定：设定id -> 是否选择 """
 
+    def _text(self, text: str) -> None:
+        """按面板宽度绘制普通文本块。"""
+        info_draw = draw.NormalDraw()
+        info_draw.width = self.width
+        info_draw.text = text
+        info_draw.draw()
+
+    def _toggle(
+        self,
+        text: str,
+        flag: bool,
+        func: Callable[..., None],
+        args: tuple[int, ...] = (),
+    ) -> None:
+        """绘制带展开箭头的折叠按钮并加入监听列表。"""
+        text += "▼" if flag else "▶"
+        button = draw.LeftButton(
+            text, text, len(text) * 2, cmd_func=func, args=args
+        )
+        self.return_list.append(text)
+        button.draw()
+
+    def _level_row(self, type_id: int, head: str, cost: int) -> int:
+        """绘制单项继承等级行及提高与降低按钮并返回继承比例。"""
+        level = self.levels[type_id]
+        now_rate = svc.rate(type_id, level)
+        self._text(
+            head
+            + _("\n   当前继承等级{0}，继承比例{1}%，点数消耗{2}\n  ").format(
+                level, now_rate, cost
+            )
+        )
+        for delta, text in ((1, _(" [提高] ")), (-1, _(" [降低] "))):
+            button = draw.CenterButton(
+                text,
+                text + f"_{type_id}",
+                len(text) * 2,
+                cmd_func=self.value_change_buton,
+                args=(delta, type_id),
+            )
+            self.return_list.append(button.return_text)
+            button.draw()
+        line_feed_draw.draw()
+        return now_rate
+
+    def _points(self, points: svc.Points) -> None:
+        """绘制周目、陷落干员与收藏品点数统计并更新陷落列表。"""
+        self._text(
+            "\n"
+            + _("当前周目数：{0}(+{1})\n\n").format(
+                points.game_round, points.round_point
+            )
+        )
+        self.all_fall_chara_list = [row.chara_id for row in points.fallen]
+        self._toggle(_("○全陷落干员"), self.show_npc_flag, self.show_npc_change)
+        info_text = "\n"
+        for count, row in enumerate(points.fallen, 1):
+            if self.show_npc_flag:
+                name = identity.of(row.chara_id).name.rjust(6, "　")
+                talent_name = game_config.config_talent[row.talent_id].name
+                info_text += f"  {name}-{talent_name}(+{row.point})"
+                if count % 8 == 0:
+                    info_text += "\n"
+        if self.show_npc_flag:
+            info_text += "\n"
+        info_text += _("  陷落干员总数：{0}，总点数：{1}\n\n").format(
+            len(points.fallen), points.fallen_point
+        )
+        self._text(info_text)
+        self._text(
+            _("○全收藏品")
+            + _("全干员内裤共{0}条，全干员袜子共{1}双，总点数{2}\n\n").format(
+                points.panties, points.socks, points.collection_point
+            )
+        )
+        if points.debug:
+            self._text(_("debug模式+9999\n\n").format(points.total))
+        self._text(_("总周目点数：{0}\n\n").format(points.total))
+
     def draw(self) -> None:
         """绘制面板"""
         while 1:
-            title_text = _("周目点数结算")
-            title_draw = draw.TitleLineDraw(title_text, self.width)
+            title_draw = draw.TitleLineDraw(_("周目点数结算"), self.width)
             title_draw.draw()
-            self.round_point_all = 0
-            self.round_point_cost = 0
             self.return_list = []
-            info_text = "\n"
-            info_draw = draw.NormalDraw()
-            info_draw.width = self.width
-            # 当前周目数
-            now_round = playthrough.game_round()
-            point_add = now_round * 20
-            self.round_point_all += point_add
-            info_text += _("当前周目数：{0}(+{1})\n\n").format(
-                now_round, point_add
-            )
-            info_draw.text = info_text
-            info_draw.draw()
-            # 统计所有干员中已经陷落的
-            self.all_fall_chara_list = []
-            button_text = _("○全陷落干员")
-            if self.show_npc_flag:
-                button_text += "▼"
-            else:
-                button_text += "▶"
-            button: draw.CenterButton | draw.LeftButton = draw.LeftButton(
-                button_text,
-                button_text,
-                len(button_text) * 2,
-                cmd_func=self.show_npc_change,
-            )
-            self.return_list.append(button_text)
-            button.draw()
-            info_text = "\n"
-            chara_count, chara_point_all = 0, 0
-            # 遍历所有获得的干员
-            for chara_id in roster.active():
-                talent_id = handle_talent.have_fall_talent(chara_id)
-                # 如果已经陷落
-                if talent_id:
-                    self.all_fall_chara_list.append(chara_id)
-                    now_character_data = identity.of(chara_id)
-                    talent_name = game_config.config_talent[talent_id].name
-                    point_add = talent_id % 10  # 取个位数字
-                    point_add *= 2
-                    chara_point_all += point_add
-                    chara_count += 1
-                    if self.show_npc_flag:
-                        # 用空格对齐
-                        draw_chara_name = now_character_data.name.rjust(6, "　")
-                        now_chara_text = (
-                            f"  {draw_chara_name}-{talent_name}(+{point_add})"
-                        )
-                        info_text += now_chara_text
-                        # 每8个换行
-                        if chara_count % 8 == 0:
-                            info_text += "\n"
-            if self.show_npc_flag:
-                info_text += "\n"
-            self.round_point_all += chara_point_all
-            info_text += _("  陷落干员总数：{0}，总点数：{1}\n\n").format(
-                chara_count, chara_point_all
-            )
-            info_draw.text = info_text
-            info_draw.draw()
-
-            # 收藏品
-            info_text = _("○全收藏品")
-            now_pan_count = sum(
-                len(items)
-                for items in player_collection.get("npc_panties").values()
-            )
-            now_socks_count = sum(
-                len(items)
-                for items in player_collection.get("npc_socks").values()
-            )
-            collection_point = now_pan_count + now_socks_count
-            self.round_point_all += collection_point
-            info_text += _(
-                "全干员内裤共{0}条，全干员袜子共{1}双，总点数{2}\n\n"
-            ).format(now_pan_count, now_socks_count, collection_point)
-            info_draw.text = info_text
-            info_draw.draw()
-
-            # debug模式下补满
-            if modes.debug():
-                self.round_point_all += 9999
-                info_text = _("debug模式+9999\n\n").format(self.round_point_all)
-                info_draw.text = info_text
-                info_draw.draw()
-
-            # 总点数
-            info_text = _("总周目点数：{0}\n\n").format(self.round_point_all)
-            info_draw.text = info_text
-            info_draw.draw()
-
-            # 玩家源石技艺
-            button_text = _("[0]博士的源石技艺")
-            if self.show_panel_flag_list[0]:
-                button_text += "▼"
-            else:
-                button_text += "▶"
-            button = draw.LeftButton(
-                button_text,
-                button_text,
-                len(button_text) * 2,
-                cmd_func=self.show_panel_change,
-                args=(0,),
-            )
-            self.return_list.append(button_text)
-            button.draw()
-            # 继承选项
-            now_inherit_data_cid = (
-                game_config.config_new_round_inherit_type_data[0][
-                    self.pl_originium_arts_count
-                ]
-            )
-            now_inherit_data = game_config.config_new_round_inherit[
-                now_inherit_data_cid
-            ]
-            now_rate = now_inherit_data.inherit_rate
-            now_cost = self.calculate_originium_arts_cost()
-            self.round_point_cost += now_cost
-            info_text = _(
-                "\n   当前继承等级{0}，继承比例{1}%，点数消耗{2}\n  "
-            ).format(self.pl_originium_arts_count, now_rate, now_cost)
-            info_draw.text = info_text
-            info_draw.draw()
-            # 提高和降低按钮
-            add_button_text = _(" [提高] ")
-            add_button = draw.CenterButton(
-                add_button_text,
-                add_button_text + "_0",
-                len(add_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(1, 0),
-            )
-            self.return_list.append(add_button.return_text)
-            add_button.draw()
-            reduce_button_text = _(" [降低] ")
-            reduce_button = draw.CenterButton(
-                reduce_button_text,
-                reduce_button_text + "_0",
-                len(reduce_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(-1, 0),
-            )
-            self.return_list.append(reduce_button.return_text)
-            reduce_button.draw()
-            line_feed_draw.draw()
-            # 绘制玩家源石技艺
-            if self.show_panel_flag_list[0]:
-                talent_draw = see_character_info_panel.PlayerAbilityText(
+            points = svc.points()
+            self._points(points)
+            costs = [svc.cost(i, lv) for i, lv in enumerate(self.levels)]
+            flags = self.show_panel_flag_list
+            func = self.show_panel_change
+            self._toggle(_("[0]博士的源石技艺"), flags[0], func, (0,))
+            self._level_row(0, "", costs[0])
+            if flags[0]:
+                see_character_info_panel.PlayerAbilityText(
                     0, self.width, 8
-                )
-                talent_draw.draw()
+                ).draw()
             line_feed_draw.draw()
-
-            # 玩家能力与经验
-            button_text = _("[1]博士的能力与经验")
-            if self.show_panel_flag_list[1]:
-                button_text += "▼"
-            else:
-                button_text += "▶"
-            button = draw.LeftButton(
-                button_text,
-                button_text,
-                len(button_text) * 2,
-                cmd_func=self.show_panel_change,
-                args=(1,),
-            )
-            self.return_list.append(button_text)
-            button.draw()
-            # 继承选项
-            now_inherit_data_cid = (
-                game_config.config_new_round_inherit_type_data[1][
-                    self.pl_abi_and_exp_count
-                ]
-            )
-            now_inherit_data = game_config.config_new_round_inherit[
-                now_inherit_data_cid
-            ]
-            now_rate = now_inherit_data.inherit_rate
-            now_cost = now_inherit_data.point_cost
-            self.round_point_cost += now_cost
-            info_text = _(
-                "\n   当前继承等级{0}，继承比例{1}%，点数消耗{2}\n  "
-            ).format(self.pl_abi_and_exp_count, now_rate, now_cost)
-            info_draw.text = info_text
-            info_draw.draw()
-            # 提高和降低按钮
-            add_button_text = _(" [提高] ")
-            add_button = draw.CenterButton(
-                add_button_text,
-                add_button_text + "_1",
-                len(add_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(1, 1),
-            )
-            self.return_list.append(add_button.return_text)
-            add_button.draw()
-            reduce_button_text = _(" [降低] ")
-            reduce_button = draw.CenterButton(
-                reduce_button_text,
-                reduce_button_text + "_1",
-                len(reduce_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(-1, 1),
-            )
-            self.return_list.append(reduce_button.return_text)
-            reduce_button.draw()
-            line_feed_draw.draw()
-            # 绘制玩家能力与经验
-            if self.show_panel_flag_list[1]:
+            self._toggle(_("[1]博士的能力与经验"), flags[1], func, (1,))
+            now_rate = self._level_row(1, "", costs[1])
+            if flags[1]:
                 abi_draw = CharacterabiText(0, self.width, now_rate)
-                experience_draw = CharacterExperienceText(
-                    0, self.width, 8, now_rate
-                )
+                exp_draw = CharacterExperienceText(0, self.width, 8, now_rate)
                 abi_draw.draw()
-                experience_draw.draw()
+                exp_draw.draw()
             line_feed_draw.draw()
-
-            # 玩家属性上限成长
-            info_text = _("[2]博士的属性上限成长")
-            # 继承选项
-            now_inherit_data_cid = (
-                game_config.config_new_round_inherit_type_data[2][
-                    self.pl_extra_growth_count
-                ]
+            now_rate = self._level_row(2, _("[2]博士的属性上限成长"), costs[2])
+            self._text(
+                _(
+                    "  属性上限成长：当前体力上限{0}(→{1})，气力上限{2}(→{3})，理智上限{4}(→{5})，精液上限{6}(→{7})\n\n"
+                ).format(*svc.growth_preview(now_rate))
             )
-            now_inherit_data = game_config.config_new_round_inherit[
-                now_inherit_data_cid
-            ]
-            now_rate = now_inherit_data.inherit_rate
-            now_cost = self.calculate_pl_extra_growth_count()
-            self.round_point_cost += now_cost
-            info_text += _(
-                "\n   当前继承等级{0}，继承比例{1}%，点数消耗{2}\n  "
-            ).format(self.pl_extra_growth_count, now_rate, now_cost)
-            info_draw.text = info_text
-            info_draw.draw()
-            # 提高和降低按钮
-            add_button_text = _(" [提高] ")
-            add_button = draw.CenterButton(
-                add_button_text,
-                add_button_text + "_2",
-                len(add_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(1, 2),
-            )
-            self.return_list.append(add_button.return_text)
-            add_button.draw()
-            reduce_button_text = _(" [降低] ")
-            reduce_button = draw.CenterButton(
-                reduce_button_text,
-                reduce_button_text + "_2",
-                len(reduce_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(-1, 2),
-            )
-            self.return_list.append(reduce_button.return_text)
-            reduce_button.draw()
-            line_feed_draw.draw()
-            # 绘制玩家属性上限成长
-            pl_needs = needs.of(0)
-            hp_extra_grouth = 1000 + int(
-                (pl_needs["hit_max"] - 1000) * now_rate / 100
-            )
-            mp_extra_grouth = 1000 + int(
-                (pl_needs["mana_max"] - 1000) * now_rate / 100
-            )
-            santy_extra_grouth = 100 + int(
-                (pl_needs["sanity_max"] - 100) * now_rate / 100
-            )
-            semen_max = h_meters.of(0)["semen_max"]
-            semen_extra_grouth = 100 + int((semen_max - 100) * now_rate / 100)
-            info_text = _(
-                "  属性上限成长：当前体力上限{0}(→{1})，气力上限{2}(→{3})，理智上限{4}(→{5})，精液上限{6}(→{7})\n\n"
-            ).format(
-                pl_needs["hit_max"],
-                hp_extra_grouth,
-                pl_needs["mana_max"],
-                mp_extra_grouth,
-                pl_needs["sanity_max"],
-                santy_extra_grouth,
-                semen_max,
-                semen_extra_grouth,
-            )
-            info_draw.text = info_text
-            info_draw.draw()
-
-            # 玩家收藏品
-            info_text = _("[3]博士的收藏品")
-            # 继承选项
-            now_inherit_data_cid = (
-                game_config.config_new_round_inherit_type_data[3][
-                    self.pl_collection_count
-                ]
-            )
-            now_inherit_data = game_config.config_new_round_inherit[
-                now_inherit_data_cid
-            ]
-            now_rate = now_inherit_data.inherit_rate
-            now_cost = now_inherit_data.point_cost
-            self.round_point_cost += now_cost
-            info_text += _(
-                "\n   当前继承等级{0}，继承比例{1}%，点数消耗{2}\n  "
-            ).format(self.pl_collection_count, now_rate, now_cost)
-            info_draw.text = info_text
-            info_draw.draw()
-            # 提高和降低按钮
-            add_button_text = _(" [提高] ")
-            add_button = draw.CenterButton(
-                add_button_text,
-                add_button_text + "_3",
-                len(add_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(1, 3),
-            )
-            self.return_list.append(add_button.return_text)
-            add_button.draw()
-            reduce_button_text = _(" [降低] ")
-            reduce_button = draw.CenterButton(
-                reduce_button_text,
-                reduce_button_text + "_3",
-                len(reduce_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(-1, 3),
-            )
-            self.return_list.append(reduce_button.return_text)
-            reduce_button.draw()
-            line_feed_draw.draw()
-            # 绘制玩家收藏品
-            new_pan_count = int(now_pan_count * now_rate / 100)
-            new_socks_count = int(now_socks_count * now_rate / 100)
-            info_text = _(
-                "  收藏品统计：当前内裤{0}(→{1})条，袜子{2}(→{3})双\n\n"
-            ).format(
-                now_pan_count, new_pan_count, now_socks_count, new_socks_count
-            )
-            info_draw.text = info_text
-            info_draw.draw()
-
-            # 干员好感与信任
-            info_text = _("已陷落干员将直接继承至新的周目，无需重新招募\n")
-            info_text += _(
-                "耗费点数可以进一步继承这些干员一定比例的好感、信赖、能力、经验\n"
-            )
-            info_text += _("\n[4]干员的好感与信任")
-            info_draw.text = info_text
-            info_draw.draw()
-            # 继承选项
-            now_inherit_data_cid = (
-                game_config.config_new_round_inherit_type_data[4][
-                    self.chara_fon_and_trust_count
-                ]
-            )
-            now_inherit_data = game_config.config_new_round_inherit[
-                now_inherit_data_cid
-            ]
-            now_rate = now_inherit_data.inherit_rate
-            now_cost = now_inherit_data.point_cost
-            self.round_point_cost += now_cost
-            info_text = _(
-                "\n   当前继承等级{0}，继承比例{1}%，点数消耗{2}\n  "
-            ).format(self.chara_fon_and_trust_count, now_rate, now_cost)
-            info_draw.text = info_text
-            info_draw.draw()
-            # 提高和降低按钮
-            add_button_text = _(" [提高] ")
-            add_button = draw.CenterButton(
-                add_button_text,
-                add_button_text + "_4",
-                len(add_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(1, 4),
-            )
-            self.return_list.append(add_button.return_text)
-            add_button.draw()
-            reduce_button_text = _(" [降低] ")
-            reduce_button = draw.CenterButton(
-                reduce_button_text,
-                reduce_button_text + "_4",
-                len(reduce_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(-1, 4),
-            )
-            self.return_list.append(reduce_button.return_text)
-            reduce_button.draw()
-            line_feed_draw.draw()
-
-            # 干员能力与经验
-            info_text = _("\n[5]干员的能力与经验")
-            info_draw.text = info_text
-            info_draw.draw()
-            # 继承选项
-            now_inherit_data_cid = (
-                game_config.config_new_round_inherit_type_data[5][
-                    self.chara_abi_and_exp_count
-                ]
-            )
-            now_inherit_data = game_config.config_new_round_inherit[
-                now_inherit_data_cid
-            ]
-            now_rate = now_inherit_data.inherit_rate
-            now_cost = now_inherit_data.point_cost
-            self.round_point_cost += now_cost
-            info_text = _(
-                "\n   当前继承等级{0}，继承比例{1}%，点数消耗{2}\n  "
-            ).format(self.chara_abi_and_exp_count, now_rate, now_cost)
-            info_draw.text = info_text
-            info_draw.draw()
-            # 提高和降低按钮
-            add_button_text = _(" [提高] ")
-            add_button = draw.CenterButton(
-                add_button_text,
-                add_button_text + "_5",
-                len(add_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(1, 5),
-            )
-            self.return_list.append(add_button.return_text)
-            add_button.draw()
-            reduce_button_text = _(" [降低] ")
-            reduce_button = draw.CenterButton(
-                reduce_button_text,
-                reduce_button_text + "_5",
-                len(reduce_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(-1, 5),
-            )
-            self.return_list.append(reduce_button.return_text)
-            reduce_button.draw()
-            line_feed_draw.draw()
-
-            # 干员催眠进度
-            info_text = _("\n[6]干员的催眠进度")
-            info_draw.text = info_text
-            info_draw.draw()
-            # 继承选项
-            now_inherit_data_cid = (
-                game_config.config_new_round_inherit_type_data[6][
-                    self.chara_hypnosis_count
-                ]
-            )
-            now_inherit_data = game_config.config_new_round_inherit[
-                now_inherit_data_cid
-            ]
-            now_rate = now_inherit_data.inherit_rate
-            now_cost = now_inherit_data.point_cost
-            self.round_point_cost += now_cost
-            info_text = _(
-                "\n   当前继承等级{0}，继承比例{1}%，点数消耗{2}\n  "
-            ).format(self.chara_hypnosis_count, now_rate, now_cost)
-            info_draw.text = info_text
-            info_draw.draw()
-            # 提高和降低按钮
-            add_button_text = _(" [提高] ")
-            add_button = draw.CenterButton(
-                add_button_text,
-                add_button_text + "_6",
-                len(add_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(1, 6),
-            )
-            self.return_list.append(add_button.return_text)
-            add_button.draw()
-            reduce_button_text = _(" [降低] ")
-            reduce_button = draw.CenterButton(
-                reduce_button_text,
-                reduce_button_text + "_6",
-                len(reduce_button_text) * 2,
-                cmd_func=self.value_change_buton,
-                args=(-1, 6),
-            )
-            self.return_list.append(reduce_button.return_text)
-            reduce_button.draw()
-            line_feed_draw.draw()
-
-            # 输出总点数的花费与剩余
-            info_text = _("\n总点数消耗：{0}，剩余：{1}\n").format(
-                self.round_point_cost,
-                self.round_point_all - self.round_point_cost,
-            )
-            info_draw.text = info_text
-            info_draw.draw()
-
-            # 世界设定部分
-            info_text = _("\n○世界设定（不消耗周目点数）")
-            info_draw.text = info_text
-            info_draw.draw()
-            # 世界设定按钮
-            button_text = _(" [更改世界设定] ")
-            if self.show_world_setting:
-                button_text = _(" [隐藏世界设定] ")
-            button = draw.CenterButton(
-                button_text,
-                button_text,
-                len(button_text) * 2,
-                cmd_func=self.toggle_world_setting,
-            )
-            self.return_list.append(button_text)
-            button.draw()
-            line_feed_draw.draw()
-
-            # 显示世界设定面板
-            world_setting_return_list = []
-            if self.show_world_setting:
-                from Script.UI.Flow import creator_character_flow
-
-                world_setting_panel = creator_character_flow.World_Setting(
-                    self.width, self.world_setting
+            now_rate = self._level_row(3, _("[3]博士的收藏品"), costs[3])
+            self._text(
+                _(
+                    "  收藏品统计：当前内裤{0}(→{1})条，袜子{2}(→{3})双\n\n"
+                ).format(
+                    points.panties,
+                    int(points.panties * now_rate / 100),
+                    points.socks,
+                    int(points.socks * now_rate / 100),
                 )
-                world_setting_panel.draw()
-                # 保存世界设定面板的返回列表，但不立即添加到主返回列表
-                world_setting_return_list = (
-                    world_setting_panel.return_list.copy()
-                )
-                line_feed_draw.draw()
-
-            # 选择送别干员
-            info_text = _("\n○送别干员：")
-            if self.farewell_npc_id:
-                info_text += f"{identity.of(self.farewell_npc_id).name}"
-            else:
-                info_text += _("未选择")
-            info_text += "        "
-            info_draw.text = info_text
-            info_draw.draw()
-            # 更改送别干员按钮
-            button_text = _(" [更改送别干员] ")
-            button = draw.CenterButton(
-                button_text,
-                button_text,
-                len(button_text) * 2,
-                cmd_func=self.farewell_npc_change,
             )
-            self.return_list.append(button_text)
-            button.draw()
-            line_feed_draw.draw()
-            line_feed_draw.draw()
-
+            self._text(
+                _("已陷落干员将直接继承至新的周目，无需重新招募\n")
+                + _(
+                    "耗费点数可以进一步继承这些干员一定比例的好感、信赖、能力、经验\n"
+                )
+                + _("\n[4]干员的好感与信任")
+            )
+            self._level_row(4, "", costs[4])
+            self._text(_("\n[5]干员的能力与经验"))
+            self._level_row(5, "", costs[5])
+            self._text(_("\n[6]干员的催眠进度"))
+            self._level_row(6, "", costs[6])
+            self._text(
+                _("\n总点数消耗：{0}，剩余：{1}\n").format(
+                    sum(costs), points.total - sum(costs)
+                )
+            )
+            world_setting_return_list = self._world_setting()
+            self._farewell_row()
             line_feed_draw.draw()
             yes_draw = draw.CenterButton(_("[确定]"), _("确定"), self.width)
-            if self.round_point_all >= self.round_point_cost:
+            if points.total >= sum(costs):
                 yes_draw.draw()
                 self.return_list.append(yes_draw.return_text)
                 line_feed_draw.draw()
-
-            # 将世界设定的返回列表添加到主返回列表
             self.return_list.extend(world_setting_return_list)
-
             yrn = flow_handle.askfor_all(self.return_list)
-
-            # 只有点击主面板的确定按钮才会退出
             if yrn == yes_draw.return_text:
                 self.start_new_round()
                 break
 
+    def _world_setting(self) -> list[str]:
+        """绘制世界设定折叠按钮与内嵌面板并返回其监听按钮列表。"""
+        self._text(_("\n○世界设定（不消耗周目点数）"))
+        button_text = _(" [更改世界设定] ")
+        if self.show_world_setting:
+            button_text = _(" [隐藏世界设定] ")
+        button = draw.CenterButton(
+            button_text,
+            button_text,
+            len(button_text) * 2,
+            cmd_func=self.toggle_world_setting,
+        )
+        self.return_list.append(button_text)
+        button.draw()
+        line_feed_draw.draw()
+        if not self.show_world_setting:
+            return []
+        from Script.UI.Flow import creator_character_flow
+
+        world_setting_panel = creator_character_flow.World_Setting(
+            self.width, self.world_setting
+        )
+        world_setting_panel.draw()
+        line_feed_draw.draw()
+        return world_setting_panel.return_list.copy()
+
+    def _farewell_row(self) -> None:
+        """绘制送别干员当前选择与更改按钮行。"""
+        info_text = _("\n○送别干员：")
+        if self.farewell_npc_id:
+            info_text += f"{identity.of(self.farewell_npc_id).name}"
+        else:
+            info_text += _("未选择")
+        self._text(info_text + "        ")
+        button_text = _(" [更改送别干员] ")
+        button = draw.CenterButton(
+            button_text,
+            button_text,
+            len(button_text) * 2,
+            cmd_func=self.farewell_npc_change,
+        )
+        self.return_list.append(button_text)
+        button.draw()
+        line_feed_draw.draw()
+        line_feed_draw.draw()
+
     def show_npc_change(self) -> None:
-        """
-        显示或隐藏陷落干员
-        """
+        """切换陷落干员明细列表的展开状态。"""
         self.show_npc_flag = not self.show_npc_flag
 
     def show_panel_change(self, type: int) -> None:
-        """
-        显示或隐藏面板
-        Keyword arguments:
-        type -- 面板类型
-        """
+        """切换指定索引的博士详情区展开状态。"""
         self.show_panel_flag_list[type] = not self.show_panel_flag_list[type]
 
-    def calculate_originium_arts_cost(self) -> int:
-        """
-        计算源石技艺消耗
-        """
-        talent = abilities.talent(0)
-        if self.pl_originium_arts_count == 0:
-            return 0
-        all_cost = 0
-        # 初级源石技艺
-        for i in [304, 307, 310, 316, 331]:
-            if talent[i]:
-                all_cost += 10
-        # 中级源石技艺
-        for i in [305, 308, 311, 317, 332]:
-            if talent[i]:
-                all_cost += 30
-        # 高级源石技艺
-        for i in [306, 309, 312, 318, 333]:
-            if talent[i]:
-                all_cost += 60
-        # 特级源石技艺
-        for i in [334]:
-            if talent[i]:
-                all_cost += 120
-        return all_cost
-
-    def calculate_pl_extra_growth_count(self) -> int:
-        """
-        计算玩家属性上限成长消耗\n
-        每50点hp、mp消耗1点\n
-        每1点sanity、semen消耗1点\n
-        """
-        if self.pl_extra_growth_count == 0:
-            return 0
-        else:
-            all_cost = 0
-            now_inherit_data_cid = (
-                game_config.config_new_round_inherit_type_data[2][
-                    self.pl_extra_growth_count
-                ]
-            )
-            now_inherit_data = game_config.config_new_round_inherit[
-                now_inherit_data_cid
-            ]
-            now_rate = now_inherit_data.inherit_rate
-            # 体力上限成长
-            pl_needs = needs.of(0)
-            hp_extra_grouth = (pl_needs["hit_max"] - 1000) * now_rate / 100
-            all_cost += int(hp_extra_grouth / 50)
-            # 气力上限成长
-            mp_extra_grouth = (pl_needs["mana_max"] - 1000) * now_rate / 100
-            all_cost += int(mp_extra_grouth / 50)
-            # 理智上限成长
-            san_extra_grouth = (pl_needs["sanity_max"] - 100) * now_rate / 100
-            all_cost += int(san_extra_grouth)
-            # 精液上限成长
-            semen_extra_grouth = (
-                (h_meters.of(0)["semen_max"] - 100) * now_rate / 100
-            )
-            all_cost += int(semen_extra_grouth)
-            return all_cost
-
     def value_change_buton(self, value: int, type: int) -> None:
-        """
-        提高或降低继承等级
-        Keyword arguments:
-        value -- 提高或降低的数值
-        type -- 继承类型
-        """
-        if type == 0:
-            self.pl_originium_arts_count += value
-            if self.pl_originium_arts_count < 0:
-                self.pl_originium_arts_count = 0
-            elif (
-                self.pl_originium_arts_count
-                > len(game_config.config_new_round_inherit_type_data[0]) - 1
-            ):
-                self.pl_originium_arts_count = (
-                    len(game_config.config_new_round_inherit_type_data[0]) - 1
-                )
-        elif type == 1:
-            self.pl_abi_and_exp_count += value
-            if self.pl_abi_and_exp_count < 0:
-                self.pl_abi_and_exp_count = 0
-            elif (
-                self.pl_abi_and_exp_count
-                > len(game_config.config_new_round_inherit_type_data[1]) - 1
-            ):
-                self.pl_abi_and_exp_count = (
-                    len(game_config.config_new_round_inherit_type_data[1]) - 1
-                )
-        elif type == 2:
-            self.pl_extra_growth_count += value
-            if self.pl_extra_growth_count < 0:
-                self.pl_extra_growth_count = 0
-            elif (
-                self.pl_extra_growth_count
-                > len(game_config.config_new_round_inherit_type_data[2]) - 1
-            ):
-                self.pl_extra_growth_count = (
-                    len(game_config.config_new_round_inherit_type_data[2]) - 1
-                )
-        elif type == 3:
-            self.pl_collection_count += value
-            if self.pl_collection_count < 0:
-                self.pl_collection_count = 0
-            elif (
-                self.pl_collection_count
-                > len(game_config.config_new_round_inherit_type_data[3]) - 1
-            ):
-                self.pl_collection_count = (
-                    len(game_config.config_new_round_inherit_type_data[3]) - 1
-                )
-        elif type == 4:
-            self.chara_fon_and_trust_count += value
-            if self.chara_fon_and_trust_count < 0:
-                self.chara_fon_and_trust_count = 0
-            elif (
-                self.chara_fon_and_trust_count
-                > len(game_config.config_new_round_inherit_type_data[4]) - 1
-            ):
-                self.chara_fon_and_trust_count = (
-                    len(game_config.config_new_round_inherit_type_data[4]) - 1
-                )
-        elif type == 5:
-            self.chara_abi_and_exp_count += value
-            if self.chara_abi_and_exp_count < 0:
-                self.chara_abi_and_exp_count = 0
-            elif (
-                self.chara_abi_and_exp_count
-                > len(game_config.config_new_round_inherit_type_data[5]) - 1
-            ):
-                self.chara_abi_and_exp_count = (
-                    len(game_config.config_new_round_inherit_type_data[5]) - 1
-                )
-        elif type == 6:
-            self.chara_hypnosis_count += value
-            if self.chara_hypnosis_count < 0:
-                self.chara_hypnosis_count = 0
-            elif (
-                self.chara_hypnosis_count
-                > len(game_config.config_new_round_inherit_type_data[6]) - 1
-            ):
-                self.chara_hypnosis_count = (
-                    len(game_config.config_new_round_inherit_type_data[6]) - 1
-                )
+        """按步长调整指定继承类型的当前等级。"""
+        self.levels[type] = svc.step(type, self.levels[type], value)
 
     def farewell_npc_change(self) -> None:
-        """
-        更改送别干员
-        """
+        """绘制送别干员选择子页面并等待玩家确认或返回。"""
         while 1:
-            title_text = _("送别干员")
-            title_draw = draw.TitleLineDraw(title_text, self.width)
+            title_draw = draw.TitleLineDraw(_("送别干员"), self.width)
             title_draw.draw()
             return_list = []
-            info_text = ""
-            info_draw = draw.NormalDraw()
-            info_draw.width = self.width
-            info_text += _("选择送别干员\n")
-            info_draw.text = info_text
-            info_draw.draw()
-            chara_count = 0
-            for chara_id in self.all_fall_chara_list:
+            self._text(_("选择送别干员\n"))
+            for count, chara_id in enumerate(self.all_fall_chara_list, 1):
                 now_character_data = identity.of(chara_id)
                 button_text = (
                     f"[{now_character_data.adv}]{now_character_data.name}"
                 )
-                button_len = max(len(button_text), 24)
+                chosen = chara_id == self.farewell_npc_id
                 button = draw.LeftButton(
                     button_text,
                     button_text,
-                    button_len,
+                    max(len(button_text), 24),
+                    normal_style="gold_enrod" if chosen else "standard",
                     cmd_func=self.farewell_npc_change_confirm,
                     args=(chara_id,),
                 )
-                if chara_id == self.farewell_npc_id:
-                    button = draw.LeftButton(
-                        button_text,
-                        button_text,
-                        button_len,
-                        normal_style="gold_enrod",
-                        cmd_func=self.farewell_npc_change_confirm,
-                        args=(chara_id,),
-                    )
                 return_list.append(button_text)
                 button.draw()
-                chara_count += 1
-                if chara_count % 8 == 0:
+                if count % 8 == 0:
                     line_feed_draw.draw()
             line_feed_draw.draw()
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), self.width)
@@ -851,65 +296,21 @@ class New_Round_Handle:
                 break
 
     def farewell_npc_change_confirm(self, chara_id: int) -> None:
-        """
-        确认送别干员
-        Keyword arguments:
-        chara_id -- 干员id
-        """
+        """记录选中的送别干员角色编号。"""
         self.farewell_npc_id = chara_id
 
     def toggle_world_setting(self) -> None:
-        """
-        切换世界设定面板的显示状态
-        """
+        """切换世界设定内嵌面板的展开状态。"""
         self.show_world_setting = not self.show_world_setting
 
     def choices(self) -> dict[str, core.JSON]:
-        """
-        面板上的继承选择
-        Return arguments:
-        dict -- 各项继承的档位、陷落干员id列表与新周目的世界设定，
-            还有选择时博士的体力、气力、理智上限（player_maxima），
-            以及选择时陷落干员的 trust 与对博士的 favorability（fallen_social），见 setup
-        """
-        st, n0 = core.state(), needs.of(0)
-        chars = identity.table()
-        return {
-            "pl_abi_and_exp_count": self.pl_abi_and_exp_count,
-            "pl_originium_arts_count": self.pl_originium_arts_count,
-            "pl_extra_growth_count": self.pl_extra_growth_count,
-            "pl_collection_count": self.pl_collection_count,
-            "chara_fon_and_trust_count": self.chara_fon_and_trust_count,
-            "chara_abi_and_exp_count": self.chara_abi_and_exp_count,
-            "chara_hypnosis_count": self.chara_hypnosis_count,
-            "all_fall_chara_list": tuple(self.all_fall_chara_list),
-            "world_setting": {
-                str(cid): value for cid, value in self.world_setting.items()
-            },
-            "player_maxima": {
-                **{k: n0[k] for k in ("hit_max", "mana_max", "sanity_max")},
-                "semen_max": h_meters.of(0)["semen_max"],
-            },
-            "npc_hypnosis": {
-                str(c): d
-                for c in self.all_fall_chara_list
-                if (d := hypnosis.degree(c))
-            },
-            "first_records": first_record.carry_for_new_round(chars, st),
-            "fallen_social": {
-                str(cid): (relations.trust(cid), relations.favorability(cid)[0])
-                for cid in self.all_fall_chara_list
-            },
-            "carried": playthrough.carry_for_new_round(st),
-            "abilities": abilities.carry([0, *self.all_fall_chara_list], st),
-            "carried_collection": player_collection.carry_for_new_round(st),
-        }
+        """收集当前面板选择并生成多周目继承快照字典。"""
+        return svc.choices(
+            self.levels, self.all_fall_chara_list, self.world_setting
+        )
 
     def start_new_round(self) -> None:
-        """
-        先输出送别干员的送别口上，再经 kernel_state.new_round 换入新周目（选行动时中止该选择）。
-        换态成功后，本方法在 finally 中绘制继承报告、等待 [醒来] 并显示成就提示，期间不改写游戏状态。
-        """
+        """播放送别对话、触发新周目重置并在换态后展示唤醒报告。"""
         from Script.Design import talk, second_behavior
 
         if self.farewell_npc_id:
@@ -950,272 +351,31 @@ class New_Round_Handle:
                 achievement_panel.draw_achievement_notice(list(achieved))
 
 
-def _int(value: core.JSON) -> int:
-    """
-    继承选择里的一个整数
-    Keyword arguments:
-    value -- 继承选择里的值
-    Return arguments:
-    int -- 这个整数
-    """
-    if not isinstance(value, int):
-        raise TypeError(f"{value!r} is not an int")
-    return value
-
-
-def _count(choices: Mapping[str, core.JSON], key: str) -> int:
-    """
-    继承选择里一项继承的档位
-    Keyword arguments:
-    choices -- 继承选择
-    key -- 继承项
-    Return arguments:
-    int -- 档位
-    """
-    return _int(choices[key])
-
-
-def _inherit_rate(type_id: int, count: int) -> int:
-    """
-    一类继承在一个档位上的继承比例
-    Keyword arguments:
-    type_id -- 继承类型
-    count -- 档位
-    Return arguments:
-    int -- 继承比例，百分数
-    """
-    cid = game_config.config_new_round_inherit_type_data[type_id][count]
-    return game_config.config_new_round_inherit[cid].inherit_rate
-
-
 def setup(inherit: Mapping[str, core.JSON]) -> None:
-    """
-    新周目的 Reset 步骤：按继承选择重建玩家与干员数据、重置游戏数据并结算周目成就，不绘制也不等待输入。
-    本函数把继承报告与新达成成就 ID 存入 awakening。此时 game_time.now() 已是新周目开局时刻。
-    Keyword arguments:
-    inherit -- 继承选择，键见 New_Round_Handle.choices
-    """
+    """执行新周目状态重建与游戏数据重置，并暂存唤醒报告数据。"""
     global awakening
-    fallen = inherit["all_fall_chara_list"]
-    world_setting = inherit["world_setting"]
-    carried = inherit["carried"]
-    if not isinstance(fallen, tuple) or not isinstance(world_setting, Mapping):
-        raise TypeError(f"inherit {inherit!r} is malformed")
-    playthrough.restore_carried(cast(Mapping[str, core.JSON], carried))
-    report = _inherit_player_data(inherit)
-    report += _inherit_npc_data(inherit, {_int(cid) for cid in fallen})
-    reset_report, achieved = _reset_game_data(
-        {int(cid): _int(value) for cid, value in world_setting.items()}
-    )
+    report, world_setting = new_round_inherit_service.rebuild(inherit)
+    reset_report, achieved = _reset_game_data(world_setting)
     awakening = (report + reset_report, tuple(achieved))
 
 
-def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> str:
-    """
-    继承玩家数据。这一步在新周目的 Reset 里运行，GameState 已是新周目的，
-    所以博士的体力、气力与理智上限从继承选择的 player_maxima 算出
-    Keyword arguments:
-    inherit -- 继承选择
-    """
-    from Script.Design import character
-
-    info_draw_text = "\n\n"
-    info_draw_text += _("开始继承玩家数据\n")
-
-    # 用默认值重建玩家身份，沿用原玩家名字
-    identity.put(identity.Identity(0, name=identity.of(0).name))
-    character.init_attr(0)
-
-    # 归档旧周目的性行为履历（此时周目数仍是旧周目数）
-    carried_fr = cast(Mapping[str, object], inherit.get("first_records", {}))
-    first_record.restore_for_new_round(0, playthrough.game_round(), carried_fr)
-
-    # 玩家能力与经验
-    now_rate = _inherit_rate(1, _count(inherit, "pl_abi_and_exp_count"))
-    old = cast(Mapping[str, core.JSON], inherit["abilities"])
-    for name in ("ability", "experience"):
-        table = abilities.carried(old, 0, name)
-        new = {i: int(value * now_rate / 100) for i, value in table.items()}
-        abilities.Table(0, abilities.PICKLED[name]).merge(new)
-    info_draw_text += _("玩家能力与经验继承完毕\n")
-
-    # 玩家源石技艺
-    if _count(inherit, "pl_originium_arts_count") > 0:
-        old_talent = abilities.carried(old, 0, "talent")
-        for i in range(301, 350):
-            if i in old_talent and old_talent[i]:
-                abilities.talent(0)[i] = old_talent[i]
-    info_draw_text += _("玩家源石技艺继承完毕\n")
-
-    # 玩家属性上限成长
-    now_rate = _inherit_rate(2, _count(inherit, "pl_extra_growth_count"))
-    # 体力上限成长
-    maxima = cast(Mapping[str, Num], inherit["player_maxima"])
-    hp_extra_grouth = (maxima["hit_max"] - 1000) * now_rate / 100
-    needs.set(0, hit_max=int(1000 + hp_extra_grouth))
-    # 气力上限成长
-    mp_extra_grouth = (maxima["mana_max"] - 1000) * now_rate / 100
-    needs.set(0, mana_max=int(1000 + mp_extra_grouth))
-    # 理智上限成长
-    san_extra_grouth = (maxima["sanity_max"] - 100) * now_rate / 100
-    needs.set(0, sanity_max=int(100 + san_extra_grouth))
-    # 精液上限成长
-    semen_extra_grouth = (maxima["semen_max"] - 100) * now_rate / 100
-    h_meters.set(0, semen_max=int(100 + semen_extra_grouth))
-    info_draw_text += _("玩家属性上限成长继承完毕\n")
-
-    # 玩家收藏品
-    now_rate = _inherit_rate(3, _count(inherit, "pl_collection_count"))
-    carried_col = cast(
-        Mapping[str, Mapping[str, tuple[str, ...]]],
-        inherit.get("carried_collection", {}),
-    )
-    old_panties = {
-        int(k): list(v) for k, v in carried_col.get("npc_panties", {}).items()
-    }
-    old_socks = {
-        int(k): list(v) for k, v in carried_col.get("npc_socks", {}).items()
-    }
-    old_pan_count = sum(len(v) for v in old_panties.values())
-    old_socks_count = sum(len(v) for v in old_socks.values())
-    new_pan_count = int(old_pan_count * now_rate / 100)
-    new_socks_count = int(old_socks_count * now_rate / 100)
-
-    # 在当前计数收藏品不超过新的数量的情况下，进行收藏品继承
-    now_pan_count, now_socks_count = 0, 0
-    new_panties = player_collection.get("npc_panties")
-    for chara_cid, items in old_panties.items():
-        now_pan_count += len(items)
-        new_panties[chara_cid] = items
-        if now_pan_count > new_pan_count:
-            break
-    new_socks = player_collection.get("npc_socks")
-    for chara_cid, items in old_socks.items():
-        now_socks_count += len(items)
-        new_socks[chara_cid] = items
-        if now_socks_count > new_socks_count:
-            break
-    player_collection.update(npc_panties=new_panties, npc_socks=new_socks)
-    info_draw_text += _("玩家收藏品继承完毕\n")
-    return info_draw_text
-
-
-def _inherit_npc_data(
-    inherit: Mapping[str, core.JSON], fallen_ids: set[int]
-) -> str:
-    """
-    继承干员数据。每名干员都重建，陷落干员再按继承选择的比例带上 trust、对博士的 favorability、能力、经验与催眠进度。
-    其中 trust 与 favorability 取自 fallen_social，因为重建会把角色键换回默认值
-    Keyword arguments:
-    inherit -- 继承选择
-    fallen_ids -- 陷落干员id
-    """
-    info_draw_text = "\n"
-    info_draw_text += _("开始继承干员数据\n")
-
-    old = cast(Mapping[str, core.JSON], inherit["abilities"])
-    social = cast(Mapping[str, tuple[Num, Num]], inherit["fallen_social"])
-    roster.clear_active()
-    for now_id, now_npc_data in npc_template.table().items():
-        character_handle.init_character(
-            now_id, now_npc_data, collect_reset=False
-        )
-        if now_id in fallen_ids and child_stage_gate.restore_grown_stage(
-            now_id, abilities.carried(old, now_id, "talent")
-        ):
-            roster.add(now_id)
-            if roster.count() > 0:
-                info_draw_text += _("共有{0}名陷落干员继承到下一周目\n").format(
-                    roster.count()
-                )
-            else:
-                info_draw_text += _("没有陷落干员\n")
-
-            # 干员好感与信任
-            now_rate = _inherit_rate(
-                4, _count(inherit, "chara_fon_and_trust_count")
-            )
-            trust, favorability = social[str(now_id)]
-            relations.trust.set(now_id, int(trust * now_rate / 100))
-            relations.favorability.set_item(
-                now_id, 0, int(favorability * now_rate / 100)
-            )
-            if now_rate > 0:
-                info_draw_text += _(
-                    "干员好感与信任继承完毕，共继承了{rate}%的好感与信任\n"
-                ).format(rate=now_rate)
-            else:
-                info_draw_text += _("干员好感与信任未继承\n")
-
-            # 干员能力与经验
-            now_rate = _inherit_rate(
-                5, _count(inherit, "chara_abi_and_exp_count")
-            )
-            for name in ("ability", "experience"):
-                table = abilities.carried(old, now_id, name)
-                new = {i: int(v * now_rate / 100) for i, v in table.items()}
-                abilities.Table(now_id, abilities.PICKLED[name]).merge(new)
-            if now_rate > 0:
-                info_draw_text += _(
-                    "干员能力与经验继承完毕，共继承了{rate}%的能力与经验\n"
-                ).format(rate=now_rate)
-            else:
-                info_draw_text += _("干员能力与经验未继承\n")
-
-            # 干员催眠进度
-            now_rate = _inherit_rate(6, _count(inherit, "chara_hypnosis_count"))
-            npc_hyp = cast(Mapping[str, float], inherit.get("npc_hypnosis", {}))
-            hypnosis.set(
-                now_id,
-                hypnosis_degree=int(
-                    npc_hyp.get(str(now_id), 0) * now_rate / 100
-                ),
-            )
-            if now_rate > 0:
-                info_draw_text += _(
-                    "干员催眠进度继承完毕，共继承了{rate}%的催眠进度\n"
-                ).format(rate=now_rate)
-            else:
-                info_draw_text += _("干员催眠进度未继承\n")
-
-        # 归档旧周目的性行为履历（陷落与未陷落分支都归档）
-        carried_fr = cast(
-            Mapping[str, object], inherit.get("first_records", {})
-        )
-        first_record.restore_for_new_round(
-            now_id, playthrough.game_round(), carried_fr
-        )
-    return info_draw_text
-
-
 def _reset_game_data(world_setting: dict[int, int]) -> tuple[str, list[int]]:
-    """
-    重置游戏数据：留下继承后的角色与已获得干员、难度与生殖方式设定，周目数加一，换上新周目的世界设定。
-    成就与 playthrough.CARRIED_KEYS 里其余的键已在 setup 里写回
-    Keyword arguments:
-    world_setting -- 新周目的世界设定
-    """
+    """重置医疗与初始设定、推进周目、结算周目成就并开放宿舍。"""
     from Script.UI.Flow import creator_character_flow
     from Script.System.Medical_System import medical_service
     from Script.Modules.gameplay_resolution import achievement_service
 
     info_draw_text = "\n"
     info_draw_text += _("开始重置游戏数据\n")
-
-    # 要保留的数据
     new_game_round = playthrough.game_round() + 1
     new_npc_id_got = roster.active()
     kept = {
         table: playthrough.settings(table)
         for table in (playthrough.DIFFICULTY, playthrough.BIRTH_TYPE)
     }
-
-    # 开始重置
     medical_service.init_medical_department_data()
     playthrough.reset_difficulty_and_birth()
     info_draw_text += _("游戏数据重置完毕\n")
-
-    # 覆盖要保留的数据
     creator_character_flow.first_bonus_and_setting_updata()
     playthrough.set_settings(playthrough.WORLD, world_setting)
     for table, values in kept.items():
@@ -1224,119 +384,47 @@ def _reset_game_data(world_setting: dict[int, int]) -> tuple[str, list[int]]:
     roster.set_active(new_npc_id_got)
     achieved = achievement_service.settle_by_type(_("周目"))
     creator_character_flow.game_start()
-
-    # 根据继承的角色，将有人住的宿舍设为开放
-    for now_id in new_npc_id_got:
-        # 获取地点数据
-        now_dormitory = chara_life.dormitory(now_id)
-        now_scene_data = constant.scene_data[now_dormitory]
-        # 如果该地点在设施开放列表中
-        if (
-            now_scene_data.scene_name
-            in game_config.config_facility_open_name_set
-        ):
-            open_cid = game_config.config_facility_open_name_to_cid[
-                now_scene_data.scene_name
-            ]
-            # 如果未开放，则开放
-            if not facility.is_open(open_cid):
-                facility.set_open(open_cid, True)
-
+    new_round_inherit_service.open_dormitories(new_npc_id_got)
     info_draw_text += _("继承数据覆盖完毕\n")
     return info_draw_text, achieved
 
 
 class CharacterabiText:
-    """
-    角色能力面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+    """绘制角色各分类能力及对应继承后数值的文本面板。"""
 
     def __init__(self, character_id: int, width: int, rate: int) -> None:
         """初始化绘制对象"""
-        self.character_id = character_id
-        """ 绘制的角色id """
-        self.width = width
-        """ 当前最大可绘制宽度 """
-        self.rate = rate
-        """ 继承比例 """
-        self.type = type
-        """ 当前绘制类型 """
-        character_data = identity.of(self.character_id)
-        """ 角色数据 """
         self.draw_list: list[draw.Drawable] = []
         """ 绘制对象列表 """
-        self.title_list: list[draw.NormalDraw] = []
-        """ 绘制标题列表 """
-        ability_list = game_config.config_ability_type_data
-        title_text = _("能力")
-        type_line = draw.LittleTitleLineDraw(title_text, self.width, ":")
+        type_line = draw.LittleTitleLineDraw(_("能力"), width, ":")
         self.draw_list.append(type_line)
-        # 进入能力大类#
-        for anility_type in ability_list:
-            type_set = ability_list[anility_type]
-            # 去掉玩家的若干能力#
-            if self.character_id == 0:
-                if anility_type in {0, 1, 2, 6}:
-                    continue
-            for ability_id in type_set:
-                # 去掉与性别不符的能力#
-                if character_data.sex == 0:
-                    if ability_id in {73, 74, 75}:
-                        continue
-                elif character_data.sex == 1:
-                    if ability_id == 3:
-                        continue
+        groups = svc.ability_groups(character_id)
+        for anility_type, (size, shown) in groups.items():
+            for ability_id in shown:
                 now_draw = draw.NormalDraw()
                 now_draw_value = draw.NormalDraw()
                 now_draw.text = game_config.config_ability[ability_id].name
-                # 这个_1是为了补空格让格式对齐#
                 now_draw_1 = draw.NormalDraw()
                 now_draw_1.text = " "
                 now_draw_1.width = 1
-                now_draw.width = self.width / len(type_set)
-                now_exp = abilities.ability(character_data.cid)[ability_id]
-                # 仅在这里与原版不同，增加继承比例
+                now_draw.width = width / size
+                now_exp = abilities.ability(character_id)[ability_id]
                 if now_exp > 0:
-                    inherit_exp = int(now_exp * self.rate / 100)
+                    inherit_exp = int(now_exp * rate / 100)
                     now_draw_value.text = f"{now_exp}(→{inherit_exp})"
                 else:
                     now_draw_value.text = str(now_exp)
-                # ↑
                 level_draw = draw.ExpLevelDraw(now_exp)
-                new_draw = draw.LeftMergeDraw(self.width / 10)
-                # 技能类能力里在八个前补个换行
+                new_draw = draw.LeftMergeDraw(width / 10)
                 if ability_id == 48:
-                    new_draw_n = draw.NormalDraw()
-                    new_draw_n.text = "\n"
-                    new_draw_n.width = 1
-                    new_draw.draw_list.append(new_draw_n)
-                new_draw.draw_list.append(now_draw_1)
-                new_draw.draw_list.append(now_draw)
-                new_draw.draw_list.append(now_draw_1)
-                # 根据不同的类型补不同数量的空格#
-                if (
-                    anility_type != 2
-                    and anility_type != 4
-                    and anility_type != 6
-                ):
-                    new_draw.draw_list.append(now_draw_1)
-                    new_draw.draw_list.append(now_draw_1)
-                    if anility_type == 3 or anility_type == 5:
-                        new_draw.draw_list.append(now_draw_1)
-                        new_draw.draw_list.append(now_draw_1)
-                new_draw.draw_list.append(level_draw)
-                new_draw.draw_list.append(now_draw_1)
-                new_draw.draw_list.append(now_draw_value)
+                    new_draw.draw_list.append(_break())
+                new_draw.draw_list += [now_draw_1, now_draw, now_draw_1]
+                pad = {2: 0, 4: 0, 6: 0, 3: 4, 5: 4}.get(anility_type, 2)
+                new_draw.draw_list += [now_draw_1] * pad
+                new_draw.draw_list += [level_draw, now_draw_1, now_draw_value]
                 self.draw_list.append(new_draw)
-            # 只有不是最后一个类型就补个换行#
             if anility_type != 6:
-                new_draw_n = draw.NormalDraw()
-                new_draw_n.text = "\n"
-                new_draw_n.width = 1
-                self.draw_list.append(new_draw_n)
+                self.draw_list.append(_break())
 
     def draw(self) -> None:
         """绘制对象"""
@@ -1345,84 +433,27 @@ class CharacterabiText:
             value.draw()
 
 
+def _break() -> draw.NormalDraw:
+    """构造宽度为 1 的单个换行绘制对象。"""
+    new_draw_n = draw.NormalDraw()
+    new_draw_n.text = "\n"
+    new_draw_n.width = 1
+    return new_draw_n
+
+
 class CharacterExperienceText:
-    """
-    显示角色经验面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+    """绘制角色非零经验及对应继承后数值的分栏文本面板。"""
 
     def __init__(
         self, character_id: int, width: int, column: int, rate: int
     ) -> None:
         """初始化绘制对象"""
-        experience = abilities.experience(character_id)
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.rate = rate
-        """ 继承比例 """
         self.draw_list: list[draw.Drawable | list[draw.LeftDraw]] = []
         """ 绘制的文本列表 """
-        self.return_list: list[str] = []
-        """ 当前面板监听的按钮列表 """
-        character_data = identity.of(character_id)
-        type_data = _("经验")
-        type_line = draw.LittleTitleLineDraw(type_data, width, ":")
+        type_line = draw.LittleTitleLineDraw(_("经验"), width, ":")
         self.draw_list.append(type_line)
-        experience_text_list = []
-        for experience_id in game_config.config_experience:
-            if character_data.sex == 0:
-                if experience_id in {
-                    2,
-                    4,
-                    7,
-                    12,
-                    14,
-                    17,
-                    20,
-                    22,
-                    26,
-                    51,
-                    54,
-                    55,
-                    58,
-                    72,
-                    74,
-                    77,
-                    86,
-                    100,
-                    101,
-                    102,
-                    103,
-                    104,
-                    105,
-                    106,
-                }:
-                    continue
-            elif character_data.sex == 1:
-                if experience_id in {3, 13, 21, 73}:
-                    continue
-            experience_text = game_config.config_experience[experience_id].name
-            experience_value = 0
-            if experience_id in experience:
-                experience_value = experience[experience_id]
-                # 仅在这里与原版不同，增加继承比例
-                inherit_exp = int(experience_value * self.rate / 100)
-                now_text = (
-                    f" {experience_text}:{experience_value}(→{inherit_exp})"
-                )
-                # ↑
-                if experience_value > 0:
-                    experience_text_list.append(now_text)
         now_draw = panel.LeftDrawTextListPanel()
-        now_draw.set(experience_text_list, self.width, self.column)
+        now_draw.set(svc.experience_texts(character_id, rate), width, column)
         self.draw_list.extend(now_draw.draw_list)
 
     def draw(self) -> None:
