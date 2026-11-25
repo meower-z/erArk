@@ -10,51 +10,33 @@
 
 import importlib
 import inspect
-import json
 import re
-import subprocess
-import sys
 
 from Script.Core import constant, constant_effect
 from Script.Core.constant.SecondBehavior import SecondBehavior
 from Script.Modules.gameplay_resolution import orgasm_ids
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT
+from tests.ui_free_subprocess import ChildRun, run_ui_free
 
 PART_ORGASM_ID = re.compile(r"[a-z]_orgasm_(small|normal|strong|super)")
 """匹配单字母部位绝顶二段行为 id 的正则表达式。"""
 BLOCKED_RUN = """
-import importlib.abc, json, sys
 from unittest import mock
-BLOCKED = (
-    "Script.Settle",
-    "Script.UI.Panel",
-    "Script.System.Instruct_System.handle_instruct",
-    "tkinter",
-    "_tkinter",
-    "PIL.ImageTk",
-)
-def blocked(name):
-    return any(name == b or name.startswith(b + ".") for b in BLOCKED)
-class Block(importlib.abc.MetaPathFinder):
-    def find_spec(self, fullname, path, target=None):
-        if blocked(fullname):
-            raise ImportError(fullname)
-        return None
-sys.meta_path.insert(0, Block())
-from tests.fast.base import FastTestCase
-case = FastTestCase()
-case.setUp()
+from Script.Modules.domains import identity
+from tests import chara_abilities, kernel_data
+from tests.chara_activity import place
+from tests.world import DEFAULT_SCENE, start_time
+kernel_data.reset_clock(start_time(), {})
 for cid in (0, 1):
-    case.world.chara(cid, str(cid))
+    kernel_data.put(identity.put, identity.Identity(cid, name=str(cid), sex=1))
+    chara_abilities.zero_tables(cid)
+    place(cid, DEFAULT_SCENE)
 from Script.Config import game_config
 from Script.Core import game_type
 from Script.Design import second_behavior as sb, talk
 from Script.Kernel import core
 from Script.Modules.domains import activity, first_record
 from Script.Modules.gameplay_resolution import working
-out = {"settle_before": "Script.Settle" in sys.modules}
-before = set(sys.modules)
 settle_id = game_config.config_behavior_must_settle_cid_list[0]
 show_id = game_config.config_behavior_must_show_cid_list[0]
 def records():
@@ -67,7 +49,7 @@ def records():
     ]
 with working.based_on(core.state()):
     sb.character_get_second_behavior(1, "chosen_as_assistant")
-    out["ordinary"] = [
+    payload["ordinary"] = [
         activity.second_behavior(1, "chosen_as_assistant"),
         activity.must_settle(1),
         activity.must_show(1),
@@ -75,10 +57,10 @@ with working.based_on(core.state()):
     ]
     sb.character_get_second_behavior(1, settle_id)
     sb.character_get_second_behavior(1, show_id)
-    out["must"] = [settle_id, show_id, activity.must_settle(1), activity.must_show(1)]
+    payload["must"] = [settle_id, show_id, activity.must_settle(1), activity.must_show(1)]
     sb.character_get_second_behavior(1, settle_id, reset=True)
     sb.character_get_second_behavior(1, show_id, reset=True)
-    out["reset"] = [
+    payload["reset"] = [
         activity.second_behavior(1, settle_id),
         activity.second_behavior(1, show_id),
         activity.must_settle(1),
@@ -86,19 +68,19 @@ with working.based_on(core.state()):
     ]
     steps = ["v_orgasm_normal", "v_orgasm_strong", "v_orgasm_super", "a_orgasm_super"]
     steps += ["happy_mark_1", "fertilization", "b_orgasm_to_milk", "u_orgasm_to_pee"]
-    out["steps"] = {}
+    payload["steps"] = {}
     for bid in steps:
         sb.character_get_second_behavior(1, bid)
-        out["steps"][bid] = records()
+        payload["steps"][bid] = records()
     fr = first_record.view(1)
-    out["place"] = [fr.first_super_orgasm_dict[5][1], activity.position(1)]
+    payload["place"] = [fr.first_super_orgasm_dict[5][1], activity.position(1)]
 with working.based_on(core.state()):
     for bid in ("v_orgasm_normal", "v_orgasm_strong", "b_orgasm_small"):
         activity.set_second_behavior(1, bid, 1)
     talked = []
     with mock.patch.object(talk, "handle_second_talk", lambda cid, bid: talked.append(bid)):
         sb.second_behavior_effect(1, game_type.CharacterStatusChange(), orgasm_settle_flag=True)
-    out["effect"] = [sorted(talked), dict(activity.second_behaviors(1))]
+    payload["effect"] = [sorted(talked), dict(activity.second_behaviors(1))]
 from Script.Core import constant, constant_effect
 sentinels = [
     constant_effect.SecondEffect.Nothing,
@@ -106,17 +88,15 @@ sentinels = [
     constant_effect.SecondEffect.Must_Settle,
 ]
 data = constant.settle_second_behavior_effect_data
-out["sentinels"] = [data[i].__wrapped__.__module__ if i in data else None for i in sentinels]
+payload["sentinels"] = [data[i].__wrapped__.__module__ if i in data else None for i in sentinels]
 with working.based_on(core.state()):
     bid = "appoinnted_as_diplomat_local"
     sb.character_get_second_behavior(1, bid)
     queued = activity.must_show(1)
     talk.must_show_talk_check(1)
-    out["show"] = [queued, activity.second_behavior(1, bid), activity.must_show(1)]
-out["loaded"] = sorted(m for m in set(sys.modules) - before if blocked(m) or m.startswith("Script.UI"))
-print(json.dumps(out, ensure_ascii=False))
+    payload["show"] = [queued, activity.second_behavior(1, bid), activity.must_show(1)]
 """
-"""子进程脚本：屏蔽 Script.Settle 与界面相关模块后运行二段行为流程并打印 JSON 结果。"""
+"""在无界面子进程中初始化角色 0 与 1、执行二段行为登记与结算并将结果写入 payload 的代码片段。"""
 
 
 class OrgasmIdsTest(FastTestCase):
@@ -174,26 +154,17 @@ class SecondBehaviorUiFreeTest(FastTestCase):
     """二段行为登记与结算在屏蔽 Script.Settle 及界面相关模块时的运行结果测试。"""
 
     out: dict
+    child: ChildRun
 
     @classmethod
     def setUpClass(cls) -> None:
-        """在独立子进程中执行 BLOCKED_RUN 并解析末行 JSON 作为本测试类的共享结果。"""
-        result = subprocess.run(
-            [sys.executable, "-c", BLOCKED_RUN],
-            cwd=ROOT,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
-        if result.returncode != 0:
-            raise AssertionError(result.stderr[-2000:])
-        cls.out = json.loads(result.stdout.splitlines()[-1])
+        """通过 run_ui_free 启动轻量后端并执行 BLOCKED_RUN，将子进程结果保存为本测试类共享数据。"""
+        cls.child = run_ui_free(BLOCKED_RUN, boot=True)
+        cls.out = cls.child.payload
 
     def test_no_ui_or_settle_loaded(self) -> None:
-        """验证初始化后未加载 Script.Settle 且二段行为调用期间未新增被屏蔽模块或 Script.UI 模块。"""
-        self.assertFalse(self.out["settle_before"])
-        self.assertEqual(self.out["loaded"], [])
+        """验证二段行为子进程运行期间未加载任何默认受限模块，也未触发任何受限导入尝试。"""
+        self.assertEqual((self.child.loaded, self.child.attempted), ([], []))
 
     def test_ordinary_and_must_lists(self) -> None:
         """验证普通二段行为写入、必结与必显列表登记以及 reset 重置后的状态均符合预期。"""
