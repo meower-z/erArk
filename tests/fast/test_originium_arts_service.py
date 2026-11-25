@@ -1,10 +1,10 @@
 """
-源石技艺与负面刻印服务测试
-==========================
-覆盖催眠类型读写、源石技艺消耗计算与习得升级、特殊解锁条件查询、
-内裤重复款式优先扣减与负面刻印降低结算、面板委托以及导入边界。
+源石技艺与负面刻印服务的快速测试。
+覆盖默认催眠类型读写、升级消耗与免费条件解锁、内裤重复款式优先扣减、
+负面刻印降低结算、面板委托，以及两项源石技艺服务的源码与纯后端子进程导入边界。
 """
 
+import json
 import subprocess
 import sys
 from unittest import mock
@@ -24,6 +24,61 @@ from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 SERVICE_PATH = "Script/Modules/gameplay_resolution/originium_arts_service.py"
 """ 源石技艺与负面刻印服务模块的仓库相对路径。 """
 
+BACKEND_RUN = """
+import importlib.abc, sys
+BLOCKED = ("Script.UI", "Script.Settle",
+    "Script.System.Instruct_System.handle_instruct", "Script.Core.flow_handle",
+    "Script.Core.io_init", "Script.Frontend", "Script.Modules.tk_ui",
+    "tkinter", "_tkinter", "PIL.ImageTk")
+ALLOWED = frozenset({"Script.Modules.tk_ui", "Script.Modules.tk_ui.orders"})
+attempted = []
+def is_blocked(name):
+    if name in ALLOWED:
+        return False
+    return any(name == root or name.startswith(root + ".") for root in BLOCKED)
+class Blocker(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path, target=None):
+        if is_blocked(fullname):
+            attempted.append(fullname)
+            raise ImportError(fullname)
+        return None
+sys.meta_path.insert(0, Blocker())
+import contextlib, io, json
+from Script.Config import normal_config
+with contextlib.redirect_stdout(io.StringIO()):
+    normal_config.init_normal_config()
+from Script.Config import game_config
+with contextlib.redirect_stdout(io.StringIO()):
+    game_config.init()
+from Script.Kernel import core
+from Script.Modules.domains import abilities, modes
+from Script.Modules.gameplay_resolution import originium_arts_panel_service
+from Script.Modules.gameplay_resolution import originium_arts_service
+from Script.Modules.gameplay_resolution import working
+with working.based_on(core.state()):
+    for talent_id in (304, 305, 306, 307, 308, 309, 310, 311, 312,
+            316, 317, 318, 331, 332, 333, 334):
+        abilities.talent(0)[talent_id] = 0
+    for talent_id in (316, 318, 305, 307, 309):
+        abilities.talent(0)[talent_id] = 1
+    modes.set_debug(True)
+    out = {
+        "menu": [[e.key, e.talent_names, e.sanity_per_hour]
+            for e in originium_arts_panel_service.menu_entries()],
+        "rows": [[r.talent_id, r.unlocked]
+            for r in originium_arts_panel_service.group_rows(6)],
+        "cost": originium_arts_service.calculate_art_cost(3),
+        "panties": originium_arts_service.consume_panties_duplicate_first(
+            ["a", "b", "a", "c", "b", "d", "e"]),
+    }
+out["attempted"] = attempted
+out["loaded"] = sorted(n for n in sys.modules
+    if n.startswith(("Script.UI", "Script.Settle")) or is_blocked(n))
+print(json.dumps(out))
+"""
+"""在拦截界面、结算与窗口模块的独立子进程中初始化配置并运行两项源石技艺服务的测试脚本。"""
+
+
 BLOCKED_IMPORT_RUN = """
 import importlib.abc, sys
 BLOCKED = ("Script.UI", "Script.Core.flow_handle", "Script.Core.io_init",
@@ -41,6 +96,17 @@ print(svc.consume_panties_duplicate_first(["a", "b", "a", "c", "b", "d", "e"]))
 print(sorted(name for name in sys.modules if is_blocked(name)))
 """
 """ 在拦截界面与窗口模块的子进程中导入并调用源石技艺服务的脚本。 """
+
+
+def talent_name(talent_id: int) -> str:
+    """
+    按素质编号读取配置表中的素质名称。
+    Keyword arguments:
+    talent_id -- int，素质配置编号
+    Return arguments:
+    str -- 配置表中的素质名称
+    """
+    return game_config.config_talent[talent_id].name
 
 
 class OriginiumArtsCase(FastTestCase):
@@ -375,12 +441,42 @@ class OriginiumArtsPanelDelegationTest(OriginiumArtsCase):
 
 
 class ImportBoundaryTest(FastTestCase):
-    """源石技艺与负面刻印服务模块的界面导入边界测试。"""
+    """源石技艺服务与面板菜单规则服务的界面与结算导入边界测试。"""
 
     def test_service_imports_no_ui(self) -> None:
         """断言 originium_arts_service.py 源码通过后端界面边界守卫检查。"""
         source = (ROOT / SERVICE_PATH).read_bytes()
         self.assertEqual(banned_imports(source, SERVICE_PATH), [])
+
+    def test_fresh_backend_process_loads_no_ui_or_settle(self) -> None:
+        """断言独立子进程在拦截界面、结算与窗口模块时可正常运行两项服务且零受限模块加载。"""
+        result = subprocess.run(
+            [sys.executable, "-c", BACKEND_RUN],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr[-2000:])
+        out = json.loads(result.stdout.splitlines()[-1])
+        self.assertEqual(out["attempted"], [])
+        self.assertEqual(out["loaded"], [])
+        self.assertEqual(
+            out["menu"],
+            [
+                [1, "", None],
+                [2, f"{talent_name(316)} + {talent_name(318)}", None],
+                [4, "", None],
+                [5, f" + {talent_name(305)}", None],
+                [6, f"{talent_name(307)} + {talent_name(309)}", 10],
+                [11, "", None],
+                [12, "", None],
+            ],
+        )
+        self.assertEqual(out["rows"], [[307, True], [308, False], [309, True]])
+        self.assertEqual(out["cost"], 100)
+        self.assertEqual(out["panties"], ["d", "e"])
 
     def test_fresh_subprocess_import_loads_no_ui(self) -> None:
         """独立子进程拦截界面与窗口模块时可导入并执行服务，且未加载被拦截模块。"""
