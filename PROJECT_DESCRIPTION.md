@@ -717,7 +717,7 @@ Script/
 
 | 系统 | 核心文件 | 说明 |
 | --- | --- | --- |
-| PRTS 教程 | `UI/Panel/prts_panel.py` | `Prts.csv`, `Tip*.csv` |
+| PRTS 教程 | `UI/Panel/prts_panel.py`, `Modules/gameplay_resolution/prts_service.py` | `Prts.csv`, `Tip*.csv` |
 | 系统设置 | `UI/Panel/system_setting.py` | `System_Setting.csv` |
 | AI 设置 | `UI/Panel/chat_ai_setting.py` | `Ai_Chat_Setting.csv` |
 | 存档面板 | `UI/Panel/see_save_info_panel.py` | 存档选择/信息 |
