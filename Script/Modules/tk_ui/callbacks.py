@@ -4,7 +4,7 @@ Tk 界面向后端登记的回调函数
 load_order 导入本模块时完成以下登记，本模块不登记内核钩子：
 - playthrough：设定表补齐提示。
 - save_load.reset：new_round 与 panel 界面实现。
-- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、面板切换、确认提问与隐奸非H开关查询。
+- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、面板切换、确认提问、隐奸非H开关查询与文本AI处理。
 - achievement_service：新达成成就提示。
 - ejaculation_service：射精文本、忍耐询问与射精面板。
 - hidden_sex_service：隐奸被发现面板。
@@ -231,6 +231,32 @@ def draw_confirm(text: str) -> bool:
         [yes_draw.return_text, back_draw.return_text]
     )
     return answer == yes_draw.return_text
+
+
+@ui_hooks.on_text_ai
+def use_text_ai(
+    character_id: int,
+    behavior_id: str,
+    original_text: str,
+    *,
+    translator: bool,
+) -> str:
+    """
+    在调用时导入 Script.Design.handle_chat_ai，并将参数转发给 judge_use_text_ai 执行文本AI处理。
+    调用时再导入可避免启动阶段加载 AI 接口库，同时避免在配置初始化前读取文本宽度。
+    Keyword arguments:
+    character_id -- int，角色编号
+    behavior_id -- str，行为编号
+    original_text -- str，待处理的原始文本
+    translator -- bool，为真时以翻译模式处理，为假时以生成模式处理
+    Return arguments:
+    str -- judge_use_text_ai 返回的最终文本
+    """
+    from Script.Design import handle_chat_ai
+
+    return handle_chat_ai.judge_use_text_ai(
+        character_id, behavior_id, original_text, translator=translator
+    )
 
 
 @achievement_service.on_unlocked

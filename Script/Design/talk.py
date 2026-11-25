@@ -485,9 +485,7 @@ def handle_talk_draw(
                 normal_config.config_normal.language != "zh_CN"
                 and normal_config.ai_setting.ai_chat_translator_setting == 2
             ):
-                from Script.Design import handle_chat_ai
-
-                now_talk_text = handle_chat_ai.judge_use_text_ai(
+                now_talk_text = ui_hooks.apply_text_ai(
                     character_id,
                     now_behavior_id,
                     now_talk_text,
@@ -501,9 +499,7 @@ def handle_talk_draw(
                 normal_config.config_normal.language != "zh_CN"
                 and normal_config.ai_setting.ai_chat_translator_setting >= 1
             ):
-                from Script.Design import handle_chat_ai
-
-                now_talk_text = handle_chat_ai.judge_use_text_ai(
+                now_talk_text = ui_hooks.apply_text_ai(
                     character_id,
                     now_behavior_id,
                     now_talk_text,
@@ -511,9 +507,7 @@ def handle_talk_draw(
                 )
             # 如果启用了文本生成ai
             elif normal_config.ai_setting.ai_chat_setting[1]:
-                from Script.Design import handle_chat_ai
-
-                now_talk_text = handle_chat_ai.judge_use_text_ai(
+                now_talk_text = ui_hooks.apply_text_ai(
                     character_id, now_behavior_id, now_talk_text
                 )
 
