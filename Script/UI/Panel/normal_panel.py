@@ -4,14 +4,9 @@ from types import FunctionType
 from Script.UI.Moudle import draw, panel, view
 from Script.Core import constant, flow_handle
 from Script.Core import get_text
-from Script.Config import game_config, normal_config
-from Script.Design import map_handle, game_time
+from Script.Config import normal_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, action_info, activity, identity
-from Script.Modules.domains import entertainment, fridge, inventory, playthrough
-from Script.Modules.domains import npc_template, warehouse
-
-panel_info_data: dict[str, object] = {}
+from Script.Modules.gameplay_resolution import normal_panel_service as svc
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -48,7 +43,8 @@ class Close_Door_Panel:
         bool | None -- 关门为真，不关为假；当前地点已问过（移动前不问第二次）时为 None
         """
 
-        if action_info.get(0, "ask_close_door_flag"):
+        ask = svc.door_ask()
+        if ask is None:
             return None
 
         title_text = _("关门")
@@ -57,28 +53,11 @@ class Close_Door_Panel:
         while 1:
             return_list: list[str] = []
             title_draw.draw()
-
-            now_scene_str = map_handle.get_map_system_path_str_for_list(
-                activity.position(0)
-            )
-            now_scene_data = constant.scene_data[now_scene_str]
             now_draw_list: list[draw.Drawable] = []
-
-            # 地点关门判定的三个分支
-            if now_scene_data.close_type == 0:
-                info_text = _("\n当前地点无法关门，要继续吗：")
-            elif now_scene_data.close_type == 1:
-                info_text = _(
-                    "\n当前地点可以关门，关上之后里面的人可以出去，但外面的人将不能进来，要关门吗："
-                )
-            else:
-                info_text = _(
-                    "\n你正在一个可以关门的小隔间内，关上后别人仍可以进入该地点，但无法发现隔间内的人，要关门吗："
-                )
 
             askfor_panel = panel.OneMessageAndSingleColumnButton()
             askfor_list = [_("是"), _("否")]
-            askfor_panel.set(askfor_list, _(info_text), 0)
+            askfor_panel.set(askfor_list, _(ask.prompt), 0)
             askfor_panel_return_list = askfor_panel.get_return_list()
             return_list.extend(askfor_panel_return_list.keys())
             now_draw_list.append(askfor_panel)
@@ -99,7 +78,7 @@ class Close_Door_Panel:
             if yrn in return_list:
                 if askfor_panel_return_list[yrn] == askfor_list[0]:
                     return True
-                if now_scene_data.close_type == 0:
+                if ask.cancel_on_no:
                     player_pick.back()
                 return False
 
@@ -130,32 +109,22 @@ class Take_Care_Baby_Panel:
             return_list = []
             title_draw.draw()
 
-            # 输出提示信息
             info_draw = draw.NormalDraw()
             info_text = _("\n当前育儿室正在照料的婴儿有：\n\n")
             info_draw.text = info_text
             info_draw.draw()
 
-            # 遍历婴儿名字并输出按钮
-            for adv_id in npc_template.ids():
-                chara_id = adv_id
-                if not identity.exists(chara_id):
-                    continue
-                if abilities.talent(chara_id)[101]:
-                    name = identity.of(chara_id).name
-                    chara_adv_id = identity.of(chara_id).adv
-                    button_text = f"[{str(chara_adv_id).rjust(4,'0')}]:{name} "
-
-                    button_draw = draw.LeftButton(
-                        _(button_text),
-                        _(str(chara_adv_id)),
-                        self.width,
-                        cmd_func=self.choice_take_care,
-                        args=(chara_id,),
-                    )
-                    return_list.append(button_draw.return_text)
-                    button_draw.draw()
-                    line_feed.draw()
+            for baby in svc.babies():
+                button_draw = draw.LeftButton(
+                    _(baby.label),
+                    _(str(baby.adv)),
+                    self.width,
+                    cmd_func=self.choice_take_care,
+                    args=(baby.chara_id,),
+                )
+                return_list.append(button_draw.return_text)
+                button_draw.draw()
+                line_feed.draw()
 
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
             back_draw.draw()
@@ -169,23 +138,14 @@ class Take_Care_Baby_Panel:
     def choice_take_care(self, chara_id: int) -> None:
         """选择照顾的方式"""
         self.target_chara_id = chara_id
-        name = identity.of(self.target_chara_id).name
+        info_text = svc.care_title(chara_id)
 
-        button_text_list = [
-            _("抱一抱她"),
-            _("哼唱儿歌"),
-            _("喂奶"),
-            _("换尿布"),
-            _("教她说话"),
-            _("给她玩玩具"),
-        ]
+        button_text_list = [option.label for option in svc.care_options()]
 
         while 1:
             return_list = []
 
-            # 输出提示信息
             info_draw = draw.NormalDraw()
-            info_text = _("\n选择照顾[{0}]的方式：\n\n").format(name)
             info_draw.text = info_text
             info_draw.draw()
 
@@ -214,34 +174,12 @@ class Take_Care_Baby_Panel:
 
     def settle_take_care(self, instruct_id: int) -> None:
         """结算照顾指令"""
-        behavior_id, state = {
-            0: (
-                constant.Behavior.HOLD_CHILD,
-                constant.CharacterStatus.STATUS_HOLD_CHILD,
-            ),
-            1: (
-                constant.Behavior.SING_CHILDREN_SONG,
-                constant.CharacterStatus.STATUS_SING_CHILDREN_SONG,
-            ),
-            2: (
-                constant.Behavior.NUIRSE_CHILD,
-                constant.CharacterStatus.STATUS_NUIRSE_CHILD,
-            ),
-            3: (
-                constant.Behavior.CHANGE_DIAPERS,
-                constant.CharacterStatus.STATUS_CHANGE_DIAPERS,
-            ),
-            4: (
-                constant.Behavior.TEACH_TALK,
-                constant.CharacterStatus.STATUS_TEACH_TALK,
-            ),
-            5: (
-                constant.Behavior.GIVE_TOY,
-                constant.CharacterStatus.STATUS_GIVE_TOY,
-            ),
-        }[instruct_id]
+        option = svc.care_options()[instruct_id]
         player_pick.choose(
-            behavior_id, 30, target=self.target_chara_id, state=state
+            option.behavior_id,
+            svc.CARE_MINUTES,
+            target=self.target_chara_id,
+            state=option.state,
         )
 
 
@@ -267,33 +205,21 @@ class Chose_First_bonus_ability_Panel:
             line = draw.LineDraw("-", window_width)
             line.draw()
             now_npc_draw = draw.NormalDraw()
-            if self.chose_ability_id != 0:
-                ability_name = game_config.config_ability[
-                    self.chose_ability_id
-                ].name
-                now_npc_text = _(
-                    "当前选择的能力为{0}，请选择新的能力："
-                ).format(ability_name)
-            else:
-                now_npc_text = _("当前没有选择能力，请选择：")
-            now_npc_draw.text = now_npc_text
+            now_npc_draw.text = svc.bonus_prompt(self.chose_ability_id)
             now_npc_draw.draw()
             line_feed.draw()
 
-            # 遍历所有可以提升的能力
-            for cid in game_config.config_ability:
-                if 40 <= cid <= 49:
-                    ability_data = game_config.config_ability[cid]
-                    button_text = f"[{cid}]{ability_data.name}"
-                    button_draw = draw.LeftButton(
-                        _(button_text),
-                        _(button_text),
-                        int(len(button_text) * 2),
-                        cmd_func=self.chose_this_ability,
-                        args=cid,
-                    )
-                    button_draw.draw()
-                    return_list.append(button_draw.return_text)
+            for ability in svc.bonus_abilities():
+                button_text = ability.label
+                button_draw = draw.LeftButton(
+                    _(button_text),
+                    _(button_text),
+                    int(len(button_text) * 2),
+                    cmd_func=self.chose_this_ability,
+                    args=ability.ability_id,
+                )
+                button_draw.draw()
+                return_list.append(button_draw.return_text)
 
             line_feed.draw()
             line_feed.draw()
@@ -308,7 +234,7 @@ class Chose_First_bonus_ability_Panel:
     def chose_this_ability(self, ability_id: int) -> None:
         """选项1"""
         self.chose_ability_id = ability_id
-        playthrough.set_setting(playthrough.FIRST_BONUS, 21, ability_id)
+        svc.choose_bonus(ability_id)
 
 
 class Fridge_Panel:
@@ -342,25 +268,16 @@ class Fridge_Panel:
             now_draw.text = draw_text
             now_draw.draw()
 
-            milk_table = fridge.table(fridge.MILK)
-            if len(milk_table) == 0:
+            milk_rows = svc.milk_rows()
+            if len(milk_rows) == 0:
                 draw_text = _("\n    当前冰箱里没有母乳\n")
                 now_draw.text = draw_text
                 now_draw.draw()
 
-            # 获得冰箱内的乳制品
-            for character_id, character_milk in milk_table.items():
-                character_data = identity.of(character_id)
-                character_name = character_data.name
-                draw_text = ("  [{}]{}：{}ml").format(
-                    str(character_data.adv).rjust(4, "0"),
-                    character_name,
-                    character_milk,
-                )
-                draw_text = draw_text.ljust(20, "　")
-                now_draw.text = draw_text
+            for row in milk_rows:
+                character_id = row.chara_id
+                now_draw.text = row.label
                 now_draw.draw()
-                # 拿走按钮
                 button_text = _("  [带走]  ")
                 button_draw = draw.CenterButton(
                     _(button_text),
@@ -371,7 +288,6 @@ class Fridge_Panel:
                 )
                 button_draw.draw()
                 return_list.append(button_draw.return_text)
-                # 转化按钮
                 button_text = _("  [转化]  ")
                 button_draw = draw.CenterButton(
                     _(button_text),
@@ -400,36 +316,14 @@ class Fridge_Panel:
 
     def take_milk(self, character_id: int) -> None:
         """拿走母乳并放进玩家背包"""
-        from Script.System.Cooking_System import cooking
-
-        character_data = identity.of(character_id)
-
-        # 创建食物对象，并放进玩家的背包里
-        new_food = cooking.create_food("", 1001, 5, character_data.name)
-        # 拿走冰箱里的母乳
-        new_food.milk_ml = fridge.take(fridge.MILK, character_id)
-        inventory.put_food(0, new_food)
-
         now_draw = draw.WaitDraw()
-        draw_text = _("\n  你将{0}的母乳（{1}ml）放进了背包\n").format(
-            character_data.name, new_food.milk_ml
-        )
-        now_draw.text = draw_text
+        now_draw.text = svc.take_milk(character_id)
         now_draw.draw()
 
     def turn_milk(self, character_id: int) -> None:
         """转化母乳为资源【鲜母乳】"""
-        character_data = identity.of(character_id)
-
-        # 拿走冰箱里的母乳，转化为鲜母乳
-        milk = fridge.take(fridge.MILK, character_id)
-        warehouse.add(31, milk)
-
         now_draw = draw.WaitDraw()
-        draw_text = _("\n  你将{0}的母乳（{1}ml）转化为了【鲜母乳】\n").format(
-            character_data.name, milk
-        )
-        now_draw.text = draw_text
+        now_draw.text = svc.turn_milk(character_id)
         now_draw.draw()
 
 
@@ -459,7 +353,6 @@ class Order_Hotel_Room_Panel:
             return_list = []
             title_draw.draw()
 
-            # 输出提示信息
             info_draw = draw.NormalDraw()
             now_draw_text = ""
             now_draw_text += _(
@@ -473,34 +366,20 @@ class Order_Hotel_Room_Panel:
             info_draw.text = now_draw_text
             info_draw.draw()
 
-            # 如果未预订房间的话直接输出按钮
-            if entertainment.hotel_room() == 0:
-                room_text_list = [
-                    _("标间(2粉红凭证)"),
-                    _("情趣主题房(10粉红凭证)"),
-                    _("顶级套房(100粉红凭证)"),
-                ]
-                # 遍历房间类型并输出按钮
-                for i in range(len(room_text_list)):
-                    room_text = room_text_list[i]
-                    button_draw = draw.LeftButton(
-                        _(f"[{i}]" + room_text),
-                        _(str(i)),
-                        self.width,
-                        cmd_func=self.order_room,
-                        args=(i,),
-                    )
-                    return_list.append(button_draw.return_text)
-                    button_draw.draw()
-                    line_feed.draw()
-            # 已预订房间则输出提示信息
-            else:
-                room_name = [_("标间"), _("情趣主题房"), _("顶级套房")]
-                draw_text = _("当前已预订{0}，退房时间为{1}日12点\n").format(
-                    room_name[entertainment.hotel_room() - 1],
-                    action_info.get(0, "check_out_time").day,
+            for i, room_text in enumerate(svc.room_offers()):
+                button_draw = draw.LeftButton(
+                    _(f"[{i}]" + room_text),
+                    _(str(i)),
+                    self.width,
+                    cmd_func=self.order_room,
+                    args=(i,),
                 )
-                info_draw.text = draw_text
+                return_list.append(button_draw.return_text)
+                button_draw.draw()
+                line_feed.draw()
+            booked = svc.booked_text()
+            if booked is not None:
+                info_draw.text = booked
                 info_draw.draw()
 
             line_feed.draw()
@@ -515,35 +394,6 @@ class Order_Hotel_Room_Panel:
 
     def order_room(self, room_id: int) -> None:
         """预订房间"""
-        room_price = [2, 10, 100]
-        room_name = [_("标间"), _("情趣主题房"), _("顶级套房")]
-        # 判断粉红凭证是否足够
-        if warehouse.amount(4) < room_price[room_id]:
-            now_draw = draw.WaitDraw()
-            draw_text = _("\n粉红凭证不足，无法预订{0}\n").format(
-                room_name[room_id]
-            )
-            now_draw.text = draw_text
-            now_draw.draw()
-            return
-        # 进行结算
-        warehouse.add(4, -room_price[room_id])
-        entertainment.set_hotel_room(room_id + 1)
-        action_info.set(
-            0,
-            "check_out_time",
-            game_time.get_sub_date(day=1, old_date=game_time.now()).replace(
-                hour=12
-            ),
-        )
-        # 情趣房的赠送
-        if room_id == 1:
-            inventory.add_item(0, 100, 1)
-            inventory.add_item(0, 120, 5)
-        # 输出预订成功信息
         now_draw = draw.WaitDraw()
-        draw_text = _("\n成功预订了{0}，退房时间为{1}\n").format(
-            room_name[room_id], action_info.get(0, "check_out_time")
-        )
-        now_draw.text = draw_text
+        now_draw.text = svc.order_room(room_id)
         now_draw.draw()
