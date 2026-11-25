@@ -1,17 +1,20 @@
-"""宿舍管理系统主面板"""
+"""
+宿舍管理面板（manage_dormitory_panel）
+======================================
+提供宿舍管理系统界面的绘制与交互分发。
+"""
 
-import os
-import re
 from types import FunctionType
 from typing import Any
-from Script.Core import get_text, flow_handle, constant, constant_promise
-from Script.Design import basement, handle_premise, map_handle
+
+from Script.Config import normal_config
+from Script.Core import constant, flow_handle, get_text
+from Script.Modules.gameplay_resolution import (
+    dormitory_manager_service as managers,
+    dormitory_room_service as rooms,
+)
 from Script.System.Dormitory_System import common
 from Script.UI.Moudle import draw, view
-from Script.Config import normal_config
-from Script.Modules.domains import activity, chara_life, dormitory, facility
-from Script.Modules.domains import inventory, roster, work
-from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -22,102 +25,96 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
+def _button(
+    return_list: list[str], cls: type, *args: Any, **kwargs: Any
+) -> str:
+    """绘制按钮控件并将其返回码加入 return_list 后返回。"""
+    button = cls(*args, **kwargs)
+    button.draw()
+    return_list.append(button.return_text)
+    return button.return_text
+
+
+def _back(return_list: list[str], style: str = "standard") -> str:
+    """绘制居中返回按钮并把返回码加入 return_list。"""
+    return _button(
+        return_list,
+        draw.CenterButton,
+        _("[返回]"),
+        _("返回"),
+        window_width,
+        normal_style=style,
+    )
+
+
 class Manage_Dormitory_Panel:
-    """
-    宿舍管理系统主面板
-    输入类型: width(int)
-    输出类型: 无
-    功能: 提供宿舍总览、干员宿舍调整、宿舍管理员调整三个子页
-    """
+    """宿舍管理系统界面面板，含宿舍总览与调整宿舍管理员两页。"""
 
     def __init__(self, width: int) -> None:
-        """初始化绘制对象"""
+        """初始化面板宽度、当前页签、详情开关与临时空白位状态。"""
         self.width: int = width
+        """ 面板内容区的显示宽度。 """
         self.now_panel: str = _("宿舍总览")
+        """ 当前选中的顶层页签名称。 """
         self.show_dormitory_detail: bool = False
-        """ 是否显示宿舍具体居住情况 """
-        self.temp_blank_character_ids: list[int] = []
-        """ 临时空白位中的干员id列表 """
+        """ 是否在宿舍总览页展开具体居住情况。 """
+        self.temp_blank = rooms.TempBlank()
+        """ 本面板实例持有的临时空白位对象。 """
         self.dormitory_select_state: dict[str, Any] = {}
-        """ 干员选择面板的筛选状态 """
+        """ 干员选择界面的筛选状态字典。 """
 
     def draw(self) -> None:
-        """
-        绘制主循环
-        输入类型: 无
-        输出类型: 无
-        功能: 绘制页签并分发到对应子页面
-        """
-        title_text = _("宿舍管理系统")
+        """运行宿舍管理面板主循环，返回时重置未分配层管理员。"""
         panel_list = [_("宿舍总览"), _("调整宿舍管理员")]
-        title_draw = draw.TitleLineDraw(title_text, self.width)
-
+        title_draw = draw.TitleLineDraw(_("宿舍管理系统"), self.width)
         while 1:
             return_list: list[str] = []
-
             title_draw.draw()
             for now_panel in panel_list:
                 panel_width = int(self.width / len(panel_list))
                 if now_panel == self.now_panel:
-                    now_draw: draw.CenterDraw | draw.CenterButton
                     now_draw = draw.CenterDraw()
                     now_draw.text = f"[{now_panel}]"
                     now_draw.style = "onbutton"
                     now_draw.width = panel_width
                     now_draw.draw()
                 else:
-                    now_draw = draw.CenterButton(
+                    _button(
+                        return_list,
+                        draw.CenterButton,
                         f"[{now_panel}]",
                         f"\n{now_panel}",
                         panel_width,
                         cmd_func=self.change_panel,
                         args=(now_panel,),
                     )
-                    now_draw.draw()
-                    return_list.append(now_draw.return_text)
             line_feed.draw()
             draw.LineDraw("+", self.width).draw()
-
             if self.now_panel == _("宿舍总览"):
                 self._draw_overview_page(return_list)
             elif self.now_panel == _("调整宿舍管理员"):
                 self._draw_manage_dormitory_manager_page(return_list)
-
             line_feed.draw()
             line_feed.draw()
-            lock_panel_leave = self._is_character_dormitory_page_locked()
-            back_style = "deep_gray" if lock_panel_leave else "standard"
-            back_draw = draw.CenterButton(
-                _("[返回]"), _("返回"), window_width, normal_style=back_style
-            )
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-
+            locked = self._is_character_dormitory_page_locked()
+            back = _back(return_list, "deep_gray" if locked else "standard")
             yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                if lock_panel_leave:
+            if yrn == back:
+                if locked:
                     self._draw_temp_blank_lock_hint()
                     continue
-                reset_count = (
-                    self._reset_unassigned_dormitory_manager_work_type()
-                )
+                reset_count = managers.reset_unassigned_managers()
                 if reset_count > 0:
-                    info_draw = draw.WaitDraw()
-                    info_draw.width = self.width
-                    info_draw.text = _(
-                        "\n○已将{0}名未分配楼层的宿舍管理员重置为无岗位\n"
-                    ).format(reset_count)
-                    info_draw.draw()
+                    self._wait(
+                        _(
+                            "\n○已将{0}名未分配楼层的宿舍管理员重置为无岗位\n"
+                        ).format(reset_count)
+                    )
                 view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_panel(self, now_panel: str) -> None:
-        """
-        切换当前页签
-        输入类型: now_panel(str)
-        输出类型: 无
-        功能: 更新当前显示页签
-        """
+        """切换当前页签，若处于空白位锁定状态则仅显示提示。"""
         if (
             now_panel != self.now_panel
             and self._is_character_dormitory_page_locked()
@@ -126,145 +123,92 @@ class Manage_Dormitory_Panel:
             return
         self.now_panel = now_panel
 
+    def _text(self, text: str) -> None:
+        """按面板宽度绘制一段普通文本。"""
+        now_draw = draw.NormalDraw()
+        now_draw.width = self.width
+        now_draw.text = text
+        now_draw.draw()
+
+    def _wait(self, text: str, style: str | None = None) -> None:
+        """按面板宽度绘制等待玩家确认的提示文本。"""
+        now_draw = draw.WaitDraw()
+        now_draw.width = self.width
+        if style is not None:
+            now_draw.style = style
+        now_draw.text = text
+        now_draw.draw()
+
+    def _show(self, notice: rooms.Notice | None) -> None:
+        """依次绘制 Notice 中的普通提示行与等待确认文本。"""
+        if notice is None:
+            return
+        for line in notice.lines:
+            self._text(line)
+        if notice.wait is not None:
+            self._wait(notice.wait)
+
     def _draw_overview_page(self, return_list: list[str]) -> None:
-        """
-        绘制宿舍总览
-        输入类型: return_list(List[str])
-        输出类型: 无
-        功能: 显示宿舍等级、开放层数/房间数、管理员状态和基础恢复效率，并提供进入干员宿舍调整的入口
-        """
-        dormitory_level = facility.level(4, 1)
-        open_rooms_by_layer = self._get_open_rooms_by_layer()
-        open_layers = sorted(open_rooms_by_layer.keys())
-        efficiency = basement.calc_facility_efficiency(4)
-        max_open_layer = common.get_dormitory_max_open_layer()
-        npc_count = str(roster.count())
-
-        temp_blank_list = self._get_temp_blank_character_ids()
-        temp_blank_names = []
-        for character_id in temp_blank_list:
-            if identity.exists(character_id):
-                temp_blank_names.append(identity.of(character_id).name)
-
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw.text = _("\n 当前宿舍区块等级：{0}\n").format(dormitory_level)
-        info_draw.text += _(" 干员总数/宿舍容量：{0}/{1}\n").format(
-            npc_count, facility.people_max()
+        """绘制宿舍总览页文本、居住详情展开区与操作按钮。"""
+        blank_ids = self.temp_blank.current()
+        self._text(rooms.overview_text(blank_ids, managers.layer_managers()))
+        line_feed.draw()
+        detail_text = _(" ▶[具体居住情况]")
+        if self.show_dormitory_detail:
+            detail_text = _(" ▼[具体居住情况]")
+        _button(
+            return_list,
+            draw.LeftButton,
+            detail_text,
+            _("显示具体居住情况"),
+            len(detail_text) * 2,
+            cmd_func=self.show_dormitory_detail_func,
         )
-        info_draw.text += _(" 按等级已开放至：{0}层，").format(max_open_layer)
-        info_draw.text += _("当前开放层数：{0} 层\n").format(len(open_layers))
-        info_draw.text += _(" 当前开放房间数：{0} 间\n").format(
-            sum(len(open_rooms_by_layer[layer]) for layer in open_layers)
-        )
-        info_draw.text += _(" 当前基础恢复效率：{0:.0f}%\n").format(
-            efficiency * 100
-        )
-        if len(temp_blank_names):
-            info_draw.text += _(" 临时空白位：{0}人（{1}）\n").format(
-                len(temp_blank_names), "、".join(temp_blank_names)
+        line_feed.draw()
+        if self.show_dormitory_detail:
+            self._text(common.get_dormitory_occupants_text())
+            line_feed.draw()
+        line_feed.draw()
+        actions = [
+            (
+                _("[选择要调整宿舍的干员]"),
+                _("\n打开宿舍调整干员选择"),
+                self._prompt_select_character_for_dormitory,
             )
-        else:
-            info_draw.text += _(" 临时空白位：0人\n")
-        info_draw.text += _("\n\n 各层管理员状态：\n")
-
-        for layer in open_layers:
-            manager_id = dormitory.managers().get(layer, 0)
-            if manager_id and identity.exists(manager_id):
-                manager_name = identity.of(manager_id).name
-                info_draw.text += _("  {0}层：{1}\n").format(
-                    layer, manager_name
+        ]
+        if rooms.has_overcrowded_room():
+            actions.append(
+                (
+                    _("[将大于两人的宿舍重新分配]"),
+                    _("\n将大于两人的宿舍重新分配"),
+                    self._redistribute_overcrowded_dormitories,
                 )
-            else:
-                info_draw.text += _("  {0}层：未任命\n").format(layer)
-        if not len(open_layers):
-            info_draw.text += _("  暂无开放层\n")
-        info_draw.draw()
-        line_feed.draw()
-
-        # 是否显示具体居住情况的按钮
-        if not self.show_dormitory_detail:
-            detail_button_text = _(" ▶[具体居住情况]")
-            button_draw = draw.LeftButton(
-                detail_button_text,
-                _("显示具体居住情况"),
-                len(detail_button_text) * 2,
-                cmd_func=self.show_dormitory_detail_func,
             )
-            button_draw.draw()
-            return_list.append(button_draw.return_text)
-            line_feed.draw()
-        # 如果选择显示具体居住情况，则按层展示每个宿舍的居住干员
-        else:
-            detail_button_text = _(" ▼[具体居住情况]")
-            button_draw = draw.LeftButton(
-                detail_button_text,
-                _("显示具体居住情况"),
-                len(detail_button_text) * 2,
-                cmd_func=self.show_dormitory_detail_func,
+        if blank_ids:
+            actions.append(
+                (
+                    _("[自动排序临时空白位]"),
+                    _("\n自动排序临时空白位"),
+                    self._auto_sort_temp_blank_characters,
+                )
             )
-            button_draw.draw()
-            return_list.append(button_draw.return_text)
-            line_feed.draw()
-            now_draw = draw.NormalDraw()
-            now_draw.text = common.get_dormitory_occupants_text()
-            now_draw.width = self.width
-            now_draw.draw()
-            line_feed.draw()
-
-        line_feed.draw()
-
-        # 提供进入干员宿舍调整的入口
-        select_draw = draw.CenterButton(
-            _("[选择要调整宿舍的干员]"),
-            _("\n打开宿舍调整干员选择"),
-            int(self.width / 3),
-            cmd_func=self._prompt_select_character_for_dormitory,
-        )
-        select_draw.draw()
-        return_list.append(select_draw.return_text)
-
-        if self._have_overcrowded_open_dormitory():
-            redistribute_text = _("[将大于两人的宿舍重新分配]")
-            redistribute_draw = draw.CenterButton(
-                redistribute_text,
-                _("\n将大于两人的宿舍重新分配"),
+        for text, return_text, func in actions:
+            _button(
+                return_list,
+                draw.CenterButton,
+                text,
+                return_text,
                 int(self.width / 3),
-                cmd_func=self._redistribute_overcrowded_dormitories,
+                cmd_func=func,
             )
-            redistribute_draw.draw()
-            return_list.append(redistribute_draw.return_text)
-
-        # 如果存在临时空白位，则提供自动排序入口
-        if len(temp_blank_names):
-            auto_sort_text = _("[自动排序临时空白位]")
-            auto_sort_draw = draw.CenterButton(
-                auto_sort_text,
-                _("\n自动排序临时空白位"),
-                int(self.width / 3),
-                cmd_func=self._auto_sort_temp_blank_characters,
-            )
-            auto_sort_draw.draw()
-            return_list.append(auto_sort_draw.return_text)
-
         line_feed.draw()
 
     def show_dormitory_detail_func(self) -> None:
-        """
-        显示/隐藏宿舍具体居住情况
-        输入类型: 无
-        输出类型: 无
-        功能: 切换show_dormitory_detail状态以控制是否在总览页显示每个宿舍的具体居住干员信息
-        """
+        """切换宿舍总览页具体居住情况的展开状态。"""
         self.show_dormitory_detail = not self.show_dormitory_detail
 
     def _prompt_select_character_for_dormitory(self) -> None:
-        """
-        弹出通用干员选择面板并进入宿舍调整
-        输入类型: 无
-        输出类型: 无
-        功能: 复用通用NPC选择按钮列表函数进行筛选与选择
-        """
+        """打开分页干员选择界面，选取要调整宿舍的在编干员。"""
         from Script.UI.Moudle import panel
         from Script.UI.Panel import common_select_NPC
 
@@ -278,17 +222,11 @@ class Manage_Dormitory_Panel:
             False,
             0,
         )
-
         while 1:
-            chara_ids = sorted(
-                [cid for cid in roster.active() if cid != 0],
-                key=lambda x: identity.of(x).adv,
-            )
-            final_list = []
-            for chara_id in chara_ids:
-                final_list.append([chara_id, self._choose_new_dormitory, []])
-            now_draw_panel.text_list = final_list
-
+            now_draw_panel.text_list = [
+                [chara_id, self._choose_new_dormitory, []]
+                for chara_id in rooms.selectable_ids()
+            ]
             info_text = _("请选择一名干员以调整宿舍（仅显示已拥有干员）：\n")
             return_list, other_return_list, self.dormitory_select_state = (
                 common_select_NPC.common_select_npc_button_list_func(
@@ -298,7 +236,6 @@ class Manage_Dormitory_Panel:
                     self.dormitory_select_state,
                 )
             )
-
             yrn = flow_handle.askfor_all(return_list)
             if yrn in return_list and yrn not in other_return_list:
                 break
@@ -306,696 +243,168 @@ class Manage_Dormitory_Panel:
     def _draw_manage_dormitory_manager_page(
         self, return_list: list[str]
     ) -> None:
-        """
-        绘制宿舍管理员调整页
-        输入类型: return_list(List[str])
-        输出类型: 无
-        功能: 按层展示当前管理员并支持进入层级任命/撤换
-        """
+        """绘制调整宿舍管理员页的未分配提示、增减入口与各层按钮。"""
         from Script.UI.Panel import manage_basement_panel
 
-        open_rooms_by_layer = self._get_open_rooms_by_layer()
-        open_layers = sorted(open_rooms_by_layer.keys())
-
-        # 显示已被任命为宿舍管理员，但是还没有被分配层级的干员
-        manager_pool = sorted(work.roster(31), key=lambda x: identity.of(x).adv)
-        now_text = _("\n 以下干员已被任命为宿舍管理员，但尚未分配管理层级：")
-        unassigned_managers = []
-        for chara_id in manager_pool:
-            character_data = identity.of(chara_id)
-            if chara_id in dormitory.managers().values():
-                continue
-            unassigned_managers.append(character_data.name)
-
-        now_draw: draw.NormalDraw | draw.LeftButton
-        if unassigned_managers:
-            now_draw = draw.NormalDraw()
-            now_draw.width = self.width
-            now_draw.text = now_text + " ".join(unassigned_managers)
-            now_draw.draw()
+        layers = managers.layer_managers()
+        unassigned = managers.unassigned_manager_names()
+        if unassigned:
+            self._text(
+                _("\n 以下干员已被任命为宿舍管理员，但尚未分配管理层级：")
+                + " ".join(unassigned)
+            )
             line_feed.draw()
-
-        # 显示增减命令
-        adjust_pool_text = _("[宿舍管理员增减]")
-        adjust_pool_draw = draw.CenterButton(
-            adjust_pool_text,
+        _button(
+            return_list,
+            draw.CenterButton,
+            _("[宿舍管理员增减]"),
             _("\n宿舍管理员增减"),
             int(self.width / 4),
             cmd_func=manage_basement_panel.change_npc_work_out,
-            args=(self.width, [31]),
+            args=(self.width, [managers.MANAGER_WORK]),
         )
-        adjust_pool_draw.draw()
-        return_list.append(adjust_pool_draw.return_text)
         line_feed.draw()
-
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw.text = _("\n 选择层级后可进行任命或撤换：\n")
-        info_draw.draw()
-
-        for layer in open_layers:
-            manager_id = dormitory.managers().get(layer, 0)
-            if manager_id and identity.exists(manager_id):
-                manager_name = identity.of(manager_id).name
-                layer_text = _("[{0}层] 当前管理员：{1}").format(
-                    layer, manager_name
-                )
-                now_draw = draw.LeftButton(
-                    layer_text,
-                    f"\n{layer}",
-                    self.width,
-                    cmd_func=self._remove_manager_for_layer,
-                    args=(layer,),
-                )
+        self._text(_("\n 选择层级后可进行任命或撤换：\n"))
+        for layer, name in layers:
+            if name is not None:
+                text = _("[{0}层] 当前管理员：{1}").format(layer, name)
+                func = self._remove_manager_for_layer
             else:
-                layer_text = _("[{0}层] 当前管理员：未任命").format(layer)
-                now_draw = draw.LeftButton(
-                    layer_text,
-                    f"\n{layer}",
-                    self.width,
-                    cmd_func=self._appoint_manager_for_layer,
-                    args=(layer,),
-                )
-            now_draw.draw()
-            return_list.append(now_draw.return_text)
+                text = _("[{0}层] 当前管理员：未任命").format(layer)
+                func = self._appoint_manager_for_layer
+            _button(
+                return_list,
+                draw.LeftButton,
+                text,
+                f"\n{layer}",
+                self.width,
+                cmd_func=func,
+                args=(layer,),
+            )
             line_feed.draw()
-
-        if not len(open_layers):
-            wait_draw = draw.NormalDraw()
-            wait_draw.width = self.width
-            wait_draw.text = _("\n 暂无可管理的开放层。\n")
-            wait_draw.draw()
+        if not layers:
+            self._text(_("\n 暂无可管理的开放层。\n"))
 
     def _choose_new_dormitory(self, character_id: int) -> None:
-        """
-        进入单角色换宿舍流程
-        输入类型: character_id(int)
-        输出类型: 无
-        功能: 校验前提并从可入住房间中选择目标宿舍
-        """
-        if not handle_premise.handle_premise(
-            constant_promise.Premise.CAN_MANUAL_CHANGE_DORMITORY, character_id
-        ):
-            now_draw = draw.WaitDraw()
-            now_draw.width = self.width
-            now_draw.style = "gold_enrod"
-            now_draw.text = _("\n○当前角色处于特殊状态，暂不可手动更换宿舍\n")
-            now_draw.draw()
+        """绘制单名干员的目标宿舍选择界面与移入临时空白位按钮。"""
+        if not rooms.can_change_room(character_id):
+            self._wait(
+                _("\n○当前角色处于特殊状态，暂不可手动更换宿舍\n"),
+                "gold_enrod",
+            )
             return
-
-        character_data = identity.of(character_id)
-        open_rooms_by_layer = self._get_open_rooms_by_layer()
-        occupancy = self._get_room_occupancy()
-        temp_blank_list = self._get_temp_blank_character_ids()
-
-        room_candidates: list[tuple[int, str, str]] = []
-        for layer in sorted(open_rooms_by_layer.keys()):
-            for room_name, room_path in open_rooms_by_layer[layer]:
-                room_count = occupancy.get(room_path, 0)
-                room_capacity = self._get_room_capacity(room_path, occupancy)
-                if (
-                    room_path != chara_life.dormitory(character_id)
-                    and room_count < room_capacity
-                ):
-                    room_candidates.append((layer, room_name, room_path))
-
+        blank_ids = self.temp_blank.current()
+        choices = rooms.room_choices(character_id)
+        title, info = rooms.change_header(character_id, blank_ids)
         while 1:
             return_list: list[str] = []
-            title_draw = draw.TitleLineDraw(
-                _("调整宿舍：{0}").format(character_data.name), self.width
-            )
-            title_draw.draw()
-
-            now_dormitory_text = self._get_dormitory_name(
-                chara_life.dormitory(character_id)
-            )
-            info_draw = draw.NormalDraw()
-            info_draw.width = self.width
-            info_draw.text = _("\n 当前宿舍：{0}\n").format(now_dormitory_text)
-            if character_id in temp_blank_list:
-                info_draw.text += _(" 当前状态：临时空白位\n")
-            info_draw.text += _(" 请选择目标宿舍（仅显示已开放且未满员）：\n\n")
-            info_draw.draw()
-
-            if character_id not in temp_blank_list:
-                temp_blank_text = _("[移入临时空白位]")
-                temp_blank_draw = draw.CenterButton(
-                    temp_blank_text,
+            draw.TitleLineDraw(title, self.width).draw()
+            self._text(info)
+            if character_id not in blank_ids:
+                _button(
+                    return_list,
+                    draw.CenterButton,
+                    _("[移入临时空白位]"),
                     _("\n移入临时空白位"),
                     int(self.width / 3),
                     cmd_func=self._move_character_to_temp_blank,
                     args=(character_id,),
                 )
-                temp_blank_draw.draw()
-                return_list.append(temp_blank_draw.return_text)
                 line_feed.draw()
             line_feed.draw()
-
-            line_count = 0
-            for layer, room_name, room_path in room_candidates:
-                room_count = occupancy.get(room_path, 0)
-                room_capacity = self._get_room_capacity(room_path, occupancy)
-                room_text = _("[{0}层] {1} ({2}/{3})").format(
-                    layer, room_name, room_count, room_capacity
-                )
-                # 如果该宿舍有角色，则显示这些角色的名字
-                if room_path in occupancy and occupancy[room_path] > 0:
-                    resident_id_set = common.get_dormitory_resident_id_set()
-                    occupants = [
-                        identity.of(cid).name
-                        for cid in resident_id_set
-                        if chara_life.dormitory(cid) == room_path
-                    ]
-                    room_text += " - " + "、".join(occupants)
-                room_draw = draw.LeftButton(
-                    room_text,
-                    f"\n{room_name}",
+            for index, choice in enumerate(choices, 1):
+                _button(
+                    return_list,
+                    draw.LeftButton,
+                    choice.label,
+                    f"\n{choice.room_name}",
                     int(self.width / 4),
                     cmd_func=self._set_character_dormitory,
-                    args=(character_id, room_path),
+                    args=(character_id, choice.room_path),
                 )
-                room_draw.draw()
-                return_list.append(room_draw.return_text)
-                # 每4个宿舍换行一次
-                line_count += 1
-                if line_count >= 4:
+                if index % 4 == 0:
                     line_feed.draw()
-                    line_count = 0
-
             line_feed.draw()
             line_feed.draw()
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-
+            back = _back(return_list)
             yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text or yrn in return_list:
+            if yrn == back or yrn in return_list:
                 break
 
     def _set_character_dormitory(
         self, character_id: int, dormitory_path: str
     ) -> None:
-        """
-        应用角色宿舍变更
-        输入类型: character_id(int), dormitory_path(str)
-        输出类型: 无
-        功能: 更新角色 dormitory 字段，不修改 permanent_dormitory
-        """
-        character_data = identity.of(character_id)
-        old_text = self._get_dormitory_name(chara_life.dormitory(character_id))
-        new_text = self._get_dormitory_name(dormitory_path)
-        chara_life.dormitory.set(character_id, dormitory_path)
-        self._remove_from_temp_blank(character_id)
-
-        info_draw = draw.WaitDraw()
-        info_draw.width = self.width
-        info_draw.text = _("\n○{0} 的宿舍已从 {1} 调整为 {2}\n").format(
-            character_data.name, old_text, new_text
+        """调用房间服务写入目标宿舍并绘制结果提示。"""
+        self._show(
+            rooms.set_room(character_id, dormitory_path, self.temp_blank)
         )
-        info_draw.draw()
 
     def _move_character_to_temp_blank(self, character_id: int) -> None:
-        """
-        将干员移入临时空白位
-        输入类型: character_id(int)
-        输出类型: 无
-        功能: 角色离开当前宿舍并加入临时空白位列表
-        """
-        character_data = identity.of(character_id)
-        temp_blank_list = self._get_temp_blank_character_ids()
-        if character_id not in temp_blank_list:
-            temp_blank_list.append(character_id)
-        old_text = self._get_dormitory_name(chara_life.dormitory(character_id))
-        chara_life.dormitory.set(character_id, "")
-
-        info_draw = draw.WaitDraw()
-        info_draw.width = self.width
-        info_draw.text = _("\n○{0} 已从 {1} 移入临时空白位\n").format(
-            character_data.name, old_text
-        )
-        info_draw.draw()
+        """调用房间服务将干员移入临时空白位并绘制结果提示。"""
+        self._show(rooms.move_to_blank(character_id, self.temp_blank))
 
     def _auto_sort_temp_blank_characters(self) -> None:
-        """
-        将临时空白位干员自动排序入住宿舍可用位
-        输入类型: 无
-        输出类型: 无
-        功能: 按列表顺序将临时空白位干员填入当前可用宿舍位置
-        """
-        temp_blank_list = self._get_temp_blank_character_ids()
-        if not len(temp_blank_list):
-            return
-
-        open_rooms_by_layer = self._get_open_rooms_by_layer()
-        occupancy = self._get_room_occupancy()
-        free_slots: list[str] = []
-
-        for layer in sorted(open_rooms_by_layer.keys()):
-            for __, room_path in open_rooms_by_layer[layer]:
-                room_count = occupancy.get(room_path, 0)
-                room_capacity = self._get_room_capacity(room_path, occupancy)
-                for _slot_idx in range(max(0, room_capacity - room_count)):
-                    free_slots.append(room_path)
-
-        assigned_count = 0
-        while len(temp_blank_list) and len(free_slots):
-            character_id = temp_blank_list[0]
-            target_room = free_slots.pop(0)
-            if identity.exists(character_id):
-                chara_life.dormitory.set(character_id, target_room)
-                assigned_count += 1
-            temp_blank_list.pop(0)
-
-        info_draw = draw.WaitDraw()
-        info_draw.width = self.width
-        if assigned_count:
-            info_draw.text = _("\n○已自动安置{0}名干员进入宿舍\n").format(
-                assigned_count
-            )
-            if len(temp_blank_list):
-                info_draw.text += _(
-                    "○仍有{0}名干员留在临时空白位（宿舍可用位置不足）\n"
-                ).format(len(temp_blank_list))
-        else:
-            info_draw.text = _("\n○当前没有可用宿舍位置，无法进行自动排序\n")
-        info_draw.draw()
-
-    def _have_overcrowded_open_dormitory(self) -> bool:
-        """
-        判断是否存在超过2人的已开放宿舍
-        输入类型: 无
-        输出类型: bool
-        功能: 遍历已开放宿舍，存在任意房间入住人数大于2则返回True
-        """
-        open_rooms_by_layer = self._get_open_rooms_by_layer()
-        occupancy = self._get_room_occupancy()
-        for layer in sorted(open_rooms_by_layer.keys()):
-            for __, room_path in open_rooms_by_layer[layer]:
-                if occupancy.get(room_path, 0) > 2:
-                    return True
-        return False
+        """调用房间服务自动排序临时空白位并绘制结果提示。"""
+        self._show(rooms.auto_sort(self.temp_blank))
 
     def _redistribute_overcrowded_dormitories(self) -> None:
-        """
-        将大于两人的宿舍重新分配
-        输入类型: 无
-        输出类型: 无
-        功能: 每个超员宿舍保留前两人，其余角色汇总后按开放宿舍空位重新分配；若空位不足则不执行分配
-        """
-        open_rooms_by_layer = self._get_open_rooms_by_layer()
-        open_room_paths: list[str] = []
-        for layer in sorted(open_rooms_by_layer.keys()):
-            for __, room_path in open_rooms_by_layer[layer]:
-                open_room_paths.append(room_path)
-
-        room_character_ids: dict[str, list[int]] = {
-            room_path: [] for room_path in open_room_paths
-        }
-        # 统一使用通用函数获取需要纳入统计的角色id集合（拥有干员 + 异常7离岛角色）
-        resident_id_set = common.get_dormitory_resident_id_set()
-        sorted_character_ids = sorted(
-            [cid for cid in resident_id_set if identity.exists(cid)],
-            key=lambda x: identity.of(x).adv,
-        )
-        for character_id in sorted_character_ids:
-            dormitory_path = chara_life.dormitory(character_id)
-            if dormitory_path in room_character_ids:
-                room_character_ids[dormitory_path].append(character_id)
-
-        need_redistribute_character_ids: list[int] = []
-        room_kept_count: dict[str, int] = {}
-        for room_path in open_room_paths:
-            room_ids = room_character_ids.get(room_path, [])
-            if len(room_ids) > 2:
-                need_redistribute_character_ids.extend(room_ids[2:])
-                room_kept_count[room_path] = 2
-            else:
-                room_kept_count[room_path] = len(room_ids)
-
-        if not len(need_redistribute_character_ids):
-            return
-
-        free_slots: list[str] = []
-        for room_path in open_room_paths:
-            remain_capacity = max(0, 2 - room_kept_count.get(room_path, 0))
-            for _slot_idx in range(remain_capacity):
-                free_slots.append(room_path)
-
-        info_draw = draw.WaitDraw()
-        info_draw.width = self.width
-        if len(free_slots) < len(need_redistribute_character_ids):
-            info_draw.text = _(
-                "\n○当前剩余宿舍空位不足以重新分配，请升级宿舍后重试。\n"
-            )
-            info_draw.draw()
-            return
-
-        for index, character_id in enumerate(need_redistribute_character_ids):
-            target_room = free_slots[index]
-            chara_life.dormitory.set(character_id, target_room)
-
-        info_draw.text = _("\n○已完成重新分配，共分配了{0}名角色。\n").format(
-            len(need_redistribute_character_ids)
-        )
-        info_draw.draw()
+        """调用房间服务重分配超员宿舍并绘制结果提示。"""
+        self._show(rooms.redistribute())
 
     def _appoint_manager_for_layer(self, layer: int) -> None:
-        """
-        为指定层任命管理员
-        输入类型: layer(int)
-        输出类型: 无
-        功能: 选择干员并更新各层管理员与工作岗位
-        """
+        """绘制指定楼层的宿舍管理员候选列表并等待选择。"""
         while 1:
             return_list: list[str] = []
-            title_draw = draw.TitleLineDraw(
+            draw.TitleLineDraw(
                 _("选择{0}层宿舍管理员").format(layer), self.width
+            ).draw()
+            candidates = managers.manager_candidates()
+            self._text(
+                _(
+                    "\n 请选择一名干员任命为宿舍管理员（仅显示宿舍管理员岗位干员）：\n"
+                )
             )
-            title_draw.draw()
-
-            basement.update_work_people()
-            manager_pool = sorted(
-                work.roster(31), key=lambda x: identity.of(x).adv
-            )
-
-            info_draw = draw.NormalDraw()
-            info_draw.width = self.width
-            info_draw.text = _(
-                "\n 请选择一名干员任命为宿舍管理员（仅显示宿舍管理员岗位干员）：\n"
-            )
-            info_draw.draw()
-
-            for chara_id in manager_pool:
-                character_data = identity.of(chara_id)
-                button_text = f"[{str(character_data.adv).rjust(4, '0')}] {character_data.name}"
-                now_draw = draw.LeftButton(
-                    button_text,
-                    f"\n{character_data.name}",
+            for chara_id, name, label in candidates:
+                _button(
+                    return_list,
+                    draw.LeftButton,
+                    label,
+                    f"\n{name}",
                     int(self.width / 3),
                     cmd_func=self._do_appoint_manager,
                     args=(layer, chara_id),
                 )
-                now_draw.draw()
-                return_list.append(now_draw.return_text)
             line_feed.draw()
-
-            if not len(manager_pool):
-                wait_draw = draw.NormalDraw()
-                wait_draw.width = self.width
-                wait_draw.text = _(
-                    "\n 当前没有可任命的宿舍管理员，请先通过[宿舍管理员增减]将干员调整到该岗位。\n"
+            if not candidates:
+                self._text(
+                    _(
+                        "\n 当前没有可任命的宿舍管理员，请先通过[宿舍管理员增减]将干员调整到该岗位。\n"
+                    )
                 )
-                wait_draw.draw()
-
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-
+            back = _back(return_list)
             yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text or yrn in return_list:
+            if yrn == back or yrn in return_list:
                 break
 
     def _do_appoint_manager(self, layer: int, character_id: int) -> None:
-        """
-        执行任命管理员
-        输入类型: layer(int), character_id(int)
-        输出类型: 无
-        功能: 同步更新层管理员、角色 work_type 与工作缓存
-        """
-        old_manager_id = dormitory.managers().get(layer, 0)
-
-        # 先把该角色在其他层的任命清掉，保证一人只管理一层
-        for other_layer, other_character_id in dormitory.managers().items():
-            if other_layer != layer and other_character_id == character_id:
-                dormitory.set_manager(other_layer, 0)
-                # 重置玩家的该楼层钥匙
-                key_item_id = 300 + other_layer
-                if inventory.items(0)[key_item_id] > 0:
-                    inventory.set_item(0, key_item_id, 0)
-                    info_draw = draw.NormalDraw()
-                    info_draw.width = self.width
-                    info_draw.text = _(
-                        "\n○{0}的{1}层管理员任命已被撤销，博士持有的该层钥匙已被收回\n"
-                    ).format(identity.of(character_id).name, other_layer)
-                    info_draw.draw()
-
-        # 替换当前层旧管理员：仅撤掉该层归属，不立即撤掉岗位，离开面板时统一清理未分配楼层者
-
-        dormitory.set_manager(layer, character_id)
-        chara_life.work_type.set(character_id, 31)
-        self._move_manager_to_layer_room(layer, character_id)
-
-        if old_manager_id and old_manager_id != character_id:
-            if old_manager_id not in dormitory.managers().values():
-                self._restore_manager_dormitory(old_manager_id)
-
-        basement.update_work_people()
-
-        info_draw = draw.WaitDraw()
-        info_draw.width = self.width
-        info_draw.text = _("\n○已任命 {0} 为 {1}层宿舍管理员\n").format(
-            identity.of(character_id).name, layer
-        )
-        info_draw.draw()
+        """调用管理员服务完成指定楼层任命并绘制结果提示。"""
+        self._show(managers.appoint(layer, character_id))
 
     def _remove_manager_for_layer(self, layer: int) -> None:
-        """
-        撤换指定层管理员
-        输入类型: layer(int)
-        输出类型: 无
-        功能: 清空层管理员并将原管理员岗位重置为无
-        """
-        manager_id = dormitory.managers().get(layer, 0)
-        info_draw: draw.WaitDraw | draw.NormalDraw
-        if not manager_id:
-            info_draw = draw.WaitDraw()
-            info_draw.width = self.width
-            info_draw.text = _("\n○该层当前没有已任命管理员\n")
-            info_draw.draw()
-            return
-
-        # 仅撤掉该层归属，不立即撤掉岗位，便于后续快速改派到其他楼层。
-        dormitory.set_manager(layer, 0)
-        self._restore_manager_dormitory(manager_id)
-        basement.update_work_people()
-        # 重置玩家的该楼层钥匙
-        key_item_id = 300 + layer
-        if inventory.items(0)[key_item_id] > 0:
-            inventory.set_item(0, key_item_id, 0)
-            info_draw = draw.NormalDraw()
-            info_draw.width = self.width
-            info_draw.text = _(
-                "\n○{0}的{1}层管理员任命已被撤销，博士持有的该层钥匙已被收回\n"
-            ).format(identity.of(manager_id).name, layer)
-            info_draw.draw()
-
-        info_draw = draw.WaitDraw()
-        info_draw.width = self.width
-        info_draw.text = _("\n○已撤换 {0}层宿舍管理员\n").format(layer)
-        info_draw.draw()
-
-    def _reset_unassigned_dormitory_manager_work_type(self) -> int:
-        """
-        离开面板时清理未分配楼层的宿舍管理员岗位
-        输入类型: 无
-        输出类型: int
-        功能: 若干员工作岗位为宿舍管理员但未被分配到任何楼层，则将其岗位重置为无
-        """
-        assigned_manager_ids = set(dormitory.managers().values())
-        assigned_manager_ids.discard(0)
-
-        reset_count = 0
-        for character_id in roster.active():
-            if character_id == 0:
-                continue
-            character_data = identity.get(character_id)
-            if character_data is None:
-                continue
-            if chara_life.work_type(character_data.cid) != 31:
-                continue
-            if character_id in assigned_manager_ids:
-                continue
-            chara_life.work_type.set(character_data.cid, 0)
-            reset_count += 1
-
-        if reset_count > 0:
-            basement.update_work_people()
-        return reset_count
-
-    def _get_temp_blank_character_ids(self) -> list[int]:
-        """
-        获取并清洗临时空白位干员列表
-        输入类型: 无
-        输出类型: List[int]
-        功能: 确保列表存在，去重并移除无效角色id
-        """
-        temp_blank_list = self.temp_blank_character_ids
-
-        valid_ids = []
-        for character_id in temp_blank_list:
-            if identity.exists(character_id) and character_id not in valid_ids:
-                valid_ids.append(character_id)
-        self.temp_blank_character_ids = valid_ids
-        return self.temp_blank_character_ids
-
-    def _remove_from_temp_blank(self, character_id: int) -> None:
-        """
-        将角色从临时空白位列表移除
-        输入类型: character_id(int)
-        输出类型: 无
-        功能: 当角色被分配到宿舍后，从临时空白位列表删除
-        """
-        temp_blank_list = self._get_temp_blank_character_ids()
-        if character_id in temp_blank_list:
-            temp_blank_list.remove(character_id)
+        """调用管理员服务撤换指定楼层管理员并绘制结果提示。"""
+        self._show(managers.dismiss(layer))
 
     def _is_character_dormitory_page_locked(self) -> bool:
-        """
-        判断当前是否处于临时空白位锁定状态
-        输入类型: 无
-        输出类型: bool
-        功能: 当处于管理干员所属宿舍页且临时空白位不为空时，锁定离开行为
-        """
+        """判断当前是否处于临时空白位未安置时的页面锁定状态。"""
         return (
             self.now_panel == _("管理干员所属宿舍")
-            and len(self._get_temp_blank_character_ids()) > 0
+            and len(self.temp_blank.current()) > 0
         )
 
     def _draw_temp_blank_lock_hint(self) -> None:
-        """
-        绘制临时空白位锁定提示
-        输入类型: 无
-        输出类型: 无
-        功能: 提示用户先清空临时空白位后再切换页面或返回
-        """
-        temp_count = len(self._get_temp_blank_character_ids())
-        info_draw = draw.WaitDraw()
-        info_draw.width = self.width
-        info_draw.text = _(
-            "\n○当前有{0}名干员处于临时空白位，请先完成安置后再切换页面或返回\n"
-        ).format(temp_count)
-        info_draw.draw()
-
-    def _get_open_rooms_by_layer(self) -> dict[int, list[tuple[str, str]]]:
-        """
-        统计已开放宿舍房间
-        输入类型: 无
-        输出类型: Dict[int, List[Tuple[str,str]]]
-        功能: 返回已开放房间，key=层号，value=[(房间名, 场景路径)]
-        """
-        return common.get_open_dormitory_rooms_by_layer()
-
-    def _get_room_occupancy(self) -> dict[str, int]:
-        """
-        统计宿舍占用人数
-        输入类型: 无
-        输出类型: Dict[str,int]
-        功能: 统计每个宿舍路径当前住了几名干员
-        """
-        occupancy: dict[str, int] = {}
-        # 统一使用通用函数获取需要纳入统计的角色id集合（拥有干员 + 异常7离岛角色）
-        for character_id in common.get_dormitory_resident_id_set():
-            dormitory_path = chara_life.dormitory(character_id)
-            if dormitory_path:
-                occupancy[dormitory_path] = occupancy.get(dormitory_path, 0) + 1
-        return dict(occupancy)
-
-    def _get_room_capacity(
-        self, room_path: str, occupancy: dict[str, int] | None = None
-    ) -> int:
-        """
-        获取宿舍房间容量
-        输入类型: room_path(str), occupancy(Dict[str,int])
-        输出类型: int
-        功能: 默认容量为2人；若当前实际入住人数超过2，则以实际人数作为该房间容量
-        """
-        if occupancy is None:
-            occupancy = self._get_room_occupancy()
-        return max(2, int(occupancy.get(room_path, 0)))
-
-    def _get_manager_room_path_by_layer(self, layer: int) -> str:
-        """
-        获取指定层的舍管房路径
-        输入类型: layer(int)
-        输出类型: str
-        功能: 从 Dormitory_Manager_Room 列表中匹配对应层级的舍管房路径，未匹配则返回空字符串
-        """
-        office_candidates = constant.place_data.get(
-            "Dormitory_Manager_Room", []
+        """绘制临时空白位未清空时的锁定等待提示。"""
+        self._wait(
+            _(
+                "\n○当前有{0}名干员处于临时空白位，请先完成安置后再切换页面或返回\n"
+            ).format(len(self.temp_blank.current()))
         )
-        for office_path in office_candidates:
-            match = re.search(r"[\\/](\d)区[\\/]", office_path)
-            if match and int(match.group(1)) == layer:
-                return office_path
-        return ""
-
-    def _is_manager_room_path(self, dormitory_path: str) -> bool:
-        """
-        判断路径是否为舍管房
-        输入类型: dormitory_path(str)
-        输出类型: bool
-        功能: 通过场景标签与地点表双重判断是否属于 Dormitory_Manager_Room
-        """
-        if dormitory_path == "":
-            return False
-        if dormitory_path in constant.place_data.get(
-            "Dormitory_Manager_Room", []
-        ):
-            return True
-        if dormitory_path in constant.scene_data:
-            return (
-                "Dormitory_Manager_Room"
-                in constant.scene_data[dormitory_path].scene_tag
-            )
-        return False
-
-    def _move_manager_to_layer_room(
-        self, layer: int, character_id: int
-    ) -> None:
-        """
-        将宿舍管理员迁入对应层舍管房
-        输入类型: layer(int), character_id(int)
-        输出类型: 无
-        功能: 任命后记录原宿舍并将当前宿舍切换到目标层舍管房
-        """
-        manager_room_path = self._get_manager_room_path_by_layer(layer)
-        if manager_room_path == "":
-            return
-
-        common.register_permanent_dormitory(character_id)
-        chara_life.dormitory.set(character_id, manager_room_path)
-
-        character_position = activity.position(character_id)
-        target_scene = map_handle.get_map_system_path_for_str(manager_room_path)
-        if target_scene:
-            map_handle.character_move_scene(
-                character_position, target_scene, character_id
-            )
-
-    def _restore_manager_dormitory(self, character_id: int) -> None:
-        """
-        将被撤销任命的宿舍管理员恢复原宿舍
-        输入类型: character_id(int)
-        输出类型: 无
-        功能: 若角色当前住在舍管房，则按恢复规则重新分配宿舍，并将其移动到落点房间
-        """
-        if not self._is_manager_room_path(chara_life.dormitory(character_id)):
-            return
-        restore_path = common.restore_character_dormitory(character_id)
-        target_scene = map_handle.get_map_system_path_for_str(restore_path)
-        map_handle.character_move_scene(
-            activity.position(character_id), target_scene, character_id
-        )
-
-    def _get_dormitory_name(self, dormitory_path: str) -> str:
-        """
-        获取宿舍显示名
-        输入类型: dormitory_path(str)
-        输出类型: str
-        功能: 将宿舍路径转换为可读中文场景名
-        """
-        if dormitory_path == "":
-            return _("暂无")
-        if dormitory_path not in constant.scene_data:
-            return dormitory_path.split(os.sep)[-1]
-        return constant.scene_data[dormitory_path].scene_name
