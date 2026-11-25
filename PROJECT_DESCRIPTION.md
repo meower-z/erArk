@@ -653,7 +653,7 @@ Script/
 | 外勤委托 | `System/Field_Commission_System/*`, `Modules/domains/commission.py` | `Commission.csv` |
 | 招募 | `UI/Panel/recruit_panel.py`, `Modules/gameplay_resolution/recruit_service.py`, `Modules/domains/recruit.py` | `Recruitment_Strategy.csv` |
 | 邀请访客 | `UI/Panel/invite_visitor_panel.py`, `Modules/domains/visitor.py` | 访客设施 |
-| 势力外交 | `UI/Panel/nation_diplomacy_panel.py`, `Modules/domains/diplomacy.py` | `Nation.csv`, `Diplomatic_Policy.csv` |
+| 势力外交 | `UI/Panel/nation_diplomacy_panel.py`, `Modules/gameplay_resolution/nation_diplomacy_service.py`, `Modules/domains/diplomacy.py` | `Nation.csv`, `Diplomatic_Policy.csv` |
 | 助理 | `UI/Panel/assistant_panel.py` | `AssistantServices.csv` |
 | 全干员位置/召集 | `UI/Panel/all_npc_position_panel.py` | 角色位置 |
 

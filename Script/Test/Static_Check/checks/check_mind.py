@@ -187,10 +187,9 @@ def check_time_stop_npc_unconscious() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]
     功能:
-        校验时停开启时全体已登场干员的unconscious_h均为3；漏掉的干员会被AI与指令前提当作可正常交互对象。
-        已知合法例外——时停中角色上线：handle_chara_on_line整体重建sp_flag(unconscious_h归0)，
-        8个调用点里nation_diplomacy_panel.py/navigation_panel.py/character_handle.py没有补写3，
-        故聚合上报并标为warning，不逐角色刷屏
+        校验时停开启时全体已登场干员的unconscious_h均为3，漏掉的干员会被AI与指令前提当作可正常交互对象。
+        已知合法例外为时停中上线（chara_on_line重建sp_flag使unconscious_h归0），8个调用点中以下3处未补写3：
+        nation_diplomacy_service.assign_diplomat、navigation_service.judge_arrive与character_handle.py，故报warning。
     """
     if not modes.time_stop():
         return []
@@ -218,7 +217,8 @@ def check_time_stop_npc_unconscious() -> list[CheckFailure]:
             "MIND-02",
             "时停开启时已登场干员处于时停无意识",
             f"[warning] 时停开启但共{len(hits)}名已登场干员unconscious_h≠3(已知合法例外:时停中上线未补写3，"
-            f"见外交/导航面板调用点): {sample}{' ...' if len(hits) > 5 else ''}",
+            "见nation_diplomacy_service.assign_diplomat/navigation_service.judge_arrive调用点"
+            f"): {sample}{' ...' if len(hits) > 5 else ''}",
             [h[0] for h in hits],
         )
     ]
