@@ -191,7 +191,6 @@
   "Script/UI/Panel/mod_panel.py": 16,
   "Script/UI/Panel/navigation_panel.py": 29,
   "Script/UI/Panel/new_round.py": 85,
-  "Script/UI/Panel/physical_check_and_manage.py": 146,
   "Script/UI/Panel/play_gomoku_panel.py": 157,
   "Script/UI/Panel/read_book_panel.py": 3,
   "Script/UI/Panel/see_character_info_panel.py": 80,
