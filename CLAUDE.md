@@ -54,7 +54,7 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
   - **`Script/Design/handle_premise/`** - The premise (condition) system is a package, split by topic into ~20 modules (`handle_premise_H.py`, `handle_premise_place.py`, `handle_premise_ability.py`, `handle_premise_talent.py`, ...) with the main entry in `__init__.py`
 - **`Script/Settle`** - Settlement modules: `default.py`, `common_default.py` (universal settlement), `Second_effect.py` (second-stage effects), `default_cloth.py`, `item_effect.py`, `realtime_settle.py`, `past_day_settle.py`, `sleep_settle.py`
 - **`Script/StateMachine`** - Atomic NPC behavior modules (`default.py`, e.g. movement), executed via `Script/Design/handle_state_machine.py`
-- **`Script/System`** - Self-contained subsystems, with some directories carrying their own design docs (`.md`): `Cooking_System`, `Dormitory_System`, `Education_System` (schooling & child-raising: timetables, classes, growth), `Field_Commission_System`, `First_Record_System` (sexual first-experience record system & panel), `Instruct_System` (instruction panel & categories), `Item_System`, `Medical_System`, `Official_Event_System` (official-duty events), `Pregnancy_System`, `Sex_System`
+- **`Script/System`** - Self-contained subsystems: `Cooking_System`, `Dormitory_System`, `Education_System` (schooling & child-raising: timetables, classes, growth), `Field_Commission_System`, `First_Record_System` (sexual first-experience record system & panel), `Instruct_System` (instruction panel & categories), `Item_System`, `Medical_System`, `Official_Event_System` (official-duty events), `Pregnancy_System`, `Sex_System`
 - **`Script/UI`** - `Flow` (title/creator/normal flows), `Moudle` (draw/panel primitives), `Panel` (60+ feature panels)
 
 ### Key Systems
@@ -241,7 +241,7 @@ The game uses Tkinter for GUI rendering:
 
 ## Data Processing Workflow Documentation
 
-The `docs/数据处理工作流` directory contains 63 detailed documentation files (62 system/workflow docs plus a README). These documents explain the relationships between different systems and code components. When working on related features, refer to these documents for understanding system interconnections, dependencies, and data flow. Additionally, some `Script/System/*` subsystem directories carry their own design docs.
+The `docs/数据处理工作流` directory contains 63 detailed documentation files (62 system/workflow docs plus a README). These documents explain the relationships between different systems and code components. When working on related features, refer to these documents for understanding system interconnections, dependencies, and data flow.
 
 ### 🏗️ Core System Architecture Documents
 - **[角色行为系统](docs/数据处理工作流/角色行为系统.md)** - Core behavior loop, time management, status changes
@@ -309,7 +309,6 @@ The `docs/数据处理工作流` directory contains 63 detailed documentation fi
 - **[载具管理系统](docs/数据处理工作流/载具管理系统.md)** - Vehicle management
 - **[读书系统](docs/数据处理工作流/读书系统.md)** - Reading and learning functionality
 - **[身体检查与管理系统](docs/数据处理工作流/身体检查与管理系统.md)** - Body examination and health management
-- **[宿舍管理系统](Script/System/Dormitory_System/宿舍管理系统设计文档.md)** - Dormitory management (doc inside subsystem dir)
 
 ### 🛍️ Items & Equipment Systems
 - **[道具背包系统](docs/数据处理工作流/道具背包系统.md)** - Item inventory management
