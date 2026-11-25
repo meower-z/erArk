@@ -7,9 +7,8 @@ erArk游戏的AI文本生成系统是一个完整的AI集成解决方案，支�
 ## 核心组件架构
 
 ### 1. 主控制模块
-- **文件位置**: `Script/UI/Panel/chat_ai_setting.py`
-- **核心类**: `Chat_Ai_Setting_Panel`
-- **功能**: 提供完整的AI设置界面，包括免责声明、配置选项、API密钥管理、测试功能等
+- **界面面板**: `Script/UI/Panel/chat_ai_setting.py`（核心类 `Chat_Ai_Setting_Panel`），负责AI设置界面的免责声明、选项展示、输入交互与按钮绘制
+- **无界面服务**: `Script/Modules/gameplay_resolution/chat_ai_setting_service.py`，负责设置项读写规则、发送数据开关、API密钥文件存取与模型连通测试
 
 ### 2. AI处理引擎
 - **文件位置**: `Script/Design/handle_chat_ai.py`

@@ -2,19 +2,12 @@
 文本生成AI的设置面板
 """
 
-from __future__ import annotations
-
 from types import FunctionType
 from Script.Core import get_text, flow_handle
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
+from Script.Modules.gameplay_resolution import chat_ai_setting_service as svc
 from Script.Modules.save_load import settings
-import openai
-from google import genai
-import concurrent.futures
-import os
-import csv
-from typing import Any
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -24,31 +17,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-DEFAULT_ON = frozenset({7, 12, 14})
-""" 默认为1的设置id，其余默认为0 """
-
-
-def setting_of(cid: int) -> Any:
-    """
-    文本生成AI的一项设置，没有登记时为默认值
-    Keyword arguments:
-    cid -- 设置id
-    Return arguments:
-    Any -- 设置的值
-    """
-    return normal_config.ai_setting.ai_chat_setting.get(
-        cid, int(cid in DEFAULT_ON)
-    )
-
-
-def fill_defaults() -> None:
-    """把没有登记的设置都写成默认值（改设置时调用，之后其他地方可以直接按id读）"""
-    for cid in game_config.config_ai_chat_setting:
-        normal_config.ai_setting.ai_chat_setting.setdefault(
-            cid, int(cid in DEFAULT_ON)
-        )
 
 
 class Chat_Ai_Setting_Panel:
@@ -69,19 +37,33 @@ class Chat_Ai_Setting_Panel:
         self.error_message = ""
         """ 错误信息 """
 
-    def draw(self) -> None:
-        """绘制对象"""
+    def say(self, text: str) -> None:
+        """按面板宽度绘制普通文本。"""
+        now_draw = draw.NormalDraw()
+        now_draw.text = text
+        now_draw.width = self.width
+        now_draw.draw()
 
-        title_text = _("文本生成AI设置")
-        title_draw = draw.TitleLineDraw(title_text, self.width)
-        if setting_of(1) == 0:
-            while 1:
-                return_list = []
-                title_draw.draw()
+    def rule(self) -> None:
+        """绘制上下带换行的横向分隔线。"""
+        line_feed.draw()
+        line_draw = draw.LineDraw("-", self.width)
+        line_draw.draw()
+        line_feed.draw()
 
-                # 输出提示信息
-                now_draw = draw.NormalDraw()
-                info_text = _(
+    def ask(self, text: str, input_max: int) -> str:
+        """弹出单条输入面板并返回玩家输入文本。"""
+        ask_panel = panel.AskForOneMessage()
+        ask_panel.set(text, input_max)
+        return ask_panel.draw()
+
+    def confirm_disclaimer(self, title_draw: draw.TitleLineDraw) -> bool:
+        """绘制免责声明并循环等待玩家选择返回或下一步。"""
+        while 1:
+            return_list = []
+            title_draw.draw()
+            self.say(
+                _(
                     " \n ○文本生成AI是一个试验性的功能，存在相当多的风险，所以需要您确认以下所有免责事项才可以使用\n\n"
                     "\n 1.该功能需要您自行准备好OpenAI/Gemini的API密钥，并保证电脑的网络环境可以正常访问该API，"
                     "本游戏不会为您提供相关的获取方法，请自行准备\n\n\n   2.文本生成AI以及网络环境的使用会产生一定的费"
@@ -93,42 +75,40 @@ class Chat_Ai_Setting_Panel:
                     "且在版本更新中声明内容可能有所变更，请以最新版本为准。\n\n\n 6.基于以上又叠了这么多层buff，"
                     "明确知道自己在做什么，并且愿意承担费用和风险的人再来点击下一步吧\n\n\n"
                 )
-                now_draw.text = info_text
-                now_draw.width = self.width
-                now_draw.draw()
+            )
+            no_draw = draw.LeftButton(
+                _("[0]我不太确定，再考虑一下"), _("返回"), self.width
+            )
+            no_draw.draw()
+            return_list.append(no_draw.return_text)
+            line_feed.draw()
+            line_feed.draw()
+            yes_draw = draw.LeftButton(
+                _(
+                    "[1]我已阅读并同意以上所有免责事项，理解并愿意承担对应的费用和风险"
+                ),
+                _("下一步"),
+                self.width,
+            )
+            yes_draw.draw()
+            return_list.append(yes_draw.return_text)
+            line_feed.draw()
+            yrn = flow_handle.askfor_all(return_list)
+            if yrn == no_draw.return_text:
+                return False
+            elif yrn == yes_draw.return_text:
+                return True
 
-                no_draw = draw.LeftButton(
-                    _("[0]我不太确定，再考虑一下"), _("返回"), self.width
-                )
-                no_draw.draw()
-                return_list.append(no_draw.return_text)
-                line_feed.draw()
-                line_feed.draw()
-
-                yes_draw = draw.LeftButton(
-                    _(
-                        "[1]我已阅读并同意以上所有免责事项，理解并愿意承担对应的费用和风险"
-                    ),
-                    _("下一步"),
-                    self.width,
-                )
-                yes_draw.draw()
-                return_list.append(yes_draw.return_text)
-                line_feed.draw()
-
-                yrn = flow_handle.askfor_all(return_list)
-                if yrn == no_draw.return_text:
-                    return
-                elif yrn == yes_draw.return_text:
-                    break
-
+    def draw(self) -> None:
+        """绘制对象"""
+        title_text = _("文本生成AI设置")
+        title_draw = draw.TitleLineDraw(title_text, self.width)
+        if svc.setting_of(1) == 0 and not self.confirm_disclaimer(title_draw):
+            return
         while 1:
             return_list = []
             line_feed.draw()
             title_draw.draw()
-
-            # 输出提示信息
-            now_draw = draw.NormalDraw()
             info_text = _(
                 " \n ○点击[选项标题]显示[选项介绍]，点击[选项本身]即可[改变该选项]\n"
             )
@@ -143,241 +123,43 @@ class Chat_Ai_Setting_Panel:
                 "   如需对模型进行破甲/破限/越狱，同样也是将相关内容添加到上述系统提示词文件中\n"
             )
             info_text += _(
-                "   包含调用、输送数据在内的完整代码，见游戏源码文件路径 Script/UI/Panel/chat_ai_setting.py ，"
+                "   相关源码文件路径如下。"
+                "Script/UI/Panel/chat_ai_setting.py 负责设置界面绘制与输入。"
+                "Script/Modules/gameplay_resolution/chat_ai_setting_service.py"
+                " 负责设置规则、发送数据选项、API密钥存取（ai_chat_api_key.csv）、客户端构造与模型测试。"
+                "Script/Design/handle_chat_ai.py 负责游玩时按所选发送数据构造提示词并调用模型。"
                 "可以根据自己的需要进行调整，调整后需自行打包\n"
             )
-            now_draw.text = info_text
-            now_draw.width = self.width
-            now_draw.draw()
-
-            # 遍历全部设置
-            for cid in game_config.config_ai_chat_setting:
-                # 如果当前不是第1个设置，且第1个设置没有开启，则不显示后面的设置
-                if cid != 1 and setting_of(1) == 0:
-                    break
+            self.say(info_text)
+            for row in svc.setting_rows():
                 line_feed.draw()
-                ai_chat_setting_data = game_config.config_ai_chat_setting[cid]
-                # 选项名
-                button_text = f"  [{ai_chat_setting_data.name}]： "
-                button_len = max(len(button_text) * 2, 60)
-                button_draw: draw.CenterButton = draw.LeftButton(
+                button_text = f"  [{row.name}]： "
+                button_draw = draw.LeftButton(
                     button_text,
                     button_text,
-                    button_len,
+                    max(len(button_text) * 2, 60),
                     cmd_func=self.draw_info,
-                    args=(cid),
+                    args=(row.cid),
                 )
                 button_draw.draw()
                 return_list.append(button_draw.return_text)
-
-                now_setting_flag = setting_of(cid)  # 当前设置的值
-                option_len = len(
-                    game_config.config_ai_chat_setting_option[cid]
-                )  # 选项的长度
-
-                # 当前选择的选项的名字
-                # 自定义模型的名字
-                if cid == 5:
-                    button_text = f" [{setting_of(cid)}] "
-                # 自定义发送的数据
-                elif cid == 6:
-                    button_text = _(" [调整发送的数据] ")
-                # 自定义base_url
-                elif cid == 10 and setting_of(cid) == 1:
-                    button_text = (
-                        f" [{game_config.config_ai_chat_setting_option[cid][now_setting_flag]}] "
-                        + normal_config.ai_setting.now_ai_chat_base_url
-                    )
-                # 自定义代理
-                elif cid == 11 and setting_of(cid) == 1:
-                    button_text = (
-                        f" [{game_config.config_ai_chat_setting_option[cid][now_setting_flag]}] "
-                        + "ip："
-                        + normal_config.ai_setting.now_ai_chat_proxy[0]
-                    )
-                    if len(normal_config.ai_setting.now_ai_chat_proxy[1]) > 0:
-                        button_text += (
-                            " port："
-                            + normal_config.ai_setting.now_ai_chat_proxy[1]
-                        )
-                else:
-                    button_text = f" [{game_config.config_ai_chat_setting_option[cid][now_setting_flag]}] "
-                button_len = max(len(button_text) * 2, 20)
-
-                # 绘制选项
                 button_draw = draw.LeftButton(
-                    button_text,
-                    str(cid) + button_text,
-                    button_len,
+                    row.value,
+                    str(row.cid) + row.value,
+                    max(len(row.value) * 2, 20),
                     cmd_func=self.change_setting,
-                    args=(cid, option_len),
+                    args=(row.cid, row.option_len),
                 )
                 button_draw.draw()
                 return_list.append(button_draw.return_text)
-
-            # 非中文语言下，显示翻译选项
             if normal_config.config_normal.language != "zh_CN":
-                line_feed.draw()
-                # 选项名
-                button_text = _("  [语言翻译]： ")
-                button_len = max(len(button_text) * 2, 60)
-                button_draw = draw.LeftButton(
-                    button_text,
-                    button_text,
-                    button_len,
-                    cmd_func=self.draw_info,
-                    args=(31),
-                )
-                button_draw.draw()
-                return_list.append(button_draw.return_text)
-                # 绘制选项
-                if normal_config.ai_setting.ai_chat_translator_setting == 0:
-                    button_text = _(" [未开启] ")
-                elif normal_config.ai_setting.ai_chat_translator_setting == 1:
-                    button_text = _(" [仅翻译地文] ")
-                elif normal_config.ai_setting.ai_chat_translator_setting == 2:
-                    button_text = _(" [翻译地文和口上] ")
-                button_draw = draw.LeftButton(
-                    button_text,
-                    "translator" + button_text,
-                    button_len,
-                    cmd_func=self.change_translator,
-                )
-                button_draw.draw()
-                return_list.append(button_draw.return_text)
-
-            # api密钥
-            if setting_of(1) == 1:
+                self.draw_translator(return_list)
+            if svc.setting_of(1) == 1:
                 line_feed.draw()
                 line_feed.draw()
-
-                # 查看当前目录下是否有api密钥文件
-                try:
-                    with open("ai_chat_api_key.csv", encoding="utf-8") as f:
-                        reader = csv.reader(f)
-                        for row in reader:
-                            if row[0] == "OPENAI_API_KEY":
-                                api_key = row[1]
-                                normal_config.ai_setting.ai_chat_api_key[
-                                    "OPENAI_API_KEY"
-                                ] = api_key
-                            elif row[0] == "GEMINI_API_KEY":
-                                api_key = row[1]
-                                normal_config.ai_setting.ai_chat_api_key[
-                                    "GEMINI_API_KEY"
-                                ] = api_key
-                            elif row[0] == "DEEPSEEK_API_KEY":
-                                api_key = row[1]
-                                normal_config.ai_setting.ai_chat_api_key[
-                                    "DEEPSEEK_API_KEY"
-                                ] = api_key
-                except FileNotFoundError:
-                    pass
-                # 显示当前api的密钥
-                OPENAI_API_KEY = normal_config.ai_setting.ai_chat_api_key.get(
-                    "OPENAI_API_KEY", ""
-                )
-                if OPENAI_API_KEY == "":
-                    OPENAI_API_KEY = _("未设置")
-                else:
-                    OPENAI_API_KEY = _("已设置")
-                key_info_text = _("  OpenAI API密钥： {0}\n").format(
-                    OPENAI_API_KEY
-                )
-                GEMINI_API_KEY = normal_config.ai_setting.ai_chat_api_key.get(
-                    "GEMINI_API_KEY", ""
-                )
-                if GEMINI_API_KEY == "":
-                    GEMINI_API_KEY = _("未设置")
-                else:
-                    GEMINI_API_KEY = _("已设置")
-                key_info_text += _("  Gemini API密钥： {0}\n").format(
-                    GEMINI_API_KEY
-                )
-                DEEPSEEK_API_KEY = normal_config.ai_setting.ai_chat_api_key.get(
-                    "DEEPSEEK_API_KEY", ""
-                )
-                if DEEPSEEK_API_KEY == "":
-                    DEEPSEEK_API_KEY = _("未设置")
-                else:
-                    DEEPSEEK_API_KEY = _("已设置")
-                key_info_text += _("  DeepSeek API密钥： {0}\n").format(
-                    DEEPSEEK_API_KEY
-                )
-                key_info_draw = draw.NormalDraw()
-                key_info_draw.text = key_info_text
-                key_info_draw.width = self.width
-                key_info_draw.draw()
-
-                # 更改api密钥
-                button_text = _("  [更改OpenAI API密钥] ")
-                button_len = max(len(button_text) * 2, 20)
-                button_draw = draw.CenterButton(
-                    button_text,
-                    _("更改OpenAI API密钥"),
-                    button_len,
-                    cmd_func=self.change_api_key,
-                    args=("OPENAI_API_KEY"),
-                )
-                button_draw.draw()
-                return_list.append(button_draw.return_text)
-                button_text = _("  [更改Gemini API密钥] ")
-                button_len = max(len(button_text) * 2, 20)
-                button_draw = draw.CenterButton(
-                    button_text,
-                    _("更改Gemini API密钥"),
-                    button_len,
-                    cmd_func=self.change_api_key,
-                    args=("GEMINI_API_KEY"),
-                )
-                button_draw.draw()
-                return_list.append(button_draw.return_text)
-                button_text = _("  [更改DeepSeek API密钥] ")
-                button_len = max(len(button_text) * 2, 20)
-                button_draw = draw.CenterButton(
-                    button_text,
-                    _("更改DeepSeek API密钥"),
-                    button_len,
-                    cmd_func=self.change_api_key,
-                    args=("DEEPSEEK_API_KEY"),
-                )
-                button_draw.draw()
-                return_list.append(button_draw.return_text)
-
-            # 测试按钮
-            if setting_of(1) == 1:
-                line_feed.draw()
-                line_feed.draw()
-                button_text = _("  [测试](最大延迟上限10秒) ")
-                button_len = max(len(button_text) * 2, 20)
-                button_draw = draw.CenterButton(
-                    button_text, _("测试"), button_len, cmd_func=self.test_ai
-                )
-                button_draw.draw()
-                return_list.append(button_draw.return_text)
-                if self.test_flag == 0:
-                    pass
-                elif self.test_flag == 1:
-                    info_text = (
-                        _(" \n  测试通过，当前调用的模型为：")
-                        + setting_of(5)
-                        + "\n"
-                    )
-                    info_draw = draw.NormalDraw()
-                    info_draw.text = info_text
-                    info_draw.width = self.width
-                    info_draw.draw()
-                elif self.test_flag == 2:
-                    info_text = (
-                        _(" \n  测试不通过，错误信息为：\n  ")
-                        + self.error_message
-                        + "\n"
-                    )
-                    info_draw = draw.NormalDraw()
-                    info_draw.text = info_text
-                    info_draw.width = self.width
-                    info_draw.draw()
-
+                svc.load_api_keys()
+                self.draw_keys(return_list)
+                self.draw_test(return_list)
             line_feed.draw()
             line_feed.draw()
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
@@ -389,12 +171,101 @@ class Chat_Ai_Setting_Panel:
                 settings.save()
                 break
 
+    def draw_translator(self, return_list: list[str]) -> None:
+        """绘制语言翻译说明与状态切换按钮并登记返回值。"""
+        line_feed.draw()
+        button_text = _("  [语言翻译]： ")
+        button_len = max(len(button_text) * 2, 60)
+        button_draw = draw.LeftButton(
+            button_text,
+            button_text,
+            button_len,
+            cmd_func=self.draw_info,
+            args=(31),
+        )
+        button_draw.draw()
+        return_list.append(button_draw.return_text)
+        label = svc.translator_label()
+        if label is not None:
+            button_text = label
+        button_draw = draw.LeftButton(
+            button_text,
+            "translator" + button_text,
+            button_len,
+            cmd_func=svc.next_translator,
+        )
+        button_draw.draw()
+        return_list.append(button_draw.return_text)
+
+    def draw_keys(self, return_list: list[str]) -> None:
+        """绘制三类API密钥设置状态及对应更改按钮。"""
+        key_info_text = ""
+        for key_type, line_text in (
+            ("OPENAI_API_KEY", _("  OpenAI API密钥： {0}\n")),
+            ("GEMINI_API_KEY", _("  Gemini API密钥： {0}\n")),
+            ("DEEPSEEK_API_KEY", _("  DeepSeek API密钥： {0}\n")),
+        ):
+            state = _("已设置") if svc.key_filled(key_type) else _("未设置")
+            key_info_text += line_text.format(state)
+        self.say(key_info_text)
+        for key_type, button_text, return_text in (
+            (
+                "OPENAI_API_KEY",
+                _("  [更改OpenAI API密钥] "),
+                _("更改OpenAI API密钥"),
+            ),
+            (
+                "GEMINI_API_KEY",
+                _("  [更改Gemini API密钥] "),
+                _("更改Gemini API密钥"),
+            ),
+            (
+                "DEEPSEEK_API_KEY",
+                _("  [更改DeepSeek API密钥] "),
+                _("更改DeepSeek API密钥"),
+            ),
+        ):
+            button_draw = draw.CenterButton(
+                button_text,
+                return_text,
+                max(len(button_text) * 2, 20),
+                cmd_func=self.change_api_key,
+                args=(key_type),
+            )
+            button_draw.draw()
+            return_list.append(button_draw.return_text)
+
+    def draw_test(self, return_list: list[str]) -> None:
+        """绘制模型测试按钮及最近一次测试结果文本。"""
+        line_feed.draw()
+        line_feed.draw()
+        button_text = _("  [测试](最大延迟上限10秒) ")
+        button_draw = draw.CenterButton(
+            button_text,
+            _("测试"),
+            max(len(button_text) * 2, 20),
+            cmd_func=self.test_ai,
+        )
+        button_draw.draw()
+        return_list.append(button_draw.return_text)
+        if self.test_flag == 1:
+            self.say(
+                _(" \n  测试通过，当前调用的模型为：")
+                + svc.setting_of(5)
+                + "\n"
+            )
+        elif self.test_flag == 2:
+            self.say(
+                _(" \n  测试不通过，错误信息为：\n  ")
+                + self.error_message
+                + "\n"
+            )
+
     def draw_info(self, cid: int) -> None:
         """绘制选项介绍信息"""
         line = draw.LineDraw("-", self.width)
         line.draw()
         now_draw = draw.WaitDraw()
-        # 常规选项
         if cid <= 30:
             info_text = f"\n {game_config.config_ai_chat_setting[cid].info}\n"
         else:
@@ -410,13 +281,9 @@ class Chat_Ai_Setting_Panel:
 
     def change_setting(self, cid: int, option_len: int) -> None:
         """修改设置"""
-        fill_defaults()
-        # 自定义模型的名字
+        svc.fill_defaults()
         if cid == 5:
-            line_feed.draw()
-            line_draw = draw.LineDraw("-", self.width)
-            line_draw.draw()
-            line_feed.draw()
+            self.rule()
             ask_text = _("请输入您要使用的模型名（不含引号、逗号或空格）：\n")
             ask_text += _(
                 "  *此处使用的模型会默认使用官方api地址，如果是第三方或本地部署，请更改[base_url]\n"
@@ -434,36 +301,16 @@ class Chat_Ai_Setting_Panel:
                 "  gemini模型示例：gemini-1.5-pro, gemini-1.5-flash，gemini-2.0-flash-exp, gemini-2.5-flash, "
                 "gemini-2.5-pro\n"
             )
-            ask_panel = panel.AskForOneMessage()
-            ask_panel.set(ask_text, 99)
-            new_model = ask_panel.draw()
-            normal_config.ai_setting.ai_chat_setting[cid] = new_model
-            self.test_flag = 0  # 重置测试标志
-        # 自定义发送的数据
+            svc.set_model(self.ask(ask_text, 99))
+            self.test_flag = 0
         elif cid == 6:
             self.select_send_data()
-        # 调整生成文本数量的选项单独处理
         elif cid == 9:
-            line_feed.draw()
-            line_draw = draw.LineDraw("-", self.width)
-            line_draw.draw()
-            line_feed.draw()
-            ask_text = _("请输入1~10的数字\n")
-            ask_panel = panel.AskForOneMessage()
-            ask_panel.set(ask_text, 99)
-            new_num = int(ask_panel.draw()) - 1
-            if new_num < 0:
-                new_num = 0
-            elif new_num > 9:
-                new_num = 9
-            normal_config.ai_setting.ai_chat_setting[cid] = new_num
-        # 调整api的base_url的选项单独处理
+            self.rule()
+            svc.set_talk_count(self.ask(_("请输入1~10的数字\n"), 99))
         elif cid == 10:
-            if normal_config.ai_setting.ai_chat_setting[cid] == 0:
-                line_feed.draw()
-                line_draw = draw.LineDraw("-", self.width)
-                line_draw.draw()
-                line_feed.draw()
+            if svc.setting_of(cid) == 0:
+                self.rule()
                 ask_text = _(
                     "请输入您要使用的api的base_url（不含引号、逗号或空格）：\n"
                 )
@@ -474,71 +321,36 @@ class Chat_Ai_Setting_Panel:
                     "  在线调用示例：http://my.test.server.example.com:8083/v1\n"
                 )
                 ask_text += _("  本地调用示例：http://localhost:1234/v1\n")
-                ask_panel = panel.AskForOneMessage()
-                ask_panel.set(ask_text, 999)
-                new_base_url = ask_panel.draw()
-                # 如果最后的字符是换行符，则删去
-                if new_base_url[-1] == "\n":
-                    new_base_url = new_base_url[:-1]
-                normal_config.ai_setting.now_ai_chat_base_url = new_base_url
-                normal_config.ai_setting.ai_chat_setting[cid] = 1
+                svc.set_base_url(self.ask(ask_text, 999))
             else:
-                normal_config.ai_setting.ai_chat_setting[cid] = 0
-        # 调整api的代理的选项单独处理
+                svc.switch_off(cid)
         elif cid == 11:
-            if normal_config.ai_setting.ai_chat_setting[cid] == 0:
-                line_feed.draw()
-                line_draw = draw.LineDraw("-", self.width)
-                line_draw.draw()
-                line_feed.draw()
+            if svc.setting_of(cid) == 0:
+                self.rule()
                 ask_text = _(
                     "请输入您要使用的代理服务器配置（不含引号、逗号或空格）：\n"
                 )
                 ask_text += _(
                     "  示例：\nhttp://username:password@proxy_ip:proxy_port\nhttps://proxy_ip:proxy_port\n"
                 )
-                ask_panel = panel.AskForOneMessage()
-                ask_panel.set(ask_text, 999)
-                new_ip = ask_panel.draw()
-                # 如果最后的字符是换行符，则删去
-                if new_ip[-1] == "\n":
-                    new_ip = new_ip[:-1]
-                normal_config.ai_setting.now_ai_chat_proxy[0] = new_ip
+                svc.set_proxy_url(self.ask(ask_text, 999))
                 line_feed.draw()
                 ask_text = _(
                     "请输入您要使用的本地绑定的 IP 地址，不使用本地ip则随便输入数字后回车即可：\n"
                 )
                 ask_text += _("  示例：0.0.0.0\n")
-                ask_panel = panel.AskForOneMessage()
-                ask_panel.set(ask_text, 999)
-                new_port = ask_panel.draw()
-                # 如果最后的字符是换行符，则删去
-                if new_port[-1] == "\n":
-                    new_port = new_port[:-1]
-                # 检测输入的端口是否符合规范，需要有三个点
-                if new_port.count(".") == 3:
-                    normal_config.ai_setting.now_ai_chat_proxy[1] = new_port
-                else:
-                    normal_config.ai_setting.now_ai_chat_proxy[1] = ""
-                normal_config.ai_setting.ai_chat_setting[cid] = 1
+                svc.set_local_ip(self.ask(ask_text, 999))
             else:
-                normal_config.ai_setting.ai_chat_setting[cid] = 0
+                svc.switch_off(cid)
         else:
-            if normal_config.ai_setting.ai_chat_setting[cid] < option_len - 1:
-                normal_config.ai_setting.ai_chat_setting[cid] += 1
-            else:
-                normal_config.ai_setting.ai_chat_setting[cid] = 0
+            svc.cycle(cid, option_len)
 
     def select_send_data(self) -> None:
         """选择发送的数据"""
         while True:
-            send_data_all_flags = normal_config.ai_setting.send_data_flags
             return_list = []
             title_draw = draw.TitleLineDraw(_("选择发送给AI的数据"), self.width)
             title_draw.draw()
-
-            # 显示提示信息
-            info_draw = draw.NormalDraw()
             info_text = _(
                 " \n ○发送的数据越多，AI可以利用的信息就越多，理论效果会越好\n"
             )
@@ -549,99 +361,43 @@ class Chat_Ai_Setting_Panel:
             info_text += _(
                 "  发送数据的文件路径为：data\\csv\\Ai_Chat_Send_Data.csv，可根据需要自行修改提示词\n"
             )
-            info_draw.text = info_text
-            info_draw.width = self.width
-            info_draw.draw()
-
-            # 遍历所有数据
-            for send_data_cid in game_config.config_ai_chat_send_data:
-                ai_chat_send_data = game_config.config_ai_chat_send_data[
-                    send_data_cid
-                ]
-
-                # 跳过ID为0的表头
-                if send_data_cid == 0:
-                    continue
-
-                # 初始化不存在的数据选择状态
-                if send_data_cid not in send_data_all_flags:
-                    # 如果是默认选择的，设为True，否则设为False
-                    if ai_chat_send_data.default == 1:
-                        send_data_all_flags[send_data_cid] = True
-                    else:
-                        send_data_all_flags[send_data_cid] = False
-
-                # 如果当前cid的余数是1，则换行
-                if send_data_cid % 10 == 1:
+            self.say(info_text)
+            for row in svc.send_data_rows():
+                if row.cid % 10 == 1:
                     line_feed.draw()
-
-                # 获取数据信息
-                send_data_name = ai_chat_send_data.name
-                send_data_required = ai_chat_send_data.required
-                send_data_size = ai_chat_send_data.data_size
-
-                # 数据量显示
-                if send_data_size == 1:
-                    size_text = _("小")
-                elif send_data_size == 2:
-                    size_text = _("中")
-                elif send_data_size == 3:
-                    size_text = _("大")
-                else:
-                    size_text = _("未知")
-
-                # 构建显示文本
-                line_text = f"  {send_data_name}({size_text})  "
-                button_len = max(len(line_text) * 2, 40)
-
-                # 绘制数据名称和数据量，点击后将打印该send_data的提示信息
+                line_text = f"  {row.name}({row.size})  "
                 name_draw = draw.LeftButton(
                     line_text,
-                    send_data_name + "_prompt",
-                    button_len,
+                    row.name + "_prompt",
+                    max(len(line_text) * 2, 40),
                     cmd_func=self.print_send_data_prompt,
-                    args=(send_data_cid,),
+                    args=(row.cid,),
                 )
                 name_draw.draw()
                 return_list.append(name_draw.return_text)
-
-                # 绘制选择按钮（必选数据没有按钮）
-                if send_data_required == 1:
-                    button_text = _("【必选】")
+                if row.required:
                     required_draw = draw.LeftDraw()
-                    required_draw.text = button_text
+                    required_draw.text = _("【必选】")
                     required_draw.draw()
                 else:
-                    if send_data_all_flags[send_data_cid]:
-                        button_text = _("[√]")
-                    else:
-                        button_text = _("[×]")
                     button_draw = draw.CenterButton(
-                        button_text,
-                        send_data_name,
+                        _("[√]") if row.chosen else _("[×]"),
+                        row.name,
                         10,
-                        cmd_func=self.toggle_send_data,
-                        args=(send_data_cid),
+                        cmd_func=svc.toggle_send_data,
+                        args=(row.cid),
                     )
                     button_draw.draw()
                     return_list.append(button_draw.return_text)
-
                 line_feed.draw()
-
-            # 添加返回按钮
             line_feed.draw()
             save_draw = draw.CenterButton(
                 _("[返回]"), _("返回"), window_width // 2
             )
             save_draw.draw()
             return_list.append(save_draw.return_text)
-
             line_feed.draw()
-
-            # 等待用户选择
             yrn = flow_handle.askfor_all(return_list)
-
-            # 处理用户选择
             if yrn == save_draw.return_text:
                 break
 
@@ -658,36 +414,18 @@ class Chat_Ai_Setting_Panel:
         line_feed.draw()
         line_feed.draw()
 
-    def toggle_send_data(self, send_data_cid: int) -> None:
-        """切换数据是否被选择"""
-        normal_config.ai_setting.send_data_flags[send_data_cid] = (
-            not normal_config.ai_setting.send_data_flags[send_data_cid]
-        )
-
-    def change_translator(self) -> None:
-        """修改翻译设置"""
-        normal_config.ai_setting.ai_chat_translator_setting += 1
-        if normal_config.ai_setting.ai_chat_translator_setting > 2:
-            normal_config.ai_setting.ai_chat_translator_setting = 0
-
     def change_api_key(self, key_type: str) -> None:
         """修改api密钥"""
         while 1:
             return_list = []
             title_draw = draw.TitleLineDraw(_("更改API密钥"), self.width)
             title_draw.draw()
-
-            # 输出提示信息
-            now_draw = draw.NormalDraw()
-            info_text = _(
-                " \n ○请在下方输入您的{0}，输入完成后点击[确定]即可保存，保存后会在当前目录下创建一个文件，"
-                "请注意保管密钥文件，谨防泄露\n\n\n"
-            ).format(key_type)
-            now_draw.text = info_text
-            now_draw.width = self.width
-            now_draw.draw()
-
-            # 输入框
+            self.say(
+                _(
+                    " \n ○请在下方输入您的{0}，输入完成后点击[确定]即可保存，保存后会在当前目录下创建一个文件，"
+                    "请注意保管密钥文件，谨防泄露\n\n\n"
+                ).format(key_type)
+            )
             ask_text = {
                 "OPENAI_API_KEY": _(
                     "请输入您的OpenAI API密钥，应当是以 sk- 开头的一长段字符串（第三方或本地部署没有格式需求）\n"
@@ -699,211 +437,56 @@ class Chat_Ai_Setting_Panel:
                     "请输入您的Gemini API密钥，应当是一个长段字符串\n"
                 ),
             }[key_type]
-            ask_name_panel = panel.AskForOneMessage()
-            ask_name_panel.set(ask_text, 999)
-            API_KEY = ask_name_panel.draw()
+            api_key = self.ask(ask_text, 999)
             line_feed.draw()
             line_feed.draw()
-
-            # 检测输入的api密钥是否符合规范
-            if (
-                key_type == "OPENAI_API_KEY" or key_type == "DEEPSEEK_API_KEY"
-            ) and not API_KEY.startswith("sk-"):
-                info_text = _(
-                    " \n  输入的API密钥不符合规范，请确认是否输入正确（第三方或本地部署没有格式需求）\n\n"
+            if not svc.key_format_ok(key_type, api_key):
+                self.say(
+                    _(
+                        " \n  输入的API密钥不符合规范，请确认是否输入正确（第三方或本地部署没有格式需求）\n\n"
+                    )
                 )
-                info_draw = draw.NormalDraw()
-                info_draw.text = info_text
-                info_draw.width = self.width
-                info_draw.draw()
-
-            # 确定按钮
             yes_draw = draw.CenterButton(
                 _("[确定]"), _("确定"), int(self.width / 2)
             )
             yes_draw.draw()
             return_list.append(yes_draw.return_text)
-
-            # 返回按钮
             back_draw = draw.CenterButton(
                 _("[返回]"), _("返回"), int(self.width / 2)
             )
             back_draw.draw()
             return_list.append(back_draw.return_text)
             line_feed.draw()
-
             yrn = flow_handle.askfor_all(return_list)
             if yrn == yes_draw.return_text:
-                normal_config.ai_setting.ai_chat_api_key[key_type] = ask_text
-                self.test_flag = 0  # 重置测试标志
-                # 调用保存函数
-                self.update_or_add_key("ai_chat_api_key.csv", key_type, API_KEY)
+                self.test_flag = 0
+                svc.save_api_key(key_type, api_key)
                 break
             elif yrn == back_draw.return_text:
                 break
 
-    def update_or_add_key(
-        self, file_path: str, key_type: str, new_api_key: str
-    ) -> None:
-        """更新或添加键值对"""
-        rows = []
-        key_found = False
-
-        # 检查文件是否存在，如果不存在则创建文件
-        if not os.path.exists(file_path):
-            with open(file_path, "w", newline="", encoding="utf-8") as f:
-                pass  # 创建一个空文件
-
-        # 读取文件内容
-        with open(file_path, newline="", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            for row in reader:
-                if row[0] == key_type:
-                    row[1] = new_api_key
-                    key_found = True
-                rows.append(row)
-
-        # 如果没有找到键，则添加新的键值对
-        if not key_found:
-            rows.append([key_type, new_api_key])
-
-        # 写回文件
-        with open(file_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            writer.writerows(rows)
-
     def test_ai(self) -> None:
         """测试AI"""
-
-        # 判断在调用哪个api
-        model = normal_config.ai_setting.ai_chat_setting[5]
-        if model == 0 or model == "0":
-            info_draw: draw.NormalDraw = draw.WaitDraw()
+        found = svc.model_key()
+        if found is None:
+            info_draw = draw.WaitDraw()
             info_draw.style = "warning"
             info_draw.text = _(" \n  未设置模型，请先选择模型\n")
             info_draw.width = self.width
             info_draw.draw()
             return
-        if "gpt" in model:
-            now_key_type = "OPENAI_API_KEY"
-        elif "deepseek" in model:
-            now_key_type = "DEEPSEEK_API_KEY"
-        elif "gemini" in model:
-            now_key_type = "GEMINI_API_KEY"
-        else:
-            now_key_type = "OPENAI_API_KEY"
-            info_draw = draw.NormalDraw()
-            info_draw.text = _(
-                " \n  未识别到gpt或gemini字符，将默认为openAI格式的模型\n"
+        key_type, known = found
+        if not known:
+            self.say(
+                _(" \n  未识别到gpt或gemini字符，将默认为openAI格式的模型\n")
             )
-            info_draw.width = self.width
-            info_draw.draw()
-
-        # 判断是否设置了api密钥
-        if now_key_type not in normal_config.ai_setting.ai_chat_api_key:
-            info_draw = draw.NormalDraw()
-            info_draw.text = _(" \n  请先设置该模型的API密钥\n")
-            info_draw.width = self.width
-            info_draw.draw()
+        client = svc.make_client(key_type)
+        if client is None:
+            self.say(_(" \n  请先设置该模型的API密钥\n"))
             return
-
-        API_KEY = normal_config.ai_setting.ai_chat_api_key[now_key_type]
-
-        client: openai.OpenAI | genai.Client
-        if (
-            now_key_type == "OPENAI_API_KEY"
-            or now_key_type == "DEEPSEEK_API_KEY"
-        ):
-            client = openai.OpenAI(api_key=API_KEY)
-            # deepseek则调整base_url
-            if now_key_type == "DEEPSEEK_API_KEY":
-                client = client.with_options(
-                    base_url="https://api.deepseek.com"
-                )
-            # 自定义base_url
-            if normal_config.ai_setting.ai_chat_setting[10] == 1:
-                client = client.with_options(
-                    base_url=normal_config.ai_setting.now_ai_chat_base_url
-                )
-            # 自定义代理
-            if normal_config.ai_setting.ai_chat_setting[11] == 1:
-                client = client.with_options(
-                    http_client=openai.DefaultHttpxClient(
-                        proxy=normal_config.ai_setting.now_ai_chat_proxy[0]
-                    )
-                )
+        error = svc.ping(client, key_type, self.say)
+        if error is None:
+            self.test_flag = 1
         else:
-            # 构建http_options参数
-            api_version_val = (
-                "v1alpha"
-                if normal_config.ai_setting.ai_chat_setting[12] == 1
-                else None
-            )
-            base_url_val = (
-                normal_config.ai_setting.now_ai_chat_base_url
-                if normal_config.ai_setting.ai_chat_setting[10] == 1
-                else None
-            )
-            # 创建client
-            if api_version_val or base_url_val:
-                client = genai.Client(
-                    api_key=API_KEY,
-                    http_options=genai.types.HttpOptions(
-                        api_version=api_version_val, base_url=base_url_val
-                    ),
-                )
-            else:
-                client = genai.Client(api_key=API_KEY)
-
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-
-        # 测试AI，在10秒内如果没有返回结果，则认为测试不通过
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(self.get_completion, client, now_key_type)
-            try:
-                # 等待10秒以获取结果
-                future.result(timeout=10)
-                info_text = _(" \n  测试通过\n")
-                self.test_flag = 1
-            except concurrent.futures.TimeoutError:
-                info_text = _(" \n  测试不通过，原因：连接超时\n")
-                self.test_flag = 2
-                self.error_message = _("连接超时")
-            except Exception as e:
-                info_text = _(" \n  测试不通过，原因：{0}\n").format(e)
-                self.test_flag = 2
-                self.error_message = str(e)
-            finally:
-                info_draw.text = info_text
-                info_draw.draw()
-                # TODO 不知道为什么取消没有生效，十分奇怪
-                # 取消任务
-                future.cancel()
-                # 关闭线程池
-                executor.shutdown(wait=False, cancel_futures=True)
-
-    def get_completion(self, client: Any, key_type: str) -> Any:
-        """获取AI的返回结果"""
-        if key_type == "OPENAI_API_KEY" or key_type == "DEEPSEEK_API_KEY":
-            return client.chat.completions.create(
-                model=normal_config.ai_setting.ai_chat_setting[5],
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": "这是一条测试消息，如果收到请指直接回复1即可，不需要思考，不要回复其他内容",
-                            }
-                        ],
-                    }
-                ],
-            )
-        elif key_type == "GEMINI_API_KEY":
-            return client.models.generate_content(
-                model=normal_config.ai_setting.ai_chat_setting[5],
-                contents="这是一条测试消息，如果收到请指直接回复1即可，不需要思考，不需要回复其他内容",
-            )
-        else:
-            raise ValueError(_("不支持的API密钥类型：{0}").format(key_type))
+            self.test_flag = 2
+            self.error_message = error
