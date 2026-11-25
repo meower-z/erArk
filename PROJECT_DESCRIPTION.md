@@ -641,7 +641,7 @@ Script/
 
 | 系统 | 核心文件 | 主要数据 |
 | --- | --- | --- |
-| 基地/基建管理 | `Modules/domains/facility.py`, `Modules/domains/work.py`, `Design/basement.py`, `UI/Panel/building_panel.py`, `manage_basement_panel.py` | `Facility*.csv` |
+| 基地/基建管理 | `Modules/domains/facility.py`, `Modules/domains/work.py`, `Modules/gameplay_resolution/basement_overview_service.py`, `Modules/gameplay_resolution/operator_list_service.py`, `Modules/gameplay_resolution/work_assignment_service.py`, `Design/basement.py`, `UI/Panel/building_panel.py`, `manage_basement_panel.py`, `UI/Panel/basement_roster_panel.py` | `Facility*.csv` |
 | 动力/能源 | `Modules/domains/power.py`, `Modules/domains/power_supply.py`, `Modules/gameplay_resolution/power_panel_service.py`, `Settle/power_settle.py`, `UI/Panel/manage_power_system_panel.py` | `Power_Generation.csv`, `Power_Storage.csv` |
 | 农业生产 | `UI/Panel/agriculture_production_panel.py`, `Design/basement.py`, `Modules/domains/production.py` | 农场设施 |
 | 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py`, `Modules/domains/production.py` | `ProductFormula.csv` |
