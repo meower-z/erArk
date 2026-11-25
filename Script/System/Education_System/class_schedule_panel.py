@@ -789,7 +789,7 @@ class Class_Schedule_Panel:
             sex_class_handle,
             growth_handle,
         )
-        from Script.UI.Panel import character_info_head
+        from Script.Modules.gameplay_resolution import class_tip_service
 
         must_attend = list(must_attend)
         while 1:
@@ -850,9 +850,7 @@ class Class_Schedule_Panel:
                     ):
                         replace_text = _("{0}→{1}").format(
                             character_data.name,
-                            character_info_head.get_course_text(
-                                old_course_data
-                            ),
+                            class_tip_service.get_course_text(old_course_data),
                         )
                 replace_mark = "*" if replace_text else ""
                 if replace_text:

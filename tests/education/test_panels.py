@@ -699,7 +699,7 @@ flow_handle.askfor_all = fake_askfor
 section(
     "Plan 28：个人课表格子的「/条件不符」「/未开放」、必修名单的顶替标记、待处理写学期名、选择活动没有照料卵"
 )
-from Script.UI.Panel import character_info_head  # noqa: E402
+from Script.Modules.gameplay_resolution import class_tip_service
 
 clear_schedules()
 _pool_cid = game_config.config_facility_open_name_to_cid[pool]
@@ -763,7 +763,7 @@ class_schedule_panel.Class_Schedule_Panel(W)._select_must_attend(
 flow_handle.askfor_all = fake_askfor
 kernel_data.set_room_open(_pool_cid, True)
 _replace_line = next((t for t in drawn_text if "会顶替原本的课" in t), "")
-_pe_text = character_info_head.get_course_text(
+_pe_text = class_tip_service.get_course_text(
     {"course_type": E.COURSE_TYPE_PE, "target": _("木桩房")}
 )
 check(
@@ -1306,7 +1306,7 @@ schedule_handle.set_selected_course(
 )
 move_to(201, classroom_path(ROOM1))
 chara.behave(201, constant.Behavior.SELF_STUDY)
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     (
         "L15 本节没排教师、在自习：悬停写「本节无教师，按自习收益」，不再写「经验减半」（自习经验是理论课的 1/3、"
@@ -1321,7 +1321,7 @@ check(
 
 schedule_handle.set_class_cell(ROOM1, _st_day, 0, 43, 101)
 chara.behave(201, constant.Behavior.ATTENT_CLASS)
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L13 对照：玩家没在授课时照她的课表写「授课：教师甲」",
     _tip is not None and "授课：教师甲" in _tip[1],
@@ -1331,7 +1331,7 @@ chara.behave(pl.cid, constant.Behavior.TEACH)
 move_to(0, classroom_path(ROOM1))
 _fallback_name = game_config.config_ability[E.FALLBACK_SUBJECT_ABILITY].name
 _theory_name = E.COURSE_TYPE_NAME[E.COURSE_TYPE_THEORY]
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L13 节次内被玩家「授课」拉来：悬停写「授课：博士」与理论课·学识（此前写课表上的料理与教师甲，实际发的是学识）",
     _tip is not None
@@ -1342,14 +1342,14 @@ check(
     _tip,
 )
 chara.behave(201, start_time=period_time(0) + datetime.timedelta(minutes=5))
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L13 对照：开始时刻与玩家没对齐（她自己坐下听课，不是被拉来的）→ 照她的课表写",
     _tip is not None and "授课：教师甲" in _tip[1],
     _tip,
 )
 set_time(DEFAULT_TIME.replace(hour=20))
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L13 节次外被拉来：同样写「授课：博士」，不写第几节（此前只写「上课中」）",
     _tip is not None and f"授课：{pl.name}" in _tip[1] and "第" not in _tip[1],
@@ -1366,7 +1366,7 @@ _st_course = schedule_handle.get_now_course(201)
 assert _st_course is not None
 move_to(201, schedule_handle.get_course_place(_st_course))
 chara.behave(201, constant.Behavior.SHARE_BLANKLY)
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L14 对照：人在体育课的地点：亮 <课>",
     _tip is not None and not _tip[0],
@@ -1375,27 +1375,27 @@ check(
 chara.behave(201, constant.Behavior.REST)
 check(
     "L14 体力不足缺这一节、在上课地点原地休息（721 派休息）：不亮 <课>（此前照亮）",
-    character_info_head.get_now_class_tip(201) is None,
-    character_info_head.get_now_class_tip(201),
+    class_tip_service.get_now_class_tip(201) is None,
+    class_tip_service.get_now_class_tip(201),
 )
 chara.behave(201, constant.Behavior.SHARE_BLANKLY)
 _st_growth.last_absent_period = [game_time.now().toordinal(), 0]
 check(
     "L14 这一节已记过缺课、休完回到地点：不亮 <课>",
-    character_info_head.get_now_class_tip(201) is None,
-    character_info_head.get_now_class_tip(201),
+    class_tip_service.get_now_class_tip(201) is None,
+    class_tip_service.get_now_class_tip(201),
 )
 _st_growth.last_absent_period = [game_time.now().toordinal() - 1, 0]
 check(
     "L14 前一天同一节的缺课记录不算：照亮",
-    character_info_head.get_now_class_tip(201) is not None,
+    class_tip_service.get_now_class_tip(201) is not None,
 )
 _st_growth.last_absent_period = []
 kernel_data.put(flags.set, 201, is_h=True)
 check(
     "L14 复审补：人在体育课的地点、但在 H 里（被玩家带进 H）：不亮 <课>（<翘> 对在 H 里的人也不亮，此前这里改亮 <课>）",
-    character_info_head.get_now_class_tip(201) is None,
-    character_info_head.get_now_class_tip(201),
+    class_tip_service.get_now_class_tip(201) is None,
+    class_tip_service.get_now_class_tip(201),
 )
 kernel_data.put(flags.set, 201, is_h=False)
 
@@ -1405,14 +1405,14 @@ schedule_handle.set_selected_course(
 move_to(201, SCENE_DORM)
 _st_growth.skip_class_flag = True
 _st_growth.skip_class_day = game_time.now().toordinal()
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L1 对照：第 1 节有课、今天已翘课：亮 <翘>「本该上」",
     _tip is not None and _tip[0] and "本该上" in _tip[1],
     _tip,
 )
 set_time(period_time(2))
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L1 第 3 节她没课：不亮 <翘>（此前写「翘课中（第 3 节）」）",
     _tip is None or not _tip[0],
@@ -1420,7 +1420,7 @@ check(
 )
 set_time(period_time(0))
 kernel_data.set_needs(_st.cid, hit=10)
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L1 体力不足（上课状态是体力缺课、不是翘课）：不亮 <翘>",
     _tip is None or not _tip[0],
@@ -1428,7 +1428,7 @@ check(
 )
 kernel_data.set_needs(_st.cid, hit=100)
 kernel_data.put(flags.set, 201, is_h=True)
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L1 人在 H 里（课堂 H、被玩家带进 H）：不亮 <翘>（此前写「翘课中：本该上 实操课」）",
     _tip is None or not _tip[0],
@@ -1439,7 +1439,7 @@ sex_class_handle.set_temp_class(
     game_time.now().date().toordinal(), 0, ROOM_P, 74, must_attend=[201]
 )
 move_to(201, classroom_path(ROOM_P))
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L1 被点名必修、人在博士的实操课教室：不亮 <翘>",
     _tip is None or not _tip[0],

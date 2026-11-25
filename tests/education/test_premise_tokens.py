@@ -447,7 +447,7 @@ aim(pl.cid, 0)
 remove_character(204)
 
 section("Plan 28 §3.2 / §3.7：上不成的个人式课视为没课；日程自习的 <课> 悬停")
-from Script.UI.Panel import character_info_head  # noqa: E402
+from Script.Modules.gameplay_resolution import class_tip_service
 
 set_time(period_time(0))
 ca.talent(student)[103] = 0
@@ -477,21 +477,21 @@ behave(student.cid, constant.Behavior.SELF_STUDY)
 _self_study_tip = (False, _("自习中（日程安排，此刻没课）"))
 check(
     "本节没课的日程自习：<课> 悬停写「自习中」（此前写「上课中」）",
-    character_info_head.get_now_class_tip(201) == _self_study_tip,
-    character_info_head.get_now_class_tip(201),
+    class_tip_service.get_now_class_tip(201) == _self_study_tip,
+    class_tip_service.get_now_class_tip(201),
 )
 set_time(DEFAULT_TIME.replace(hour=20))
 check(
     "节次外的日程自习（照旧 45 分钟）同样写「自习中」",
-    character_info_head.get_now_class_tip(201) == _self_study_tip,
-    character_info_head.get_now_class_tip(201),
+    class_tip_service.get_now_class_tip(201) == _self_study_tip,
+    class_tip_service.get_now_class_tip(201),
 )
 set_time(period_time(0))
 behave(student.cid, constant.Behavior.ATTENT_CLASS)
 check(
     "听课而此刻没课、也不是在听玩家的手动授课：仍写「上课中」",
-    character_info_head.get_now_class_tip(201) == (False, _("上课中")),
-    character_info_head.get_now_class_tip(201),
+    class_tip_service.get_now_class_tip(201) == (False, _("上课中")),
+    class_tip_service.get_now_class_tip(201),
 )
 behave(student.cid, constant.Behavior.SHARE_BLANKLY)
 
@@ -761,7 +761,7 @@ schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_INTERN, intern_work
 )
 move_to(201, intern_place)
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L4 对照：学生岗、人在实习地点：<课> 写实习课，CVP CourseType 为实习课",
     _tip is not None
@@ -770,7 +770,7 @@ check(
     _tip,
 )
 chara_life.work_type.set(student.cid, intern_work)
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L4 改任这个岗位、本人就在岗：不亮 <课>，CVP CourseType / Course 都不成立（此前按残留课表显示在上实习课）",
     _tip is None
@@ -781,21 +781,21 @@ check(
 chara_life.work_type.set(student.cid, 152)
 check(
     "L4 改回学生岗：恢复",
-    character_info_head.get_now_class_tip(201) is not None,
+    class_tip_service.get_now_class_tip(201) is not None,
 )
 
 section("Plan 31 §3.6（L2）：<翘> 只认今天挂上的翘课 flag")
 _growth_201 = child_growth(201)
 _growth_201.skip_class_flag = True
 _growth_201.skip_class_day = game_time.now().toordinal() - 1
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check(
     "L2 前一天挂上、没清掉的 flag（一步跨过午夜 / 翘课当天离线）：不亮 <翘>，照常显示在上课（此前整天挂着 <翘>）",
     _tip is not None and not _tip[0],
     _tip,
 )
 _growth_201.skip_class_day = game_time.now().toordinal()
-_tip = character_info_head.get_now_class_tip(201)
+_tip = class_tip_service.get_now_class_tip(201)
 check("L2 今天挂上的：亮 <翘>", _tip is not None and _tip[0], _tip)
 _growth_201.skip_class_flag = False
 _growth_201.skip_class_day = 0
