@@ -187,7 +187,6 @@ Script/UI/Panel/play_gomoku_panel.py	GomokuPanel.place_piece	UP032	count=1
 Script/UI/Panel/play_gomoku_panel.py	Gomoku_Board	D101	count=1
 Script/UI/Panel/play_gomoku_panel.py	Gomoku_Cache	D101	count=1
 Script/UI/Panel/play_gomoku_panel.py	ZobristCache	D101	count=1
-Script/UI/Panel/resource_exchange_panel.py	<module>	module-lines	lines=1210
 Script/UI/Panel/see_character_info_panel.py	<module>	module-lines	lines=1798
 Script/UI/Panel/see_character_info_panel.py	CharacterExperienceText.__init__	pyrefly:incompatible-comparison	count=1
 Script/UI/Panel/see_character_info_panel.py	CharacterJuelText.__init__	pyrefly:incompatible-comparison	count=1

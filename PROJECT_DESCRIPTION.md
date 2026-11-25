@@ -645,7 +645,7 @@ Script/
 | 动力/能源 | `Modules/domains/power.py`, `Modules/domains/power_supply.py`, `Modules/gameplay_resolution/power_panel_service.py`, `Settle/power_settle.py`, `UI/Panel/manage_power_system_panel.py` | `Power_Generation.csv`, `Power_Storage.csv` |
 | 农业生产 | `UI/Panel/agriculture_production_panel.py`, `Design/basement.py`, `Modules/domains/production.py` | 农场设施 |
 | 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py`, `Modules/domains/production.py` | `ProductFormula.csv` |
-| 资源交易 | `UI/Panel/resource_exchange_panel.py`, `Modules/domains/economy.py`, `Modules/domains/warehouse.py` | `Resource.csv`, `Restaurant.csv` |
+| 资源交易 | `UI/Panel/resource_exchange_panel.py`, `UI/Panel/trade_setting_panel.py`, `Modules/gameplay_resolution/resource_exchange_service.py`, `Modules/domains/economy.py`, `Modules/domains/warehouse.py` | `Resource.csv`, `Restaurant.csv` |
 | 装备维护 | `UI/Panel/equipmen_panel.py`, `Modules/domains/maintenance.py` | `Equipment_*` 系列 |
 | 载具管理 | `UI/Panel/manage_vehicle_panel.py`, `Modules/gameplay_resolution/vehicle_service.py`, `Modules/domains/commission.py` | `Vehicle.csv` |
 | 宿舍管理 | `System/Dormitory_System/*`, `Modules/domains/dormitory.py` | 宿舍场景地图 |
