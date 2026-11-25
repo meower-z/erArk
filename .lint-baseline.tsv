@@ -166,7 +166,6 @@ Script/UI/Panel/ability_up_panel.py	<module>	module-lines	lines=1083
 Script/UI/Panel/assistant_panel.py	<module>	module-lines	lines=745
 Script/UI/Panel/character_info_head.py	<module>	module-lines	lines=816
 Script/UI/Panel/chat_ai_setting.py	<module>	module-lines	lines=909
-Script/UI/Panel/check_locker_panel.py	<module>	module-lines	lines=622
 Script/UI/Panel/debug_panel.py	<module>	module-lines	lines=2653
 Script/UI/Panel/debug_panel.py	Debug_Panel.change_target_value	pyrefly:bad-argument-type	count=5
 Script/UI/Panel/debug_panel.py	Debug_Panel.change_target_value	pyrefly:bad-index	count=35
