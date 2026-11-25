@@ -17,7 +17,11 @@ from Script.Design import game_time, update
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import start_gate, starts
 from Script.Modules.tk_ui import player_pick
-from Script.System.Cooking_System import cooking, make_food_panel
+from Script.System.Cooking_System import (
+    cooking,
+    make_food_confirm_panel,
+    make_food_panel,
+)
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Pregnancy_System import egg_handle, pregnancy_handle
 from Script.UI.Panel import gift_panel, play_gomoku_panel, talent_up_panel
@@ -281,7 +285,7 @@ class PanelSubMenusReadOnly(FastTestCase):
 
     def food_button(
         self, seasoning: int, cook_mode: int
-    ) -> make_food_panel.SeeFoodListByFoodNameDraw:
+    ) -> make_food_confirm_panel.SeeFoodListByFoodNameDraw:
         """
         做饭面板里一道有题库的家常菜的按钮
         Keyword arguments:
@@ -296,7 +300,7 @@ class PanelSubMenusReadOnly(FastTestCase):
             if cooking.has_cook_question_library(rid)
             and recipe.type not in {3, 8}
         )
-        return make_food_panel.SeeFoodListByFoodNameDraw(
+        return make_food_confirm_panel.SeeFoodListByFoodNameDraw(
             (str(recipe_id), "", seasoning, cook_mode, 0), WIDTH, True, True, 0
         )
 

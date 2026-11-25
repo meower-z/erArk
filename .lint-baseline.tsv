@@ -94,7 +94,6 @@ Script/Settle/orgasm_settle.py	<module>	module-lines	lines=552
 Script/Settle/realtime_settle.py	<module>	module-lines	lines=1004
 Script/StateMachine/default.py	<module>	module-lines	lines=4268
 Script/System/Cooking_System/cooking.py	<module>	module-lines	lines=688
-Script/System/Cooking_System/make_food_panel.py	<module>	module-lines	lines=1084
 Script/System/Dormitory_System/common.py	<module>	module-lines	lines=517
 Script/System/Dormitory_System/manage_dormitory_panel.py	<module>	module-lines	lines=1001
 Script/System/Education_System/class_ai.py	<module>	module-lines	lines=896

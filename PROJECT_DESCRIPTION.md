@@ -680,7 +680,7 @@ Script/
 | 系统 | 核心文件 | 说明 |
 | --- | --- | --- |
 | 烹饪/食谱 | `System/Cooking_System/cooking.py` | `Recipes.csv`, `Seasoning.csv` |
-| 制作食物 | `System/Cooking_System/make_food_panel.py` | 批量制作 |
+| 制作食物 | `System/Cooking_System/make_food_panel.py`, `System/Cooking_System/make_food_confirm_panel.py`, `Modules/gameplay_resolution/make_food_service.py` | 批量制作 |
 | 食物商店 | `UI/Panel/food_shop_panel.py`, `Modules/domains/kitchen.py` | `Restaurant.csv` |
 | 食物背包/进食 | `System/Cooking_System/food_bag_panel.py` | 饮用类独立、尿意结算 |
 | 烹饪题库 | `data/csv/cook_question/*.csv` | 140 张题目表 -> `Cook_Question.json` |
