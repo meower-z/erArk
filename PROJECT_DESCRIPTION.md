@@ -673,7 +673,7 @@ Script/
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
 | 身体检查与管理 | `UI/Panel/physical_check_and_manage.py`, `Modules/gameplay_resolution/physical_exam_service.py`, `Modules/gameplay_resolution/physical_exam_report.py`, `Modules/gameplay_resolution/body_manage_service.py`, `Modules/domains/physical_exam.py` | `Physical_Exam_Setting.csv` |
 | 读书/图书馆 | `UI/Panel/borrow_book_panel.py`, `read_book_panel.py`, `manage_library.py`, `Modules/gameplay_resolution/library_panel_service.py`, `Modules/domains/library.py` | `Book*.csv` |
-| 五子棋 | `UI/Panel/play_gomoku_panel.py` | 娱乐小游戏 |
+| 五子棋 | `UI/Panel/play_gomoku_panel.py`, `Modules/gameplay_resolution/gomoku_shapes.py`, `Modules/gameplay_resolution/gomoku_evaluate.py`, `Modules/gameplay_resolution/gomoku_moves.py`, `Modules/gameplay_resolution/gomoku_cache.py`, `Modules/gameplay_resolution/gomoku_board.py`, `Modules/gameplay_resolution/gomoku_search.py` | 娱乐小游戏 |
 
 ### 18.3 烹饪与物品
 
