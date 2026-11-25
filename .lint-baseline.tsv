@@ -175,7 +175,6 @@ Script/UI/Panel/debug_panel.py	Debug_Panel.change_target_value	pyrefly:unsupport
 Script/UI/Panel/debug_panel.py	Debug_Panel.change_value	pyrefly:bad-argument-type	count=2
 Script/UI/Panel/debug_panel.py	Debug_Panel.change_value	pyrefly:bad-index	count=4
 Script/UI/Panel/draw_event_text_panel.py	DrawEventTextPanel.__init__	pyrefly:bad-override-mutable-attribute	count=1
-Script/UI/Panel/hypnosis_panel.py	<module>	module-lines	lines=797
 Script/UI/Panel/in_scene_panel.py	<module>	E401	count=1
 Script/UI/Panel/manage_basement_panel.py	<module>	module-lines	lines=1780
 Script/UI/Panel/manage_power_system_panel.py	<module>	module-lines	lines=826

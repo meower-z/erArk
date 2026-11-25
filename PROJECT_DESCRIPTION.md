@@ -696,7 +696,7 @@ Script/
 | 系统 | 核心文件 | 说明 |
 | --- | --- | --- |
 | 源石技艺 | `UI/Panel/originium_arts.py` | 催眠/透视/激素/时停等技艺 |
-| 催眠 | `UI/Panel/hypnosis_panel.py`, `Design/hypnosis_state.py` | `Hypnosis_*` 系列 |
+| 催眠 | `UI/Panel/hypnosis_panel.py`, `Modules/gameplay_resolution/hypnosis_panel_service.py`, `Design/hypnosis_state.py` | `Hypnosis_*` 系列 |
 | 时间停止 | `Design/…`, `Modules/domains/modes.py` + 主循环特殊处理 | `mode.time_stop` |
 | 醉酒/醉奸 | `Sex_System/drunk_sex_common.py` | `Alcohol_Level.csv`, `Drunk_Level.csv` |
 
