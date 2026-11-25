@@ -162,7 +162,6 @@ Script/UI/Moudle/draw.py	<module>	module-lines	lines=1245
 Script/UI/Moudle/panel.py	<module>	module-lines	lines=780
 Script/UI/Moudle/panel.py	DrawTextListPanel.set	pyrefly:not-a-type	count=1
 Script/UI/Moudle/panel.py	OneMessageAndSingleColumnButton.set	B905	count=1
-Script/UI/Panel/ability_up_panel.py	<module>	module-lines	lines=1083
 Script/UI/Panel/assistant_panel.py	<module>	module-lines	lines=745
 Script/UI/Panel/chat_ai_setting.py	<module>	module-lines	lines=909
 Script/UI/Panel/debug_panel.py	<module>	module-lines	lines=2653
