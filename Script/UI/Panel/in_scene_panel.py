@@ -6,6 +6,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.UI.Panel import (
     game_info_panel,
     see_character_info_panel,
+    see_character_info_scene,
     dirty_panel,
     cloth_panel,
     chara_image_list_panel,
@@ -56,7 +57,7 @@ class InScenePanel:
         # 场景角色数据
         character_handle_panel = panel.PageHandlePanel(
             [],
-            see_character_info_panel.SeeCharacterInfoByNameDrawInScene,
+            see_character_info_scene.SeeCharacterInfoByNameDrawInScene,
             20,
             10,
             self.width,

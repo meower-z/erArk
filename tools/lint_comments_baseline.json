@@ -189,7 +189,6 @@
   "Script/UI/Panel/mod_panel.py": 16,
   "Script/UI/Panel/navigation_panel.py": 29,
   "Script/UI/Panel/read_book_panel.py": 3,
-  "Script/UI/Panel/see_character_info_panel.py": 80,
   "Script/UI/Panel/see_item_info_panel.py": 36,
   "Script/UI/Panel/see_save_info_panel.py": 15,
   "Script/UI/Panel/sleep_panel.py": 20,

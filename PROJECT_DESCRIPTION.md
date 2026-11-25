@@ -663,7 +663,7 @@ Script/
 | --- | --- | --- |
 | 能力升级 | `UI/Panel/ability_up_panel.py`, `Modules/gameplay_resolution/ability_up_service.py`, `Modules/gameplay_resolution/mark_change_service.py`, `Modules/domains/abilities.py` | `AbilityUp.csv` |
 | 素质/天赋 | `Design/handle_talent.py`, `UI/Panel/talent_up_panel.py`, `Modules/domains/abilities.py` | `Talent*.csv` |
-| 属性查看 | `UI/Panel/see_character_info_panel.py` | 多页角色面板 |
+| 属性查看 | `UI/Panel/see_character_info_panel.py`, `UI/Panel/see_character_info_scene.py`, `Modules/gameplay_resolution/character_info_service.py`, `Modules/gameplay_resolution/player_ability_service.py` | 多页角色面板 |
 | 服装/脱衣/换装 | `Design/clothing.py`, `UI/Panel/cloth_panel.py` | `Clothing*.csv` |
 | 衣柜检查 | `UI/Panel/check_locker_panel.py`, `Modules/gameplay_resolution/locker_service.py` | 衣柜查看、偷取与射精编辑 |
 | 收藏品 | `UI/Panel/collection_panel.py` | `Collection_bouns.csv` |

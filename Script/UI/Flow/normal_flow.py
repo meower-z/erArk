@@ -32,7 +32,7 @@ from Script.UI.Panel import (
     see_save_info_panel,
     hypnosis_panel,
     achievement_panel,
-    see_character_info_panel,
+    see_character_info_scene,
     ability_up_panel,
     gift_panel,
     manage_power_system_panel,
@@ -322,7 +322,7 @@ def see_achievement_flow() -> None:
 @handle_panel.add_panel(constant.Panel.SEE_ATTR)
 def see_attr_flow() -> None:
     """查看属性面板"""
-    now_panel = see_character_info_panel.SeeCharacterInfoInScenePanel(
+    now_panel = see_character_info_scene.SeeCharacterInfoInScenePanel(
         activity.target(0), width
     )
     now_panel.draw()

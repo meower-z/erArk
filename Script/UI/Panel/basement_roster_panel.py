@@ -12,7 +12,7 @@ from Script.Modules.domains import abilities, hypnosis, identity, needs
 from Script.Modules.domains import relations
 from Script.Modules.gameplay_resolution import operator_list_service as svc
 from Script.UI.Moudle import draw, view
-from Script.UI.Panel import see_character_info_panel
+from Script.UI.Panel import see_character_info_scene
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -381,7 +381,7 @@ class RosterTab:
 
     def see_attr(self, character_id: int) -> None:
         """打开干员属性详情面板查看目标干员，关闭后回到场景面板。"""
-        now_draw = see_character_info_panel.SeeCharacterInfoHandleInScene(
+        now_draw = see_character_info_scene.SeeCharacterInfoHandleInScene(
             character_id, self.width, svc.operator_ids()
         )
         now_draw.draw()

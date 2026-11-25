@@ -129,7 +129,7 @@ class InlineSubpanelTest(SlowTestCase):
             "Script.UI.Panel.chara_image_list_panel"
         )
         info = importlib.import_module(
-            "Script.UI.Panel.see_character_info_panel"
+            "Script.UI.Panel.see_character_info_scene"
         )
         start, end, changed = self.run_pick(
             image.CharacterImageButton(self.npcs[1], 120).change_target
