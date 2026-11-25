@@ -23,6 +23,7 @@ from Script.Modules.domains import h_meters, h_state, identity, tallies
 from Script.Modules.domains import wardrobe
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import ejaculation_service
+from Script.Modules.gameplay_resolution import locker_service
 from Script.Modules.gameplay_resolution import semen_dirty_service, working
 from Script.Settle import default as settle_default
 from Script.Settle import realtime_settle
@@ -30,7 +31,7 @@ from Script.System.Cooking_System import cooking
 from Script.System.Item_System import condom_handle
 from Script.System.Pregnancy_System import soft_egg_handle
 from Script.UI.Moudle import draw
-from Script.UI.Panel import check_locker_panel, ejaculation_panel
+from Script.UI.Panel import ejaculation_panel
 from tests import chara_abilities as ca
 from tests.fast.base import FastTestCase
 
@@ -57,7 +58,7 @@ CALLERS = (
     realtime_settle,
     cooking,
     condom_handle,
-    check_locker_panel,
+    locker_service,
 )
 """ 依赖射精或精液污浊服务的五个调用方模块元组。 """
 FLOW_TYPES = {"B": 0, "C": 1, "E": 2}
