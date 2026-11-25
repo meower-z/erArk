@@ -661,7 +661,7 @@ Script/
 
 | 系统 | 核心文件 | 说明 |
 | --- | --- | --- |
-| 能力升级 | `UI/Panel/ability_up_panel.py`, `Modules/domains/abilities.py` | `AbilityUp.csv` |
+| 能力升级 | `UI/Panel/ability_up_panel.py`, `Modules/gameplay_resolution/ability_up_service.py`, `Modules/gameplay_resolution/mark_change_service.py`, `Modules/domains/abilities.py` | `AbilityUp.csv` |
 | 素质/天赋 | `Design/handle_talent.py`, `UI/Panel/talent_up_panel.py`, `Modules/domains/abilities.py` | `Talent*.csv` |
 | 属性查看 | `UI/Panel/see_character_info_panel.py` | 多页角色面板 |
 | 服装/脱衣/换装 | `Design/clothing.py`, `UI/Panel/cloth_panel.py` | `Clothing*.csv` |
