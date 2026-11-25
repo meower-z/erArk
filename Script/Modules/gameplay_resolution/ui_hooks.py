@@ -1,10 +1,11 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供八类回调的登记与调用入口，分别用于输出提示文本、数值变化、图片、分隔线、富文本口上，
-以及切换面板、确认提问与查询隐奸中显示非H指令的开关。
+本模块提供九类回调的登记与调用入口，分别用于输出提示文本、数值变化、图片、分隔线、富文本口上，
+以及切换面板、确认提问、查询隐奸中显示非H指令的开关与调用文本AI处理。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，前六类输出与切换入口不执行操作，emit_confirm 返回 True，hidden_sex_show_non_h 返回 False。
+未登记回调时，前六类输出与切换入口不执行操作，emit_confirm 返回 True，hidden_sex_show_non_h 返回 False，
+apply_text_ai 原样返回传入文本。
 """
 
 from collections.abc import Callable
@@ -79,6 +80,29 @@ class RichTalk(Protocol):
         """
 
 
+class TextAi(Protocol):
+    """文本AI处理回调的函数签名协议。"""
+
+    def __call__(
+        self,
+        character_id: int,
+        behavior_id: str,
+        original_text: str,
+        *,
+        translator: bool,
+    ) -> str:
+        """
+        接收对话文本与上下文标识，返回处理后的显示文本。
+        Keyword arguments:
+        character_id -- int，角色编号
+        behavior_id -- str，行为编号
+        original_text -- str，待处理的原始文本
+        translator -- bool，为真时以翻译模式处理，为假时以生成模式处理
+        Return arguments:
+        str -- 处理后的显示文本
+        """
+
+
 type PanelSwitch = Callable[[int], None]
 """ 面板切换回调函数类型，接收目标面板编号。 """
 _notices: list[Notice] = []
@@ -105,6 +129,8 @@ type Confirm = Callable[[str], bool]
 """ 确认提问回调函数类型，接收提问文本，返回布尔值表示是否确认。 """
 _confirms: list[Confirm] = []
 """ 按登记顺序保存的确认提问回调列表。 """
+_text_ais: list[TextAi] = []
+""" 按登记顺序保存的文本AI处理回调列表。 """
 
 
 def on_notice(fn: Notice) -> Notice:
@@ -333,3 +359,38 @@ def emit_rich_talk(
             wait_flag=wait_flag,
             trailing_wait=trailing_wait,
         )
+
+
+def on_text_ai(fn: TextAi) -> TextAi:
+    """
+    登记一个文本AI处理回调，可作为装饰器使用。
+    Keyword arguments:
+    fn -- TextAi，要登记的文本AI处理回调函数
+    Return arguments:
+    TextAi -- 原样返回传入的 fn
+    """
+    _text_ais.append(fn)
+    return fn
+
+
+def apply_text_ai(
+    character_id: int,
+    behavior_id: str,
+    original_text: str,
+    *,
+    translator: bool = False,
+) -> str:
+    """
+    按登记顺序依次调用已登记的文本AI处理回调，每个回调接收前一个回调的返回值。未登记回调时原样返回 original_text。
+    Keyword arguments:
+    character_id -- int，角色编号
+    behavior_id -- str，行为编号
+    original_text -- str，待处理的原始文本
+    translator -- bool，为真时以翻译模式处理，默认为 False
+    Return arguments:
+    str -- 最后一个回调的返回值，未登记回调时返回 original_text
+    """
+    text = original_text
+    for fn in _text_ais:
+        text = fn(character_id, behavior_id, text, translator=translator)
+    return text

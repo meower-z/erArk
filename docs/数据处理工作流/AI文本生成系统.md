@@ -67,9 +67,9 @@ erArk游戏的AI文本生成系统是一个完整的AI集成解决方案，支�
 ### 4. 集成接口
 
 #### 对话系统集成 (`Script/Design/talk.py`)
-- **集成点**: `handle_talk_draw()` 函数（195, 241, 248, 253行）
-- **功能**: 在角色对话触发时调用AI生成
-- **翻译支持**: 支持非中文语言的AI翻译功能
+- **集成点**: `handle_talk_draw()` 在三处调用 `Script/Modules/gameplay_resolution/ui_hooks.py` 的 `apply_text_ai()`，分别对应角色口上翻译、地文翻译与地文生成
+- **前端回调**: Tk 前端通过 `Script/Modules/tk_ui/callbacks.py` 登记 `use_text_ai()`，由其延迟导入 `handle_chat_ai` 并调用 `judge_use_text_ai()`
+- **未登记行为**: 未登记文本AI回调时，`apply_text_ai()` 原样返回输入文本
 
 #### 指令系统集成 (`Script/Design/handle_instruct.py`)
 - **集成点**: `handle_chat_with_ai()` 函数（450行）
