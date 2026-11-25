@@ -672,7 +672,7 @@ Script/
 | 射精面板 | `UI/Panel/ejaculation_panel.py` | `Semen_Shoot_Amount.csv` |
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
 | 身体检查与管理 | `UI/Panel/physical_check_and_manage.py`, `Modules/domains/physical_exam.py` | `Physical_Exam_Setting.csv` |
-| 读书/图书馆 | `UI/Panel/borrow_book_panel.py`, `read_book_panel.py`, `manage_library.py`, `Modules/domains/library.py` | `Book*.csv` |
+| 读书/图书馆 | `UI/Panel/borrow_book_panel.py`, `read_book_panel.py`, `manage_library.py`, `Modules/gameplay_resolution/library_panel_service.py`, `Modules/domains/library.py` | `Book*.csv` |
 | 五子棋 | `UI/Panel/play_gomoku_panel.py` | 娱乐小游戏 |
 
 ### 18.3 烹饪与物品

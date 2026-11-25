@@ -5,9 +5,7 @@ from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, panel, view
 from Script.UI.Panel import common_select_NPC
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import entertainment, library
-from Script.Modules.domains import chara_life
-from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import library_panel_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -32,8 +30,6 @@ class Manage_Library_Panel:
         """ 绘制的最大宽度 """
         self.now_panel = _("管理图书馆")
         """ 当前绘制的页面 """
-        self.draw_list: list[draw.NormalDraw] = []
-        """ 绘制的文本列表 """
 
     def draw(self) -> None:
         """绘制对象"""
@@ -43,15 +39,10 @@ class Manage_Library_Panel:
         while 1:
             return_list = []
             title_draw.draw()
-            # line = draw.LineDraw("-", window_width)
-            # line.draw()
             cinfo_draw = draw.NormalDraw()
             info_text = _("\n要进行哪方面的管理呢？\n")
             cinfo_draw.text = info_text
             cinfo_draw.draw()
-
-            # 选项面板
-            # button_all_draw = panel.LeftDrawTextListPanel()
 
             button0_text = _("[001]催还书")
             button0_draw = draw.LeftButton(
@@ -131,41 +122,20 @@ class Manage_Library_Panel:
             line_feed.draw()
             line = draw.LineDraw("-", window_width)
             line.draw()
-            book_count = 0
+            lent = library_panel_service.lent_books()
+            for book_count, row in enumerate(lent, 1):
+                button_draw = draw.LeftButton(
+                    _(row.text),
+                    _(str(book_count)),
+                    self.width,
+                    cmd_func=self.return_book,
+                    args=(row.holder_id,),
+                )
+                line_feed.draw()
+                button_draw.draw()
+                return_list.append(button_draw.return_text)
 
-            # 按类型遍历全图书，寻找已经被借出的书籍
-            holders = library.holders()
-            for book_type_cid in game_config.config_book_type:
-                if book_type_cid == 0:
-                    continue
-                book_type_data = game_config.config_book_type[book_type_cid]
-                for book_cid in game_config.config_book_type_data[
-                    book_type_cid
-                ]:
-                    book_data = game_config.config_book[book_cid]
-                    borrow_npc_id = holders[book_cid]
-                    if borrow_npc_id > 0:
-                        book_count += 1
-                        book_text = (
-                            f"  [{str(book_count).rjust(3,'0')}]("
-                            f"{book_type_data.son_type_name}){book_data.name}"
-                        )
-                        borrow_npc_name = identity.of(borrow_npc_id).name
-                        book_text += _("  (被{0}借走)").format(borrow_npc_name)
-
-                        button_draw = draw.LeftButton(
-                            _(book_text),
-                            _(str(book_count)),
-                            self.width,
-                            cmd_func=self.return_book,
-                            args=(borrow_npc_id,),
-                        )
-                        line_feed.draw()
-                        button_draw.draw()
-                        return_list.append(button_draw.return_text)
-
-            # 没有人借书时输出提示信息
-            if book_count == 0:
+            if not lent:
                 now_draw = draw.NormalDraw()
                 now_draw.width = window_width
                 now_draw.text = _("\n  目前无人借书，不需要催还\n")
@@ -176,26 +146,15 @@ class Manage_Library_Panel:
             back_draw.draw()
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
-
-            # 在非页面切换时退出面板
             if yrn == back_draw.return_text:
                 break
 
     def return_book(self, chara_id: int) -> None:
         """角色还书"""
 
-        character_data = identity.of(chara_id)
-        chara_life.book_return_possibility.set(
-            chara_id, chara_life.book_return_possibility(chara_id) + 100
-        )
-        chara_life.entertainment_type.set(
-            chara_id, [101] * len(chara_life.entertainment_type(chara_id))
-        )
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
-        now_draw.text = _("\n{0}将在空闲时间前往图书馆还书\n").format(
-            character_data.name
-        )
+        now_draw.text = library_panel_service.urge_return(chara_id)
         now_draw.draw()
 
     def get_new_book(self) -> None:
@@ -214,21 +173,15 @@ class Manage_Library_Panel:
         )
 
         while 1:
-
-            # 显示提示信息
             line = draw.LineDraw("-", self.width)
             line.draw()
             info_draw = draw.NormalDraw()
-            can_recommend_count = 3 - len(library.recommended())
             info_draw.text = _("\n 当前剩余可选推荐 {0}\n").format(
-                can_recommend_count
+                library_panel_service.recommend_left()
             )
             info_draw.draw()
             line_feed.draw()
-
-            # 按类型遍历全图书，寻找已经被借出的书籍
-            book_type_list = [i for i in game_config.config_book_type]
-            self.handle_panel.text_list = book_type_list
+            self.handle_panel.text_list = list(game_config.config_book_type)
             self.handle_panel.update()
             self.handle_panel.draw()
             return_list = []
@@ -250,21 +203,12 @@ class Manage_Library_Panel:
             line_feed.draw()
             line = draw.LineDraw("-", window_width)
             line.draw()
-
-            # 提示信息
             now_draw = draw.NormalDraw()
             now_draw.width = window_width
             now_draw.text = _("\n  要把哪一天定为读书会呢？\n")
             now_draw.draw()
 
-            # 遍历一周七天
-            for i in range(7):
-                week_date_data = game_config.config_week_day[i]
-                button_text = f"  [{i}]:{week_date_data.name}"
-                party_entertain_id = entertainment.party_day(i)
-                if party_entertain_id:
-                    button_text += f" ({game_config.config_entertainment[party_entertain_id].name})"
-
+            for i, button_text in enumerate(library_panel_service.party_rows()):
                 button_draw = draw.LeftButton(
                     _(button_text),
                     _(str(i)),
@@ -281,47 +225,26 @@ class Manage_Library_Panel:
             back_draw.draw()
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
-
-            # 在非页面切换时退出面板
             if yrn == back_draw.return_text:
                 break
 
     def choice_read_party(self, week_day: int) -> None:
         """选择读书会之日"""
 
-        party_entertain_id = entertainment.party_day(week_day)
-
-        if party_entertain_id == 101:
-            entertainment.set_party_day(week_day, 0)
-        elif party_entertain_id:
+        refusal = library_panel_service.pick_party_day(week_day)
+        if refusal is not None:
             now_draw = draw.WaitDraw()
             now_draw.width = window_width
-            now_draw.text = _("\n这一天已经被选为其他活动了\n")
+            now_draw.text = refusal
             now_draw.draw()
-        else:
-            # 先取消掉其他日子可能有的读书会
-            for i in range(7):
-                if entertainment.party_day(i) == 101:
-                    entertainment.set_party_day(i, 0)
-
-            # 再把指定日子变成读书会
-            entertainment.set_party_day(week_day, 101)
 
     def borrowing_history(self) -> None:
         """借阅历史记录查看"""
 
-        # 创建角色列表，包含所有有借阅历史的角色
-        character_list = []
-        for character_id in identity.table():
-            if character_id == 0:  # 跳过玩家
-                continue
-            # 检查是否有借阅历史记录
-            if len(chara_life.borrow_book_history(character_id)) > 0:
-                character_list.append(
-                    [character_id, self.show_character_history, []]
-                )
-
-        # 如果没有任何角色有借阅历史
+        character_list = [
+            [character_id, self.show_character_history, []]
+            for character_id in library_panel_service.history_holders()
+        ]
         if not character_list:
             while 1:
                 line_feed.draw()
@@ -343,9 +266,7 @@ class Manage_Library_Panel:
                 if yrn == back_draw.return_text:
                     break
         else:
-            # 保存原始角色列表
             original_character_list = character_list.copy()
-            # 创建分页面板来显示角色列表
             self.character_handle_panel = panel.PageHandlePanel(
                 [],
                 common_select_NPC.CommonSelectNPCButtonList,
@@ -360,13 +281,9 @@ class Manage_Library_Panel:
 
             while 1:
                 info_text = _("以下角色拥有借阅历史记录：\n\n")
-
-                # 在每次循环开始时恢复原始列表，避免筛选累积
                 self.character_handle_panel.text_list = (
                     original_character_list.copy()
                 )
-
-                # 使用通用角色选择面板
                 return_list, _other_return_list, select_state = (
                     common_select_NPC.common_select_npc_button_list_func(
                         self.character_handle_panel,
@@ -377,110 +294,40 @@ class Manage_Library_Panel:
                 )
 
                 yrn = flow_handle.askfor_all(return_list)
-
-                # 如果点击返回按钮，退出面板
                 if yrn == _("返回"):
                     break
 
     def show_character_history(self, character_id: int) -> None:
         """显示指定角色的借阅历史"""
 
-        character_data = identity.of(character_id)
-
         while 1:
             return_list = []
-
-            # 显示标题
-            title_text = _("[{0}]的借书卡记录").format(character_data.name)
+            card = library_panel_service.history_card(character_id)
+            title_text = _("[{0}]的借书卡记录").format(card.name)
             title_draw = draw.TitleLineDraw(title_text, window_width)
             title_draw.draw()
             line_feed.draw()
 
-            # 检查是否有借阅历史
-            if len(chara_life.borrow_book_history(character_id)) == 0:
+            if not card.records:
                 no_history_draw = draw.NormalDraw()
                 no_history_draw.width = window_width
                 no_history_draw.text = _("\n  该角色暂无借阅历史记录\n")
                 no_history_draw.draw()
             else:
-                # 显示借阅历史统计信息
-                total_books = len(chara_life.borrow_book_history(character_id))
-                total_reads = sum(
-                    record.get("total_read_count", 0)
-                    for record in chara_life.borrow_book_history(character_id)
-                )
-
                 stats_draw = draw.NormalDraw()
                 stats_draw.width = window_width
-                stats_text = _(
+                stats_draw.text = _(
                     "\n  借阅历史统计：共借阅过{0}本书，累计阅读{1}次\n"
-                ).format(total_books, total_reads)
-                stats_draw.text = stats_text
+                ).format(card.total_books, card.total_reads)
                 stats_draw.draw()
-
                 line_feed.draw()
-
-                # 显示详细的借阅记录
-                for i, record in enumerate(
-                    reversed(chara_life.borrow_book_history(character_id))
-                ):
-                    book_id = record.get("book_id", 0)
-                    book_name = record.get("book_name", _("未知书籍"))
-                    borrow_time = record.get("borrow_time", None)
-                    return_time = record.get("return_time", None)
-                    read_count = record.get("total_read_count", 0)
-
-                    # 格式化时间显示
-                    borrow_time_str = ""
-                    return_time_str = ""
-                    if borrow_time:
-                        if isinstance(borrow_time, str):
-                            borrow_time_str = borrow_time
-                        else:
-                            borrow_time_str = borrow_time.strftime(
-                                "%Y年%m月%d日 %H:%M"
-                            )
-
-                    if return_time:
-                        if isinstance(return_time, str):
-                            return_time_str = return_time
-                        else:
-                            return_time_str = return_time.strftime(
-                                "%Y年%m月%d日 %H:%M"
-                            )
-                    else:
-                        return_time_str = _("仍在借阅中")
-
-                    # 构建记录文本
-                    record_text = _("  [{0}] 《{1}》").format(
-                        str(i + 1).rjust(2, "0"), book_name
-                    )
-                    if book_id in game_config.config_book:
-                        book_type_data = game_config.config_book_type[
-                            game_config.config_book[book_id].type
-                        ]
-                        record_text += _(" ({0})").format(
-                            book_type_data.son_type_name
-                        )
-
-                    record_text += _("\n      借书时间：{0}").format(
-                        borrow_time_str
-                    )
-                    record_text += _("\n      还书时间：{0}").format(
-                        return_time_str
-                    )
-                    record_text += _("\n      阅读次数：{0}次\n").format(
-                        read_count
-                    )
-
+                for record_text in card.records:
                     record_draw = draw.NormalDraw()
                     record_draw.width = window_width
                     record_draw.text = record_text
                     record_draw.draw()
-
                     line_feed.draw()
 
-            # 返回按钮
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
             back_draw.draw()
             return_list.append(back_draw.return_text)
@@ -523,37 +370,19 @@ class SelectRecommendBookButton:
         """ 数字按钮的id """
         self.button_return: str = str(button_id)
         """ 按钮返回值 """
-
-        type_data = game_config.config_book_type[self.book_type_id]
-        button_text = f"[{str(type_data.cid).rjust(2,'0')}]：{type_data.father_type_name}-{type_data.son_type_name}"
-        name_draw: draw.LeftDraw | draw.LeftButton = draw.LeftDraw()
-        if self.book_type_id in library.recommended():
-            button_text += _(" (已推荐)")
-            name_draw = draw.LeftButton(
-                button_text,
-                self.button_return,
-                self.width,
-                normal_style="gold_enrod",
-                cmd_func=self.button_0,
-            )
-        else:
-            name_draw = draw.LeftButton(
-                button_text,
-                self.button_return,
-                self.width,
-                cmd_func=self.button_0,
-            )
-
+        option = library_panel_service.recommend_option(self.book_type_id)
+        self.now_draw = draw.LeftButton(
+            option.text,
+            self.button_return,
+            self.width,
+            normal_style="gold_enrod" if option.picked else "standard",
+            cmd_func=self.button_0,
+        )
         """ 绘制的对象 """
-        self.now_draw = name_draw
 
     def button_0(self) -> None:
         """选项1"""
-        recommended = library.recommended()
-        if self.book_type_id in recommended:
-            library.set_recommended(recommended - {self.book_type_id})
-        elif 3 - len(recommended):
-            library.set_recommended(recommended | {self.book_type_id})
+        library_panel_service.toggle_recommend(self.book_type_id)
 
     def draw(self) -> None:
         """绘制对象"""
