@@ -109,7 +109,7 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
 
         def inherit_arts(handle: Any) -> None:
             handle_init(handle)
-            handle.pl_originium_arts_count = 1
+            handle.levels[0] = 1
 
         self.started.clear()
         self.world.player.press(

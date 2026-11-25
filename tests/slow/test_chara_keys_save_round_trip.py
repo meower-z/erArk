@@ -109,13 +109,16 @@ class CharaKeysSaveRoundTripTest(SlowTestCase):
         from tests import kernel_data
 
         relations = game("Script.Modules.domains.relations")
-        new_round = game("Script.UI.Panel.new_round")
+        service = game("Script.Modules.gameplay_resolution.new_round_service")
+        inherit_service = game(
+            "Script.Modules.gameplay_resolution.new_round_inherit_service"
+        )
         npc_template = game("Script.Modules.domains.npc_template")
         cid = next(c for c in identity.table() if npc_template.get(c))
         with kernel_data.writing():
             relations.trust.set(cid, 80)
             relations.favorability.set_item(cid, 0, 70)
-        rate = new_round._inherit_rate(4, 1)
+        rate = service.rate(4, 1)
         self.assertGreater(rate, 0)
         inherit = {
             "chara_fon_and_trust_count": 1,
@@ -126,6 +129,6 @@ class CharaKeysSaveRoundTripTest(SlowTestCase):
         }
         template = {cid: npc_template.get(cid)}
         with mock.patch.object(npc_template, "table", return_value=template):
-            kernel_data.written(new_round._inherit_npc_data, inherit, {cid})
+            kernel_data.written(inherit_service.inherit_npcs, inherit, {cid})
         self.assertEqual(relations.trust(cid), int(50 * rate / 100))
         self.assertEqual(relations.favorability(cid)[0], int(30 * rate / 100))
