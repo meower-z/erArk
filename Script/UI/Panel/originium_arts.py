@@ -4,11 +4,11 @@
 
 from types import FunctionType
 from Script.Core import get_text, flow_handle, constant
-from Script.Design import handle_talent, handle_premise
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities, identity, modes
+from Script.Modules.domains import identity, modes
 from Script.Modules.gameplay_resolution import originium_arts_service
+from Script.Modules.gameplay_resolution import originium_arts_panel_service
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -31,180 +31,66 @@ class Originium_Arts_Panel:
         """初始化绘制对象"""
         self.width: int = width
         """ 绘制的最大宽度 """
-        self.draw_list: list[draw.NormalDraw] = []
-        """ 绘制的文本列表 """
         self.pl_character_data = identity.of(0)
         """ 玩家的属性 """
 
+    def _menu_button(
+        self, entry: originium_arts_panel_service.ArtMenuEntry
+    ) -> draw.LeftButton:
+        """
+        将单条主菜单条目映射为对应的左对齐按钮对象，补齐翻译文案、默认催眠类型、理智消耗与点击回调。
+        Keyword arguments:
+        entry -- originium_arts_panel_service.ArtMenuEntry，主菜单条目数据
+        Return arguments:
+        draw.LeftButton -- 配置完成的菜单按钮绘制对象
+        """
+        texts = {
+            1: (_("[001]消除负面刻印"), _("1")),
+            2: (_("[002]时间系能力："), _("2")),
+            3: (_("[003]催眠系能力："), _("3")),
+            4: (_("[004]自我强化(未实装)"), _("4")),
+            5: (_("[005]激素系能力："), _("5")),
+            6: (_("[006]视觉系能力："), _("6")),
+            7: (_("[007]触觉系能力(未实装)"), _("7")),
+            11: (_("[011]能力获得与升级"), _("11")),
+            12: (_("[012]Re:败者食尘"), _("12")),
+        }
+        actions = {
+            1: (Down_Negative_Talent_Panel(self.width).draw, ()),
+            4: (self.to_do, ()),
+            7: (self.to_do, 7),
+            11: (self.gain_and_upgrade_ability, ()),
+            12: (self.new_round_for_sure, ()),
+        }
+        text, return_text = texts[entry.key]
+        text += entry.talent_names
+        if entry.key == 3:
+            type_id = originium_arts_service.get_hypnosis_type(
+                self.pl_character_data.cid
+            )
+            type_name = game_config.config_hypnosis_type[type_id].name
+            text += _("当前默认催眠类型：{0}").format(type_name)
+        if entry.sanity_per_hour is not None:
+            text += _("({0}理智/h)").format(entry.sanity_per_hour)
+        cmd_func, args = actions.get(entry.key, (self.arts_show, entry.key))
+        return draw.LeftButton(
+            _(text), return_text, window_width, cmd_func=cmd_func, args=args
+        )
+
     def draw(self) -> None:
         """绘制对象"""
-
-        talent = abilities.talent(0)
-        title_text = _("源石技艺")
-        title_draw = draw.TitleLineDraw(title_text, self.width)
+        title_draw = draw.TitleLineDraw(_("源石技艺"), self.width)
         while 1:
             return_list = []
             title_draw.draw()
             cinfo_draw = draw.NormalDraw()
-            info_text = _("\n要使用哪一个源石技艺呢？\n")
-            cinfo_draw.text = info_text
+            cinfo_draw.text = _("\n要使用哪一个源石技艺呢？\n")
             cinfo_draw.draw()
-
-            # 选项面板
-
-            DNT_Panel = Down_Negative_Talent_Panel(self.width)
-            button1_text = _("[001]消除负面刻印")
-            button1_draw = draw.LeftButton(
-                _(button1_text), _("1"), window_width, cmd_func=DNT_Panel.draw
-            )
-            line_feed.draw()
-            button1_draw.draw()
-            return_list.append(button1_draw.return_text)
-
-            if handle_premise.handle_primary_time_stop(0):
-                button2_text = _("[002]时间系能力：")
-                talent_id_list = [316, 317, 318]
-                count = 0
-                for talent_id in talent_id_list:
-                    if not talent[talent_id]:
-                        continue
-                    talent_name = game_config.config_talent[talent_id].name
-                    if talent_id != 316:
-                        button2_text += " + "
-                    button2_text += talent_name
-                    count += 1
-                button2_draw = draw.LeftButton(
-                    _(button2_text),
-                    _("2"),
-                    window_width,
-                    cmd_func=self.arts_show,
-                    args=(2),
-                )
+            for entry in originium_arts_panel_service.menu_entries():
+                button_draw = self._menu_button(entry)
                 line_feed.draw()
-                button2_draw.draw()
-                return_list.append(button2_draw.return_text)
-
-            if handle_talent.have_hypnosis_talent():
-                button3_text = _("[003]催眠系能力：")
-                now_type_id = originium_arts_service.get_hypnosis_type(
-                    self.pl_character_data.cid
-                )
-                now_type_name = game_config.config_hypnosis_type[
-                    now_type_id
-                ].name
-                button3_text += _("当前默认催眠类型：{0}").format(now_type_name)
-                button3_draw = draw.LeftButton(
-                    _(button3_text),
-                    _("3"),
-                    window_width,
-                    cmd_func=self.arts_show,
-                    args=(3),
-                )
-                line_feed.draw()
-                button3_draw.draw()
-                return_list.append(button3_draw.return_text)
-
-            if modes.debug():
-                button4_text = _("[004]自我强化(未实装)")
-                button4_draw = draw.LeftButton(
-                    _(button4_text),
-                    _("4"),
-                    window_width,
-                    cmd_func=self.to_do,
-                    args=(),
-                )
-                line_feed.draw()
-                button4_draw.draw()
-                return_list.append(button4_draw.return_text)
-
-            if handle_talent.have_hormone_talent():
-                button5_text = _("[005]激素系能力：")
-                # 输出当前开启的激素系能力
-                talent_id_list = [304, 305, 306]
-                count = 0
-                for talent_id in talent_id_list:
-                    if not talent[talent_id]:
-                        continue
-                    talent_name = game_config.config_talent[talent_id].name
-                    if talent_id != 304:
-                        button5_text += " + "
-                    button5_text += talent_name
-                    count += 1
-                button5_draw = draw.LeftButton(
-                    _(button5_text),
-                    _("5"),
-                    window_width,
-                    cmd_func=self.arts_show,
-                    args=(5),
-                )
-                line_feed.draw()
-                button5_draw.draw()
-                return_list.append(button5_draw.return_text)
-
-            if handle_talent.have_visual_talent():
-                button6_text = _("[006]视觉系能力：")
-                # 输出当前开启的视觉系能力
-                talent_id_list = [307, 308, 309]
-                count = 0
-                for talent_id in talent_id_list:
-                    if not talent[talent_id]:
-                        continue
-                    talent_name = game_config.config_talent[talent_id].name
-                    if talent_id != 307:
-                        button6_text += " + "
-                    button6_text += talent_name
-                    count += 1
-                # 输出理智消耗
-                button6_text += _("({0}理智/h)").format(count * 5)
-                button6_draw = draw.LeftButton(
-                    _(button6_text),
-                    _("6"),
-                    window_width,
-                    cmd_func=self.arts_show,
-                    args=(6),
-                )
-                line_feed.draw()
-                button6_draw.draw()
-                return_list.append(button6_draw.return_text)
-
-            if handle_talent.have_tactile_talent():
-                button7_text = _("[007]触觉系能力(未实装)")
-                button7_draw = draw.LeftButton(
-                    _(button7_text),
-                    _("7"),
-                    window_width,
-                    cmd_func=self.to_do,
-                    args=(7),
-                )
-                line_feed.draw()
-                button7_draw.draw()
-                return_list.append(button7_draw.return_text)
-
-            button11_text = _("[011]能力获得与升级")
-            button11_draw = draw.LeftButton(
-                _(button11_text),
-                _("11"),
-                window_width,
-                cmd_func=self.gain_and_upgrade_ability,
-                args=(),
-            )
-            line_feed.draw()
-            button11_draw.draw()
-            return_list.append(button11_draw.return_text)
-
-            if modes.debug() or handle_premise.handle_time_over_a_year(0):
-                button12_text = _("[012]Re:败者食尘")
-                button12_draw = draw.LeftButton(
-                    _(button12_text),
-                    _("12"),
-                    window_width,
-                    cmd_func=self.new_round_for_sure,
-                    args=(),
-                )
-                line_feed.draw()
-                button12_draw.draw()
-                return_list.append(button12_draw.return_text)
-
+                button_draw.draw()
+                return_list.append(button_draw.return_text)
             line_feed.draw()
             back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
             back_draw.draw()
@@ -225,57 +111,41 @@ class Originium_Arts_Panel:
 
     def arts_show(self, ability_type: int) -> None:
         """源石技艺展示"""
-        # 催眠系
         if ability_type == 3:
             from Script.UI.Panel import hypnosis_panel
 
             now_panel = hypnosis_panel.Chose_Hypnosis_Type_Panel(self.width)
             now_panel.draw()
-        else:
-            line_draw = draw.LineDraw("-", self.width)
-            line_draw.draw()
-            while 1:
-                return_list = []
-                info_draw = draw.NormalDraw()
-                info_text = ""
-
-                # 激素系
-                if ability_type == 2:
-                    talent_id_list = [316, 317, 318]
-                    info_text = _("\n时间系能力（消耗2理智/min）：\n")
-                elif ability_type == 5:
-                    talent_id_list = [304, 305, 306]
-                    info_text = _("\n激素系能力（不消耗理智）：\n")
-                # 视觉系（类型6）
-                else:
-                    talent_id_list = [307, 308, 309]
-                    info_text = _("\n视觉系能力（每级消耗5理智/h）：\n")
-                info_draw.text = _(info_text)
-                info_draw.draw()
-                # 遍历输出该能力的全素质
-                for talent_id in talent_id_list:
-                    talent_name = game_config.config_talent[talent_id].name
-                    talent_info = game_config.config_talent[talent_id].info
-                    draw_text = f"  {talent_name}：{talent_info}\n"
-                    now_draw = draw.NormalDraw()
-                    if not abilities.talent(0)[talent_id]:
-                        draw_text = _("  {0}(未解锁)：{1}\n").format(
-                            talent_name, talent_info
-                        )
-                        now_draw.style = "deep_gray"
-                    now_draw.text = _(draw_text)
-                    now_draw.draw()
-
-                line_feed.draw()
-                back_draw = draw.CenterButton(
-                    _("[返回]"), _("返回"), window_width
-                )
-                back_draw.draw()
-                line_feed.draw()
-                return_list.append(back_draw.return_text)
-                yrn = flow_handle.askfor_all(return_list)
-                if yrn in return_list:
-                    break
+            return
+        line_draw = draw.LineDraw("-", self.width)
+        line_draw.draw()
+        while 1:
+            headers = {
+                2: _("\n时间系能力（消耗2理智/min）：\n"),
+                5: _("\n激素系能力（不消耗理智）：\n"),
+                6: _("\n视觉系能力（每级消耗5理智/h）：\n"),
+            }
+            info_draw = draw.NormalDraw()
+            info_draw.text = _(headers[ability_type])
+            info_draw.draw()
+            for row in originium_arts_panel_service.group_rows(ability_type):
+                draw_text = f"  {row.name}：{row.info}\n"
+                now_draw = draw.NormalDraw()
+                if not row.unlocked:
+                    draw_text = _("  {0}(未解锁)：{1}\n").format(
+                        row.name, row.info
+                    )
+                    now_draw.style = "deep_gray"
+                now_draw.text = _(draw_text)
+                now_draw.draw()
+            line_feed.draw()
+            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
+            back_draw.draw()
+            line_feed.draw()
+            return_list = [back_draw.return_text]
+            yrn = flow_handle.askfor_all(return_list)
+            if yrn in return_list:
+                break
 
     def draw_lv_up_button(
         self, condition: bool, draw_text: str, cid: int, return_list: list[str]
@@ -304,76 +174,38 @@ class Originium_Arts_Panel:
         self, condition: originium_arts_service.ArtConditionProgress
     ) -> str:
         """按条件类型将解锁进度格式化为界面展示文案。"""
-        kind = condition.kind
-        if kind == "max_favorability_trust":
-            return _(
+        templates = {
+            "max_favorability_trust": _(
                 "：需要单干员最高好感度≥{0}（当前{1}），最高信赖度≥{2}（当前{3}）"
-            ).format(
-                condition.required_primary,
-                condition.current_primary,
-                condition.required_secondary,
-                condition.current_secondary,
-            )
-        if kind == "total_favorability_fall":
-            return _(
+            ),
+            "total_favorability_fall": _(
                 "：需要全干员总好感度≥{0}（当前{1}），已进入任意陷落路线的干员人数≥{2}（当前{3}）"
-            ).format(
-                condition.required_primary,
-                condition.current_primary,
-                condition.required_secondary,
-                condition.current_secondary,
-            )
-        if kind == "total_favorability_deep_fall":
-            return _(
+            ),
+            "total_favorability_deep_fall": _(
                 "：需要全干员总好感度≥{0}（当前{1}），陷落程度为[爱侣]或[奴隶]的干员人数≥{2}（当前{3}）"
-            ).format(
-                condition.required_primary,
-                condition.current_primary,
-                condition.required_secondary,
-                condition.current_secondary,
-            )
-        if kind == "panty_collection_total":
-            return _("：需要全干员内裤收藏总数量≥{0}（当前{1}）").format(
-                condition.required_primary, condition.current_primary
-            )
-        if kind == "internal_semen_orgasm_exp":
-            return _(
+            ),
+            "panty_collection_total": _(
+                "：需要全干员内裤收藏总数量≥{0}（当前{1}）"
+            ),
+            "internal_semen_orgasm_exp": _(
                 "：需要全干员的体内部位被射精总量≥{0}ml（当前{1}ml），全干员总绝顶经验≥{2}（当前{3}）"
-            ).format(
-                condition.required_primary,
-                condition.current_primary,
-                condition.required_secondary,
-                condition.current_secondary,
-            )
-        if kind == "child_count":
-            return _("：需要生育孩子数量≥{0}（当前{1}）").format(
-                condition.required_primary, condition.current_primary
-            )
-        if kind == "unconscious_sex_orgasm_exp":
-            return _(
+            ),
+            "child_count": _("：需要生育孩子数量≥{0}（当前{1}）"),
+            "unconscious_sex_orgasm_exp": _(
                 "：需要全干员无意识性交经验≥{0}（当前{1}），全干员总无意识绝顶经验≥{2}（当前{3}）"
-            ).format(
-                condition.required_primary,
-                condition.current_primary,
-                condition.required_secondary,
-                condition.current_secondary,
-            )
-        if kind == "time_stop_sex_orgasm_exp":
-            return _(
+            ),
+            "time_stop_sex_orgasm_exp": _(
                 "：需要对干员的时姦经验≥{0}（当前{1}），全干员总无意识绝顶经验≥{2}（当前{3}）"
-            ).format(
-                condition.required_primary,
-                condition.current_primary,
-                condition.required_secondary,
-                condition.current_secondary,
-            )
-        if kind == "sleep_sex_exp":
-            return _("：需要对干员的睡姦经验≥{0}（当前{1}）").format(
-                condition.required_primary, condition.current_primary
-            )
-        return _(
-            "：需要博士催眠经验≥{0}（当前{1}），需要全干员总催眠深度≥{2}%（当前{3}%）"
-        ).format(
+            ),
+            "sleep_sex_exp": _("：需要对干员的睡姦经验≥{0}（当前{1}）"),
+        }
+        template = templates.get(
+            condition.kind,
+            _(
+                "：需要博士催眠经验≥{0}（当前{1}），需要全干员总催眠深度≥{2}%（当前{3}%）"
+            ),
+        )
+        return template.format(
             condition.required_primary,
             condition.current_primary,
             condition.required_secondary,
@@ -510,15 +342,9 @@ class Down_Negative_Talent_Panel:
         """初始化绘制对象"""
         self.width: int = width
         """ 绘制的最大宽度 """
-        self.draw_list: list[draw.NormalDraw] = []
-        """ 绘制的文本列表 """
 
     def draw(self) -> None:
         """绘制对象"""
-        self.ability_id_list = list(
-            originium_arts_service.NEGATIVE_MARK_ABILITY_IDS
-        )
-
         while 1:
             return_list = []
             info_draw = draw.NormalDraw()
