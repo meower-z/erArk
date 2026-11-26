@@ -1,27 +1,19 @@
-"""日程模板面板（Plan 22 二期 §5.1）
-
-面板管的是"孩子没课的时候干什么"，分两层操作：
-
-    编辑模板       —— 改的是模板本体，所有套用该模板的孩子一起变
-    批量套用       —— 把一套模板一次性挂到多个孩子身上（口径 4 的核心操作）
-
-单孩微调不在本面板，而在个人课表面板的「日程」一行（§5.2），
-因为微调是"看着这个孩子的课表决定她空闲时段干什么"，和课表放一起才顺手。
-
-绘制只经 Script/UI/Moudle 的 draw.py 与 panel.py，不直接碰 Tk。
+"""
+日程模板面板（schedule_template_panel）
+=======================================
+负责日程模板表、编辑页与各选择页的绘制和输入处理。展示文本由 schedule_template_service 提供。
 """
 
 from types import FunctionType
 
 from Script.Core import get_text, flow_handle
-from Script.Design import attr_calculation
+from Script.Modules.gameplay_resolution import schedule_template_service
 from Script.System.Education_System import (
     education_constant,
     schedule_template_handle,
     growth_handle,
 )
 from Script.UI.Moudle import draw, panel
-from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -30,13 +22,25 @@ line_feed.text = "\n"
 line_feed.width = 1
 
 
+def _draw_button_rows(
+    rows: list[list[schedule_template_service.Button]],
+    prefix: str,
+    width: int,
+    return_list: list[str],
+    id_by_return: dict[str, int],
+) -> None:
+    """逐行绘制左对齐按钮，登记返回码与对应编号并在每行末尾换行。"""
+    for row in rows:
+        for value, text in row:
+            now_draw = draw.LeftButton(text, f"{prefix}{value}", width)
+            now_draw.draw()
+            return_list.append(now_draw.return_text)
+            id_by_return[now_draw.return_text] = value
+        line_feed.draw()
+
+
 class Schedule_Template_Panel:
-    """
-    日程模板面板（方案 §5.1）
-    输入类型: width(int)
-    输出类型: 无
-    功能: 列出全部模板与其三个时段的活动，可编辑模板、批量套用到多个孩子
-    """
+    """教育管理界面的日程模板子面板，负责展示模板表与处理编辑、新建和批量套用。"""
 
     def __init__(self, width: int) -> None:
         """初始化绘制对象"""
@@ -46,13 +50,8 @@ class Schedule_Template_Panel:
 
     def draw_page(self, return_list: list[str]) -> None:
         """
-        绘制本页内容
-        输入类型: return_list(List[str])，容器的共享返回值列表，本页的按钮往里加
-        输出类型: 无
-        功能: 画模板表 + 批量套用入口。
-              只画不取输入，askfor_all 由容器 Education_Manage_Panel 统一调用。
-              本页不画自己的 [返回]，因为容器的 [返回] 用同一个 return_text「返回」。
-              同屏有两个 return_text 相同的按钮时，先画的那个会变成不可点的普通文字。
+        绘制日程模板主页并将本页按钮返回码写入 return_list。
+        输入等待由外层教育管理容器统一处理。
         """
         draw.TitleLineDraw(_("日程模板"), self.width).draw()
         self._draw_head()
@@ -74,12 +73,7 @@ class Schedule_Template_Panel:
         line_feed.draw()
 
     def handle_yrn(self, yrn: str) -> None:
-        """
-        处理本页按钮的选择结果
-        输入类型: yrn(str)，容器 askfor_all 的返回值
-        输出类型: 无
-        功能: 批量套用 / 编辑某套模板
-        """
+        """按容器传入的按钮返回码分发到批量套用、新建模板或模板编辑流程。"""
         if yrn == _("批量套用"):
             self._batch_apply()
             return
@@ -90,132 +84,58 @@ class Schedule_Template_Panel:
             self._edit_template(self.template_id_by_return[yrn])
 
     def _draw_head(self) -> None:
-        """
-        绘制表头一行
-        输入类型: 无
-        输出类型: 无
-        功能: 编号 / 模板名 / 三个时段 / 套用人数。
-              与 _draw_template_table 引用同一组列宽常量，两边都走 pad_display_width——
-                 手写空格的表头对不上按显示宽补齐的数据行
-        """
-        head_text = education_constant.COLUMN_INDENT
-        for column_text, column_width in (
-            (_("编号"), education_constant.COLUMN_WIDTH_ID),
-            (_("模板名"), education_constant.COLUMN_WIDTH_NAME),
-            (_("上午"), education_constant.COLUMN_WIDTH_SLOT),
-            (_("下午"), education_constant.COLUMN_WIDTH_SLOT),
-            (_("晚上"), education_constant.COLUMN_WIDTH_SLOT),
-        ):
-            head_text += attr_calculation.pad_display_width(
-                column_text, column_width
-            )
-        head_text += _("套用中") + "\n"
+        """以金色样式绘制模板表表头。"""
         head_draw = draw.NormalDraw()
         head_draw.width = self.width
-        head_draw.text = head_text
+        head_draw.text = schedule_template_service.head_text()
         head_draw.style = "gold_enrod"
         head_draw.draw()
 
     def _draw_template_table(self) -> dict[str, int]:
-        """
-        绘制全部模板，每行是一个可点的按钮
-        输入类型: 无
-        输出类型: Dict[str, int]，按钮返回值 → 模板编号
-        功能: 点某一行即进入该模板的编辑
-        """
+        """绘制全部模板行按钮，并返回按钮返回码到模板编号的映射。"""
         template_id_by_return: dict[str, int] = {}
-        for template_id in schedule_template_handle.get_all_template_id():
-            template_data = schedule_template_handle.get_template_data(
-                template_id
-            )
-            if template_data is None:
-                continue
-            # 0 显示为「自由选择娱乐活动」而不是「--」：空着的时段并不是没安排，而是保留当天的随机娱乐
-            slot_text_list = [
-                schedule_template_handle.get_activity_name(
-                    template_data.get(
-                        education_constant.TEMPLATE_KEY_SLOT, {}
-                    ).get(slot, 0)
-                )
-                for slot in range(education_constant.SLOT_COUNT)
-            ]
-            use_count = schedule_template_handle.get_template_use_count(
-                template_id
-            )
-            # 不能用 "{:<10}".format()：str 的 <10 按 len()（字符数）补齐，而终端按显示列排版、
-            #    中文占2列。同一个 {:<10} 对「读书」产出12列、对「上课（无课时自习）」产出19列，
-            #    四套模板的行字符数全都是57、显示列宽却是82/75/71/61，没有一列对得齐
-            row_text = education_constant.COLUMN_INDENT
-            for column_text, column_width in (
-                (str(template_id), education_constant.COLUMN_WIDTH_ID),
-                (
-                    template_data[education_constant.TEMPLATE_KEY_NAME],
-                    education_constant.COLUMN_WIDTH_NAME,
-                ),
-                (slot_text_list[0], education_constant.COLUMN_WIDTH_SLOT),
-                (slot_text_list[1], education_constant.COLUMN_WIDTH_SLOT),
-                (slot_text_list[2], education_constant.COLUMN_WIDTH_SLOT),
-            ):
-                row_text += attr_calculation.pad_display_width(
-                    column_text, column_width
-                )
-            row_text += _("{0} 人").format(use_count)
-            now_draw = draw.LeftButton(
-                row_text, f"TEMPLATE_{template_id}", self.width
-            )
-            now_draw.draw()
-            template_id_by_return[now_draw.return_text] = template_id
-            line_feed.draw()
+        _draw_button_rows(
+            [[row] for row in schedule_template_service.template_rows()],
+            "TEMPLATE_",
+            self.width,
+            [],
+            template_id_by_return,
+        )
         return template_id_by_return
 
     def _edit_template(self, template_id: int) -> None:
         """
-        编辑一套模板：选一个时段，再给它挑活动
-        输入类型: template_id(int)
-        输出类型: 无
-        功能: 改的是模板本体，所有套用它的孩子一起变
+        打开指定模板的编辑页，处理时段修改、重命名与删除操作。
+        预设模板用同宽灰字占位替代删除按钮，使返回按钮位置保持不变。
         """
         while 1:
-            data = schedule_template_handle.get_template_data(template_id)
-            if data is None:
+            name = schedule_template_service.template_name(template_id)
+            if name is None:
                 return
             return_list: list[str] = []
             slot_by_return: dict[str, int] = {}
             draw.TitleLineDraw(
-                _("编辑模板：{0}").format(
-                    data[education_constant.TEMPLATE_KEY_NAME]
-                ),
-                self.width,
+                _("编辑模板：{0}").format(name), self.width
             ).draw()
-            for slot in range(education_constant.SLOT_COUNT):
-                now_name = schedule_template_handle.get_activity_name(
-                    data.get(education_constant.TEMPLATE_KEY_SLOT, {}).get(
-                        slot, 0
+            _draw_button_rows(
+                [
+                    [button]
+                    for button in schedule_template_service.slot_buttons(
+                        template_id
                     )
-                )
-                now_draw = draw.LeftButton(
-                    _("[{0}：{1}]").format(
-                        education_constant.SLOT_NAME[slot], now_name
-                    ),
-                    f"SLOT_{slot}",
-                    int(self.width / 2),
-                )
-                now_draw.draw()
-                return_list.append(now_draw.return_text)
-                slot_by_return[now_draw.return_text] = slot
-                line_feed.draw()
-            draw.LineDraw("-", self.width).draw()
-            is_preset = schedule_template_handle.judge_template_is_preset(
-                template_id
+                ],
+                "SLOT_",
+                int(self.width / 2),
+                return_list,
+                slot_by_return,
             )
+            draw.LineDraw("-", self.width).draw()
             rename_draw = draw.CenterButton(
                 _("[重命名]"), _("重命名"), int(self.width / 3)
             )
             rename_draw.draw()
             return_list.append(rename_draw.return_text)
-            # 预设四套不给删按钮，只画同宽灰字占位：直接省略会让右边的[返回]整体左移，
-            #    玩家在预设与自建模板之间来回切时按钮会跳位
-            if is_preset:
+            if schedule_template_handle.judge_template_is_preset(template_id):
                 null_draw = draw.CenterDraw()
                 null_draw.width = int(self.width / 3)
                 null_draw.style = "deep_gray"
@@ -247,20 +167,14 @@ class Schedule_Template_Panel:
                     break
                 continue
             if yrn in slot_by_return:
-                slot = slot_by_return[yrn]
                 entertainment_id = self._select_activity()
                 if entertainment_id is not None:
                     schedule_template_handle.set_template_slot(
-                        template_id, slot, entertainment_id
+                        template_id, slot_by_return[yrn], entertainment_id
                     )
 
     def _ask_template_name(self, ask_text: str) -> str:
-        """
-        向玩家要一个模板名
-        输入类型: ask_text(str)，提示语
-        输出类型: str，玩家输入的名字，取消或空输入为空串
-        功能: 走 panel.AskForOneMessage
-        """
+        """弹出单行输入框采集模板名称并去除首尾空白。"""
         ask_panel = panel.AskForOneMessage()
         ask_panel.set(ask_text, education_constant.TEMPLATE_NAME_MAX)
         line_feed.draw()
@@ -268,12 +182,8 @@ class Schedule_Template_Panel:
 
     def _create_template(self) -> None:
         """
-        新建一套模板并直接进入编辑
-        输入类型: 无
-        输出类型: 无
-        功能: 兑现方案 §1 的「可定义**若干套**日程模板」。
-              建完立刻进编辑页：新模板三个时段全空，不进去配一遍等于没建，
-                 而空模板套到孩子身上是「三格都不改写」，玩家会以为功能坏了
+        询问名称并新建一套空模板，创建成功后立即进入编辑页。
+        新建模板的三个时段均为空，进入编辑页便于直接配置活动。
         """
         new_name = self._ask_template_name(
             _("给新模板起个名字（直接回车用默认名）")
@@ -284,77 +194,20 @@ class Schedule_Template_Panel:
 
     def _select_activity(self) -> int | None:
         """
-        从娱乐候选表里挑一项活动
-        输入类型: 无
-        输出类型: Optional[int]，娱乐cid；0为「自由选择娱乐活动」（该时段不改写、保留随机）；None为取消
-        功能: 每行6个，分三组画（schedule_template_handle.get_schedule_activity_rows）：
-              第一行固定是 上课（无课时自习）与 自由选择娱乐活动；
-              第二行是有年龄需求的活动（没有时为空），按钮上标注「限××」——
-              套了这种活动的模板给不符合年龄的干员用时，那个时段会退回到自由选择；
-              第三行起是其余娱乐。
-              地点还没开放的活动在同一对括号里再标「未开放」，仍可选（Plan 27 §3.1）。
-              原实现整个循环里没有任何换行，29个按钮×38列＝1102列画在同一逻辑行上，
-                 靠终端软换行硬折，不是网格。
-              原来的「清空该时段」与「自由选择娱乐活动」是同一个值 0，只保留后者一个出口
+        打开选择活动页，返回所选娱乐编号或在取消时返回 None。
+        返回 0 表示该时段选择自由选择娱乐活动。
         """
-        # 每行6个：190/6=31列，6×31=186≤190
-        cell_width = int(self.width / 6)
         while 1:
             return_list: list[str] = []
             id_by_return: dict[str, int] = {}
             draw.TitleLineDraw(_("选择活动"), self.width).draw()
-
-            first_row, age_row, other_list = (
-                schedule_template_handle.get_schedule_activity_rows()
+            _draw_button_rows(
+                schedule_template_service.activity_rows(),
+                "ACT_",
+                int(self.width / 6),
+                return_list,
+                id_by_return,
             )
-
-            def draw_activity(entertainment_id: int) -> None:
-                """画一个活动按钮并登记返回值；年龄限制与「未开放」写在名字后面的同一对括号里"""
-                name = schedule_template_handle.get_activity_name(
-                    entertainment_id
-                )
-                limit_text = (
-                    schedule_template_handle.get_activity_age_limit_text(
-                        entertainment_id
-                    )
-                )
-                place_closed = bool(
-                    entertainment_id
-                ) and not schedule_template_handle.judge_activity_place_open(
-                    entertainment_id
-                )
-                if limit_text and place_closed:
-                    name = _("{0}（{1}，未开放）").format(name, limit_text)
-                elif limit_text:
-                    name = _("{0}（{1}）").format(name, limit_text)
-                elif place_closed:
-                    name = _("{0}（未开放）").format(name)
-                now_draw = draw.LeftButton(
-                    _("[{0}]").format(name),
-                    f"ACT_{entertainment_id}",
-                    cell_width,
-                )
-                now_draw.draw()
-                return_list.append(now_draw.return_text)
-                id_by_return[now_draw.return_text] = entertainment_id
-
-            for entertainment_id in first_row:
-                draw_activity(entertainment_id)
-            if first_row:
-                line_feed.draw()
-            for entertainment_id in age_row:
-                draw_activity(entertainment_id)
-            if age_row:
-                line_feed.draw()
-            index = 0
-            for entertainment_id in other_list:
-                draw_activity(entertainment_id)
-                index += 1
-                if index % 6 == 0:
-                    line_feed.draw()
-            if index % 6:
-                line_feed.draw()
-
             line_feed.draw()
             back_draw = draw.CenterButton(
                 _("[取消]"), _("取消选择活动"), self.width
@@ -371,18 +224,12 @@ class Schedule_Template_Panel:
 
     def _batch_apply(self) -> None:
         """
-        批量套用：先选模板，再多选孩子，一次套完
-        输入类型: 无
-        输出类型: 无
-        功能: 口径 4 的核心操作——给三个孩子改日程是改一个模板 + 一次套用，而不是逐个改
+        先选择模板再多选候选孩子，确认后批量套用并显示结果提示。
+        候选名单取自 growth_handle.get_student_candidate_list。
         """
         template_id = self._select_template()
         if template_id is None:
             return
-        # 必须走一期的 get_student_candidate_list 而不是「有成长素质就算孩子」：
-        #    世界设定「萝莉化」(世界设定表的 1 号) 会给全岛干员挂上萝莉素质103
-        #    (character_handle.py:434)，只按素质筛会把整个罗德岛列进这份名单；
-        #    另外婴儿(101)也排不了自习读书，那份名单已经把两件事一并挡掉了
         child_list = growth_handle.get_student_candidate_list()
         if not child_list:
             info_draw = draw.NormalDraw()
@@ -391,41 +238,23 @@ class Schedule_Template_Panel:
             info_draw.style = "deep_gray"
             info_draw.draw()
             return
-        # 多选：选中的孩子存在集合里，再点一次取消选中，最后一次性套用
         selected_set: set[int] = set()
         while 1:
             return_list: list[str] = []
             id_by_return: dict[str, int] = {}
-            template_data = schedule_template_handle.get_template_data(
-                template_id
-            )
-            # 模板取不到（编号非法，或已被删掉）就直接退出，不画一个空面板
-            if template_data is None:
+            name = schedule_template_service.template_name(template_id)
+            if name is None:
                 return
             draw.TitleLineDraw(
-                _("批量套用：{0}").format(
-                    template_data[education_constant.TEMPLATE_KEY_NAME]
-                ),
-                self.width,
+                _("批量套用：{0}").format(name), self.width
             ).draw()
-            # 每行6个：190/6=31列。原来整个循环没有换行，孩子一多就会串行
-            index = 0
-            for child_id in child_list:
-                child_data: identity.Identity = identity.of(child_id)
-                mark = "√" if child_id in selected_set else "  "
-                now_draw = draw.LeftButton(
-                    _("[{0}{1}]").format(mark, child_data.name),
-                    f"CHILD_{child_id}",
-                    int(self.width / 6),
-                )
-                now_draw.draw()
-                return_list.append(now_draw.return_text)
-                id_by_return[now_draw.return_text] = child_id
-                index += 1
-                if index % 6 == 0:
-                    line_feed.draw()
-            if index % 6:
-                line_feed.draw()
+            _draw_button_rows(
+                schedule_template_service.child_rows(child_list, selected_set),
+                "CHILD_",
+                int(self.width / 6),
+                return_list,
+                id_by_return,
+            )
             confirm_draw = draw.CenterButton(
                 _("[确认套用]"), _("确认套用"), int(self.width / 2)
             )
@@ -442,62 +271,32 @@ class Schedule_Template_Panel:
             if yrn == back_draw.return_text:
                 return
             if yrn == confirm_draw.return_text:
-                count = schedule_template_handle.batch_apply_template(
-                    sorted(selected_set), template_id
-                )
                 info_draw = draw.NormalDraw()
                 info_draw.width = self.width
-                info_draw.text = _("\n已把[{0}]套用到 {1} 名孩子\n").format(
-                    template_data[education_constant.TEMPLATE_KEY_NAME], count
+                info_draw.text = schedule_template_service.batch_apply(
+                    template_id, selected_set
                 )
                 info_draw.style = "gold_enrod"
                 info_draw.draw()
                 return
             if yrn in id_by_return:
-                child_id = id_by_return[yrn]
-                if child_id in selected_set:
-                    selected_set.discard(child_id)
-                else:
-                    selected_set.add(child_id)
+                selected_set ^= {id_by_return[yrn]}
 
     def _select_template(self) -> int | None:
         """
-        选一套模板
-        输入类型: 无
-        输出类型: Optional[int]，模板编号；0为不套用（恢复每日随机娱乐）；None为取消
-        功能: 供批量套用与个人课表面板的单孩换模板共用。
-              两个调用点都必须用 `is None` 判取消而不是判真假——
-                 0 是「不套用」这个有效选项，用真假判会把它当成取消给吞掉
+        打开选择模板页，返回模板编号、0（不套用）或在取消时返回 None。
+        调用方必须用 is None 判断取消，因为 0 是不套用日程的有效选项。
         """
         return_list: list[str] = []
         id_by_return: dict[str, int] = {}
         draw.TitleLineDraw(_("选择模板"), self.width).draw()
-        # 每行6个：190/6=31列。原来整个循环没有换行，模板一多就会串行
-        index = 0
-        for template_id in schedule_template_handle.get_all_template_id():
-            template_data = schedule_template_handle.get_template_data(
-                template_id
-            )
-            # 编号来自 get_all_template_id，正常取得到；取不到就跳过这一项，不崩在下标上
-            if template_data is None:
-                continue
-            now_draw = draw.LeftButton(
-                _("[{0}]").format(
-                    template_data[education_constant.TEMPLATE_KEY_NAME]
-                ),
-                f"PICK_{template_id}",
-                int(self.width / 6),
-            )
-            now_draw.draw()
-            return_list.append(now_draw.return_text)
-            id_by_return[now_draw.return_text] = template_id
-            index += 1
-            if index % 6 == 0:
-                line_feed.draw()
-        if index % 6:
-            line_feed.draw()
-        # 「不套用」是模板编号0，apply_template 早就支持，只是此前面板没给出口——
-        # 少了它，孩子一旦套上日程就再也回不到「每日随机娱乐」的状态
+        _draw_button_rows(
+            schedule_template_service.template_choice_rows(),
+            "PICK_",
+            int(self.width / 6),
+            return_list,
+            id_by_return,
+        )
         none_draw = draw.CenterButton(
             _("[不套用日程（恢复随机）]"), _("不套用日程"), int(self.width / 2)
         )
