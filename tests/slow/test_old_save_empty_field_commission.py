@@ -125,7 +125,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         无
         """
         from Script.Config import normal_config
-        from Script.System.Field_Commission_System import field_commission_panel
+        from Script.UI.Panel import field_commission_panel
 
         panel = field_commission_panel.CommissionDraw(
             commission_id,

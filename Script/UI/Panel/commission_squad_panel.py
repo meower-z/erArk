@@ -16,9 +16,7 @@ from Script.Modules.gameplay_resolution import field_commission_service
 from Script.UI.Moudle import draw
 
 if TYPE_CHECKING:
-    from Script.System.Field_Commission_System.field_commission_panel import (
-        CommissionDraw,
-    )
+    from Script.UI.Panel.field_commission_panel import CommissionDraw
 
 _: FunctionType = get_text._
 """ 翻译api """

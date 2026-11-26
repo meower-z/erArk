@@ -289,9 +289,7 @@ class LanguageRun:
 
     def commission_list(self) -> list[int]:
         """外勤委托面板列出的委托id"""
-        panel_module: Any = game(
-            "Script.System.Field_Commission_System.field_commission_panel"
-        )
+        panel_module: Any = game("Script.UI.Panel.field_commission_panel")
         panel = panel_module.Field_Commission_Panel(100)
         self.press("[返回]")
         panel.draw()
