@@ -708,7 +708,7 @@ Script/
 
 | 系统 | 核心文件 | 说明 |
 | --- | --- | --- |
-| 群交 | `Modules/gameplay_resolution/group_sex_service.py`, `System/Sex_System/group_sex_panel.py` | 模板结算与统计、信息与编辑面板 |
+| 群交 | `Modules/gameplay_resolution/group_sex_service.py`, `Modules/gameplay_resolution/group_sex_editor_service.py`, `Modules/gameplay_resolution/group_sex_invite_service.py`, `System/Sex_System/group_sex_panel.py` | 模板结算与统计、模板编辑与邀请服务、信息与编辑面板 |
 | 隐奸 | `System/Sex_System/hidden_sex_panel.py` | 隐蔽值/发现度 |
 | 露出 | `System/Sex_System/exhibitionism_sex_panel.py` | 露出 H |
 | 绳艺 | `System/Sex_System/bondage_panel.py` | `Bondage.csv` |
