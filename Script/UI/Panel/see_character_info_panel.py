@@ -9,7 +9,7 @@ from Script.Core import flow_handle, get_text
 from Script.Config import normal_config
 from Script.Design import character_image
 from Script.UI.Panel import body_info_panel, character_info_head
-from Script.System.First_Record_System import first_record_panel
+from Script.UI.Panel import first_record_panel
 from Script.Modules.domains import visitor
 from Script.Modules.gameplay_resolution import character_info_service as svc
 from Script.Modules.gameplay_resolution import (
