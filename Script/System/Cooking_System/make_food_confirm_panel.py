@@ -9,8 +9,9 @@ from Script.Core import get_text, flow_handle, text_handle, py_cmd
 from Script.Design import attr_calculation
 from Script.Modules.gameplay_resolution import make_food_service as service
 from Script.Modules.tk_ui import player_pick
-from Script.System.Cooking_System import cooking, cook_question_panel
+from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw
+from Script.UI.Panel import cook_question_panel
 from Script.Config import game_config, normal_config
 
 _: FunctionType = get_text._
