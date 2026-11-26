@@ -158,7 +158,7 @@ class Course_Select_Panel:
 
     def _edit_schedule(self, character_id: int) -> None:
         """绘制单个学生的日程模板与三时段覆盖编辑页，并按输入套用模板或单槽活动。"""
-        from Script.System.Education_System import schedule_template_panel
+        from Script.UI.Panel import schedule_template_panel
 
         template_panel = schedule_template_panel.Schedule_Template_Panel(
             self.width

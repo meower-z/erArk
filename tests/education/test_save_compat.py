@@ -331,8 +331,10 @@ for save_id in candidate_list:
     try:
         from Script.System.Education_System import (
             class_schedule_panel,
-            course_select_panel,
             growth_panel,
+        )
+        from Script.UI.Panel import (
+            course_select_panel,
             schedule_template_panel,
         )
 

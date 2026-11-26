@@ -510,7 +510,7 @@ schedule_template_handle.delete_template(_l18_id)
 section(
     "Plan 32 L28：模板键与 need 分隔符集中在 education_constant，模块与面板不写字面量"
 )
-from Script.System.Education_System import schedule_template_panel  # noqa: E402
+from Script.UI.Panel import schedule_template_panel
 
 check(
     "L28 schedule_template_handle 的五个模块级常量已删",
