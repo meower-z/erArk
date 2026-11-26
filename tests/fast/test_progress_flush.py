@@ -27,7 +27,7 @@ from Script.Modules.tk_ui import orders
 from Script.Settle import past_day_settle, sleep_settle
 from Script.System.Education_System import sex_class_handle
 from Script.UI.Moudle import draw, view
-from Script.UI.Panel import debug_panel, play_gomoku_panel
+from Script.UI.Panel import chat_ai_panel, debug_panel, play_gomoku_panel
 from tests import legacy_save
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
@@ -157,7 +157,11 @@ class ProgressShownBeforeWork(FastTestCase):
             handle_chat_ai,
             "text_ai",
             lambda: handle_chat_ai.judge_use_text_ai(
-                0, "", "", direct_mode=True
+                0,
+                "",
+                "",
+                chat_ai_panel.OUTPUT,
+                settle=chat_ai_panel.settle_direct_instruct,
             ),
         )
         self.assertIn("正在调用test-model", shown)
