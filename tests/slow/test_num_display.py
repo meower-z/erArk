@@ -176,6 +176,9 @@ class NumDisplayTest(SlowTestCase):
         settle_behavior = importlib.import_module(
             "Script.Design.settle_behavior"
         )
+        settle_hooks = importlib.import_module(
+            "Script.Modules.gameplay_resolution.settle_hooks"
+        )
 
         self.set_values(Fraction(0))
         quiet_up, quiet_down, seen = sorted(status.of(self.operator.cid))[:3]
@@ -197,10 +200,10 @@ class NumDisplayTest(SlowTestCase):
         with mock.patch.object(
             settle_behavior, "handle_instruct_data", return_value=change
         ):
-            panel = settle_behavior.handle_settle_behavior(0, now_time)
-        self.assertIsNotNone(panel)
+            settle_text = settle_behavior.handle_settle_behavior(0, now_time)
+        self.assertIsNotNone(settle_text)
         self.world.player.screen.clear()
-        panel.draw()
+        settle_hooks.emit_settle_text(settle_text)
         text = "".join(self.world.player.screen)
         names = {
             sid: game_config.config_character_state[sid].name

@@ -7,7 +7,6 @@
 """
 
 import datetime
-from types import SimpleNamespace
 from unittest import mock
 
 from Script.Config import game_config, normal_config
@@ -16,6 +15,7 @@ from Script.Design import character_behavior, event, game_time, settle_behavior
 from Script.Kernel import core
 from Script.Modules.domains import commission
 from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
+from Script.Modules.gameplay_resolution import settle_hooks
 from Script.Modules.gameplay_resolution import working
 from Script.System.Field_Commission_System import field_commission_function
 from Script.UI.Moudle import draw
@@ -167,18 +167,24 @@ class BehaviorPauseTest(NoticeCase):
     """验证 judge_character_status 结算后的停顿提示在玩家、干员与空结算下的行为。"""
 
     def setUp(self) -> None:
-        """创建非玩家角色，并打桩事件处理返回 None、行为结算返回带模拟 draw 方法的替身面板。"""
+        """创建非玩家角色并记录结算文本回调输出。同时打桩事件处理返回 None 与行为结算返回预设文本。"""
         super().setUp()
         self.world.chara(NPC, "干员")
-        self.panel = SimpleNamespace(draw_list=["数值变化"], draw=mock.Mock())
+        self.settle_text = "数值变化"
+        self.drawn_texts: list[str] = []
         self.enterContext(
             mock.patch.object(event, "handle_event", return_value=None)
         )
         self.enterContext(
             mock.patch.object(
+                settle_hooks, "_settle_texts", [self.drawn_texts.append]
+            )
+        )
+        self.enterContext(
+            mock.patch.object(
                 settle_behavior,
                 "handle_settle_behavior",
-                side_effect=lambda *args: self.panel,
+                side_effect=lambda *args: self.settle_text,
             )
         )
 
@@ -199,24 +205,24 @@ class BehaviorPauseTest(NoticeCase):
             )
 
     def test_player_always_pauses(self) -> None:
-        """验证绘制设置 19 关闭时，玩家结算仍绘制一次面板并发出一次结算后的停顿提示。"""
+        """验证绘制设置 19 关闭时，玩家结算仍派发一次结算文本并发出一次停顿提示。"""
         self.settle(0, 0)
-        self.panel.draw.assert_called_once_with()
+        self.assertEqual(self.drawn_texts, ["数值变化"])
         self.assert_notices(("\n", True, None, True))
 
     def test_npc_pause_follows_setting(self) -> None:
-        """验证非玩家角色在绘制设置 19 关闭时无停顿提示，开启时发出结算后的停顿提示，且两次均绘制面板。"""
+        """验证非玩家角色在绘制设置 19 关闭时无停顿、开启时停顿一次。两次结算均派发结算文本。"""
         self.settle(NPC, 0)
         self.assert_notices()
         self.settle(NPC, 1)
-        self.assertEqual(self.panel.draw.call_count, 2)
+        self.assertEqual(self.drawn_texts, ["数值变化"] * 2)
         self.assert_notices(("\n", True, None, True))
 
     def test_empty_settlement_skips_pause(self) -> None:
-        """验证结算面板 draw_list 为空时，即使玩家开启绘制设置 19 也不绘制面板且不发出停顿提示。"""
-        self.panel.draw_list = []
+        """验证结算文本为空字符串时，即使玩家开启绘制设置 19 也不派发文本且不发出停顿提示。"""
+        self.settle_text = ""
         self.settle(0, 1)
-        self.panel.draw.assert_not_called()
+        self.assertEqual(self.drawn_texts, [])
         self.assert_notices()
 
 
