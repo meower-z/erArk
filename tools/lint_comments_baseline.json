@@ -27,7 +27,7 @@
   "Script/Design/character_behavior.py": 30,
   "Script/Design/character_handle.py": 65,
   "Script/Design/character_image.py": 30,
-  "Script/Design/character_move.py": 27,
+  "Script/Design/character_move.py": 24,
   "Script/Design/child_stage_gate.py": 2,
   "Script/Design/clothing.py": 84,
   "Script/Design/cross_section_image.py": 6,

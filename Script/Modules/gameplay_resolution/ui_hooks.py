@@ -1,12 +1,12 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供十一类回调的登记与调用入口。
-十一类回调分别用于输出提示文本、数值变化、图片、分隔线、富文本口上、逐行等待文本、刷出缓冲输出、
-切换面板、确认提问、查询隐奸中显示非H指令的开关与调用文本AI处理。
+本模块提供十二类回调的登记与调用入口。
+十二类回调分别用于输出提示文本、数值变化、图片、分隔线、富文本口上、逐行等待文本、刷出缓冲输出、
+切换面板、确认提问、查询隐奸中显示非H指令的开关、调用文本AI处理与主角寻路首段选定。
 本模块不直接导入界面、Tk 或输入输出模块。
 未登记回调时，emit_notice、emit_delta、emit_image、emit_divider、emit_rich_talk、
-emit_line_wait_text、emit_flush 与 switch_panel 不执行操作。
+emit_line_wait_text、emit_flush、switch_panel 与 choose_route_leg 不执行操作。
 未登记回调时，emit_confirm 返回 True。
 未登记回调时，hidden_sex_show_non_h 返回 False。
 未登记回调时，apply_text_ai 原样返回传入文本。
@@ -143,6 +143,12 @@ type Flush = Callable[[], None]
 """ 刷出缓冲输出回调函数类型，不接收参数且无返回值。 """
 _flushes: list[Flush] = []
 """ 按登记顺序保存的刷出缓冲输出回调列表。 """
+type RouteLeg = Callable[
+    [str, int, int, dict[str, object], dict[str, object] | None], None
+]
+""" 主角寻路首段选定回调函数类型，按位置接收行为编号、分钟数、角色状态编号、写入字段与附加参数。 """
+_route_legs: list[RouteLeg] = []
+""" 按登记顺序保存的主角寻路首段选定回调列表。 """
 
 
 def on_notice(fn: Notice) -> Notice:
@@ -453,3 +459,38 @@ def emit_flush() -> None:
     """
     for fn in _flushes:
         fn()
+
+
+def on_route_leg(fn: RouteLeg) -> RouteLeg:
+    """
+    登记一个主角寻路首段选定回调，可作为装饰器使用。
+    Keyword arguments:
+    fn -- RouteLeg，要登记的主角寻路首段选定回调函数
+    Return arguments:
+    RouteLeg -- 原样返回传入的 fn
+    """
+    _route_legs.append(fn)
+    return fn
+
+
+def choose_route_leg(
+    behavior_id: str,
+    minutes: int,
+    *,
+    state: int,
+    fields: dict[str, object],
+    args: dict[str, object] | None,
+) -> None:
+    """
+    按登记顺序调用已登记的主角寻路首段选定回调，未登记时不执行操作。
+    Keyword arguments:
+    behavior_id -- str，本段移动使用的行为编号
+    minutes -- int，本段移动所需的分钟数
+    state -- int，本段移动开始时写入的角色状态编号
+    fields -- dict[str, object]，本段移动开始时写入主角数据的字段映射
+    args -- dict[str, object] | None，行动附加参数字典，无附加参数时为 None
+    Return arguments:
+    None -- 无返回值
+    """
+    for fn in _route_legs:
+        fn(behavior_id, minutes, state, fields, args)
