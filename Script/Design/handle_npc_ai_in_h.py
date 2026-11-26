@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import random
+from collections.abc import Callable
 from types import FunctionType
 from Script.Core import game_path_config, game_type, constant, get_text
 from Script.Design import (
@@ -606,13 +607,12 @@ def evaluate_npc_body_part_prefs(character_id: int) -> int:
     return part_id
 
 
-def npc_active_h() -> int:
+def npc_active_h(choose: Callable[..., object]) -> None:
     """
-    判断NPC的逆推ai：在玩家选行动时调用，选出的行为经 player_pick.choose 定为玩家这次的行动（抛出 Chosen）\n
-    Return arguments:
-    int -- 0为对方没有逆推或没有可选的行为
+    在交互对象主动 H 时替玩家选出性爱行为，并调用 choose 定下本次行动。未主动 H、幼年阶段或无候选时返回 None。\n
+    Keyword arguments:
+    choose -- Callable[..., object]，定下玩家行动的回调，以 (behavior_id, 10, state=behavior_id) 调用
     """
-    from Script.Modules.tk_ui import player_pick
     from Script.Modules.gameplay_resolution import instruct_filter
 
     target_character_id = activity.target(0)
@@ -622,10 +622,10 @@ def npc_active_h() -> int:
     if not hypnosis.of(target_character_data.cid)[
         "active_h"
     ] and not h_state.get(target_character_data.cid, "npc_active_h"):
-        return 0
+        return
     # 对方处于幼年阶段时不逆推
     if child_stage_gate.is_child_stage(target_character_id):
-        return 0
+        return
 
     # 根据NPC的部位喜好，选择一个部位
     part_id = evaluate_npc_body_part_prefs(target_character_id)
@@ -693,13 +693,13 @@ def npc_active_h() -> int:
 
     # 如果没有符合条件的状态，则返回
     if len(all_stastus_list) == 0:
-        return 0
+        return
 
     # 随机选择一个状态
     behavior_id = random.choice(all_stastus_list)
 
     # 定为玩家这次选的行动
-    player_pick.choose(behavior_id, 10, state=behavior_id)
+    choose(behavior_id, 10, state=behavior_id)
 
 
 def npc_ai_in_group_sex(character_id: int) -> None:
