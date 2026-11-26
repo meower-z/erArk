@@ -149,11 +149,11 @@ def walk(world: FullWorld, path: list) -> None:
     Return arguments:
     无
     """
-    from Script.Design import character_move
+    from Script.UI.Panel import see_map_panel
     from tests.world import act
 
     world.scene(path)
-    act(lambda: character_move.own_charcter_move(list(path)))
+    act(lambda: see_map_panel.pick_route(list(path)))
 
 
 def npc_id(world: FullWorld, name: str) -> int:

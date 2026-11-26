@@ -173,8 +173,8 @@ class SlowTestCase(unittest.TestCase):
         Return arguments:
         无
         """
-        from Script.Design import character_move
+        from Script.UI.Panel import see_map_panel
         from tests import world
 
         self.world.scene(path)
-        world.act(lambda: character_move.own_charcter_move(list(path)))
+        world.act(lambda: see_map_panel.pick_route(list(path)))

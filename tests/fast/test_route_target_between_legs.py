@@ -11,7 +11,8 @@
 from unittest import mock
 
 from Script.Core import constant
-from Script.Design import character_behavior, character_move, map_handle
+from Script.Design import character_behavior, map_handle
+from Script.UI.Panel import see_map_panel
 from tests.fast.base import FastTestCase
 from tests.world import play
 from tests.chara_activity import aim
@@ -63,7 +64,7 @@ class RouteTargetBetweenLegsTest(FastTestCase):
         with mock.patch.object(
             character_behavior, "judge_character_status", settle
         ):
-            play(lambda: character_move.own_charcter_move(list(TARGET)))
+            play(lambda: see_map_panel.pick_route(list(TARGET)))
         self.assertEqual(activity.position(self.player.cid), TARGET)
         self.assertGreater(len(self.targets), 2, "寻路走了不止两段")
         self.assertEqual(self.targets, [1] * len(self.targets))

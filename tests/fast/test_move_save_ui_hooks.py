@@ -22,6 +22,7 @@ from Script.Modules.gameplay_resolution import ui_hooks
 from Script.Modules.save_load.legacy_pickle import LegacyObject
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw, view
+from Script.UI.Panel import see_map_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT
@@ -189,7 +190,7 @@ class RoutePanelTest(HookCase):
     def test_first_leg_is_chosen_from_scene_panel(self) -> None:
         """验证寻路可走第一段时抛出 player_pick.Chosen，并经回调切至场景面板。"""
         with self.assertRaises(player_pick.Chosen):
-            kernel_data.written(character_move.own_charcter_move, list(OFFICE))
+            kernel_data.written(see_map_panel.pick_route, list(OFFICE))
         self.assert_panel(constant.Panel.IN_SCENE)
 
     def test_arrived_route_returns_to_scene_panel(self) -> None:
