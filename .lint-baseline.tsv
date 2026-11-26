@@ -101,7 +101,6 @@ Script/System/Education_System/education_constant.py	<module>	module-lines	lines
 Script/System/Education_System/growth_event_handle.py	<module>	module-lines	lines=621
 Script/System/Education_System/growth_event_handle.py	push_semester_event	pyrefly:bad-argument-type	count=2
 Script/System/Education_System/growth_handle.py	<module>	module-lines	lines=937
-Script/System/Education_System/growth_panel.py	<module>	module-lines	lines=515
 Script/System/Education_System/schedule_handle.py	<module>	module-lines	lines=855
 Script/System/Education_System/schedule_handle.py	get_course_at	pyrefly:bad-argument-type	count=1
 Script/System/Education_System/schedule_handle.py	get_course_at	pyrefly:bad-assignment	count=1

@@ -673,6 +673,7 @@ Script/
 | 射精面板 | `UI/Panel/ejaculation_panel.py` | `Semen_Shoot_Amount.csv` |
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
 | 教育管理 | `System/Education_System/*`, `Modules/gameplay_resolution/class_schedule_service.py`, `Modules/gameplay_resolution/sex_class_plan_service.py`, `Modules/gameplay_resolution/class_tip_service.py` | 全局课表、个人课表、日程模板与养成总览 |
+| 养成总览 | `System/Education_System/growth_panel.py`, `Modules/gameplay_resolution/growth_overview_service.py`, `Modules/domains/growth.py` | 女儿的阶段、科目、出勤、成绩单、性格与履历 |
 | 身体检查与管理 | `UI/Panel/physical_check_and_manage.py`, `Modules/gameplay_resolution/physical_exam_service.py`, `Modules/gameplay_resolution/physical_exam_report.py`, `Modules/gameplay_resolution/body_manage_service.py`, `Modules/domains/physical_exam.py` | `Physical_Exam_Setting.csv` |
 | 读书/图书馆 | `UI/Panel/borrow_book_panel.py`, `read_book_panel.py`, `manage_library.py`, `Modules/gameplay_resolution/library_panel_service.py`, `Modules/domains/library.py` | `Book*.csv` |
 | 五子棋 | `UI/Panel/play_gomoku_panel.py`, `Modules/gameplay_resolution/gomoku_shapes.py`, `Modules/gameplay_resolution/gomoku_evaluate.py`, `Modules/gameplay_resolution/gomoku_moves.py`, `Modules/gameplay_resolution/gomoku_cache.py`, `Modules/gameplay_resolution/gomoku_board.py`, `Modules/gameplay_resolution/gomoku_search.py` | 娱乐小游戏 |
