@@ -1010,3 +1010,13 @@ reads = "读取 Script/Design/handle_npc_ai_in_h.py 的源码字节，交由 ban
 used_for = "测试：Script/Design/handle_npc_ai_in_h.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R99"
+file = "tests/fast/test_past_day_settle_ui_free.py"
+symbol = "PastDaySettleImportBoundaryTest.test_skips_ui_imports"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Settle/past_day_settle.py 的源码字节并解析其中的导入语句"
+used_for = "测试：Script/Settle/past_day_settle.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
+when = "test"
+capture = "suite"
