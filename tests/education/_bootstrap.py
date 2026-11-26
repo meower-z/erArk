@@ -111,7 +111,7 @@ from Script.Design import (  # noqa: E402
     map_handle,
     settle_behavior,
 )
-import Script.Settle  # noqa: F401,E402  注册全部结算器
+import Script.Settle.all_effects
 import Script.StateMachine  # noqa: F401,E402  注册全部状态机
 from Script.Core import (
     constant,

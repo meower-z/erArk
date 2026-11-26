@@ -1,22 +1,4 @@
-"""结算包，导入 default、default_cloth、Second_effect 等结算模块"""
-
-from Script.Settle import (
-    default,
-    default_cloth,
-    Second_effect,
-    sleep_settle,
-    past_day_settle,
-    realtime_settle,
-    common_default,
-)
-
-# 导入让各结算模块随包载入；default、default_cloth、Second_effect 载入时注册结算效果
-__all__ = [
-    "default",
-    "default_cloth",
-    "Second_effect",
-    "sleep_settle",
-    "past_day_settle",
-    "realtime_settle",
-    "common_default",
-]
+"""
+结算模块包。本初始化文件不执行导入。导入单个子模块仅加载该模块及其自身依赖。
+如需注册全部结算效果，请导入 Script.Settle.all_effects。
+"""

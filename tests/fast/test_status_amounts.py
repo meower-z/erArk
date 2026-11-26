@@ -8,9 +8,9 @@
 
 import datetime
 
-from Script.Core import constant, constant_effect, game_type
+from Script.Core import game_type
 from Script.Modules.domains import dirty, status
-from Script.Settle import realtime_settle
+from Script.Settle import default, realtime_settle
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
@@ -30,10 +30,13 @@ class StatusAmountsTest(FastTestCase):
     def test_action_effect_writes_whole_amounts(self) -> None:
         """少量S快结算 7 分钟：状态值与记录的量是整数"""
         change = game_type.CharacterStatusChange()
-        effect = constant.settle_behavior_effect_data[
-            constant_effect.BehaviorEffect.TARGET_ADD_SMALL_S_FEEL
-        ]
-        kernel_data.written(effect, 0, 7, change, datetime.datetime(2025, 1, 1))
+        kernel_data.written(
+            default.handle_target_add_small_s_feel,
+            0,
+            7,
+            change,
+            datetime.datetime(2025, 1, 1),
+        )
         written = status.of(self.npc.cid)[0]
         recorded = change.target_change[1].status_data[0]
         self.assertGreater(written, 0)

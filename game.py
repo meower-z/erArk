@@ -52,7 +52,7 @@ if __name__ == "__main__":
     map_config.init_map_data()
 
     from Script.Design import start_flow
-    import Script.Settle
+    import Script.Settle.all_effects
     import Script.StateMachine
     import Script.System.Medical_System
     from Script.Core import game_init
