@@ -202,7 +202,7 @@ def judge_character_status(character_id: int) -> int:
         event_config = game_config.config_event[event_id]
         event_type_now = event_config.type
         # 事件绘制
-        start_event_draw.draw()
+        event.show_event_text(start_event_draw)
 
     # if not character_id:
     #     print(f"debug 1 move_src = {character_data.behavior.move_src},position = {character_data.position}")
@@ -224,7 +224,7 @@ def judge_character_status(character_id: int) -> int:
             # print(f"debug 指令前置类型的事件触发")
             activity.update_event(character_id, event_id=end_event_id)
             # 事件绘制
-            end_event_draw.draw()
+            event.show_event_text(end_event_draw)
             # 事件的数值结算
             second_settle_panel = settle_behavior.handle_settle_behavior(
                 character_id, end_time, 0

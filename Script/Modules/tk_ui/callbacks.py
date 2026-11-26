@@ -4,7 +4,7 @@ Tk 界面向后端登记的回调函数
 load_order 导入本模块时完成以下登记，本模块不登记内核钩子：
 - playthrough：设定表补齐提示。
 - save_load.reset：new_round 与 panel 界面实现。
-- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、面板切换、确认提问、隐奸非H开关查询、
+- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、逐行等待文本、面板切换、确认提问、隐奸非H开关查询、
   文本AI处理与刷出缓冲输出。
 - achievement_service：新达成成就提示。
 - ejaculation_service：射精文本、忍耐询问与射精面板。
@@ -182,6 +182,23 @@ def draw_rich_talk(
         wait_draw = draw.LineFeedWaitDraw()
         wait_draw.text = " \n"
         wait_draw.draw()
+
+
+@ui_hooks.on_line_wait_text
+def draw_line_wait_text(text: str, style: str) -> None:
+    """
+    按配置文本宽度使用 draw.LineFeedWaitDraw 以指定样式逐行绘制文本并在每段后等待确认。
+    Keyword arguments:
+    text -- str，要绘制的文本
+    style -- str，文本样式名
+    Return arguments:
+    None -- 无返回值
+    """
+    now_draw = draw.LineFeedWaitDraw()
+    now_draw.width = normal_config.config_normal.text_width
+    now_draw.text = text
+    now_draw.style = style
+    now_draw.draw()
 
 
 @ui_hooks.on_panel_switch

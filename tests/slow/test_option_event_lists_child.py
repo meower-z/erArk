@@ -19,7 +19,7 @@ from tests.kernel_project import activity
 from tests.kernel_project import identity
 
 if TYPE_CHECKING:
-    from Script.UI.Panel.draw_event_text_panel import DrawEventTextPanel
+    from Script.Design.event import EventText
 
 PARENT_ID = "110b756a-bd81-4fb8-b86a-4e749a2b34fa"
 """ 星熊的选项父事件：行为是聊天，效果 10001 打开选项面板 """
@@ -93,14 +93,14 @@ class OptionEventListsChildTest(SlowTestCase):
 
         def record_event(
             character_id: int, event_before_instrust_flag: bool = False
-        ) -> "DrawEventTextPanel | None":
+        ) -> "EventText | None":
             """
             执行真实的 handle_event，并记下它选出的事件
             Keyword arguments:
             character_id -- 角色id
             event_before_instrust_flag -- 是否是事件在前，指令在后
             Return arguments:
-            DrawEventTextPanel -- 事件绘制面板，没有触发事件时为None
+            EventText -- 触发事件时为对应的事件文本对象，未触发事件时为 None
             """
             result = real_handle_event(character_id, event_before_instrust_flag)
             if result is not None:
