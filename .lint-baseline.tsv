@@ -125,7 +125,6 @@ Script/System/Pregnancy_System/born_event_panel.py	Born_Panel.draw	pyrefly:unbou
 Script/System/Pregnancy_System/egg_handle.py	<module>	module-lines	lines=645
 Script/System/Pregnancy_System/family_tree_draw.py	<module>	module-lines	lines=720
 Script/System/Pregnancy_System/pregnancy_handle.py	<module>	module-lines	lines=1108
-Script/System/Sex_System/group_sex_panel.py	<module>	module-lines	lines=804
 Script/Test/Static_Check/check_log.py	_build_entry_header_lines	pyrefly:bad-argument-type	count=3
 Script/Test/Static_Check/check_log.py	_build_entry_header_lines	pyrefly:bad-return	count=1
 Script/Test/Static_Check/checks/check_behavior.py	<module>	module-lines	lines=903

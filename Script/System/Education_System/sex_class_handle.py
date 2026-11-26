@@ -482,7 +482,7 @@ def get_class_member_list() -> list[int]:
     功能: 「已被拉进这节课」按身份认，不再重算入课门槛：门槛（judge_can_join_sex_class）只在入课那一刻判——
              开课拉人（10014）、开课后到场（722）、受邀到场都过它。成年学生的实行值随苦痛、露出、玩家理智在课中变化，
              一跌破门槛，她人还在课堂 H 里，却拿不到旁观收益、在课的口上前提也判不过。
-          旁观名单（get_watcher_list）、在课前提（self_in_sex_class）、课堂模式下群交模板的选人（group_sex_panel）
+          旁观名单（get_watcher_list）、在课前提（self_in_sex_class）、课堂模式下群交模板的选人（group_sex_editor_service）
              与主修科目加成（common_default 的经验写入段，实施复审补）都读这份名单。
           只读不写，前提路径上可以调用
     """
