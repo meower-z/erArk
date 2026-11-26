@@ -1,16 +1,16 @@
 # -*- coding: UTF-8 -*-
 """
-玩家最近的输入（log.inputs）与界面输入历史（view.input_cache）
-==============================================================
+最近输入（log.inputs）与输入历史（input_cache.input_cache）
+===========================================================
 - 选行动阶段输入的非空指令在行动开始前写入当前写缓冲区，空输入被忽略，一步结束后留在 GameState 中。
 - 选行动阶段连续输入超出 INPUTS_MAX 条时，GameState 中只保留最新的 INPUTS_MAX 条。
 - 结算阶段接收的输入立即写入当前写缓冲区，同一步之后的读取马上可见，并在一步结束后留在 GameState 中。
 - 一步之外暂存的输入在读档（cause 为 "load"）换入 GameState 时清空，新游戏换入时保留到下一个行动开始。
 - kernel_state.write 写出的存档包含暂存输入，内核的 core.state() 本身不变。
 - flow_handle.order_deal("str") 规范化纯数字返回值，同时把原始输入交给 orders.accept 暂存。
-- 前一指令的前提读取 GameState 的 log.inputs，不受界面输入历史 view.input_cache 影响。
+- 前一指令的前提读取 log.inputs，不受 input_cache.input_cache 影响。
 - log.inputs 随 kernel_state 编解码完整往返。
-- 读档后 log.inputs 换成存档时的输入（含存档时的暂存输入），读档前的输入不保留，view.input_cache 不变。
+- 读档后 log.inputs 换成存档输入（含暂存），不留读档前输入。input_cache.input_cache 不变。
 存档写在临时目录里（index.SAVE_DIR 换成它）。
 """
 
@@ -19,7 +19,7 @@ import tempfile
 from unittest import mock
 
 from Script.Core import constant, constant_promise, flow_handle, io_init
-from Script.Core import save_handle
+from Script.Core import input_cache, save_handle
 from Script.Design import handle_premise
 from Script.Kernel import core
 from Script.Modules.domains import country, history
@@ -27,7 +27,7 @@ from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import index, kernel_state
 from Script.Modules.tk_ui import orders
 from Script.Protocol import ScriptedUiPort, script
-from Script.UI.Moudle import draw, view
+from Script.UI.Moudle import draw
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests.fast.kernel_toys import KernelTestCase, Toy, flag, game
@@ -162,17 +162,19 @@ class RecentInputsTest(FastTestCase):
     def test_order_deal_hands_inputs_to_orders(self) -> None:
         """order_deal("str") 规范化纯数字返回值，同时将原始输入交给 orders 暂存"""
         self.enterContext(mock.patch.object(io_init, "_port", io_init._port))
-        self.enterContext(mock.patch.object(view, "input_cache", []))
+        self.enterContext(mock.patch.object(input_cache, "input_cache", []))
         io_init.configure(ScriptedUiPort(script("05")))
         self.assertEqual(flow_handle.order_deal("str", print_order=False), "5")
         self.assertEqual(history.inputs(orders.settled(core.state())), ["05"])
 
     def test_premise_reads_game_state(self) -> None:
-        """前一指令的前提读取 GameState 中的 log.inputs，不受 view.input_cache 影响"""
+        """前一指令的前提读取 GameState 中的 log.inputs，不受 input_cache.input_cache 影响"""
         kiss = str(constant.Instruct.KISS_H)
         caress = str(constant.Instruct.MAKING_OUT)
         kernel_data.put(history.add_inputs, [kiss, "0"])
-        self.enterContext(mock.patch.object(view, "input_cache", [caress, "0"]))
+        self.enterContext(
+            mock.patch.object(input_cache, "input_cache", [caress, "0"])
+        )
         premise = constant_promise.Premise
         self.assertEqual(
             handle_premise.handle_premise(premise.LAST_CMD_KISS_H, 0), 1
@@ -190,13 +192,13 @@ class RecentInputsTest(FastTestCase):
         self.assertEqual(history.inputs(decoded), ["3", "确定"])
 
     def test_load_takes_the_saved_inputs(self) -> None:
-        """读档后 log.inputs 恢复为存档时的输入（含暂存输入），读档前输入不保留且 view.input_cache 不变"""
+        """读档后 log.inputs 恢复为存档时的输入（含暂存输入），读档前输入不保留。input_cache.input_cache 保持不变"""
         kernel_data.put(history.add_inputs, ["1"])
         orders.accept("save")
         save_handle.establish_save(SLOT)
         kernel_data.put(history.add_inputs, ["after save"])
         orders.accept("load")
-        self.enterContext(mock.patch.object(view, "input_cache", ["ui"]))
+        self.enterContext(mock.patch.object(input_cache, "input_cache", ["ui"]))
         with (
             mock.patch.object(draw, "NormalDraw", Quiet),
             mock.patch.object(draw, "LeftDraw", Quiet),
@@ -206,4 +208,4 @@ class RecentInputsTest(FastTestCase):
         self.assertEqual(
             history.inputs(orders.settled(core.state())), ["1", "save"]
         )
-        self.assertEqual(view.input_cache, ["ui"])
+        self.assertEqual(input_cache.input_cache, ["ui"])

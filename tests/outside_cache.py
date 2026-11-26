@@ -3,8 +3,8 @@
 测试复原内核状态之外的进程状态
 ==============================
 全局设置（save_load.settings、normal_config.system_setting 与 normal_config.ai_setting）、
-界面临时状态（Script.UI.Moudle.view）与未结算玩家输入（Script.Modules.tk_ui.orders._unsettled）
-不在 GameState 中，由 fresh 复原到初始状态。
+界面临时状态（Script.UI.Moudle.view）、未结算玩家输入（Script.Modules.tk_ui.orders._unsettled）
+与进程输入历史（Script.Core.input_cache.input_cache）不在 GameState 中，由 fresh 复原到初始状态。
 本模块顶部不导入游戏模块，以免收集慢速层测试时提前载入游戏。
 """
 
@@ -19,10 +19,10 @@ SETTINGS_DIR = tempfile.mkdtemp(prefix="erark-settings-")
 
 def fresh() -> None:
     """
-    将全局设置（系统设置与文本生成 AI 设置）、界面临时状态与未结算玩家输入复原到初始状态。
+    将全局设置（系统设置与文本生成 AI 设置）、界面临时状态、未结算玩家输入与进程输入历史复原到初始状态。
     函数将 settings.json 路径指向 SETTINGS_DIR 并删除该文件，同时清空 settings 模块的装入与收下状态。
     随后函数把 normal_config.system_setting 与 normal_config.ai_setting 换成空对象，
-    重新载入 view 并清空 orders._unsettled。
+    重新载入 view，并清空 orders._unsettled 与 input_cache.input_cache。
     下一次 core.reset_state 时，settings 的输出钩子以默认值为底重新装好全局设置。
     Keyword arguments:
     无
@@ -30,7 +30,7 @@ def fresh() -> None:
     无
     """
     from Script.Config import normal_config
-    from Script.Core import game_type
+    from Script.Core import game_type, input_cache
     from Script.Modules.save_load import settings
     from Script.Modules.tk_ui import orders
     from Script.UI.Moudle import view
@@ -47,3 +47,4 @@ def fresh() -> None:
     normal_config.ai_setting = game_type.Ai_Setting()
     importlib.reload(view)
     orders._unsettled.clear()
+    input_cache.input_cache.clear()

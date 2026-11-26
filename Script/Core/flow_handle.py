@@ -8,14 +8,11 @@ from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from types import FunctionType
 from typing import Callable, Literal, overload
-from Script.Core import text_handle, io_init, get_text, constant
+from Script.Core import text_handle, io_init, get_text, constant, input_cache
 from Script.Modules.tk_ui import orders
-from Script.UI.Moudle import view
 
 benchmark_mode = False
 """ 性能分析脚本置为 True 时，等待暂停立即返回 """
-INPUT_CACHE_LIMIT = 21
-"""界面输入历史 `view.input_cache` 最多保留的最近非空输入条数。"""
 
 # 翻译函数
 _: FunctionType = get_text._
@@ -279,9 +276,9 @@ _offered: tuple[str, ...] | None = None
 
 def _remember(order: str) -> None:
     if order != "":
-        if len(view.input_cache) >= INPUT_CACHE_LIMIT:
-            del view.input_cache[0]
-        view.input_cache.append(order)
+        if len(input_cache.input_cache) >= input_cache.INPUT_CACHE_LIMIT:
+            del input_cache.input_cache[0]
+        input_cache.input_cache.append(order)
 
 
 @contextmanager

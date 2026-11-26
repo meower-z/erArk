@@ -40,13 +40,12 @@ sys.modules["Script.Core.save_handle"] = types.SimpleNamespace(
 from Script.Config import normal_config
 
 normal_config.init_normal_config()
-from Script.Core import flow_handle, io_init
+from Script.Core import flow_handle, input_cache, io_init
 from Script.Protocol import (
     ButtonOp, Cancel, Choose, Continue, Exit, InputText, Pause, RenderChunk,
     ScriptedUiPort, SessionCancelled, SubmitChoice, TextOp, ThreadedUiPort,
     script,
 )
-from Script.UI.Moudle import view
 
 report = {}
 
@@ -92,7 +91,7 @@ report["nested"] = {
     ],
     "buttons": [[op.label, op.command_id] for op in ops(port, ButtonOp)],
     "texts": [op.text for op in ops(port, TextOp)],
-    "history": list(view.input_cache),
+    "history": list(input_cache.input_cache),
 }
 
 port = ScriptedUiPort(

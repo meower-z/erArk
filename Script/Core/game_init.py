@@ -12,6 +12,7 @@ from Script.Core import (
     constant,
     py_cmd,
     get_text,
+    input_cache,
     save_handle,
 )
 from Script.Config import game_config, normal_config
@@ -78,7 +79,7 @@ def init(main_flow: Callable[[], object]) -> None:
             # 向error_log写入回溯用信息
             with open(error_path, "a", encoding="utf-8") as e:
                 e.write(f"\n版本信息：{normal_config.config_normal.verson}\n")
-                e.write(f"最近输入指令：{view.input_cache}\n")
+                e.write(f"最近输入指令：{input_cache.input_cache}\n")
                 e.write(f"玩家最近状态：{instruct_cn_name_list}\n")
                 e.write(
                     f"当前游戏内时间：{game_time.get_date_text(game_time.now())}\n"
@@ -89,7 +90,9 @@ def init(main_flow: Callable[[], object]) -> None:
             error_text += _("版本信息：{0}\n").format(
                 normal_config.config_normal.verson
             )
-            error_text += _("最近输入指令：{0}\n").format(view.input_cache)
+            error_text += _("最近输入指令：{0}\n").format(
+                input_cache.input_cache
+            )
             error_text += _("玩家最近状态：{0}\n").format(instruct_cn_name_list)
             error_text += _("当前游戏内时间：{0}\n").format(
                 game_time.get_date_text(game_time.now())

@@ -24,13 +24,13 @@ import os
 import traceback
 
 from Script.Config import normal_config, game_config
+from Script.Core import input_cache
 from Script.Design import game_time
 from Script.Modules.domains import history, playthrough
 from . import snapshot as snapshot_module
 from .check_registry import CheckFailure, get_all_checks
 
 from Script.Modules.domains import identity
-from Script.UI.Moudle import view
 
 # 日志文件路径：与error.log同一约定，使用相对于游戏进程工作目录（即仓库根目录）的相对路径
 LOG_PATH = os.path.join("static_check_error.log")
@@ -171,9 +171,9 @@ def _build_recent_input_text() -> str:
     返回值:
         str: 最近输入指令的可读文本
     功能:
-        取view.input_cache末尾最多10条原始输入，拼接为日志展示用文本
+        取 Script.Core.input_cache.input_cache 末尾最多 10 条原始输入，转为日志展示用文本
     """
-    return str(list(view.input_cache[-10:]))
+    return str(list(input_cache.input_cache[-10:]))
 
 
 def _build_recent_behavior_text() -> str:

@@ -5,23 +5,23 @@
 - 收藏地点（map.bookmarks）与 debug 模式（mode.debug）随 kernel_state 编解码往返。
 - 「当前地点在收藏列表中」的前提随收藏与取消收藏变化。建玩家时收藏四个地点。
 - 读版本 26 的旧存档时，文件 "1" 里的 debug 模式、收藏地点与输入记录（input_cache）写进 GameState
-  （对应 mode.debug、map.bookmarks 与 log.inputs）。界面输入历史（view.input_cache）不随读档改变。
+  （对应 mode.debug、map.bookmarks 与 log.inputs）。进程输入历史（Script.Core.input_cache.input_cache）不随读档改变。
 - 医疗部初始化后的日结算照常完成。
-- 静态检查日志的最近输入文本读取界面输入历史（view.input_cache）的末尾十条。
+- 静态检查日志的最近输入文本读取进程输入历史（input_cache.input_cache）的末尾十条。
 存档写在临时目录里（index.SAVE_DIR 换成它）。
 """
 
 import tempfile
 from unittest import mock
 
-from Script.Core import constant_promise, save_handle
+from Script.Core import constant_promise, input_cache, save_handle
 from Script.Design import character, handle_premise
 from Script.Kernel import core
 from Script.Modules.domains import activity, bookmarks, country, history, modes
 from Script.Modules.save_load import index, kernel_state
 from Script.System.Medical_System import medical_service
 from Script.Test.Static_Check import check_log
-from Script.UI.Moudle import draw, view
+from Script.UI.Moudle import draw
 from tests import kernel_data, legacy_save
 from tests.fast.base import FastTestCase
 
@@ -43,7 +43,7 @@ class Quiet:
 
 
 class BookmarksDebugStateTest(FastTestCase):
-    """收藏地点与 debug 模式在 GameState 里，输入记录在界面上"""
+    """收藏地点与 debug 模式在 GameState 里，进程输入历史在 Script.Core.input_cache 中"""
 
     def setUp(self) -> None:
         """复原小世界，存档写进临时目录，建玩家角色"""
@@ -102,7 +102,7 @@ class BookmarksDebugStateTest(FastTestCase):
     def test_v26_save_moves_fields(self) -> None:
         """
         版本 26 的旧存档带着六个字段：读档后 debug 模式、收藏地点与最近输入（log.inputs）取自存档，
-        界面输入历史（view.input_cache）不变
+        进程输入历史（input_cache.input_cache）不变
         """
         old = legacy_save.old(
             "Cache",
@@ -114,7 +114,9 @@ class BookmarksDebugStateTest(FastTestCase):
             rhodes_island=legacy_save.old("Rhodes_Island"),
         )
         legacy_save.write_cache(SLOT, old)
-        self.enterContext(mock.patch.object(view, "input_cache", ["1", "2"]))
+        self.enterContext(
+            mock.patch.object(input_cache, "input_cache", ["1", "2"])
+        )
         with (
             mock.patch.object(draw, "NormalDraw", Quiet),
             mock.patch.object(draw, "LeftDraw", Quiet),
@@ -125,7 +127,7 @@ class BookmarksDebugStateTest(FastTestCase):
             self.assertTrue(modes.debug())
             self.assertEqual(bookmarks.places(), [["中枢", "博士办公室"]])
             self.assertEqual(history.inputs(), ["9"])
-        self.assertEqual(view.input_cache, ["1", "2"])
+        self.assertEqual(input_cache.input_cache, ["1", "2"])
 
     def test_medical_settles_without_island(self) -> None:
         """医疗部初始化后的日结算成功"""
@@ -135,9 +137,11 @@ class BookmarksDebugStateTest(FastTestCase):
         self.assertTrue(report["success"])
 
     def test_check_log_reads_input_history(self) -> None:
-        """界面输入记录有 12 条时，静态检查日志的最近输入文本取末尾 10 条"""
+        """进程输入历史（input_cache.input_cache）有 12 条时，静态检查日志的最近输入文本取末尾 10 条"""
         history = [str(i) for i in range(12)]
-        self.enterContext(mock.patch.object(view, "input_cache", history))
+        self.enterContext(
+            mock.patch.object(input_cache, "input_cache", history)
+        )
         self.assertEqual(
             check_log._build_recent_input_text(), str(history[-10:])
         )
