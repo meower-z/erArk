@@ -66,8 +66,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any, TextIO
 
-    from Script.UI.Panel import draw_event_text_panel
-
 ABSENT = None
 """ 比较时，一边没有的名字或步记作这个值（记录的值不会是 None） """
 
@@ -300,13 +298,13 @@ class ActionLog:
 
         def handle_event(
             character_id: int, *args: bool, **kwargs: bool
-        ) -> draw_event_text_panel.DrawEventTextPanel | None:
+        ) -> event.EventText | None:
             """
             照常选事件，选中时记下事件id
             Keyword arguments:
             character_id -- 角色id
             Return arguments:
-            object -- 原函数的返回值：选中事件时为事件绘制面板（它的 event_id 是事件id），否则为 None
+            object -- 原函数的返回值，选中事件时为 EventText 对象（event_id 为事件编号），否则为 None
             """
             result = real_handle_event(character_id, *args, **kwargs)
             event_id = getattr(result, "event_id", "")

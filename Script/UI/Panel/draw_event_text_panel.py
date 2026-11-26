@@ -1,10 +1,8 @@
 """事件描述文本的绘制面板"""
 
-from Script.Design import talk
+from Script.Design import event
 from Script.UI.Moudle import draw
-from Script.Config import normal_config, game_config
-from Script.Modules.domains import activity
-from Script.Modules.domains import identity
+from Script.Config import normal_config
 
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
@@ -26,82 +24,21 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
         self, event_id: str, character_id: int, event_type: int
     ) -> None:
         """初始化绘制对象"""
+        event_text = event.build_event_text(event_id, character_id, event_type)
         self.width: int = window_width
         """ 绘制的最大宽度 """
-        self.event_id: str = event_id
+        self.event_id: str = event_text.event_id
         """ 事件id """
         self.character_id: int = character_id
         """ 触发事件的角色id """
         self.event_type: int = event_type
         """ 事件的类型 """
-        self.text: str = ""
+        self.text: str = event_text.text
         """ 当前绘制的文本 """
-        self.style: str = "standard"
+        self.style: str = event_text.style
         """ 绘制文本的样式 """
         self.tooltip: str = ""
         """ 绘制文本的悬停提示 """
-        character_data: identity.Identity = identity.of(character_id)
-        if activity.position(0) not in [
-            activity.position(character_data.cid),
-            activity.behavior(character_data.cid).move_target,
-        ]:
-            return
-
-        self.son_event_flag = False  # 子事件标记
-        self.diy_event_flag = False  # diy事件标记
-
-        event_data = game_config.config_event[self.event_id]
-
-        # 如果玩家身上有角色diy事件标记
-        if activity.event(character_data.cid).chara_diy_event_flag:
-            # 更新事件id
-            self.event_id = activity.event(character_data.cid).event_id
-            event_data = game_config.config_event[self.event_id]
-            # 如果文本中没有两个|，则不是diy事件，不触发
-            if event_data.text.count("|") < 2:
-                return
-            # 清除角色的diy事件标记
-            activity.update_event(
-                character_data.cid, chara_diy_event_flag=False
-            )
-            # 触发diy事件标记
-            self.diy_event_flag = True
-
-        # 检查是否是子事件
-        if "option_son" in event_data.premise:
-            self.son_event_flag = True
-        for primise in event_data.premise:
-            if "CVP_A1_Son" in primise:
-                self.son_event_flag = True
-                break
-
-        # 子事件的文本里去掉选项内容
-        if self.son_event_flag and "|" in event_data.text:
-            now_event_text: str = "\n" + event_data.text.split("|")[1]
-        # diy事件的文本里去掉选项和行动事件内容
-        elif self.diy_event_flag and "|" in event_data.text:
-            now_event_text = "\n" + event_data.text.split("|")[2]
-        else:
-            now_event_text = "\n" + event_data.text
-
-        # 代码词语
-        now_event_text = talk.code_text_to_draw_text(
-            now_event_text, character_id
-        )
-        self.text = now_event_text
-
-        # 口上颜色
-        if event_data.adv_id not in {"", "0", 0}:
-            character_data = identity.of(character_id)
-            target_character_data: identity.Identity = identity.of(
-                activity.target(character_data.cid)
-            )
-            text_color = character_data.text_color
-            tar_text_color = target_character_data.text_color
-            if text_color:
-                self.style = character_data.name
-            elif tar_text_color:
-                self.style = target_character_data.name
 
     def draw(self) -> None:
         """

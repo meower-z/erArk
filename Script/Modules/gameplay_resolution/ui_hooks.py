@@ -1,12 +1,12 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供十类回调的登记与调用入口。
-十类回调分别用于输出提示文本、数值变化、图片、分隔线、富文本口上、刷出缓冲输出、切换面板、确认提问、
-查询隐奸中显示非H指令的开关与调用文本AI处理。
+本模块提供十一类回调的登记与调用入口。
+十一类回调分别用于输出提示文本、数值变化、图片、分隔线、富文本口上、逐行等待文本、刷出缓冲输出、
+切换面板、确认提问、查询隐奸中显示非H指令的开关与调用文本AI处理。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，emit_notice、emit_delta、emit_image、emit_divider、emit_rich_talk、emit_flush 与 switch_panel
-不执行操作。
+未登记回调时，emit_notice、emit_delta、emit_image、emit_divider、emit_rich_talk、
+emit_line_wait_text、emit_flush 与 switch_panel 不执行操作。
 未登记回调时，emit_confirm 返回 True。
 未登记回调时，hidden_sex_show_non_h 返回 False。
 未登记回调时，apply_text_ai 原样返回传入文本。
@@ -123,6 +123,10 @@ _dividers: list[Divider] = []
 """ 按登记顺序保存的分隔线绘制回调列表。 """
 _rich_talks: list[RichTalk] = []
 """ 按登记顺序保存的富文本口上回调列表。 """
+type LineWaitText = Callable[[str, str], None]
+""" 逐行等待文本回调函数类型，接收文本与样式名。 """
+_line_wait_texts: list[LineWaitText] = []
+""" 按登记顺序保存的逐行等待文本回调列表。 """
 _panel_switches: list[PanelSwitch] = []
 """ 按登记顺序保存的面板切换回调列表。 """
 type ToggleQuery = Callable[[], bool]
@@ -367,6 +371,31 @@ def emit_rich_talk(
             wait_flag=wait_flag,
             trailing_wait=trailing_wait,
         )
+
+
+def on_line_wait_text(fn: LineWaitText) -> LineWaitText:
+    """
+    登记一个逐行等待文本回调，可作为装饰器使用。
+    Keyword arguments:
+    fn -- LineWaitText，要登记的逐行等待文本回调函数
+    Return arguments:
+    LineWaitText -- 原样返回传入的 fn
+    """
+    _line_wait_texts.append(fn)
+    return fn
+
+
+def emit_line_wait_text(text: str, style: str = "standard") -> None:
+    """
+    按登记顺序调用已登记的逐行等待文本回调，未登记时不执行操作。
+    Keyword arguments:
+    text -- str，要输出的文本
+    style -- str，文本样式名，默认为 "standard"
+    Return arguments:
+    None -- 无返回值
+    """
+    for fn in _line_wait_texts:
+        fn(text, style)
 
 
 def on_text_ai(fn: TextAi) -> TextAi:

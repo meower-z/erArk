@@ -205,7 +205,7 @@ tests/slow/test_load_is_reset.py	LoadIsResetTest.instruct	pyrefly:bad-override	c
 tests/slow/test_no_nested_resolution.py	NoNestedResolutionTest.watching	pyrefly:deprecated	count=1
 tests/slow/test_old_save_age_and_body_type.py	<module>	module-lines	lines=1107
 tests/slow/test_tag_logic_same_in_english.py	<module>	UP035	count=1
-tests/snapshot.py	<module>	module-lines	lines=822
+tests/snapshot.py	<module>	module-lines	lines=820
 tests/snapshot.py	canonical	pyrefly:bad-specialization	count=1
 tests/snapshot.py	same	B905	count=1
 tests/snapshot_states.py	days_passed	pyrefly:deprecated	count=1

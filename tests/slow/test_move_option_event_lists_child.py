@@ -18,7 +18,7 @@ from tests.kernel_project import activity
 from tests.kernel_project import identity
 
 if TYPE_CHECKING:
-    from Script.UI.Panel.draw_event_text_panel import DrawEventTextPanel
+    from Script.Design.event import EventText
 
 PARENT_ID = "da8a5d84-014c-41ef-a755-c65c765867e0"
 """ 抵达男士止步地点、在场者都至少二级陷落时的选项父事件 """
@@ -83,14 +83,14 @@ class MoveOptionEventListsChildTest(SlowTestCase):
 
         def record_event(
             character_id: int, event_before_instrust_flag: bool = False
-        ) -> "DrawEventTextPanel | None":
+        ) -> "EventText | None":
             """
             照常判定事件，把博士触发的事件id收进 fired；父事件触发时把前一场景收进 previous
             Keyword arguments:
             character_id -- 角色id
             event_before_instrust_flag -- 是否是事件在前，指令在后
             Return arguments:
-            DrawEventTextPanel -- 事件绘制面板，没有触发事件时为None
+            EventText -- 触发事件时为对应的事件文本对象，未触发事件时为 None
             """
             result = real_handle_event(character_id, event_before_instrust_flag)
             if result is not None and character_id == 0:

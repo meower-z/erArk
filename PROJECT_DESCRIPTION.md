@@ -557,7 +557,7 @@ Script/
 - 数据：`data/event/*.json` -> 构建为 `Character_Event.json`
 - 触发时按角色 `adv_id`、行为 `behavior_id`、`start/type`、`premise` 筛选
 - 事件类型：指令前置、指令后置、子事件（`son_event_id`）、多层嵌套事件
-- 事件文本通过 `DrawEventTextPanel` 绘制；选项通过 `Event_option_Panel`
+- 事件文本由 `event.build_event_text` 构建并经 `event.show_event_text` 与 `ui_hooks` 逐行等待文本回调输出。选项通过 `Event_option_Panel` 绘制
 - 效果结算走与行为相同的 `CVE/CSE/int` 体系
 - 记录已触发事件：`events.triggered` / `events.triggered_today`（`domains/history.py`）
 

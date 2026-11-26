@@ -1,10 +1,13 @@
-"""状态触发事件：按行为建立事件预索引，处理角色的事件触发"""
+"""状态触发事件：按行为建立事件预索引，处理角色事件触发并构建与显示事件文本。"""
 
 import random
-from Script.UI.Panel import draw_event_text_panel
+from dataclasses import dataclass
+
 from Script.Config import game_config
+from Script.Design import talk
 from Script.Modules.domains import activity, history
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _handle_premise = None
 """ handle_premise 模块的延迟导入缓存（规避循环导入，同时消除每次事件判定重复导入的开销） """
@@ -53,16 +56,97 @@ def _get_event_index(behavior_id: str) -> dict:
     return index
 
 
+@dataclass(frozen=True, slots=True)
+class EventText:
+    """不可变的事件文本结果，保存待显示的文本、样式与事件元数据。"""
+
+    event_id: str
+    """ 事件编号，在自定义事件切换生效时为角色当前记录的事件编号 """
+    character_id: int
+    """ 触发事件的角色编号 """
+    event_type: int
+    """ 传入的事件类型编号 """
+    text: str
+    """ 待显示的事件正文，无需显示时为空字符串 """
+    style: str
+    """ 绘制事件正文使用的文本样式名，默认值为 "standard" """
+
+
+def build_event_text(
+    event_id: str, character_id: int, event_type: int
+) -> EventText:
+    """
+    构建事件文本，按序执行位置检查、自定义事件切换、分段截取、代码词展开与样式判定。
+    玩家不在角色位置或移动目标时，返回空文本与 "standard" 样式。
+    启用 chara_diy_event_flag 时取用角色记录的事件。
+    该事件文本少于两个 "|" 时返回空文本且不清除标记，否则清除标记。
+    含 "|" 的子事件取第二段，自定义事件取第三段，其余取全文，段首加换行符。
+    随后调用 talk.code_text_to_draw_text 展开代码词。
+    角色专属事件按 text_color 依次取角色名或交互对象名，否则为 "standard"。
+    Keyword arguments:
+    event_id -- str，事件编号
+    character_id -- int，角色编号
+    event_type -- int，事件类型，原样写入结果
+    Return arguments:
+    EventText -- 构建后的事件文本对象
+    """
+    text = ""
+    style = "standard"
+    if activity.position(0) not in (
+        activity.position(character_id),
+        activity.behavior(character_id).move_target,
+    ):
+        return EventText(event_id, character_id, event_type, text, style)
+    diy_event_flag = False
+    if activity.event(character_id).chara_diy_event_flag:
+        event_id = activity.event(character_id).event_id
+        if game_config.config_event[event_id].text.count("|") < 2:
+            return EventText(event_id, character_id, event_type, text, style)
+        activity.update_event(character_id, chara_diy_event_flag=False)
+        diy_event_flag = True
+    event_data = game_config.config_event[event_id]
+    son_event_flag = "option_son" in event_data.premise or any(
+        "CVP_A1_Son" in premise for premise in event_data.premise
+    )
+    if son_event_flag and "|" in event_data.text:
+        text = "\n" + event_data.text.split("|")[1]
+    elif diy_event_flag and "|" in event_data.text:
+        text = "\n" + event_data.text.split("|")[2]
+    else:
+        text = "\n" + event_data.text
+    text = talk.code_text_to_draw_text(text, character_id)
+    if event_data.adv_id not in {"", "0", 0}:
+        character_data = identity.of(character_id)
+        target_data = identity.of(activity.target(character_id))
+        if character_data.text_color:
+            style = character_data.name
+        elif target_data.text_color:
+            style = target_data.name
+    return EventText(event_id, character_id, event_type, text, style)
+
+
+def show_event_text(event_text: EventText) -> None:
+    """
+    在事件文本非空时经 ui_hooks.emit_line_wait_text 输出正文与样式，空文本时不触发回调。
+    Keyword arguments:
+    event_text -- EventText，待显示的事件文本对象
+    Return arguments:
+    None -- 无返回值
+    """
+    if event_text.text:
+        ui_hooks.emit_line_wait_text(event_text.text, event_text.style)
+
+
 def handle_event(
     character_id: int, event_before_instrust_flag: bool = False
-) -> draw_event_text_panel.DrawEventTextPanel | None:
+) -> EventText | None:
     """
     处理状态触发事件
     Keyword arguments:
     character_id -- 角色id
     event_before_instrust_flag -- 是否是事件在前，指令在后（或跳过指令）
     Return arguments:
-    DrawEventTextPanel -- 事件绘制面板，没有触发事件时为None
+    EventText -- 触发事件时为对应的事件文本对象，未触发事件时为 None
     """
     # 延迟导入并缓存，避免循环导入且不在热路径反复执行导入机制
     global _handle_premise
@@ -140,7 +224,5 @@ def handle_event(
         if event_config.type == 2 and "10012" in event_config.effect:
             activity.update_event(character_id, skip_instruct_talk=True)
         # print(f"debug now_event_id:{now_event_id}")
-        return draw_event_text_panel.DrawEventTextPanel(
-            now_event_id, character_id, event_config.type
-        )
+        return build_event_text(now_event_id, character_id, event_config.type)
     return None
