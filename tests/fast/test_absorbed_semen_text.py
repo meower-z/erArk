@@ -10,7 +10,7 @@ from fractions import Fraction
 
 from Script.Design import handle_talent
 from Script.Modules.domains import dirty, first_record
-from Script.System.First_Record_System import first_record_panel
+from Script.Modules.gameplay_resolution import first_record_service
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
@@ -53,6 +53,6 @@ class AbsorbedSemenTextTest(FastTestCase):
 
     def test_absorbed_amount_is_whole(self) -> None:
         """履历面板写「肠胃一共吸收了23ml精液」"""
-        text = first_record_panel._build_fluid_text(1)
+        text = first_record_service.fluid_text(1)
         self.assertIn("肠胃一共吸收了23ml精液", text)
         self.assertNotIn("/", text)
