@@ -263,16 +263,11 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
     character_id -- 角色id
     visitor_flag -- 是否为访客
     """
-    from Script.Settle import default
+    from Script.Modules.gameplay_resolution import roster_lifecycle_service
     from Script.System.Dormitory_System import common as dormitory_common
 
     # 角色上线
-    default.handle_chara_on_line(
-        character_id,
-        1,
-        change_data=game_type.CharacterStatusChange(),
-        now_time=game_time.now(),
-    )
+    roster_lifecycle_service.chara_on_line(character_id, game_time.now())
 
     character_data = identity.of(character_id)
     # 清零全特殊状态flag
