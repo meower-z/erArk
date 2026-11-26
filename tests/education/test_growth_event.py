@@ -1364,7 +1364,7 @@ clear_schedules()
 section(
     "Plan 32 §8.2（追加调整）：公务事件的后果不写在选项上，玩家选定、结算之后单独用一个 WaitDraw 显示"
 )
-from Script.System.Official_Event_System import (
+from Script.UI.Panel import (
     official_event_panel,
 )  # noqa: E402
 

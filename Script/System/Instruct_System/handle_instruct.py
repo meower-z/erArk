@@ -2524,7 +2524,7 @@ def handle_aromatherapy() -> None:
 @add_instruct(constant.Instruct.OFFICIAL_WORK)
 def handle_official_work() -> None:
     """处理处理公务指令：先为待决断队列里的第一条公务事件选定选项，选项在处理公务开始时结算"""
-    from Script.System.Official_Event_System import official_event_panel
+    from Script.UI.Panel import official_event_panel
 
     option = official_event_panel.choose_official_event_option(width)
     chara_handle_instruct_common_settle(
@@ -2543,7 +2543,7 @@ def _start_official_option(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    from Script.System.Official_Event_System import official_event_panel
+    from Script.UI.Panel import official_event_panel
 
     official_event_panel.settle_chosen_option(dict(chosen["args"]))
 
