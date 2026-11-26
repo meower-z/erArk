@@ -1151,7 +1151,7 @@ def handle_comprehensive_value_effect(
                 if operation == "寻路":
                     # 玩家进行寻路移动
                     if final_character_id == 0:
-                        character_move.own_charcter_move(to_place)
+                        character_move.start_player_route(to_place)
                     # NPC进行寻路移动
                     else:
                         default.plan_movement(final_character_id, to_place)

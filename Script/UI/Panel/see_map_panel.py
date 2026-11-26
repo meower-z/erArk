@@ -34,7 +34,32 @@ def move_now(scene_path: list[str]) -> None:
     py_cmd.clr_cmd()
     line_feed.draw()
     flow_handle.set_skip_pauses(True)
-    character_move.own_charcter_move(scene_path)
+    pick_route(scene_path)
+
+
+def pick_route(
+    target_scene: list, follow: int = 0, open_map: bool = False
+) -> None:
+    """
+    在 player_pick.drafting("move") 草稿上下文中调用 own_charcter_move 发起主角寻路。
+    当其返回 PlayerLeg 时，调用 player_pick.choose 选定首段移动并抛出 Chosen。
+    Keyword arguments:
+    target_scene -- list，目标场景的地图绝对坐标
+    follow -- int，跟随目标的角色编号，0 表示不跟随
+    open_map -- bool，每段移动开始后是否打开地图面板
+    Return arguments:
+    None -- 未触发 Chosen 异常时返回 None
+    """
+    with player_pick.drafting("move"):
+        leg = character_move.own_charcter_move(target_scene, follow, open_map)
+        if leg is not None:
+            player_pick.choose(
+                leg.behavior_id,
+                leg.minutes,
+                state=leg.state,
+                fields=leg.fields,
+                args=leg.args,
+            )
 
 
 def _draw_grid(draw_list: list, per_row: int, width: int) -> None:
@@ -222,9 +247,7 @@ class SeeMapPanel:
         py_cmd.clr_cmd()
         line_feed.draw()
         flow_handle.set_skip_pauses(True)
-        character_move.own_charcter_move(
-            scene_path, open_map=svc.opens_map(scene_path)
-        )
+        pick_route(scene_path, open_map=svc.opens_map(scene_path))
 
 
 class MoveMenuPanel:

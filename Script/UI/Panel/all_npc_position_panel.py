@@ -369,7 +369,7 @@ class MoveSonPanel:
 
     def move(self, character_id: int) -> None:
         """移动"""
-        from Script.Design import character_move
+        from Script.UI.Panel import see_map_panel
 
         line = draw.LineDraw("-", window_width)
         line.draw()
@@ -400,7 +400,7 @@ class MoveSonPanel:
             now_draw.draw()
         # 博士前往干员位置的情况：寻路的各段在玩家下一次选行动时接着走，她走开了就跟过去，到达时她是交互对象
         elif activity.position(character_id) != activity.position(0):
-            character_move.own_charcter_move(
+            see_map_panel.pick_route(
                 activity.position(character_id), follow=character_id
             )
         # 该干员就在玩家的位置，玩家的交互对象设为该干员

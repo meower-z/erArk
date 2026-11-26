@@ -1,5 +1,6 @@
 """角色移动：主角寻路、通用角色移动控制、撤销移动计划与移动到私密房间的结算"""
 
+from dataclasses import dataclass
 from Script.Core import constant, get_text
 from Script.Design import map_handle, update
 from Script.Modules.domains import action_info, activity, flags, inventory, plan
@@ -23,30 +24,70 @@ def cancel_movement_plan(character_id: int) -> None:
     activity.update_behavior(character_id, move_final_target=[])
 
 
+@dataclass(frozen=True)
+class PlayerLeg:
+    """不可变数据类，保存主角单段寻路移动对应的行动参数。"""
+
+    behavior_id: str
+    """ 本段移动使用的行为编号，取 MOVE 或 CARRY_MOVE """
+    minutes: int
+    """ 本段移动所需的分钟数 """
+    state: int
+    """ 本段移动开始时写入的角色状态编号 """
+    fields: dict[str, object]
+    """ 本段移动开始时写入主角数据的字段映射 """
+    args: dict[str, object] | None
+    """ 行动附加参数字典，open_map 为真时含 starts.OPEN_MAP 键，否则为 None """
+
+
 def own_charcter_move(
     target_scene: list, follow: int = 0, open_map: bool = False
-) -> None:
+) -> PlayerLeg | None:
     """
-    主角寻路至目标场景：走第一段，之后每段在玩家下一次选行动时由计划队列接着走（continue_player_route）。
-    玩家选行动时，第一段能走就选定它（player_pick.choose，从那里退出本函数）；已在目标、被叫停或寻路断了时，清掉玩家的交互对象
+    为主角规划到目标场景的第一段寻路移动。
+    非结算期存在可走路段时返回 PlayerLeg 供界面层选定。
+    结算期存在可走路段时将该段排入主角计划队列，切换至场景面板并返回 None。
+    无可用路段时清除主角交互对象，按结果切换至地图面板或场景面板并返回 None。
     Keyword arguments:
-    target_scene -- 寻路目标场景(在地图系统下的绝对坐标)
-    follow -- 前往这名干员的位置：她走开了就跟过去，到达时设为玩家的交互对象；0 为不跟人
-    open_map -- 每一段开始后仍打开地图面板（从大地图移动到另一个区块时）
+    target_scene -- list，目标场景的地图绝对坐标
+    follow -- int，跟随目标的角色编号，0 表示不跟随
+    open_map -- bool，每段移动开始后是否打开地图面板
+    Return arguments:
+    PlayerLeg | None -- 非结算期可走时返回首段移动参数，其余情况返回 None
     """
-    from Script.Modules.tk_ui import player_pick
+    plan.set_route(None)
+    move_now = _player_leg(target_scene, follow, open_map)
+    if isinstance(move_now, PlayerLeg):
+        return move_now
+    if move_now == "end" or move_now in _BREAK_LIST:
+        activity.set_target(0, 0)
+    if move_now in ["Null", "wait_open", "door_lock"]:
+        ui_hooks.switch_panel(constant.Panel.SEE_MAP)
+    else:
+        ui_hooks.switch_panel(constant.Panel.IN_SCENE)
+    return None
 
-    with player_pick.drafting("move"):
-        plan.set_route(None)
-        move_now = _player_leg(target_scene, follow, open_map)
-        if move_now == "end" or move_now in _BREAK_LIST:
-            activity.set_target(0, 0)
-        # 继续留在地图页面
-        if move_now in ["Null", "wait_open", "door_lock"]:
-            ui_hooks.switch_panel(constant.Panel.SEE_MAP)
-        # 回到主页面
-        else:
-            ui_hooks.switch_panel(constant.Panel.IN_SCENE)
+
+def start_player_route(target_scene: list) -> None:
+    """
+    为主角发起前往目标场景的寻路移动。
+    非结算期得到首段移动参数时，通过 ui_hooks.choose_route_leg 将其交由已登记的回调处理。
+    结算期由 own_charcter_move 将首段排入主角计划队列。
+    无可用路段时，本函数不执行后续操作。
+    Keyword arguments:
+    target_scene -- list，目标场景的地图绝对坐标
+    Return arguments:
+    None -- 无返回值
+    """
+    leg = own_charcter_move(target_scene)
+    if leg is not None:
+        ui_hooks.choose_route_leg(
+            leg.behavior_id,
+            leg.minutes,
+            state=leg.state,
+            fields=leg.fields,
+            args=leg.args,
+        )
 
 
 def continue_player_route() -> None:
@@ -91,15 +132,19 @@ _BREAK_LIST = ["null", "wait_open", "door_lock"]
 
 def _player_leg(
     target_scene: list, follow: int = 0, open_map: bool = False
-) -> str:
+) -> str | PlayerLeg:
     """
-    玩家走寻路的一段：玩家选行动时选定它（player_pick.choose，从那里退出本函数），结算途中排进玩家的计划队列
+    处理主角寻路的一段移动。
+    已被叫停或已抵达目标时返回 "end"。
+    路径受阻时返回受阻结果字符串。
+    可走时在结算期将路段排入计划队列并返回路径结果字符串。
+    可走时在非结算期切换至场景面板并返回 PlayerLeg。
     Keyword arguments:
-    target_scene -- 寻路目标场景
-    follow -- 跟着走的干员id，0 为不跟人
-    open_map -- 这一段开始后仍打开地图面板
+    target_scene -- list，目标场景的地图绝对坐标
+    follow -- int，跟随目标的角色编号，0 表示不跟随
+    open_map -- bool，本段移动开始后是否打开地图面板
     Return arguments:
-    str -- 寻路结果，"end" 为已在目标或被叫停
+    str | PlayerLeg -- 非结算期可走时返回 PlayerLeg，其余情况返回路径结果字符串或 "end"
     """
     if flags.get(0, "move_stop"):
         flags.set(0, move_stop=False)
@@ -112,7 +157,6 @@ def _player_leg(
     )
     if move_now in _BREAK_LIST:
         return move_now
-    # 隐奸携带模式中使用携带H中移动行为，消耗大幅增加
     if flags.get(0, "hidden_sex_mode") == 5:
         behavior_id = constant.Behavior.CARRY_MOVE
         state = constant.CharacterStatus.STATUS_CARRY_MOVE
@@ -120,33 +164,34 @@ def _player_leg(
         behavior_id = constant.Behavior.MOVE
         state = constant.CharacterStatus.STATUS_MOVE
     plan.set_route((target_scene, activity.position(0), follow, open_map))
-    fields = {
-        "behavior.move_target": now_target_position,
-        "behavior.move_src": activity.position(0),
-        "behavior.move_final_target": target_scene,
-        "action_info.ask_close_door_flag": False,
-    }
     from Script.Modules.gameplay_resolution import starts
 
-    args = {starts.OPEN_MAP: True} if open_map else None
+    leg = PlayerLeg(
+        behavior_id,
+        now_need_time,
+        state,
+        {
+            "behavior.move_target": now_target_position,
+            "behavior.move_src": activity.position(0),
+            "behavior.move_final_target": target_scene,
+            "action_info.ask_close_door_flag": False,
+        },
+        {starts.OPEN_MAP: True} if open_map else None,
+    )
     if update.in_resolution():
         from Script.Modules.gameplay_resolution import plan_queue
 
         plan_queue.plan_next(
             0,
-            behavior_id,
-            now_need_time,
-            state=state,
-            fields=fields,
-            args=args,
+            leg.behavior_id,
+            leg.minutes,
+            state=leg.state,
+            fields=leg.fields,
+            args=leg.args,
         )
         return move_now
-    from Script.Modules.tk_ui import player_pick
-
     ui_hooks.switch_panel(constant.Panel.IN_SCENE)
-    player_pick.choose(
-        behavior_id, now_need_time, state=state, fields=fields, args=args
-    )
+    return leg
 
 
 def character_move(

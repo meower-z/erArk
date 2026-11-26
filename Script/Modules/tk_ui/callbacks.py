@@ -5,7 +5,7 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 - playthrough：设定表补齐提示。
 - save_load.reset：new_round 与 panel 界面实现。
 - ui_hooks：提示、数值变化、图片、分隔线、富文本口上、逐行等待文本、面板切换、确认提问、隐奸非H开关查询、
-  文本AI处理与刷出缓冲输出。
+  文本AI处理、刷出缓冲输出与主角寻路首段选定。
 - achievement_service：新达成成就提示。
 - ejaculation_service：射精文本、忍耐询问与射精面板。
 - hidden_sex_service：隐奸被发现面板。
@@ -23,6 +23,7 @@ from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Modules.gameplay_resolution import hidden_sex_service
 from Script.Modules.gameplay_resolution import pregnancy_hooks
 from Script.Modules.save_load import reset
+from Script.Modules.tk_ui import player_pick
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
 from Script.Protocol.delta_events import DeltaEntry, DeltaEvent
 from Script.Protocol.narrative_events import NarrativeEvent, TextBlock, TextSpan
@@ -150,6 +151,30 @@ def draw_divider(char: str = "-") -> None:
 
 
 ui_hooks.on_flush(io_init.flush)
+
+
+@ui_hooks.on_route_leg
+def pick_route_leg(
+    behavior_id: str,
+    minutes: int,
+    state: int,
+    fields: dict[str, object],
+    args: dict[str, object] | None,
+) -> None:
+    """
+    将主角寻路首段参数转发给 player_pick.choose 以选定行动。
+    Keyword arguments:
+    behavior_id -- str，本段移动使用的行为编号
+    minutes -- int，本段移动所需的分钟数
+    state -- int，本段移动开始时写入的角色状态编号
+    fields -- dict[str, object]，本段移动开始时写入主角数据的字段映射
+    args -- dict[str, object] | None，行动附加参数字典，无附加参数时为 None
+    Return arguments:
+    None -- 无返回值（player_pick.choose 抛出 player_pick.Chosen 时不返回）
+    """
+    player_pick.choose(
+        behavior_id, minutes, state=state, fields=fields, args=args
+    )
 
 
 @ui_hooks.on_rich_talk
