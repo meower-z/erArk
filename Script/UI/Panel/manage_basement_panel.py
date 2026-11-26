@@ -216,6 +216,7 @@ class Manage_Basement_Panel:
             equipmen_panel,
             invite_visitor_panel,
             manage_assembly_line_panel,
+            manage_dormitory_panel,
             manage_library,
             manage_power_system_panel,
             manage_vehicle_panel,
@@ -223,7 +224,6 @@ class Manage_Basement_Panel:
             recruit_panel,
             resource_exchange_panel,
         )
-        from Script.System.Dormitory_System import manage_dormitory_panel
         from Script.System.Education_System import class_schedule_panel
         from Script.System.Field_Commission_System import field_commission_panel
         from Script.System.Medical_System import medical_department_panel

@@ -217,7 +217,7 @@ Script/
 └── UI/
     ├── Moudle/draw.py      # 绘制类抽象层（NormalDraw/Button/BarDraw...）
     ├── Moudle/panel.py     # 通用面板构建块
-    ├── Panel/              # 65 个功能面板
+    ├── Panel/              # 67 个功能面板
     └── Flow/               # 标题 / 创建角色 / normal_flow 面板注册
 ```
 
@@ -648,7 +648,7 @@ Script/
 | 资源交易 | `UI/Panel/resource_exchange_panel.py`, `UI/Panel/trade_setting_panel.py`, `Modules/gameplay_resolution/resource_exchange_service.py`, `Modules/domains/economy.py`, `Modules/domains/warehouse.py` | `Resource.csv`, `Restaurant.csv` |
 | 装备维护 | `UI/Panel/equipmen_panel.py`, `Modules/domains/maintenance.py` | `Equipment_*` 系列 |
 | 载具管理 | `UI/Panel/manage_vehicle_panel.py`, `Modules/gameplay_resolution/vehicle_service.py`, `Modules/domains/commission.py` | `Vehicle.csv` |
-| 宿舍管理 | `System/Dormitory_System/*`, `Modules/gameplay_resolution/dormitory_room_service.py`, `Modules/gameplay_resolution/dormitory_manager_service.py`, `Modules/domains/dormitory.py` | 宿舍场景地图 |
+| 宿舍管理 | `System/Dormitory_System/*`, `Modules/gameplay_resolution/dormitory_room_service.py`, `Modules/gameplay_resolution/dormitory_manager_service.py`, `Modules/domains/dormitory.py`, `UI/Panel/manage_dormitory_panel.py` | 宿舍场景地图 |
 | 医疗经营 | `System/Medical_System/*`, `Modules/gameplay_resolution/medical_department_service.py`, `Modules/gameplay_resolution/medical_management_service.py`, `Modules/gameplay_resolution/medical_diagnose_service.py`, `Modules/gameplay_resolution/medical_diagnose_view.py`, `Modules/gameplay_resolution/medical_diagnose_treatment.py`, `Modules/domains/medical.py`, `Modules/domains/medical_patient.py` | `Medical_*` 系列 |
 | 外勤委托 | `System/Field_Commission_System/*`, `Modules/gameplay_resolution/field_commission_service.py`, `Modules/gameplay_resolution/commission_roster_service.py`, `Modules/domains/commission.py` | `Commission.csv` |
 | 招募 | `UI/Panel/recruit_panel.py`, `Modules/gameplay_resolution/recruit_service.py`, `Modules/domains/recruit.py` | `Recruitment_Strategy.csv` |

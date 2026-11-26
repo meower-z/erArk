@@ -177,7 +177,7 @@ def education_manage_flow() -> None:
 @handle_panel.add_panel(constant.Panel.MANAGE_DORMITORY)
 def manage_dormitory_flow() -> None:
     """宿舍管理面板"""
-    from Script.System.Dormitory_System import manage_dormitory_panel
+    from Script.UI.Panel import manage_dormitory_panel
 
     now_panel = manage_dormitory_panel.Manage_Dormitory_Panel(width)
     now_panel.draw()
