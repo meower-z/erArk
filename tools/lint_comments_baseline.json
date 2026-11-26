@@ -86,7 +86,6 @@
   "Script/System/Education_System/auto_schedule.py": 16,
   "Script/System/Education_System/baby_growth_handle.py": 7,
   "Script/System/Education_System/class_ai.py": 39,
-  "Script/System/Education_System/course_select_panel.py": 27,
   "Script/System/Education_System/education_constant.py": 24,
   "Script/System/Education_System/growth_event_handle.py": 24,
   "Script/System/Education_System/growth_handle.py": 42,

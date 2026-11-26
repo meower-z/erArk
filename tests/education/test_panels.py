@@ -20,6 +20,7 @@ from Script.UI.Moudle import view
 import inspect
 from tests import chara_abilities as ca, kernel_data, chara_activity as chara
 from Script.Modules.domains import chara_life, flags, library, relations
+from Script.Modules.gameplay_resolution import course_select_service
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -353,14 +354,14 @@ check(
 answers[:] = [lambda o: o == _("清空本格")]
 cs.handle_yrn(cell_key)
 check("清空本格", schedule_handle.get_selected_course(201, 0, 1) is None)
-cell_text = cs._get_cell_text(201, 0, 0)
+cell_text = course_select_service.cell_text(201, 0, 0)
 check(
     "格子文本：科目/教室",
     "/" in cell_text
     and any(room in cell_text for room in schedule_handle.get_classroom_list()),
     cell_text,
 )
-check("未排课格子为 --", cs._get_cell_text(201, 6, 8) == "--")
+check("未排课格子为 --", course_select_service.cell_text(201, 6, 8) == "--")
 answers[:] = [
     lambda o: o == "CHANGE_TEMPLATE",
     lambda o: o == "TPL_2" or o.endswith("2") and "TPL" in o,
@@ -704,10 +705,9 @@ from Script.Modules.gameplay_resolution import class_tip_service
 clear_schedules()
 _pool_cid = game_config.config_facility_open_name_to_cid[pool]
 _cell_width = max(8, int((W - 14) / len(E.WEEK_NAME)))
-cs = course_select_panel.Course_Select_Panel(W)
 kernel_data.set_room_open(_pool_cid, False)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PE, pool)
-_text_open = cs._get_cell_text(201, 0, 0)
+_text_open = course_select_service.cell_text(201, 0, 0)
 check(
     "体育课排在未解锁的游泳池：格子写「[体]游泳池/未开放」",
     _text_open
@@ -719,9 +719,9 @@ check(
 kernel_data.set_room_open(_pool_cid, True)
 check(
     "解锁后不再标注",
-    cs._get_cell_text(201, 0, 0)
+    course_select_service.cell_text(201, 0, 0)
     == f"[{E.COURSE_TYPE_SHORT[E.COURSE_TYPE_PE]}]{pool}",
-    cs._get_cell_text(201, 0, 0),
+    course_select_service.cell_text(201, 0, 0),
 )
 _too_wide = []
 for _cid in game_config.config_entertainment:
