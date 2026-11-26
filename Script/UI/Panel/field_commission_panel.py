@@ -9,7 +9,7 @@ from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk
-from Script.System.Field_Commission_System import commission_squad_panel
+from Script.UI.Panel import commission_squad_panel
 from Script.System.Field_Commission_System.field_commission_function import (
     get_commission_demand_and_reward,
 )

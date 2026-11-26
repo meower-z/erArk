@@ -368,7 +368,7 @@ def give_gift_flow() -> None:
 @handle_panel.add_panel(constant.Panel.FIELD_COMMISSION)
 def field_commission_flow() -> None:
     """外勤委托面板"""
-    from Script.System.Field_Commission_System import field_commission_panel
+    from Script.UI.Panel import field_commission_panel
 
     now_panel = field_commission_panel.Field_Commission_Panel(width)
     now_panel.draw()
