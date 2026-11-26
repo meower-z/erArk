@@ -176,7 +176,6 @@ Script/
 ├── Frontend/Tk/            # Tk 图形前端包（窗口、渲染、字体、缓存、历史、门控与事件循环）
 ├── Protocol/               # 游戏逻辑与前端之间的通信协议与端口实现
 ├── Design/                 # 游戏设计逻辑（最大层）
-│   ├── start_flow.py       # 主面板循环
 │   ├── character_behavior.py # 核心行为循环
 │   ├── character_handle.py / character.py / character_move.py
 │   ├── handle_npc_ai.py / handle_npc_ai_in_h.py

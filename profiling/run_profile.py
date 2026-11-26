@@ -369,7 +369,7 @@ def init_game_environment(
 
     map_config.init_map_data()
 
-    from Script.Design import start_flow, character_handle
+    from Script.Design import character_handle
     import Script.Settle.all_effects
     import Script.StateMachine
     from Script.Core import game_init

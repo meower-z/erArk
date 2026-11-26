@@ -44,7 +44,7 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 ### Core Game Flow
 1. **Entry Point**: `game.py` - Auto-builds config data (`auto_build_config`), initializes configs (`normal_config`, `game_config`), loads the mod system (`init_mod_system()`), character templates, and map data, resets the kernel clock (`kernel_state.reset_clock`), creates `ThreadedUiPort` with a random token and `TkFrontend(port, token)`, starts the game thread with `game_init.start(start_flow.start_frame, port, frontend.init_config)`, and runs the Tk main loop with `frontend.run()`
 2. **Game Initialization**: `Script/Core/game_init.py` - Sets up the game environment, styles, and main flow
-3. **Main Frame Loop**: `Script/Design/start_flow.py` - Contains UI handling and panel management
+3. **Main Frame Loop**: `Script/Modules/tk_ui/start_flow.py` - Loads the kernel module order, shows the title and character-creation panels outside the game, and steps the kernel while in the game
 4. **Main Behavior Loop**: `Script/Design/character_behavior.py` - The actual game simulation loop
 
 ### Script Directory Layout
