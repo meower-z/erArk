@@ -4,7 +4,8 @@ Tk 界面向后端登记的回调函数
 load_order 导入本模块时完成以下登记，本模块不登记内核钩子：
 - playthrough：设定表补齐提示。
 - save_load.reset：new_round 与 panel 界面实现。
-- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、面板切换、确认提问、隐奸非H开关查询与文本AI处理。
+- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、面板切换、确认提问、隐奸非H开关查询、
+  文本AI处理与刷出缓冲输出。
 - achievement_service：新达成成就提示。
 - ejaculation_service：射精文本、忍耐询问与射精面板。
 - hidden_sex_service：隐奸被发现面板。
@@ -14,7 +15,7 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 from collections.abc import Mapping
 
 from Script.Config import normal_config
-from Script.Core import constant, flow_handle, get_text
+from Script.Core import constant, flow_handle, get_text, io_init
 from Script.Kernel import core
 from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import achievement_service
@@ -146,6 +147,9 @@ def draw_divider(char: str = "-") -> None:
     None -- 无返回值
     """
     draw.LineDraw(char, normal_config.config_normal.text_width).draw()
+
+
+ui_hooks.on_flush(io_init.flush)
 
 
 @ui_hooks.on_rich_talk
