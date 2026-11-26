@@ -669,7 +669,7 @@ Script/
 | 收藏品 | `UI/Panel/collection_panel.py` | `Collection_bouns.csv` |
 | 成就/蚀刻章 | `UI/Panel/achievement_panel.py`, `Modules/domains/achievement.py` | `Achievement.csv` |
 | 身体信息 | `UI/Panel/body_info_panel.py`, `dirty_panel.py` | `BodyPart.csv` |
-| 性行为履历 | `System/First_Record_System/*`, `Modules/gameplay_resolution/first_record_text.py`, `Modules/gameplay_resolution/first_record_service.py`, `Modules/domains/first_record.py` | `FirstRecordSpecial.csv` |
+| 性行为履历 | `System/First_Record_System/*`, `UI/Panel/first_record_panel.py`, `Modules/gameplay_resolution/first_record_text.py`, `Modules/gameplay_resolution/first_record_service.py`, `Modules/domains/first_record.py` | `FirstRecordSpecial.csv` |
 | 射精面板 | `UI/Panel/ejaculation_panel.py` | `Semen_Shoot_Amount.csv` |
 | 怀孕总览 | `System/Pregnancy_System/pregnancy_panel.py`, `Modules/gameplay_resolution/pregnancy_overview_service.py` | 怀孕阶段总览、生育谱系图与异常女儿排查 |
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
