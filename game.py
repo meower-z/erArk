@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     map_config.init_map_data()
 
-    from Script.Design import start_flow
+    from Script.Modules.tk_ui import start_flow
     import Script.Settle.all_effects
     import Script.StateMachine
     import Script.System.Medical_System

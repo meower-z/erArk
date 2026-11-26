@@ -37,7 +37,7 @@ pip install -r requirements.txt
 ### 核心游戏流程
 1. **入口点**：`game.py` - 自动构建配置数据（`auto_build_config`），初始化配置（`normal_config`、`game_config`），加载 mod 系统（`init_mod_system()`）、角色模板与地图数据，重置内核时钟（`kernel_state.reset_clock`），创建带随机令牌的 `ThreadedUiPort` 与 `TkFrontend(port, token)`，调用 `game_init.start(start_flow.start_frame, port, frontend.init_config)` 启动游戏线程，再由 `frontend.run()` 运行 Tk 主循环
 2. **游戏初始化**：`Script/Core/game_init.py` - 设置游戏环境、样式和主流程
-3. **主框架循环**：`Script/Design/start_flow.py` - 包含 UI 处理和面板管理
+3. **主框架循环**：`Script/Modules/tk_ui/start_flow.py` - 加载内核模块顺序，不在游戏内时显示标题与建角色面板，在游戏内时逐步推进内核
 4. **主行为循环**：`Script/Design/character_behavior.py` - 实际的游戏模拟循环
 
 ### Script 目录结构
