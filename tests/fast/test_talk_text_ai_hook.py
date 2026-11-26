@@ -22,6 +22,7 @@ from Script.Kernel import core
 from Script.Modules.domains import activity
 from Script.Modules.gameplay_resolution import ui_hooks, working
 from Script.Modules.tk_ui import callbacks
+from Script.UI.Panel import chat_ai_panel
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT
 
@@ -148,6 +149,7 @@ def run_json(script: str) -> dict[str, Any]:
         check=False,
         capture_output=True,
         text=True,
+        encoding="cp1252",
         timeout=300,
     )
     if result.returncode != 0:
@@ -340,7 +342,7 @@ class TkTextAiCallbackTest(FastTestCase):
     """Tk 端 use_text_ai 回调的参数转发与延迟导入行为测试。"""
 
     def test_use_text_ai_forwards_to_judge_use_text_ai(self) -> None:
-        """验证 use_text_ai 在翻译与生成两种模式下均将参数原样转发给 judge_use_text_ai 并返回其结果。"""
+        """验证 use_text_ai 将参数与 chat_ai_panel.OUTPUT 转发给 judge_use_text_ai。"""
         target = "Script.Design.handle_chat_ai.judge_use_text_ai"
         for translator in (False, True):
             with self.subTest(translator=translator):
@@ -350,7 +352,11 @@ class TkTextAiCallbackTest(FastTestCase):
                     )
                 self.assertEqual(ret, "新文")
                 judge.assert_called_once_with(
-                    TARGET, BLANK, "原文", translator=translator
+                    TARGET,
+                    BLANK,
+                    "原文",
+                    chat_ai_panel.OUTPUT,
+                    translator=translator,
                 )
 
     def test_startup_registers_text_ai_lazily(self) -> None:

@@ -990,3 +990,13 @@ reads = "通过 banned_imports 读取 Script/Design/event.py 的源码字节并�
 used_for = "测试：Script/Design/event.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R92"
+file = "tests/fast/test_handle_chat_ai_ui_free.py"
+symbol = "ImportBoundaryTest.test_source_imports_no_ui"
+mechanism = "ast"
+reads = "读取 Script/Design/handle_chat_ai.py 的源码字节，分别交由 banned_imports 与 imports_in 解析其中的导入语句"
+used_for = "测试：Script/Design/handle_chat_ai.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束，且不导入 Script.System.Instruct_System.handle_instruct"
+when = "test"
+capture = "suite"
