@@ -20,6 +20,7 @@ BACKEND_UI_FREE_DIRS = (
     "Script/Modules/gameplay_resolution",
     "Script/Modules/save_load",
     "Script/Protocol",
+    "Script/Settle",
     "Script/StateMachine",
     "Script/System/Dormitory_System",
     "Script/System/First_Record_System",
