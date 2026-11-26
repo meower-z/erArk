@@ -11,12 +11,12 @@ from Script.Core import (
     game_path_config,
     game_type,
     get_text,
-    io_init,
     old_chara_to_new,
 )
 from Script.Config import normal_config, game_config, character_config
 from Script.Design import attr_calculation, character_handle, map_handle
 from Script.Modules.gameplay_resolution import ui_hooks
+from Script.Modules.save_load import style_hooks
 from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
@@ -630,12 +630,12 @@ def install_save(save_id: str, version: int) -> None:
         update_count += domain.adopt_old_save(loaded_dict, version)
 
     ui_hooks.emit_notice(_("\n开始检测存档的数据结构是否需要跨版本更新\n"))
-    io_init.flush()
+    ui_hooks.emit_flush()
 
     # 检测是否为旧版存档（npc_tem_data是List而不是Dict）
     if isinstance(loaded_dict.get("npc_tem_data"), list):
         ui_hooks.emit_notice(_("\n检测到旧版存档，开始迁移角色ID系统...\n"))
-        io_init.flush()
+        ui_hooks.emit_flush()
 
         migrate_count = old_chara_to_new.migrate_old_save_data(loaded_dict)
 
@@ -671,7 +671,7 @@ def install_save(save_id: str, version: int) -> None:
 
     if need_migration:
         ui_hooks.emit_notice(_("\n检测到需要进行角色替换迁移...\n"))
-        io_init.flush()
+        ui_hooks.emit_flush()
 
         migration_count = old_chara_to_new.migrate_character_replacement(
             loaded_dict, character_replacement_map
@@ -752,7 +752,7 @@ def install_save(save_id: str, version: int) -> None:
 
     # 更新字体颜色
     if color_update_count:
-        io_init.init_style()
+        style_hooks.emit_styles_changed()
         ui_hooks.emit_notice(
             _("\n共有{0}个角色的口上颜色已更新\n").format(color_update_count)
         )
