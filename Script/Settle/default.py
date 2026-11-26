@@ -23,6 +23,7 @@ from Script.Modules.gameplay_resolution import semen_dirty_service
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import roster_lifecycle_service
 from Script.Modules.gameplay_resolution import instruct_plan_service, ui_hooks
+from Script.Modules.gameplay_resolution import settle_hooks
 from Script.Settle.common_default import base_chara_hp_mp_common_settle
 from Script.Settle.common_default import base_chara_state_common_settle
 from Script.Settle.common_default import (
@@ -50,8 +51,6 @@ from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
-width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3117,11 +3116,7 @@ def handle_option_fater(
     """
     if not add_time:
         return
-    from Script.UI.Panel import event_option_panel
-
-    event_option_panel.line_feed.draw()
-    now_draw = event_option_panel.Event_option_Panel(character_id, width)
-    now_draw.draw()
+    settle_hooks.emit_event_options(character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(

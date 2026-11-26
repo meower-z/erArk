@@ -1,10 +1,10 @@
 """
 行为结算界面回调（settle_hooks）
 ================================
-本模块提供行为结算文本与嵌套事件选项回调的登记与派发入口。
+本模块提供行为结算文本、嵌套事件选项与事件选项三类回调的登记与派发入口。
 本模块仅导入标准库 collections.abc.Callable 与 typing.Protocol。
 本模块不导入界面、Tk 或输入输出模块。
-未登记回调时，emit_settle_text 与 emit_nested_event_options 不执行任何操作。
+未登记回调时，emit_settle_text、emit_nested_event_options 与 emit_event_options 不执行任何操作。
 """
 
 from collections.abc import Callable
@@ -87,3 +87,33 @@ def emit_nested_event_options(
     """
     for fn in _nested_event_options:
         fn(character_id, parent_child_id, parent_value)
+
+
+type EventOptions = Callable[[int], None]
+""" 事件选项回调的类型别名。 """
+_event_options: list[EventOptions] = []
+""" 按登记顺序保存的事件选项回调列表。 """
+
+
+def on_event_options(fn: EventOptions) -> EventOptions:
+    """
+    登记一个事件选项回调。该函数可作为装饰器使用。
+    Keyword arguments:
+    fn -- EventOptions，要登记的回调函数
+    Return arguments:
+    EventOptions -- 原样返回传入的 fn
+    """
+    _event_options.append(fn)
+    return fn
+
+
+def emit_event_options(character_id: int) -> None:
+    """
+    按登记顺序调用已登记的事件选项回调。未登记回调时不执行任何操作。
+    Keyword arguments:
+    character_id -- int，需要展示事件选项的角色编号
+    Return arguments:
+    None -- 无返回值
+    """
+    for fn in _event_options:
+        fn(character_id)
