@@ -9,7 +9,7 @@ import subprocess
 import sys
 from unittest import mock
 
-from Script.Core import flow_handle, io_init
+from Script.Core import flow_handle, input_cache, io_init
 from Script.Modules.tk_ui import orders
 from Script.Protocol import (
     BackendEvent,
@@ -22,7 +22,6 @@ from Script.Protocol import (
     default_first_option,
 )
 from Script.Protocol._core import MAX_CHUNK_BYTES
-from Script.UI.Moudle import view
 from tests import world
 from tests.fast.base import FastTestCase
 
@@ -150,10 +149,10 @@ class MinimalWorldPortTest(FastTestCase):
     """检验 MinimalWorld.reset 安装丢弃事件的脚本端口、隔离会话状态及空选项快速失败的行为。"""
 
     def setUp(self) -> None:
-        """复原小世界并隔离 orders._unsettled 与 view.input_cache。"""
+        """复原小世界并隔离 orders._unsettled 与 input_cache.input_cache。"""
         super().setUp()
         self.enterContext(mock.patch.object(orders, "_unsettled", []))
-        self.enterContext(mock.patch.object(view, "input_cache", []))
+        self.enterContext(mock.patch.object(input_cache, "input_cache", []))
 
     def test_reset_answers_through_real_flow(self) -> None:
         """
@@ -193,7 +192,7 @@ class PlayerInputTest(FastTestCase):
         super().setUp()
         self.enterContext(mock.patch.object(io_init, "_port", io_init._port))
         self.enterContext(mock.patch.object(orders, "_unsettled", []))
-        self.enterContext(mock.patch.object(view, "input_cache", []))
+        self.enterContext(mock.patch.object(input_cache, "input_cache", []))
         self.enterContext(mock.patch.dict(flow_handle.cmd_map, clear=True))
         self.before = _hooks()
         self.player = world.PlayerInput()

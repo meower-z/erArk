@@ -12,7 +12,7 @@ from types import ModuleType
 from unittest import mock
 
 from Script.Config import normal_config
-from Script.Core import io_init, old_chara_to_new, save_handle
+from Script.Core import input_cache, io_init, old_chara_to_new, save_handle
 from Script.Design import handle_chat_ai
 from Script.Protocol import (
     RenderChunk,
@@ -26,7 +26,7 @@ from Script.Modules.save_load import index
 from Script.Modules.tk_ui import orders
 from Script.Settle import past_day_settle, sleep_settle
 from Script.System.Education_System import sex_class_handle
-from Script.UI.Moudle import draw, view
+from Script.UI.Moudle import draw
 from Script.UI.Panel import chat_ai_panel, debug_panel, play_gomoku_panel
 from tests import legacy_save
 from tests.chara_activity import aim
@@ -75,7 +75,7 @@ class ProgressShownBeforeWork(FastTestCase):
     def setUp(self) -> None:
         """
         准备测试角色与协议端口环境。该方法创建角色 0「博士」与角色 1「干员」，将干员设为博士的交互对象。
-        该方法通过 enterContext 临时将待写入玩家输入队列 orders._unsettled 与近期输入列表 view.input_cache 替换为空
+        该方法通过 enterContext 临时将待写输入队列 orders._unsettled 与输入历史 input_cache.input_cache 替换为空
         列表，并将 NormalDraw.draw 替换为 emit_text，在用例结束后还原它们与 io_init._port。
         该方法最后将 io_init 接入默认选首项且文本输入返回「1」的 ScriptedUiPort。
         Keyword arguments:
@@ -89,7 +89,7 @@ class ProgressShownBeforeWork(FastTestCase):
         aim(0, 1)
         self.enterContext(mock.patch.object(io_init, "_port", io_init._port))
         self.enterContext(mock.patch.object(orders, "_unsettled", []))
-        self.enterContext(mock.patch.object(view, "input_cache", []))
+        self.enterContext(mock.patch.object(input_cache, "input_cache", []))
         self.enterContext(mock.patch.object(draw.NormalDraw, "draw", emit_text))
         self.port = ScriptedUiPort(default_first_option("1"))
         io_init.configure(self.port)
