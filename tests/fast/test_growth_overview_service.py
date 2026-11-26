@@ -16,8 +16,9 @@ from Script.Modules.domains import abilities, growth, official, pregnancy
 from Script.Modules.domains import relations
 from Script.Modules.gameplay_resolution import growth_overview_service as svc
 from Script.Modules.gameplay_resolution import working
+from Script.Modules.tk_ui import student_select
 from Script.System.Education_System import education_constant as ec
-from Script.System.Education_System import growth_panel, student_select
+from Script.System.Education_System import growth_panel
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase

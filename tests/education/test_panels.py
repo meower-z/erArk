@@ -11,7 +11,7 @@ from _bootstrap import section, semester_handle, set_time, sex_class_handle
 from Script.System.Education_System import class_schedule_panel
 from Script.System.Education_System import course_select_panel, growth_panel
 from Script.System.Education_System import schedule_template_panel
-from Script.System.Education_System import student_select
+from Script.Modules.tk_ui import student_select
 from typing import TYPE_CHECKING
 from Script.Design import game_time, instuct_judege
 from Script.Core import text_handle
