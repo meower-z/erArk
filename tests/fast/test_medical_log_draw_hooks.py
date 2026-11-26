@@ -4,8 +4,8 @@
 - 日志提示（MedicalReportNoticeTest）：验证 log_system.render_medical_reports
   的文本返回、ui_hooks.emit_notice 提示派发参数与 Tk 回调绘制结果，
   并覆盖每日结算与财务报表面板的日志输出。
-- 导入边界（MedicalImportBoundaryTest）：用后端界面边界守卫检查
-  Script/System/Medical_System 下面板以外的模块，断言其中无违规界面导入。
+- 导入边界（MedicalImportBoundaryTest）：用后端界面边界守卫检查直接位于
+  Script/System/Medical_System 目录的每个 .py 文件，断言其中无违规界面导入。
 """
 
 from typing import Any
@@ -15,19 +15,15 @@ from Script.Config import normal_config
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import ui_hooks, working
-from Script.System.Medical_System import log_system, medical_department_panel
-from Script.System.Medical_System import medical_service
+from Script.System.Medical_System import log_system, medical_service
 from Script.UI.Moudle import draw
+from Script.UI.Panel import medical_department_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 
 MEDICAL_DIR = "Script/System/Medical_System"
 """医疗系统包目录的仓库相对路径。"""
-PANELS = frozenset(
-    {"medical_department_panel.py", "medical_player_diagnose_panel.py"}
-)
-"""医疗系统包中两个界面面板文件的文件名集合。"""
 EMPTY = "\n暂无医疗经营日志记录。\n"
 """日志列表为空且未传入自定义提示时返回的默认空日志提示。"""
 FIRST: dict[str, Any] = {
@@ -238,15 +234,13 @@ class MedicalReportNoticeTest(FastTestCase):
 
 
 class MedicalImportBoundaryTest(FastTestCase):
-    """Script/System/Medical_System 下面板以外模块的界面导入边界测试。"""
+    """Script/System/Medical_System 顶层 .py 文件的界面导入边界测试。"""
 
     def test_non_panel_modules_import_no_ui(self) -> None:
-        """用后端界面边界守卫的 banned_imports 检查医疗系统包中面板以外的每个模块，断言无违规导入。"""
-        sources = sorted((ROOT / MEDICAL_DIR).glob("*.py"))
+        """用 banned_imports 检查直接位于医疗系统包目录的每个 .py 文件（含 __init__.py），断言无违规导入。"""
         checked = [
             path.relative_to(ROOT).as_posix()
-            for path in sources
-            if path.name not in PANELS
+            for path in sorted((ROOT / MEDICAL_DIR).glob("*.py"))
         ]
         self.assertIn(f"{MEDICAL_DIR}/log_system.py", checked)
         self.assertEqual(

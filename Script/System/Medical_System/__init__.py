@@ -1,7 +1,6 @@
 """Medical subsystem package - 医疗系统子模块"""
 
 # 显式导入医疗系统的后端子模块，供包级导入并便于 PyInstaller 打包
-# 两个界面面板模块（medical_department_panel、medical_player_diagnose_panel）由调用方按名导入
 # 按依赖顺序先导入基础模块再导入上层模块，避免循环导入
 
 # 第一层：基础常量和工具模块（无内部依赖）

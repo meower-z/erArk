@@ -1,22 +1,24 @@
 """
 医疗系统包界面面板导入边界测试
 ==============================
-验证导入医疗系统包及后端子模块时不载入两个医疗界面面板，并核对通配导入结果与按名直接导入面板的行为。
-同时通过语法树检查 Script/System/Medical_System 顶层非面板模块不导入面板模块或后端界面边界守卫禁止的模块。
+验证导入医疗系统包及后端子模块时不载入两个医疗界面面板，并核对通配导入绑定的后端子模块名。
+同时通过语法树检查 Script/System/Medical_System 顶层各 .py 文件。
+检查断言这些文件不含面板模块导入，也不含后端界面边界守卫禁止的导入。
 """
 
+import os
 import subprocess
 import sys
 
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 from tests.fast.test_discovery_service import panel_imports
-from tests.fast.test_medical_log_draw_hooks import MEDICAL_DIR, PANELS
+from tests.fast.test_medical_log_draw_hooks import MEDICAL_DIR
 
 BLOCKED_RUN = """
 import importlib.abc, sys
-PANELS = ("Script.System.Medical_System.medical_department_panel",
-    "Script.System.Medical_System.medical_player_diagnose_panel")
+PANELS = ("Script.UI.Panel.medical_department_panel",
+    "Script.UI.Panel.medical_player_diagnose_panel")
 class Block(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
         if fullname in PANELS:
@@ -30,17 +32,8 @@ print(sorted(name for name in PANELS if name in sys.modules))
 names = {}
 exec("from Script.System.Medical_System import *", names)
 print(sorted(name for name in names if name != "__builtins__"))
-sys.meta_path.remove(block)
-from Script.Config import normal_config
-from Script.System.Medical_System import medical_department_panel
-from Script.System.Medical_System import medical_player_diagnose_panel
-panel = medical_department_panel.Medical_Department_Panel(
-    normal_config.config_normal.text_width)
-package = sys.modules["Script.System.Medical_System"]
-print(type(panel).__name__, callable(medical_player_diagnose_panel.start_player_diagnose_flow),
-    package.medical_department_panel is medical_department_panel)
 """
-"""子进程测试脚本，先拦截两个医疗界面面板导入以验证包导入与通配导入，再解除拦截验证按名直接导入两面板。"""
+"""子进程测试脚本，先拦截两个医疗界面面板的导入，再执行包导入与通配导入并输出两行检查结果。"""
 BACKEND = [
     "clinic_doctor_service",
     "clinic_patient_management",
@@ -56,7 +49,7 @@ BACKEND = [
 
 
 class PackageImportTest(FastTestCase):
-    """验证在子进程中导入医疗系统包不载入两个医疗界面面板，且通配导入与按名直接导入均符合预期。"""
+    """验证在子进程中导入医疗系统包不载入两个医疗界面面板，且通配导入绑定名称与 BACKEND 一致。"""
 
     result: subprocess.CompletedProcess[str]
     """setUpClass 运行 BLOCKED_RUN 子进程后保存的 CompletedProcess 执行结果。"""
@@ -68,22 +61,23 @@ class PackageImportTest(FastTestCase):
         cls.result = subprocess.run(
             [sys.executable, "-c", BLOCKED_RUN],
             cwd=ROOT,
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
             check=False,
             capture_output=True,
-            text=True,
+            encoding="utf-8",
             timeout=300,
         )
 
     def line(self, index: int) -> str:
         """
-        断言子进程退出码为 0，并返回标准输出末尾三行中的指定行。
+        断言子进程退出码为 0，并返回标准输出末尾两行中的指定行。
         Keyword arguments:
-        index -- int，在标准输出末尾三行中的索引
+        index -- int，在标准输出末尾两行中的索引
         Return arguments:
         str -- 对应索引位置的标准输出行文本
         """
         self.assertEqual(self.result.returncode, 0, self.result.stderr[-2000:])
-        return self.result.stdout.splitlines()[-3:][index]
+        return self.result.stdout.splitlines()[-2:][index]
 
     def test_package_import_skips_panels(self) -> None:
         """验证导入医疗系统包及后端子模块后，sys.modules 中不含两个医疗界面面板模块。"""
@@ -93,21 +87,15 @@ class PackageImportTest(FastTestCase):
         """验证对医疗系统包执行通配导入后，绑定名称列表与 BACKEND 完全一致。"""
         self.assertEqual(self.line(1), repr(BACKEND))
 
-    def test_panels_import_directly(self) -> None:
-        """验证解除拦截后按名直接导入两个医疗界面面板可正常构造面板、获取可调用入口并挂载包属性。"""
-        self.assertEqual(self.line(2), "Medical_Department_Panel True True")
-
 
 class PackageSourceBoundaryTest(FastTestCase):
-    """通过语法树验证医疗系统包顶层非面板模块不导入面板模块及后端界面边界守卫禁止的模块。"""
+    """通过语法树验证医疗系统包顶层 .py 文件不导入面板模块及后端界面边界守卫禁止的模块。"""
 
     def test_non_panel_modules_skip_panels(self) -> None:
-        """验证医疗系统包顶层非面板模块（含 __init__.py）经 panel_imports 与 banned_imports 检查均返回空列表。"""
-        sources = sorted((ROOT / MEDICAL_DIR).glob("*.py"))
+        """验证医疗系统包顶层 .py 文件（含 __init__.py）的 panel_imports 与 banned_imports 均返回空列表。"""
         checked = [
             path.relative_to(ROOT).as_posix()
-            for path in sources
-            if path.name not in PANELS
+            for path in sorted((ROOT / MEDICAL_DIR).glob("*.py"))
         ]
         self.assertIn(f"{MEDICAL_DIR}/__init__.py", checked)
         for relative in checked:
