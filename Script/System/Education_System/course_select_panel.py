@@ -14,10 +14,10 @@ from Script.Modules.gameplay_resolution.class_schedule_service import (
     cell_width,
     period_head_text,
 )
+from Script.Modules.tk_ui import student_select
 from Script.System.Education_System import education_constant
 from Script.System.Education_System import growth_handle
 from Script.System.Education_System import schedule_template_handle
-from Script.System.Education_System import student_select
 from Script.UI.Moudle import draw
 
 _: FunctionType = get_text._

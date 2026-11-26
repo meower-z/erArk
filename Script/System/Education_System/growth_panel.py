@@ -8,8 +8,8 @@ from types import FunctionType
 
 from Script.Core import get_text
 from Script.Modules.gameplay_resolution import growth_overview_service
+from Script.Modules.tk_ui import student_select
 from Script.System.Education_System import education_constant, growth_handle
-from Script.System.Education_System import student_select
 from Script.UI.Moudle import draw
 
 _: FunctionType = get_text._
