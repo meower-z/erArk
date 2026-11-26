@@ -1,16 +1,17 @@
-"""怀孕总览面板（总览页与生育谱系图页），以及怀孕阶段与关键时间的文本"""
+"""
+怀孕总览面板（pregnancy_panel）
+===============================
+绘制怀孕状态总览界面（总览、生育谱系图与异常女儿排查页签）并处理交互输入。
+文案与规则由 pregnancy_overview_service 提供，get_date_text 供其他模块调用。
+"""
 
 import datetime
 from types import FunctionType
-from Script.Core import get_text, flow_handle, constant, py_cmd
+from Script.Core import get_text, flow_handle, constant, py_cmd, text_handle
 from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
-from Script.Design import game_time
-from Script.Design import handle_premise
-from Script.System.Pregnancy_System import egg_handle, family_tree_draw
-from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
-from Script.Modules.domains import abilities, pregnancy, roster, relations
-from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import pregnancy_overview_service
+from Script.System.Pregnancy_System import family_tree_draw, pregnancy_constant
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -19,37 +20,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def get_chara_pregnancy_stage(character_id: int) -> int:
-    """
-    获取角色当前的怀孕阶段枚举（同时满足多个时取时序最靠后者）
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 阶段枚举值（0为不在任何怀孕阶段）
-    """
-    now_stage = pregnancy_constant.STAGE_NONE
-    if handle_premise.handle_fertilization_1(character_id):
-        now_stage = pregnancy_constant.STAGE_FERTILIZATION
-    if len(egg_handle.get_unidentified_eggs(character_id, exclude_held=False)):
-        now_stage = pregnancy_constant.STAGE_EGG_WAIT
-    # 无壳卵生：排出的体外卵尚在玩家收藏品中等待受精判定
-    from Script.System.Pregnancy_System import soft_egg_handle
-
-    if len(soft_egg_handle.get_mother_soft_eggs(character_id)):
-        now_stage = pregnancy_constant.STAGE_SOFT_EGG_WAIT
-    if handle_premise.handle_pregnancy_1(character_id):
-        now_stage = pregnancy_constant.STAGE_PREGNANCY
-    if len(egg_handle.get_hatching_eggs(character_id)):
-        now_stage = pregnancy_constant.STAGE_HATCHING
-    if handle_premise.handle_parturient_1(character_id):
-        now_stage = pregnancy_constant.STAGE_PARTURIENT
-    if handle_premise.handle_postpartum_1(character_id):
-        now_stage = pregnancy_constant.STAGE_POSTPARTUM
-    if handle_premise.handle_rearing_1(character_id):
-        now_stage = pregnancy_constant.STAGE_REARING
-    return now_stage
 
 
 def get_date_text(now_time: datetime.datetime) -> str:
@@ -61,139 +31,6 @@ def get_date_text(now_time: datetime.datetime) -> str:
     str -- 格式化文本
     """
     return pregnancy_constant.format_season_date(now_time)
-
-
-def get_fetus_count_text(character_id: int) -> str:
-    """
-    获取胎生阶段文案后缀的胎数说明：多胞胎显示"（N胞胎）"，同卵双胞胎显示"（同卵双胞胎）"，单胎返回空串
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    str -- 胎数说明文本
-    """
-    preg = pregnancy.of(character_id)
-    fetus_count = preg.fetus_count
-    if fetus_count < 2:
-        return ""
-    if preg.identical_twins:
-        return _("（同卵双胞胎）")
-    return _("（{0}胞胎）").format(fetus_count)
-
-
-def get_stage_info_text(character_id: int, now_stage: int) -> str:
-    """
-    获取角色当前阶段的关键时间说明文本
-    Keyword arguments:
-    character_id -- 角色id
-    now_stage -- 阶段枚举值
-    Return arguments:
-    str -- 关键时间说明
-    """
-    preg = pregnancy.of(character_id)
-    if now_stage == pregnancy_constant.STAGE_FERTILIZATION:
-        start_time = preg.fertilization_time
-        # 预计日期扣除妊娠加速药的加速天数，已到期则显示为当天
-        acc_day = int(preg.acceleration_days)
-        predict_time = max(
-            game_time.get_predict_date(
-                pregnancy_constant.PREGNANCY_DAY - acc_day, start_time
-            ),
-            game_time.now(),
-        )
-        return _("受精于{0}，预计{1}妊娠").format(
-            get_date_text(start_time), get_date_text(predict_time)
-        ) + get_fetus_count_text(character_id)
-    if now_stage == pregnancy_constant.STAGE_EGG_WAIT:
-        egg_count = len(
-            egg_handle.get_unidentified_eggs(character_id, exclude_held=False)
-        )
-        return _("{0}枚卵待鉴定").format(egg_count)
-    if now_stage == pregnancy_constant.STAGE_SOFT_EGG_WAIT:
-        from Script.System.Pregnancy_System import soft_egg_handle
-
-        # 逐枚列出体外卵的地点、精液量与距受精判定的剩余分钟
-        egg_text_list = []
-        for __, egg_data in soft_egg_handle.get_mother_soft_eggs(
-            character_id
-        ).items():
-            remain_minute = soft_egg_handle.get_soft_egg_remain_minute(egg_data)
-            if remain_minute > 0:
-                egg_text_list.append(
-                    _("{0}的卵块（{1}ml，{2}分钟后判定）").format(
-                        soft_egg_handle.get_soft_egg_scene_name(egg_data),
-                        int(egg_data["semen_count"]),
-                        remain_minute,
-                    )
-                )
-            else:
-                egg_text_list.append(
-                    _("{0}的卵块（{1}ml，即将判定）").format(
-                        soft_egg_handle.get_soft_egg_scene_name(egg_data),
-                        int(egg_data["semen_count"]),
-                    )
-                )
-        return _("待受精卵块：{0}").format("、".join(egg_text_list))
-    if now_stage == pregnancy_constant.STAGE_PREGNANCY:
-        start_time = preg.fertilization_time
-        # 预计日期扣除妊娠加速药的加速天数，已到期则显示为当天
-        acc_day = int(preg.acceleration_days)
-        predict_time = max(
-            game_time.get_predict_date(
-                pregnancy_constant.PARTURIENT_DAY - acc_day, start_time
-            ),
-            game_time.now(),
-        )
-        return _("受精于{0}，预计{1}临盆").format(
-            get_date_text(start_time), get_date_text(predict_time)
-        ) + get_fetus_count_text(character_id)
-    if now_stage == pregnancy_constant.STAGE_HATCHING:
-        hatching_eggs = egg_handle.get_hatching_eggs(character_id)
-        first_egg = list(hatching_eggs.values())[0]
-        hatch_day = egg_handle.get_hatch_day(first_egg)
-        # 预计破壳日扣除孵化加速药的加速天数，已到期则显示为当天
-        egg_acc_day = int(first_egg.get("acceleration_days", 0))
-        born_time = max(
-            game_time.get_predict_date(
-                pregnancy_constant.HATCH_TOTAL_DAY - egg_acc_day,
-                first_egg["lay_time"],
-            ),
-            game_time.now(),
-        )
-        return _("孵化第{0}天，预计{1}破壳").format(
-            hatch_day, get_date_text(born_time)
-        )
-    if now_stage == pregnancy_constant.STAGE_PARTURIENT:
-        return _("已在住院区待产，预计近日生产") + get_fetus_count_text(
-            character_id
-        )
-    if now_stage == pregnancy_constant.STAGE_POSTPARTUM:
-        return _("生产完毕，正在住院区休养")
-    if now_stage == pregnancy_constant.STAGE_REARING:
-        # 函数内导入，避免与 pregnancy_handle 形成循环导入
-        from Script.System.Pregnancy_System import pregnancy_handle
-
-        # 逐个列出名下全部婴儿及各自的预计成长日（扣除成长加速药的加速天数，已到期则显示为当天）
-        baby_text_list = []
-        for child_id in pregnancy_handle.get_baby_id_list(character_id):
-            child_data = identity.of(child_id)
-            child_preg = pregnancy.of(child_id)
-            acc_day = int(child_preg.growth_acceleration_days)
-            grow_time = max(
-                game_time.get_predict_date(
-                    pregnancy_constant.REARING_COMPLETE_DAY - acc_day,
-                    child_preg.born_time,
-                ),
-                game_time.now(),
-            )
-            baby_text_list.append(
-                _("{0}（预计{1}长大）").format(
-                    child_data.name, get_date_text(grow_time)
-                )
-            )
-        if len(baby_text_list):
-            return _("正在育儿室照顾{0}").format("、".join(baby_text_list))
-        return _("育儿中")
-    return ""
 
 
 class Pregnancy_Overview_Panel:
@@ -224,10 +61,7 @@ class Pregnancy_Overview_Panel:
             py_cmd.clr_cmd()
             return_list = []
 
-            # 页签切换按钮（仅在检测到疑似误入的女儿时才追加排查页签，不打扰正常存档）
-            page_name_list = [_("总览"), _("生育谱系图")]
-            if pregnancy_handle.get_suspected_abnormal_daughter_list():
-                page_name_list.append(_("异常女儿排查"))
+            page_name_list = pregnancy_overview_service.page_names()
             if self.now_page >= len(page_name_list):
                 self.now_page = 0
                 self.pending_remove_id = 0
@@ -253,7 +87,6 @@ class Pregnancy_Overview_Panel:
             line_draw = draw.LineDraw("+", self.width)
             line_draw.draw()
 
-            # 分页绘制
             if self.now_page == 0:
                 return_list.extend(self.draw_overview_page())
             elif self.now_page == 1:
@@ -279,14 +112,11 @@ class Pregnancy_Overview_Panel:
         """
         return_list = []
 
-        # 排序按钮
         info_draw = draw.NormalDraw()
         info_draw.text = _("排序方式：")
         info_draw.draw()
-        sort_text = (
-            _("[按阶段降序▼]")
-            if view.pregnancy_panel_sort_type == 0
-            else _("[按阶段升序▲]")
+        sort_text = pregnancy_overview_service.sort_button_text(
+            view.pregnancy_panel_sort_type
         )
         sort_draw = draw.LeftButton(
             sort_text,
@@ -298,7 +128,6 @@ class Pregnancy_Overview_Panel:
         return_list.append(sort_draw.return_text)
         line_feed.draw()
 
-        # 筛选按钮组
         info_draw = draw.NormalDraw()
         info_draw.text = _("阶段筛选：")
         info_draw.draw()
@@ -327,26 +156,9 @@ class Pregnancy_Overview_Panel:
         line_feed.draw()
         line_feed.draw()
 
-        # 收集处于怀孕阶段的干员
-        chara_stage_list = []
-        for character_id in list(roster.active_sorted()):
-            if character_id == 0:
-                continue
-            now_stage = get_chara_pregnancy_stage(character_id)
-            if now_stage == pregnancy_constant.STAGE_NONE:
-                continue
-            if (
-                view.pregnancy_panel_filter_type
-                and now_stage != view.pregnancy_panel_filter_type
-            ):
-                continue
-            chara_stage_list.append((character_id, now_stage))
-        # 按阶段排序（0降序，1升序）
-        chara_stage_list.sort(
-            key=lambda data: data[1],
-            reverse=view.pregnancy_panel_sort_type == 0,
+        chara_stage_list = pregnancy_overview_service.overview_rows(
+            view.pregnancy_panel_filter_type, view.pregnancy_panel_sort_type
         )
-
         if not len(chara_stage_list):
             info_draw = draw.NormalDraw()
             info_draw.text = _("当前没有处于怀孕阶段的干员\n")
@@ -354,13 +166,10 @@ class Pregnancy_Overview_Panel:
             info_draw.draw()
             return return_list
 
-        # 逐行绘制：姓名按钮（点击以其为中心打开谱系图）+阶段名+关键时间
-        for character_id, now_stage in chara_stage_list:
-            character_data = identity.of(character_id)
-            name_text = f"[{character_data.name}]"
+        for character_id, name, line_text in chara_stage_list:
             name_draw = draw.LeftButton(
-                name_text,
-                f"{character_id}_{character_data.name}",
+                f"[{name}]",
+                f"{character_id}_{name}",
                 20,
                 cmd_func=self.jump_to_tree,
                 args=(character_id,),
@@ -368,8 +177,7 @@ class Pregnancy_Overview_Panel:
             name_draw.draw()
             return_list.append(name_draw.return_text)
             info_draw = draw.NormalDraw()
-            stage_text = pregnancy_constant.STAGE_NAME_LIST[now_stage]
-            info_draw.text = f"　{stage_text}　　{get_stage_info_text(character_id, now_stage)}"
+            info_draw.text = line_text
             info_draw.width = self.width - 20
             info_draw.draw()
             line_feed.draw()
@@ -383,11 +191,7 @@ class Pregnancy_Overview_Panel:
         Return arguments:
         list -- 监听的按钮返回文本列表
         """
-        from Script.Core import text_handle
-
         return_list = []
-
-        # 重置回博士按钮
         reset_draw = draw.LeftButton(
             _("[重置回博士]"),
             _("重置回博士"),
@@ -404,9 +208,9 @@ class Pregnancy_Overview_Panel:
         info_draw.draw()
         line_feed.draw()
 
-        # 中心角色兜底（角色被删除等情况时重置回玩家）
-        if not identity.exists(self.tree_center_id):
-            self.tree_center_id = 0
+        self.tree_center_id = pregnancy_overview_service.live_id(
+            self.tree_center_id
+        )
 
         window_width_int = int(self.width)
         chart_data = family_tree_draw.build_family_tree_chart(
@@ -414,12 +218,10 @@ class Pregnancy_Overview_Panel:
         )
         self.tree_page = chart_data["now_page"]
         button_count = 0
-        # 整图统一前导缩进（全部行同一缩进以保证上下连线的列对齐，缩进内为近似居中）
         pad_width = max(0, (window_width_int - chart_data["width"]) // 2)
         for row_data in chart_data["rows"]:
             now_col = 0
             for cell in row_data["cells"]:
-                # 以半角空格把游标补齐到cell的目标列（目标列=统一缩进+图内列位）
                 target_col = pad_width + cell["col"]
                 if target_col > now_col:
                     space_draw = draw.NormalDraw()
@@ -451,7 +253,6 @@ class Pregnancy_Overview_Panel:
                 now_col = target_col + text_handle.get_text_index(token["text"])
             line_feed.draw()
 
-        # 家族分页控制行（仅多页时绘制）
         if chart_data["total_page"] > 1:
             line_feed.draw()
             if chart_data["now_page"] > 0:
@@ -542,23 +343,15 @@ class Pregnancy_Overview_Panel:
         Return arguments:
         list -- 监听的按钮返回文本列表
         """
-        from Script.System.Education_System import education_constant
-
         return_list = []
-
-        # 待确认移除的目标已失效时清掉
-        if self.pending_remove_id and not identity.exists(
+        self.pending_remove_id = pregnancy_overview_service.live_id(
             self.pending_remove_id
-        ):
-            self.pending_remove_id = 0
-
-        # 二次确认态：只画确认区
+        )
         if self.pending_remove_id:
-            character_data = identity.of(self.pending_remove_id)
             confirm_draw = draw.NormalDraw()
-            confirm_draw.text = _(
-                "\n　确定要从本存档彻底移除女儿「{0}」（id:{1}）吗？\n　此操作不可撤销。\n"
-            ).format(character_data.name, self.pending_remove_id)
+            confirm_draw.text = pregnancy_overview_service.remove_confirm_text(
+                self.pending_remove_id
+            )
             confirm_draw.width = self.width
             confirm_draw.draw()
             line_feed.draw()
@@ -580,10 +373,6 @@ class Pregnancy_Overview_Panel:
             return_list.append(no_draw.return_text)
             return return_list
 
-        all_daughter = pregnancy_handle.get_all_player_daughter_id_list()
-        abnormal_list = pregnancy_handle.get_suspected_abnormal_daughter_list()
-        normal_count = len(all_daughter) - len(abnormal_list)
-
         info_draw = draw.NormalDraw()
         info_draw.text = _(
             "　此处排查因旧版本存档BUG而误入本存档的女儿。\n"
@@ -596,15 +385,13 @@ class Pregnancy_Overview_Panel:
         line_feed.draw()
 
         count_draw = draw.NormalDraw()
-        count_draw.text = _(
-            "　本存档共有 {0} 名博士女儿，其中 {1} 名在册（正常），{2} 名疑似误入：\n"
-        ).format(len(all_daughter), normal_count, len(abnormal_list))
+        count_draw.text = pregnancy_overview_service.abnormal_count_text()
         count_draw.width = self.width
         count_draw.draw()
         line_feed.draw()
 
-        for character_id in abnormal_list:
-            character_data = identity.of(character_id)
+        abnormal_rows = pregnancy_overview_service.abnormal_rows()
+        for character_id, line_text in abnormal_rows:
             remove_draw = draw.LeftButton(
                 _("[去除]"),
                 f"abnormal_remove_{character_id}",
@@ -614,19 +401,8 @@ class Pregnancy_Overview_Panel:
             )
             remove_draw.draw()
             return_list.append(remove_draw.return_text)
-            mother = identity.get(relations.mother_id(character_id))
-            mother_name = mother.name if mother is not None else _("未知")
-            stage_name = _("成年")
-            for talent_id in (101, 102, 103, 104):
-                if abilities.talent(character_id).get(talent_id):
-                    stage_name = education_constant.STAGE_TALENT_NAME.get(
-                        talent_id, _("成年")
-                    )
-                    break
             info_draw = draw.NormalDraw()
-            info_draw.text = _(
-                "　{0}（id:{1}）　母亲：{2}　成长阶段：{3}\n"
-            ).format(character_data.name, character_id, mother_name, stage_name)
+            info_draw.text = line_text
             info_draw.width = self.width - 8
             info_draw.draw()
 
@@ -643,13 +419,9 @@ class Pregnancy_Overview_Panel:
     def do_remove_abnormal(self) -> None:
         """确认移除待处理的疑似误入女儿"""
         if self.pending_remove_id:
-            if (
-                pregnancy_handle.remove_abnormal_daughter(
-                    self.pending_remove_id
-                )
-                and self.tree_center_id == self.pending_remove_id
-            ):
-                self.tree_center_id = 0
+            self.tree_center_id = pregnancy_overview_service.remove_abnormal(
+                self.pending_remove_id, self.tree_center_id
+            )
         self.pending_remove_id = 0
 
     def cancel_remove_abnormal(self) -> None:
