@@ -377,7 +377,7 @@ def field_commission_flow() -> None:
 @handle_panel.add_panel(constant.Panel.CURE_PATIENT)
 def cure_patient_flow() -> None:
     """治疗病人面板"""
-    from Script.System.Medical_System import medical_player_diagnose_panel
+    from Script.UI.Panel import medical_player_diagnose_panel
 
     medical_player_diagnose_panel.start_player_diagnose_flow()
 
@@ -385,7 +385,7 @@ def cure_patient_flow() -> None:
 @handle_panel.add_panel(constant.Panel.MANAGE_DEDICAL_DEPARTMENT)
 def manage_medical_department_flow() -> None:
     """管理医疗系统面板面板"""
-    from Script.System.Medical_System import medical_department_panel
+    from Script.UI.Panel import medical_department_panel
 
     now_panel = medical_department_panel.Medical_Department_Panel(width)
     now_panel.draw()

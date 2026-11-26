@@ -221,12 +221,12 @@ class Manage_Basement_Panel:
             manage_library,
             manage_power_system_panel,
             manage_vehicle_panel,
+            medical_department_panel,
             nation_diplomacy_panel,
             recruit_panel,
             resource_exchange_panel,
         )
         from Script.System.Education_System import class_schedule_panel
-        from Script.System.Medical_System import medical_department_panel
         from Script.System.Pregnancy_System import pregnancy_panel
 
         panels = {
