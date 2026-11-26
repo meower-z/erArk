@@ -2,7 +2,7 @@
 状态触发事件文本构建与无界面运行测试
 ====================================
 - 触发与显示（HandleEventTest）：验证事件选中、自定义事件切换、短文本不清除标记、离场空文本与逐行绘制。
-- 文本与样式（BuildEventTextTest）：验证子事件分段、专属样式优先级以及 DrawEventTextPanel 与回调绘制一致。
+- 文本与样式（BuildEventTextTest）：验证子事件分段、样式优先级以及 show_event_text 经回调按专属事件样式绘制。
 - 状态判定（JudgeStatusTest）：验证 judge_character_status 显示一次开始事件并记录切换后的事件编号。
 - 无界面运行（EventUiFreeTest）：验证屏蔽界面、结算与输入输出模块时 event.py 可在子进程中选出并构建事件文本。
 - 导入边界（EventImportBoundaryTest）：验证 Script/Design/event.py 源码不导入界面、输入输出与 Tk 模块。
@@ -18,7 +18,6 @@ from Script.Kernel import core
 from Script.Modules.domains import activity, identity
 from Script.Modules.gameplay_resolution import ui_hooks, working
 from Script.UI.Moudle import draw
-from Script.UI.Panel import draw_event_text_panel
 from tests import kernel_data
 from tests.chara_activity import aim, place, stand
 from tests.fast.base import FastTestCase
@@ -290,7 +289,7 @@ class HandleEventTest(EventTextCase):
 
 
 class BuildEventTextTest(EventTextCase):
-    """验证 build_event_text 的文本分段、样式优先级与 DrawEventTextPanel 绘制一致性。"""
+    """验证 build_event_text 的子事件分段与样式优先级，以及 show_event_text 经回调按专属事件样式绘制。"""
 
     def test_son_event_keeps_second_part(self) -> None:
         """
@@ -313,20 +312,17 @@ class BuildEventTextTest(EventTextCase):
         self.assertEqual(event.build_event_text(ADV, NPC, 1).style, "干员")
         self.assertEqual(event.build_event_text(MAIN, NPC, 1).style, "standard")
 
-    def test_panel_draws_like_the_hook(self) -> None:
+    def test_show_draws_adv_style(self) -> None:
         """
-        验证 DrawEventTextPanel 与 show_event_text 传入 LineFeedWaitDraw 的宽度、样式与测试文本一致。
+        验证角色有文字颜色时，show_event_text 经回调以角色名样式、专属事件正文与配置宽度调用一次 LineFeedWaitDraw。
         Return arguments:
         None -- 无返回值
         """
         self.color(NPC)
-        panel = draw_event_text_panel.DrawEventTextPanel(ADV, NPC, 1)
-        panel.draw()
         event.show_event_text(event.build_event_text(ADV, NPC, 1))
-        self.assertEqual((panel.event_id, panel.event_type), (ADV, 1))
         width = normal_config.config_normal.text_width
         self.assertEqual(
-            [now[1:] for now in self.drawn], [(width, "干员", "\n专属正文")] * 2
+            self.drawn, [("LineFeedWaitDraw", width, "干员", "\n专属正文")]
         )
 
 
