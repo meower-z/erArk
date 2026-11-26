@@ -31,9 +31,9 @@ POWER = 12.34
 """人力发电测试中由模拟函数返回的电量值（12.34）。"""
 GUARDS = (
     (power_settle, ("Script.UI", "tkinter", "Script.Core.io_init")),
-    (sleep_settle, ("Script.UI", "tkinter")),
+    (sleep_settle, ("Script.UI", "tkinter", "Script.Core.io_init")),
 )
-"""各结算模块与其禁止导入前缀的配对元组。sleep_settle 保留 Script.Core.io_init 以在耗时结算前刷出入睡提示。"""
+"""各结算模块与其禁止导入前缀的配对元组。"""
 
 
 class Notice(NamedTuple):
