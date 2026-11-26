@@ -694,15 +694,15 @@ class FullWorld(MinimalWorld):
 
     def _load_game(self) -> None:
         """
-        先载入小世界，再导入 Script.Settle、Script.StateMachine、医疗系统与界面流程（靠装饰器注册），
-        随后重置核外状态并加载内核模块
+        先载入小世界，再导入 Script.Settle.all_effects、Script.StateMachine、
+        医疗系统与界面流程（靠装饰器注册），随后重置核外状态并加载内核模块
         Keyword arguments:
         无
         Return arguments:
         无
         """
         super()._load_game()
-        import Script.Settle  # noqa: F401
+        import Script.Settle.all_effects
         import Script.StateMachine  # noqa: F401
         import Script.System.Medical_System  # noqa: F401
         import Script.UI.Flow  # noqa: F401

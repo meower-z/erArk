@@ -77,7 +77,7 @@ from tests.world import MinimalWorld
 world = MinimalWorld.load()
 wait_texts = world.wait_texts  # WaitDraw 文本，断言「某段提示是否画出」时读它
 
-import Script.Settle  # 结算器靠装饰器注册，MinimalWorld 不导入它
+import Script.Settle.all_effects
 from Script.Config import game_config
 from Script.Core import constant, game_type
 from Script.Design import attr_calculation, game_time, handle_premise

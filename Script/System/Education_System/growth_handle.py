@@ -260,7 +260,6 @@ def settle_student_class_gain(
     """
     if not add_time:
         return False
-    # 延迟导入：Script.Settle 的包 __init__ 会连带载入指令系统，必须等配置初始化之后
     from Script.Settle import common_default
     from Script.Design import game_time
 

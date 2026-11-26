@@ -30,13 +30,13 @@ from Script.Config import game_config
 game_config.init()
 import Script.Design.update
 import Script.StateMachine.default
-import Script.Settle
+import Script.Settle.all_effects
 
 print("导入完成", "Script.System.Instruct_System.handle_instruct" in sys.modules)
 """
 """
 子进程执行的代码。代码载入游戏配置，
-再导入 Script.Design.update、Script.StateMachine.default 和 Script.Settle。
+再导入 Script.Design.update、Script.StateMachine.default 和 Script.Settle.all_effects。
 最后一行打印“导入完成”和 handle_instruct 是否在 sys.modules 中。代码里没有 os._exit 调用。
 代码跑完后，进程靠解释器的正常退出流程结束。
 """
