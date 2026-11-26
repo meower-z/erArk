@@ -23,6 +23,7 @@ BACKEND_UI_FREE_DIRS = (
     "Script/Settle",
     "Script/StateMachine",
     "Script/System/Dormitory_System",
+    "Script/System/Field_Commission_System",
     "Script/System/First_Record_System",
     "Script/System/Item_System",
     "Script/Test",
