@@ -10,8 +10,8 @@ from typing import Any
 from unittest import mock
 
 from Script.Core import flow_handle
+from Script.Modules.tk_ui import student_select
 from Script.System.Education_System import education_constant as ec
-from Script.System.Education_System import student_select
 from Script.UI.Panel import common_select_NPC
 from tests.fast.base import FastTestCase
 from tests.ui_free_subprocess import ChildRun, run_ui_free
