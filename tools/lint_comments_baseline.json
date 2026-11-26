@@ -72,7 +72,7 @@
   "Script/Settle/default_cloth.py": 42,
   "Script/Settle/item_effect.py": 61,
   "Script/Settle/orgasm_settle.py": 99,
-  "Script/Settle/past_day_settle.py": 37,
+  "Script/Settle/past_day_settle.py": 36,
   "Script/Settle/realtime_settle.py": 104,
   "Script/Settle/sleep_settle.py": 36,
   "Script/StateMachine/__init__.py": 1,
