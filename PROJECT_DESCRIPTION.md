@@ -217,7 +217,7 @@ Script/
 └── UI/
     ├── Moudle/draw.py      # 绘制类抽象层（NormalDraw/Button/BarDraw...）
     ├── Moudle/panel.py     # 通用面板构建块
-    ├── Panel/              # 64 个功能面板
+    ├── Panel/              # 65 个功能面板
     └── Flow/               # 标题 / 创建角色 / normal_flow 面板注册
 ```
 
@@ -794,8 +794,8 @@ Script/
 
 ## 22. AI 文本生成
 
-- 核心：`Script/Design/handle_chat_ai.py`（966 行）
-- 入口：`judge_use_text_ai(character_id, behavior_id, original_text, translator, direct_mode)`；未开启或条件不满足时原样返回
+- 核心：`Script/Design/handle_chat_ai.py`（1030 行）
+- 入口：`judge_use_text_ai(character_id, behavior_id, original_text, output, translator=False, settle=None)`，未开启或条件不满足时原样返回。直接对话界面与 Tk 输出位于 `Script/UI/Panel/chat_ai_panel.py`
 - 支持 OpenAI 兼容接口（含 DeepSeek）与 Google Gemini
 - 系统提示词：`data/ui_text/text_ai_system_promote.csv`
 - 发送数据配置：`data/csv/Ai_Chat_Send_Data.csv`（25 条）；AI 设置：`data/csv/Ai_Chat_Setting.csv`

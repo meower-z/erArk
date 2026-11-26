@@ -15,8 +15,7 @@ erArk游戏的AI文本生成系统是一个完整的AI集成解决方案，支�
 - **核心函数**:
   - `judge_use_text_ai()`: 判断是否使用AI生成文本
   - `text_ai()`: 主要的AI文本生成函数
-  - `direct_chat_with_ai()`: 直接与AI对话功能
-  - `settle_direct_instruct()`: 处理直接对话的结果
+- **界面面板与输出**: `Script/UI/Panel/chat_ai_panel.py`，提供流式文本的 Tk 输出实现，以及直接对话界面 `direct_chat_with_ai()` 与结果结算 `settle_direct_instruct()`
 
 ### 3. 配置数据层
 

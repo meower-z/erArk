@@ -284,9 +284,9 @@ def nation_diplomacy_flow() -> None:
 @handle_panel.add_panel(constant.Panel.CHAT_WITH_AI)
 def chat_ai_setting_flow() -> None:
     """文本生成AI面板"""
-    from Script.Design import handle_chat_ai
+    from Script.UI.Panel import chat_ai_panel
 
-    handle_chat_ai.direct_chat_with_ai()
+    chat_ai_panel.direct_chat_with_ai()
 
 
 @handle_panel.add_panel(constant.Panel.PHYSICAL_CHECK_AND_MANAGE)

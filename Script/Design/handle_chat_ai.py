@@ -1,8 +1,13 @@
-"""文本生成AI：判断是否启用、构造提示词、调用接口生成文本、流式输出、保存对话记录与直接对话模式"""
+"""
+文本生成AI处理（handle_chat_ai）
+================================
+负责判断是否启用文本生成AI、构造提示词、调用模型接口生成文本、处理流式输出并保存对话记录。
+本模块不导入界面、Tk 或输入输出模块。
+调用提示与流式文本通过调用方传入的 ChatAiOutput 对象输出。
+"""
 
 from types import FunctionType
-from Script.Core import get_text, constant, flow_handle, io_init
-from Script.UI.Moudle import draw, panel, view
+from Script.Core import get_text, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, attr_calculation, game_time, attr_text
 import openai
@@ -10,19 +15,14 @@ from google import genai
 from google.genai import types as genai_types
 import os
 import re
-from typing import Any, Callable, Iterable, TypedDict
+from collections.abc import Callable, Iterable, Iterator
+from typing import Any, NoReturn, Protocol, TypedDict
 from Script.Modules.domains import abilities, activity, chara_life, identity
 from Script.Modules.domains import chara_profile, flags, hypnosis, needs
 from Script.Modules.domains import relations, wardrobe
 
 _: FunctionType = get_text._
 """ 翻译api """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 
 class DirectModeResult(TypedDict):
@@ -42,23 +42,63 @@ class DirectModeResult(TypedDict):
     """ 对话文本 """
 
 
+class ChatAiOutput(Protocol):
+    """文本生成AI输出接口协议，向调用方交付提示与流式文本。"""
+
+    def show(self, text: str, *, full_width: bool = False) -> None:
+        """
+        输出一段文本。
+        Keyword arguments:
+        text -- str，要显示的文本
+        full_width -- bool，为真时按配置的文本宽度排版，默认为 False
+        Return arguments:
+        None -- 无返回值
+        """
+
+    def line_break(self) -> None:
+        """
+        在流式文本末尾输出一次等待玩家确认的换行。
+        Return arguments:
+        None -- 无返回值
+        """
+
+    def flush(self) -> None:
+        """
+        立即将缓冲中的输出刷新到界面。
+        Return arguments:
+        None -- 无返回值
+        """
+
+    def flushing[T](self, items: Iterable[T]) -> Iterator[T]:
+        """
+        逐项产出可迭代对象中的元素，并在调用方处理完每项后刷新输出。
+        Keyword arguments:
+        items -- Iterable[T]，待逐项产出的元素序列
+        Return arguments:
+        Iterator[T] -- 按原顺序逐项产出元素的迭代器
+        """
+
+
 def judge_use_text_ai(
     character_id: int,
     behavior_id: str,
     original_text: str,
+    output: ChatAiOutput,
     translator: bool = False,
-    direct_mode: bool = False,
+    settle: Callable[[DirectModeResult], NoReturn] | None = None,
 ) -> str:
     """
-    判断是否使用文本生成AI
-    参数:
-        character_id: int 角色ID
-        behavior_id: str 行为ID
-        original_text: str 原始文本
-        translator: bool 是否为翻译模式
-        direct_mode: bool 是否为直接对话模式
-    返回:
-        fanal_text: str 最终文本
+    判断是否启用文本生成AI并执行生成或翻译，条件不满足时返回原文本。
+    传入 settle 时开启直接对话模式，模型返回后调用 settle 选择玩家动作且不返回。
+    Keyword arguments:
+    character_id -- int，角色编号
+    behavior_id -- str，行为编号
+    original_text -- str，原始文本
+    output -- ChatAiOutput，输出提示与流式文本的接口对象
+    translator -- bool，为真时以翻译模式处理，默认为 False
+    settle -- Callable[[DirectModeResult], NoReturn] | None，直接对话结算回调，默认为 None
+    Return arguments:
+    str -- 最终文本，直接对话模式触发结算时不返回
     """
     # 如果AI设置未开启，则直接返回原文本
     if normal_config.ai_setting.ai_chat_setting.get(1, 0) == 0:
@@ -73,7 +113,7 @@ def judge_use_text_ai(
     if now_key_type not in normal_config.ai_setting.ai_chat_api_key:
         return original_text
 
-    # 直接对话模式跳过安全检查
+    direct_mode = settle is not None
     if not direct_mode:
         # 判断是否设置了指令类型
         if normal_config.ai_setting.ai_chat_setting[2] == 0:
@@ -104,25 +144,23 @@ def judge_use_text_ai(
     # 输出文本生成提示
     if normal_config.ai_setting.ai_chat_setting[8] == 0:
         model = normal_config.ai_setting.ai_chat_setting[5]
-        info_draw = draw.NormalDraw()
         info_text = _("\n（正在调用{0}）\n").format(model)
-        info_draw.text = info_text
-        info_draw.width = window_width
-        info_draw.draw()
-        io_init.flush()
+        output.show(info_text, full_width=True)
+        output.flush()
 
     ai_result = text_ai(
         character_id,
         behavior_id,
         original_text,
+        output,
         translator=translator,
         direct_mode=direct_mode,
     )
 
-    # 处理直接对话模式的返回值
     if isinstance(ai_result, dict):
         ai_gererate_text = ai_result["text"]
-        settle_direct_instruct(ai_result)
+        if settle is not None:
+            settle(ai_result)
     else:
         ai_gererate_text = ai_result
 
@@ -596,20 +634,21 @@ def text_ai(
     character_id: int,
     behavior_id: str,
     original_text: str,
+    output: ChatAiOutput,
     translator: bool = False,
     direct_mode: bool = False,
 ) -> DirectModeResult | str:
     """
-    文本生成AI\n\n
+    构造提示词并调用模型接口生成文本，开启流式输出时通过 output 逐段显示。
     Keyword arguments:
-    character_id: int 角色id\n
-    behavior_id: str 行为id\n
-    original_text: str 原始文本\n
-    translator -- 翻译模式\n
-    direct_mode -- 直接对话模式\n
+    character_id -- int，角色编号
+    behavior_id -- str，行为编号
+    original_text -- str，原始文本
+    output -- ChatAiOutput，流式输出文本的接口对象
+    translator -- bool，为真时以翻译模式处理，默认为 False
+    direct_mode -- bool，为真时以直接对话模式解析结果，默认为 False
     Return arguments:
-    直接对话模式: dict -- {"time": int, "tired": int, "relationship": int, "text": str}
-    非直接对话模式: str -- AI生成的文本\n
+    DirectModeResult | str -- 直接对话模式返回解析后的结果字典，否则返回生成文本
     """
 
     # 基础数据
@@ -740,11 +779,10 @@ def text_ai(
                 )
                 # 调用流式处理函数获取返回的文本
                 ai_gererate_text: str | None = process_stream_response(
-                    stream=completion,  # 流式返回数据的迭代器，类型为object
-                    direct_mode=direct_mode,  # 是否为直接对话模式，类型为bool
-                    extractor=lambda chunk: chunk.choices[
-                        0
-                    ].delta.content,  # 提取chunk中的文本，返回值为str
+                    stream=completion,
+                    direct_mode=direct_mode,
+                    extractor=lambda chunk: chunk.choices[0].delta.content,
+                    output=output,
                 )
             # 非流式输出
             else:
@@ -796,9 +834,10 @@ def text_ai(
                 )
                 # 调用流式处理函数获取返回的文本
                 ai_gererate_text = process_stream_response(
-                    stream=gemini_stream,  # 流式返回数据的迭代器，类型为object
-                    direct_mode=direct_mode,  # 是否为直接对话模式，类型为bool
-                    extractor=lambda chunk: chunk.text,  # 提取chunk中的文本，返回值为str
+                    stream=gemini_stream,
+                    direct_mode=direct_mode,
+                    extractor=lambda chunk: chunk.text,
+                    output=output,
                 )
             # 非流式输出
             else:
@@ -918,249 +957,74 @@ def text_ai(
 
 
 def process_stream_response(
-    # chunk 是 openai 或 google-genai 流式返回的对象，跑 mypy 的环境不装这两个包，故为 Any
     stream: Iterable[Any],
     direct_mode: bool,
     extractor: Callable[[Any], str | None],
+    output: ChatAiOutput,
 ) -> str:
     """
-    处理流式输出的返回数据，并绘制返回结果
-    参数:
-        stream: object - 流式返回数据的迭代器，每个元素代表部分返回内容
-        direct_mode: bool - 是否为直接对话模式，直接对话模式下需要等待"text:"标记再开始输出
-        extractor: function - 一个函数，输入chunk对象，返回对应的文本字符串
-    返回:
-        str - 拼接后的完整返回文本
+    遍历流式响应并通过 output 逐段显示文本，结束时输出等待换行并返回完整原文。
+    运行 mypy 的环境未安装两个客户端库，因此 stream 与片段参数标注为 Any。
+    Keyword arguments:
+    stream -- Iterable[Any]，流式响应对象迭代器
+    direct_mode -- bool，为真时等待 text: 标记后再显示正文
+    extractor -- Callable[[Any], str | None]，从单个片段取出文本的函数
+    output -- ChatAiOutput，流式输出与刷新的接口对象
+    Return arguments:
+    str -- 拼接后的完整原始返回文本
     """
 
     ai_generate_text: str = ""
-    now_draw = draw.NormalDraw()
-    # 非直接对话模式时默认直接开始输出文本
     text_started: bool = not direct_mode
-    # 临时存储上次的最后文本
     last_text: str = ""
 
     try:
-        for chunk in io_init.flushing(stream):
-            # 提取当前chunk中的文本
+        for chunk in output.flushing(stream):
             chunk_text: str | None = extractor(chunk)
             if chunk_text is None or not chunk_text:
                 continue
             ai_generate_text += chunk_text
 
-            # 如果chunk仅为单独换行，则绘制换行并跳过当前循环
-            if chunk_text.strip() == "\n":
-                line_feed = draw.LineFeedWaitDraw()
-                line_feed.text = " \n"
-                line_feed.draw()
-                continue
-
-            # 如果chunk最后的字符为单斜杠，则记录并替换该斜杠
             if chunk_text[-1] == "\\":
                 chunk_text = chunk_text[:-1]
                 last_text = "\\"
 
-            # 在直接对话模式下，等待遇到"text:"标记后再开始绘制和存储
             if direct_mode:
-                # 直接对话模式下等待遇到"text:"标记后再开始绘制和存储
                 if "text:" in chunk_text and not text_started:
                     text_started = True
                     parts = chunk_text.split("text:", 1)
                     if len(parts) > 1:
                         display_text = parts[1]
-                        # 替换掉换行符
                         display_text = display_text.replace("\\n", "\n")
-                        now_draw.text = display_text
-                        # now_draw.width = 1
-                        now_draw.draw()
-                # 如果是"text"，则再等待一个":"之后开始绘制
+                        output.show(display_text)
                 elif chunk_text.strip() == "text" and not text_started:
                     last_text = "text"
-                # 如果是":"，则开始绘制
                 elif last_text and chunk_text.strip() == ":":
                     last_text = ""
                     text_started = True
                     parts = chunk_text.split(":", 1)
                     if len(parts) > 1:
                         display_text = parts[1]
-                        # 替换掉换行符
                         display_text = display_text.replace("\\n", "\n")
-                        now_draw.text = display_text
-                        # now_draw.width = 1
-                        now_draw.draw()
-                # 如果已经开始text部分，直接显示文本
+                        output.show(display_text)
                 elif text_started:
-                    # 替换掉换行符
                     chunk_text = chunk_text.replace("\\n", "\n")
-                    # 如果这次的文本开头n，且上次的最后文本是斜杠，则将该文本替换为换行符
                     if last_text == "\\" and chunk_text.startswith("n"):
                         chunk_text = chunk_text.replace("n", "\n")
                         last_text = ""
-                    now_draw.text = chunk_text.replace("text:", "")
-                    # now_draw.width = 1
-                    now_draw.draw()
-            # 非直接对话模式下直接显示文本
+                    output.show(chunk_text.replace("text:", ""))
             else:
-                now_draw.text = chunk_text
-                now_draw.draw()
+                output.show(chunk_text)
     except Exception as e:
         print(f"处理流式响应出错: {e}", flush=True)
 
-    # 如果一直到最后都没有遇到text:，则直接显示最后的文本
     if not text_started and direct_mode:
-        # 为text:后面的文本
         parts = ai_generate_text.split("text:", 1)
         if len(parts) > 1:
             display_text = parts[1]
-            # 替换掉换行符
             display_text = display_text.replace("\\n", "\n")
-            now_draw.text = display_text
-            # now_draw.width = 1  # Commented out: width=1 can cause layout issues
-            now_draw.draw()
+            output.show(display_text)
 
-    # 绘制一个空白的等待
-    wait_draw = draw.LineFeedWaitDraw()
-    wait_draw.text = " \n"
-    wait_draw.draw()
+    output.line_break()
 
     return ai_generate_text
-
-
-def direct_chat_with_ai() -> str:
-    """
-    与AI进行直接对话\n
-    用户输入动作文本，AI生成回复\n
-    Return arguments:
-    reply_text -- AI回复文本
-    """
-    title_draw = draw.TitleLineDraw("与AI进行直接对话", window_width)
-    while 1:
-        title_draw.draw()
-        line_feed.draw()
-        return_list = []
-        if not handle_premise.handle_ai_chat_on(0):
-            info_text = _(
-                "\nAI对话功能未开启，请前往【系统设置】中的【文本生成AI设置】中开启。\n"
-            )
-            info_draw = draw.WaitDraw()
-            info_draw.style = "gold_enrod"
-            info_draw.text = info_text
-            info_draw.draw()
-            reply_text = ""
-        else:
-            # 提示信息
-            ask_text = _("\n请描述你想要进行的动作：\n")
-
-            # 获取玩家输入
-            ask_panel = panel.AskForOneMessage()
-            ask_panel.set(ask_text, 999)
-            user_input = ask_panel.draw()
-            line_feed.draw()
-
-            # 如果输入为空，则退出
-            if not user_input:
-                return ""
-
-            # 获取当前玩家角色ID和目标角色ID
-            character_id = 0  # 假设0是玩家角色
-            behavior_id = "ai_chat_instruct"  # 默认行为ID，可以根据实际情况调整
-
-            # 调用判断函数，启用直接对话模式
-            reply_text = judge_use_text_ai(
-                character_id, behavior_id, user_input, direct_mode=True
-            )
-
-            # 非流式传输下再绘制回复
-            if normal_config.ai_setting.ai_chat_setting[14] != 1:
-                # 处理换行符
-                reply_text = reply_text.replace("\\n", "\n")
-                # 替换掉text:
-                reply_text = reply_text.replace("text:", "")
-                # 绘制AI回复
-                reply_draw = draw.NormalDraw()
-                reply_draw.text = _("\nAI回复：\n") + reply_text + _("\n")
-                reply_draw.width = window_width
-                reply_draw.draw()
-        line_feed.draw()
-        line_feed.draw()
-        back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-        back_draw.draw()
-        line_feed.draw()
-        return_list.append(back_draw.return_text)
-        yrn = flow_handle.askfor_all(return_list)
-        if yrn == back_draw.return_text:
-            view.now_panel_id = constant.Panel.IN_SCENE
-            break
-    return reply_text
-
-
-def settle_direct_instruct(ai_result: DirectModeResult) -> None:
-    """
-    处理直接对话模式下的AI返回结果\n
-    参数:
-        ai_result: dict -- AI返回的结果，包含时间、体力消耗、关系变化等信息
-    返回:
-        None
-    """
-    from Script.System.Instruct_System.handle_instruct import (
-        chara_handle_instruct_common_settle,
-    )
-
-    tem_behavior_id = constant.Behavior.AI_CHAT_INSTRUCT
-    # 指令持续时间
-    new_duration = ai_result["time"]
-    # 构建该临时指令的结算
-    game_config.config_behavior_effect_data[tem_behavior_id] = []
-    # 体力气力消耗
-    game_config.config_behavior_effect_data[tem_behavior_id].append(
-        10 + ai_result["tired"]
-    )
-    game_config.config_behavior_effect_data[tem_behavior_id].append(
-        11 + ai_result["tired"]
-    )
-    # 关系变化
-    if ai_result["relationship"] == 1:
-        game_config.config_behavior_effect_data[tem_behavior_id].append(23)
-    elif ai_result["relationship"] == 3:
-        game_config.config_behavior_effect_data[tem_behavior_id].append(21)
-    elif ai_result["relationship"] == 4:
-        game_config.config_behavior_effect_data[tem_behavior_id].append(21)
-        game_config.config_behavior_effect_data[tem_behavior_id].append(22)
-    # 角色状态变化
-    if ai_result["character_state"] != -1:
-        # 如果是列表，则遍历添加
-        if isinstance(ai_result["character_state"], list):
-            for chara_state_id in ai_result["character_state"]:
-                if 9 <= chara_state_id and chara_state_id <= 20:
-                    effect_id = chara_state_id + 42
-                    game_config.config_behavior_effect_data[
-                        tem_behavior_id
-                    ].append(effect_id)
-        # 否则直接添加
-        else:
-            chara_state_id = ai_result["character_state"]
-            if 9 <= chara_state_id and chara_state_id <= 20:
-                effect_id = chara_state_id + 42
-                game_config.config_behavior_effect_data[tem_behavior_id].append(
-                    effect_id
-                )
-    # 经验变化
-    if ai_result["experience"] != -1:
-        # 如果是列表，则遍历添加
-        if isinstance(ai_result["experience"], list):
-            for exp_id in ai_result["experience"]:
-                exp_effect_id = f"CVE_A2_E|{exp_id}_G_1"
-                game_config.config_behavior_effect_data[tem_behavior_id].append(
-                    exp_effect_id
-                )
-        # 否则直接添加
-        else:
-            exp_id = ai_result["experience"]
-            exp_effect_id = f"CVE_A2_E|{exp_id}_G_1"
-            game_config.config_behavior_effect_data[tem_behavior_id].append(
-                exp_effect_id
-            )
-    # 执行结算
-    chara_handle_instruct_common_settle(
-        tem_behavior_id, duration=new_duration, force_taget_wait=True
-    )
