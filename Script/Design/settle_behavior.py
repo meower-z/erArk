@@ -6,25 +6,21 @@ import datetime
 import random
 from functools import wraps
 from types import FunctionType
-from typing import TYPE_CHECKING, Callable, ParamSpec, Protocol, TypeVar
+from typing import Callable, ParamSpec, Protocol, TypeVar
 from Script.Core import constant, constant_effect, game_type
 from Script.Core import get_text, num, rich_text, text_handle
 from Script.Design import attr_calculation, attr_text, game_time
-from Script.Design import handle_premise, second_behavior, talk
+from Script.Design import event, handle_premise, second_behavior, talk
 from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.Modules.gameplay_resolution import hypnosis_service
 from Script.Modules.gameplay_resolution import instruct_plan_service
+from Script.Modules.gameplay_resolution import settle_hooks
 from Script.Modules.domains import abilities, action_info, activity
 from Script.Modules.domains import chara_profile, flags, h_meters, hypnosis
 from Script.Modules.domains import modes, needs, relations, roster, status, work
 from Script.Modules.domains import identity
 
-if TYPE_CHECKING:
-    from Script.UI.Moudle import panel
-
-width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 _: FunctionType = get_text._
 """ 翻译api """
 ValueNum = TypeVar("ValueNum", int, float)
@@ -52,13 +48,15 @@ class ValueOperation(Protocol):
 
 def handle_settle_behavior(
     character_id: int, now_time: datetime.datetime, event_flag: int = 1
-) -> panel.LeftDrawTextListPanel | None:
+) -> str | None:
     """
-    处理结算角色行为并输出对应文本
+    结算角色行为与事件带来的数值变化，并返回待展示的结算文本。
     Keyword arguments:
-    character_id -- 角色id
-    now_time -- 结算时间
-    event_flag -- 事件结算变量，0只事件不指令，1只指令不事件，2均结算
+    character_id -- int，要结算的角色编号
+    now_time -- datetime.datetime，当前结算时间
+    event_flag -- int，事件结算标志，0 仅结算事件，1 仅结算指令，2 同时结算，默认为 1
+    Return arguments:
+    str | None -- 带样式标记的变化文本，无变化或非玩家不在玩家位置时返回 None，全部条目被隐藏时为 ""
     """
     from Script.Modules.gameplay_resolution import group_sex_service
 
@@ -183,16 +181,15 @@ def handle_settle_behavior(
         son_event_id = activity.event(now_character_data.cid).son_event_id
         # 如果触发了子事件的话
         if son_event_id != "":
-            from Script.UI.Panel import draw_event_text_panel
-
             # 将子事件id归零
             activity.update_event(now_character_data.cid, son_event_id="")
             # 绘制子事件文本
             event_config = game_config.config_event[son_event_id]
-            son_event_draw = draw_event_text_panel.DrawEventTextPanel(
-                son_event_id, character_id, event_config.type
+            event.show_event_text(
+                event.build_event_text(
+                    son_event_id, character_id, event_config.type
+                )
             )
-            son_event_draw.draw()
             # 进行子事件结算
             change_data = handle_event_data(
                 son_event_id, character_id, add_time, change_data, now_time
@@ -574,13 +571,7 @@ def handle_settle_behavior(
             now_text_time = "\n"
         if now_text_list:
             now_text_list.append(now_text_time)
-        from Script.UI.Moudle import rich_text_draw
-
-        now_text = "".join(now_text_list)
-        now_panel = rich_text_draw.get_rich_text_draw_panel(now_text)
-        now_panel.width = width
-        now_panel.column = 8
-        return now_panel
+        return "".join(now_text_list)
     return None
 
 
@@ -975,7 +966,6 @@ def handle_comprehensive_value_effect(
         base_chara_experience_common_settle,
         base_chara_climix_common_settle,
     )
-    from Script.UI.Panel import event_option_panel
     from Script.Design import character
 
     # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
@@ -1121,10 +1111,9 @@ def handle_comprehensive_value_effect(
                     )
         # 父子嵌套事件
         elif attribute_name == "father":
-            now_draw = event_option_panel.multi_layer_event_option_Panel(
-                character_id, width, type_son_id, int(effect_all_value_list[3])
+            settle_hooks.emit_nested_event_options(
+                character_id, type_son_id, int(effect_all_value_list[3])
             )
-            now_draw.draw()
         # 指定角色id为交互对象
         elif attribute_name == "change_target_id":
             # 检查目标角色是否与自己位于同一位置

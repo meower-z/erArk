@@ -10,6 +10,7 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 - ejaculation_service：射精文本、忍耐询问与射精面板。
 - hidden_sex_service：隐奸被发现面板。
 - pregnancy_hooks：生产与破壳面板。
+- settle_hooks：行为结算文本与嵌套事件选项面板。
 """
 
 from collections.abc import Mapping
@@ -21,7 +22,7 @@ from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Modules.gameplay_resolution import hidden_sex_service
-from Script.Modules.gameplay_resolution import pregnancy_hooks
+from Script.Modules.gameplay_resolution import pregnancy_hooks, settle_hooks
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
@@ -417,4 +418,39 @@ def draw_born_event(
 
     born_event_panel.Born_Panel(
         character_id, egg_mode=egg_mode, egg_id_list=egg_id_list
+    ).draw()
+
+
+@settle_hooks.on_settle_text
+def draw_settle_text(text: str) -> None:
+    """
+    经 rich_text_draw.get_rich_text_draw_panel 构造富文本面板并调用其 draw 方法绘制行为结算文本。
+    Keyword arguments:
+    text -- str，要绘制的行为结算文本
+    Return arguments:
+    None -- 无返回值
+    """
+    rich_text_draw.get_rich_text_draw_panel(text).draw()
+
+
+@settle_hooks.on_nested_event_options
+def draw_nested_event_options(
+    character_id: int, parent_child_id: int, parent_value: int
+) -> None:
+    """
+    按配置文本宽度创建并绘制 event_option_panel.multi_layer_event_option_Panel 面板。
+    Keyword arguments:
+    character_id -- int，触发嵌套事件的角色编号
+    parent_child_id -- int，嵌套父子事件的序号（非事件编号）
+    parent_value -- int，该嵌套父子事件的对应数值
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.UI.Panel import event_option_panel
+
+    event_option_panel.multi_layer_event_option_Panel(
+        character_id,
+        normal_config.config_normal.text_width,
+        parent_child_id,
+        parent_value,
     ).draw()

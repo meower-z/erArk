@@ -20,6 +20,7 @@ from Script.Design import (
 from Script.Kernel import core
 from Script.Modules.domains import h_state, scene_state
 from Script.Modules.gameplay_resolution import hidden_sex_service, ui_hooks
+from Script.Modules.gameplay_resolution import settle_hooks
 from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, realtime_settle
@@ -207,10 +208,10 @@ def judge_character_status(character_id: int) -> int:
     # if not character_id:
     #     print(f"debug 1 move_src = {character_data.behavior.move_src},position = {character_data.position}")
     # 指令与指令前事件的数值结算
-    first_settle_panel = settle_behavior.handle_settle_behavior(
+    first_settle_text = settle_behavior.handle_settle_behavior(
         character_id, end_time, event_type_now
     )
-    second_settle_panel = None
+    second_settle_text = None
     # if not character_id:
     #     print(f"debug 2 move_src = {character_data.behavior.move_src},position = {character_data.position}")
 
@@ -226,7 +227,7 @@ def judge_character_status(character_id: int) -> int:
             # 事件绘制
             event.show_event_text(end_event_draw)
             # 事件的数值结算
-            second_settle_panel = settle_behavior.handle_settle_behavior(
+            second_settle_text = settle_behavior.handle_settle_behavior(
                 character_id, end_time, 0
             )
 
@@ -234,10 +235,10 @@ def judge_character_status(character_id: int) -> int:
     #     print(f"debug 3 move_src = {character_data.behavior.move_src},position = {character_data.position}")
 
     # 绘制数值变化
-    if first_settle_panel is not None and len(first_settle_panel.draw_list):
-        first_settle_panel.draw()
-        if second_settle_panel is not None:
-            second_settle_panel.draw()
+    if first_settle_text:
+        settle_hooks.emit_settle_text(first_settle_text)
+        if second_settle_text is not None:
+            settle_hooks.emit_settle_text(second_settle_text)
         # 暂停一次让玩家看输出信息，非玩家角色是否暂停由 draw_setting[19] 决定
         if character_id == 0 or normal_config.system_setting.draw_setting[19]:
             ui_hooks.emit_notice("\n", wait=True, use_text_width=True)
