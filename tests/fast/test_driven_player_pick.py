@@ -12,11 +12,10 @@ from types import MappingProxyType
 from unittest import mock
 
 from Script.Core import constant, py_cmd
-from Script.Design import start_flow
 from Script.Kernel import core
 from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions, intent
-from Script.Modules.tk_ui import player_hook, player_pick
+from Script.Modules.tk_ui import player_hook, player_pick, start_flow
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
 
@@ -130,9 +129,14 @@ class DrivenPlayerPick(FastTestCase):
             """结束 start_frame 的循环"""
 
         titles: list[int] = []
+        shown: list[str] = []
         game_rounds = [("a", 30), ("b", 5), ("c", 1)]
+        self.enterContext(
+            mock.patch.object(py_cmd, "clr_cmd", lambda: shown.append("clear"))
+        )
 
         def title() -> None:
+            shown.append("title")
             titles.append(core.state().clock)
             if len(titles) > 1:
                 raise FlowDone
@@ -140,6 +144,7 @@ class DrivenPlayerPick(FastTestCase):
             view.now_panel_id = _GAME_PANEL
 
         def in_game() -> None:
+            shown.append("game")
             if not game_rounds:
                 view.now_panel_id = constant.Panel.TITLE
                 return
@@ -156,3 +161,7 @@ class DrivenPlayerPick(FastTestCase):
             start_flow.start_frame()
         self.assertEqual(_started, [("a", 60, 30), ("b", 90, 5), ("c", 95, 1)])
         self.assertEqual(titles[1], 96, "回到标题时内核停在玩家的选择之前")
+        self.assertEqual(
+            shown,
+            ["clear", "title"] + ["clear", "game"] * 4 + ["clear", "title"],
+        )
