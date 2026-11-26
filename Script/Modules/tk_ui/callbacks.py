@@ -10,7 +10,7 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 - ejaculation_service：射精文本、忍耐询问与射精面板。
 - hidden_sex_service：隐奸被发现面板。
 - pregnancy_hooks：生产与破壳面板。
-- settle_hooks：行为结算文本与嵌套事件选项面板。
+- settle_hooks：行为结算文本、嵌套事件选项面板与事件选项面板。
 """
 
 from collections.abc import Mapping
@@ -453,4 +453,22 @@ def draw_nested_event_options(
         normal_config.config_normal.text_width,
         parent_child_id,
         parent_value,
+    ).draw()
+
+
+@settle_hooks.on_event_options
+def draw_event_options(character_id: int) -> None:
+    """
+    先调用 event_option_panel.line_feed.draw 绘制一次换行。
+    再按配置文本宽度创建并绘制 event_option_panel.Event_option_Panel 面板。
+    Keyword arguments:
+    character_id -- int，需要展示事件选项的角色编号
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.UI.Panel import event_option_panel
+
+    event_option_panel.line_feed.draw()
+    event_option_panel.Event_option_Panel(
+        character_id, normal_config.config_normal.text_width
     ).draw()
