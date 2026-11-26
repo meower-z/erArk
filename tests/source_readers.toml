@@ -980,3 +980,13 @@ reads = "通过 banned_imports 读取 Script/Modules/gameplay_resolution/world_v
 used_for = "测试：Script/Modules/gameplay_resolution/world_view_service.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R96"
+file = "tests/fast/test_design_event_ui_free.py"
+symbol = "EventImportBoundaryTest.test_event_imports_no_ui"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Design/event.py 的源码字节并解析其中的导入语句"
+used_for = "测试：Script/Design/event.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
+when = "test"
+capture = "suite"
