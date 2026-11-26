@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 """ 仓库根目录路径 """
 BACKEND_UI_FREE_DIRS = (
     "Script/Config",
-    "Script/Design/handle_premise",
+    "Script/Design",
     "Script/Kernel",
     "Script/Modules/domains",
     "Script/Modules/gameplay_resolution",
@@ -22,6 +22,8 @@ BACKEND_UI_FREE_DIRS = (
     "Script/Protocol",
     "Script/StateMachine",
     "Script/System/Dormitory_System",
+    "Script/System/First_Record_System",
+    "Script/System/Item_System",
     "Script/Test",
 )
 """ 禁止导入界面与输入输出模块的后端目录 """
@@ -43,9 +45,13 @@ BANNED = (
 ALLOWED = frozenset(
     {
         (
+            "Script/Design/handle_panel.py",
+            "Script.Modules.tk_ui.player_pick",
+        ),
+        (
             "Script/Modules/save_load/kernel_state.py",
             "Script.Modules.tk_ui.orders",
-        )
+        ),
     }
 )
 """ 免于报出的 (仓库相对路径, 模块全名) 集合，对指定文件放行该模块及其成员 """
@@ -178,7 +184,7 @@ class BackendUiBoundaryGuardTest(FastTestCase):
         )
 
     def test_allowed_import_is_narrow(self) -> None:
-        """验证 ALLOWED 仅放行 kernel_state.py 导入 orders 及其成员，不放行其余模块或其他文件"""
+        """验证对 kernel_state.py 放行 orders 及其成员并报出其余 tk_ui 项，对 reset.py 报出含 orders 的六项"""
         source = "\n".join(
             (
                 "from Script.Modules.tk_ui import orders",
