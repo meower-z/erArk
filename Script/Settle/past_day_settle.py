@@ -2,7 +2,7 @@
 
 import random
 from types import FunctionType
-from Script.Core import game_path_config, get_text, io_init
+from Script.Core import get_text
 from Script.Design import (
     game_time,
     handle_premise,
@@ -10,21 +10,14 @@ from Script.Design import (
     attr_calculation,
     basement,
 )
-from Script.UI.Moudle import draw
 from Script.Config import normal_config
 from Script.Modules.domains import abilities, flags, growth, history, needs
 from Script.Modules.domains import pregnancy, roster, tallies, relations
 from Script.Modules.domains import identity
+from Script.Modules.gameplay_resolution import ui_hooks
 
-game_path = game_path_config.game_path
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
-line_feed.text = "\n"
-line_feed.width = 1
 
 
 def update_new_day() -> None:
@@ -51,11 +44,10 @@ def update_new_day() -> None:
 
     from Script.System.Education_System import sex_class_handle
 
-    now_draw = draw.NormalDraw()
-    now_draw.width = window_width
-    now_draw.text = _("\n已过24点，开始结算各种数据\n\n")
-    now_draw.draw()
-    io_init.flush()
+    ui_hooks.emit_notice(
+        _("\n已过24点，开始结算各种数据\n\n"), use_text_width=True
+    )
+    ui_hooks.emit_flush()
 
     # 清理过期的临时性技实操课，避免字典随游戏天数无限膨胀并进存档（Plan 22 四期 §7-16）
     # 课还在上（课堂模式开着、玩家在 H 里）时，该函数跳过 running 为真的那条：下课时间由玩家决定，
@@ -73,10 +65,12 @@ def update_new_day() -> None:
         if normal_config.system_setting.base_setting.get(10, 1):
             expired_food_num = cooking.handle_food_deterioration(character_id)
             if expired_food_num > 0 and character_id == 0:
-                now_draw.text = _(
-                    "你持有的{0}个食物因过期变质而自动丢弃了\n"
-                ).format(expired_food_num)
-                now_draw.draw()
+                ui_hooks.emit_notice(
+                    _("你持有的{0}个食物因过期变质而自动丢弃了\n").format(
+                        expired_food_num
+                    ),
+                    use_text_width=True,
+                )
         # 清零香薰疗愈的flag
         flags.set(character_data.cid, aromatherapy=0)
         with growth.editing(character_id, create=False) as growth_data:
@@ -134,15 +128,17 @@ def update_new_day() -> None:
     report_character_list = semester_handle.settle_semester_change()
     if report_character_list:
         growth_event_handle.push_semester_event_for_list(report_character_list)
-        now_draw.text = _(
-            "\n【学期结束】{0}的成绩单出来了，可以用「检查成绩单」指令查看\n"
-        ).format(
-            "、".join(identity.of(one).name for one in report_character_list)
+        ui_hooks.emit_notice(
+            _(
+                "\n【学期结束】{0}的成绩单出来了，可以用「检查成绩单」指令查看\n"
+            ).format(
+                "、".join(
+                    identity.of(one).name for one in report_character_list
+                )
+            ),
+            style="gold_enrod",
+            use_text_width=True,
         )
-        # now_draw 是本函数复用的同一个对象，改了 style 必须改回来，否则后面所有输出都变成金色
-        now_draw.style = "gold_enrod"
-        now_draw.draw()
-        now_draw.style = "standard"
     basement.update_base_resouce_newday()  # 更新基地资源
     navigation_service.judge_arrive()  # 判断是否到达目的地
     # 每周一次
