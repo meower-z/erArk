@@ -12,8 +12,9 @@
 from unittest import mock
 
 from Script.Core import constant
-from Script.Design import character_behavior, character_move, map_handle
+from Script.Design import character_behavior, map_handle
 from Script.Kernel import core
+from Script.UI.Panel import see_map_panel
 from tests.fast.base import FastTestCase
 from tests.world import play
 from tests.chara_activity import aim
@@ -86,7 +87,7 @@ class PlayerRouteOneLegPerPickTest(FastTestCase):
         with mock.patch.object(
             character_behavior, "judge_character_status", settle
         ):
-            play(lambda: character_move.own_charcter_move(list(TARGET)))
+            play(lambda: see_map_panel.pick_route(list(TARGET)))
         self.assertFalse(core.in_settlement(), "寻路结束后内核停在博士的选择")
 
     def test_walks_to_target(self) -> None:

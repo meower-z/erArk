@@ -1020,3 +1020,13 @@ reads = "通过 banned_imports 读取 Script/Settle/past_day_settle.py 的源码
 used_for = "测试：Script/Settle/past_day_settle.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
 when = "test"
 capture = "suite"
+
+[[reader]]
+id = "R97"
+file = "tests/fast/test_character_move_ui_free.py"
+symbol = "CharacterMoveImportBoundaryTest.test_source_imports_no_ui"
+mechanism = "ast"
+reads = "通过 banned_imports 读取 Script/Design/character_move.py 的源码字节并解析其中的导入语句"
+used_for = "测试：Script/Design/character_move.py 遵守 tests/fast/test_backend_ui_boundary_guard.py 后端界面边界守卫的导入约束"
+when = "test"
+capture = "suite"
