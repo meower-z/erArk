@@ -28,8 +28,8 @@ from Script.Modules.gameplay_resolution import (
 from Script.Modules.npc_action_choice import choice
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
-from Script.System.Item_System import condom_panel
 from Script.System.Sex_System import group_sex_panel
+from Script.UI.Panel import condom_panel
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
