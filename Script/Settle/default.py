@@ -12,8 +12,6 @@ from Script.Design import handle_ability, second_behavior, character_move
 from Script.Core import constant, constant_effect, game_type
 from Script.Core import get_text, num
 from Script.Config import game_config, normal_config
-from Script.UI.Moudle import draw
-from Script.System.Instruct_System import handle_instruct
 from Script.System.Instruct_System.common_behavior_utils import (
     get_last_valid_sex_behavior_id,
 )
@@ -24,7 +22,7 @@ from Script.Modules.gameplay_resolution import hypnosis_service
 from Script.Modules.gameplay_resolution import semen_dirty_service
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import roster_lifecycle_service
-from Script.UI.Panel import event_option_panel
+from Script.Modules.gameplay_resolution import instruct_plan_service, ui_hooks
 from Script.Settle.common_default import base_chara_hp_mp_common_settle
 from Script.Settle.common_default import base_chara_state_common_settle
 from Script.Settle.common_default import (
@@ -52,8 +50,6 @@ from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
-window_width = normal_config.config_normal.text_width
-""" 窗体宽度 """
 width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
@@ -979,10 +975,7 @@ def handle_move_to_target_scene(
             draw_text = _("{0}向{1}移动了\n").format(
                 character_data.name, target_position_name
             )
-            now_draw = draw.NormalDraw()
-            now_draw.text = draw_text
-            now_draw.width = width
-            now_draw.draw()
+            ui_hooks.emit_notice(draw_text, use_text_width=True)
         map_handle.character_move_scene(
             activity.position(character_id),
             activity.behavior(character_id).move_target,
@@ -1092,15 +1085,12 @@ def handle_first_sex(
         # 失去性无知
         if abilities.talent(target_data.cid)[222] == 1:
             abilities.talent(target_data.cid)[222] = 0
-            now_draw = draw.NormalDraw()
-            now_draw.text = _("\n{0}失去了【性无知】\n\n").format(
-                target_data.name
+            ui_hooks.emit_notice(
+                _("\n{0}失去了【性无知】\n\n").format(target_data.name)
             )
-            now_draw.draw()
 
         # 处子血胖次
         pan_id = None
-        now_draw = draw.NormalDraw()
         if len(wardrobe.of(target_data.cid).cloth_wear[9]):
             pan_id = wardrobe.of(target_data.cid).cloth_wear[9][-1]
         elif len(wardrobe.of(target_data.cid).cloth_off[9]):
@@ -1113,23 +1103,24 @@ def handle_first_sex(
         if pan_id is not None:
             pan_name = game_config.config_clothing_tem[pan_id].name
             wardrobe.set_part(target_data.cid, "cloth_wear", 9, [])
-            now_draw.text = _(
-                "\n获得了{0}穿着的{1}(沾有处子血)，已自动存入收藏品列表，可在藏物馆查看\n\n"
-            ).format(target_data.name, pan_name)
-            now_draw.draw()
+            ui_hooks.emit_notice(
+                _(
+                    "\n获得了{0}穿着的{1}(沾有处子血)，已自动存入收藏品列表，可在藏物馆查看\n\n"
+                ).format(target_data.name, pan_name)
+            )
             player_collection.set_first_panty(
                 activity.target(character_id),
                 _("{0}(沾有处子血)").format(pan_name),
             )
         else:
-            now_draw.text = _(
+            notice = _(
                 "\n{0}的处子血滴了下去，被你谨慎地用试管接了一滴，已自动存入收藏品列表，可在藏物馆查看\n\n"
             ).format(target_data.name)
             player_collection.set_first_panty(
                 activity.target(character_id),
                 _("一滴{0}的处子血").format(target_data.name),
             )
-            now_draw.draw()
+            ui_hooks.emit_notice(notice)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1549,11 +1540,9 @@ def handle_hypnosis_one(
             player_ability.set(character_id, air_hypnosis_position="")
         flags.set(target_character_data.cid, unconscious_h=0)
         hypnosis_state.clear_hypnosis_sub_states(activity.target(character_id))
-        now_draw = draw.NormalDraw()
-        now_draw.text = _("\n{0}的理智耗尽，催眠结束\n\n").format(
-            character_data.name
+        ui_hooks.emit_notice(
+            _("\n{0}的理智耗尽，催眠结束\n\n").format(character_data.name)
         )
-        now_draw.draw()
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1645,11 +1634,9 @@ def handle_hypnosis_all(
                 player_ability.set(character_data.cid, air_hypnosis_position="")
             flags.set(target_character_data.cid, unconscious_h=0)
             hypnosis_state.clear_hypnosis_sub_states(target_id)
-            now_draw = draw.NormalDraw()
-            now_draw.text = _("\n{0}的理智耗尽，催眠结束\n\n").format(
-                character_data.name
+            ui_hooks.emit_notice(
+                _("\n{0}的理智耗尽，催眠结束\n\n").format(character_data.name)
             )
-            now_draw.draw()
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1927,7 +1914,7 @@ def handle_target_hypnosis_active_h_switch_change(
         needs.add(character_id, "sanity", -santi_down, min=0)
         change_data.sanity_point -= santi_down
         player_ability.add_sanity_cost(character_id, santi_down)
-        handle_instruct.plan_instruct_common_settle(constant.Behavior.H)
+        instruct_plan_service.plan_instruct_common_settle(constant.Behavior.H)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2641,12 +2628,10 @@ def handle_target_get_weeknesss_by_dr(
     if activity.dead(character_id):
         return
     abilities.talent(target_character_data.cid)[402] = 1
-    now_draw = draw.NormalDraw()
-    now_draw.width = width
-    now_draw.text = _("\n{0}获得了【被博士持有把柄】\n").format(
-        target_character_data.name
+    ui_hooks.emit_notice(
+        _("\n{0}获得了【被博士持有把柄】\n").format(target_character_data.name),
+        use_text_width=True,
     )
-    now_draw.draw()
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2672,12 +2657,10 @@ def handle_self_get_weeknesss_to_dr(
     if activity.dead(character_id):
         return
     abilities.talent(character_id)[401] = 1
-    now_draw = draw.NormalDraw()
-    now_draw.width = width
-    now_draw.text = _("\n{0}获得了【持有博士把柄】\n").format(
-        character_data.name
+    ui_hooks.emit_notice(
+        _("\n{0}获得了【持有博士把柄】\n").format(character_data.name),
+        use_text_width=True,
     )
-    now_draw.draw()
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3134,6 +3117,8 @@ def handle_option_fater(
     """
     if not add_time:
         return
+    from Script.UI.Panel import event_option_panel
+
     event_option_panel.line_feed.draw()
     now_draw = event_option_panel.Event_option_Panel(character_id, width)
     now_draw.draw()
@@ -3178,6 +3163,8 @@ def handle_open_instruct_filter_h(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    from Script.System.Instruct_System import handle_instruct
+
     handle_instruct.instruct_filter_H_change(True)
 
 
@@ -3198,6 +3185,8 @@ def handle_close_instruct_filter_h(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    from Script.System.Instruct_System import handle_instruct
+
     handle_instruct.instruct_filter_H_change(False)
 
 
@@ -6796,7 +6785,6 @@ def handle_official_work_add_adjust(
     official.set_office_work(int(max(official.office_work() - finish_work, 0)))
     # 输出处理结果
     if activity.position(character_id) == activity.position(0):
-        now_draw = draw.NormalDraw()
         now_draw_text += _("共处理了{0}公务，").format(finish_work)
         if official.office_work() > 0:
             now_draw_text += _("还有{0}需要处理\n").format(
@@ -6804,9 +6792,7 @@ def handle_official_work_add_adjust(
             )
         else:
             now_draw_text += _("已经全部处理完毕\n\n")
-        now_draw.text = now_draw_text
-        now_draw.width = width
-        now_draw.draw()
+        ui_hooks.emit_notice(now_draw_text, use_text_width=True)
     # 输出待办事项
     basement.draw_todo()
     # 结算成就
@@ -6917,14 +6903,12 @@ def handle_cure_patient_add_just(
     if activity.position(character_id) != activity.position(0):
         return
 
-    now_draw = draw.NormalDraw()
-    now_draw.width = width
     severity_name = patient_obj.severity_name or _("未知病情")
     if (
         patient_obj.state
         == medical_constant.MedicalPatientState.WAITING_MEDICATION
     ):
-        now_draw.text = _(
+        notice = _(
             "\n在{doctor}的努力下，为一名{severity}患者完成诊断，获得{income}龙门币。\n"
         ).format(
             doctor=character_data.name,
@@ -6932,13 +6916,11 @@ def handle_cure_patient_add_just(
             income=income_delta,
         )
     else:
-        now_draw.text = _(
-            "\n{doctor}为一名{severity}患者推进诊疗进度。\n"
-        ).format(
+        notice = _("\n{doctor}为一名{severity}患者推进诊疗进度。\n").format(
             doctor=character_data.name,
             severity=severity_name,
         )
-    now_draw.draw()
+    ui_hooks.emit_notice(notice, use_text_width=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -7028,26 +7010,23 @@ def handle_ward_round_process(
     if activity.position(character_id) != activity.position(0):
         return
 
-    draw_text = draw.NormalDraw()
-    draw_text.width = width
-
     if result_flag in {"no_candidate", "no_doctor"}:
-        draw_text.text = _(
+        notice = _(
             "\n{doctor}巡视病房，但当前没有需要处理的住院患者。\n"
         ).format(doctor=doctor_data.name)
     elif result_flag == "missing_config":
-        draw_text.text = _(
+        notice = _(
             "\n{doctor}处理住院病人时遇到异常配置，已将该患者提前出院。\n"
         ).format(doctor=doctor_data.name)
     elif outcome.get("discharged"):
-        draw_text.text = _(
+        notice = _(
             "\n在{doctor}的查房下，一名{severity}患者顺利出院。\n"
         ).format(
             doctor=doctor_data.name,
             severity=severity_before_name,
         )
     elif outcome.get("success"):
-        draw_text.text = _(
+        notice = _(
             "\n{doctor}为一名{before}患者完成住院治疗，病情下降至{after}。\n"
         ).format(
             doctor=doctor_data.name,
@@ -7055,14 +7034,14 @@ def handle_ward_round_process(
             after=severity_after_name,
         )
     else:
-        draw_text.text = _(
+        notice = _(
             "\n{doctor}尝试为一名{severity}患者用药，但药物库存不足，需等待补给。\n"
         ).format(
             doctor=doctor_data.name,
             severity=severity_before_name,
         )
 
-    draw_text.draw()
+    ui_hooks.emit_notice(notice, use_text_width=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -7087,14 +7066,12 @@ def handle_ask_copy_key(
     from Script.System.Dormitory_System import dormitory_manager_system
 
     key_item_id = dormitory_manager_system.ask_copy_key(character_id)
-    now_draw = draw.NormalDraw()
-    now_draw.width = width
     if key_item_id:
         key_name = game_config.config_item[key_item_id].name
-        now_draw.text = _("\n获得了：【{0}】\n").format(key_name)
+        notice = _("\n获得了：【{0}】\n").format(key_name)
     else:
-        now_draw.text = _("\n获得钥匙失败\n")
-    now_draw.draw()
+        notice = _("\n获得钥匙失败\n")
+    ui_hooks.emit_notice(notice, use_text_width=True)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -7168,9 +7145,7 @@ def handle_recruit_add_just(
 
     # 如果是玩家在招募或玩家与招募者在同一位置的话，显示招募进度的增加情况
     if activity.position(character_id) == activity.position(0):
-        now_draw = draw.NormalDraw()
-        now_draw.width = width
-        now_draw.text = _(
+        notice = _(
             "\n在{0}的努力下，{1}号招募位进度+{2}%，现在为{3}%\n"
         ).format(
             character_data.name,
@@ -7178,7 +7153,7 @@ def handle_recruit_add_just(
             round(now_add_lust, 1),
             round(recruit_lines[select_index]["progress"] + now_add_lust, 1),
         )
-        now_draw.draw()
+        ui_hooks.emit_notice(notice, use_text_width=True)
 
     # 增加对应槽的招募值，并进行结算
     progress = recruit_lines[select_index]["progress"] + now_add_lust
@@ -7220,10 +7195,10 @@ def handle_invite_visitor_add_adjust(
     if target == 0:
         # 玩家使用时显示提示
         if character_id == 0:
-            now_draw = draw.NormalDraw()
-            now_draw.width = width
-            now_draw.text = _("\n请先使用邀请系统选择邀请的对象，再进行邀请\n")
-            now_draw.draw()
+            ui_hooks.emit_notice(
+                _("\n请先使用邀请系统选择邀请的对象，再进行邀请\n"),
+                use_text_width=True,
+            )
         return
 
     # 如果该角色已经被招募，则直接返回
@@ -7231,10 +7206,9 @@ def handle_invite_visitor_add_adjust(
         visitor.set_invite(0)
         # 玩家使用时显示提示
         if character_id == 0:
-            now_draw = draw.NormalDraw()
-            now_draw.width = width
-            now_draw.text = _("\n该角色已经被招募，邀请已重置\n")
-            now_draw.draw()
+            ui_hooks.emit_notice(
+                _("\n该角色已经被招募，邀请已重置\n"), use_text_width=True
+            )
         return
 
     # 获取调整值#
@@ -7251,16 +7225,12 @@ def handle_invite_visitor_add_adjust(
 
     # 如果是玩家在邀请或玩家与邀请者在同一位置的话，显示进度的增加情况
     if activity.position(character_id) == activity.position(0):
-        now_draw = draw.NormalDraw()
-        now_draw.width = width
-        now_draw.text = _(
-            "\n在{0}的努力下，邀请进度+{1}%，现在为{2}%\n"
-        ).format(
+        notice = _("\n在{0}的努力下，邀请进度+{1}%，现在为{2}%\n").format(
             character_data.name,
             round(now_add_lust, 1),
             round(progress + now_add_lust, 1),
         )
-        now_draw.draw()
+        ui_hooks.emit_notice(notice, use_text_width=True)
 
     # 增加对应槽的邀请值，并进行结算
     visitor.set_invite(target, progress + now_add_lust)
@@ -7746,10 +7716,7 @@ def handle_end_h_add_hpmp_max(
                 info_text += _("，精液量上限增加了{0}").format(orgasm_count)
             info_text += "\n"
             # 输出提示信息
-            info_draw = draw.NormalDraw()
-            info_draw.text = info_text
-            info_draw.width = width
-            info_draw.draw()
+            ui_hooks.emit_notice(info_text, use_text_width=True)
         # npc则自动进行一次能力上升结算
         if chara_id != 0 and normal_config.system_setting.base_setting[2]:
             handle_ability.gain_ability(chara_id)
@@ -7829,10 +7796,7 @@ def handle_group_sex_end_h_add_hpmp_max(
                 info_text += _("，精液量上限增加了{0}").format(orgasm_count)
             info_text += "\n"
             # 输出提示信息
-            info_draw = draw.NormalDraw()
-            info_draw.text = info_text
-            info_draw.width = width
-            info_draw.draw()
+            ui_hooks.emit_notice(info_text, use_text_width=True)
         # npc则自动进行一次能力上升结算
         if chara_id != 0 and normal_config.system_setting.base_setting[2]:
             handle_ability.gain_ability(chara_id)
@@ -7949,12 +7913,12 @@ def handle_board_game_win_add_adjust(
     game_name = game_config.config_board_game[
         activity.behavior(character_id).board_game_type
     ].name
-    info_draw = draw.NormalDraw()
-    info_draw.text = _("{0}在{1}中获胜，获得了{2}粉红凭证\n\n").format(
-        character_data.name, game_name, add_pink_certificates
+    ui_hooks.emit_notice(
+        _("{0}在{1}中获胜，获得了{2}粉红凭证\n\n").format(
+            character_data.name, game_name, add_pink_certificates
+        ),
+        use_text_width=True,
     )
-    info_draw.width = width
-    info_draw.draw()
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -8393,13 +8357,10 @@ def handle_give_gift_add_adjust(
             character_id, add_time, change_data, now_time
         )
         # 显示绘制信息
-        now_draw = draw.WaitDraw()
         draw_text = _("\n  {0}的反发刻印从1级降为了0\n\n").format(
             target_data.name
         )
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(draw_text, wait=True, style="gold_enrod")
     # 药物礼物
     elif gift_data.type == 11:
         # 这是药物ID，执行药物使用逻辑
@@ -8608,10 +8569,7 @@ def handle_read_add_adjust(
             library_service.check_return_book(character_id)
     # 仅在是玩家的情况下输出该提示信息
     if character_id == 0:
-        info_draw = draw.NormalDraw()
-        info_draw.text = info_text
-        info_draw.style = "gold_enrod"
-        info_draw.draw()
+        ui_hooks.emit_notice(info_text, style="gold_enrod")
         achievement_service.settle_and_notify(_("读书"))
 
 
@@ -9042,9 +9000,7 @@ def handle_check_report_card_add_just(
         finished = growth_data.report_card_flag and bool(report_data)
         if not finished:
             report_data = semester_handle.build_report_card(target_id)
-        now_draw = draw.NormalDraw()
-        now_draw.width = normal_config.config_normal.text_width
-        now_draw.text = semester_handle.get_report_card_text(
+        notice = semester_handle.get_report_card_text(
             target_id, report_data, finished
         )
         # 更早的学期不在这里翻——指令是一段式的打印，翻页要有面板才做得了。
@@ -9052,10 +9008,10 @@ def handle_check_report_card_add_just(
         history_count = len(semester_handle.get_report_card_history(target_id))
         earlier_count = history_count - 1 if finished else history_count
         if earlier_count > 0:
-            now_draw.text += _(
+            notice += _(
                 "（更早的 {0} 个学期可以在教育管理系统的养成总览里翻看）\n"
             ).format(earlier_count)
-        now_draw.draw()
+        ui_hooks.emit_notice(notice, use_text_width=True)
 
         # 成绩档位越高，检查成绩单时的反馈越正面
         # 档位已经把「出勤率 + 有没有真学出东西」并进一个口径了，
@@ -9469,12 +9425,12 @@ def handle_add_hpmp_max(
     needs.add(character_id, "mana_max", add_mp)
     # 如果和玩家位于同一地点，则输出提示信息
     if activity.position(character_id) == activity.position(0):
-        now_draw = draw.NormalDraw()
-        now_draw.text = _("\n{0}的体力上限增加{1},气力上限增加{2}").format(
-            character_data.name, str(add_hp), str(add_mp)
+        ui_hooks.emit_notice(
+            _("\n{0}的体力上限增加{1},气力上限增加{2}").format(
+                character_data.name, str(add_hp), str(add_mp)
+            ),
+            use_text_width=True,
         )
-        now_draw.width = width
-        now_draw.draw()
     # 交互对象也同样#
     if activity.target(character_id) != character_id:
         target_data: identity.Identity = identity.of(
@@ -9496,17 +9452,14 @@ def handle_add_hpmp_max(
         needs.add(target_data.cid, "mana_max", add_mp)
         # 如果和玩家位于同一地点，则输出提示信息
         if activity.position(character_id) == activity.position(0):
-            now_draw = draw.NormalDraw()
-            now_draw.text = _(
-                "\n{0}的体力上限增加{1},气力上限增加{2}\n"
-            ).format(target_data.name, str(add_hp), str(add_mp))
-            now_draw.width = width
-            now_draw.draw()
+            ui_hooks.emit_notice(
+                _("\n{0}的体力上限增加{1},气力上限增加{2}\n").format(
+                    target_data.name, str(add_hp), str(add_mp)
+                ),
+                use_text_width=True,
+            )
     else:
-        now_draw = draw.NormalDraw()
-        now_draw.text = "\n"
-        now_draw.width = 1
-        now_draw.draw()
+        ui_hooks.emit_notice("\n")
     if character_id == 0:
         achievement_service.settle_and_notify(_("锻炼"))
 
