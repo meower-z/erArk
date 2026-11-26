@@ -3635,7 +3635,7 @@ def handle_condom_instruct_common(mode: str, behavior_id: str) -> None:
     mode -- 面板操作类型，hang=挂装饰，take_back=取回装饰，drink=饮用，squeeze=挤出
     behavior_id -- 判定通过后结算的行为id
     """
-    from Script.System.Item_System import condom_panel
+    from Script.UI.Panel import condom_panel
 
     judge = _("严重骚扰")
     if not instuct_judege.calculation_instuct_judege(
