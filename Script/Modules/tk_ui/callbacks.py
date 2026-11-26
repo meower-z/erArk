@@ -263,8 +263,8 @@ def use_text_ai(
     translator: bool,
 ) -> str:
     """
-    在调用时导入 Script.Design.handle_chat_ai，并将参数转发给 judge_use_text_ai 执行文本AI处理。
-    调用时再导入可避免启动阶段加载 AI 接口库，同时避免在配置初始化前读取文本宽度。
+    将参数与 chat_ai_panel.OUTPUT 转发给 handle_chat_ai.judge_use_text_ai。
+    在调用时按需导入两模块，避免启动时加载两个客户端库或在配置就绪前读取文本宽度。
     Keyword arguments:
     character_id -- int，角色编号
     behavior_id -- str，行为编号
@@ -274,9 +274,14 @@ def use_text_ai(
     str -- judge_use_text_ai 返回的最终文本
     """
     from Script.Design import handle_chat_ai
+    from Script.UI.Panel import chat_ai_panel
 
     return handle_chat_ai.judge_use_text_ai(
-        character_id, behavior_id, original_text, translator=translator
+        character_id,
+        behavior_id,
+        original_text,
+        chat_ai_panel.OUTPUT,
+        translator=translator,
     )
 
 

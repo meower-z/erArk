@@ -34,7 +34,7 @@
   "Script/Design/event.py": 10,
   "Script/Design/game_time.py": 7,
   "Script/Design/handle_ability.py": 43,
-  "Script/Design/handle_chat_ai.py": 166,
+  "Script/Design/handle_chat_ai.py": 112,
   "Script/Design/handle_npc_ai.py": 112,
   "Script/Design/handle_npc_ai_in_h.py": 104,
   "Script/Design/handle_premise/__init__.py": 86,
