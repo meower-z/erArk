@@ -672,7 +672,7 @@ Script/
 | 射精面板 | `UI/Panel/ejaculation_panel.py` | `Semen_Shoot_Amount.csv` |
 | 怀孕总览 | `System/Pregnancy_System/pregnancy_panel.py`, `Modules/gameplay_resolution/pregnancy_overview_service.py` | 怀孕阶段总览、生育谱系图与异常女儿排查 |
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
-| 教育管理 | `System/Education_System/*`, `Modules/gameplay_resolution/class_schedule_service.py`, `Modules/gameplay_resolution/sex_class_plan_service.py`, `Modules/gameplay_resolution/course_select_service.py`, `Modules/gameplay_resolution/class_tip_service.py` | 全局课表、个人课表、日程模板与养成总览 |
+| 教育管理 | `System/Education_System/*`, `Modules/gameplay_resolution/class_schedule_service.py`, `Modules/gameplay_resolution/sex_class_plan_service.py`, `Modules/gameplay_resolution/course_select_service.py`, `Modules/gameplay_resolution/class_tip_service.py`, `Modules/gameplay_resolution/student_select_service.py` | 全局课表、个人课表、日程模板与养成总览 |
 | 养成总览 | `System/Education_System/growth_panel.py`, `Modules/gameplay_resolution/growth_overview_service.py`, `Modules/domains/growth.py` | 女儿的阶段、科目、出勤、成绩单、性格与履历 |
 | 身体检查与管理 | `UI/Panel/physical_check_and_manage.py`, `Modules/gameplay_resolution/physical_exam_service.py`, `Modules/gameplay_resolution/physical_exam_report.py`, `Modules/gameplay_resolution/body_manage_service.py`, `Modules/domains/physical_exam.py` | `Physical_Exam_Setting.csv` |
 | 读书/图书馆 | `UI/Panel/borrow_book_panel.py`, `read_book_panel.py`, `manage_library.py`, `Modules/gameplay_resolution/library_panel_service.py`, `Modules/domains/library.py` | `Book*.csv` |
