@@ -16,7 +16,7 @@ from Script.Modules.domains import dirty, player_collection
 from Script.Modules.gameplay_resolution import first_record_service as service
 from Script.Modules.gameplay_resolution import first_record_text as text
 from Script.Modules.gameplay_resolution import hypnosis_service
-from Script.System.First_Record_System import first_record_panel
+from Script.UI.Panel import first_record_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests.ui_free_subprocess import run_ui_free
