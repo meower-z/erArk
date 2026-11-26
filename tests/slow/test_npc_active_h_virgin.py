@@ -108,7 +108,7 @@ class NpcActiveHVirginTest(SlowTestCase):
             for seed in SEEDS:
                 random.seed(seed)
                 try:
-                    handle_npc_ai_in_h.npc_active_h()
+                    handle_npc_ai_in_h.npc_active_h(player_pick.choose)
                 except player_pick.Chosen as chosen:
                     data = chosen.action.action_data
                     assert isinstance(data, Mapping)

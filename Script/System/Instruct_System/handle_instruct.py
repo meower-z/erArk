@@ -4477,13 +4477,13 @@ def handle_give_blowjob() -> None:
 def handle_change_top_and_bottom() -> None:
     """处理交给对方指令"""
     h_state.set(activity.target(0), npc_active_h=True)
-    handle_npc_ai_in_h.npc_active_h()
+    handle_npc_ai_in_h.npc_active_h(player_pick.choose)
 
 
 @add_instruct(constant.Instruct.KEEP_ENJOY)
 def handle_keep_enjoy() -> None:
     """处理继续享受指令"""
-    handle_npc_ai_in_h.npc_active_h()
+    handle_npc_ai_in_h.npc_active_h(player_pick.choose)
 
 
 @add_instruct(constant.Instruct.TRY_PL_ACTIVE_H)
