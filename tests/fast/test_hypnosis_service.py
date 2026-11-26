@@ -16,10 +16,10 @@ from Script.Kernel import core
 from Script.Modules import load_order
 from Script.Modules.domains import abilities, activity, flags, hypnosis
 from Script.Modules.domains import identity, player_ability, scene_state
+from Script.Modules.gameplay_resolution import first_record_text
 from Script.Modules.gameplay_resolution import hypnosis_service, ui_hooks
 from Script.Modules.gameplay_resolution import status_tag_service, working
 from Script.Settle import default as settle_default
-from Script.System.First_Record_System import first_record_panel
 from Script.System.Sex_System import h_mode_common
 from Script.UI.Moudle import draw
 from Script.UI.Panel import hypnosis_panel
@@ -50,7 +50,7 @@ MOVED = (
 CALLERS = (
     settle_behavior,
     settle_default,
-    first_record_panel,
+    first_record_text,
     h_mode_common,
     status_tag_service,
 )
