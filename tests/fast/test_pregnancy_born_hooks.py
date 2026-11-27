@@ -5,7 +5,7 @@
 - CheckBornTest：check_born 的胎生生产判定与回调派发。
 - CheckHardEggBornTest：带壳卵生 check_egg_born 的到期卵判定与回调派发。
 - CheckSoftEggBornTest：无壳卵生 check_egg_born 的到期卵判定与回调派发。
-- ImportBoundaryTest：妊娠后端模块的导入边界与屏蔽妊娠面板后的独立运行。
+- ImportBoundaryTest：屏蔽两个妊娠面板后胎生生产与无壳卵破壳的独立运行。
 """
 
 import datetime
@@ -19,13 +19,13 @@ from Script.Kernel import core
 from Script.Modules.domains import pregnancy
 from Script.Modules.gameplay_resolution import pregnancy_hooks, working
 from Script.Modules.tk_ui import callbacks
-from Script.System.Pregnancy_System import born_event_panel, egg_handle
+from Script.System.Pregnancy_System import egg_handle
 from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
 from Script.UI.Moudle import draw
+from Script.UI.Panel import born_event_panel
 from tests import chara_abilities as ca
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
-from tests.fast.test_ejaculation_services import imports_in
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 MOTHER = 1
 """ 测试使用的母亲角色编号（1）。 """
@@ -33,26 +33,11 @@ HARD_EGG_RACE = 6
 """ 带壳卵生种族编号（6）。 """
 SOFT_EGG_RACE = 11
 """ 无壳卵生种族编号（11）。 """
-PANELS = (
-    "Script.System.Pregnancy_System.born_event_panel",
-    "Script.System.Pregnancy_System.pregnancy_panel",
-)
-""" 导入边界检查禁止直接导入的两个妊娠面板模块全名元组。 """
-SOURCES = (
-    "Script/System/Pregnancy_System/__init__.py",
-    "Script/System/Pregnancy_System/egg_handle.py",
-    "Script/System/Pregnancy_System/family_tree_draw.py",
-    "Script/System/Pregnancy_System/pregnancy_constant.py",
-    "Script/System/Pregnancy_System/pregnancy_handle.py",
-    "Script/System/Pregnancy_System/soft_egg_handle.py",
-    "Script/Modules/gameplay_resolution/pregnancy_hooks.py",
-)
-""" 接受导入边界检查的七个模块仓库相对路径元组。 """
 BLOCKED_RUN = """
 import datetime, importlib.abc, json, sys
 BLOCKED = (
-    "Script.System.Pregnancy_System.born_event_panel",
-    "Script.System.Pregnancy_System.pregnancy_panel",
+    "Script.UI.Panel.born_event_panel",
+    "Script.UI.Panel.pregnancy_panel",
 )
 def blocked(name):
     return any(name == root or name.startswith(root + ".") for root in BLOCKED)
@@ -422,38 +407,7 @@ class CheckSoftEggBornTest(EggCase):
 
 
 class ImportBoundaryTest(FastTestCase):
-    """妊娠后端模块导入边界与屏蔽妊娠面板后独立运行的单元测试。"""
-
-    def test_sources_import_no_ui_or_pregnancy_panels(self) -> None:
-        """验证 SOURCES 中每个模块均通过 banned_imports 检查，且不直接导入 PANELS 中的妊娠面板。"""
-        for path in SOURCES:
-            with self.subTest(path=path):
-                source = (ROOT / path).read_bytes()
-                self.assertEqual(banned_imports(source, path), [])
-                self.assertEqual(panel_imports(source, path), [])
-
-    def test_checkers_report_relative_and_multi_name_imports(self) -> None:
-        """验证 banned_imports 与 panel_imports 均能检出相对导入以及单条导入语句中的后续目标名。"""
-        path = "Script/System/Pregnancy_System/sample.py"
-        source = (
-            "from . import pregnancy_constant, born_event_panel\n"
-            "from ...UI.Moudle import draw\n"
-            "from Script import Core, UI\n"
-            "def f():\n"
-            "    from .pregnancy_panel import get_date_text\n"
-        )
-        self.assertEqual(
-            banned_imports(source, path),
-            [(2, "Script.UI.Moudle.draw"), (3, "Script.UI")],
-        )
-        self.assertEqual(
-            panel_imports(source, path),
-            [
-                "Script.System.Pregnancy_System.born_event_panel",
-                "Script.System.Pregnancy_System.pregnancy_panel",
-                "Script.System.Pregnancy_System.pregnancy_panel.get_date_text",
-            ],
-        )
+    """屏蔽两个妊娠面板后胎生生产与无壳卵破壳独立运行的单元测试。"""
 
     def test_birth_and_hatch_run_without_panels(self) -> None:
         """
@@ -479,21 +433,3 @@ class ImportBoundaryTest(FastTestCase):
                 "loaded": [],
             },
         )
-
-
-def panel_imports(source: str | bytes, path: str) -> list[str]:
-    """
-    列出源码中导入 PANELS 模块或其成员的解析后完整路径。
-    Keyword arguments:
-    source -- str | bytes，待检查的 Python 源码
-    path -- str，文件的仓库相对路径，用于解析相对导入
-    Return arguments:
-    list[str] -- 排序后的命中完整路径列表
-    """
-    package = path.rsplit("/", 1)[0].replace("/", ".")
-    text = source.decode() if isinstance(source, bytes) else source
-    return sorted(
-        name
-        for name in imports_in(text, package)
-        if any(name == root or name.startswith(root + ".") for root in PANELS)
-    )

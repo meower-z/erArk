@@ -99,7 +99,7 @@ def find_call() -> None:
 @handle_panel.add_panel(constant.Panel.PREGNANCY_OVERVIEW)
 def pregnancy_overview_flow() -> None:
     """怀孕总览面板"""
-    from Script.System.Pregnancy_System import pregnancy_panel
+    from Script.UI.Panel import pregnancy_panel
 
     now_panel = pregnancy_panel.Pregnancy_Overview_Panel(width)
     now_panel.draw()

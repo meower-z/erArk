@@ -217,7 +217,7 @@ Script/
 └── UI/
     ├── Moudle/draw.py      # 绘制类抽象层（NormalDraw/Button/BarDraw...）
     ├── Moudle/panel.py     # 通用面板构建块
-    ├── Panel/              # 88 个功能面板
+    ├── Panel/              # 90 个功能面板
     └── Flow/               # 标题 / 创建角色 / normal_flow 面板注册
 ```
 
@@ -671,7 +671,7 @@ Script/
 | 身体信息 | `UI/Panel/body_info_panel.py`, `dirty_panel.py` | `BodyPart.csv` |
 | 性行为履历 | `System/First_Record_System/*`, `UI/Panel/first_record_panel.py`, `Modules/gameplay_resolution/first_record_text.py`, `Modules/gameplay_resolution/first_record_service.py`, `Modules/domains/first_record.py` | `FirstRecordSpecial.csv` |
 | 射精面板 | `UI/Panel/ejaculation_panel.py` | `Semen_Shoot_Amount.csv` |
-| 怀孕总览 | `System/Pregnancy_System/pregnancy_panel.py`, `Modules/gameplay_resolution/pregnancy_overview_service.py` | 怀孕阶段总览、生育谱系图与异常女儿排查 |
+| 怀孕总览 | `UI/Panel/pregnancy_panel.py`, `Modules/gameplay_resolution/pregnancy_overview_service.py` | 怀孕阶段总览、生育谱系图与异常女儿排查 |
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
 | 教育管理 | `System/Education_System/*`, `Modules/gameplay_resolution/class_schedule_service.py`, `Modules/gameplay_resolution/sex_class_plan_service.py`, `Modules/gameplay_resolution/course_select_service.py`, `Modules/gameplay_resolution/class_tip_service.py`, `Modules/gameplay_resolution/student_select_service.py`, `Modules/tk_ui/student_select.py`, `UI/Panel/course_select_panel.py`, `UI/Panel/schedule_template_panel.py`, `UI/Panel/sex_class_plan_panel.py`, `UI/Panel/class_schedule_panel.py` | 全局课表、个人课表、日程模板与养成总览 |
 | 养成总览 | `UI/Panel/growth_panel.py`, `Modules/gameplay_resolution/growth_overview_service.py`, `Modules/domains/growth.py` | 女儿的阶段、科目、出勤、成绩单、性格与履历 |

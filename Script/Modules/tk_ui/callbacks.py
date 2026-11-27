@@ -416,7 +416,7 @@ def draw_born_event(
     Return arguments:
     None -- 无返回值
     """
-    from Script.System.Pregnancy_System import born_event_panel
+    from Script.UI.Panel import born_event_panel
 
     born_event_panel.Born_Panel(
         character_id, egg_mode=egg_mode, egg_id_list=egg_id_list

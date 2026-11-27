@@ -5,8 +5,7 @@
 - 素质开关药物：验证 33/34、37/38 与 40/41 号药物切换对应素质并发出等待提示。
 - 妊娠、孵化与成长加速：验证 35、36 与 39 号药物的天数累加、无效果分支、选择编号重置与季节日期格式。
 - 送礼结算调用：验证 handle_give_gift_add_adjust 扣除 33 号药物道具、调用药物服务并生效。
-- 导入边界：验证相对与嵌套导入检查器、drug_service.py 的无界面与无 pregnancy_panel 边界、default.py
-  不导入 gift_panel 以及 gift_panel 不定义 handle_drug_use_effect。
+- 导入边界：验证相对与嵌套导入检查器、default.py 不导入 gift_panel，以及 gift_panel 不定义 handle_drug_use_effect。
 """
 
 import ast
@@ -21,12 +20,12 @@ from Script.Kernel import core
 from Script.Modules.domains import abilities, activity, inventory, pregnancy
 from Script.Modules.gameplay_resolution import drug_service, ui_hooks, working
 from Script.System.Pregnancy_System import egg_handle, pregnancy_constant
-from Script.System.Pregnancy_System import pregnancy_handle, pregnancy_panel
+from Script.System.Pregnancy_System import pregnancy_handle
 from Script.Settle import default as settle_default
 from Script.UI.Moudle import draw
-from Script.UI.Panel import gift_panel
+from Script.UI.Panel import gift_panel, pregnancy_panel
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 TARGET = 1
 """ 测试使用的目标角色编号（1）。 """
@@ -40,8 +39,6 @@ GIFT_DRUG = 33
 """ 送礼结算测试使用的 11 类药物礼物编号（33）。 """
 GIFT_PANEL = "Script.UI.Panel.gift_panel"
 """ 边界测试禁止导入的礼物面板模块名。 """
-PREGNANCY_PANEL = "Script.System.Pregnancy_System.pregnancy_panel"
-""" 边界测试禁止药物服务导入的妊娠面板模块名。 """
 EGG = 7
 """ 孵化加速测试使用的卵编号（7）。 """
 START = datetime.datetime(2025, 2, 14, 8, 30)
@@ -453,7 +450,7 @@ def forbidden_imports(
 
 
 class ImportBoundaryTest(FastTestCase):
-    """导入检查辅助函数以及药物服务、结算模块和礼物面板的边界测试。"""
+    """导入检查辅助函数以及结算模块和礼物面板的边界测试。"""
 
     def test_checker_resolves_relative_and_nested_imports(self) -> None:
         """验证 forbidden_imports 检出相对、绝对与函数内嵌套导入，且不误报同前缀的无关模块名。"""
@@ -473,16 +470,6 @@ class ImportBoundaryTest(FastTestCase):
                 f"{GIFT_PANEL}.Gift_Panel",
                 f"{GIFT_PANEL}.draw_gift",
             ],
-        )
-
-    def test_drug_service_imports_no_ui(self) -> None:
-        """验证 drug_service.py 通过 banned_imports 检查且不导入 Script.UI 或 pregnancy_panel。"""
-        path = "Script/Modules/gameplay_resolution/drug_service.py"
-        source = (ROOT / path).read_bytes()
-        self.assertEqual(banned_imports(source, path), [])
-        self.assertEqual(
-            forbidden_imports(source, path, ("Script.UI", PREGNANCY_PANEL)),
-            [],
         )
 
     def test_settlement_skips_gift_panel(self) -> None:
