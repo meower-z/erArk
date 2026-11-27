@@ -1,11 +1,11 @@
 """
 tk_ui 的指令界面回调
 ====================
-导入时调用 instruct_hooks.on_instruct 与 on_prompts 登记十个槽位。
+导入时以on_instruct、on_prompts、on_sex_position登记11槽位。
 show_non_h 写 view.show_non_h_in_hidden_sex。stash_filter 与 stashed_filter 读写 view.instruct_type_filter_cache。
 skip_pauses 调用时查找 flow_handle.set_skip_pauses。
 ask_sex_class_ability 与 confirm_poor_music 用 draw 画提示与按钮，经 flow_handle.askfor_all 读回答。
-ask_close_door 与 select_condom 调用时分别导入 normal_panel 与 condom_panel。
+ask_close_door、select_condom、choose_sex_position调用时分别导入normal_panel、condom_panel、sex_position_panel。
 ask_official_option 与 show_official_result 调用时导入 official_event_panel。
 """
 
@@ -183,6 +183,24 @@ def show_official_result(
     )
 
 
+def choose_sex_position(sex_type: int, change_position: bool) -> None:
+    """
+    在调用时导入 sex_position_panel。
+    以导入时读取的模块全局 width、sex_type 与 change_position 构造 Sex_Position_Panel。
+    随后无参调用该实例的 draw 方法。
+    Keyword arguments:
+    sex_type -- int，性交类型编号（1 阴道、2 子宫口、3 子宫、4 肛门、5 尿道）
+    change_position -- bool，是否为切换体位
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.UI.Panel import sex_position_panel
+
+    sex_position_panel.Sex_Position_Panel(
+        width, sex_type, change_position
+    ).draw()
+
+
 instruct_hooks.on_instruct(
     show_non_h, skip_pauses, stash_filter, stashed_filter
 )
@@ -194,3 +212,4 @@ instruct_hooks.on_prompts(
     ask_official_option,
     show_official_result,
 )
+instruct_hooks.on_sex_position(choose_sex_position)

@@ -35,8 +35,6 @@ from Script.Modules.domains import identity, modes
 
 _: FunctionType = get_text._
 """ 翻译api """
-width: int = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 InstructParams = ParamSpec("InstructParams")
 """ 指令处理函数的参数 """
 InstructReturn = TypeVar("InstructReturn")
@@ -3777,21 +3775,13 @@ def handle_birth_control_pills_after() -> None:
 @add_instruct(constant.Instruct.VAGINAL_SEX)
 def handle_vaginal_sex() -> None:
     """处理阴道性交指令"""
-    from Script.System.Sex_System import sex_position_panel
-
-    now_panel = sex_position_panel.Sex_Position_Panel(width=width)
-    now_panel.draw()
+    instruct_hooks.choose_sex_position(1, False)
 
 
 @add_instruct(constant.Instruct.CHANGE_VAGINAL_SEX_POSITION)
 def handle_change_vaginal_sex_position() -> None:
     """处理换阴道性交体位指令"""
-    from Script.System.Sex_System import sex_position_panel
-
-    now_panel = sex_position_panel.Sex_Position_Panel(
-        width=width, change_position=True
-    )
-    now_panel.draw()
+    instruct_hooks.choose_sex_position(1, True)
 
 
 @add_instruct(constant.Instruct.NORMAL_SEX)
@@ -3915,12 +3905,7 @@ def handle_womb_os_caress() -> None:
 @add_instruct(constant.Instruct.CHANGE_CERVIX_SEX_POSITION)
 def handle_change_cervix_sex_position() -> None:
     """处理换子宫姦口体位指令"""
-    from Script.System.Sex_System import sex_position_panel
-
-    now_panel = sex_position_panel.Sex_Position_Panel(
-        width=width, sex_type=2, change_position=True
-    )
-    now_panel.draw()
+    instruct_hooks.choose_sex_position(2, True)
 
 
 @add_instruct(constant.Instruct.NORMAL_CERVIX_SEX)
@@ -4028,12 +4013,7 @@ def handle_back_lay_cervix_sex() -> None:
 @add_instruct(constant.Instruct.CHANGE_WOMB_SEX_POSITION)
 def handle_change_womb_sex_position() -> None:
     """处理换子宫姦体位指令"""
-    from Script.System.Sex_System import sex_position_panel
-
-    now_panel = sex_position_panel.Sex_Position_Panel(
-        width=width, sex_type=3, change_position=True
-    )
-    now_panel.draw()
+    instruct_hooks.choose_sex_position(3, True)
 
 
 @add_instruct(constant.Instruct.NORMAL_WOMB_SEX)
@@ -4135,21 +4115,13 @@ def handle_back_lay_womb_sex() -> None:
 @add_instruct(constant.Instruct.ANAL_SEX)
 def handle_anal_sex() -> None:
     """处理肛门性交指令"""
-    from Script.System.Sex_System import sex_position_panel
-
-    now_panel = sex_position_panel.Sex_Position_Panel(width=width, sex_type=4)
-    now_panel.draw()
+    instruct_hooks.choose_sex_position(4, False)
 
 
 @add_instruct(constant.Instruct.CHANGE_ANAL_SEX_POSITION)
 def handle_change_anal_sex_position() -> None:
     """处理换肛交体位指令"""
-    from Script.System.Sex_System import sex_position_panel
-
-    now_panel = sex_position_panel.Sex_Position_Panel(
-        width=width, sex_type=4, change_position=True
-    )
-    now_panel.draw()
+    instruct_hooks.choose_sex_position(4, True)
 
 
 @add_instruct(constant.Instruct.NORMAL_ANAL_SEX)
@@ -4273,21 +4245,13 @@ def handle_double_penetration() -> None:
 @add_instruct(constant.Instruct.URETHRAL_SEX)
 def handle_urethral_sex() -> None:
     """处理尿道姦指令"""
-    from Script.System.Sex_System import sex_position_panel
-
-    now_panel = sex_position_panel.Sex_Position_Panel(width=width, sex_type=5)
-    now_panel.draw()
+    instruct_hooks.choose_sex_position(5, False)
 
 
 @add_instruct(constant.Instruct.CHANGE_URETHRAL_SEX_POSITION)
 def handle_change_urethral_sex_position() -> None:
     """处理换尿道姦体位指令"""
-    from Script.System.Sex_System import sex_position_panel
-
-    now_panel = sex_position_panel.Sex_Position_Panel(
-        width=width, sex_type=5, change_position=True
-    )
-    now_panel.draw()
+    instruct_hooks.choose_sex_position(5, True)
 
 
 @add_instruct(constant.Instruct.NORMAL_URETHRAL_SEX)
