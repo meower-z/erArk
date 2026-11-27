@@ -23,6 +23,7 @@ BACKEND_UI_FREE_DIRS = (
     "Script/Settle",
     "Script/StateMachine",
     "Script/System/Dormitory_System",
+    "Script/System/Education_System",
     "Script/System/Field_Commission_System",
     "Script/System/First_Record_System",
     "Script/System/Item_System",
@@ -47,10 +48,6 @@ BANNED = (
 """ 禁止后端目录导入的界面、输入输出与 Tk（窗口、事件、图像、适配）模块（含子模块） """
 ALLOWED = frozenset(
     {
-        (
-            "Script/Design/handle_panel.py",
-            "Script.Modules.tk_ui.player_pick",
-        ),
         (
             "Script/Modules/save_load/kernel_state.py",
             "Script.Modules.tk_ui.orders",
