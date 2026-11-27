@@ -1,20 +1,32 @@
 # -*- coding: UTF-8 -*-
 """
-面板切换指令表测试
-==================
-PanelInstructsTest 核对 PANEL_INSTRUCTS 与 EXPECTED_PANEL_INSTRUCTS 一致，
-并验证每条预期指令经 handle_instruct 切换到对应面板且已登记 cid 与前提条件。
+面板切换与诊疗指令测试
+======================
+PanelInstructsTest 核对 PANEL_INSTRUCTS 与 EXPECTED_PANEL_INSTRUCTS 一致。
+该测试类验证每条预期指令经操作菜单面板切换 view.now_panel_id，并检查幼年阶段拦截与菜单登记。
+CurePatientInstructTest 验证 CURE_PATIENT 指令在有待诊病人时打开诊疗面板，无待诊病人时提示并留在场景面板。
 """
 
 from unittest import mock
 
-from Script.Config import game_config
-from Script.Core import constant
-from Script.Modules.gameplay_resolution import ui_hooks
+from Script.Config import game_config, normal_config
+from Script.Core import constant, get_text
+from Script.Modules.domains import medical
 from Script.System.Instruct_System import handle_instruct
+from Script.System.Medical_System import medical_constant as mc
 from Script.UI.Moudle import view
+from Script.UI.Panel import see_instruct_panel
+from tests import chara_abilities as ca
+from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
+from tests.fast.test_medical_diagnose_service import DiagnoseCase, patient
 
+CHILD = 102
+""" 幼年阶段年龄素质编号（102） """
+_ = get_text._
+""" 本地化文本翻译函数 """
+NO_PATIENT = _("\n当前没有需要诊疗的病人\n")
+""" 无待诊病人时 CURE_PATIENT 指令发出的预期提示文本 """
 EXPECTED_PANEL_INSTRUCTS: dict[str, int] = {
     constant.Instruct.BUY_FOOD: constant.Panel.FOOD_SHOP,
     constant.Instruct.EAT: constant.Panel.FOOD_BAG,
@@ -81,27 +93,29 @@ EXPECTED_PANEL_INSTRUCTS: dict[str, int] = {
 """ 61 条纯面板切换指令的预期映射表（指令 id 到面板 id），独立列出以校验表项完整与面板切换行为 """
 
 
+def open_from_menu(instruct_id: str) -> None:
+    """
+    以当前配置文本宽度创建 SeeInstructPanel 实例并执行指定指令。
+    Keyword arguments:
+    instruct_id -- str，待执行的指令 id
+    Return arguments:
+    None -- 无返回值
+    """
+    see_instruct_panel.SeeInstructPanel(
+        normal_config.config_normal.text_width
+    ).handle_instruct(instruct_id)
+
+
 class PanelInstructsTest(FastTestCase):
-    """PANEL_INSTRUCTS 表项核对，以及各预期指令的面板切换与 cid、前提登记测试。"""
+    """PANEL_INSTRUCTS 表项核对，以及操作菜单面板切换、幼年阶段拦截与菜单登记测试。"""
 
     def setUp(self) -> None:
-        """
-        调用父类准备，创建角色 0（博士）与角色 1（阿米娅），并将 view.now_panel_id 临时设为 Panel.IN_SCENE。
-        随后在 ui_hooks 的面板切换回调末尾追加 self.panels.append 以记录目标面板，并保留现有 Tk 回调。
-        """
+        """调用父类准备，创建角色 0 与角色 1，并将 view.now_panel_id 临时设为 Panel.IN_SCENE。"""
         super().setUp()
         self.world.chara(0, "博士")
         self.world.chara(1, "阿米娅")
         self.enterContext(
             mock.patch.object(view, "now_panel_id", constant.Panel.IN_SCENE)
-        )
-        self.panels: list[int] = []
-        self.enterContext(
-            mock.patch.object(
-                ui_hooks,
-                "_panel_switches",
-                [*ui_hooks._panel_switches, self.panels.append],
-            )
         )
 
     def test_table_lists_every_panel_instruct(self) -> None:
@@ -111,18 +125,22 @@ class PanelInstructsTest(FastTestCase):
         )
 
     def test_each_instruct_opens_its_panel(self) -> None:
-        """
-        验证遍历 EXPECTED_PANEL_INSTRUCTS 逐项经 handle_instruct 执行后，记录器仅收到一次对应面板编号。
-        同时断言每项的目标面板不为 IN_SCENE，且 view.now_panel_id 随之更新为该面板编号。
-        """
+        """验证每条预期指令均映射到非 IN_SCENE 面板，且经操作菜单执行后将 view.now_panel_id 设为该面板。"""
         for instruct_id, panel_id in EXPECTED_PANEL_INSTRUCTS.items():
             with self.subTest(instruct_id=instruct_id):
-                self.panels.clear()
                 view.now_panel_id = constant.Panel.IN_SCENE
                 self.assertNotEqual(panel_id, constant.Panel.IN_SCENE)
-                handle_instruct.handle_instruct(instruct_id)
-                self.assertEqual(self.panels, [panel_id])
+                open_from_menu(instruct_id)
                 self.assertEqual(view.now_panel_id, panel_id)
+
+    def test_child_target_keeps_scene_for_h_panel(self) -> None:
+        """验证交互对象带幼年素质 102 时，经菜单执行 UNDRESS 保持 IN_SCENE，执行 SEE_ATTR 切换至 SEE_ATTR。"""
+        aim(0, 1)
+        ca.talent(1)[CHILD] = 1
+        open_from_menu(constant.Instruct.UNDRESS)
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
+        open_from_menu(constant.Instruct.SEE_ATTR)
+        self.assertEqual(view.now_panel_id, constant.Panel.SEE_ATTR)
 
     def test_each_instruct_has_a_menu_entry(self) -> None:
         """
@@ -144,3 +162,29 @@ class PanelInstructsTest(FastTestCase):
                     ],
                     [getattr(constant.InstructType, row.instruct_type)],
                 )
+
+
+class CurePatientInstructTest(DiagnoseCase):
+    """CURE_PATIENT 指令经操作菜单执行时打开诊疗面板或提示无病人的测试。"""
+
+    def setUp(self) -> None:
+        """调用父类准备，并将 view.now_panel_id 临时设为 Panel.IN_SCENE。"""
+        super().setUp()
+        self.enterContext(
+            mock.patch.object(view, "now_panel_id", constant.Panel.IN_SCENE)
+        )
+
+    def test_waiting_patient_opens_cure_panel(self) -> None:
+        """验证当日有待诊病人时，经菜单执行 CURE_PATIENT 切换至 Panel.CURE_PATIENT 且不产生等待提示。"""
+        sick = patient([], state=mc.MedicalPatientState.REFRESHED)
+        medical.state().today = {sick.patient_id: sick}
+        open_from_menu(constant.Instruct.CURE_PATIENT)
+        self.assertEqual(view.now_panel_id, constant.Panel.CURE_PATIENT)
+        self.assertEqual(self.world.wait_texts, [])
+
+    def test_no_patient_notices_and_stays(self) -> None:
+        """验证当日无病人时，经菜单执行 CURE_PATIENT 保持 Panel.IN_SCENE 并发出 NO_PATIENT 等待提示。"""
+        medical.state().today = {}
+        open_from_menu(constant.Instruct.CURE_PATIENT)
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
+        self.assertEqual(self.world.wait_texts, [NO_PATIENT])

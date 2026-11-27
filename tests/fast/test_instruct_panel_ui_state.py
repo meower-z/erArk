@@ -4,7 +4,7 @@
 ========================
 InstructPanelUiStateTest 验证 SeeInstructPanel.handle_instruct 在派发前维护的两项界面状态。
 测试覆盖长等待开启跳过暂停、短等待与切换指令不调用跳过暂停、切换指令更新非H开关与幼年阶段拦截。
-同时验证直接调用 handle_instruct.handle_instruct 不写入上述两项界面状态。
+同时验证直接调用 handle_instruct.handle_instruct 不改写上述两项界面状态与 view.now_panel_id，并校验其面板返回值。
 """
 
 from unittest import mock
@@ -117,3 +117,20 @@ class InstructPanelUiStateTest(FastTestCase):
         with self.assertRaises(player_pick.Chosen):
             handle_instruct.handle_instruct(constant.Instruct.WAIT_1_HOUR)
         self.skip.assert_not_called()
+
+    def test_backend_dispatch_returns_panel_untouched(self) -> None:
+        """验证直调 handle_instruct 返回 SEE_ATTR 面板，对 NON_H 与幼年拦截的 UNDRESS 返回 None，不改当前面板。"""
+        self.enterContext(
+            mock.patch.object(view, "now_panel_id", constant.Panel.IN_SCENE)
+        )
+        self.assertEqual(
+            handle_instruct.handle_instruct(constant.Instruct.SEE_ATTR),
+            constant.Panel.SEE_ATTR,
+        )
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
+        self.assertIsNone(handle_instruct.handle_instruct(NON_H))
+        ca.talent(TARGET)[CHILD] = 1
+        self.assertIsNone(
+            handle_instruct.handle_instruct(constant.Instruct.UNDRESS)
+        )
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
