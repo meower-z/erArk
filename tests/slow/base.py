@@ -102,7 +102,7 @@ class SlowTestCase(unittest.TestCase):
 
     def instruct(self, instruct_id: str) -> None:
         """
-        像玩家在主界面点下指令一样执行它：先确认它的前提都成立（主界面才会列出），再交给 handle_instruct
+        模拟玩家在主界面执行指令：先确认前提均成立（主界面才会列出），再交给 see_instruct_panel.dispatch_instruct。
         Keyword arguments:
         instruct_id -- 指令id（constant.Instruct 中的值）
         Return arguments:
@@ -110,7 +110,7 @@ class SlowTestCase(unittest.TestCase):
         """
         from Script.Core import constant
         from Script.Design import handle_premise
-        from Script.System.Instruct_System import handle_instruct
+        from Script.UI.Panel import see_instruct_panel
         from tests import world
 
         def pick() -> None:
@@ -125,7 +125,7 @@ class SlowTestCase(unittest.TestCase):
             self.assertEqual(
                 failed, [], f"指令 {instruct_id} 此刻不会出现在主界面"
             )
-            handle_instruct.handle_instruct(instruct_id)
+            see_instruct_panel.dispatch_instruct(instruct_id)
 
         world.act(pick)
 

@@ -135,7 +135,7 @@ _left: object = None
 """ 上一次 act 停下时的 GameState """
 
 
-def act(fn: Callable[[], None]) -> None:
+def act(fn: Callable[[], object]) -> None:
     """
     玩家做一个行动：内核一步一步推进，到玩家选行动时跑一次 fn，再推进到玩家下一次选行动时停下。
     fn 经 player_pick.choose 定下的行动随即开始。fn 没有定下行动就返回时（例如打开又退出一个面板），act 立即停下。

@@ -71,7 +71,7 @@ def instruct(
 ) -> None:
     """
     像玩家在主界面点下指令一样执行它：先安排之后要按的按钮，确认指令的前提都成立，
-    在玩家的一次选择里（world.act）交给 handle_instruct，指令打开了面板时显示面板（与主面板循环每一轮做的相同）；
+    在一次选择（world.act）中交给 see_instruct_panel.dispatch_instruct，打开面板时显示该面板（同主面板循环）；
     游戏随之推进到玩家下一次要选行动
     Keyword arguments:
     world -- FullWorld
@@ -87,7 +87,7 @@ def instruct(
     from Script.Core import constant
     from Script.Design import handle_premise
     from Script.Modules.tk_ui import player_pick
-    from Script.System.Instruct_System import handle_instruct
+    from Script.UI.Panel import see_instruct_panel
     from tests.world import act
 
     failed = [
@@ -104,11 +104,11 @@ def instruct(
     def choose() -> None:
         """玩家这一次选择：点下指令，指令打开了面板时显示面板"""
         if target == -1:
-            handle_instruct.handle_instruct(instruct_id)
+            see_instruct_panel.dispatch_instruct(instruct_id)
         else:
             with player_pick.drafting("scene target"):
                 activity.set_target(0, target)
-                handle_instruct.handle_instruct(instruct_id)
+                see_instruct_panel.dispatch_instruct(instruct_id)
         if view.now_panel_id != constant.Panel.IN_SCENE:
             constant.panel_data[view.now_panel_id]()
 

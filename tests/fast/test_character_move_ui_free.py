@@ -68,7 +68,8 @@ def run(name, target, settle=False, move=character_move.own_charcter_move, **kwa
     with mock.patch.object(core, "in_settlement", return_value=settle):
         leg = kernel_data.written(move, list(target), **kwargs)
     payload[name] = {{
-        "leg": None if leg is None else dataclasses.asdict(leg),
+        "leg": dataclasses.asdict(leg) if dataclasses.is_dataclass(leg) else leg,
+        "route_panel": character_move.route_panel(leg) if isinstance(leg, str) else None,
         "route": None if plan.route() is None else list(plan.route()),
         "queue": [[kind, chosen["behavior_id"]] for kind, chosen in plan.queue(0)],
         "panels": list(panels),
@@ -163,16 +164,17 @@ class CharacterMoveUiFreeTest(FastTestCase):
         self.assertEqual((self.child.attempted, self.child.loaded), ([], []))
 
     def test_pick_returns_first_leg(self) -> None:
-        """验证非结算期常规与 open_map 寻路返回预期首段移动结果、路线及面板切换，且不排入计划队列。"""
+        """验证非结算期常规与 open_map 寻路返回预期首段移动参数并记录路线，不排入计划队列也不触发面板切换。"""
         move = constant.Behavior.MOVE
         status = constant.CharacterStatus.STATUS_MOVE
         self.assertEqual(
             self.child.payload["pick"],
             {
                 "leg": leg(OFFICE, move, status),
+                "route_panel": None,
                 "route": [OFFICE, CORRIDOR, 0, False],
                 "queue": [],
-                "panels": [constant.Panel.IN_SCENE],
+                "panels": [],
                 "notices": [],
                 "chosen": [],
             },
@@ -181,9 +183,10 @@ class CharacterMoveUiFreeTest(FastTestCase):
             self.child.payload["open_map"],
             {
                 "leg": leg(OFFICE, move, status, {"open_map": True}),
+                "route_panel": None,
                 "route": [OFFICE, CORRIDOR, 0, True],
                 "queue": [],
-                "panels": [constant.Panel.IN_SCENE],
+                "panels": [],
                 "notices": [],
                 "chosen": [],
             },
@@ -200,44 +203,47 @@ class CharacterMoveUiFreeTest(FastTestCase):
             self.child.payload["carry"],
             {
                 "leg": carry,
+                "route_panel": None,
                 "route": [OFFICE, CORRIDOR, 0, False],
                 "queue": [],
-                "panels": [constant.Panel.IN_SCENE],
+                "panels": [],
                 "notices": [],
                 "chosen": [],
             },
         )
 
     def test_settlement_queues_first_leg(self) -> None:
-        """验证结算期寻路返回 None、将首段移动排入计划队列、记录路线并切至场景面板。"""
+        """验证结算期寻路返回 "open"、排入首段并记录路线，不触发面板切换。该返回值经 route_panel 映射到场景面板。"""
         self.assertEqual(
             self.child.payload["settle"],
             {
-                "leg": None,
+                "leg": "open",
+                "route_panel": constant.Panel.IN_SCENE,
                 "route": [OFFICE, CORRIDOR, 0, False],
                 "queue": [["Behavior", constant.Behavior.MOVE]],
-                "panels": [constant.Panel.IN_SCENE],
+                "panels": [],
                 "notices": [],
                 "chosen": [],
             },
         )
 
-    def test_no_leg_switches_panel(self) -> None:
-        """验证已抵达、被叫停与门锁受阻分支均返回 None、按分支切换面板，并清除 move_stop 标记。"""
+    def test_no_leg_names_its_panel(self) -> None:
+        """验证已抵达、被叫停与门锁受阻返回结果串且不切面板，并校验 route_panel 映射与 move_stop 清零。"""
         payload = self.child.payload
-        for name, panel in (
-            ("end", constant.Panel.IN_SCENE),
-            ("stop", constant.Panel.IN_SCENE),
-            ("locked", constant.Panel.SEE_MAP),
+        for name, outcome, panel in (
+            ("end", "end", constant.Panel.IN_SCENE),
+            ("stop", "end", constant.Panel.IN_SCENE),
+            ("locked", "door_lock", constant.Panel.SEE_MAP),
         ):
             with self.subTest(name):
                 self.assertEqual(
                     payload[name],
                     {
-                        "leg": None,
+                        "leg": outcome,
+                        "route_panel": panel,
                         "route": None,
                         "queue": [],
-                        "panels": [panel],
+                        "panels": [],
                         "notices": (
                             [locked_notice()] if name == "locked" else []
                         ),
@@ -260,9 +266,10 @@ class CharacterMoveUiFreeTest(FastTestCase):
             payload["master_key"],
             {
                 "leg": opened,
+                "route_panel": None,
                 "route": [DORM, CORRIDOR, 0, False],
                 "queue": [],
-                "panels": [constant.Panel.IN_SCENE],
+                "panels": [],
                 "notices": notices,
                 "chosen": [],
             },
@@ -270,16 +277,17 @@ class CharacterMoveUiFreeTest(FastTestCase):
         self.assertEqual((payload["keys_left"], payload["dorm_closed"]), (0, 0))
 
     def test_start_route_hands_leg_to_ui(self) -> None:
-        """验证 start_player_route 非结算期经回调交出首段，结算期排入计划队列且不触发回调。"""
+        """验证 start_player_route 非结算期经回调交出首段且不切面板，结算期将首段入队并切至场景面板。"""
         move = constant.Behavior.MOVE
         route = [OFFICE, CORRIDOR, 0, False]
         self.assertEqual(
             self.child.payload["start"],
             {
                 "leg": None,
+                "route_panel": None,
                 "route": route,
                 "queue": [],
-                "panels": [constant.Panel.IN_SCENE],
+                "panels": [],
                 "notices": [],
                 "chosen": [
                     leg(OFFICE, move, constant.CharacterStatus.STATUS_MOVE)
@@ -290,6 +298,7 @@ class CharacterMoveUiFreeTest(FastTestCase):
             self.child.payload["start_settle"],
             {
                 "leg": None,
+                "route_panel": None,
                 "route": route,
                 "queue": [["Behavior", move]],
                 "panels": [constant.Panel.IN_SCENE],
