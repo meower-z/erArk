@@ -1,12 +1,15 @@
 """
-后端目录界面边界守卫测试
-========================
-通过语法树检查 BACKEND_UI_FREE_DIRS 下的源码是否导入了 BANNED 中的界面或输入输出模块。
+后端界面边界守卫测试
+====================
+通过语法树检查 BACKEND_UI_FREE_DIRS 下的 .py 文件与 BACKEND_UI_FREE_FILES 中的文件
+是否导入了 BANNED 中的界面、输入输出与 Tk 模块。
 """
 
 import ast
+from collections import Counter
 from importlib.util import resolve_name
 from pathlib import Path, PurePosixPath
+from unittest import mock
 
 from tests.fast.base import FastTestCase
 
@@ -28,6 +31,27 @@ BACKEND_UI_FREE_DIRS = (
     "Script/Test",
 )
 """ 禁止导入界面与输入输出模块的后端目录 """
+BACKEND_UI_FREE_FILES = (
+    "Script/Core/constant_effect.py",
+    "Script/Core/constant_promise.py",
+    "Script/Core/dijkstra.py",
+    "Script/Core/game_path_config.py",
+    "Script/Core/game_type.py",
+    "Script/Core/get_text.py",
+    "Script/Core/image_catalog.py",
+    "Script/Core/image_path_index.py",
+    "Script/Core/input_cache.py",
+    "Script/Core/json_handle.py",
+    "Script/Core/mod_manager.py",
+    "Script/Core/num.py",
+    "Script/Core/old_chara_to_new.py",
+    "Script/Core/rich_text.py",
+    "Script/Core/save_handle.py",
+    "Script/Core/text_handle.py",
+    "Script/Core/value_handle.py",
+    "Script/Modules/__init__.py",
+)
+""" 禁止导入界面与输入输出模块的单个后端文件 """
 BANNED = (
     "Script.UI",
     "Script.Core.flow_handle",
@@ -74,29 +98,69 @@ def banned_imports(source: str | bytes, path: str) -> list[tuple[int, str]]:
     return sorted(found)
 
 
+def guarded_files() -> list[str]:
+    """
+    收集 BACKEND_UI_FREE_DIRS 下的 .py 文件与 BACKEND_UI_FREE_FILES 所列文件的路径。
+    Return arguments:
+    list -- 仓库相对路径列表，先按目录顺序列出各目录内排序后的 .py 文件，再接单文件列表
+    """
+    found = [
+        path.relative_to(ROOT).as_posix()
+        for folder in BACKEND_UI_FREE_DIRS
+        for path in sorted((ROOT / folder).rglob("*.py"))
+    ]
+    return found + list(BACKEND_UI_FREE_FILES)
+
+
 def violations() -> list[str]:
     """
-    扫描 BACKEND_UI_FREE_DIRS 下的 .py 文件，收集命中的违规导入。
+    读取 guarded_files() 返回的源码文件，收集命中 BANNED 的导入语句。
     Return arguments:
     list -- 形如 "相对路径:行号: 模块全名" 的违规记录列表
     """
-    found: list[str] = []
-    for folder in BACKEND_UI_FREE_DIRS:
-        for path in sorted((ROOT / folder).rglob("*.py")):
-            relative = path.relative_to(ROOT).as_posix()
-            found.extend(
-                f"{relative}:{line}: {name}"
-                for line, name in banned_imports(path.read_bytes(), relative)
-            )
-    return found
+    return [
+        f"{relative}:{line}: {name}"
+        for relative in guarded_files()
+        for line, name in banned_imports(
+            (ROOT / relative).read_bytes(), relative
+        )
+    ]
 
 
 class BackendUiBoundaryGuardTest(FastTestCase):
     """验证后端目录不导入界面与输入输出模块"""
 
-    def test_backend_dirs_import_no_ui(self) -> None:
-        """断言 BACKEND_UI_FREE_DIRS 下不存在导入 BANNED 模块的语句"""
+    def test_backend_sources_import_no_ui(self) -> None:
+        """断言 guarded_files() 返回的源码中不存在导入 BANNED 模块的语句"""
         self.assertEqual(violations(), [])
+
+    def test_scan_entries_are_distinct_and_nonempty(self) -> None:
+        """断言守卫目录均含 .py 文件、单文件条目均为存在的 .py 文件，且 guarded_files() 无重复路径"""
+        for folder in BACKEND_UI_FREE_DIRS:
+            self.assertTrue(any((ROOT / folder).rglob("*.py")), folder)
+        for file in BACKEND_UI_FREE_FILES:
+            self.assertTrue(
+                file.endswith(".py") and (ROOT / file).is_file(), file
+            )
+        counts = Counter(guarded_files())
+        self.assertEqual([file for file, n in counts.items() if n > 1], [])
+
+    def test_violations_scan_file_entries(self) -> None:
+        """断言在内存中为 BACKEND_UI_FREE_FILES 注入禁用导入后，violations() 按序报出各条目"""
+
+        def inject(path: Path) -> bytes:
+            relative = path.relative_to(ROOT).as_posix()
+            if relative in BACKEND_UI_FREE_FILES:
+                return b"import tkinter\n"
+            return b""
+
+        with mock.patch.object(
+            Path, "read_bytes", autospec=True, side_effect=inject
+        ):
+            found = violations()
+        self.assertEqual(
+            found, [f"{file}:1: tkinter" for file in BACKEND_UI_FREE_FILES]
+        )
 
     def test_checker_resolves_absolute_and_relative_imports(self) -> None:
         """验证检查函数能检出绝对导入、相对导入与函数内导入，并放行仅前缀相近的模块"""
