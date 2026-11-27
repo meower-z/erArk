@@ -7,8 +7,10 @@
 - 筛选排序（FilteredSortedTest）：验证类型、难度、时间筛选与各排序维度及方向的组合结果。
 - 面板状态（PanelViewStateTest）：验证做饭面板读写 view 状态并生成按页补齐 50 项的按钮列表。
 - 导入边界（CookingImportBoundaryTest）：验证 cooking.py 源码不导入界面与输入输出模块。
+- 无界面导入（CookingSystemUiFreeTest）：验证 Cooking_System 各模块在无界面子进程中成功导入且无受拦截导入。
 """
 
+from pathlib import Path
 from unittest import mock
 
 from Script.Config import config_def, game_config
@@ -20,6 +22,7 @@ from Script.UI.Moudle import view
 from tests import chara_abilities as ca, kernel_data
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.ui_free_subprocess import ChildRun, run_ui_free
 
 _ = get_text._
 """get_text 提供的翻译函数。"""
@@ -48,6 +51,27 @@ ANY_TYPE = "任意"
 """不在六种固定食物类型名中的测试类型名。"""
 COOKING = "Script/System/Cooking_System/cooking.py"
 """待检查导入边界的 cooking.py 仓库相对路径。"""
+PACKAGE = "Script.System.Cooking_System"
+"""待测烹饪系统包的点分导入路径。"""
+MODULES = tuple(
+    sorted(path.stem for path in Path(ROOT, *PACKAGE.split(".")).glob("*.py"))
+)
+"""直接位于 PACKAGE 对应目录的已排序 .py 模块名元组，包含 __init__。"""
+LOAD_ALL = """
+import importlib
+for name in MODULES:
+    module = PACKAGE if name == "__init__" else PACKAGE + "." + name
+    try:
+        importlib.import_module(module)
+    except ImportError as error:
+        payload[name] = repr(error)
+    else:
+        payload[name] = None
+"""
+"""
+供子进程执行的代码片段，依次导入 MODULES 各模块（遇到 __init__ 时直接导入 PACKAGE）。
+模块导入成功时在 payload[name] 记 None，触发 ImportError 时记 repr(error)。
+"""
 
 
 def recipe_table(
@@ -272,3 +296,28 @@ class CookingImportBoundaryTest(FastTestCase):
         self.assertEqual(
             banned_imports((ROOT / COOKING).read_bytes(), COOKING), []
         )
+
+
+class CookingSystemUiFreeTest(FastTestCase):
+    """Script/System/Cooking_System 模块的无界面子进程导入测试。"""
+
+    child: ChildRun
+    """setUpClass 运行无界面子进程后保存的 ChildRun 结果。"""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        """以 boot=True 调用 run_ui_free 运行 LOAD_ALL 导入 MODULES 各模块，并将结果存入 cls.child。"""
+        cls.child = run_ui_free(
+            f"PACKAGE = {PACKAGE!r}\nMODULES = {MODULES!r}\n{LOAD_ALL}",
+            boot=True,
+        )
+
+    def test_modules_load_without_ui(self) -> None:
+        """
+        断言 MODULES 包含 __init__ 与 cooking。
+        断言子进程成功导入各模块，未尝试导入也未加载受拦截模块。
+        """
+        self.assertTrue({"__init__", "cooking"} <= set(MODULES))
+        self.assertEqual(self.child.payload, dict.fromkeys(MODULES))
+        self.assertEqual(self.child.attempted, [])
+        self.assertEqual(self.child.loaded, [])
