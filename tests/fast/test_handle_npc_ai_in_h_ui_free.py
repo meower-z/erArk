@@ -1,21 +1,17 @@
 """
 H 中的 NPC AI 无界面测试
 ========================
-本测试包含源码导入边界检查与无界面子进程运行测试。源码检查用语法树验证
-Script/Design/handle_npc_ai_in_h.py 不导入界面与输入输出等受禁模块。子进程测试在启用
-默认界面与结算导入拦截的独立子进程中运行 npc_active_h 及四个不依赖 Script.Settle 的辅助
-函数，验证返回结果且未加载也未尝试导入任何受拦截模块。
+本模块在启用默认界面与结算导入拦截的独立子进程中运行 handle_npc_ai_in_h。
+测试覆盖 npc_active_h 的行为选择与不依赖 Script.Settle 的辅助函数结果。
+测试同时断言子进程未加载也未尝试导入受拦截模块。
 """
 
 from typing import Any, cast
 
 from Script.Config import game_config
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 from tests.ui_free_subprocess import run_ui_free
 
-SOURCE = "Script/Design/handle_npc_ai_in_h.py"
-"""待检查源码导入边界的目标模块仓库相对路径。"""
 SEEDS = 20
 """无界面子进程中重复调用 npc_active_h 与 evaluate_npc_body_part_prefs 的次数。"""
 SKIPPED_TAGS = {"道具", "药物", "SM", "非逆推"}
@@ -89,15 +85,6 @@ with working.based_on(core.state()):
     ]
 """
 """在无界面子进程中初始化测试角色并运行 npc_active_h 与四个不依赖结算的辅助函数的代码片段。"""
-
-
-class HandleNpcAiInHSourceTest(FastTestCase):
-    """handle_npc_ai_in_h.py 的源码导入边界测试。"""
-
-    def test_source_imports_no_ui(self) -> None:
-        """断言 handle_npc_ai_in_h.py 源码不存在 banned_imports 检出的受禁导入。"""
-        source = (ROOT / SOURCE).read_bytes()
-        self.assertEqual(banned_imports(source, SOURCE), [])
 
 
 class HandleNpcAiInHUiFreeTest(FastTestCase):

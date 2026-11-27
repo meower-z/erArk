@@ -6,7 +6,7 @@
 - OrgasmJudgeTest：玩家射精时 orgasm_judge 对两类回调的派发。
 - EdgeNoticeTest：寸止判定结果经提示回调派发。
 - ClimaxPanelTest：玩家 P 部位绝顶时 base_chara_climix_common_settle 派发射精面板。
-- ImportBoundaryTest：两个结算模块与射精服务的导入边界及不加载射精面板。
+- ImportBoundaryTest：独立子进程中派发射精服务回调并加载两个结算模块，断言不加载射精面板与 Tk。
 """
 
 import json
@@ -25,18 +25,12 @@ from Script.Settle import common_default, orgasm_settle
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 TARGET = 1
 """ 测试使用的目标角色编号（1）。 """
 NAME = "测试干员"
 """ 测试使用的目标角色名称。 """
-SOURCES = (
-    "Script/Modules/gameplay_resolution/ejaculation_service.py",
-    "Script/Settle/orgasm_settle.py",
-    "Script/Settle/common_default.py",
-)
-""" 需通过后端界面边界检查的三个模块仓库相对路径元组。 """
 STARTUP_CHECK = """
 import json, sys
 from Script.Config import normal_config
@@ -437,15 +431,7 @@ class ClimaxPanelTest(DrawCase):
 
 
 class ImportBoundaryTest(FastTestCase):
-    """两个结算模块与射精服务的导入边界及不加载射精面板测试。"""
-
-    def test_sources_import_no_ui(self) -> None:
-        """验证两个结算模块与射精服务均通过 banned_imports 检查。"""
-        for path in SOURCES:
-            with self.subTest(path=path):
-                self.assertEqual(
-                    banned_imports((ROOT / path).read_bytes(), path), []
-                )
+    """射精服务与两个结算模块在独立子进程中不加载射精面板与 Tk 模块的测试。"""
 
     def test_settles_load_without_panel(self) -> None:
         """验证独立子进程中两类单槽位回调按约定派发，且导入两个结算模块后不加载射精面板模块与 Tk 模块。"""

@@ -3,7 +3,6 @@
 ==============================
 - 外勤委托提示：验证新载具奖励提示与委托完成汇总提示经 ui_hooks 发出并由 Tk 回调绘制。
 - 结算后的停顿：验证角色状态结算后的停顿提示按玩家身份与干员停顿设置经 ui_hooks 发出并绘制。
-- 导入边界：验证外勤委托与角色行为模块源码通过后端界面边界守卫的 banned_imports 检查。
 """
 
 import datetime
@@ -20,7 +19,6 @@ from Script.Modules.gameplay_resolution import working
 from Script.System.Field_Commission_System import field_commission_function
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 
 VEHICLE_COMMISSION = 1104
 """ 发放 51 号新载具奖励的委托编号（1104）。 """
@@ -34,11 +32,6 @@ NPC = 1
 """ 停顿测试使用的非玩家角色编号（1）。 """
 PAUSE_SETTING = 19
 """ 控制干员显示文本与结算数据时是否停顿的绘制设置索引（19）。 """
-SOURCES = (
-    "Script/System/Field_Commission_System/field_commission_function.py",
-    "Script/Design/character_behavior.py",
-)
-""" 接受导入边界检查的两个模块仓库相对路径元组。 """
 
 type Notice = tuple[str, bool, str | None, bool]
 """ 一条提示的参数元组类型，依次为文本、是否等待确认、样式名与是否按文本宽度排版。 """
@@ -224,15 +217,3 @@ class BehaviorPauseTest(NoticeCase):
         self.settle(0, 1)
         self.assertEqual(self.drawn_texts, [])
         self.assert_notices()
-
-
-class ImportBoundaryTest(FastTestCase):
-    """外勤委托与角色行为模块的导入边界语法树测试。"""
-
-    def test_sources_pass_backend_guard(self) -> None:
-        """验证 SOURCES 中两个模块的源码均通过后端界面边界守卫 banned_imports 检查且无违规导入。"""
-        for path in SOURCES:
-            with self.subTest(path=path):
-                self.assertEqual(
-                    banned_imports((ROOT / path).read_bytes(), path), []
-                )

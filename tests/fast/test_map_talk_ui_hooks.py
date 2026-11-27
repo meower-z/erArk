@@ -5,7 +5,7 @@
 - TkMapTalkCallbacksTest：正常启动流程登记 Tk 回调以及分隔线与富文本口上绘制序列。
 - MapAccessibleHookTest：judge_scene_accessible 经分隔线与提示回调派发未开放与锁门提醒。
 - TalkHookTest：handle_talk_draw 与 second_behavior_info_text 经富文本口上和提示回调派发。
-- ImportBoundaryTest：三模块的后端界面导入边界以及屏蔽界面模块时的独立加载。
+- ImportBoundaryTest：屏蔽界面模块时在独立子进程中加载 map_handle、talk 与 ui_hooks 并派发回调。
 """
 
 import json
@@ -23,7 +23,7 @@ from Script.Modules.gameplay_resolution import ui_hooks, working
 from Script.Modules.tk_ui import callbacks
 from Script.UI.Moudle import draw, rich_text_draw
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 TARGET = 1
 """ 测试使用的目标角色编号（1）。 """
@@ -33,12 +33,6 @@ DORM = ["宿舍", "1区", "102"]
 """ 1 区 102 号宿舍的场景路径列表。 """
 BLANK = constant.Behavior.SHARE_BLANKLY
 """ 测试口上派发时使用的基础行为编号。 """
-SOURCES = (
-    "Script/Design/map_handle.py",
-    "Script/Design/talk.py",
-    "Script/Modules/gameplay_resolution/ui_hooks.py",
-)
-""" 接受后端界面边界导入检查的三个模块仓库相对路径元组。 """
 STARTUP_CHECK = """
 import json, sys
 from Script.Config import normal_config
@@ -479,15 +473,7 @@ class TalkHookTest(DrawCase):
 
 
 class ImportBoundaryTest(FastTestCase):
-    """map_handle、talk 与 ui_hooks 的导入边界及屏蔽界面加载测试。"""
-
-    def test_sources_import_no_ui(self) -> None:
-        """验证 SOURCES 中三个模块经 banned_imports 检查均不含禁用导入。"""
-        for path in SOURCES:
-            with self.subTest(path=path):
-                self.assertEqual(
-                    banned_imports((ROOT / path).read_bytes(), path), []
-                )
+    """屏蔽界面、callbacks 与 Tk 模块时在独立子进程中加载 map_handle、talk 与 ui_hooks 的测试。"""
 
     def test_modules_load_without_ui_in_subprocess(self) -> None:
         """验证独立子进程屏蔽界面、callbacks 与 Tk 模块后可导入三模块并派发回调且零误加载。"""

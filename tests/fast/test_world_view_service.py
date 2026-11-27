@@ -21,10 +21,8 @@ from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_map_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
-SERVICE_PATH = "Script/Modules/gameplay_resolution/world_view_service.py"
-""" 地图查看服务模块的仓库相对路径。 """
 DORM = ["宿舍", "1区"]
 """ 测试用宿舍 1 区地图路径。 """
 START = ["宿舍", "1区", "101"]
@@ -384,11 +382,6 @@ print(json.dumps(out))
 
 class ImportBoundaryTest(FastTestCase):
     """验证地图查看服务的无界面与无结算导入边界。"""
-
-    def test_service_imports_no_ui(self) -> None:
-        """验证服务源码通过后端界面边界守卫检查。"""
-        source = (ROOT / SERVICE_PATH).read_bytes()
-        self.assertEqual(banned_imports(source, SERVICE_PATH), [])
 
     def test_fresh_process_runs_without_ui_or_settle(self) -> None:
         """验证拦截界面、结算与 Tk 模块时独立子进程能跑通全部服务公开函数且零受限模块被尝试导入。"""

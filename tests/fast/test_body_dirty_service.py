@@ -33,10 +33,7 @@ from Script.Modules.gameplay_resolution import working
 from Script.UI.Moudle import draw
 from Script.UI.Panel import dirty_panel
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
-
-SERVICE_PATH = "Script/Modules/gameplay_resolution/body_dirty_service.py"
-""" 身体污秽计算服务模块的仓库相对路径。 """
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 BLOCKED_IMPORT_RUN = """
 import importlib.abc, sys
@@ -425,11 +422,6 @@ class DirtyPanelDelegationTest(BodyDirtyServiceCase):
 
 class ImportBoundaryTest(FastTestCase):
     """身体污秽计算服务模块的界面导入边界测试。"""
-
-    def test_service_imports_no_ui(self) -> None:
-        """断言 body_dirty_service.py 源码通过后端界面边界守卫检查。"""
-        source = (ROOT / SERVICE_PATH).read_bytes()
-        self.assertEqual(banned_imports(source, SERVICE_PATH), [])
 
     def test_fresh_subprocess_import_loads_no_ui(self) -> None:
         """独立子进程拦截界面与窗口模块时可导入并执行服务，且未加载被拦截模块。"""

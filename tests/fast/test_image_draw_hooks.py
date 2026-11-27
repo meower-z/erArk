@@ -4,7 +4,7 @@
 - ImageHookTest：验证 Tk 图片回调登记与绘制、回调按登记顺序执行及未登记时静默。
 - CrossSectionTest：验证无交互对象时静默，以及不同身体状态下的断面图选图与回调绘制。
 - TalkImageTest：验证口上图片标签按序发出并移除，以及口上绘制先发图片再输出正文。
-- ImportBoundaryTest：验证三个模块无禁用导入、检查函数行为及屏蔽 Script.UI 后口上图片正常运行。
+- ImportBoundaryTest：验证 banned_imports 的检查行为，以及屏蔽 Script.UI 后口上图片正常运行。
 """
 
 import json
@@ -26,12 +26,6 @@ from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 
 TARGET = 1
 """ 测试使用的交互对象角色编号（1）。 """
-SOURCES = (
-    "Script/Design/cross_section_image.py",
-    "Script/Design/talk_image.py",
-    "Script/Modules/gameplay_resolution/ui_hooks.py",
-)
-""" 接受后端界面边界导入检查的三个模块仓库相对路径元组。 """
 BLOCKED_RUN = """
 import importlib.abc
 import json
@@ -282,14 +276,6 @@ class TalkImageTest(ImageCase):
 
 class ImportBoundaryTest(FastTestCase):
     """断面图、口上图片与 ui_hooks 导入边界的测试。"""
-
-    def test_sources_import_no_ui(self) -> None:
-        """验证 SOURCES 中三个模块经 banned_imports 检查均不含禁用导入。"""
-        for path in SOURCES:
-            with self.subTest(path=path):
-                self.assertEqual(
-                    banned_imports((ROOT / path).read_bytes(), path), []
-                )
 
     def test_checker_reports_relative_and_multi_name_imports(self) -> None:
         """验证 banned_imports 能检出相对导入与单条语句中的后续禁用导入名。"""

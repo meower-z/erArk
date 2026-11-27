@@ -5,7 +5,6 @@
 - 文本与样式（BuildEventTextTest）：验证子事件分段、样式优先级以及 show_event_text 经回调按专属事件样式绘制。
 - 状态判定（JudgeStatusTest）：验证 judge_character_status 显示一次开始事件并记录切换后的事件编号。
 - 无界面运行（EventUiFreeTest）：验证屏蔽界面、结算与输入输出模块时 event.py 可在子进程中选出并构建事件文本。
-- 导入边界（EventImportBoundaryTest）：验证 Script/Design/event.py 源码不导入界面、输入输出与 Tk 模块。
 """
 
 import dataclasses
@@ -21,7 +20,6 @@ from Script.UI.Moudle import draw
 from tests import kernel_data
 from tests.chara_activity import aim, place, stand
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 from tests.ui_free_subprocess import ChildRun, run_ui_free
 
 BEHAVIOR = "event_text_test_behavior"
@@ -38,8 +36,6 @@ ADV = "event-text-adv"
 """ 测试用的角色专属事件编号 """
 NPC = 1
 """ 测试中触发事件的非玩家角色编号 """
-EVENT = "Script/Design/event.py"
-""" 待检查导入边界的 event.py 仓库相对路径 """
 EVENTS = {
     MAIN: (2, "", "正文甲", {}, {"10012": 1}),
     DIY: (1, "", "第一段|第二段|第三段", {}, {}),
@@ -381,15 +377,3 @@ class EventUiFreeTest(FastTestCase):
             },
         )
         self.assertEqual((self.child.attempted, self.child.loaded), ([], []))
-
-
-class EventImportBoundaryTest(FastTestCase):
-    """验证 Script/Design/event.py 源码的导入边界。"""
-
-    def test_event_imports_no_ui(self) -> None:
-        """
-        验证 banned_imports 在 Script/Design/event.py 源码中不报告界面、输入输出与 Tk 导入。
-        Return arguments:
-        None -- 无返回值
-        """
-        self.assertEqual(banned_imports((ROOT / EVENT).read_bytes(), EVENT), [])

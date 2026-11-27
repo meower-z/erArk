@@ -6,7 +6,6 @@
 - 取名输入框（NamePromptTest）：验证 input_name_panel.input_name_func 的绘制内容、
   不合规时的提示重问及返回值。
 - 调用方（NameCallerTest）：验证角色称呼设置与改名卡将输入的名字写入对应字段。
-- 导入边界（CharacterImportBoundaryTest）：验证 Script/Design/character.py 无直接界面导入。
 """
 
 from unittest import mock
@@ -21,7 +20,6 @@ from Script.UI.Moudle import draw
 from Script.UI.Panel import character_setting, input_name_panel
 from Script.UI.Panel import see_item_info_panel
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 
 DIGITS = "角色名不能为纯数字，请重新输入\n"
 """名字全是数字时的提示。"""
@@ -196,12 +194,3 @@ class NameCallerTest(FastTestCase):
             ["你能回忆起自己的名字吗？（默认称呼为博士，此处仅输入姓名即可）"],
         )
         self.assertEqual(identity.of(0).name, "凯尔希")
-
-
-class CharacterImportBoundaryTest(FastTestCase):
-    """Script/Design/character.py 的界面导入边界测试。"""
-
-    def test_character_imports_no_ui(self) -> None:
-        """用后端界面边界守卫的 banned_imports 检查 character.py，断言源码中无禁用的界面与输入输出导入。"""
-        path = "Script/Design/character.py"
-        self.assertEqual(banned_imports((ROOT / path).read_bytes(), path), [])

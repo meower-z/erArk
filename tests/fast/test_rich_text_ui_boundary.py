@@ -1,9 +1,9 @@
 """
 富文本核心层与界面绘制层边界及行为测试
 ======================================
-验证 Script/Core/rich_text.py 不导入界面或 Tk 模块且不含界面绘制构造函数，
-在独立子进程中可无界面依赖地导入；同时验证纯解析/配色函数与
-Script/UI/Moudle/rich_text_draw.py 绘制构造函数的行为契约。
+验证 Script/Core/rich_text.py 不暴露界面绘制构造函数。
+验证该模块可在屏蔽 Script.UI 与 Tk 的独立子进程中导入。
+同时验证其纯解析与配色函数，以及 Script/UI/Moudle/rich_text_draw.py 绘制构造函数的行为契约。
 """
 
 import importlib
@@ -13,7 +13,7 @@ import sys
 from Script.Core import rich_text
 from Script.UI.Moudle import draw, panel
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 ISOLATED_IMPORT_SCRIPT = """
 import importlib.abc
@@ -55,11 +55,8 @@ def _load_rich_text_draw():
 class RichTextImportBoundaryTest(FastTestCase):
     """验证 Script/Core/rich_text.py 与界面绘制层的静态及运行时隔离。"""
 
-    def test_rich_text_source_imports_no_ui(self) -> None:
-        """断言 Script/Core/rich_text.py 不导入 BANNED 模块且不暴露绘制构造函数。"""
-        relative = "Script/Core/rich_text.py"
-        source = (ROOT / relative).read_bytes()
-        self.assertEqual(banned_imports(source, relative), [])
+    def test_rich_text_has_no_draw_builders(self) -> None:
+        """断言 Script.Core.rich_text 不暴露 get_rich_text_draw_panel 与 get_rich_text_draw_list。"""
         self.assertFalse(hasattr(rich_text, "get_rich_text_draw_panel"))
         self.assertFalse(hasattr(rich_text, "get_rich_text_draw_list"))
 

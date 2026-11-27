@@ -449,11 +449,6 @@ class ExhibitionismTest(HiddenSexCase):
 class BoundaryTest(FastTestCase):
     """验证隐奸结算服务与调用方的导入边界、函数归属与无面板运行能力。"""
 
-    def test_service_passes_ui_guard(self) -> None:
-        """验证隐奸结算服务通过后端界面边界守卫检查。"""
-        source = (ROOT / SERVICE_PATH).read_bytes()
-        self.assertEqual(banned_imports(source, SERVICE_PATH), [])
-
     def test_callers_use_service_not_panels(self) -> None:
         """验证两处后端调用方导入隐奸结算服务且不导入两处性行为面板。"""
         for path in CALLER_PATHS:
