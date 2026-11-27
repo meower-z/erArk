@@ -14,25 +14,17 @@ ROOT = Path(__file__).resolve().parents[2]
 """ 仓库根目录路径 """
 BACKEND_UI_FREE_DIRS = (
     "Script/Config",
+    "Script/Core/constant",
     "Script/Design",
     "Script/Kernel",
     "Script/Modules/domains",
     "Script/Modules/gameplay_resolution",
+    "Script/Modules/npc_action_choice",
     "Script/Modules/save_load",
     "Script/Protocol",
     "Script/Settle",
     "Script/StateMachine",
-    "Script/System/Cooking_System",
-    "Script/System/Dormitory_System",
-    "Script/System/Education_System",
-    "Script/System/Field_Commission_System",
-    "Script/System/First_Record_System",
-    "Script/System/Instruct_System",
-    "Script/System/Item_System",
-    "Script/System/Medical_System",
-    "Script/System/Official_Event_System",
-    "Script/System/Pregnancy_System",
-    "Script/System/Sex_System",
+    "Script/System",
     "Script/Test",
 )
 """ 禁止导入界面与输入输出模块的后端目录 """
