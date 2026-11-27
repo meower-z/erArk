@@ -35,6 +35,20 @@ SHOWS_NON_H: dict[str, bool] = {
 """ 切换指令到隐奸中显示非H开关值的映射。未受幼年阶段拦截时，SeeInstructPanel.handle_instruct 派发前写入该开关。 """
 
 
+def dispatch_instruct(instruct_id: str) -> None:
+    """
+    调用 handle_instruct.handle_instruct 执行指令，若其返回非空面板编号则写入 view.now_panel_id。
+    本函数不执行界面绘制，不修改跳过暂停状态或隐奸非H显示开关。
+    Keyword arguments:
+    instruct_id -- str，待执行的指令 id
+    Return arguments:
+    None -- 无返回值
+    """
+    panel_id = handle_instruct.handle_instruct(instruct_id)
+    if panel_id is not None:
+        view.now_panel_id = panel_id
+
+
 class SeeInstructPanel:
     """
     查看操作菜单面板
@@ -336,6 +350,7 @@ class SeeInstructPanel:
     def handle_instruct(self, instruct_id_or_cid: str) -> None:
         """
         处理玩家操作指令
+        在派发前状态更新后调用 dispatch_instruct 执行指令，并在指令返回面板编号时更新 view.now_panel_id。
         Keyword arguments:
         instruct_id_or_cid -- 指令id（字符串）或数字cid（字符串形式）
         """
@@ -375,7 +390,7 @@ class SeeInstructPanel:
                 flow_handle.set_skip_pauses(True)
             if instruct_id in SHOWS_NON_H:
                 view.show_non_h_in_hidden_sex = SHOWS_NON_H[instruct_id]
-        handle_instruct.handle_instruct(instruct_id)
+        dispatch_instruct(instruct_id)
 
     def handle_chara_diy_instruct(self, event_id: str) -> None:
         """

@@ -237,7 +237,7 @@ class SaveLoadKernelStateTest(SlowTestCase):
         core = game("Script.Kernel.core")
         constant = game("Script.Core.constant")
         save_handle = game("Script.Core.save_handle")
-        handle_instruct = game("Script.System.Instruct_System.handle_instruct")
+        see_instruct_panel = game("Script.UI.Panel.see_instruct_panel")
         world = game("tests.world")
         saves: list[tuple[str, str, int, int]] = []
 
@@ -253,7 +253,9 @@ class SaveLoadKernelStateTest(SlowTestCase):
         with mock.patch.object(save_handle, "establish_save", record):
             self.world.player.press("1小时", "确定")
             world.act(
-                lambda: handle_instruct.handle_instruct(constant.Instruct.SLEEP)
+                lambda: see_instruct_panel.dispatch_instruct(
+                    constant.Instruct.SLEEP
+                )
             )
             self.show_panel()
             self.world.player.check_done()

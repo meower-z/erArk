@@ -42,18 +42,19 @@ class PlayerLeg:
 
 def own_charcter_move(
     target_scene: list, follow: int = 0, open_map: bool = False
-) -> PlayerLeg | None:
+) -> PlayerLeg | str:
     """
     为主角规划到目标场景的第一段寻路移动。
     非结算期存在可走路段时返回 PlayerLeg 供界面层选定。
-    结算期存在可走路段时将该段排入主角计划队列，切换至场景面板并返回 None。
-    无可用路段时清除主角交互对象，按结果切换至地图面板或场景面板并返回 None。
+    结算期存在可走路段时将该段排入主角计划队列，并返回路径通行结果字符串。
+    已抵达、被叫停或路径受阻时清除主角交互对象，并返回 "end" 或受阻结果字符串。
+    本函数不切换面板。
     Keyword arguments:
     target_scene -- list，目标场景的地图绝对坐标
     follow -- int，跟随目标的角色编号，0 表示不跟随
     open_map -- bool，每段移动开始后是否打开地图面板
     Return arguments:
-    PlayerLeg | None -- 非结算期可走时返回首段移动参数，其余情况返回 None
+    PlayerLeg | str -- 非结算期可走时返回首段移动参数 PlayerLeg，其余情况返回路径结果字符串
     """
     plan.set_route(None)
     move_now = _player_leg(target_scene, follow, open_map)
@@ -61,11 +62,22 @@ def own_charcter_move(
         return move_now
     if move_now == "end" or move_now in _BREAK_LIST:
         activity.set_target(0, 0)
+    return move_now
+
+
+def route_panel(move_now: str) -> int:
+    """
+    按寻路结果字符串返回对应的目标面板编号。
+    move_now 为 "Null"、"wait_open" 或 "door_lock" 时返回 Panel.SEE_MAP，其余值返回 Panel.IN_SCENE。
+    小写 "null"（character_move 表示不可达的返回值）不等于大写 "Null"，因此映射到 Panel.IN_SCENE。
+    Keyword arguments:
+    move_now -- str，寻路结果字符串
+    Return arguments:
+    int -- constant.Panel.SEE_MAP 或 constant.Panel.IN_SCENE
+    """
     if move_now in ["Null", "wait_open", "door_lock"]:
-        ui_hooks.switch_panel(constant.Panel.SEE_MAP)
-    else:
-        ui_hooks.switch_panel(constant.Panel.IN_SCENE)
-    return None
+        return constant.Panel.SEE_MAP
+    return constant.Panel.IN_SCENE
 
 
 def start_player_route(target_scene: list) -> None:
@@ -73,14 +85,14 @@ def start_player_route(target_scene: list) -> None:
     为主角发起前往目标场景的寻路移动。
     非结算期得到首段移动参数时，通过 ui_hooks.choose_route_leg 将其交由已登记的回调处理。
     结算期由 own_charcter_move 将首段排入主角计划队列。
-    无可用路段时，本函数不执行后续操作。
+    own_charcter_move 返回结果字符串时，经 ui_hooks.switch_panel 切换至 route_panel 对应的面板。
     Keyword arguments:
     target_scene -- list，目标场景的地图绝对坐标
     Return arguments:
     None -- 无返回值
     """
     leg = own_charcter_move(target_scene)
-    if leg is not None:
+    if isinstance(leg, PlayerLeg):
         ui_hooks.choose_route_leg(
             leg.behavior_id,
             leg.minutes,
@@ -88,6 +100,8 @@ def start_player_route(target_scene: list) -> None:
             fields=leg.fields,
             args=leg.args,
         )
+    else:
+        ui_hooks.switch_panel(route_panel(leg))
 
 
 def continue_player_route() -> None:
@@ -138,7 +152,7 @@ def _player_leg(
     已被叫停或已抵达目标时返回 "end"。
     路径受阻时返回受阻结果字符串。
     可走时在结算期将路段排入计划队列并返回路径结果字符串。
-    可走时在非结算期切换至场景面板并返回 PlayerLeg。
+    可走时在非结算期直接返回 PlayerLeg，不切换面板。
     Keyword arguments:
     target_scene -- list，目标场景的地图绝对坐标
     follow -- int，跟随目标的角色编号，0 表示不跟随
@@ -190,7 +204,6 @@ def _player_leg(
             args=leg.args,
         )
         return move_now
-    ui_hooks.switch_panel(constant.Panel.IN_SCENE)
     return leg
 
 

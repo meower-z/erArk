@@ -40,7 +40,7 @@ class PickDraftHTest(SlowTestCase):
         core._bodies["kernel.StartAction"] = spy
         self.addCleanup(core._bodies.__setitem__, "kernel.StartAction", saved)
 
-    def run_pick(self, fn: "Callable[[], None]") -> tuple[int, int, bool]:
+    def run_pick(self, fn: "Callable[[], object]") -> tuple[int, int, bool]:
         """
         玩家这一次选择跑 fn；记下选择期间（fn 结束或抛出之前）缓存的指纹是否变了
         Return arguments:

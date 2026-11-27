@@ -43,6 +43,7 @@ def pick_route(
     """
     在 player_pick.drafting("move") 草稿上下文中调用 own_charcter_move 发起主角寻路。
     当其返回 PlayerLeg 时，调用 player_pick.choose 选定首段移动并抛出 Chosen。
+    当其返回结果字符串时，在同一草稿上下文内按 character_move.route_panel 结果更新 view.now_panel_id。
     Keyword arguments:
     target_scene -- list，目标场景的地图绝对坐标
     follow -- int，跟随目标的角色编号，0 表示不跟随
@@ -52,7 +53,7 @@ def pick_route(
     """
     with player_pick.drafting("move"):
         leg = character_move.own_charcter_move(target_scene, follow, open_map)
-        if leg is not None:
+        if isinstance(leg, character_move.PlayerLeg):
             player_pick.choose(
                 leg.behavior_id,
                 leg.minutes,
@@ -60,6 +61,7 @@ def pick_route(
                 fields=leg.fields,
                 args=leg.args,
             )
+        view.now_panel_id = character_move.route_panel(leg)
 
 
 def _draw_grid(draw_list: list, per_row: int, width: int) -> None:

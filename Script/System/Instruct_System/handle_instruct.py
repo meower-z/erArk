@@ -41,19 +41,21 @@ InstructReturn = TypeVar("InstructReturn")
 """ 指令处理函数的返回值 """
 
 
-def handle_instruct(instruct: str) -> None:
+def handle_instruct(instruct: str) -> int | None:
     """
-    处理执行指令：在玩家选择草稿（pick_hooks.drafting）里运行，指令写的值随它定下的行动走，
-    没有定下行动而改了游戏状态时随一个 0 分钟的 Edit 走
+    在 pick_hooks.drafting 中执行指令。写入的游戏状态随定下的行动提交，未定下行动时随 0 分钟 Edit 提交。
     Keyword arguments:
     instruct -- 指令id（字符串）
+    Return arguments:
+    int | None -- 处理函数返回的 int 面板编号，其余情况（被幼年阶段拦截、未登记前提表或返回非 int）为 None。
     """
     with pick_hooks.drafting(instruct):
-        # 交互对象处于幼年阶段时不执行H类指令
         if child_stage_gate.blocks_instruct(instruct):
-            return
+            return None
         if instruct in constant.instruct_premise_data:
-            constant.handle_instruct_data[instruct]()
+            panel_id = constant.handle_instruct_data[instruct]()
+            return panel_id if type(panel_id) is int else None
+    return None
 
 
 # ========== 指令类型映射 ==========
@@ -257,12 +259,12 @@ def add_instruct(
     return decorator
 
 
-def _open_panel(panel_id: int) -> Callable[[], None]:
-    """返回一个无参指令处理函数，调用时经 ui_hooks.switch_panel 切换至面板 panel_id"""
+def _open_panel(panel_id: int) -> Callable[[], int]:
+    """生成直接返回面板编号 panel_id 的无参指令处理函数。"""
 
-    def handler() -> None:
-        """切换至面板 panel_id"""
-        ui_hooks.switch_panel(panel_id)
+    def handler() -> int:
+        """返回目标面板编号 panel_id。"""
+        return panel_id
 
     return handler
 
@@ -331,8 +333,7 @@ PANEL_INSTRUCTS: dict[str, int] = {
     constant.Instruct.EDIT_GROUP_SEX_TEMPLE: constant.Panel.EDIT_GROUP_SEX_TEMPLE,
 }
 """
-指令 id 到面板 id 的映射表：每项经 add_instruct 注册为指令，
-其处理函数调用 ui_hooks.switch_panel 切换至对应面板。
+指令 id 到面板 id 的映射表。模块初始化时遍历本表，经 add_instruct 为每项注册返回对应面板编号的处理函数。
 CARRY_MOVE 与 MOVE 共用地图面板（SEE_MAP）：选定地点后，
 由 character_move._player_leg（经 own_charcter_move 调用）
 按玩家标记 hidden_sex_mode 是否为 5 决定取 Behavior.CARRY_MOVE 或 Behavior.MOVE。
@@ -2316,15 +2317,14 @@ def handle_exercise() -> None:
 
 
 @add_instruct(constant.Instruct.CURE_PATIENT)
-def handle_cure_patient() -> None:
-    """处理诊疗病人指令"""
-    # 如果当前没有病人，输出提示并返回
+def handle_cure_patient() -> int | None:
+    """处理诊疗病人指令：有待诊病人时返回 Panel.CURE_PATIENT，否则经 ui_hooks.emit_notice 提示并返回 None。"""
     if not handle_premise.handle_patient_wait(0):
         ui_hooks.emit_notice(
             _("\n当前没有需要诊疗的病人\n"), wait=True, use_text_width=True
         )
-        return
-    ui_hooks.switch_panel(constant.Panel.CURE_PATIENT)
+        return None
+    return constant.Panel.CURE_PATIENT
 
 
 @add_instruct(constant.Instruct.RECRUIT)
