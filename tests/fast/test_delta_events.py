@@ -126,8 +126,9 @@ class DrawCase(FastTestCase):
         summary_text: str | None,
         wait: bool,
         use_text_width: bool,
+        **facts: object,
     ) -> None:
-        """记录一次数值变化回调收到的全部参数。"""
+        """记录一次数值变化回调收到的变化项、来源、摘要文本、等待与宽度开关，忽略 facts。"""
         self.deltas.append(
             (entries, source, summary_text, wait, use_text_width)
         )
