@@ -66,7 +66,8 @@ from Script.Modules.gameplay_resolution import (
 )
 from Script.Modules.npc_action_choice import choose, npc_hook
 from Script.Modules.save_load import autosave, reset, settings
-from Script.Modules.tk_ui import callbacks, orders, player_hook, player_pick
+from Script.Modules.tk_ui import callbacks, instruct_callbacks, orders
+from Script.Modules.tk_ui import player_hook, player_pick
 
 LOAD_ORDER: tuple[ModuleType, ...] = (
     medical,
@@ -139,6 +140,7 @@ LOAD_ORDER: tuple[ModuleType, ...] = (
     player_hook,
     orders,
     callbacks,
+    instruct_callbacks,
     working,
     cloth_see,
     plan_queue,
