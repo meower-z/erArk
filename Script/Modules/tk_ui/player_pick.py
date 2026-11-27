@@ -14,7 +14,7 @@ tk_ui 的玩家选择
 import random
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
-from typing import NoReturn, cast
+from typing import Any, NoReturn, cast
 
 from Script.Core import constant, py_cmd
 from Script.Design import handle_panel
@@ -22,6 +22,7 @@ from Script.Kernel import core
 from Script.Modules.gameplay_resolution import (
     edits,
     intent,
+    pick_hooks,
     plan_queue,
     working,
 )
@@ -268,3 +269,35 @@ def choose(
 
 chooser: Callable[[], None] = _round
 """ 玩家的一轮选择：游戏里是主面板循环的一轮，测试里换成脚本 """
+
+
+def _choose_now(*args: Any, **kwargs: Any) -> NoReturn:
+    """
+    在调用时从本模块命名空间查找 choose 并原样转发参数。
+    当调用方替换本模块的 choose 后，经 pick_hooks.choose 的调用会执行替换后的函数。
+    Keyword arguments:
+    args -- 位置参数，原样转发给本模块的 choose
+    kwargs -- 关键字参数，原样转发给本模块的 choose
+    Return arguments:
+    NoReturn -- 不正常返回，由本模块的 choose 抛出异常
+    """
+    choose(*args, **kwargs)
+
+
+def _back_now() -> NoReturn:
+    """在调用时查找并执行本模块的 back。"""
+    back()
+
+
+def _drafting_now(origin: str) -> AbstractContextManager[None]:
+    """
+    在调用时从本模块命名空间查找 drafting 并返回其上下文管理器。
+    Keyword arguments:
+    origin -- str，写入来源标识，原样传给本模块的 drafting
+    Return arguments:
+    AbstractContextManager[None] -- 本模块的 drafting 返回的上下文管理器
+    """
+    return drafting(origin)
+
+
+pick_hooks.on_pick(_choose_now, _back_now, _drafting_now)

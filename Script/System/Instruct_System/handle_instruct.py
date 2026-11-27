@@ -23,7 +23,7 @@ from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import group_sex_service
 from Script.Modules.gameplay_resolution import instruct_plan_service
 from Script.Modules.gameplay_resolution import intent, player_starters
-from Script.Modules.tk_ui import player_pick
+from Script.Modules.gameplay_resolution import pick_hooks
 from Script.Modules.domains import (
     abilities,
     achievement,
@@ -47,12 +47,12 @@ InstructReturn = TypeVar("InstructReturn")
 
 def handle_instruct(instruct: str) -> None:
     """
-    处理执行指令：在玩家选择草稿（player_pick.drafting）里运行，指令写的值随它定下的行动走，
+    处理执行指令：在玩家选择草稿（pick_hooks.drafting）里运行，指令写的值随它定下的行动走，
     没有定下行动而改了游戏状态时随一个 0 分钟的 Edit 走
     Keyword arguments:
     instruct -- 指令id（字符串）
     """
-    with player_pick.drafting(instruct):
+    with pick_hooks.drafting(instruct):
         # 交互对象处于幼年阶段时不执行H类指令
         if child_stage_gate.blocks_instruct(instruct):
             return
@@ -329,7 +329,7 @@ def choose_instruct(
     minutes -- 名义分钟数
     target -- 交互对象的角色id，None 时为玩家当前的交互对象
     state -- 开始时的角色状态，None 时为行为id
-    judge -- 指令的判断条件：选择时先问玩家（instuct_judege.ask_judge），[返回]时退出选择（player_pick.back）；
+    judge -- 指令的判断条件：选择时先问玩家（instuct_judege.ask_judge），[返回]时退出选择（pick_hooks.back）；
         开始门再判定（催眠在那时扣理智）；为空时不判断。群交判定的是场景里的每个干员而不是交互对象，选择时不问
     target_wait -- 交互对象是否排上同样分钟数的等待
     start -- 指令自己的开始代码的名字（start_part），为空时没有
@@ -348,8 +348,8 @@ def choose_instruct(
         and judge != _("群交")
         and not instuct_judege.ask_judge(0, target, judge)
     ):
-        player_pick.back()
-    player_pick.choose(
+        pick_hooks.back()
+    pick_hooks.choose(
         behavior_id,
         minutes,
         kind=player_starters.KIND,
@@ -1361,13 +1361,13 @@ def handle_check_locker() -> None:
 @add_instruct(constant.Instruct.COLLCET_PANTY)
 def handle_collect_panty() -> None:
     """处理收起内裤指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.ASK_DATE)
 def handle_ask_date() -> None:
     """处理邀请约会指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.CONFESSION)
@@ -1480,7 +1480,7 @@ def _give_token(who: int, chosen: intent.Intent) -> None:
 @add_instruct(constant.Instruct.DRINK_ALCOHOL)
 def handle_drink_alcohol() -> None:
     """处理劝酒指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.PEE)
@@ -2551,7 +2551,7 @@ def _start_official_option(who: int, chosen: intent.Intent) -> None:
 @add_instruct(constant.Instruct.BATTLE_COMMAND)
 def handle_battle_command() -> None:
     """处理指挥作战指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.ASSISTANT_ADJUSTMENTS)
@@ -3650,7 +3650,7 @@ def handle_condom_instruct_common(mode: str, behavior_id: str) -> None:
         )
     selection = condom_panel.Condom_Select_Panel(width, mode).draw()
     if selection is None:
-        player_pick.back()
+        pick_hooks.back()
     chara_handle_instruct_common_settle(
         behavior_id, judge=judge, start="condom", args=selection
     )
@@ -3774,7 +3774,7 @@ def handle_philter() -> None:
 @add_instruct(constant.Instruct.ENEMAS)
 def handle_enemas() -> None:
     """处理灌肠液指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.DIURETICS_ONCE)
@@ -4318,7 +4318,7 @@ def handle_stimulate_vagina() -> None:
 @add_instruct(constant.Instruct.DOUBLE_PENETRATION)
 def handle_double_penetration() -> None:
     """处理二穴插入指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.URETHRAL_SEX)
@@ -4440,7 +4440,7 @@ def handle_back_lay_urethral_sex() -> None:
 @add_instruct(constant.Instruct.BEAT_BREAST)
 def handle_beat_breast() -> None:
     """处理打胸部指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.SPANKING)
@@ -4452,38 +4452,38 @@ def handle_spanking() -> None:
 @add_instruct(constant.Instruct.SHAME_PLAY)
 def handle_shame_play() -> None:
     """处理羞耻play指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.TAKE_SHOWER_H)
 def handle_take_shower_h() -> None:
     """处理淋浴指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.BUBBLE_BATH)
 def handle_bubble_bath() -> None:
     """处理泡泡浴指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.GIVE_BLOWJOB)
 def handle_give_blowjob() -> None:
     """处理给对方口交指令"""
-    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
+    pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.CHANGE_TOP_AND_BOTTOM)
 def handle_change_top_and_bottom() -> None:
     """处理交给对方指令"""
     h_state.set(activity.target(0), npc_active_h=True)
-    handle_npc_ai_in_h.npc_active_h(player_pick.choose)
+    handle_npc_ai_in_h.npc_active_h(pick_hooks.choose)
 
 
 @add_instruct(constant.Instruct.KEEP_ENJOY)
 def handle_keep_enjoy() -> None:
     """处理继续享受指令"""
-    handle_npc_ai_in_h.npc_active_h(player_pick.choose)
+    handle_npc_ai_in_h.npc_active_h(pick_hooks.choose)
 
 
 @add_instruct(constant.Instruct.TRY_PL_ACTIVE_H)
