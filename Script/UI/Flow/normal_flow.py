@@ -527,7 +527,7 @@ def ask_exhibitionism_sex_flow() -> None:
 @handle_panel.add_panel(constant.Panel.BONDAGE)
 def bondage_flow() -> None:
     """捆绑面板"""
-    from Script.System.Sex_System.bondage_panel import Bondage_Panel
+    from Script.UI.Panel.bondage_panel import Bondage_Panel
 
     now_panel = Bondage_Panel(width)
     now_panel.draw()

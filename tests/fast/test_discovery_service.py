@@ -18,7 +18,7 @@ from Script.Core import constant
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import hidden_sex_service, intent
 from Script.Modules.gameplay_resolution import npc_starters, plan_queue
-from Script.System.Sex_System import sex_be_discovered_panel
+from Script.UI.Panel import sex_be_discovered_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT
@@ -33,8 +33,7 @@ REGISTERED = list(hidden_sex_service._on_discovered)
 """ 模块导入完成后，hidden_sex_service._on_discovered 中已登记的被发现通知回调副本。 """
 BLOCKED_RUN = """
 import importlib.abc, sys
-PANELS = ("Script.UI.Panel", "Script.System.Sex_System.sex_be_discovered_panel",
-    "Script.System.Sex_System.hidden_sex_panel",
+PANELS = ("Script.UI.Panel", "Script.System.Sex_System.hidden_sex_panel",
     "Script.System.Sex_System.exhibitionism_sex_panel")
 def blocked(name):
     return any(name == root or name.startswith(root + ".") for root in PANELS)
@@ -217,7 +216,7 @@ class PanelImportBoundaryTest(FastTestCase):
         source = "\n".join(
             (
                 "import Script.System.Sex_System.hidden_sex_panel",
-                "from ...System.Sex_System import sex_be_discovered_panel",
+                "from ...UI.Panel import sex_be_discovered_panel",
                 "from Script.System.Sex_System import handle, exhibitionism_sex_panel",
                 "def f():",
                 "    from Script.UI.Panel.see_panel import x",
@@ -228,7 +227,7 @@ class PanelImportBoundaryTest(FastTestCase):
             panel_imports(source, path),
             [
                 "Script.System.Sex_System.hidden_sex_panel",
-                "Script.System.Sex_System.sex_be_discovered_panel",
+                "Script.UI.Panel.sex_be_discovered_panel",
                 "Script.System.Sex_System.exhibitionism_sex_panel",
                 "Script.UI.Panel.see_panel",
                 "Script.UI.Panel.see_panel.x",
