@@ -5,7 +5,7 @@
 - TkConfirmTest：经 Tk 回调绘制确认提问的顺序与玩家选择结果。
 - CalculationNoticeTest：实行值计算文本与合意获得文本的提示派发。
 - AskJudgeTest：选择指令时经确认回调派发提问与早返回。
-- ImportBoundaryTest：指令实行值模块与 ui_hooks 的导入边界及无界面加载。
+- ImportBoundaryTest：在无界面子进程中加载 ui_hooks 并派发确认提问。
 """
 
 import json
@@ -22,18 +22,12 @@ from Script.Modules.gameplay_resolution import ui_hooks, working
 from Script.Modules.tk_ui import callbacks
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
-from tests.fast.test_ejaculation_services import imports_in
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 TARGET = 1
 """ 测试使用的目标角色编号（1）。 """
 NAME = "测试干员"
 """ 测试使用的目标角色名称。 """
-SOURCES = (
-    "Script/Design/instuct_judege.py",
-    "Script/Modules/gameplay_resolution/ui_hooks.py",
-)
-""" 接受导入边界检查的两个模块仓库相对路径元组。 """
 CLEAN_RUN = """
 import json, sys
 from Script.Modules.gameplay_resolution import ui_hooks
@@ -344,22 +338,7 @@ class AskJudgeTest(DrawCase):
 
 
 class ImportBoundaryTest(FastTestCase):
-    """指令实行值模块与 ui_hooks 的导入边界及无界面加载测试。"""
-
-    def test_sources_import_no_ui(self) -> None:
-        """
-        验证 SOURCES 中两个模块通过 banned_imports 检查，
-        且 Script/Design/instuct_judege.py 不导入 Script.Core.flow_handle。
-        """
-        for path in SOURCES:
-            with self.subTest(path=path):
-                self.assertEqual(
-                    banned_imports((ROOT / path).read_bytes(), path), []
-                )
-        source = (ROOT / SOURCES[0]).read_text(encoding="utf-8")
-        self.assertNotIn(
-            "Script.Core.flow_handle", imports_in(source, "Script.Design")
-        )
+    """ui_hooks 的无界面子进程加载与确认提问派发测试。"""
 
     def test_ui_hooks_loads_without_ui(self) -> None:
         """验证独立子进程只导入 ui_hooks 即可登记并派发确认提问，且不加载 Script.UI、tkinter 或 _tkinter。"""

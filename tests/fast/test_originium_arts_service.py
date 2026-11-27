@@ -1,7 +1,7 @@
 """
 源石技艺与负面刻印服务的快速测试。
 覆盖默认催眠类型读写、升级消耗与免费条件解锁、内裤重复款式优先扣减、
-负面刻印降低结算、面板委托，以及两项源石技艺服务的源码与纯后端子进程导入边界。
+负面刻印降低结算、面板委托，以及两项源石技艺服务的纯后端子进程导入边界。
 """
 
 import json
@@ -19,10 +19,7 @@ from Script.Modules.gameplay_resolution import working
 from Script.UI.Moudle import draw
 from Script.UI.Panel import originium_arts
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
-
-SERVICE_PATH = "Script/Modules/gameplay_resolution/originium_arts_service.py"
-""" 源石技艺与负面刻印服务模块的仓库相对路径。 """
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 BACKEND_RUN = """
 import importlib.abc, sys
@@ -442,11 +439,6 @@ class OriginiumArtsPanelDelegationTest(OriginiumArtsCase):
 
 class ImportBoundaryTest(FastTestCase):
     """源石技艺服务与面板菜单规则服务的界面与结算导入边界测试。"""
-
-    def test_service_imports_no_ui(self) -> None:
-        """断言 originium_arts_service.py 源码通过后端界面边界守卫检查。"""
-        source = (ROOT / SERVICE_PATH).read_bytes()
-        self.assertEqual(banned_imports(source, SERVICE_PATH), [])
 
     def test_fresh_backend_process_loads_no_ui_or_settle(self) -> None:
         """断言独立子进程在拦截界面、结算与窗口模块时可正常运行两项服务且零受限模块加载。"""

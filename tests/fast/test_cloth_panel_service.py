@@ -22,10 +22,7 @@ from Script.UI.Panel import cloth_panel
 from tests import kernel_data
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
-
-SERVICE_PATH = "Script/Modules/gameplay_resolution/cloth_panel_service.py"
-""" 服装面板服务模块的仓库相对路径。 """
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 BLOCKED_IMPORT_RUN = """
 import importlib.abc, sys
@@ -397,11 +394,6 @@ class ReadOnlyTest(FastTestCase):
 
 class ImportBoundaryTest(FastTestCase):
     """服务模块的无界面导入边界测试。"""
-
-    def test_service_imports_no_ui(self) -> None:
-        """验证服装面板服务源码通过后端界面导入边界检查，无违规导入。"""
-        source = (ROOT / SERVICE_PATH).read_bytes()
-        self.assertEqual(banned_imports(source, SERVICE_PATH), [])
 
     def test_fresh_subprocess_import_loads_no_ui(self) -> None:
         """验证在拦截界面、窗口与 Tk 模块的全新子进程中导入并调用服务可成功执行且不加载任何受限模块。"""

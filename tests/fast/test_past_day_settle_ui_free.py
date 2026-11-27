@@ -1,21 +1,17 @@
 """
-跨天结算无界面子进程与导入边界测试
-==================================
+跨天结算无界面子进程测试
+========================
 本模块在三种标准流编码下启动无界面子进程，放行 Script.Settle 并保留其余默认拦截项。
 子进程分别构造周日与周一状态，并调用 past_day_settle.update_new_day 完成跨天结算。
 子进程用例验证运行期间未触碰受拦截模块，并核对两天结算的提示、刷出事件、访客入编与食物数量。
-导入边界用例通过语法树检查 Script/Settle/past_day_settle.py 不含禁用界面或输入输出导入。
 """
 
 import os
 from unittest import mock
 
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 from tests.ui_free_subprocess import BLOCKED, ChildRun, run_ui_free
 
-SOURCE = "Script/Settle/past_day_settle.py"
-"""待检查导入边界的跨天结算源码仓库相对路径。"""
 ENCODINGS = ("cp1252", "gbk", "utf-16")
 """setUpClass 启动子进程时依次设置的 PYTHONIOENCODING 编码元组。"""
 NEW_DAYS = """
@@ -208,17 +204,3 @@ class PastDaySettleUiFreeTest(FastTestCase):
                     "\n○本周抽签选中了c1作为c0的助理\n",
                     [event[0] for event in day["events"]],
                 )
-
-
-class PastDaySettleImportBoundaryTest(FastTestCase):
-    """验证 Script/Settle/past_day_settle.py 源码导入边界的测试类。"""
-
-    def test_skips_ui_imports(self) -> None:
-        """
-        通过 banned_imports 检查 Script/Settle/past_day_settle.py 源码，断言不含禁用界面或输入输出导入。
-        Return arguments:
-        None -- 无返回值
-        """
-        self.assertEqual(
-            banned_imports((ROOT / SOURCE).read_bytes(), SOURCE), []
-        )

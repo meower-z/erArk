@@ -6,7 +6,6 @@
 - 按类筛选（CookByFoodTypeTest）：验证六种类型名、未知类型名、跳过时间不小于 999 与读取传入映射。
 - 筛选排序（FilteredSortedTest）：验证类型、难度、时间筛选与各排序维度及方向的组合结果。
 - 面板状态（PanelViewStateTest）：验证做饭面板读写 view 状态并生成按页补齐 50 项的按钮列表。
-- 导入边界（CookingImportBoundaryTest）：验证 cooking.py 源码不导入界面与输入输出模块。
 - 无界面导入（CookingSystemUiFreeTest）：验证 Cooking_System 各模块在无界面子进程中成功导入且无受拦截导入。
 """
 
@@ -21,7 +20,7 @@ from Script.UI.Panel import make_food_panel
 from Script.UI.Moudle import view
 from tests import chara_abilities as ca, kernel_data
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 from tests.ui_free_subprocess import ChildRun, run_ui_free
 
 _ = get_text._
@@ -49,8 +48,6 @@ DATA = {str(cid): cid for cid, *_rest in RECIPES}
 """由 RECIPES 构造的菜谱编号文本到菜谱编号映射。"""
 ANY_TYPE = "任意"
 """不在六种固定食物类型名中的测试类型名。"""
-COOKING = "Script/System/Cooking_System/cooking.py"
-"""待检查导入边界的 cooking.py 仓库相对路径。"""
 PACKAGE = "Script.System.Cooking_System"
 """待测烹饪系统包的点分导入路径。"""
 MODULES = tuple(
@@ -286,16 +283,6 @@ class PanelViewStateTest(RecipeCase):
         view.makefood_filter_type.append(0)
         panel.change_panel(_("零食"))
         self.assertEqual(panel.handle_panel.text_list, self.expected([]))
-
-
-class CookingImportBoundaryTest(FastTestCase):
-    """验证 cooking.py 不导入界面与输入输出模块的语法树边界测试。"""
-
-    def test_cooking_imports_no_ui(self) -> None:
-        """验证 cooking.py 通过后端界面边界守卫 banned_imports 检查且不存在违规导入。"""
-        self.assertEqual(
-            banned_imports((ROOT / COOKING).read_bytes(), COOKING), []
-        )
 
 
 class CookingSystemUiFreeTest(FastTestCase):

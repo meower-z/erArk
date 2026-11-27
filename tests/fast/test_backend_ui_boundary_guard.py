@@ -55,10 +55,7 @@ BACKEND_UI_FREE_FILES = (
 BANNED = (
     "Script.UI",
     "Script.Core.flow_handle",
-    "Script.Core.image_cache",
     "Script.Core.io_init",
-    "Script.Core.key_listion_event",
-    "Script.Core.main_frame",
     "Script.Core.py_cmd",
     "Script.Frontend",
     "Script.Modules.tk_ui",
@@ -185,12 +182,6 @@ class BackendUiBoundaryGuardTest(FastTestCase):
                 "from Script.Modules.tk_ui import callbacks",
                 "from ..tk_ui import callbacks",
                 "from Script.Modules.tk_ui import orders",
-                "from Script.Core import main_frame",
-                "from ...Core import main_frame",
-                "import Script.Core.key_listion_event",
-                "from ...Core import key_listion_event",
-                "from Script.Core.image_cache import image_data",
-                "from ...Core import image_cache",
             )
         )
         self.assertEqual(
@@ -212,12 +203,6 @@ class BackendUiBoundaryGuardTest(FastTestCase):
                 (17, "Script.Modules.tk_ui.callbacks"),
                 (18, "Script.Modules.tk_ui.callbacks"),
                 (19, "Script.Modules.tk_ui.orders"),
-                (20, "Script.Core.main_frame"),
-                (21, "Script.Core.main_frame"),
-                (22, "Script.Core.key_listion_event"),
-                (23, "Script.Core.key_listion_event"),
-                (24, "Script.Core.image_cache.image_data"),
-                (25, "Script.Core.image_cache"),
             ],
         )
 

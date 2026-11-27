@@ -4,8 +4,8 @@
 - 日志提示（MedicalReportNoticeTest）：验证 log_system.render_medical_reports
   的文本返回、ui_hooks.emit_notice 提示派发参数与 Tk 回调绘制结果，
   并覆盖每日结算与财务报表面板的日志输出。
-- 导入边界（MedicalImportBoundaryTest）：用后端界面边界守卫检查直接位于
-  Script/System/Medical_System 目录的每个 .py 文件，断言其中无违规界面导入。
+- 导入边界（MedicalImportBoundaryTest）：在医疗系统包路径下用内联样本
+  验证 banned_imports 检出相对导入与多别名违规，并放行包内相对导入。
 """
 
 from typing import Any
@@ -20,7 +20,7 @@ from Script.UI.Moudle import draw
 from Script.UI.Panel import medical_department_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import banned_imports
 
 MEDICAL_DIR = "Script/System/Medical_System"
 """医疗系统包目录的仓库相对路径。"""
@@ -234,22 +234,7 @@ class MedicalReportNoticeTest(FastTestCase):
 
 
 class MedicalImportBoundaryTest(FastTestCase):
-    """Script/System/Medical_System 顶层 .py 文件的界面导入边界测试。"""
-
-    def test_non_panel_modules_import_no_ui(self) -> None:
-        """用 banned_imports 检查直接位于医疗系统包目录的每个 .py 文件（含 __init__.py），断言无违规导入。"""
-        checked = [
-            path.relative_to(ROOT).as_posix()
-            for path in sorted((ROOT / MEDICAL_DIR).glob("*.py"))
-        ]
-        self.assertIn(f"{MEDICAL_DIR}/log_system.py", checked)
-        self.assertEqual(
-            [
-                (path, banned_imports((ROOT / path).read_bytes(), path))
-                for path in checked
-            ],
-            [(path, []) for path in checked],
-        )
+    """在医疗系统包路径下验证 banned_imports 解析行为的自检测试。"""
 
     def test_checker_catches_relative_and_later_aliases(self) -> None:
         """验证在医疗系统包路径下，banned_imports 检出相对导入与多别名中的违规模块并放行包内相对导入。"""

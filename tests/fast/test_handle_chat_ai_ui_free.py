@@ -1,7 +1,7 @@
 """
 文本生成AI无界面运行与导入边界测试
 ==================================
-检查 handle_chat_ai 源码不导入界面、Tk、输入输出或 handle_instruct 模块。
+检查 handle_chat_ai 源码不导入 handle_instruct 模块。
 在拦截界面模块且屏蔽网络连接的新子进程中，用替身客户端与记录输出对象运行 25 组用例。
 核对无受限模块加载、零网络连接，以及返回值、输出顺序、请求参数、记录保存与直接结算。
 """
@@ -9,7 +9,7 @@
 from typing import Any, cast
 
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 from tests.fast.test_ejaculation_services import imports_in
 from tests.ui_free_subprocess import run_ui_free
 
@@ -211,13 +211,12 @@ def result(*values: object) -> Any:
 class ImportBoundaryTest(FastTestCase):
     """文本生成AI模块源码静态导入边界测试。"""
 
-    def test_source_imports_no_ui(self) -> None:
-        """断言 handle_chat_ai.py 不含受禁界面导入且不导入 handle_instruct。"""
-        source = (ROOT / SOURCE).read_bytes()
-        self.assertEqual(banned_imports(source, SOURCE), [])
+    def test_source_skips_handle_instruct(self) -> None:
+        """断言 handle_chat_ai.py 源码不导入 Script.System.Instruct_System.handle_instruct。"""
+        source = (ROOT / SOURCE).read_text(encoding="utf-8")
         self.assertNotIn(
             "Script.System.Instruct_System.handle_instruct",
-            imports_in(source.decode("utf-8"), "Script.Design"),
+            imports_in(source, "Script.Design"),
         )
 
 

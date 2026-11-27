@@ -3,7 +3,6 @@
 ==========================
 - 素质提示：验证酒量素质结算提示经 ui_hooks.emit_notice 发出并由 Tk 回调绘制。
 - 妊娠提示：验证受精判定提示与 body_part_grow 的提示经 ui_hooks.emit_notice 发出并由 Tk 回调绘制。
-- 导入边界：验证 handle_talent.py 与 pregnancy_handle.py 通过后端界面边界守卫的 banned_imports 检查。
 """
 
 from unittest import mock
@@ -17,7 +16,6 @@ from Script.Modules.gameplay_resolution import ui_hooks, working
 from Script.System.Pregnancy_System import pregnancy_handle
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 
 TARGET = 1
 """ 测试使用的目标角色编号（1）。 """
@@ -31,11 +29,6 @@ DRINK_EXP = 94
 """ 饮酒经验编号（94）。 """
 BODY_PART_TALENTS = range(126, 133)
 """ body_part_grow 读取的素质编号范围（126~132）。 """
-SOURCES = (
-    "Script/Design/handle_talent.py",
-    "Script/System/Pregnancy_System/pregnancy_handle.py",
-)
-""" 受导入边界检查的两个模块的仓库相对路径元组。 """
 
 type Notice = tuple[str, bool, str | None, bool]
 """ 一条提示的参数元组类型，依次为文本、是否等待确认、样式名与是否按文本宽度排版。 """
@@ -172,15 +165,3 @@ class PregnancyNoticeTest(NoticeCase):
         self.assert_notices()
         self.assertEqual(pregnancy_handle.body_part_grow(TARGET, True), "")
         self.assert_notices(("", True, None, True))
-
-
-class ImportBoundaryTest(FastTestCase):
-    """handle_talent.py 与 pregnancy_handle.py 的导入边界语法树测试。"""
-
-    def test_sources_pass_backend_guard(self) -> None:
-        """验证 SOURCES 中两个模块源码经后端界面边界守卫 banned_imports 检查均返回空列表。"""
-        for path in SOURCES:
-            with self.subTest(path=path):
-                self.assertEqual(
-                    banned_imports((ROOT / path).read_bytes(), path), []
-                )

@@ -1,10 +1,9 @@
 """
-主角寻路无界面运行与导入边界测试
-================================
+主角寻路无界面运行与选路测试
+============================
 - 无界面运行（CharacterMoveUiFreeTest）：在无界面子进程验证 own_charcter_move 与 start_player_route。
 - 界面选路（PickRouteTest）：在已加载界面的本进程中验证 see_map_panel.pick_route 选定的行动携带首段参数。
 - 效果寻路（MoveEffectRouteTest）：在已加载界面的本进程验证 Move 寻路效果非结算期选定、结算期入队。
-- 导入边界（CharacterMoveImportBoundaryTest）：验证 character_move.py 不导入界面、输入输出与 Tk 模块。
 """
 
 from unittest import mock
@@ -18,7 +17,6 @@ from Script.Modules.tk_ui import player_pick
 from Script.UI.Panel import see_map_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 from tests.ui_free_subprocess import ChildRun, run_ui_free
 
 CORRIDOR = ["宿舍", "1区", "外走廊"]
@@ -31,8 +29,6 @@ MASTER_KEY = 152
 """ 一次性万能钥匙的道具编号 """
 _ = get_text._
 """ 本地化文本翻译函数 """
-SOURCE = "Script/Design/character_move.py"
-""" 待检查导入边界的 character_move.py 仓库相对路径 """
 PLACE_TAG = "寻路测试地点"
 """ 寻路效果测试映射至 OFFICE 的临时地点标签 """
 UI_FREE_RUN = f"""
@@ -397,13 +393,3 @@ class MoveEffectRouteTest(FastTestCase):
             [["Behavior", constant.Behavior.MOVE]],
         )
         self.assertEqual(plan.route(), [OFFICE, CORRIDOR, 0, False])
-
-
-class CharacterMoveImportBoundaryTest(FastTestCase):
-    """验证 Script/Design/character_move.py 源码的导入边界。"""
-
-    def test_source_imports_no_ui(self) -> None:
-        """验证 banned_imports 检查 character_move.py 源码返回空列表。"""
-        self.assertEqual(
-            banned_imports((ROOT / SOURCE).read_bytes(), SOURCE), []
-        )

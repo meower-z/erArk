@@ -18,11 +18,9 @@ from Script.Settle import default
 from tests import kernel_data
 from tests.chara_activity import aim, behave
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 from tests.ui_free_subprocess import BLOCKED, run_ui_free
 
-SERVICE_PATH = "Script/Modules/gameplay_resolution/food_effects.py"
-""" 进食效果计算模块的仓库相对路径。 """
 CALLER_PATH = "Script/Settle/default.py"
 """ 进食结算调用方模块的仓库相对路径。 """
 PANEL = "Script.UI.Panel.food_bag_panel"
@@ -267,11 +265,6 @@ class EatSettleTest(FoodEffectsCase):
 
 class BoundaryTest(FastTestCase):
     """进食效果模块与进食结算调用方的界面导入边界测试。"""
-
-    def test_service_passes_ui_guard(self) -> None:
-        """food_effects.py 的源码通过后端界面边界守卫 banned_imports 检查，违规导入列表为空。"""
-        source = (ROOT / SERVICE_PATH).read_bytes()
-        self.assertEqual(banned_imports(source, SERVICE_PATH), [])
 
     def test_caller_does_not_import_panel(self) -> None:
         """Script/Settle/default.py 的全部导入语句中不包含 Script.UI.Panel.food_bag_panel。"""

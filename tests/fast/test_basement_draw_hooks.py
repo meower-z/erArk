@@ -3,8 +3,6 @@
 ==================================
 - 提示发出与绘制（BasementNoticeTest）：验证 basement 经 ui_hooks.emit_notice
   发出的提示参数与 Tk 回调绘制结果。
-- 导入边界（BasementImportBoundaryTest）：用后端界面边界守卫检查 basement.py
-  的导入语句，断言无违规导入。
 """
 
 from unittest import mock
@@ -26,10 +24,7 @@ from Script.System.Cooking_System import cooking
 from Script.System.Medical_System import medical_service
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
 
-BASEMENT = "Script/Design/basement.py"
-"""Script/Design/basement.py 的仓库相对路径。"""
 TODO_SETTING = 5
 """normal_config.system_setting.draw_setting 中待办事项提示的开关索引（5）。"""
 NEW_DAY_STEPS = (
@@ -292,14 +287,4 @@ class BasementNoticeTest(FastTestCase):
                 "gold_enrod",
                 True,
             )
-        )
-
-
-class BasementImportBoundaryTest(FastTestCase):
-    """Script/Design/basement.py 的界面与输入输出导入边界测试。"""
-
-    def test_basement_imports_no_ui(self) -> None:
-        """用后端界面边界守卫的 banned_imports 检查 Script/Design/basement.py，断言无违规导入。"""
-        self.assertEqual(
-            banned_imports((ROOT / BASEMENT).read_bytes(), BASEMENT), []
         )

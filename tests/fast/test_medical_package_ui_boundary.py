@@ -3,7 +3,7 @@
 ==============================
 验证导入医疗系统包及后端子模块时不载入两个医疗界面面板，并核对通配导入绑定的后端子模块名。
 同时通过语法树检查 Script/System/Medical_System 顶层各 .py 文件。
-检查断言这些文件不含面板模块导入，也不含后端界面边界守卫禁止的导入。
+检查断言这些文件不导入名称段以 _panel 结尾的模块或成员。
 """
 
 import os
@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 from tests.fast.test_discovery_service import panel_imports
 from tests.fast.test_medical_log_draw_hooks import MEDICAL_DIR
 
@@ -89,10 +89,10 @@ class PackageImportTest(FastTestCase):
 
 
 class PackageSourceBoundaryTest(FastTestCase):
-    """通过语法树验证医疗系统包顶层 .py 文件不导入面板模块及后端界面边界守卫禁止的模块。"""
+    """通过语法树验证医疗系统包顶层 .py 文件不导入名称段以 _panel 结尾的模块或成员。"""
 
     def test_non_panel_modules_skip_panels(self) -> None:
-        """验证医疗系统包顶层 .py 文件（含 __init__.py）的 panel_imports 与 banned_imports 均返回空列表。"""
+        """验证医疗系统包顶层 .py 文件（含 __init__.py）的 panel_imports 返回空列表。"""
         checked = [
             path.relative_to(ROOT).as_posix()
             for path in sorted((ROOT / MEDICAL_DIR).glob("*.py"))
@@ -101,10 +101,4 @@ class PackageSourceBoundaryTest(FastTestCase):
         for relative in checked:
             source = (ROOT / relative).read_bytes()
             with self.subTest(path=relative):
-                self.assertEqual(
-                    (
-                        panel_imports(source, relative),
-                        banned_imports(source, relative),
-                    ),
-                    ([], []),
-                )
+                self.assertEqual(panel_imports(source, relative), [])

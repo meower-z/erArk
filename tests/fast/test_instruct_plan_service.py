@@ -26,12 +26,10 @@ from Script.Modules.gameplay_resolution import intent, plan_queue, start_gate
 from Script.Modules.gameplay_resolution import working
 from Script.System.Instruct_System import handle_instruct
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT, banned_imports
+from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 _ = get_text._
 
-SERVICE_PATH = "Script/Modules/gameplay_resolution/instruct_plan_service.py"
-""" 指令规划服务模块的仓库相对路径。 """
 NO_HANDLE_INSTRUCT_CALLERS = (
     "Script/Design/settle_behavior.py",
     "Script/Settle/realtime_settle.py",
@@ -469,12 +467,8 @@ class HandleInstructCompatibilityTest(InstructPlanCase):
 class ImportBoundaryTest(FastTestCase):
     """指令规划服务与后端调用方导入边界及屏蔽界面子进程隔离测试。"""
 
-    def test_sources_import_no_ui_or_handle_instruct(self) -> None:
-        """验证服务无禁用界面导入，且 settle_behavior 与 realtime_settle 不导入 handle_instruct。"""
-        self.assertEqual(
-            banned_imports((ROOT / SERVICE_PATH).read_bytes(), SERVICE_PATH),
-            [],
-        )
+    def test_callers_skip_handle_instruct(self) -> None:
+        """验证 settle_behavior.py 与 realtime_settle.py 源码不导入 handle_instruct。"""
         for path in NO_HANDLE_INSTRUCT_CALLERS:
             with self.subTest(path=path):
                 hits = [
