@@ -11,7 +11,8 @@ from unittest import mock
 
 from Script.Config import game_config
 from Script.Core import constant
-from Script.System.Cooking_System import cooking, food_bag_panel
+from Script.System.Cooking_System import cooking
+from Script.UI.Panel import food_bag_panel
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import inventory
 from tests import kernel_data

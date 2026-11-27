@@ -25,7 +25,7 @@ SERVICE_PATH = "Script/Modules/gameplay_resolution/food_effects.py"
 """ 进食效果计算模块的仓库相对路径。 """
 CALLER_PATH = "Script/Settle/default.py"
 """ 进食结算调用方模块的仓库相对路径。 """
-PANEL = "Script.System.Cooking_System.food_bag_panel"
+PANEL = "Script.UI.Panel.food_bag_panel"
 """ 边界测试禁止调用方导入的食物背包面板模块全名。 """
 RECIPE = 987654
 """ 测试使用的合成菜谱编号（987654）。 """
@@ -274,7 +274,7 @@ class BoundaryTest(FastTestCase):
         self.assertEqual(banned_imports(source, SERVICE_PATH), [])
 
     def test_caller_does_not_import_panel(self) -> None:
-        """Script/Settle/default.py 的全部导入语句中不包含 Script.System.Cooking_System.food_bag_panel。"""
+        """Script/Settle/default.py 的全部导入语句中不包含 Script.UI.Panel.food_bag_panel。"""
         tree = ast.parse((ROOT / CALLER_PATH).read_bytes())
         found = []
         for node in ast.walk(tree):

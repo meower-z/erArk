@@ -24,9 +24,9 @@ from Script.Modules.domains import abilities, activity, inventory, kitchen
 from Script.Modules.domains import player_collection, wardrobe
 from Script.Modules.gameplay_resolution import readonly, working
 from Script.Settle import common_default
-from Script.System.Cooking_System import cooking, food_bag_panel
+from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw
-from Script.UI.Panel import check_locker_panel
+from Script.UI.Panel import check_locker_panel, food_bag_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 

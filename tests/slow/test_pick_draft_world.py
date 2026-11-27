@@ -207,7 +207,8 @@ class PickDraftWorldTest(SlowTestCase):
         from Script.Config import game_config
         from Script.Core import constant
         from Script.Modules.tk_ui import player_pick
-        from Script.System.Cooking_System import cooking, food_bag_panel
+        from Script.System.Cooking_System import cooking
+        from Script.UI.Panel import food_bag_panel
 
         self.world.move(self.chara_id, activity.position(0))
         aim(0, self.chara_id)
@@ -264,7 +265,8 @@ class PickDraftWorldTest(SlowTestCase):
         from Script.Config import game_config
         from Script.Core import constant
         from Script.Modules.tk_ui import player_pick
-        from Script.System.Cooking_System import cooking, food_bag_panel
+        from Script.System.Cooking_System import cooking
+        from Script.UI.Panel import food_bag_panel
 
         self.world.move(self.chara_id, activity.position(0))
         aim(0, self.chara_id)

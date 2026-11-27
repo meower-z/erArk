@@ -108,7 +108,7 @@ def pregnancy_overview_flow() -> None:
 @handle_panel.add_panel(constant.Panel.FOOD_BAG)
 def food_bag_flow() -> None:
     """食物背包面板"""
-    from Script.System.Cooking_System import food_bag_panel
+    from Script.UI.Panel import food_bag_panel
 
     now_panel = food_bag_panel.FoodBagPanel(width)
     now_panel.draw()
