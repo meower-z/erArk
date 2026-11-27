@@ -309,7 +309,7 @@ class NoNestedResolutionTest(SlowTestCase):
         """目睹H后发现者的反应与博士的结束H各一次，「结束H模式」只显示一次"""
         from Script.Core import constant
         from Script.Kernel import core
-        from Script.System.Sex_System import sex_be_discovered_panel
+        from Script.UI.Panel import sex_be_discovered_panel
 
         partner_id = self.start_h()
         finder_id = next(

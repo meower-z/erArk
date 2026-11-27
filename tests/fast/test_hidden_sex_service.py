@@ -20,7 +20,8 @@ from Script.Modules.domains import activity, flags, h_state
 from Script.Modules.gameplay_resolution import hidden_sex_service, working
 from Script.Settle import Second_effect
 from Script.System.Sex_System import exhibitionism_sex_panel
-from Script.System.Sex_System import hidden_sex_panel, sex_be_discovered_panel
+from Script.System.Sex_System import hidden_sex_panel
+from Script.UI.Panel import sex_be_discovered_panel
 from tests import chara_abilities
 from tests.chara_activity import aim, behave
 from tests.fast.base import FastTestCase
@@ -63,8 +64,7 @@ EXPOSED_ORGASMS = (
 BLOCKED_RUN = """
 import importlib.abc, sys
 PANELS = ("Script.UI.Panel", "Script.System.Sex_System.hidden_sex_panel",
-    "Script.System.Sex_System.exhibitionism_sex_panel",
-    "Script.System.Sex_System.sex_be_discovered_panel")
+    "Script.System.Sex_System.exhibitionism_sex_panel")
 def blocked(name):
     return any(name == root or name.startswith(root + ".") for root in PANELS)
 class Block(importlib.abc.MetaPathFinder):

@@ -391,7 +391,7 @@ def draw_hidden_sex_discovered(
     Return arguments:
     None -- 无返回值
     """
-    from Script.System.Sex_System import sex_be_discovered_panel
+    from Script.UI.Panel import sex_be_discovered_panel
 
     sex_be_discovered_panel.Sex_Be_Discovered_Panel(
         normal_config.config_normal.text_width,
