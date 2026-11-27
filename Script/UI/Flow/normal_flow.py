@@ -168,7 +168,7 @@ def manage_basement_flow() -> None:
 @handle_panel.add_panel(constant.Panel.EDUCATION_MANAGE)
 def education_manage_flow() -> None:
     """教育管理面板"""
-    from Script.System.Education_System import class_schedule_panel
+    from Script.UI.Panel import class_schedule_panel
 
     now_panel = class_schedule_panel.Education_Manage_Panel(width)
     now_panel.draw()

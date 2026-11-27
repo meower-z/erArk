@@ -329,12 +329,10 @@ for save_id in candidate_list:
         problem.append((save_id, "semester", repr(error)))
     # 教育面板在真实存档上能画出来（不取输入）
     try:
-        from Script.System.Education_System import (
-            class_schedule_panel,
-            growth_panel,
-        )
         from Script.UI.Panel import (
+            class_schedule_panel,
             course_select_panel,
+            growth_panel,
             schedule_template_panel,
         )
 

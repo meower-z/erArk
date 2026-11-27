@@ -217,7 +217,7 @@ Script/
 └── UI/
     ├── Moudle/draw.py      # 绘制类抽象层（NormalDraw/Button/BarDraw...）
     ├── Moudle/panel.py     # 通用面板构建块
-    ├── Panel/              # 71 个功能面板
+    ├── Panel/              # 77 个功能面板
     └── Flow/               # 标题 / 创建角色 / normal_flow 面板注册
 ```
 
@@ -673,8 +673,8 @@ Script/
 | 射精面板 | `UI/Panel/ejaculation_panel.py` | `Semen_Shoot_Amount.csv` |
 | 怀孕总览 | `System/Pregnancy_System/pregnancy_panel.py`, `Modules/gameplay_resolution/pregnancy_overview_service.py` | 怀孕阶段总览、生育谱系图与异常女儿排查 |
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
-| 教育管理 | `System/Education_System/*`, `Modules/gameplay_resolution/class_schedule_service.py`, `Modules/gameplay_resolution/sex_class_plan_service.py`, `Modules/gameplay_resolution/course_select_service.py`, `Modules/gameplay_resolution/class_tip_service.py`, `Modules/gameplay_resolution/student_select_service.py`, `Modules/tk_ui/student_select.py`, `UI/Panel/course_select_panel.py`, `UI/Panel/schedule_template_panel.py`, `UI/Panel/sex_class_plan_panel.py` | 全局课表、个人课表、日程模板与养成总览 |
-| 养成总览 | `System/Education_System/growth_panel.py`, `Modules/gameplay_resolution/growth_overview_service.py`, `Modules/domains/growth.py` | 女儿的阶段、科目、出勤、成绩单、性格与履历 |
+| 教育管理 | `System/Education_System/*`, `Modules/gameplay_resolution/class_schedule_service.py`, `Modules/gameplay_resolution/sex_class_plan_service.py`, `Modules/gameplay_resolution/course_select_service.py`, `Modules/gameplay_resolution/class_tip_service.py`, `Modules/gameplay_resolution/student_select_service.py`, `Modules/tk_ui/student_select.py`, `UI/Panel/course_select_panel.py`, `UI/Panel/schedule_template_panel.py`, `UI/Panel/sex_class_plan_panel.py`, `UI/Panel/class_schedule_panel.py` | 全局课表、个人课表、日程模板与养成总览 |
+| 养成总览 | `UI/Panel/growth_panel.py`, `Modules/gameplay_resolution/growth_overview_service.py`, `Modules/domains/growth.py` | 女儿的阶段、科目、出勤、成绩单、性格与履历 |
 | 身体检查与管理 | `UI/Panel/physical_check_and_manage.py`, `Modules/gameplay_resolution/physical_exam_service.py`, `Modules/gameplay_resolution/physical_exam_report.py`, `Modules/gameplay_resolution/body_manage_service.py`, `Modules/domains/physical_exam.py` | `Physical_Exam_Setting.csv` |
 | 读书/图书馆 | `UI/Panel/borrow_book_panel.py`, `read_book_panel.py`, `manage_library.py`, `Modules/gameplay_resolution/library_panel_service.py`, `Modules/domains/library.py` | `Book*.csv` |
 | 五子棋 | `UI/Panel/play_gomoku_panel.py`, `Modules/gameplay_resolution/gomoku_shapes.py`, `Modules/gameplay_resolution/gomoku_evaluate.py`, `Modules/gameplay_resolution/gomoku_moves.py`, `Modules/gameplay_resolution/gomoku_cache.py`, `Modules/gameplay_resolution/gomoku_board.py`, `Modules/gameplay_resolution/gomoku_search.py` | 娱乐小游戏 |
