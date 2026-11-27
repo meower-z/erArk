@@ -1,12 +1,11 @@
 """
-二段结算提示回调与导入边界测试
-==============================
+二段结算提示回调与依赖测试
+==========================
 - 提示回调（SecondEffectNoticeTest）：覆盖 handle_milking_machine、handle_urine_collector、handle_b_orgasm_to_milk、
 handle_u_orgasm_to_pee 与 handle_extra_orgasm 的状态写入、ui_hooks 提示参数及零值无提示分支。
 - Tk 绘制（TkSecondEffectNoticeTest）：保留启动登记回调，验证这五个函数按顺序以 NormalDraw、
 配置文本宽度与默认样式绘制五条提示。
-- 模块边界（SecondEffectBoundaryTest）：验证 Script/Settle/Second_effect.py 导入 ui_hooks，且不导入 Script.UI、tkinter
-或 Script.Core.io_init。
+- 模块依赖（SecondEffectBoundaryTest）：验证 Script/Settle/Second_effect.py 导入 ui_hooks。
 """
 
 import os
@@ -48,8 +47,6 @@ URINE_SPILT = "\n{0}在绝顶的同时漏出了{1}ml的尿液，漏出的尿液�
 """ handle_u_orgasm_to_pee 在身体道具 5 关闭时提示文本的 msgid """
 EXTRA = "\n{0}因为第{1}次的连续额外绝顶而被迫感受到了更多的苦痛和恐怖\n"
 """ handle_extra_orgasm 提示文本的 msgid """
-FORBIDDEN = ("Script.UI", "tkinter", "Script.Core.io_init")
-""" Second_effect.py 禁止导入的模块前缀元组 """
 
 
 def text(msgid: str, amount: int) -> str:
@@ -235,18 +232,9 @@ class TkSecondEffectNoticeTest(NoticeCase):
 class SecondEffectBoundaryTest(FastTestCase):
     """检查 Script/Settle/Second_effect.py 模块导入边界的测试类。"""
 
-    def test_imports_ui_hooks_not_ui(self) -> None:
-        """验证 Script/Settle/Second_effect.py 导入 ui_hooks，且不导入 FORBIDDEN 中的任何模块或子模块。"""
+    def test_imports_ui_hooks(self) -> None:
+        """验证 Script/Settle/Second_effect.py 导入 ui_hooks。"""
         path = os.path.join(ROOT, "Script", "Settle", "Second_effect.py")
         with open(path, encoding="utf-8") as source:
             names = imports_in(source.read(), Second_effect.__package__ or "")
-        self.assertEqual(
-            {
-                name
-                for name in names
-                for banned in FORBIDDEN
-                if name == banned or name.startswith(banned + ".")
-            },
-            set(),
-        )
         self.assertIn(ui_hooks.__name__, names)

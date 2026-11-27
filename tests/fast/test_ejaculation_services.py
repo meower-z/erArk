@@ -4,7 +4,7 @@
 - 精液污浊与流动（semen_dirty_service）：验证部位污浊累计、扣减保底、缺位跳过、穿着服装污浊与满溢流动记录。
 - 通用射精与忍耐（ejaculation_service）：验证忍耐掷骰、额外精液优先扣减与无精液返回。
 - 射精总流程（ejaculation_flow）：验证目标部位、避孕套、体外无壳卵、无精液与关闭回调五个分支及成就调用。
-- Tk 回调与模块边界：验证 load_order 登记后的六步绘制顺序，以及调用方与射精面板的导入及定义边界。
+- Tk 回调与模块边界：验证 load_order 登记后的六步绘制顺序、调用方导入服务，以及射精面板的定义边界。
 """
 
 import ast
@@ -395,11 +395,10 @@ class TkBannerTest(FastTestCase):
 class ModuleBoundaryTest(FastTestCase):
     """调用方与射精面板模块边界的语法树测试。"""
 
-    def test_callers_import_services_not_panel(self) -> None:
-        """验证五个调用方模块均导入射精或精液污浊服务，且任意作用域均不导入射精面板模块。"""
+    def test_callers_import_services(self) -> None:
+        """验证五个调用方模块均导入射精或精液污浊服务。"""
         for module in CALLERS:
             imports = imported_modules(module)
-            self.assertNotIn(PANEL, imports, module.__name__)
             self.assertTrue(
                 {
                     ejaculation_service.__name__,

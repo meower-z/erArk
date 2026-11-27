@@ -63,7 +63,7 @@ class KernelStateWithoutTkUiTest(FastTestCase):
         拦截全部界面与 tk_ui 模块运行子进程，验证默认存档等于 core.state()、
         登记 on_settled 后按登记函数写出且未加载 orders
         """
-        child = run_ui_free(TK_UI_BLOCKED_SAVE, boot=True, allowed=frozenset())
+        child = run_ui_free(TK_UI_BLOCKED_SAVE, boot=True)
         self.assertEqual(child.attempted, [])
         self.assertEqual(child.loaded, [])
         self.assertEqual(

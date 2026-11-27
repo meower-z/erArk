@@ -68,9 +68,8 @@ ON_LINE = {
 BLOCKED_RUN = """
 import importlib.abc, json, sys
 BLOCKED = {roots!r}
-ALLOWED = ("Script.Modules.tk_ui", "Script.Modules.tk_ui.orders")
 def is_blocked(name):
-    return name not in ALLOWED and any(
+    return any(
         name == root or name.startswith(root + ".") for root in BLOCKED)
 class Blocker(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):

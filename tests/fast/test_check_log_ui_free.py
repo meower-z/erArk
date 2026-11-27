@@ -92,7 +92,6 @@ class StaticCheckSwitchTest(FastTestCase):
             CHILD_SWITCH,
             boot=True,
             blocked=frozenset({"Script.Test"}),
-            allowed=frozenset(),
         )
         cls.payload = cast(dict[str, Any], cls.child.payload)
 

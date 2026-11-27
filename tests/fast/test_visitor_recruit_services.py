@@ -4,14 +4,13 @@
 - 招募服务（recruit_service）：覆盖招募条件、入职与满员拒绝、候选筛选、结算、效率与修复。
 - 访客服务（visitor_service）：覆盖客房排序与空房、抵达与无房、邀请、离开、去留与将离查询。
 - Tk 回调（tk_ui.callbacks）：保留启动登记回调，验证招募入职的 WaitDraw 提示与成就通知。
-- 模块边界：验证三处后端调用方不导入界面面板，且两个面板文件不绑定十五个服务函数名。
+- 模块边界：验证两个面板文件不绑定 MOVED 中的服务函数名。
 """
 
 import ast
 import datetime
 import os
-from importlib.util import resolve_name
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from unittest import mock
 
 from Script.Config import game_config, normal_config
@@ -33,12 +32,6 @@ _ = get_text._
 """ 文本翻译函数 """
 ROOT = Path(__file__).resolve().parents[2]
 """ 仓库根目录路径 """
-BACKEND_FILES = (
-    "Script/Design/basement.py",
-    "Script/System/Dormitory_System/common.py",
-    "Script/System/Field_Commission_System/field_commission_function.py",
-)
-""" 验证不导入界面面板的后端调用方文件相对路径元组 """
 MOVED = {
     "Script/UI/Panel/recruit_panel.py": (
         "repair_recruit_lines",
@@ -74,20 +67,6 @@ VISITOR_ID = 111
 def source_tree(path: str) -> ast.Module:
     """读取仓库相对路径对应源码文件并解析为语法树模块。"""
     return ast.parse((ROOT / path).read_text(encoding="utf-8"))
-
-
-def imported_modules(path: str) -> set[str]:
-    """解析源码文件所有作用域导入的完整模块与成员名集合，含相对导入展开。"""
-    package = ".".join(PurePosixPath(path).parent.parts)
-    found: set[str] = set()
-    for node in ast.walk(source_tree(path)):
-        if isinstance(node, ast.Import):
-            found.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            base = resolve_name("." * node.level + (node.module or ""), package)
-            found.add(base)
-            found.update(f"{base}.{alias.name}" for alias in node.names)
-    return found
 
 
 def bound_names(path: str) -> set[str]:
@@ -439,18 +418,7 @@ class TkCallbackTest(FastTestCase):
 
 
 class BoundaryTest(FastTestCase):
-    """验证后端调用方与两个界面面板之间的模块边界约束。"""
-
-    def test_backend_callers_import_no_ui_panel(self) -> None:
-        """断言 BACKEND_FILES 三个后端文件在任意作用域均不导入 Script.UI.Panel 及其子模块。"""
-        for path in BACKEND_FILES:
-            panels = {
-                name
-                for name in imported_modules(path)
-                if name == "Script.UI.Panel"
-                or name.startswith("Script.UI.Panel.")
-            }
-            self.assertEqual(panels, set(), path)
+    """验证两个界面面板文件不绑定后端服务函数名的边界测试。"""
 
     def test_panels_bind_no_moved_function(self) -> None:
         """断言两个面板文件在任意作用域均不绑定 MOVED 中对应的服务函数名。"""

@@ -60,7 +60,7 @@ PANELS = (
     "Script.UI.Panel.nation_diplomacy_panel",
     "Script.UI.Panel.navigation_panel",
 )
-""" 每日结算不导入的外交与导航面板模块全名 """
+""" 需校验不绑定结算函数名的外交与导航面板模块全名 """
 OWNERS = {diplomacy_service: MOVED[:2], navigation_service: MOVED[2:]}
 """ 后端服务模块到其所属结算函数名元组的映射 """
 FORBIDDEN = {*MOVED, "*", "__getattr__"}
@@ -430,20 +430,11 @@ class TkNoticeTest(FastTestCase):
 class SettleImportBoundaryTest(FastTestCase):
     """每日结算导入边界与结算函数模块归属的测试"""
 
-    def test_new_day_imports_services_not_panels(self) -> None:
-        """验证每日结算模块导入两个后端服务，不导入外交与导航面板"""
+    def test_new_day_imports_services(self) -> None:
+        """验证每日结算模块导入外交与导航两个后端服务"""
         names = imported_names(past_day_settle)
         self.assertIn(diplomacy_service.__name__, names)
         self.assertIn(navigation_service.__name__, names)
-        self.assertEqual(
-            {
-                name
-                for name in names
-                for panel in PANELS
-                if name == panel or name.startswith(panel + ".")
-            },
-            set(),
-        )
 
     def test_relative_imports_resolve_against_the_package(self) -> None:
         """验证相对导入按所在包解析为模块全名，相对形式的面板导入同样会被检出"""

@@ -29,11 +29,8 @@ import contextlib, importlib.abc, io, json, sys
 BLOCKED = ("Script.UI", "Script.Settle",
     "Script.System.Instruct_System.handle_instruct", "Script.Core.flow_handle",
     "Script.Modules.tk_ui", "tkinter", "_tkinter", "PIL.ImageTk")
-ALLOWED = ("Script.Modules.tk_ui", "Script.Modules.tk_ui.orders")
 attempts = []
 def blocked(name):
-    if name in ALLOWED:
-        return False
     return any(name == root or name.startswith(root + ".") for root in BLOCKED)
 class Blocker(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):

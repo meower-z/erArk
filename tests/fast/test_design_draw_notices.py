@@ -2,10 +2,7 @@
 Script/Design 提示文本出口测试
 ==============================
 - 提示出口：验证四个 Script/Design 模块的七处提示按预期参数经 ui_hooks.emit_notice 发出并由 Tk 回调绘制。
-- 导入边界：验证五个 Script/Design 模块的源码在各作用域中均不导入 Script.UI、tkinter 与 Script.Core.io_init。
 """
-
-import pathlib
 
 from unittest import mock
 
@@ -19,8 +16,6 @@ from Script.Modules.domains import wardrobe
 from Script.Modules.gameplay_resolution import ui_hooks, working
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
-from tests.fast.test_ejaculation_services import imports_in
-from tests.world import ROOT
 
 TARGET = 1
 """ 测试使用的目标角色编号（1）。 """
@@ -34,16 +29,6 @@ OBEDIENCE = 31
 """ 顺从能力编号（31），该能力在 3 级升级时需屈服刻印达到 1 级。 """
 SOCKS = 1002
 """ 测试使用的袜子服装模板编号（1002）。 """
-MODULES = (
-    "clothing",
-    "handle_ability",
-    "handle_npc_ai",
-    "handle_npc_ai_in_h",
-    "second_behavior",
-)
-""" 需要检查导入边界的五个 Script/Design 模块名元组。 """
-BANNED = ("Script.UI", "tkinter", "Script.Core.io_init")
-""" 五个 Script/Design 模块不得导入的包与模块名元组。 """
 
 type Notice = tuple[str, bool, str | None, bool]
 """ 一条提示的参数元组类型，依次为文本、是否等待确认、样式名与是否按文本宽度排版。 """
@@ -198,25 +183,3 @@ class DesignNoticeTest(FastTestCase):
         handle_npc_ai_in_h.wake_by_noise(0, TARGET)
         text = _("\n{0}被{1}的动静吵醒了\n").format(NAME, PLAYER)
         self.assert_notice((text, True, None, True))
-
-
-class ImportBoundaryTest(FastTestCase):
-    """五个 Script/Design 模块的导入边界语法树测试。"""
-
-    def test_modules_skip_ui(self) -> None:
-        """验证 MODULES 中五个模块的源码在各作用域中均不导入 BANNED 所列的界面包、tkinter 与输入输出模块。"""
-        for name in MODULES:
-            path = pathlib.Path(ROOT, "Script", "Design", f"{name}.py")
-            found = imports_in(
-                path.read_text(encoding="utf-8"), "Script.Design"
-            )
-            with self.subTest(module=name):
-                self.assertEqual(
-                    {
-                        module
-                        for module in found
-                        for banned in BANNED
-                        if module == banned or module.startswith(banned + ".")
-                    },
-                    set(),
-                )

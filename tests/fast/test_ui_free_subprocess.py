@@ -132,10 +132,15 @@ class UiFreeSubprocessTest(FastTestCase):
 
     def test_tk_ui_orders_imports_but_its_siblings_stay_blocked(self) -> None:
         """
-        验证默认放行项 Script.Modules.tk_ui.orders 可正常导入且不记入 loaded。
+        验证经 allowed 显式放行的 Script.Modules.tk_ui.orders 可正常导入且不记入 loaded。
         同时验证同包未放行的 Script.Modules.tk_ui.callbacks 被拦截并记入 attempted。
         """
-        run = run_ui_free(TK_ORDERS_RUN)
+        run = run_ui_free(
+            TK_ORDERS_RUN,
+            allowed=frozenset(
+                {"Script.Modules.tk_ui", "Script.Modules.tk_ui.orders"}
+            ),
+        )
         self.assertEqual(
             run.payload,
             {

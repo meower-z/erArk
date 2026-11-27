@@ -59,11 +59,8 @@ import importlib.abc, sys
 BLOCKED = ("Script.UI", "Script.Settle", "Script.Design.handle_chat_ai",
     "Script.Core.flow_handle", "Script.Core.io_init", "Script.Frontend",
     "Script.Modules.tk_ui", "tkinter", "_tkinter", "PIL")
-ALLOWED = frozenset({"Script.Modules.tk_ui", "Script.Modules.tk_ui.orders"})
 attempted = []
 def is_blocked(name):
-    if name in ALLOWED:
-        return False
     return any(name == root or name.startswith(root + ".") for root in BLOCKED)
 class Blocker(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):

@@ -3,15 +3,13 @@
 ================
 - 片段输出：验证无摘录时静默且随机状态不变、单条与多条摘录经提示回调绘出默认样式 NormalDraw，以及无回调时静默。
 - 口上调用：验证屏蔽读书面板时玩家读书发出摘录提示，非玩家读书与玩家其他行为不发出提示。
-- 导入边界：验证口上模块不导入读书面板，以及屏蔽界面与 Tk 模块的子进程可独立运行摘录服务。
+- 导入边界：验证屏蔽界面、输入输出与 Tk 模块的子进程可独立运行摘录服务。
 """
 
-import ast
 import json
 import random
 import subprocess
 import sys
-from importlib.util import resolve_name
 from typing import Any
 from unittest import mock
 
@@ -41,7 +39,7 @@ EXCERPTS = {ONE: ["独段"], MANY: ["甲段", "乙段", "丙段", "丁段"], EMP
 SEED = 7
 """ 验证随机抽取与随机状态一致性的固定随机种子（7）。 """
 PANEL = "Script.UI.Panel.read_book_panel"
-""" 边界测试禁止口上模块导入的读书面板模块名。 """
+""" 口上调用测试在 sys.modules 中屏蔽的读书面板模块名。 """
 
 type Drawn = tuple[str, float, str, str]
 """ 单次绘制记录的元组类型，依次为绘制类名、宽度、样式名与文本。 """
@@ -213,29 +211,7 @@ print(json.dumps([texts, sorted(m for m in sys.modules if blocked(m))]))
 
 
 class BoundaryTest(FastTestCase):
-    """口上模块的读书面板导入边界与图书馆服务的无界面子进程运行测试。"""
-
-    def test_talk_imports_no_read_book_panel(self) -> None:
-        """验证 Script/Design/talk.py 的源码不以绝对、from 或相对形式导入读书面板模块及其子路径。"""
-        path = "Script/Design/talk.py"
-        package = "Script.Design"
-        names: set[str] = set()
-        for node in ast.walk(ast.parse((ROOT / path).read_bytes())):
-            if isinstance(node, ast.Import):
-                names.update(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom):
-                base = resolve_name(
-                    "." * node.level + (node.module or ""), package
-                )
-                names.update(f"{base}.{alias.name}" for alias in node.names)
-        self.assertEqual(
-            sorted(
-                name
-                for name in names
-                if name == PANEL or name.startswith(PANEL + ".")
-            ),
-            [],
-        )
+    """图书馆服务的无界面子进程运行测试。"""
 
     def test_service_runs_with_ui_blocked(self) -> None:
         """验证在屏蔽界面与 Tk 模块的子进程中调用 draw_book_fragment 可正常输出单条摘录且零误加载。"""

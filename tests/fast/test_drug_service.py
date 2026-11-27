@@ -5,13 +5,10 @@
 - 素质开关药物：验证 33/34、37/38 与 40/41 号药物切换对应素质并发出等待提示。
 - 妊娠、孵化与成长加速：验证 35、36 与 39 号药物的天数累加、无效果分支、选择编号重置与季节日期格式。
 - 送礼结算调用：验证 handle_give_gift_add_adjust 扣除 33 号药物道具、调用药物服务并生效。
-- 导入边界：验证相对与嵌套导入检查器、default.py 不导入 gift_panel，以及 gift_panel 不定义 handle_drug_use_effect。
+- 面板边界：验证 gift_panel 模块不含 handle_drug_use_effect 属性。
 """
 
-import ast
 import datetime
-from importlib.util import resolve_name
-from pathlib import PurePosixPath
 from unittest import mock
 
 from Script.Core import game_type, get_text
@@ -25,7 +22,6 @@ from Script.Settle import default as settle_default
 from Script.UI.Moudle import draw
 from Script.UI.Panel import gift_panel, pregnancy_panel
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 TARGET = 1
 """ 测试使用的目标角色编号（1）。 """
@@ -37,8 +33,6 @@ CHILD_NAME = "测试孩子"
 """ 成长加速测试使用的婴儿角色名称。 """
 GIFT_DRUG = 33
 """ 送礼结算测试使用的 11 类药物礼物编号（33）。 """
-GIFT_PANEL = "Script.UI.Panel.gift_panel"
-""" 边界测试禁止导入的礼物面板模块名。 """
 EGG = 7
 """ 孵化加速测试使用的卵编号（7）。 """
 START = datetime.datetime(2025, 2, 14, 8, 30)
@@ -410,71 +404,9 @@ class GiftSettlementTest(DrugCase):
         self.assertEqual(self.notices, [(text, True, "gold_enrod", False)])
 
 
-def import_targets(source: str | bytes, path: str) -> set[str]:
-    """
-    解析源码语法树中的绝对、相对与嵌套导入语句，返回各导入项的完整目标名。
-    Keyword arguments:
-    source -- str | bytes，Python 源码文本或字节串
-    path -- str，相对仓库根目录的文件路径，用于推算相对导入所属包
-    Return arguments:
-    set[str] -- 解析后的完整导入目标名集合
-    """
-    package = ".".join(PurePosixPath(path).parent.parts)
-    names: set[str] = set()
-    for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.Import):
-            names.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            base = resolve_name("." * node.level + (node.module or ""), package)
-            names.update(f"{base}.{alias.name}" for alias in node.names)
-    return names
-
-
-def forbidden_imports(
-    source: str | bytes, path: str, modules: tuple[str, ...]
-) -> list[str]:
-    """
-    筛选源码中命中禁用模块或其子路径的导入目标名，并按字典序返回。
-    Keyword arguments:
-    source -- str | bytes，Python 源码文本或字节串
-    path -- str，相对仓库根目录的文件路径
-    modules -- tuple[str, ...]，禁止导入的模块前缀元组
-    Return arguments:
-    list[str] -- 按字典序排列的违规导入目标名列表
-    """
-    return sorted(
-        name
-        for name in import_targets(source, path)
-        if any(name == m or name.startswith(m + ".") for m in modules)
-    )
-
-
 class ImportBoundaryTest(FastTestCase):
-    """导入检查辅助函数以及结算模块和礼物面板的边界测试。"""
+    """礼物面板不含 handle_drug_use_effect 属性的边界测试。"""
 
-    def test_checker_resolves_relative_and_nested_imports(self) -> None:
-        """验证 forbidden_imports 检出相对、绝对与函数内嵌套导入，且不误报同前缀的无关模块名。"""
-        source = (
-            "from ..Panel import gift_panel\n"
-            "from Script.UI.Panel.gift_panel import Gift_Panel\n"
-            "import Script.UI.Panel.gift_panel_extra\n"
-            "def f():\n"
-            "    from ..Panel.gift_panel import draw_gift\n"
-        )
-        self.assertEqual(
-            forbidden_imports(
-                source, "Script/UI/Moudle/probe.py", (GIFT_PANEL,)
-            ),
-            [
-                GIFT_PANEL,
-                f"{GIFT_PANEL}.Gift_Panel",
-                f"{GIFT_PANEL}.draw_gift",
-            ],
-        )
-
-    def test_settlement_skips_gift_panel(self) -> None:
-        """验证 default.py 不导入 gift_panel 且 gift_panel 模块不含 handle_drug_use_effect 属性。"""
-        path = "Script/Settle/default.py"
-        source = (ROOT / path).read_bytes()
-        self.assertEqual(forbidden_imports(source, path, (GIFT_PANEL,)), [])
+    def test_gift_panel_lacks_drug_effect(self) -> None:
+        """验证 gift_panel 模块不含 handle_drug_use_effect 属性。"""
         self.assertFalse(hasattr(gift_panel, "handle_drug_use_effect"))

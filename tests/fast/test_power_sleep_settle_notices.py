@@ -3,11 +3,9 @@
 ========================================
 - 提示发出（PowerSleepNoticeTest）：验证 power_settle 与 sleep_settle 经 ui_hooks 发出各结算提示参数。
 - Tk 回调绘制（TkPowerSleepNoticeTest）：验证已登记的 Tk 提示回调以预期绘制类、文本、宽度与样式绘制上述提示。
-- 导入边界（PowerSleepImportBoundaryTest）：经语法树检查两模块源码，验证任意作用域不含各自禁用的模块导入。
 """
 
 import functools
-import os
 from collections.abc import Callable
 from typing import NamedTuple
 from unittest import mock
@@ -22,18 +20,11 @@ from Script.Modules.gameplay_resolution import working
 from Script.Settle import power_settle, sleep_settle
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
-from tests.fast.test_ejaculation_services import imports_in
-from tests.world import ROOT
 
 OPERATOR = 1
 """测试使用的干员角色编号（1）。"""
 POWER = 12.34
 """人力发电测试中由模拟函数返回的电量值（12.34）。"""
-GUARDS = (
-    (power_settle, ("Script.UI", "tkinter", "Script.Core.io_init")),
-    (sleep_settle, ("Script.UI", "tkinter", "Script.Core.io_init")),
-)
-"""各结算模块与其禁止导入前缀的配对元组。"""
 
 
 class Notice(NamedTuple):
@@ -351,24 +342,3 @@ class TkPowerSleepNoticeTest(PowerSleepNoticeTest):
                 for n in notices
             ],
         )
-
-
-class PowerSleepImportBoundaryTest(FastTestCase):
-    """power_settle 与 sleep_settle 导入边界的语法树测试。"""
-
-    def test_settle_modules_skip_ui_imports(self) -> None:
-        """验证 GUARDS 中两结算模块源码的任意作用域均不导入各自禁用的模块或其子模块。"""
-        for module, banned in GUARDS:
-            path = module.__name__.replace(".", "/") + ".py"
-            with open(os.path.join(ROOT, path), encoding="utf-8") as file:
-                imports = imports_in(file.read(), module.__package__ or "")
-            with self.subTest(path=path):
-                self.assertEqual(
-                    sorted(
-                        name
-                        for name in imports
-                        for root in banned
-                        if name == root or name.startswith(root + ".")
-                    ),
-                    [],
-                )

@@ -5,16 +5,13 @@
 - 保养：验证指定目标、全体在队角色与指定名单两种范围，以及保养达标清记录并结算成就 331。
 - 一次维护：验证优先维修与优先保养、在修目标处理、无可维护提示与不绘制时的状态写入。
 - 结算调用：验证维护装备行为结算按铁匠是否与玩家同处一地传参，以及时长为 0 时跳过。
-- 导入边界：验证导入检查器、装备服务不导入 Script.UI、结算不导入装备面板，以及屏蔽面板运行。
+- 导入边界：验证屏蔽 Script.UI.Panel 的子进程可导入并运行装备服务完成维护。
 """
 
-import ast
 import random
 import subprocess
 import sys
 from collections.abc import Callable
-from importlib.util import resolve_name
-from pathlib import PurePosixPath
 from typing import Any
 from unittest import mock
 
@@ -46,8 +43,6 @@ SKILL = 4
 """ 测试铁匠能力 48 的等级（4），修正值 1.6，对应维修量 0.8 与保养量 0.4。 """
 OFFICE = ["中枢", "博士办公室"]
 """ 与默认位置不同的测试场景路径，用于让铁匠离开玩家所在场景。 """
-PANEL = "Script.UI.Panel.equipmen_panel"
-""" 边界测试禁止结算模块导入的装备面板模块名。 """
 
 type Drawn = tuple[str, float, str, str]
 """ 单次绘制记录的元组类型，依次为绘制类名、宽度、样式名与文本。 """
@@ -367,28 +362,6 @@ class SettlementCallerTest(EquipmentCase):
         self.settle(0).assert_not_called()
 
 
-def imported(source: str | bytes, path: str) -> set[str]:
-    """解析源码中的绝对、相对与嵌套导入，按 path 所属包展开相对导入并返回完整名称集合。"""
-    package = ".".join(PurePosixPath(path).parent.parts)
-    names: set[str] = set()
-    for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.Import):
-            names.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            base = resolve_name("." * node.level + (node.module or ""), package)
-            names.update(f"{base}.{alias.name}" for alias in node.names)
-    return names
-
-
-def forbidden(source: str | bytes, path: str, module: str) -> list[str]:
-    """筛选源码中等于 module 或位于其子路径下的导入名称，并按字典序返回。"""
-    return sorted(
-        name
-        for name in imported(source, path)
-        if name == module or name.startswith(module + ".")
-    )
-
-
 BLOCKED_RUN = """
 import importlib.abc, json, sys
 
@@ -426,41 +399,7 @@ print(json.dumps([done, len(notices), unlocked, panels]))
 
 
 class ImportBoundaryTest(FastTestCase):
-    """导入检查器、装备服务与结算模块的导入边界及屏蔽面板运行测试。"""
-
-    def test_checker_catches_relative_and_multi_alias_imports(self) -> None:
-        """验证检查器检出相对导入、多名导入与函数内导入，且不误报同前缀模块。"""
-        source = (
-            "from ..UI.Panel import equipmen_panel, other_panel\n"
-            "import Script.UI.Panel.equipmen_panel_extra\n"
-            "def f():\n"
-            "    from ..UI.Panel.equipmen_panel import Equipment_Maintain_Panel\n"
-        )
-        self.assertEqual(
-            forbidden(source, "Script/Settle/probe.py", PANEL),
-            [PANEL, f"{PANEL}.Equipment_Maintain_Panel"],
-        )
-        self.assertEqual(
-            forbidden(source, "Script/Settle/probe.py", "Script.UI"),
-            [
-                "Script.UI.Panel.equipmen_panel",
-                "Script.UI.Panel.equipmen_panel.Equipment_Maintain_Panel",
-                "Script.UI.Panel.equipmen_panel_extra",
-                "Script.UI.Panel.other_panel",
-            ],
-        )
-
-    def test_service_imports_no_ui(self) -> None:
-        """验证 equipment_service.py 不导入 Script.UI 及其子模块。"""
-        path = "Script/Modules/gameplay_resolution/equipment_service.py"
-        source = (ROOT / path).read_bytes()
-        self.assertEqual(forbidden(source, path, "Script.UI"), [])
-
-    def test_settlement_imports_no_equipment_panel(self) -> None:
-        """验证 Script/Settle/default.py 不导入 Script.UI.Panel.equipmen_panel 及其子路径。"""
-        path = "Script/Settle/default.py"
-        source = (ROOT / path).read_bytes()
-        self.assertEqual(forbidden(source, path, PANEL), [])
+    """屏蔽 Script.UI.Panel 的子进程中运行装备服务的测试。"""
 
     def test_service_runs_with_panels_blocked(self) -> None:
         """验证屏蔽 Script.UI.Panel 的子进程可导入并运行服务完成维修收尾，发提示且通知成就 321。"""

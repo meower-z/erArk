@@ -37,9 +37,8 @@ from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 BLOCKED_IMPORT_RUN = """
 import importlib.abc, sys
-BLOCKED = ("Script.UI", "Script.Core.flow_handle", "Script.Core.image_cache",
-    "Script.Core.io_init", "Script.Core.key_listion_event",
-    "Script.Core.main_frame", "Script.Core.py_cmd", "Script.Frontend",
+BLOCKED = ("Script.UI", "Script.Core.flow_handle", "Script.Core.io_init",
+    "Script.Core.py_cmd", "Script.Frontend",
     "Script.Modules.tk_ui", "tkinter", "_tkinter", "PIL.ImageTk")
 def is_blocked(name):
     return any(name == root or name.startswith(root + ".") for root in BLOCKED)

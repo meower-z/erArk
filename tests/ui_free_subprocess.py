@@ -33,8 +33,6 @@ BLOCKED = frozenset(
     }
 )
 """默认拦截的 10 个模块根名集合，由 UiImportBlocker 用于拦截各根模块及其子模块。"""
-ALLOWED = frozenset({"Script.Modules.tk_ui", "Script.Modules.tk_ui.orders"})
-"""默认按精确全名放行的模块集合，仅包含 Script.Modules.tk_ui 与 Script.Modules.tk_ui.orders。"""
 
 
 @dataclass(frozen=True)
@@ -98,7 +96,7 @@ def run_ui_free(
     *,
     boot: bool = False,
     blocked: frozenset[str] = BLOCKED,
-    allowed: frozenset[str] = ALLOWED,
+    allowed: frozenset[str] = frozenset(),
     timeout: float = 300,
 ) -> ChildRun:
     """
@@ -108,7 +106,7 @@ def run_ui_free(
     snippet -- str，在子进程中执行的 Python 代码片段，可通过全局字典 payload 回传结果
     boot -- bool，是否在安装拦截器后调用 boot_backend 初始化配置与空内核状态，默认 False
     blocked -- frozenset[str]，受拦截的模块根名集合，默认 BLOCKED
-    allowed -- frozenset[str]，按精确全名放行的模块集合，默认 ALLOWED
+    allowed -- frozenset[str]，按精确全名放行的模块集合，默认 frozenset()
     timeout -- float，子进程超时秒数，默认 300
     Return arguments:
     ChildRun -- 包含 payload、attempted 与 loaded 的子进程运行结果

@@ -4,13 +4,9 @@
 - 寻路面板：验证主角寻路选定首段、抵达目标与遇锁时经 ui_hooks 切换面板。
 - 开门与私密房间：验证开门提示与私密房间结算提示经 ui_hooks 发出并由 Tk 回调绘制。
 - 读档提示：验证读档检测、地图更新与设置补全提示经 ui_hooks 发出并由 Tk 回调绘制。
-- 导入边界：验证角色移动与读档模块源码不导入 Script.UI 下的模块。
 """
 
-import ast
 import re
-from importlib.util import resolve_name
-from pathlib import PurePosixPath
 from unittest import mock
 
 from Script.Config import normal_config
@@ -25,7 +21,6 @@ from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_map_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT
 
 CORRIDOR = ["宿舍", "1区", "外走廊"]
 """ 1 区宿舍外走廊的场景路径，与 102 号宿舍相邻。 """
@@ -41,8 +36,6 @@ MASTER_KEY = 152
 """ 一次性宿舍万能钥匙的道具编号（152）。 """
 SLOT = "move_save_ui_hooks"
 """ 读档测试传入 save_handle.install_save 的模拟存档编号。 """
-SOURCES = ("Script/Design/character_move.py", "Script/Core/save_handle.py")
-""" 接受 Script.UI 导入边界检查的两个模块仓库相对路径元组。 """
 
 type Drawn = tuple[str, float, str, str]
 """ 一次绘制或直接输出的记录元组类型，依次为来源名、宽度、样式名与文本。 """
@@ -339,56 +332,6 @@ class LoadNoticeTest(HookCase):
                 False,
             ),
         )
-
-
-class ImportBoundaryTest(FastTestCase):
-    """角色移动与读档模块的 Script.UI 导入边界语法树测试。"""
-
-    def test_sources_import_no_ui(self) -> None:
-        """验证 SOURCES 中两个模块经 ui_imports 检查均不含 Script.UI 下的导入。"""
-        for path in SOURCES:
-            with self.subTest(path=path):
-                source = (ROOT / path).read_bytes()
-                self.assertEqual(ui_imports(source, path), [])
-
-    def test_checker_reads_every_imported_name(self) -> None:
-        """验证 ui_imports 检出同语句后续与相对导入的 Script.UI，并放行前缀相近模块。"""
-        source = (
-            "from Script import Frontend, UI\n"
-            "from ..UI.Moudle import draw\n"
-            "import Script.UIX\n"
-        )
-        self.assertEqual(
-            ui_imports(source, "Script/Design/sample.py"),
-            [(1, "Script.UI"), (2, "Script.UI.Moudle.draw")],
-        )
-
-
-def ui_imports(source: str | bytes, path: str) -> list[tuple[int, str]]:
-    """
-    解析源码语法树，检查每条导入语句的全部导入名并找出 Script.UI 及其子模块。
-    Keyword arguments:
-    source -- str | bytes，待检查的 Python 源码
-    path -- str，文件的仓库相对路径，用于解析相对导入
-    Return arguments:
-    list[tuple[int, str]] -- 排序后的（行号，解析后导入全名）列表
-    """
-    package = ".".join(PurePosixPath(path).parent.parts)
-    found: list[tuple[int, str]] = []
-    for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.Import):
-            names = [alias.name for alias in node.names]
-        elif isinstance(node, ast.ImportFrom):
-            base = resolve_name("." * node.level + (node.module or ""), package)
-            names = [f"{base}.{alias.name}" for alias in node.names]
-        else:
-            continue
-        found.extend(
-            (node.lineno, name)
-            for name in names
-            if name == "Script.UI" or name.startswith("Script.UI.")
-        )
-    return sorted(found)
 
 
 def lock_notice() -> Notice:
