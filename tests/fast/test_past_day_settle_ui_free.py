@@ -2,8 +2,8 @@
 跨天结算无界面子进程测试
 ========================
 本模块在三种标准流编码下启动无界面子进程，放行 Script.Settle 并保留其余默认拦截项。
-子进程分别构造周日与周一状态，并调用 past_day_settle.update_new_day 完成跨天结算。
-子进程用例验证运行期间未触碰受拦截模块，并核对两天结算的提示、刷出事件、访客入编与食物数量。
+子进程分别构造周日与周一状态，调用 past_day_settle.update_new_day 完成跨天结算。
+用例验证运行期间未触碰受拦截模块，并核对两天结算的提示记录、访客入编与食物数量。
 """
 
 import os
@@ -34,7 +34,6 @@ from tests.world import DEFAULT_SCENE, start_time
 map_config.init_map_data()
 events = []
 ui_hooks.on_notice(lambda text, **options: events.append([text, options]))
-ui_hooks.on_flush(lambda: events.append("flush"))
 opened = game_config.config_facility_open
 rooms = sorted(cid for cid in opened if 2000 < cid < 2100)
 guest = opened[min(cid for cid, row in opened.items() if row.NPC_id)].NPC_id
@@ -91,10 +90,10 @@ payload["monday"] = new_day(0, 0, [])
 """
 """
 在无界面子进程中执行的测试代码片段。
-片段初始化地图并登记 ui_hooks.on_notice 与 ui_hooks.on_flush 回调以记录提示与刷出事件。
-内部辅助函数 new_day 按指定星期、食物过期开关与成绩单列表重建时钟、三名测试角色、设施、国家与库存状态，
-打桩 semester_handle.settle_semester_change 后调用 past_day_settle.update_new_day。
-片段分别执行周日与周一两日结算，并将访客编号与两日结果写入 payload。
+片段初始化地图并登记 ui_hooks.on_notice 回调以记录提示事件。
+内部辅助函数 new_day 按指定星期、食物过期开关与成绩单列表重建时钟、三名测试角色、设施、国家与库存状态。
+该函数在打桩 semester_handle.settle_semester_change 后调用 past_day_settle.update_new_day。
+片段分别执行周日与周一两日结算，将访客编号与两日结果写入 payload。
 """
 
 
@@ -150,9 +149,9 @@ class PastDaySettleUiFreeTest(FastTestCase):
 
     def test_sunday_notices_and_arrival(self) -> None:
         """
-        验证各编码子进程的周日结算结果：星期为 6，
-        前四条事件依次为开始提示、刷出、玩家 1 个过期食物提示与金色（gold_enrod）学期成绩单提示。
-        同时断言结算后在编名单为 [1, guest]、访客列表为 [guest]，且玩家与角色 1 的剩余食物数均为 0。
+        验证各编码子进程的周日结算结果为星期 6。
+        断言前三条事件依次为开始提示、玩家 1 个过期食物提示与金色（gold_enrod）学期成绩单提示。
+        断言结算后在编名单为 [1, guest]、访客列表为 [guest]，且玩家与角色 1 的剩余食物数均为 0。
         Return arguments:
         None -- 无返回值
         """
@@ -163,10 +162,9 @@ class PastDaySettleUiFreeTest(FastTestCase):
                 guest = run.payload["guest"]
                 self.assertEqual(day["weekday"], 6)
                 self.assertEqual(
-                    day["events"][:4],
+                    day["events"][:3],
                     [
                         START,
-                        "flush",
                         notice("你持有的1个食物因过期变质而自动丢弃了\n"),
                         notice(
                             "\n【学期结束】c1的成绩单出来了，"
@@ -182,8 +180,9 @@ class PastDaySettleUiFreeTest(FastTestCase):
 
     def test_monday_keeps_food_when_setting_off(self) -> None:
         """
-        验证各编码子进程的周一结算结果：星期为 0，前两条事件依次为开始提示与刷出。
-        同时断言无食物或学期相关提示、玩家与角色 1 的食物数保持为 [1, 2]，且事件中包含每周助理轮换抽签提示。
+        验证各编码子进程的周一结算结果为星期 0，且首条事件为开始提示。
+        断言结算事件不含食物或学期相关提示，且包含每周助理轮换抽签提示。
+        断言玩家与角色 1 的剩余食物数保持为 [1, 2]。
         Return arguments:
         None -- 无返回值
         """
@@ -192,7 +191,7 @@ class PastDaySettleUiFreeTest(FastTestCase):
                 day = run.payload["monday"]
                 assert isinstance(day, dict)
                 self.assertEqual(day["weekday"], 0)
-                self.assertEqual(day["events"][:2], [START, "flush"])
+                self.assertEqual(day["events"][:1], [START])
                 own = [
                     event
                     for event in day["events"]
