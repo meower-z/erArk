@@ -3,17 +3,16 @@
 指令界面钩子测试
 ================
 InstructHooksUiFreeTest 在无界面子进程中验证 instruct_hooks 的默认行为、槽位登记与界面模块隔离。
-InstructCallbacksTest 在本进程中验证 instruct_hooks 经 instruct_callbacks 读写 view 并调用 flow_handle。
+InstructCallbacksTest 验证 stash_filter 与 stashed_filter 经 instruct_callbacks 读写 view.instruct_type_filter_cache。
 HandleInstructHooksTest 验证 handle_instruct 经 ui_hooks 切换面板与发出提示，并经 instruct_hooks 调用界面回调。
 """
 
 from unittest import mock
 
 from Script.Config import normal_config
-from Script.Core import constant, flow_handle, get_text
+from Script.Core import constant, get_text
 from Script.Modules.domains import identity
 from Script.Modules.gameplay_resolution import instruct_hooks, intent, ui_hooks
-from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import view
 from tests.fast.base import FastTestCase
@@ -28,19 +27,13 @@ payload["error"] = None
 try:
     from Script.Modules.gameplay_resolution import instruct_hooks
 
-    instruct_hooks.show_non_h(True)
-    instruct_hooks.skip_pauses(True)
     instruct_hooks.stash_filter({6: True})
     payload["plain"] = sorted(instruct_hooks.stashed_filter().items())
     calls = []
     instruct_hooks.on_instruct(
-        lambda shown: calls.append(["show_non_h", shown]),
-        lambda enabled: calls.append(["skip_pauses", enabled]),
         lambda filters: calls.append(["stash", sorted(filters.items())]),
         lambda: {1: False},
     )
-    instruct_hooks.show_non_h(True)
-    instruct_hooks.skip_pauses(False)
     instruct_hooks.stash_filter({6: True})
     payload["stashed"] = sorted(instruct_hooks.stashed_filter().items())
     payload["calls"] = calls
@@ -63,7 +56,7 @@ class InstructHooksUiFreeTest(FastTestCase):
 
     def test_defaults_without_ui(self) -> None:
         """
-        验证无界面子进程未记录导入错误，且未登记时三个写入入口调用正常。
+        验证无界面子进程未记录导入错误，且未登记时 stash_filter 调用正常。
         同时断言未登记时 stashed_filter 的键值对列表为空。
         """
         self.assertIsNone(self.child.payload["error"])
@@ -71,18 +64,11 @@ class InstructHooksUiFreeTest(FastTestCase):
 
     def test_registered_handlers_get_calls(self) -> None:
         """
-        验证经 on_instruct 登记后，三个写入入口按顺序把参数传给登记函数。
+        验证经 on_instruct 登记后，stash_filter 将参数传给登记函数。
         同时断言 stashed_filter 返回登记函数提供的映射。
         """
         payload = self.child.payload
-        self.assertEqual(
-            payload["calls"],
-            [
-                ["show_non_h", True],
-                ["skip_pauses", False],
-                ["stash", [[6, True]]],
-            ],
-        )
+        self.assertEqual(payload["calls"], [["stash", [[6, True]]]])
         self.assertEqual(payload["stashed"], [[1, False]])
 
     def test_hooks_touch_no_ui_module(self) -> None:
@@ -92,29 +78,16 @@ class InstructHooksUiFreeTest(FastTestCase):
 
 
 class InstructCallbacksTest(FastTestCase):
-    """本进程载入 load_order 后，instruct_hooks 经 instruct_callbacks 读写 view 并调用 flow_handle 的测试。"""
+    """本进程中 stash_filter 与 stashed_filter 经 instruct_callbacks 读写 view.instruct_type_filter_cache 的测试。"""
 
     def setUp(self) -> None:
         """
-        调用父类准备，并用 mock.patch.object 临时替换 view.show_non_h_in_hidden_sex 与 view.instruct_type_filter_cache。
+        调用父类准备，并用 mock.patch.object 临时替换 view.instruct_type_filter_cache。
         """
         super().setUp()
         self.enterContext(
-            mock.patch.object(view, "show_non_h_in_hidden_sex", False)
-        )
-        self.enterContext(
             mock.patch.object(view, "instruct_type_filter_cache", {})
         )
-
-    def test_show_non_h_reaches_view(self) -> None:
-        """
-        验证先后以 True、False 调用 instruct_hooks.show_non_h 后，view.show_non_h_in_hidden_sex 同步更新。
-        同时断言 ui_hooks.hidden_sex_show_non_h() 返回相同布尔值。
-        """
-        for shown in (True, False):
-            instruct_hooks.show_non_h(shown)
-            self.assertIs(view.show_non_h_in_hidden_sex, shown)
-            self.assertIs(ui_hooks.hidden_sex_show_non_h(), shown)
 
     def test_filter_stash_reaches_view(self) -> None:
         """
@@ -125,14 +98,6 @@ class InstructCallbacksTest(FastTestCase):
         instruct_hooks.stash_filter(filters)
         self.assertIs(view.instruct_type_filter_cache, filters)
         self.assertIs(instruct_hooks.stashed_filter(), filters)
-
-    def test_skip_pauses_reaches_flow_handle(self) -> None:
-        """验证替换 flow_handle.set_skip_pauses 后，skip_pauses 在调用时命中替换对象并原样传入参数。"""
-        skip = self.enterContext(
-            mock.patch.object(flow_handle, "set_skip_pauses")
-        )
-        instruct_hooks.skip_pauses(True)
-        skip.assert_called_once_with(True)
 
 
 class HandleInstructHooksTest(FastTestCase):
@@ -244,31 +209,6 @@ class HandleInstructHooksTest(FastTestCase):
                     chosen["target"] = target
                 handle_instruct.start_instruct(0, chosen)
                 self.assertEqual(self.notices, [notice])
-
-    def test_hidden_sex_interface_toggles(self) -> None:
-        """
-        依次执行 SWITCH_TO_NON_H_INTERFACE 与 SWITCH_TO_H_INTERFACE 两条指令。
-        验证 ui_hooks.hidden_sex_show_non_h() 随之依次返回 True 与 False。
-        """
-        for instruct, shown in (
-            (constant.Instruct.SWITCH_TO_NON_H_INTERFACE, True),
-            (constant.Instruct.SWITCH_TO_H_INTERFACE, False),
-        ):
-            handle_instruct.handle_instruct(instruct)
-            self.assertIs(ui_hooks.hidden_sex_show_non_h(), shown)
-
-    def test_long_wait_skips_pauses(self) -> None:
-        """
-        验证执行 WAIT_1_HOUR 指令会以 True 调用 flow_handle.set_skip_pauses 一次。
-        同时断言该指令抛出携带 60 分钟行动的 player_pick.Chosen。
-        """
-        skip = self.enterContext(
-            mock.patch.object(flow_handle, "set_skip_pauses")
-        )
-        with self.assertRaises(player_pick.Chosen) as chosen:
-            handle_instruct.handle_instruct(constant.Instruct.WAIT_1_HOUR)
-        skip.assert_called_once_with(True)
-        self.assertEqual(chosen.exception.action.duration, 60)
 
     def test_h_filter_stash_and_restore(self) -> None:
         """

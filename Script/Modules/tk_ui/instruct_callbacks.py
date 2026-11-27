@@ -1,9 +1,8 @@
 """
 tk_ui 的指令界面回调
 ====================
-导入时以on_instruct、on_prompts、on_sex_position登记11槽位。
-show_non_h 写 view.show_non_h_in_hidden_sex。stash_filter 与 stashed_filter 读写 view.instruct_type_filter_cache。
-skip_pauses 调用时查找 flow_handle.set_skip_pauses。
+导入时经 on_instruct、on_prompts 与 on_sex_position 登记 9 个槽位。
+stash_filter 写入 view.instruct_type_filter_cache。stashed_filter 读取 view.instruct_type_filter_cache。
 ask_sex_class_ability 与 confirm_poor_music 用 draw 画提示与按钮，经 flow_handle.askfor_all 读回答。
 ask_close_door、select_condom、choose_sex_position调用时分别导入normal_panel、condom_panel、sex_position_panel。
 ask_official_option 与 show_official_result 调用时导入 official_event_panel。
@@ -22,28 +21,6 @@ _: FunctionType = get_text._
 """ 翻译api """
 width: int = normal_config.config_normal.text_width
 """ 屏幕宽度 """
-
-
-def show_non_h(shown: bool) -> None:
-    """
-    将 view.show_non_h_in_hidden_sex 设为 shown。
-    Keyword arguments:
-    shown -- bool，隐奸中显示非H指令开关的新值
-    Return arguments:
-    None -- 无返回值
-    """
-    view.show_non_h_in_hidden_sex = shown
-
-
-def skip_pauses(enabled: bool) -> None:
-    """
-    在调用时查找 flow_handle.set_skip_pauses 并以 enabled 调用它。
-    Keyword arguments:
-    enabled -- bool，为真时开启跳过暂停模式
-    Return arguments:
-    None -- 无返回值
-    """
-    flow_handle.set_skip_pauses(enabled)
 
 
 def stash_filter(filters: dict[int, bool]) -> None:
@@ -201,9 +178,7 @@ def choose_sex_position(sex_type: int, change_position: bool) -> None:
     ).draw()
 
 
-instruct_hooks.on_instruct(
-    show_non_h, skip_pauses, stash_filter, stashed_filter
-)
+instruct_hooks.on_instruct(stash_filter, stashed_filter)
 instruct_hooks.on_prompts(
     ask_close_door,
     ask_sex_class_ability,
