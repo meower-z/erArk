@@ -15,10 +15,10 @@ from Script.Config import game_config
 from Script.Core import constant, game_type
 from Script.Modules.domains import kitchen
 from Script.Modules.tk_ui import player_pick
-from Script.System.Cooking_System import food_bag_panel
 from Script.UI.Panel import (
     check_locker_panel,
     cloth_panel,
+    food_bag_panel,
     food_shop_panel,
     normal_panel,
     read_book_panel,
