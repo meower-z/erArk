@@ -227,7 +227,7 @@ class Manage_Basement_Panel:
             resource_exchange_panel,
         )
         from Script.UI.Panel import class_schedule_panel
-        from Script.System.Pregnancy_System import pregnancy_panel
+        from Script.UI.Panel import pregnancy_panel
 
         panels = {
             _("[基建系统]"): building_panel.Building_Panel,
