@@ -257,6 +257,91 @@ def add_instruct(
     return decorator
 
 
+def _open_panel(panel_id: int) -> Callable[[], None]:
+    """返回一个无参指令处理函数，调用时经 ui_hooks.switch_panel 切换至面板 panel_id"""
+
+    def handler() -> None:
+        """切换至面板 panel_id"""
+        ui_hooks.switch_panel(panel_id)
+
+    return handler
+
+
+PANEL_INSTRUCTS: dict[str, int] = {
+    constant.Instruct.BUY_FOOD: constant.Panel.FOOD_SHOP,
+    constant.Instruct.EAT: constant.Panel.FOOD_BAG,
+    constant.Instruct.MOVE: constant.Panel.SEE_MAP,
+    constant.Instruct.CARRY_MOVE: constant.Panel.SEE_MAP,
+    constant.Instruct.SEE_ATTR: constant.Panel.SEE_ATTR,
+    constant.Instruct.BUY_H_ITEM: constant.Panel.H_ITEM_SHOP,
+    constant.Instruct.ITEM: constant.Panel.ITEM,
+    constant.Instruct.SAVE: constant.Panel.SAVE,
+    constant.Instruct.ABL_UP: constant.Panel.ABL_UP,
+    constant.Instruct.OWNER_ABL_UP: constant.Panel.OWNER_ABL_UP,
+    constant.Instruct.DEBUG_ADJUST: constant.Panel.DEBUG_ADJUST,
+    constant.Instruct.SYSTEM_SETTING: constant.Panel.SYSTEM_SETTING,
+    constant.Instruct.TALK_QUICK_TEST: constant.Panel.TALK_QUICK_TEST,
+    constant.Instruct.CHAT_WITH_AI: constant.Panel.CHAT_WITH_AI,
+    constant.Instruct.BORROW_BOOK: constant.Panel.BORROW_BOOK,
+    constant.Instruct.READ_BOOK: constant.Panel.READ_BOOK,
+    constant.Instruct.MANAGE_LIBRARY: constant.Panel.MANAGE_LIBRARY,
+    constant.Instruct.MANAGE_ASSEMBLY_LINE: constant.Panel.MANAGE_ASSEMBLY_LINE,
+    constant.Instruct.MANAGE_AGRICULTURE: constant.Panel.MANAGE_AGRICULTURE,
+    constant.Instruct.MANAGE_VEHICLE: constant.Panel.MANAGE_VEHICLE,
+    constant.Instruct.PHYSICAL_CHECK_AND_MANAGE: constant.Panel.PHYSICAL_CHECK_AND_MANAGE,
+    constant.Instruct.MANAGE_CONFINEMENT_AND_TRAINING: constant.Panel.MANAGE_CONFINEMENT_AND_TRAINING,
+    constant.Instruct.MANAGE_RESOURCE_EXCHANGE: constant.Panel.MANAGE_RESOURCE_EXCHANGE,
+    constant.Instruct.NAVIGATION: constant.Panel.NAVIGATION,
+    constant.Instruct.MANAGE_BASEMENT: constant.Panel.MANAGE_BASEMENT,
+    constant.Instruct.EDUCATION_MANAGE: constant.Panel.EDUCATION_MANAGE,
+    constant.Instruct.MANAGE_DORMITORY: constant.Panel.MANAGE_DORMITORY,
+    constant.Instruct.CHANGE_HYPNOSIS_MODE: constant.Panel.CHANGE_HYPNOSIS_MODE,
+    constant.Instruct.DIRAY: constant.Panel.DIRAY,
+    constant.Instruct.SLEEP: constant.Panel.SLEEP,
+    constant.Instruct.MAKE_COFFEE_ADD: constant.Panel.MAKE_COFFEE_ADD,
+    constant.Instruct.MAKE_FOOD: constant.Panel.MAKE_FOOD,
+    constant.Instruct.MIXOLOGY: constant.Panel.MIXOLOGY,
+    constant.Instruct.ALL_NPC_POSITION: constant.Panel.ALL_NPC_POSITION,
+    constant.Instruct.GIVE_GIFT: constant.Panel.GIVE_GIFT,
+    constant.Instruct.ORIGINIUM_ARTS: constant.Panel.ORIGINIUM_ARTS,
+    constant.Instruct.TAKE_CARE_BABY: constant.Panel.TAKE_CARE_BABY,
+    constant.Instruct.ORDER_HOTEL_ROOM: constant.Panel.ORDER_HOTEL_ROOM,
+    constant.Instruct.SEE_COLLECTION: constant.Panel.COLLECTION,
+    constant.Instruct.SEE_ACHIEVEMENT: constant.Panel.SEE_ACHIEVEMENT,
+    constant.Instruct.SEE_FRIDGE: constant.Panel.FRIDGE,
+    constant.Instruct.PREGNANCY_OVERVIEW: constant.Panel.PREGNANCY_OVERVIEW,
+    constant.Instruct.FIELD_COMMISSION: constant.Panel.FIELD_COMMISSION,
+    constant.Instruct.CHECK_LOCKER: constant.Panel.CHECK_LOCKER,
+    constant.Instruct.ASK_HIDDEN_SEX: constant.Panel.ASK_HIDDEN_SEX,
+    constant.Instruct.ASK_EXHIBITIONISM_SEX: constant.Panel.ASK_EXHIBITIONISM_SEX,
+    constant.Instruct.PLAY_GOMOKU: constant.Panel.PLAY_GOMOKU,
+    constant.Instruct.TASTE_WINE: constant.Panel.FOOD_BAG,
+    constant.Instruct.AROMATHERAPY: constant.Panel.AROMATHERAPY,
+    constant.Instruct.ASSISTANT_ADJUSTMENTS: constant.Panel.ASSISTANT,
+    constant.Instruct.BUILDING: constant.Panel.BUILDING,
+    constant.Instruct.EQUIPMENT_MAINTAIN: constant.Panel.EQUIPMENT_MAINTAIN,
+    constant.Instruct.RECRUITMENT: constant.Panel.RECRUITMENT,
+    constant.Instruct.VISITOR_SYSTEM: constant.Panel.VISITOR,
+    constant.Instruct.NATION_DIPLOMACY: constant.Panel.NATION_DIPLOMACY,
+    constant.Instruct.PRTS: constant.Panel.PRTS,
+    constant.Instruct.MANAGE_DEDICAL_DEPARTMENT: constant.Panel.MANAGE_DEDICAL_DEPARTMENT,
+    constant.Instruct.MANAGE_POWER_SYSTEM: constant.Panel.MANAGE_POWER_SYSTEM,
+    constant.Instruct.BONDAGE: constant.Panel.BONDAGE,
+    constant.Instruct.UNDRESS: constant.Panel.UNDRESS,
+    constant.Instruct.EDIT_GROUP_SEX_TEMPLE: constant.Panel.EDIT_GROUP_SEX_TEMPLE,
+}
+"""
+指令 id 到面板 id 的映射表：每项经 add_instruct 注册为指令，
+其处理函数调用 ui_hooks.switch_panel 切换至对应面板。
+CARRY_MOVE 与 MOVE 共用地图面板（SEE_MAP）：选定地点后，
+由 character_move._player_leg（经 own_charcter_move 调用）
+按玩家标记 hidden_sex_mode 是否为 5 决定取 Behavior.CARRY_MOVE 或 Behavior.MOVE。
+"""
+
+for _instruct_id, _panel_id in PANEL_INSTRUCTS.items():
+    add_instruct(_instruct_id)(_open_panel(_panel_id))
+
+
 def instruct_filter_H_change(on_off_flag: bool) -> None:
     """
     指令类型过滤器进出H变更（已弃用）
@@ -456,42 +541,12 @@ def handle_rest() -> None:
     )
 
 
-@add_instruct(constant.Instruct.BUY_FOOD)
-def handle_buy_food() -> None:
-    """处理购买食物指令"""
-    ui_hooks.switch_panel(constant.Panel.FOOD_SHOP)
-
-
-@add_instruct(constant.Instruct.EAT)
-def handle_eat() -> None:
-    """处理食物背包指令"""
-    ui_hooks.switch_panel(constant.Panel.FOOD_BAG)
-
-
 @add_instruct(constant.Instruct.PUT_SELFMADE_FOOD_IN)
 def handle_put_selfmade_food_in() -> None:
     """处理放入正常食物指令"""
     from Script.Modules.gameplay_resolution import canteen_service
 
     canteen_service.put_selfmade_food_in()
-
-
-@add_instruct(constant.Instruct.MOVE)
-def handle_move() -> None:
-    """处理移动指令"""
-    ui_hooks.switch_panel(constant.Panel.SEE_MAP)
-
-
-@add_instruct(constant.Instruct.CARRY_MOVE)
-def handle_carry_move() -> None:
-    """处理携带H中移动指令，与移动指令共用地图面板，实际行为在own_charcter_move中按携带模式区分"""
-    ui_hooks.switch_panel(constant.Panel.SEE_MAP)
-
-
-@add_instruct(constant.Instruct.SEE_ATTR)
-def handle_see_attr() -> None:
-    """查看属性"""
-    ui_hooks.switch_panel(constant.Panel.SEE_ATTR)
 
 
 @add_instruct(constant.Instruct.CHAT)
@@ -522,36 +577,6 @@ def _count_talk(who: int, chosen: intent.Intent) -> None:
     action_info.add(chosen["target"], "talk_count", 1)
 
 
-@add_instruct(constant.Instruct.BUY_H_ITEM)
-def handle_buy_h_item() -> None:
-    """处理购买成人用品指令"""
-    ui_hooks.switch_panel(constant.Panel.H_ITEM_SHOP)
-
-
-@add_instruct(constant.Instruct.ITEM)
-def handle_item() -> None:
-    """处理道具指令"""
-    ui_hooks.switch_panel(constant.Panel.ITEM)
-
-
-@add_instruct(constant.Instruct.SAVE)
-def handle_save() -> None:
-    """处理读写存档指令"""
-    ui_hooks.switch_panel(constant.Panel.SAVE)
-
-
-@add_instruct(constant.Instruct.ABL_UP)
-def handle_abl_up() -> None:
-    """处理属性上升"""
-    ui_hooks.switch_panel(constant.Panel.ABL_UP)
-
-
-@add_instruct(constant.Instruct.OWNER_ABL_UP)
-def handle_owner_abl_up() -> None:
-    """处理自身属性上升"""
-    ui_hooks.switch_panel(constant.Panel.OWNER_ABL_UP)
-
-
 @add_instruct(constant.Instruct.DEBUG_MODE_ON)
 def debug_mode() -> None:
     """处理开启DEBUG模式指令"""
@@ -562,30 +587,6 @@ def debug_mode() -> None:
 def debug_mode_off() -> None:
     """处理关闭DEBUG模式指令"""
     modes.set_debug(False)
-
-
-@add_instruct(constant.Instruct.DEBUG_ADJUST)
-def debug_adjust() -> None:
-    """处理debug数值调整指令"""
-    ui_hooks.switch_panel(constant.Panel.DEBUG_ADJUST)
-
-
-@add_instruct(constant.Instruct.SYSTEM_SETTING)
-def handle_system_setting() -> None:
-    """系统设置"""
-    ui_hooks.switch_panel(constant.Panel.SYSTEM_SETTING)
-
-
-@add_instruct(constant.Instruct.TALK_QUICK_TEST)
-def handle_talk_quick_test() -> None:
-    """快速测试口上"""
-    ui_hooks.switch_panel(constant.Panel.TALK_QUICK_TEST)
-
-
-@add_instruct(constant.Instruct.CHAT_WITH_AI)
-def handle_chat_with_ai() -> None:
-    """与文本生成AI对话"""
-    ui_hooks.switch_panel(constant.Panel.CHAT_WITH_AI)
 
 
 @add_instruct(constant.Instruct.TEACH)
@@ -633,58 +634,10 @@ def _start_teach(who: int, chosen: intent.Intent) -> None:
             )
 
 
-@add_instruct(constant.Instruct.BORROW_BOOK)
-def handle_borrow_book() -> None:
-    """处理借阅书籍指令"""
-    ui_hooks.switch_panel(constant.Panel.BORROW_BOOK)
-
-
-@add_instruct(constant.Instruct.READ_BOOK)
-def handle_read_book() -> None:
-    """处理读书指令"""
-    ui_hooks.switch_panel(constant.Panel.READ_BOOK)
-
-
-@add_instruct(constant.Instruct.MANAGE_LIBRARY)
-def handle_manage_library() -> None:
-    """处理管理图书馆指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_LIBRARY)
-
-
-@add_instruct(constant.Instruct.MANAGE_ASSEMBLY_LINE)
-def handle_manage_assembly_line() -> None:
-    """处理管理流水线指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_ASSEMBLY_LINE)
-
-
 @add_instruct(constant.Instruct.PLANT_MANAGE_CROP)
 def handle_plant_manage_crop() -> None:
     """处理种植与养护作物指令"""
     chara_handle_instruct_common_settle(constant.Behavior.PLANT_MANAGE_CROP)
-
-
-@add_instruct(constant.Instruct.MANAGE_AGRICULTURE)
-def handle_manage_agriculture() -> None:
-    """处理管理农业生产指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_AGRICULTURE)
-
-
-@add_instruct(constant.Instruct.MANAGE_VEHICLE)
-def handle_manage_vehicle() -> None:
-    """处理管理载具指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_VEHICLE)
-
-
-@add_instruct(constant.Instruct.PHYSICAL_CHECK_AND_MANAGE)
-def handle_physical_check_and_manage() -> None:
-    """处理身体检查与管理指令"""
-    ui_hooks.switch_panel(constant.Panel.PHYSICAL_CHECK_AND_MANAGE)
-
-
-@add_instruct(constant.Instruct.MANAGE_CONFINEMENT_AND_TRAINING)
-def handle_manage_vonfinement_and_training() -> None:
-    """处理管理监禁调教指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_CONFINEMENT_AND_TRAINING)
 
 
 @add_instruct(constant.Instruct.INVESTIGATE_RESOURCE_MARKET)
@@ -695,40 +648,10 @@ def handle_investigate_resource_market() -> None:
     )
 
 
-@add_instruct(constant.Instruct.MANAGE_RESOURCE_EXCHANGE)
-def handle_manage_resource_exchange() -> None:
-    """处理管理资源交易指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_RESOURCE_EXCHANGE)
-
-
-@add_instruct(constant.Instruct.NAVIGATION)
-def handle_navigation() -> None:
-    """处理导航指令"""
-    ui_hooks.switch_panel(constant.Panel.NAVIGATION)
-
-
-@add_instruct(constant.Instruct.MANAGE_BASEMENT)
-def handle_manage_basement() -> None:
-    """处理管理罗德岛指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_BASEMENT)
-
-
-@add_instruct(constant.Instruct.EDUCATION_MANAGE)
-def handle_education_manage() -> None:
-    """处理教育管理系统指令"""
-    ui_hooks.switch_panel(constant.Panel.EDUCATION_MANAGE)
-
-
 @add_instruct(constant.Instruct.CHECK_REPORT_CARD)
 def handle_check_report_card() -> None:
     """处理检查成绩单指令"""
     chara_handle_instruct_common_settle(constant.Behavior.CHECK_REPORT_CARD)
-
-
-@add_instruct(constant.Instruct.MANAGE_DORMITORY)
-def handle_manage_dormitory() -> None:
-    """处理宿舍管理系统指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_DORMITORY)
 
 
 # 以下为源石技艺#
@@ -776,12 +699,6 @@ def handle_hypnosis_all() -> None:
     chara_handle_instruct_common_settle(
         constant.Behavior.HYPNOSIS_ALL, args=door
     )
-
-
-@add_instruct(constant.Instruct.CHANGE_HYPNOSIS_MODE)
-def handle_change_hypnosis_mode() -> None:
-    """处理切换催眠模式"""
-    ui_hooks.switch_panel(constant.Panel.CHANGE_HYPNOSIS_MODE)
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_CANCEL)
@@ -894,18 +811,6 @@ def handle_target_stop_in_time_stop() -> None:
     )
 
 
-@add_instruct(constant.Instruct.DIRAY)
-def handle_diary() -> None:
-    """处理日记指令"""
-    ui_hooks.switch_panel(constant.Panel.DIRAY)
-
-
-@add_instruct(constant.Instruct.SLEEP)
-def handle_sleep() -> None:
-    """处理睡觉指令"""
-    ui_hooks.switch_panel(constant.Panel.SLEEP)
-
-
 @add_instruct(constant.Instruct.TAKE_SHOWER)
 def handle_take_shower() -> None:
     """处理淋浴指令"""
@@ -950,34 +855,10 @@ def handle_make_coffee() -> None:
     chara_handle_instruct_common_settle(constant.Behavior.MAKE_COFFEE)
 
 
-@add_instruct(constant.Instruct.MAKE_COFFEE_ADD)
-def handle_make_coffee_add() -> None:
-    """处理泡咖啡（加料）指令"""
-    ui_hooks.switch_panel(constant.Panel.MAKE_COFFEE_ADD)
-
-
 @add_instruct(constant.Instruct.ASK_MAKE_COFFEE)
 def handle_ask_make_coffee() -> None:
     """处理让对方泡咖啡指令"""
     chara_handle_instruct_common_settle(constant.Behavior.ASK_MAKE_COFFEE)
-
-
-@add_instruct(constant.Instruct.MAKE_FOOD)
-def handle_make_food() -> None:
-    """做饭"""
-    ui_hooks.switch_panel(constant.Panel.MAKE_FOOD)
-
-
-@add_instruct(constant.Instruct.MIXOLOGY)
-def handle_mixology() -> None:
-    """处理调酒指令"""
-    ui_hooks.switch_panel(constant.Panel.MIXOLOGY)
-
-
-@add_instruct(constant.Instruct.ALL_NPC_POSITION)
-def handle_all_npc_position() -> None:
-    """处理干员位置一览指令"""
-    ui_hooks.switch_panel(constant.Panel.ALL_NPC_POSITION)
 
 
 @add_instruct(constant.Instruct.FOLLOW)
@@ -1110,18 +991,6 @@ def handle_listen_complaint() -> None:
         start="calm_target",
         args={"value": _calm_value()},
     )
-
-
-@add_instruct(constant.Instruct.GIVE_GIFT)
-def handle_give_gift() -> None:
-    """处理赠送礼物指令"""
-    ui_hooks.switch_panel(constant.Panel.GIVE_GIFT)
-
-
-@add_instruct(constant.Instruct.ORIGINIUM_ARTS)
-def handle_originium_arts() -> None:
-    """处理源石技艺指令"""
-    ui_hooks.switch_panel(constant.Panel.ORIGINIUM_ARTS)
 
 
 @add_instruct(constant.Instruct.TARGET_TO_SELF)
@@ -1285,42 +1154,6 @@ def handle_prenatal_touch() -> None:
     chara_handle_instruct_common_settle(constant.Behavior.PRENATAL_TOUCH)
 
 
-@add_instruct(constant.Instruct.TAKE_CARE_BABY)
-def handle_take_care_baby() -> None:
-    """处理照顾婴儿指令"""
-    ui_hooks.switch_panel(constant.Panel.TAKE_CARE_BABY)
-
-
-@add_instruct(constant.Instruct.ORDER_HOTEL_ROOM)
-def handle_order_hotel_room() -> None:
-    """处理预定房间指令"""
-    ui_hooks.switch_panel(constant.Panel.ORDER_HOTEL_ROOM)
-
-
-@add_instruct(constant.Instruct.SEE_COLLECTION)
-def handle_see_collection() -> None:
-    """处理查看收藏品指令"""
-    ui_hooks.switch_panel(constant.Panel.COLLECTION)
-
-
-@add_instruct(constant.Instruct.SEE_ACHIEVEMENT)
-def handle_see_achievement() -> None:
-    """处理查看蚀刻章指令"""
-    ui_hooks.switch_panel(constant.Panel.SEE_ACHIEVEMENT)
-
-
-@add_instruct(constant.Instruct.SEE_FRIDGE)
-def handle_see_fridge() -> None:
-    """处理查看冰箱指令"""
-    ui_hooks.switch_panel(constant.Panel.FRIDGE)
-
-
-@add_instruct(constant.Instruct.PREGNANCY_OVERVIEW)
-def handle_pregnancy_overview() -> None:
-    """处理怀孕总览指令"""
-    ui_hooks.switch_panel(constant.Panel.PREGNANCY_OVERVIEW)
-
-
 @add_instruct(constant.Instruct.TAKE_CHARA_EGGS)
 def handle_take_chara_eggs() -> None:
     """处理拿走产下的卵指令"""
@@ -1337,18 +1170,6 @@ def handle_identify_held_eggs() -> None:
     chara_handle_instruct_common_settle(
         constant.Behavior.IDENTIFY_HELD_EGGS, duration=30
     )
-
-
-@add_instruct(constant.Instruct.FIELD_COMMISSION)
-def handle_field_commission() -> None:
-    """处理外勤委托指令"""
-    ui_hooks.switch_panel(constant.Panel.FIELD_COMMISSION)
-
-
-@add_instruct(constant.Instruct.CHECK_LOCKER)
-def handle_check_locker() -> None:
-    """处理检查衣柜指令"""
-    ui_hooks.switch_panel(constant.Panel.CHECK_LOCKER)
 
 
 @add_instruct(constant.Instruct.COLLCET_PANTY)
@@ -1718,18 +1539,6 @@ def handle_time_stop_h() -> None:
 def handle_hypnosis_h() -> None:
     """处理催眠奸指令"""
     handle_unconscious_h("hypnosis")
-
-
-@add_instruct(constant.Instruct.ASK_HIDDEN_SEX)
-def handle_ask_hidden_sex() -> None:
-    """处理邀请隐奸指令"""
-    ui_hooks.switch_panel(constant.Panel.ASK_HIDDEN_SEX)
-
-
-@add_instruct(constant.Instruct.ASK_EXHIBITIONISM_SEX)
-def handle_ask_exhibitionism_sex() -> None:
-    """处理邀请露出指令"""
-    ui_hooks.switch_panel(constant.Panel.ASK_EXHIBITIONISM_SEX)
 
 
 @start_part(constant.Behavior.ASK_HIDDEN_SEX_FAIL)
@@ -2277,12 +2086,6 @@ def handle_play_water() -> None:
     )
 
 
-@add_instruct(constant.Instruct.PLAY_GOMOKU)
-def handle_play_gomoku() -> None:
-    """处理下五子棋指令"""
-    ui_hooks.switch_panel(constant.Panel.PLAY_GOMOKU)
-
-
 @add_instruct(constant.Instruct.PLAY_CHESS)
 def handle_play_chess() -> None:
     """处理下棋指令"""
@@ -2329,12 +2132,6 @@ def handle_swimming() -> None:
     chara_handle_instruct_common_settle(
         constant.Behavior.SWIMMING, force_taget_wait=True
     )
-
-
-@add_instruct(constant.Instruct.TASTE_WINE)
-def handle_taste_wine() -> None:
-    """处理品酒指令"""
-    ui_hooks.switch_panel(constant.Panel.FOOD_BAG)
 
 
 @add_instruct(constant.Instruct.TASTE_TEA)
@@ -2405,12 +2202,6 @@ def handle_hydrotherapy_treatment() -> None:
 def handle_onsen_bath() -> None:
     """处理泡温泉指令"""
     chara_handle_instruct_common_settle(constant.Behavior.ONSEN_BATH)
-
-
-@add_instruct(constant.Instruct.AROMATHERAPY)
-def handle_aromatherapy() -> None:
-    """处理香薰疗愈指令"""
-    ui_hooks.switch_panel(constant.Panel.AROMATHERAPY)
 
 
 # 以下为工作#
@@ -2503,54 +2294,12 @@ def handle_battle_command() -> None:
     pick_hooks.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
-@add_instruct(constant.Instruct.ASSISTANT_ADJUSTMENTS)
-def handle_ASSISTANT_ADJUSTMENTS() -> None:
-    """处理助理相关调整指令"""
-    ui_hooks.switch_panel(constant.Panel.ASSISTANT)
-
-
-@add_instruct(constant.Instruct.BUILDING)
-def handle_building() -> None:
-    """处理基建系统指令"""
-    ui_hooks.switch_panel(constant.Panel.BUILDING)
-
-
-@add_instruct(constant.Instruct.EQUIPMENT_MAINTAIN)
-def handle_equipment_maintain() -> None:
-    """处理管理装备维护指令"""
-    ui_hooks.switch_panel(constant.Panel.EQUIPMENT_MAINTAIN)
-
-
-@add_instruct(constant.Instruct.RECRUITMENT)
-def handle_recruiment() -> None:
-    """处理招募情况指令"""
-    ui_hooks.switch_panel(constant.Panel.RECRUITMENT)
-
-
-@add_instruct(constant.Instruct.VISITOR_SYSTEM)
-def handle_visitor_system() -> None:
-    """处理访客系统指令"""
-    ui_hooks.switch_panel(constant.Panel.VISITOR)
-
-
-@add_instruct(constant.Instruct.NATION_DIPLOMACY)
-def handle_nation_diplomacy() -> None:
-    """处理势力与外交指令"""
-    ui_hooks.switch_panel(constant.Panel.NATION_DIPLOMACY)
-
-
 @add_instruct(constant.Instruct.INVITE_VISITOR)
 def handle_invite_visitor() -> None:
     """处理邀请访客指令"""
     chara_handle_instruct_common_settle(
         constant.Behavior.INVITE_VISITOR, force_taget_wait=True
     )
-
-
-@add_instruct(constant.Instruct.PRTS)
-def handle_prts() -> None:
-    """处理普瑞赛斯指令"""
-    ui_hooks.switch_panel(constant.Panel.PRTS)
 
 
 @add_instruct(constant.Instruct.TRAINING)
@@ -2579,12 +2328,6 @@ def handle_cure_patient() -> None:
         )
         return
     ui_hooks.switch_panel(constant.Panel.CURE_PATIENT)
-
-
-@add_instruct(constant.Instruct.MANAGE_DEDICAL_DEPARTMENT)
-def handle_manage_dedical_department() -> None:
-    """处理管理医疗系统指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_DEDICAL_DEPARTMENT)
 
 
 @add_instruct(constant.Instruct.RECRUIT)
@@ -2631,12 +2374,6 @@ def handle_maintenance_facilities() -> None:
 def handle_manage_facility_power() -> None:
     """处理调控设施供能指令"""
     chara_handle_instruct_common_settle(constant.Behavior.MANAGE_FACILITY_POWER)
-
-
-@add_instruct(constant.Instruct.MANAGE_POWER_SYSTEM)
-def handle_manage_power_system() -> None:
-    """处理管理能源系统指令"""
-    ui_hooks.switch_panel(constant.Panel.MANAGE_POWER_SYSTEM)
 
 
 @add_instruct(constant.Instruct.REPAIR_EQUIPMENT)
@@ -3519,12 +3256,6 @@ def handle_remote_all_set_sex_toy_strong_in_h() -> None:
     )
 
 
-@add_instruct(constant.Instruct.BONDAGE)
-def handle_bondage() -> None:
-    """处理绳艺指令"""
-    ui_hooks.switch_panel(constant.Panel.BONDAGE)
-
-
 @add_instruct(constant.Instruct.PATCH_ON)
 def handle_patch_on() -> None:
     """处理戴上眼罩指令"""
@@ -4405,12 +4136,6 @@ def handle_try_pl_active_h() -> None:
     h_state.set(activity.target(0), npc_active_h=False)
 
 
-@add_instruct(constant.Instruct.UNDRESS)
-def handle_undress() -> None:
-    """处理脱衣服指令"""
-    ui_hooks.switch_panel(constant.Panel.UNDRESS)
-
-
 @add_instruct(constant.Instruct.ORGASM_EDGE_ON)
 def handle_orgasm_edge_on() -> None:
     """处理绝顶寸止指令"""
@@ -4433,12 +4158,6 @@ def handle_run_group_sex_temple() -> None:
 def handle_run_all_group_sex_temple() -> None:
     """处理进行一次轮流群交指令"""
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=10)
-
-
-@add_instruct(constant.Instruct.EDIT_GROUP_SEX_TEMPLE)
-def handle_edit_group_sex_temple() -> None:
-    """处理编辑群交行动指令"""
-    ui_hooks.switch_panel(constant.Panel.EDIT_GROUP_SEX_TEMPLE)
 
 
 @add_instruct(constant.Instruct.SWITCH_TO_NON_H_INTERFACE)

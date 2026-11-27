@@ -36,7 +36,7 @@
 | 通用配置表 | `data/csv/` 113 张主表 + `cook_question/` 140 张题库 CSV |
 | 角色口上数据 | `Character_Talk.json` 内约 91,943 条 |
 | 通用口上数据 | `Talk_Common.json` 内约 215,322 条 |
-| 指令 | `InstructConfig.csv` 定义 408 条，`handle_instruct.py` 注册 400 个处理函数 |
+| 指令 | `InstructConfig.csv` 定义 423 条，`handle_instruct.py` 注册 413 个指令（352 个 `@add_instruct` 处理函数 + `PANEL_INSTRUCTS` 61 行面板切换） |
 | 行为 | `Behavior_Data.csv` 定义 688 个行为 |
 | 前提处理函数 | 约 1,886 个（`handle_premise` 包内统计） |
 | 结算处理函数 | 一段/二段共约 638 个（`@settle_behavior` 注册，`Script/Settle`） |
@@ -566,10 +566,11 @@ Script/
 ## 15. 指令系统
 
 - 注册：`Script/System/Instruct_System/handle_instruct.py`
-  - 400 个 `@add_instruct` 装饰器
+  - 常规指令以 `@add_instruct` 装饰处理函数注册
+  - 仅切换面板的指令登记在 `PANEL_INSTRUCTS` 表（指令 ID -> 面板 ID），由同文件内循环逐项经 `add_instruct` 注册
   - `add_instruct` 支持从 `InstructConfig.csv` 读参数（类型/名称/前提集/行为ID等），装饰器参数优先
 - ID 常量：`Script/System/Instruct_System/Instruct.py`
-- 配置：`data/csv/InstructConfig.csv`（408 条）
+- 配置：`data/csv/InstructConfig.csv`（423 条）
 - 显示与过滤：`Script/UI/Panel/instruct_filter_panel.py`、`Script/UI/Panel/see_instruct_panel.py`
 - 实行判定：`Script/Design/instuct_judege.py`；`InstructJudge.csv` 定义实行值判定
 - 调度：`handle_instruct()` 在玩家的交互对象处于幼年阶段时跳过 H 类指令（`child_stage_gate.blocks_instruct`）。对 `constant.instruct_premise_data` 里有的其余指令，它调用 `constant.handle_instruct_data` 里对应的函数
@@ -877,7 +878,7 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 ### 27.2 新增一个指令
 
 1. 在 `InstructConfig.csv` 增加行（行为 ID、前提集等）
-2. 在 `Script/System/Instruct_System/handle_instruct.py` 用 `@add_instruct` 写处理函数
+2. 在 `Script/System/Instruct_System/handle_instruct.py` 注册处理逻辑：若指令仅打开面板，在 `PANEL_INSTRUCTS` 增加一行 `constant.Instruct.X: constant.Panel.Y`，并在 `tests/fast/test_panel_instructs.py` 的 `EXPECTED_PANEL_INSTRUCTS` 同步增加同一行（快速测试断言两表完全相等）；其余指令用 `@add_instruct` 编写处理函数
 3. 确保关联 `behavior_id` 在 `Behavior_Data.csv` / `Behavior_Effect.csv` 有结算配置
 4. 重跑构建，验证显示与执行
 
