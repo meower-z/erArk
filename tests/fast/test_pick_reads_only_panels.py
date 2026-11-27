@@ -17,14 +17,11 @@ from Script.Design import game_time, update
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import start_gate, starts
 from Script.Modules.tk_ui import player_pick
-from Script.System.Cooking_System import (
-    cooking,
-    make_food_confirm_panel,
-    make_food_panel,
-)
+from Script.System.Cooking_System import cooking
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Pregnancy_System import egg_handle, pregnancy_handle
 from Script.UI.Panel import gift_panel, play_gomoku_panel, talent_up_panel
+from Script.UI.Panel import make_food_confirm_panel, make_food_panel
 from Script.Modules.domains import achievement, activity, inventory, pregnancy
 from Script.Modules.domains import kitchen, modes
 from tests import chara_abilities as ca, kernel_data, pick_guard

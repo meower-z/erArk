@@ -124,7 +124,7 @@ def food_shop_flow() -> None:
 @handle_panel.add_panel(constant.Panel.MAKE_FOOD)
 def make_food_flow() -> None:
     """制作食物面板"""
-    from Script.System.Cooking_System import make_food_panel
+    from Script.UI.Panel import make_food_panel
 
     now_panel = make_food_panel.Make_food_Panel(width)
     now_panel.draw()
@@ -487,7 +487,7 @@ def play_gomoku_flow() -> None:
 @handle_panel.add_panel(constant.Panel.MAKE_COFFEE_ADD)
 def make_coffee_add_flow() -> None:
     """泡咖啡（加料）面板"""
-    from Script.System.Cooking_System import make_food_panel
+    from Script.UI.Panel import make_food_panel
 
     now_panel = make_food_panel.Make_food_Panel(width, make_food_type=1)
     now_panel.draw()
@@ -496,7 +496,7 @@ def make_coffee_add_flow() -> None:
 @handle_panel.add_panel(constant.Panel.MIXOLOGY)
 def mixology_flow() -> None:
     """调酒面板"""
-    from Script.System.Cooking_System import make_food_panel
+    from Script.UI.Panel import make_food_panel
 
     now_panel = make_food_panel.Make_food_Panel(width, make_food_type=2)
     now_panel.draw()
