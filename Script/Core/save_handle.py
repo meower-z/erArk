@@ -630,12 +630,10 @@ def install_save(save_id: str, version: int) -> None:
         update_count += domain.adopt_old_save(loaded_dict, version)
 
     ui_hooks.emit_notice(_("\n开始检测存档的数据结构是否需要跨版本更新\n"))
-    ui_hooks.emit_flush()
 
     # 检测是否为旧版存档（npc_tem_data是List而不是Dict）
     if isinstance(loaded_dict.get("npc_tem_data"), list):
         ui_hooks.emit_notice(_("\n检测到旧版存档，开始迁移角色ID系统...\n"))
-        ui_hooks.emit_flush()
 
         migrate_count = old_chara_to_new.migrate_old_save_data(loaded_dict)
 
@@ -671,7 +669,6 @@ def install_save(save_id: str, version: int) -> None:
 
     if need_migration:
         ui_hooks.emit_notice(_("\n检测到需要进行角色替换迁移...\n"))
-        ui_hooks.emit_flush()
 
         migration_count = old_chara_to_new.migrate_character_replacement(
             loaded_dict, character_replacement_map
