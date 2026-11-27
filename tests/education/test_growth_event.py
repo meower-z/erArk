@@ -9,6 +9,7 @@ from _bootstrap import handle_premise, make_character, open_all_classroom
 from _bootstrap import period_time, random, remove_character
 from _bootstrap import schedule_handle, schedule_template_handle, section
 from _bootstrap import semester_handle, set_time, activity
+from Script.System.Instruct_System import handle_instruct
 from Script.System.Official_Event_System import official_event_handle
 from typing import Any
 from Script.System.Pregnancy_System import pregnancy_constant
@@ -1490,9 +1491,8 @@ setattr(
 )
 try:
     with kernel_data.writing():
-        _od_chosen = official_event_panel.choose_official_event_option(120)
-        if _od_chosen is not None:
-            official_event_panel.settle_chosen_option(_od_chosen)
+        if (_od_chosen := handle_instruct.choose_official_option()) is not None:
+            handle_instruct.settle_official_option(_od_chosen)
 finally:
     official_event_handle.settle_official_event_option = _orig_settle_option
     setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
@@ -1504,7 +1504,7 @@ _od_choice_tip = {
 }.get(_od_choice, "")
 check(
     (
-        "§8.2 处理公务（choose_official_event_option 选定、settle_chosen_option 结算）："
+        "§8.2 处理公务（choose_official_option 选定、settle_official_option 结算）："
         "选了画面上的第一个选项 → 先结算、记进履历，"
         "再弹一个写着它的后果的 WaitDraw；队列清空"
     ),
