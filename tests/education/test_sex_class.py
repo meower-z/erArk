@@ -1313,7 +1313,7 @@ check(
 )
 
 section("Plan 32 L11：课堂模式下群交模板的选人只列课堂成员")
-from Script.System.Sex_System import group_sex_panel  # noqa: E402
+from Script.UI.Panel import group_sex_panel
 
 drawn_text.clear()
 group_sex_panel.Edit_Group_Sex_Temple_Panel(190).show_target_chara_list(

@@ -615,7 +615,7 @@ check(
 open_all_classroom()
 
 section("Plan 26 §3.3：课堂模式下的邀请名单按实操课门槛筛")
-from Script.System.Sex_System import group_sex_panel  # noqa: E402
+from Script.UI.Panel import group_sex_panel
 from Script.UI.Panel import common_select_NPC  # noqa: E402
 
 _invite_captured: dict[str, list[object]] = {}

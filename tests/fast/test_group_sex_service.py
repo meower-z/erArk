@@ -26,11 +26,11 @@ from Script.Modules.domains import abilities, activity, flags, h_state, modes
 from Script.Modules.gameplay_resolution import group_sex_service, working
 from Script.Settle import default as settle_default
 from Script.System.Instruct_System import handle_instruct
-from Script.System.Sex_System import group_sex_panel
+from Script.UI.Panel import group_sex_panel
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT
 
-PANEL = "Script.System.Sex_System.group_sex_panel"
+PANEL = "Script.UI.Panel.group_sex_panel"
 """导入边界测试中禁止后端调用方导入的群交面板模块全名。"""
 SERVICE = "Script/Modules/gameplay_resolution/group_sex_service.py"
 """群交模板服务模块在仓库中的相对路径。"""
@@ -405,7 +405,7 @@ def forbidden(source: str | bytes, path: str) -> list[str]:
 BLOCKED_RUN = """
 import importlib.abc, json, sys
 
-BLOCKED = ("Script.UI.Panel", "Script.System.Sex_System.group_sex_panel")
+BLOCKED = ("Script.UI.Panel",)
 
 class Block(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
@@ -451,12 +451,12 @@ class ImportBoundaryTest(FastTestCase):
         """验证 forbidden 能正确识别相对、多名与函数内嵌套导入，且不误报同前缀模块。"""
         source = (
             "from . import group_sex_panel, hidden_sex_panel\n"
-            "import Script.System.Sex_System.group_sex_panel_extra\n"
+            "import Script.UI.Panel.group_sex_panel_extra\n"
             "def f():\n"
-            "    from ..Sex_System.group_sex_panel import SeeGroupSexInfoPanel\n"
+            "    from ..Panel.group_sex_panel import SeeGroupSexInfoPanel\n"
         )
         self.assertEqual(
-            forbidden(source, "Script/System/Sex_System/probe.py"),
+            forbidden(source, "Script/UI/Panel/probe.py"),
             [PANEL, f"{PANEL}.SeeGroupSexInfoPanel"],
         )
 

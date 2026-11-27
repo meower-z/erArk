@@ -505,7 +505,7 @@ def mixology_flow() -> None:
 @handle_panel.add_panel(constant.Panel.ASK_HIDDEN_SEX)
 def ask_hidden_sex_flow() -> None:
     """邀请隐奸面板"""
-    from Script.System.Sex_System.hidden_sex_panel import (
+    from Script.UI.Panel.hidden_sex_panel import (
         Select_Hidden_Sex_Mode_Panel,
     )
 
@@ -516,7 +516,7 @@ def ask_hidden_sex_flow() -> None:
 @handle_panel.add_panel(constant.Panel.ASK_EXHIBITIONISM_SEX)
 def ask_exhibitionism_sex_flow() -> None:
     """邀请露出面板"""
-    from Script.System.Sex_System.exhibitionism_sex_panel import (
+    from Script.UI.Panel.exhibitionism_sex_panel import (
         Select_Exhibitionism_Sex_Mode_Panel,
     )
 
@@ -536,7 +536,7 @@ def bondage_flow() -> None:
 @handle_panel.add_panel(constant.Panel.EDIT_GROUP_SEX_TEMPLE)
 def edit_group_sex_temple_flow() -> None:
     """编辑群交场景面板"""
-    from Script.System.Sex_System import group_sex_panel
+    from Script.UI.Panel import group_sex_panel
 
     now_panel = group_sex_panel.Edit_Group_Sex_Temple_Panel(width)
     now_panel.draw()

@@ -213,11 +213,11 @@ Script/
 │   ├── Field_Commission_System/ # 外勤委托
 │   ├── Instruct_System/    # 指令注册、分类、映射
 │   ├── Medical_System/     # 医疗经营
-│   └── Sex_System/         # 群交/隐奸/露出/醉奸等
+│   └── Sex_System/         # 醉酒/醉奸、H 模式描述文本
 └── UI/
     ├── Moudle/draw.py      # 绘制类抽象层（NormalDraw/Button/BarDraw...）
     ├── Moudle/panel.py     # 通用面板构建块
-    ├── Panel/              # 85 个功能面板
+    ├── Panel/              # 88 个功能面板
     └── Flow/               # 标题 / 创建角色 / normal_flow 面板注册
 ```
 
@@ -708,9 +708,9 @@ Script/
 
 | 系统 | 核心文件 | 说明 |
 | --- | --- | --- |
-| 群交 | `Modules/gameplay_resolution/group_sex_service.py`, `Modules/gameplay_resolution/group_sex_editor_service.py`, `Modules/gameplay_resolution/group_sex_invite_service.py`, `System/Sex_System/group_sex_panel.py` | 模板结算与统计、模板编辑与邀请服务、信息与编辑面板 |
-| 隐奸 | `System/Sex_System/hidden_sex_panel.py` | 隐蔽值/发现度 |
-| 露出 | `System/Sex_System/exhibitionism_sex_panel.py` | 露出 H |
+| 群交 | `Modules/gameplay_resolution/group_sex_service.py`, `Modules/gameplay_resolution/group_sex_editor_service.py`, `Modules/gameplay_resolution/group_sex_invite_service.py`, `UI/Panel/group_sex_panel.py` | 模板结算与统计、模板编辑与邀请服务、信息与编辑面板 |
+| 隐奸 | `UI/Panel/hidden_sex_panel.py` | 隐蔽值/发现度 |
+| 露出 | `UI/Panel/exhibitionism_sex_panel.py` | 露出 H |
 | 绳艺 | `UI/Panel/bondage_panel.py` | `Bondage.csv` |
 | 监禁调教 | `UI/Panel/confinement_and_training.py` | 关押区、监狱长 |
 | 睡眠/无意识 | `UI/Panel/sleep_panel.py`, `handle_npc_ai_in_h.py` | 睡奸/无意识 H |

@@ -249,7 +249,7 @@ class Sex_Be_Discovered_Panel:
 
     def _switch_to_hidden_sex(self) -> None:
         """选择转为隐奸"""
-        from Script.System.Sex_System.hidden_sex_panel import (
+        from Script.UI.Panel.hidden_sex_panel import (
             Select_Hidden_Sex_Mode_Panel,
         )
 
@@ -284,7 +284,7 @@ class Sex_Be_Discovered_Panel:
             else:
                 self._end_current_h()
         else:
-            from Script.System.Sex_System.exhibitionism_sex_panel import (
+            from Script.UI.Panel.exhibitionism_sex_panel import (
                 Select_Exhibitionism_Sex_Mode_Panel,
             )
 

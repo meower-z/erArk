@@ -35,7 +35,7 @@ class HiddenSexNoCarryModeTest(SlowTestCase):
         tuple -- (按钮文字的列表, 面板画出的文字)
         """
         from Script.Core import io_init
-        from Script.System.Sex_System import hidden_sex_panel
+        from Script.UI.Panel import hidden_sex_panel
 
         player_input = self.world.player
         player_input.screen.clear()
