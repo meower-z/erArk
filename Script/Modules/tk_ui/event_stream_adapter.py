@@ -1,19 +1,22 @@
 """
 叙事事件的 Tk 绘制适配器，通过 draw 绘制类输出 NarrativeEvent、SceneBreak 与 DeltaEvent。
 DeltaEvent 先转为单段落 NarrativeEvent。
-summary_text 非 None 时用作段落文本，为 None 时按变化项逐行生成。
-无自定义颜色的 plain 文本段直接沿用块基础样式（标题块为 littletitle，段落块为事件 style）。
-其余角色或带 color 的文本段经 frame_style_def 注册派生样式，保留块基础样式的背景与字体。
-派生样式采用配置字号并合并基础样式与角色的加粗、下划线和斜体标记。
+段落文本在 summary_text 非 None 时取该值，否则按变化项逐行生成。
+无 color 的 plain 文本段沿用块基础样式（标题块为 littletitle，段落块为事件 style）。
+其余角色或带 color 的文本段经 frame_style_def 注册派生样式。
+派生样式保留基础样式的背景与字体，采用配置字号，并合并基础样式与角色的加粗、下划线和斜体标记。
 其前景色依次取自 color、角色取色样式或块基础样式。
-非末块文本结尾无换行符时补一段换行，使后续块从新行开始。
-pause 为真时，适配器在最后一段非空文本使用 WaitDraw，各段均为空时在末段使用 WaitDraw。
+非末块结尾无换行时补一段换行，使后续块从新行开始。
+pause 为真时，适配器在末段非空文本用 WaitDraw，全空时在末段用 WaitDraw。
+启用非零行数预算时，若已有输出且新事件使累计行数达到或超过预算，适配器先暂停一次再整条绘制。
+SceneBreak、含非空文本的暂停事件或 reset() 清零已输出行数。
 """
 
+import math
 from typing import Unpack
 
 from Script.Config import game_config, normal_config
-from Script.Core import io_init
+from Script.Core import flow_handle, io_init, text_handle
 from Script.Kernel import core
 from Script.Protocol.delta_events import DeltaEntry, DeltaEvent, DeltaValue
 from Script.Protocol.narrative_events import (
@@ -97,6 +100,30 @@ def _layout(event: NarrativeEvent) -> list[tuple[str, str | None] | str]:
     return items
 
 
+def _rows(items: list[tuple[str, str | None] | str], width: int) -> int:
+    """
+    估算单条事件排版项在给定列宽下占用的屏幕行数。
+    函数将各文本项的内容拼接，并将每个分隔线项记为一个换行符，再按换行符分段。
+    每段经 text_handle.get_text_index 计算显示列宽，再除以不小于 1 的 width 并向上取整。
+    末段之前的每段至少计 1 行。
+    末段直接计入取整结果，空串时计 0 行。
+    Keyword arguments:
+    items -- list[tuple[str, str | None] | str]，_layout 生成的排版项列表
+    width -- int，单行显示列宽，小于 1 时按 1 处理
+    Return arguments:
+    int -- 估算占用的屏幕总行数
+    """
+    text = "".join(
+        item[0] if isinstance(item, tuple) else "\n" for item in items
+    )
+    span = max(width, 1)
+    counts = [
+        math.ceil(text_handle.get_text_index(line) / span)
+        for line in text.split("\n")
+    ]
+    return sum(max(1, count) for count in counts[:-1]) + counts[-1]
+
+
 def _amount(value: DeltaValue, unit: str, signed: bool = False) -> str:
     """
     将一个数值变化字段格式化为带单位的文本。
@@ -139,11 +166,30 @@ def _delta_text(entries: tuple[DeltaEntry, ...]) -> str:
 
 
 class EventStreamAdapter:
-    """维护事件序号并将叙事事件、场景分隔与数值变化事件绘制到 Tk 文本框的适配器。"""
+    """
+    维护事件序号并将叙事事件、场景分隔与数值变化事件绘制到 Tk 文本框的适配器。
+    启用非零行数预算时，适配器累计已输出估算行数，并在已有输出且新事件将使累计行数达到或超过预算时先暂停一次。
+    """
 
-    def __init__(self) -> None:
-        """初始化适配器并将事件序号计数器置为 0。"""
+    def __init__(self, budget: int = 0) -> None:
+        """
+        初始化适配器，将事件序号与已输出行数计数器均置为 0，并设置屏幕行数预算。
+        Keyword arguments:
+        budget -- int，屏幕行数预算，默认为 0 表示关闭自动暂停
+        Return arguments:
+        None -- 无返回值
+        """
         self._seq = 0
+        self.budget = budget
+        self._height = 0
+
+    def reset(self) -> None:
+        """
+        将已输出行数计数器清零，供调用方在清屏、切换面板或新回合边界重新开始计数。
+        Return arguments:
+        None -- 无返回值
+        """
+        self._height = 0
 
     def meta(self, source: str, **facts: Unpack[EventFacts]) -> EventMeta:
         """
@@ -162,8 +208,13 @@ class EventStreamAdapter:
         """
         将一条叙事事件、场景分隔或数值变化事件经 LineDraw、NormalDraw 或 WaitDraw 绘制到界面。
         数值变化事件先转为不指定样式的单段落叙事事件。
-        非末块结尾无换行时补一次换行。
-        pause 为真时，最后一段非空文本使用 WaitDraw，各段全空时由末段使用 WaitDraw。
+        SceneBreak 绘制分隔线后清零已输出行数，不触发自动暂停。
+        叙事事件先经 _layout 排版，非末块结尾无换行时补一次换行。
+        随后适配器用 _rows 估算本次行数。
+        若 budget 非零且已输出行数大于 0，当已输出行数加本次行数达到或超过 budget 时，
+        适配器先调用 flow_handle.askfor_wait() 暂停并清零已输出行数。
+        之后适配器累加本次行数并整条绘制事件。
+        pause 为真时，适配器在末段非空文本用 WaitDraw 并在绘制后清零行数，各段全空时在末段用 WaitDraw 且不清零行数。
         Keyword arguments:
         event -- NarrativeEvent | SceneBreak | DeltaEvent，待绘制的事件
         Return arguments:
@@ -184,8 +235,18 @@ class EventStreamAdapter:
         width = normal_config.config_normal.text_width
         if isinstance(event, SceneBreak):
             draw.LineDraw(event.char, width).draw()
+            self._height = 0
             return
         items = _layout(event)
+        height = _rows(items, width)
+        if (
+            self.budget
+            and self._height
+            and self._height + height >= self.budget
+        ):
+            flow_handle.askfor_wait()
+            self._height = 0
+        self._height += height
         texts = [i for i, item in enumerate(items) if isinstance(item, tuple)]
         filled = [
             i
@@ -207,6 +268,8 @@ class EventStreamAdapter:
             if style is not None:
                 now_draw.style = style
             now_draw.draw()
+        if event.pause and filled:
+            self._height = 0
 
 
 STREAM = EventStreamAdapter()
