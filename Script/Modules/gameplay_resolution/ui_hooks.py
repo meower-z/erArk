@@ -1,12 +1,12 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供十二类回调的登记与调用入口。
-十二类回调分别用于输出提示文本、数值变化、图片、分隔线、富文本口上、逐行等待文本、刷出缓冲输出、
+本模块提供十一类回调的登记与调用入口。
+十一类回调分别用于输出提示文本、数值变化、图片、分隔线、富文本口上、逐行等待文本、
 切换面板、确认提问、查询隐奸中显示非H指令的开关、调用文本AI处理与主角寻路首段选定。
 本模块不直接导入界面、Tk 或输入输出模块。
 未登记回调时，emit_notice、emit_delta、emit_image、emit_divider、emit_rich_talk、
-emit_line_wait_text、emit_flush、switch_panel 与 choose_route_leg 不执行操作。
+emit_line_wait_text、switch_panel 与 choose_route_leg 不执行操作。
 未登记回调时，emit_confirm 返回 True。
 未登记回调时，hidden_sex_show_non_h 返回 False。
 未登记回调时，apply_text_ai 原样返回传入文本。
@@ -98,10 +98,6 @@ _confirms: list[Confirm] = []
 """ 按登记顺序保存的确认提问回调列表。 """
 _text_ais: list[TextAi] = []
 """ 按登记顺序保存的文本AI处理回调列表。 """
-type Flush = Callable[[], None]
-""" 刷出缓冲输出回调函数类型，不接收参数且无返回值。 """
-_flushes: list[Flush] = []
-""" 按登记顺序保存的刷出缓冲输出回调列表。 """
 type RouteLeg = Callable[
     [str, int, int, dict[str, object], dict[str, object] | None], None
 ]
@@ -401,28 +397,6 @@ def apply_text_ai(
     for fn in _text_ais:
         text = fn(character_id, behavior_id, text, translator=translator)
     return text
-
-
-def on_flush(fn: Flush) -> Flush:
-    """
-    登记一个刷出缓冲输出回调，可作为装饰器使用。
-    Keyword arguments:
-    fn -- Flush，要登记的刷出缓冲输出回调函数
-    Return arguments:
-    Flush -- 原样返回传入的 fn
-    """
-    _flushes.append(fn)
-    return fn
-
-
-def emit_flush() -> None:
-    """
-    按登记顺序调用已登记的刷出缓冲输出回调，未登记时不执行操作。
-    Return arguments:
-    None -- 无返回值
-    """
-    for fn in _flushes:
-        fn()
 
 
 def on_route_leg(fn: RouteLeg) -> RouteLeg:

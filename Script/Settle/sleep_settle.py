@@ -40,7 +40,6 @@ def update_sleep() -> None:
     ui_hooks.emit_notice(
         _("\n博士入睡，开始结算各种数据\n"), use_text_width=True
     )
-    ui_hooks.emit_flush()
     id_list = roster.active()
     id_list.add(0)
 

@@ -6,7 +6,7 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 - save_load.reset：new_round 与 panel 界面实现。
 - save_load.style_hooks：文本样式初始化（io_init.init_style）。
 - ui_hooks：提示、数值变化、图片、分隔线、富文本口上、逐行等待文本、面板切换、确认提问、隐奸非H开关查询、
-  文本AI处理、刷出缓冲输出与主角寻路首段选定。
+  文本AI处理与主角寻路首段选定。
 - achievement_service：新达成成就提示。
 - ejaculation_service：射精文本、忍耐询问与射精面板。
 - hidden_sex_service：隐奸被发现面板。
@@ -167,7 +167,6 @@ def draw_divider(char: str = "-") -> None:
     STREAM.render(SceneBreak(STREAM.meta("ui_hooks.divider"), char))
 
 
-ui_hooks.on_flush(io_init.flush)
 style_hooks.on_styles_changed(io_init.init_style)
 
 

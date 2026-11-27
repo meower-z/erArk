@@ -1,10 +1,11 @@
 """
 叙事事件的 Tk 绘制适配器，通过 draw 绘制类输出 NarrativeEvent、SceneBreak 与 DeltaEvent。
+每次 render 在绘制前后各调用一次 io_init.flush，先刷出前置缓冲输出，再将本条事件刷出到协议端口。
 DeltaEvent 先转为单段落 NarrativeEvent。
 summary_text 非 None 时用作段落文本，为 None 时按变化项逐行生成。
-无自定义颜色的 plain 文本段直接沿用块基础样式（标题块为 littletitle，段落块为事件 style）。
+无自定义颜色的 plain 文本段沿用块基础样式（标题块为 littletitle，段落块为事件 style）。
 其余角色或带 color 的文本段经 frame_style_def 注册派生样式，保留块基础样式的背景与字体。
-派生样式采用配置字号并合并基础样式与角色的加粗、下划线和斜体标记。
+派生样式采用配置字号，并合并基础样式与角色的加粗、下划线和斜体标记。
 其前景色依次取自 color、角色取色样式或块基础样式。
 非末块文本结尾无换行符时补一段换行，使后续块从新行开始。
 pause 为真时，适配器在最后一段非空文本使用 WaitDraw，各段均为空时在末段使用 WaitDraw。
@@ -160,7 +161,9 @@ class EventStreamAdapter:
 
     def render(self, event: NarrativeEvent | SceneBreak | DeltaEvent) -> None:
         """
-        将一条叙事事件、场景分隔或数值变化事件经 LineDraw、NormalDraw 或 WaitDraw 绘制到界面。
+        在绘制前后各调用一次 io_init.flush，经 LineDraw、NormalDraw 或 WaitDraw 输出单条事件。
+        绘制前的刷出结束前置缓冲输出。
+        绘制后的刷出将本条事件送达协议端口。
         数值变化事件先转为不指定样式的单段落叙事事件。
         非末块结尾无换行时补一次换行。
         pause 为真时，最后一段非空文本使用 WaitDraw，各段全空时由末段使用 WaitDraw。
@@ -169,6 +172,11 @@ class EventStreamAdapter:
         Return arguments:
         None -- 无返回值
         """
+        io_init.flush()
+        self._draw(event)
+        io_init.flush()
+
+    def _draw(self, event: NarrativeEvent | SceneBreak | DeltaEvent) -> None:
         if isinstance(event, DeltaEvent):
             text = (
                 event.summary_text

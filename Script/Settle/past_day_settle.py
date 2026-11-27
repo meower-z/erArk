@@ -47,7 +47,6 @@ def update_new_day() -> None:
     ui_hooks.emit_notice(
         _("\n已过24点，开始结算各种数据\n\n"), use_text_width=True
     )
-    ui_hooks.emit_flush()
 
     # 清理过期的临时性技实操课，避免字典随游戏天数无限膨胀并进存档（Plan 22 四期 §7-16）
     # 课还在上（课堂模式开着、玩家在 H 里）时，该函数跳过 running 为真的那条：下课时间由玩家决定，
