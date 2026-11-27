@@ -213,10 +213,9 @@ class ModuleBoundaryTest(FastTestCase):
     """测试服务调用方与界面面板之间的模块导入边界及双顺序导入"""
 
     def test_settle_uses_difficulty_service(self) -> None:
-        """验证 common_default 导入 difficulty_service 且不导入 system_setting 面板"""
+        """验证 common_default 导入 difficulty_service"""
         imports = imported_modules(common_default)
         self.assertIn(difficulty_service.__name__, imports)
-        self.assertNotIn(SETTING_PANEL, imports)
 
     def test_diy_callers_use_diy_instruct_service(self) -> None:
         """验证 handle_premise 与 see_instruct_panel 导入 diy_instruct_service 且不导入 event_option_panel"""

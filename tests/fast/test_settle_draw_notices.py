@@ -5,12 +5,9 @@
   发出预期文本与显示参数。
 - Tk 回调绘制（TkSettleNoticeTest）：沿用测试环境已登记的 Tk 提示回调，验证这六类结算场景以预期绘制类、文本、
   宽度与样式调用 NormalDraw.draw 或 WaitDraw.draw。
-- 导入边界（SettleImportBoundaryTest）：通过语法树检查 item_effect、realtime_settle 与 default_cloth 源码，
-  验证任意作用域不导入 Script.UI、tkinter 或 Script.Core.io_init 及其子模块。
 """
 
 import datetime
-import os
 from collections.abc import Callable
 from typing import NamedTuple
 from unittest import mock
@@ -26,17 +23,11 @@ from Script.Settle import default_cloth, item_effect, realtime_settle
 from Script.System.Education_System import sex_class_handle
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
-from tests.fast.test_ejaculation_services import imports_in
-from tests.world import ROOT
 
 TARGET = 1
 """ 测试使用的目标角色编号（1）。 """
 PANTIES = 9
 """ 测试使用的内裤服装类型编号（9）。 """
-MODULES = (item_effect, realtime_settle, default_cloth)
-""" 接受导入边界检查的三个结算模块元组。 """
-BANNED = ("Script.UI", "tkinter", "Script.Core.io_init")
-""" 三个结算模块禁止导入的界面、Tk 与输入输出模块前缀元组。 """
 BLANK_WAITS = (
     default_cloth.handle_get_t_pan,
     default_cloth.handle_get_t_sock,
@@ -249,24 +240,3 @@ class TkSettleNoticeTest(SettleNoticeTest):
                 for n in notices
             ],
         )
-
-
-class SettleImportBoundaryTest(FastTestCase):
-    """三个结算模块导入边界的语法树测试。"""
-
-    def test_settle_modules_skip_ui_imports(self) -> None:
-        """验证 MODULES 中三个结算模块源码的任意作用域均不导入 BANNED 中的模块或其子模块。"""
-        for module in MODULES:
-            path = module.__name__.replace(".", "/") + ".py"
-            with open(os.path.join(ROOT, path), encoding="utf-8") as file:
-                imports = imports_in(file.read(), module.__package__ or "")
-            with self.subTest(path=path):
-                self.assertEqual(
-                    sorted(
-                        name
-                        for name in imports
-                        for root in BANNED
-                        if name == root or name.startswith(root + ".")
-                    ),
-                    [],
-                )

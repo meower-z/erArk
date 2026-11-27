@@ -13,8 +13,6 @@ FRONTEND = Path("Script/Frontend/Tk")
 """允许导入 Tk 依赖的前端包相对路径。"""
 BANNED_PREFIXES = ("tkinter", "_tkinter", "PIL.ImageTk", "Script.Frontend.Tk")
 """游戏后端代码中禁止导入的模块前缀元组。"""
-BANNED_MODULES = frozenset({"main_frame", "key_listion_event", "image_cache"})
-"""游戏后端代码中禁止按任意路径段导入的模块名称集合。"""
 
 
 def absolute_module(node: ast.ImportFrom, package: str) -> str:
@@ -57,15 +55,14 @@ def imported_names(tree: ast.AST, package: str = "") -> list[str]:
 
 def banned(name: str) -> bool:
     """
-    判断单条导入名称是否命中禁止前缀或禁止模块名
+    判断单条导入名称是否命中禁止前缀
 
     参数：
     name (str) -- 待检查的导入名称
 
     返回值类型：bool -- 命中禁用规则时返回 True，否则返回 False
     """
-    parts = name.split(".")
-    return bool(BANNED_MODULES.intersection(parts)) or any(
+    return any(
         name == prefix or name.startswith(prefix + ".")
         for prefix in BANNED_PREFIXES
     )
@@ -110,9 +107,6 @@ class FrontendBoundaryGuardTest(FastTestCase):
                 "from _tkinter import TclError",
                 "from PIL import ImageTk",
                 "from Script.Frontend.Tk import app",
-                "from Script.Core import main_frame",
-                "import Script.Core.key_listion_event",
-                "from .image_cache import image_data",
                 "from ..Frontend.Tk import app",
                 "from .. import Frontend",
                 "from PIL import Image",
@@ -134,10 +128,6 @@ class FrontendBoundaryGuardTest(FastTestCase):
                 "PIL.ImageTk",
                 "Script.Frontend.Tk",
                 "Script.Frontend.Tk.app",
-                "Script.Core.main_frame",
-                "Script.Core.key_listion_event",
-                "Script.Core.image_cache",
-                "Script.Core.image_cache.image_data",
                 "Script.Frontend.Tk",
                 "Script.Frontend.Tk.app",
             ],

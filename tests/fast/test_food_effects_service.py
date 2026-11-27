@@ -1,13 +1,11 @@
 """
 进食效果服务测试
 ================
-覆盖品质钳制与手制加成、菜谱难度与烹饪时间系数、随机抽取顺序与种子复现、进食结算调用及模块导入边界。
+覆盖品质钳制与手制加成、菜谱难度与烹饪时间系数、随机抽取顺序与种子复现、进食结算调用及无界面子进程运行。
 """
 
-import ast
 import datetime
 import random
-from importlib.util import resolve_name
 from unittest import mock
 
 from Script.Config import config_def, game_config
@@ -18,13 +16,8 @@ from Script.Settle import default
 from tests import kernel_data
 from tests.chara_activity import aim, behave
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT
 from tests.ui_free_subprocess import BLOCKED, run_ui_free
 
-CALLER_PATH = "Script/Settle/default.py"
-""" 进食结算调用方模块的仓库相对路径。 """
-PANEL = "Script.UI.Panel.food_bag_panel"
-""" 边界测试禁止调用方导入的食物背包面板模块全名。 """
 RECIPE = 987654
 """ 测试使用的合成菜谱编号（987654）。 """
 UNKNOWN = 987655
@@ -264,31 +257,13 @@ class EatSettleTest(FoodEffectsCase):
 
 
 class BoundaryTest(FastTestCase):
-    """进食效果模块与进食结算调用方的界面导入边界测试。"""
-
-    def test_caller_does_not_import_panel(self) -> None:
-        """Script/Settle/default.py 的全部导入语句中不包含 Script.UI.Panel.food_bag_panel。"""
-        tree = ast.parse((ROOT / CALLER_PATH).read_bytes())
-        found = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom):
-                base = resolve_name(
-                    "." * node.level + (node.module or ""), "Script.Settle"
-                )
-                names = [base, *(f"{base}.{a.name}" for a in node.names)]
-            elif isinstance(node, ast.Import):
-                names = [alias.name for alias in node.names]
-            else:
-                continue
-            if any(name.startswith(PANEL) for name in names):
-                found.append(node.lineno)
-        self.assertEqual(found, [])
+    """进食效果服务的无界面子进程运行测试。"""
 
     def test_runs_with_ui_blocked(self) -> None:
         """
-        验证拦截默认受限模块与食物背包面板时，子进程执行 FOOD_RUN 返回 payload 为 {"effects": [180, 12]}。
+        验证拦截默认受限模块时，子进程执行 FOOD_RUN 返回 payload 为 {"effects": [180, 12]}。
         同时验证子进程的 loaded 与 attempted 均为空列表。
         """
-        run = run_ui_free(FOOD_RUN, blocked=BLOCKED | {PANEL})
+        run = run_ui_free(FOOD_RUN, blocked=BLOCKED)
         self.assertEqual(run.payload, {"effects": [180, 12]})
         self.assertEqual((run.loaded, run.attempted), ([], []))

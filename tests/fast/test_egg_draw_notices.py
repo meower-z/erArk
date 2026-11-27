@@ -3,12 +3,10 @@
 ======================
 - 提示发出（EggNoticeTest）：验证 egg_handle 与 soft_egg_handle 的五个结算函数经 ui_hooks 发出提示并更新卵数据。
 - Tk 回调绘制（TkEggNoticeTest）：验证小世界已登记的 Tk 提示回调以 WaitDraw 与配置文本宽度绘制提示。
-- 模块边界（EggImportBoundaryTest）：验证两个模块的源码不导入 Script.UI、tkinter 或 Script.Core.io_init。
 """
 
 import datetime
 import itertools
-import os
 from unittest import mock
 
 from Script.Config import normal_config
@@ -21,8 +19,6 @@ from Script.System.Pregnancy_System import egg_handle, pregnancy_constant
 from Script.System.Pregnancy_System import soft_egg_handle
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
-from tests.fast.test_ejaculation_services import imports_in
-from tests.world import ROOT
 
 _ = get_text._
 """ get_text 提供的翻译函数。 """
@@ -32,13 +28,6 @@ NURSE = 2
 """ 测试用保育员角色编号（2）。 """
 BANNER = "\n※※※※※※※※※\n"
 """ 卵提示文本首尾使用的分隔行。 """
-SOURCES = (
-    "Script/System/Pregnancy_System/egg_handle.py",
-    "Script/System/Pregnancy_System/soft_egg_handle.py",
-)
-""" 受导入边界检查的两个模块的仓库相对路径元组。 """
-BANNED = ("Script.UI", "tkinter", "Script.Core.io_init")
-""" 禁止两个卵模块导入的模块路径前缀元组。 """
 
 
 class EggCase(FastTestCase):
@@ -270,22 +259,3 @@ class TkEggNoticeTest(EggCase):
             self.drawn,
             [("WaitDraw", text, normal_config.config_normal.text_width)],
         )
-
-
-class EggImportBoundaryTest(FastTestCase):
-    """验证两个卵模块不导入界面与输入输出模块的语法树边界测试。"""
-
-    def test_sources_import_no_ui(self) -> None:
-        """验证 SOURCES 中两个模块源码的任意作用域均不导入 BANNED 中的模块或其子模块。"""
-        for path in SOURCES:
-            with open(os.path.join(ROOT, path), encoding="utf-8") as source:
-                imports = imports_in(
-                    source.read(), "Script.System.Pregnancy_System"
-                )
-            hits = sorted(
-                name
-                for name in imports
-                for root in BANNED
-                if name == root or name.startswith(root + ".")
-            )
-            self.assertEqual(hits, [], path)

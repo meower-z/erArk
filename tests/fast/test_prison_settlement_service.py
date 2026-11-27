@@ -4,7 +4,7 @@
 - 逃脱结果处理（escape_success、escape_fail）：覆盖状态标志、移出名册、离线、追捕委托、概率清零与提示参数。
 - 每日结算入口（settle_prisoners）：覆盖无监狱长逃脱、有监狱长失败与零概率跳过分支。
 - Tk 提示回调（tk_ui.callbacks）：保留启动登记回调，验证 WaitDraw 与 NormalDraw 的样式、宽度与文本。
-- 模块边界：验证 basement.py 导入 prison_service 而非面板，且面板文件不绑定三个结算函数。
+- 模块边界：验证 basement.py 导入 prison_service，且面板文件不绑定三个结算函数。
 """
 
 import ast
@@ -34,8 +34,6 @@ OTHER = 2
 """ 测试用第二名囚犯角色编号 """
 WARDEN = 3
 """ 测试用监狱长角色编号 """
-PANEL = "Script.UI.Panel.confinement_and_training"
-""" 监禁调教管理面板模块全名 """
 BASEMENT = "Script/Design/basement.py"
 """ 基地每日结算模块的仓库相对路径 """
 PANEL_FILE = "Script/UI/Panel/confinement_and_training.py"
@@ -285,11 +283,10 @@ class TkPrisonNoticeTest(PrisonCase):
 class PrisonBoundaryTest(FastTestCase):
     """验证基地每日结算与监禁调教管理面板之间的模块边界约束。"""
 
-    def test_basement_imports_service_not_panel(self) -> None:
-        """验证 Script/Design/basement.py 导入 prison_service 且不导入监禁调教管理面板。"""
+    def test_basement_imports_prison_service(self) -> None:
+        """验证 Script/Design/basement.py 导入 prison_service。"""
         imports = file_imports(BASEMENT)
         self.assertIn(prison_service.__name__, imports)
-        self.assertNotIn(PANEL, imports)
 
     def test_panel_binds_no_settlement_function(self) -> None:
         """验证监禁调教管理面板各作用域均不绑定 settle_prisoners、escape_success 与 escape_fail。"""

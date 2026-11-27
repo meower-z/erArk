@@ -35,10 +35,7 @@ BLOCKED = (
     "_tkinter",
     "PIL.ImageTk",
 )
-ALLOWED = ("Script.Modules.tk_ui", "Script.Modules.tk_ui.orders")
 def blocked(name):
-    if name in ALLOWED:
-        return False
     return any(name == b or name.startswith(b + ".") for b in BLOCKED)
 class Block(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
