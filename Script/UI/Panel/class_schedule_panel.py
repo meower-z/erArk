@@ -13,9 +13,9 @@ from Script.Modules.gameplay_resolution import class_schedule_service as svc
 from Script.Modules.gameplay_resolution.class_schedule_service import (
     get_teacher_absent_mark as get_teacher_absent_mark,
 )
-from Script.System.Education_System import growth_panel
 from Script.System.Education_System import education_constant, schedule_handle
-from Script.UI.Panel import course_select_panel, schedule_template_panel
+from Script.UI.Panel import course_select_panel, growth_panel
+from Script.UI.Panel import schedule_template_panel
 from Script.UI.Panel.sex_class_plan_panel import (
     Sex_Class_Plan_Panel,
     add_button,

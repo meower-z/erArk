@@ -164,10 +164,8 @@ class GrowthEventsMatchStageTest(SlowTestCase):
 
         from Script.Config import game_config
         from Script.Core import save_handle
-        from Script.System.Education_System import (
-            education_constant,
-            growth_panel,
-        )
+        from Script.System.Education_System import education_constant
+        from Script.UI.Panel import growth_panel
         from Script.Modules.domains import growth, official
         from Script.System.Official_Event_System import official_event_handle
         from Script.Test.Static_Check.checks import check_official

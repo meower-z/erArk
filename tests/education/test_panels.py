@@ -8,8 +8,8 @@ from _bootstrap import education, education_constant, finish, flow_handle
 from _bootstrap import game_config, make_character, move_to, activity
 from _bootstrap import open_all_classroom, period_time, pl, schedule_handle
 from _bootstrap import section, semester_handle, set_time, sex_class_handle
-from Script.System.Education_System import class_schedule_panel
-from Script.System.Education_System import growth_panel
+from Script.UI.Panel import class_schedule_panel
+from Script.UI.Panel import growth_panel
 from Script.UI.Panel import course_select_panel, schedule_template_panel
 from Script.Modules.tk_ui import student_select
 from typing import TYPE_CHECKING
