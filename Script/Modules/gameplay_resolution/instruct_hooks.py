@@ -1,13 +1,13 @@
 """
 指令界面钩子（instruct_hooks）
 ==============================
-本模块提供两组指令界面入口与对应的槽位登记函数。本模块不导入界面模块。
+本模块提供三组指令界面入口与登记函数。本模块不导入界面模块。
 on_instruct 登记 show_non_h、skip_pauses、stash_filter 与 stashed_filter。
-未登记时，前三个写入入口不执行操作。未登记时，stashed_filter 返回新的空字典。
-on_prompts 登记 ask_close_door、ask_sex_class_ability、confirm_poor_music、
-select_condom、ask_official_option 与 show_official_result 六个槽位。
-未登记时，前五个询问入口抛出 RuntimeError。未登记时，show_official_result 不执行操作。
-Script.Modules.tk_ui.instruct_callbacks 在导入时调用 on_instruct 与 on_prompts 填入两组槽位。
+未登记时前三个无操作。未登记时 stashed_filter 返回新空字典。
+on_prompts 登记 ask_close_door、ask_sex_class_ability、confirm_poor_music、select_condom、
+ask_official_option 与 show_official_result。未登记时前五个抛出 RuntimeError。未登记时第六个无操作。
+on_sex_position 登记 choose_sex_position。未登记时抛出 RuntimeError。
+Script.Modules.tk_ui.instruct_callbacks 导入时调用上述三个登记函数填入三组槽位。
 """
 
 from collections.abc import Callable, Sequence
@@ -31,6 +31,8 @@ type AskOfficial = Callable[[dict[str, Any]], int]
 """ 展示单条公务事件并询问选项的函数类型别名，接收队列项字典并返回选项序号或 0。 """
 type ShowOfficial = Callable[[str, int, int, int], None]
 """ 展示公务事件结算后果的函数类型别名，接收事件 uid、主体角色编号、互动对象编号与选项序号。 """
+type ChooseSexPosition = Callable[[int, bool], None]
+""" 打开性交体位选择面板的函数类型别名，接收性交类型编号与换体位标记且无返回值。 """
 
 
 def _ignore(value: object) -> None:
@@ -101,6 +103,8 @@ _ask_official_option: AskOfficial = _unregistered
 """ 当前生效的公务事件选项询问槽位，默认为 _unregistered。 """
 _show_official_result: ShowOfficial = _ignore_result
 """ 当前生效的公务事件后果显示槽位，默认为 _ignore_result。 """
+_choose_sex_position: ChooseSexPosition = _unregistered
+""" 当前生效的性交体位选择面板槽位，默认为未登记时抛出 RuntimeError 的 _unregistered。 """
 
 
 def on_instruct(
@@ -269,3 +273,29 @@ def show_official_result(
     None -- 无返回值
     """
     _show_official_result(uid, character_id, partner_id, option_index)
+
+
+def on_sex_position(choose_sex_position: ChooseSexPosition) -> None:
+    """
+    登记性交体位选择面板槽位的处理函数。
+    后续调用会替换先前登记的处理函数。
+    Keyword arguments:
+    choose_sex_position -- ChooseSexPosition，打开性交体位选择面板的函数
+    Return arguments:
+    None -- 无返回值
+    """
+    global _choose_sex_position
+    _choose_sex_position = choose_sex_position
+
+
+def choose_sex_position(sex_type: int, change_position: bool) -> None:
+    """
+    在调用时读取当前 _choose_sex_position 槽位，打开性交体位选择面板。
+    未登记时抛出 RuntimeError。
+    Keyword arguments:
+    sex_type -- int，性交类型编号（1 阴道、2 子宫口、3 子宫、4 肛门、5 尿道）
+    change_position -- bool，是否为切换体位
+    Return arguments:
+    None -- 无返回值
+    """
+    _choose_sex_position(sex_type, change_position)

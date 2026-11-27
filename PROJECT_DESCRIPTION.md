@@ -217,7 +217,7 @@ Script/
 └── UI/
     ├── Moudle/draw.py      # 绘制类抽象层（NormalDraw/Button/BarDraw...）
     ├── Moudle/panel.py     # 通用面板构建块
-    ├── Panel/              # 83 个功能面板
+    ├── Panel/              # 84 个功能面板
     └── Flow/               # 标题 / 创建角色 / normal_flow 面板注册
 ```
 
@@ -714,7 +714,7 @@ Script/
 | 绳艺 | `UI/Panel/bondage_panel.py` | `Bondage.csv` |
 | 监禁调教 | `UI/Panel/confinement_and_training.py` | 关押区、监狱长 |
 | 睡眠/无意识 | `UI/Panel/sleep_panel.py`, `handle_npc_ai_in_h.py` | 睡奸/无意识 H |
-| 性爱姿势 | `System/Sex_System/sex_position_panel.py` | `Sex_Position.csv` |
+| 性爱姿势 | `UI/Panel/sex_position_panel.py` | `Sex_Position.csv` |
 | H 被发现 | `UI/Panel/sex_be_discovered_panel.py` | 目击/逃走 |
 
 ### 18.6 系统/UI 功能
