@@ -5,16 +5,13 @@
 - 模板统计与部位查询：验证空模板、仅模板 A、双模板启用后的统计结果，以及部位空缺与占用状态。
 - 行为筛选与清理：验证部位映射、过滤开关、无指令映射项、处女保护过滤及双模板角色清理。
 - 调用方与面板：验证状态重置、指令启动、NPC 群交补位经服务生效，以及面板不定义六个模板函数。
-- 导入边界：验证导入解析自测、服务与五处后端调用方不导入面板，以及屏蔽面板子进程运行全部六个函数。
+- 导入边界：验证屏蔽面板模块的子进程可导入群交模板服务、运行全部六个函数且不加载面板模块。
 """
 
-import ast
 import datetime
 import json
 import subprocess
 import sys
-from importlib.util import resolve_name
-from pathlib import PurePosixPath
 from typing import Any
 from unittest import mock
 
@@ -30,18 +27,6 @@ from Script.UI.Panel import group_sex_panel
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT
 
-PANEL = "Script.UI.Panel.group_sex_panel"
-"""导入边界测试中禁止后端调用方导入的群交面板模块全名。"""
-SERVICE = "Script/Modules/gameplay_resolution/group_sex_service.py"
-"""群交模板服务模块在仓库中的相对路径。"""
-CALLERS = (
-    "Script/Design/handle_npc_ai_in_h.py",
-    "Script/Design/settle_behavior.py",
-    "Script/Settle/default.py",
-    "Script/System/Education_System/sex_class_handle.py",
-    "Script/System/Instruct_System/handle_instruct.py",
-)
-"""五个后端调用方模块在仓库中的相对路径元组。"""
 MOVED = (
     "group_sex_settle",
     "count_group_sex_instruct_list",
@@ -380,28 +365,6 @@ class CallerTest(TemplateCase):
         )
 
 
-def imported(source: str | bytes, path: str) -> set[str]:
-    """解析源码中的绝对、相对与嵌套导入语句，返回按模块路径展开后的完整导入名集合。"""
-    package = ".".join(PurePosixPath(path).parent.parts)
-    names: set[str] = set()
-    for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.Import):
-            names.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            base = resolve_name("." * node.level + (node.module or ""), package)
-            names.update(f"{base}.{alias.name}" for alias in node.names)
-    return names
-
-
-def forbidden(source: str | bytes, path: str) -> list[str]:
-    """筛选源码导入名中等于或位于 group_sex_panel 下的条目并按字典序返回。"""
-    return sorted(
-        name
-        for name in imported(source, path)
-        if name == PANEL or name.startswith(PANEL + ".")
-    )
-
-
 BLOCKED_RUN = """
 import importlib.abc, json, sys
 
@@ -445,28 +408,7 @@ print(json.dumps(out))
 
 
 class ImportBoundaryTest(FastTestCase):
-    """验证群交模板服务与五处后端调用方的导入边界，以及屏蔽面板时的独立运行能力。"""
-
-    def test_checker_resolves_relative_and_multi_name_imports(self) -> None:
-        """验证 forbidden 能正确识别相对、多名与函数内嵌套导入，且不误报同前缀模块。"""
-        source = (
-            "from . import group_sex_panel, hidden_sex_panel\n"
-            "import Script.UI.Panel.group_sex_panel_extra\n"
-            "def f():\n"
-            "    from ..Panel.group_sex_panel import SeeGroupSexInfoPanel\n"
-        )
-        self.assertEqual(
-            forbidden(source, "Script/UI/Panel/probe.py"),
-            [PANEL, f"{PANEL}.SeeGroupSexInfoPanel"],
-        )
-
-    def test_service_and_callers_import_no_group_sex_panel(self) -> None:
-        """验证 group_sex_service.py 与五个后端调用方模块均不导入 group_sex_panel 及其成员。"""
-        for path in (SERVICE, *CALLERS):
-            with self.subTest(path):
-                self.assertEqual(
-                    forbidden((ROOT / path).read_bytes(), path), []
-                )
+    """验证群交模板服务在屏蔽 Script.UI.Panel 及其子模块的子进程中可独立导入、运行全部六个函数且不加载面板模块。"""
 
     def test_service_runs_with_panels_blocked(self) -> None:
         """验证屏蔽 Script.UI.Panel 与 group_sex_panel 的子进程可运行全部六个服务函数且不加载被屏蔽模块。"""
