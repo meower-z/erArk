@@ -1,12 +1,12 @@
 """
 叙事事件协议的数据类型定义模块，仅导入 Python 标准库。
-本模块定义五个不可变数据类与两个字面量类型别名（SpanRole、BlockKind）。
+本模块定义五个不可变数据类、一个 TypedDict（EventFacts）与两个字面量类型别名（SpanRole、BlockKind）。
 五个数据类依次描述事件元数据、行内文本、文本块、叙事事件与场景分隔，并在构造时校验字段。
 """
 
 import unicodedata
 from dataclasses import dataclass
-from typing import Literal, get_args
+from typing import Literal, TypedDict, get_args
 
 type SpanRole = Literal["plain", "emphasis", "strong", "warning", "accent"]
 """ 行内文本的角色字面量类型，取值为 plain、emphasis、strong、warning 或 accent。 """
@@ -44,16 +44,35 @@ def _visible(char: object) -> bool:
     )
 
 
+class EventFacts(TypedDict, total=False):
+    """事件可选事实字段的 TypedDict：角色编号 actors、地点 location、是否涉及玩家 involves_player、类别 category。"""
+
+    actors: tuple[int, ...]
+    location: str
+    involves_player: bool
+    category: str
+
+
 @dataclass(frozen=True, slots=True)
 class EventMeta:
-    """叙事事件的不可变元数据，包含非负序号 seq、非负游戏时钟 clock 与来源标识 source。"""
+    """
+    事件的不可变元数据，包含非负序号 seq、非负游戏时钟 clock 与来源标识 source。
+    另含四个事实字段：actors（默认 ()）、location（默认 ""）、involves_player（默认 False）与 category（默认 ""）。
+    """
 
     seq: int
     clock: int
     source: str
+    actors: tuple[int, ...] = ()
+    location: str = ""
+    involves_player: bool = False
+    category: str = ""
 
     def __post_init__(self) -> None:
-        """校验 seq 与 clock 为非负非布尔整数且 source 为字符串，不满足时抛出 ValueError。"""
+        """
+        校验 seq 与 clock 为非负非布尔整数，actors 为非负非布尔整数元组，source、location 与 category 为字符串。
+        同时校验 involves_player 为布尔值，以上任一项不满足时抛出 ValueError。
+        """
         _require(
             _count(self.seq), f"seq {self.seq!r} is not a non-negative int"
         )
@@ -63,6 +82,17 @@ class EventMeta:
         )
         _require(
             isinstance(self.source, str), f"source {self.source!r} is not a str"
+        )
+        _require(
+            isinstance(self.actors, tuple) and all(map(_count, self.actors)),
+            f"actors {self.actors!r} is not a tuple of non-negative ints",
+        )
+        for name in ("location", "category"):
+            value = getattr(self, name)
+            _require(isinstance(value, str), f"{name} {value!r} is not a str")
+        _require(
+            isinstance(self.involves_player, bool),
+            f"involves_player {self.involves_player!r} is not a bool",
         )
 
 

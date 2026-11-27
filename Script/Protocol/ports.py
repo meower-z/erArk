@@ -1,10 +1,12 @@
 """
-协议端口抽象接口模块。
-定义游戏逻辑侧使用的 UiPort 与前端界面侧使用的 SessionPort 两套 typing.Protocol 契约。
+协议端口抽象接口模块，定义四套 typing.Protocol 契约。
+UiPort 与 SessionPort 分别供游戏逻辑侧与前端界面侧使用。
+Notice 与 Delta 分别定义提示文本回调与数值变化回调的函数签名。
 """
 
-from typing import Protocol
+from typing import Protocol, Unpack
 
+from Script.Protocol.delta_events import DeltaEntry
 from Script.Protocol.messages import (
     AttachmentSnapshot,
     BackendEvent,
@@ -17,6 +19,7 @@ from Script.Protocol.messages import (
     SubmitText,
     UiResponse,
 )
+from Script.Protocol.narrative_events import EventFacts
 
 
 class UiPort(Protocol):
@@ -229,4 +232,56 @@ class SessionPort(Protocol):
         response (UiResponse) -- 待提交的 Continue、SubmitChoice、SubmitText 或 Cancel 响应
 
         返回值：bool -- 响应被接受时返回 True，被拒绝时返回 False
+        """
+
+
+class Notice(Protocol):
+    """提示文本回调的函数签名协议。"""
+
+    def __call__(
+        self,
+        text: str,
+        *,
+        wait: bool,
+        style: str | None,
+        use_text_width: bool,
+        **facts: Unpack[EventFacts],
+    ) -> None:
+        """
+        接收一条提示文本及其显示选项并完成输出。
+        Keyword arguments:
+        text -- str，要输出的提示文本
+        wait -- bool，为真时等待玩家确认
+        style -- str | None，文本样式名，为 None 时使用默认样式
+        use_text_width -- bool，为真时按配置的文本宽度排版
+        facts -- EventFacts，可选的事件事实关键字参数（actors、location、involves_player、category）
+        Return arguments:
+        None -- 无返回值
+        """
+
+
+class Delta(Protocol):
+    """数值变化回调的函数签名协议。"""
+
+    def __call__(
+        self,
+        entries: tuple[DeltaEntry, ...],
+        *,
+        source: str,
+        summary_text: str | None,
+        wait: bool,
+        use_text_width: bool,
+        **facts: Unpack[EventFacts],
+    ) -> None:
+        """
+        接收一组数值变化项及其显示选项并完成输出。
+        Keyword arguments:
+        entries -- tuple[DeltaEntry, ...]，数值变化项元组
+        source -- str，事件来源标识
+        summary_text -- str | None，整段显示文本，无摘要文本时为 None
+        wait -- bool，为真时等待玩家确认
+        use_text_width -- bool，为真时按配置的文本宽度排版
+        facts -- EventFacts，可选的事件事实关键字参数（actors、location、involves_player、category）
+        Return arguments:
+        None -- 无返回值
         """
