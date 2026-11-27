@@ -211,13 +211,13 @@ Script/
 │   ├── Cooking_System/     # 烹饪/食物
 │   ├── Dormitory_System/   # 宿舍
 │   ├── Field_Commission_System/ # 外勤委托
-│   ├── Instruct_System/    # 指令注册、分类、显示、映射
+│   ├── Instruct_System/    # 指令注册、分类、映射
 │   ├── Medical_System/     # 医疗经营
 │   └── Sex_System/         # 群交/隐奸/露出/醉奸等
 └── UI/
     ├── Moudle/draw.py      # 绘制类抽象层（NormalDraw/Button/BarDraw...）
     ├── Moudle/panel.py     # 通用面板构建块
-    ├── Panel/              # 84 个功能面板
+    ├── Panel/              # 85 个功能面板
     └── Flow/               # 标题 / 创建角色 / normal_flow 面板注册
 ```
 
@@ -570,7 +570,7 @@ Script/
   - `add_instruct` 支持从 `InstructConfig.csv` 读参数（类型/名称/前提集/行为ID等），装饰器参数优先
 - ID 常量：`Script/System/Instruct_System/Instruct.py`
 - 配置：`data/csv/InstructConfig.csv`（408 条）
-- 显示与过滤：`Script/UI/Panel/instruct_filter_panel.py`、`Script/System/Instruct_System/see_instruct_panel.py`
+- 显示与过滤：`Script/UI/Panel/instruct_filter_panel.py`、`Script/UI/Panel/see_instruct_panel.py`
 - 实行判定：`Script/Design/instuct_judege.py`；`InstructJudge.csv` 定义实行值判定
 - 调度：`handle_instruct()` 在玩家的交互对象处于幼年阶段时跳过 H 类指令（`child_stage_gate.blocks_instruct`）。对 `constant.instruct_premise_data` 里有的其余指令，它调用 `constant.handle_instruct_data` 里对应的函数
 - 执行后行为写入 `character_data.behavior.behavior_id`，由主行为循环结算

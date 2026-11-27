@@ -1,7 +1,6 @@
 """场景互动界面面板"""
 
 from types import FunctionType
-from Script.System.Instruct_System import see_instruct_panel
 from Script.UI.Moudle import draw, panel, view
 from Script.UI.Panel import (
     game_info_panel,
@@ -11,6 +10,7 @@ from Script.UI.Panel import (
     cloth_panel,
     chara_image_list_panel,
     character_info_head,
+    see_instruct_panel,
 )
 from Script.Core import (
     get_text,

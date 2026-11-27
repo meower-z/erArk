@@ -22,8 +22,8 @@ from Script.Modules.domains import activity, flags
 from Script.Modules.gameplay_resolution import difficulty_service
 from Script.Modules.gameplay_resolution import diy_instruct_service, working
 from Script.Settle import common_default
-from Script.System.Instruct_System import see_instruct_panel
-from Script.UI.Panel import event_option_panel, system_setting
+from Script.UI.Panel import event_option_panel, see_instruct_panel
+from Script.UI.Panel import system_setting
 from tests.fast.base import FastTestCase
 from tests.world import ROOT
 
