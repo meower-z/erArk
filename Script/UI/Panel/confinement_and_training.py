@@ -1,16 +1,14 @@
-"""监禁调教管理面板与调教前准备入口函数 prepare_training"""
+"""监禁调教管理面板"""
 
 import os
 from types import FunctionType
-from typing import NoReturn
 from Script.Core import get_text, flow_handle, constant
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import activity, chara_life
+from Script.Modules.domains import chara_life
 from Script.Modules.domains import inventory
 from Script.Modules.domains import prison
 from Script.Modules.gameplay_resolution import prison_service, training_prep
-from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
@@ -20,19 +18,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def prepare_training() -> NoReturn:
-    """
-    玩家定下调教前准备：10 分钟的等待，准备工作在行动开始时进行（start_training_preparation）
-    """
-    player_pick.choose(
-        constant.Behavior.WAIT,
-        10,
-        kind="prepare_training",
-        target=activity.target(0),
-        state=constant.CharacterStatus.STATUS_WAIT,
-    )
 
 
 class Confinement_And_Training_Manage_Panel:

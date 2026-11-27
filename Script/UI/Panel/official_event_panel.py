@@ -13,11 +13,10 @@
       养成倾向于是变成按键顺序的产物。序号只是画面上的编号，结算与履历一律认 CSV 里的原序号
 """
 
-from collections.abc import Mapping
 from types import FunctionType
 
 from Script.Core import flow_handle, get_text, py_cmd, text_handle
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Design import talk
 from Script.System.Official_Event_System import official_event_handle
 from Script.Modules.tk_ui import player_pick
@@ -31,8 +30,6 @@ line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
 
 
 def get_code_text(raw_text: str, character_id: int, partner_id: int) -> str:
@@ -209,59 +206,3 @@ class Official_Event_Draw:
             )
             result_draw.draw()
             return
-
-
-def choose_official_event_option(width: int = 0) -> dict | None:
-    """
-    处理公务时的选择：待决断队列里的事件逐条出队，为第一条有可选选项的事件选定选项，选项在处理公务开始时才结算
-
-    出队在先：无效项已由 pop_official_event 静默丢弃，弹出的每一条都保证主体与配置都还在。
-       出队与履历写入选择缓冲区，随处理公务的行动生效
-    Keyword arguments:
-    width -- 绘制宽度，默认取窗体宽度
-    Return arguments:
-    dict | None -- 选定的选项（uid、chara_id、partner_id、option），队列里没有要决断的事件时为 None
-    """
-    if not width:
-        width = window_width
-    official_event_handle.init_provider()
-    while 1:
-        queue_data = official_event_handle.pop_official_event()
-        if queue_data is None:
-            return None
-        option_index = Official_Event_Draw(queue_data, width).draw()
-        if option_index:
-            return {
-                "uid": queue_data["uid"],
-                "chara_id": queue_data.get("chara_id", 0),
-                "partner_id": queue_data.get("partner_id", 0),
-                "option": option_index,
-            }
-        # 一条选项都不可选而被跳过：不结算，但**必须记履历**。
-        # 只出队的话事件出了队却没进履历，judge_event_done 仍为假，
-        #    明天照样会被重新派下来，玩家于是反复看到同一条「已经不需要你来决定了」。
-        #    记 0 号选项，养成履历里会显示为「（未作选择）」——那条兜底文案本就是为它写的
-        official_event_handle.record_event_done(
-            queue_data["uid"], queue_data.get("chara_id", 0), 0
-        )
-
-
-def settle_chosen_option(option: Mapping) -> None:
-    """
-    结算 choose_official_event_option 选定的选项并记进履历，再单独显示这个选择的后果（Plan 32 §8.2）
-    Keyword arguments:
-    option -- 选定的选项（uid、chara_id、partner_id、option）
-    Return arguments:
-    无
-    """
-    uid = str(option["uid"])
-    character_id = int(option["chara_id"])
-    partner_id = int(option["partner_id"])
-    option_index = int(option["option"])
-    official_event_handle.settle_official_event_option(
-        uid, character_id, partner_id, option_index
-    )
-    Official_Event_Draw(
-        {"uid": uid, "chara_id": character_id, "partner_id": partner_id},
-        window_width,
-    ).draw_result(option_index)

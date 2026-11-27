@@ -3,21 +3,18 @@
 import datetime
 from functools import wraps
 from collections.abc import Callable, Mapping
-from typing import NoReturn, ParamSpec, TypeVar
+from typing import Any, NoReturn, ParamSpec, TypeVar
 from types import FunctionType
 from Script.Core import (
     constant,
     constant_promise,
     game_type,
     get_text,
-    flow_handle,
 )
 from Script.Design import handle_ability, map_handle, instuct_judege
 from Script.Design import handle_npc_ai_in_h, handle_premise, child_stage_gate
-from Script.UI.Panel import normal_panel
 from Script.Kernel import core
 from Script.Config import normal_config, game_config
-from Script.UI.Moudle import draw
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import group_sex_service
@@ -1153,11 +1150,11 @@ def handle_door_unlock_inner() -> None:
 
 def ask_close_door() -> dict[str, object]:
     """
-    选择时问玩家关不关门（normal_panel.Close_Door_Panel），只读数据
+    经 instruct_hooks.ask_close_door 询问玩家是否关门，只读游戏状态。
     Return arguments:
-    dict -- 交给 choose 的 args：问过时 {CLOSE_DOOR: 回答}，在这里问过了就不再问时为空
+    dict[str, object] -- 交给 choose 的 args，问过时为 {CLOSE_DOOR: 回答}，未询问时为空字典
     """
-    answer = normal_panel.Close_Door_Panel(width).draw()
+    answer = instruct_hooks.ask_close_door()
     if answer is None:
         return {}
     return {CLOSE_DOOR: answer}
@@ -1584,10 +1581,19 @@ def handle_do_h_with_daughter() -> None:
 
 @add_instruct(constant.Instruct.PREPARE_TRAINING)
 def handle_prepare_training() -> None:
-    """处理调教前准备指令：选择交给调教面板（行动开始时三人去调教室并做好准备）"""
-    from Script.UI.Panel import confinement_and_training
-
-    confinement_and_training.prepare_training()
+    """
+    处理调教前准备指令，经 pick_hooks.choose 定下种类为 prepare_training 的 10 分钟等待行动。
+    行动以当前交互对象为目标，开始时由对应开始函数执行准备流程。
+    Return arguments:
+    None -- 经 pick_hooks.choose 结束本次选择，无正常返回值
+    """
+    pick_hooks.choose(
+        constant.Behavior.WAIT,
+        10,
+        kind="prepare_training",
+        target=activity.target(0),
+        state=constant.CharacterStatus.STATUS_WAIT,
+    )
 
 
 @add_instruct(constant.Instruct.SWITCH_TO_H_INTERFACE)
@@ -2089,7 +2095,9 @@ def handle_start_sex_class() -> None:
     if temp_class is not None:
         ability_id = temp_class.get("ability_id", -1)
     if ability_id not in education_constant.SEX_CLASS_ABILITY_LIST:
-        ability_id = ask_for_sex_class_ability()
+        ability_id = instruct_hooks.ask_sex_class_ability(
+            education_constant.SEX_CLASS_ABILITY_LIST
+        )
         if ability_id == -1:
             return
     # 交互对象取第一名学生：行为效果串里的464会让交互对象进H，其余学生由10014的结算器补上
@@ -2116,49 +2124,6 @@ def _start_sex_class(who: int, chosen: intent.Intent) -> None:
     sex_class_handle.start_sex_class(
         ability_id, _ints(chosen["args"]["students"])
     )
-
-
-def ask_for_sex_class_ability() -> int:
-    """
-    让玩家选一门本节课的主修性技科目
-
-    只列女学生学得了的七门。76腰技的 sex_need 为0（男性专属，data/csv/Ability.csv:76），
-       选了它全场学生一节课都吃不到加成，还不会报错，所以在源头就不列出来。
-    Keyword arguments:
-    无
-    Return arguments:
-    int -- 选中的能力id，取消则为-1
-    """
-    from Script.System.Education_System import education_constant
-
-    while 1:
-        now_draw = draw.NormalDraw()
-        now_draw.width = width
-        now_draw.text = _(
-            "\n这节实操课主要练哪一门？\n（其他动作照样可以做，只是不会有本门的加成）\n\n"
-        )
-        now_draw.draw()
-        return_list = []
-        id_to_return = {}
-        for ability_id in education_constant.SEX_CLASS_ABILITY_LIST:
-            ability_name = game_config.config_ability[ability_id].name
-            now_button = draw.CenterButton(
-                _("[{0}]").format(ability_name), ability_name, int(width / 4)
-            )
-            now_button.draw()
-            return_list.append(now_button.return_text)
-            id_to_return[now_button.return_text] = ability_id
-        line_draw = draw.NormalDraw()
-        line_draw.text = "\n"
-        line_draw.draw()
-        back_draw = draw.CenterButton(_("[返回]"), _("返回"), int(width / 4))
-        back_draw.draw()
-        return_list.append(back_draw.return_text)
-        yrn = flow_handle.askfor_all(return_list)
-        if yrn == back_draw.return_text:
-            return -1
-        if yrn in id_to_return:
-            return id_to_return[yrn]
 
 
 @add_instruct(constant.Instruct.END_SEX_CLASS)
@@ -2273,29 +2238,8 @@ def handle_singing() -> None:
     if abilities.ability(0)[44] <= 2 and handle_premise.handle_scene_over_one(
         0
     ):
-        while 1:
-            now_draw = draw.WaitDraw()
-            now_draw.width = width
-            now_draw.text = _(
-                "\n当前音乐能力小于等于2，可能会让对方感觉不适，确认要继续吗\n\n"
-            )
-            now_draw.draw()
-            return_list = []
-            back_draw = draw.CenterButton(
-                _("[取消]"), _("\n取消"), int(width / 3)
-            )
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-            yes_draw = draw.CenterButton(
-                _("[确定]"), _("\n确定"), int(width / 3)
-            )
-            yes_draw.draw()
-            return_list.append(yes_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                return
-            elif yrn == yes_draw.return_text:
-                break
+        if not instruct_hooks.confirm_poor_music():
+            return
     chara_handle_instruct_common_settle(constant.Behavior.SINGING)
 
 
@@ -2306,29 +2250,8 @@ def handle_play_instrument() -> None:
     if abilities.ability(0)[44] <= 2 and handle_premise.handle_scene_over_one(
         0
     ):
-        while 1:
-            now_draw = draw.WaitDraw()
-            now_draw.width = width
-            now_draw.text = _(
-                "\n当前音乐能力小于等于2，可能会让对方感觉不适，确认要继续吗\n\n"
-            )
-            now_draw.draw()
-            return_list = []
-            back_draw = draw.CenterButton(
-                _("[取消]"), _("\n取消"), int(width / 3)
-            )
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-            yes_draw = draw.CenterButton(
-                _("[确定]"), _("\n确定"), int(width / 3)
-            )
-            yes_draw.draw()
-            return_list.append(yes_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                return
-            elif yrn == yes_draw.return_text:
-                break
+        if not instruct_hooks.confirm_poor_music():
+            return
     chara_handle_instruct_common_settle(constant.Behavior.PLAY_INSTRUMENT)
 
 
@@ -2497,10 +2420,13 @@ def handle_aromatherapy() -> None:
 
 @add_instruct(constant.Instruct.OFFICIAL_WORK)
 def handle_official_work() -> None:
-    """处理处理公务指令：先为待决断队列里的第一条公务事件选定选项，选项在处理公务开始时结算"""
-    from Script.UI.Panel import official_event_panel
-
-    option = official_event_panel.choose_official_event_option(width)
+    """
+    处理公务指令，先经 choose_official_option 为待决断队列中第一条可选公务事件选定选项。
+    选定后随处理公务行动带入 official_option 开始代码，在行动开始时结算。
+    Return arguments:
+    None -- 经行动选择结束本次处理，无正常返回值
+    """
+    option = choose_official_option()
     chara_handle_instruct_common_settle(
         constant.Behavior.OFFICIAL_WORK,
         force_taget_wait=True,
@@ -2512,14 +2438,65 @@ def handle_official_work() -> None:
 @start_part("official_option")
 def _start_official_option(who: int, chosen: intent.Intent) -> None:
     """
-    处理公务开始时：结算选择时选定的公务事件选项（args 的 uid、chara_id、partner_id、option），记进履历，再显示它的后果
+    处理公务行动开始时，按行动参数中的公务选项调用 settle_official_option 完成结算并显示后果。
     Keyword arguments:
-    who -- 角色id
-    chosen -- 行动的意图
+    who -- int，执行行动的角色编号，本函数不使用
+    chosen -- intent.Intent，本次行动的意图，其 args 包含 uid、chara_id、partner_id 与 option
+    Return arguments:
+    None -- 无返回值
     """
-    from Script.UI.Panel import official_event_panel
+    settle_official_option(chosen["args"])
 
-    official_event_panel.settle_chosen_option(dict(chosen["args"]))
+
+def choose_official_option() -> dict[str, object] | None:
+    """
+    初始化公务事件提供者并逐条出队待决断事件，经 instruct_hooks.ask_official_option 询问选项。
+    返回非零选项序号时立即返回该事件选项字典。
+    返回 0 时以选项 0 调用 record_event_done 记入履历，以免事件保持未完成状态而被再次派发。
+    Return arguments:
+    dict[str, object] | None -- 含 uid、chara_id、partner_id 与 option 的字典，队列无可选事件时为 None
+    """
+    from Script.System.Official_Event_System import official_event_handle
+
+    official_event_handle.init_provider()
+    while (
+        queue_data := official_event_handle.pop_official_event()
+    ) is not None:
+        uid, character_id = queue_data["uid"], queue_data.get("chara_id", 0)
+        option_index = instruct_hooks.ask_official_option(queue_data)
+        if option_index:
+            partner_id = queue_data.get("partner_id", 0)
+            return {
+                "uid": uid,
+                "chara_id": character_id,
+                "partner_id": partner_id,
+                "option": option_index,
+            }
+        official_event_handle.record_event_done(uid, character_id, 0)
+    return None
+
+
+def settle_official_option(option: Mapping[str, Any]) -> None:
+    """
+    调用 official_event_handle.settle_official_event_option 结算已选公务选项并写入履历。
+    结算完成后，经 instruct_hooks.show_official_result 展示该选项的后果。
+    Keyword arguments:
+    option -- Mapping[str, Any]，包含 uid、chara_id、partner_id 与 option 的选项映射
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.System.Official_Event_System import official_event_handle
+
+    uid = str(option["uid"])
+    character_id = int(option["chara_id"])
+    partner_id = int(option["partner_id"])
+    option_index = int(option["option"])
+    official_event_handle.settle_official_event_option(
+        uid, character_id, partner_id, option_index
+    )
+    instruct_hooks.show_official_result(
+        uid, character_id, partner_id, option_index
+    )
 
 
 @add_instruct(constant.Instruct.BATTLE_COMMAND)
@@ -3600,16 +3577,15 @@ def handle_take_condom_out() -> None:
 
 def handle_condom_instruct_common(mode: str, behavior_id: str) -> None:
     """
-    避孕套指令的公共处理流程
-    先进行严重骚扰级别的实行值判定（只判），判定失败则定下严重骚扰失败行为，不打开选择面板；
-    判定通过后打开选择面板，取消时退出选择，确认的选择带进行动，开始时由开始代码 condom 结算。
-    行动开始时开始门再判定一次，绘制判定并结算催眠补正的代价
+    避孕套指令的公共处理流程，先进行不绘制且不结算催眠代价的严重骚扰实行值判定。
+    判定失败时定下严重骚扰失败行为。判定通过后经 instruct_hooks.select_condom 询问，取消时调用 pick_hooks.back()。
+    确认选择后将结果带入行动参数，行动开始时由开始代码 condom 结算。
     Keyword arguments:
-    mode -- 面板操作类型，hang=挂装饰，take_back=取回装饰，drink=饮用，squeeze=挤出
-    behavior_id -- 判定通过后结算的行为id
+    mode -- str，面板操作类型，可选 hang（挂装饰）、take_back（取回装饰）、drink（饮用）或 squeeze（挤出）
+    behavior_id -- str，判定通过后定下的行为编号
+    Return arguments:
+    None -- 经行动选择或取消选择结束，无正常返回值
     """
-    from Script.UI.Panel import condom_panel
-
     judge = _("严重骚扰")
     if not instuct_judege.calculation_instuct_judege(
         0,
@@ -3621,7 +3597,7 @@ def handle_condom_instruct_common(mode: str, behavior_id: str) -> None:
         chara_handle_instruct_common_settle(
             constant.Behavior.HIGH_OBSCENITY_ANUS, judge=judge
         )
-    selection = condom_panel.Condom_Select_Panel(width, mode).draw()
+    selection = instruct_hooks.select_condom(mode)
     if selection is None:
         pick_hooks.back()
     chara_handle_instruct_common_settle(
