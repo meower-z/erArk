@@ -36,7 +36,7 @@ class InstructColumnsHideTest(SlowTestCase):
         game_config = importlib.import_module("Script.Config.game_config")
         constant = importlib.import_module("Script.Core.constant")
         see_instruct_panel = importlib.import_module(
-            "Script.System.Instruct_System.see_instruct_panel"
+            "Script.UI.Panel.see_instruct_panel"
         )
 
         panel = see_instruct_panel.SeeInstructPanel(PANEL_WIDTH)

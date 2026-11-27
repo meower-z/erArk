@@ -51,7 +51,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
         dict -- 指令类型: 列出的指令id列表
         """
         from Script.Core import constant
-        from Script.System.Instruct_System import see_instruct_panel
+        from Script.UI.Panel import see_instruct_panel
 
         aim(self.pl.cid, target_id)
         panel = see_instruct_panel.SeeInstructPanel(PANEL_WIDTH)
@@ -77,7 +77,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
         Return arguments:
         无
         """
-        from Script.System.Instruct_System import see_instruct_panel
+        from Script.UI.Panel import see_instruct_panel
 
         see_instruct_panel.SeeInstructPanel(PANEL_WIDTH).change_filter(
             instruct_type
