@@ -17,13 +17,14 @@ from Script.Design import handle_npc_ai_in_h, handle_premise, child_stage_gate
 from Script.UI.Panel import normal_panel
 from Script.Kernel import core
 from Script.Config import normal_config, game_config
-from Script.UI.Moudle import draw, view
+from Script.UI.Moudle import draw
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import group_sex_service
 from Script.Modules.gameplay_resolution import instruct_plan_service
 from Script.Modules.gameplay_resolution import intent, player_starters
-from Script.Modules.gameplay_resolution import pick_hooks
+from Script.Modules.gameplay_resolution import instruct_hooks, pick_hooks
+from Script.Modules.gameplay_resolution import ui_hooks
 from Script.Modules.domains import (
     abilities,
     achievement,
@@ -269,13 +270,13 @@ def instruct_filter_H_change(on_off_flag: bool) -> None:
     """
     setting = normal_config.system_setting
     if on_off_flag:
-        view.instruct_type_filter_cache = setting.instruct_type_filter.copy()
+        instruct_hooks.stash_filter(setting.instruct_type_filter.copy())
         # 自动开启性爱面板并关闭其他面板
         setting.instruct_type_filter[6] = True
         for i in {1, 2, 3, 4, 5}:
             setting.instruct_type_filter[i] = False
-    elif len(view.instruct_type_filter_cache):
-        setting.instruct_type_filter = view.instruct_type_filter_cache.copy()
+    elif len(instruct_hooks.stashed_filter()):
+        setting.instruct_type_filter = instruct_hooks.stashed_filter().copy()
 
 
 TARGET_WAIT = "target_wait"
@@ -463,13 +464,13 @@ def handle_rest() -> None:
 @add_instruct(constant.Instruct.BUY_FOOD)
 def handle_buy_food() -> None:
     """处理购买食物指令"""
-    view.now_panel_id = constant.Panel.FOOD_SHOP
+    ui_hooks.switch_panel(constant.Panel.FOOD_SHOP)
 
 
 @add_instruct(constant.Instruct.EAT)
 def handle_eat() -> None:
     """处理食物背包指令"""
-    view.now_panel_id = constant.Panel.FOOD_BAG
+    ui_hooks.switch_panel(constant.Panel.FOOD_BAG)
 
 
 @add_instruct(constant.Instruct.PUT_SELFMADE_FOOD_IN)
@@ -483,19 +484,19 @@ def handle_put_selfmade_food_in() -> None:
 @add_instruct(constant.Instruct.MOVE)
 def handle_move() -> None:
     """处理移动指令"""
-    view.now_panel_id = constant.Panel.SEE_MAP
+    ui_hooks.switch_panel(constant.Panel.SEE_MAP)
 
 
 @add_instruct(constant.Instruct.CARRY_MOVE)
 def handle_carry_move() -> None:
     """处理携带H中移动指令，与移动指令共用地图面板，实际行为在own_charcter_move中按携带模式区分"""
-    view.now_panel_id = constant.Panel.SEE_MAP
+    ui_hooks.switch_panel(constant.Panel.SEE_MAP)
 
 
 @add_instruct(constant.Instruct.SEE_ATTR)
 def handle_see_attr() -> None:
     """查看属性"""
-    view.now_panel_id = constant.Panel.SEE_ATTR
+    ui_hooks.switch_panel(constant.Panel.SEE_ATTR)
 
 
 @add_instruct(constant.Instruct.CHAT)
@@ -529,31 +530,31 @@ def _count_talk(who: int, chosen: intent.Intent) -> None:
 @add_instruct(constant.Instruct.BUY_H_ITEM)
 def handle_buy_h_item() -> None:
     """处理购买成人用品指令"""
-    view.now_panel_id = constant.Panel.H_ITEM_SHOP
+    ui_hooks.switch_panel(constant.Panel.H_ITEM_SHOP)
 
 
 @add_instruct(constant.Instruct.ITEM)
 def handle_item() -> None:
     """处理道具指令"""
-    view.now_panel_id = constant.Panel.ITEM
+    ui_hooks.switch_panel(constant.Panel.ITEM)
 
 
 @add_instruct(constant.Instruct.SAVE)
 def handle_save() -> None:
     """处理读写存档指令"""
-    view.now_panel_id = constant.Panel.SAVE
+    ui_hooks.switch_panel(constant.Panel.SAVE)
 
 
 @add_instruct(constant.Instruct.ABL_UP)
 def handle_abl_up() -> None:
     """处理属性上升"""
-    view.now_panel_id = constant.Panel.ABL_UP
+    ui_hooks.switch_panel(constant.Panel.ABL_UP)
 
 
 @add_instruct(constant.Instruct.OWNER_ABL_UP)
 def handle_owner_abl_up() -> None:
     """处理自身属性上升"""
-    view.now_panel_id = constant.Panel.OWNER_ABL_UP
+    ui_hooks.switch_panel(constant.Panel.OWNER_ABL_UP)
 
 
 @add_instruct(constant.Instruct.DEBUG_MODE_ON)
@@ -571,25 +572,25 @@ def debug_mode_off() -> None:
 @add_instruct(constant.Instruct.DEBUG_ADJUST)
 def debug_adjust() -> None:
     """处理debug数值调整指令"""
-    view.now_panel_id = constant.Panel.DEBUG_ADJUST
+    ui_hooks.switch_panel(constant.Panel.DEBUG_ADJUST)
 
 
 @add_instruct(constant.Instruct.SYSTEM_SETTING)
 def handle_system_setting() -> None:
     """系统设置"""
-    view.now_panel_id = constant.Panel.SYSTEM_SETTING
+    ui_hooks.switch_panel(constant.Panel.SYSTEM_SETTING)
 
 
 @add_instruct(constant.Instruct.TALK_QUICK_TEST)
 def handle_talk_quick_test() -> None:
     """快速测试口上"""
-    view.now_panel_id = constant.Panel.TALK_QUICK_TEST
+    ui_hooks.switch_panel(constant.Panel.TALK_QUICK_TEST)
 
 
 @add_instruct(constant.Instruct.CHAT_WITH_AI)
 def handle_chat_with_ai() -> None:
     """与文本生成AI对话"""
-    view.now_panel_id = constant.Panel.CHAT_WITH_AI
+    ui_hooks.switch_panel(constant.Panel.CHAT_WITH_AI)
 
 
 @add_instruct(constant.Instruct.TEACH)
@@ -640,25 +641,25 @@ def _start_teach(who: int, chosen: intent.Intent) -> None:
 @add_instruct(constant.Instruct.BORROW_BOOK)
 def handle_borrow_book() -> None:
     """处理借阅书籍指令"""
-    view.now_panel_id = constant.Panel.BORROW_BOOK
+    ui_hooks.switch_panel(constant.Panel.BORROW_BOOK)
 
 
 @add_instruct(constant.Instruct.READ_BOOK)
 def handle_read_book() -> None:
     """处理读书指令"""
-    view.now_panel_id = constant.Panel.READ_BOOK
+    ui_hooks.switch_panel(constant.Panel.READ_BOOK)
 
 
 @add_instruct(constant.Instruct.MANAGE_LIBRARY)
 def handle_manage_library() -> None:
     """处理管理图书馆指令"""
-    view.now_panel_id = constant.Panel.MANAGE_LIBRARY
+    ui_hooks.switch_panel(constant.Panel.MANAGE_LIBRARY)
 
 
 @add_instruct(constant.Instruct.MANAGE_ASSEMBLY_LINE)
 def handle_manage_assembly_line() -> None:
     """处理管理流水线指令"""
-    view.now_panel_id = constant.Panel.MANAGE_ASSEMBLY_LINE
+    ui_hooks.switch_panel(constant.Panel.MANAGE_ASSEMBLY_LINE)
 
 
 @add_instruct(constant.Instruct.PLANT_MANAGE_CROP)
@@ -670,25 +671,25 @@ def handle_plant_manage_crop() -> None:
 @add_instruct(constant.Instruct.MANAGE_AGRICULTURE)
 def handle_manage_agriculture() -> None:
     """处理管理农业生产指令"""
-    view.now_panel_id = constant.Panel.MANAGE_AGRICULTURE
+    ui_hooks.switch_panel(constant.Panel.MANAGE_AGRICULTURE)
 
 
 @add_instruct(constant.Instruct.MANAGE_VEHICLE)
 def handle_manage_vehicle() -> None:
     """处理管理载具指令"""
-    view.now_panel_id = constant.Panel.MANAGE_VEHICLE
+    ui_hooks.switch_panel(constant.Panel.MANAGE_VEHICLE)
 
 
 @add_instruct(constant.Instruct.PHYSICAL_CHECK_AND_MANAGE)
 def handle_physical_check_and_manage() -> None:
     """处理身体检查与管理指令"""
-    view.now_panel_id = constant.Panel.PHYSICAL_CHECK_AND_MANAGE
+    ui_hooks.switch_panel(constant.Panel.PHYSICAL_CHECK_AND_MANAGE)
 
 
 @add_instruct(constant.Instruct.MANAGE_CONFINEMENT_AND_TRAINING)
 def handle_manage_vonfinement_and_training() -> None:
     """处理管理监禁调教指令"""
-    view.now_panel_id = constant.Panel.MANAGE_CONFINEMENT_AND_TRAINING
+    ui_hooks.switch_panel(constant.Panel.MANAGE_CONFINEMENT_AND_TRAINING)
 
 
 @add_instruct(constant.Instruct.INVESTIGATE_RESOURCE_MARKET)
@@ -702,25 +703,25 @@ def handle_investigate_resource_market() -> None:
 @add_instruct(constant.Instruct.MANAGE_RESOURCE_EXCHANGE)
 def handle_manage_resource_exchange() -> None:
     """处理管理资源交易指令"""
-    view.now_panel_id = constant.Panel.MANAGE_RESOURCE_EXCHANGE
+    ui_hooks.switch_panel(constant.Panel.MANAGE_RESOURCE_EXCHANGE)
 
 
 @add_instruct(constant.Instruct.NAVIGATION)
 def handle_navigation() -> None:
     """处理导航指令"""
-    view.now_panel_id = constant.Panel.NAVIGATION
+    ui_hooks.switch_panel(constant.Panel.NAVIGATION)
 
 
 @add_instruct(constant.Instruct.MANAGE_BASEMENT)
 def handle_manage_basement() -> None:
     """处理管理罗德岛指令"""
-    view.now_panel_id = constant.Panel.MANAGE_BASEMENT
+    ui_hooks.switch_panel(constant.Panel.MANAGE_BASEMENT)
 
 
 @add_instruct(constant.Instruct.EDUCATION_MANAGE)
 def handle_education_manage() -> None:
     """处理教育管理系统指令"""
-    view.now_panel_id = constant.Panel.EDUCATION_MANAGE
+    ui_hooks.switch_panel(constant.Panel.EDUCATION_MANAGE)
 
 
 @add_instruct(constant.Instruct.CHECK_REPORT_CARD)
@@ -732,7 +733,7 @@ def handle_check_report_card() -> None:
 @add_instruct(constant.Instruct.MANAGE_DORMITORY)
 def handle_manage_dormitory() -> None:
     """处理宿舍管理系统指令"""
-    view.now_panel_id = constant.Panel.MANAGE_DORMITORY
+    ui_hooks.switch_panel(constant.Panel.MANAGE_DORMITORY)
 
 
 # 以下为源石技艺#
@@ -769,12 +770,10 @@ def handle_hypnosis_all() -> None:
     now_npc_num = len(scene_state.occupants(now_scene_str)) - 1
     sanity_point_cost = 10 + 10 * now_npc_num
     if needs.of(character_data.cid)["sanity"] < sanity_point_cost:
-        now_draw = draw.WaitDraw()
         draw_text = _(
             "\n当前理智值不足，至少需要{0}点理智值，无法进行集体催眠\n"
         ).format(sanity_point_cost)
-        now_draw.text = draw_text
-        now_draw.draw()
+        ui_hooks.emit_notice(draw_text, wait=True)
         return
     door: dict[str, object] = {}
     if scene_state.close_flag(now_scene_str) == 0:
@@ -787,7 +786,7 @@ def handle_hypnosis_all() -> None:
 @add_instruct(constant.Instruct.CHANGE_HYPNOSIS_MODE)
 def handle_change_hypnosis_mode() -> None:
     """处理切换催眠模式"""
-    view.now_panel_id = constant.Panel.CHANGE_HYPNOSIS_MODE
+    ui_hooks.switch_panel(constant.Panel.CHANGE_HYPNOSIS_MODE)
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_CANCEL)
@@ -903,13 +902,13 @@ def handle_target_stop_in_time_stop() -> None:
 @add_instruct(constant.Instruct.DIRAY)
 def handle_diary() -> None:
     """处理日记指令"""
-    view.now_panel_id = constant.Panel.DIRAY
+    ui_hooks.switch_panel(constant.Panel.DIRAY)
 
 
 @add_instruct(constant.Instruct.SLEEP)
 def handle_sleep() -> None:
     """处理睡觉指令"""
-    view.now_panel_id = constant.Panel.SLEEP
+    ui_hooks.switch_panel(constant.Panel.SLEEP)
 
 
 @add_instruct(constant.Instruct.TAKE_SHOWER)
@@ -939,14 +938,14 @@ def handle_wait() -> None:
 @add_instruct(constant.Instruct.WAIT_1_HOUR)
 def handle_wait_1_hour() -> None:
     """处理等待一个小时指令"""
-    flow_handle.set_skip_pauses(True)
+    instruct_hooks.skip_pauses(True)
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=60)
 
 
 @add_instruct(constant.Instruct.WAIT_6_HOUR)
 def handle_wait_6_hour() -> None:
     """处理等待六个小时指令"""
-    flow_handle.set_skip_pauses(True)
+    instruct_hooks.skip_pauses(True)
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=360)
 
 
@@ -959,7 +958,7 @@ def handle_make_coffee() -> None:
 @add_instruct(constant.Instruct.MAKE_COFFEE_ADD)
 def handle_make_coffee_add() -> None:
     """处理泡咖啡（加料）指令"""
-    view.now_panel_id = constant.Panel.MAKE_COFFEE_ADD
+    ui_hooks.switch_panel(constant.Panel.MAKE_COFFEE_ADD)
 
 
 @add_instruct(constant.Instruct.ASK_MAKE_COFFEE)
@@ -971,19 +970,19 @@ def handle_ask_make_coffee() -> None:
 @add_instruct(constant.Instruct.MAKE_FOOD)
 def handle_make_food() -> None:
     """做饭"""
-    view.now_panel_id = constant.Panel.MAKE_FOOD
+    ui_hooks.switch_panel(constant.Panel.MAKE_FOOD)
 
 
 @add_instruct(constant.Instruct.MIXOLOGY)
 def handle_mixology() -> None:
     """处理调酒指令"""
-    view.now_panel_id = constant.Panel.MIXOLOGY
+    ui_hooks.switch_panel(constant.Panel.MIXOLOGY)
 
 
 @add_instruct(constant.Instruct.ALL_NPC_POSITION)
 def handle_all_npc_position() -> None:
     """处理干员位置一览指令"""
-    view.now_panel_id = constant.Panel.ALL_NPC_POSITION
+    ui_hooks.switch_panel(constant.Panel.ALL_NPC_POSITION)
 
 
 @add_instruct(constant.Instruct.FOLLOW)
@@ -1005,8 +1004,7 @@ def _start_follow(who: int, chosen: intent.Intent) -> None:
     target_data: identity.Identity = identity.of(chosen["target"])
 
     # 提示信息
-    now_draw = draw.NormalDraw()
-    now_draw.text = _("\n{0}进入智能跟随模式\n").format(target_data.name)
+    text = _("\n{0}进入智能跟随模式\n").format(target_data.name)
 
     # 去掉其他NPC的跟随
     if not modes.debug():
@@ -1019,10 +1017,10 @@ def _start_follow(who: int, chosen: intent.Intent) -> None:
                 other_character_data = identity.of(npc_id)
                 if flags.get(other_character_data.cid, "is_follow"):
                     flags.set(other_character_data.cid, is_follow=0)
-                    now_draw.text += _(
+                    text += _(
                         "当前最大跟随数量：1人，{0}退出跟随模式\n"
                     ).format(other_character_data.name)
-    now_draw.draw()
+    ui_hooks.emit_notice(text)
 
 
 @add_instruct(constant.Instruct.END_FOLLOW)
@@ -1122,13 +1120,13 @@ def handle_listen_complaint() -> None:
 @add_instruct(constant.Instruct.GIVE_GIFT)
 def handle_give_gift() -> None:
     """处理赠送礼物指令"""
-    view.now_panel_id = constant.Panel.GIVE_GIFT
+    ui_hooks.switch_panel(constant.Panel.GIVE_GIFT)
 
 
 @add_instruct(constant.Instruct.ORIGINIUM_ARTS)
 def handle_originium_arts() -> None:
     """处理源石技艺指令"""
-    view.now_panel_id = constant.Panel.ORIGINIUM_ARTS
+    ui_hooks.switch_panel(constant.Panel.ORIGINIUM_ARTS)
 
 
 @add_instruct(constant.Instruct.TARGET_TO_SELF)
@@ -1295,37 +1293,37 @@ def handle_prenatal_touch() -> None:
 @add_instruct(constant.Instruct.TAKE_CARE_BABY)
 def handle_take_care_baby() -> None:
     """处理照顾婴儿指令"""
-    view.now_panel_id = constant.Panel.TAKE_CARE_BABY
+    ui_hooks.switch_panel(constant.Panel.TAKE_CARE_BABY)
 
 
 @add_instruct(constant.Instruct.ORDER_HOTEL_ROOM)
 def handle_order_hotel_room() -> None:
     """处理预定房间指令"""
-    view.now_panel_id = constant.Panel.ORDER_HOTEL_ROOM
+    ui_hooks.switch_panel(constant.Panel.ORDER_HOTEL_ROOM)
 
 
 @add_instruct(constant.Instruct.SEE_COLLECTION)
 def handle_see_collection() -> None:
     """处理查看收藏品指令"""
-    view.now_panel_id = constant.Panel.COLLECTION
+    ui_hooks.switch_panel(constant.Panel.COLLECTION)
 
 
 @add_instruct(constant.Instruct.SEE_ACHIEVEMENT)
 def handle_see_achievement() -> None:
     """处理查看蚀刻章指令"""
-    view.now_panel_id = constant.Panel.SEE_ACHIEVEMENT
+    ui_hooks.switch_panel(constant.Panel.SEE_ACHIEVEMENT)
 
 
 @add_instruct(constant.Instruct.SEE_FRIDGE)
 def handle_see_fridge() -> None:
     """处理查看冰箱指令"""
-    view.now_panel_id = constant.Panel.FRIDGE
+    ui_hooks.switch_panel(constant.Panel.FRIDGE)
 
 
 @add_instruct(constant.Instruct.PREGNANCY_OVERVIEW)
 def handle_pregnancy_overview() -> None:
     """处理怀孕总览指令"""
-    view.now_panel_id = constant.Panel.PREGNANCY_OVERVIEW
+    ui_hooks.switch_panel(constant.Panel.PREGNANCY_OVERVIEW)
 
 
 @add_instruct(constant.Instruct.TAKE_CHARA_EGGS)
@@ -1349,13 +1347,13 @@ def handle_identify_held_eggs() -> None:
 @add_instruct(constant.Instruct.FIELD_COMMISSION)
 def handle_field_commission() -> None:
     """处理外勤委托指令"""
-    view.now_panel_id = constant.Panel.FIELD_COMMISSION
+    ui_hooks.switch_panel(constant.Panel.FIELD_COMMISSION)
 
 
 @add_instruct(constant.Instruct.CHECK_LOCKER)
 def handle_check_locker() -> None:
     """处理检查衣柜指令"""
-    view.now_panel_id = constant.Panel.CHECK_LOCKER
+    ui_hooks.switch_panel(constant.Panel.CHECK_LOCKER)
 
 
 @add_instruct(constant.Instruct.COLLCET_PANTY)
@@ -1439,29 +1437,23 @@ def _give_token(who: int, chosen: intent.Intent) -> None:
 
     target_id = chosen["target"]
     target_data = identity.of(target_id)
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
     behavior_id = chosen["behavior_id"]
     if behavior_id == constant.Behavior.CONFESSION:
         old, new, mark = 202, 203, 205
-        now_draw.text = _(
+        text = _(
             "\n告白成功，{0}收下了你赠予的[戒指]，[恋慕]转为[恋人]\n"
         ).format(target_data.name)
     elif behavior_id == constant.Behavior.GIVE_NECKLACE:
         old, new, mark = 212, 213, 215
-        now_draw.text = _(
+        text = _(
             "\n{0}接受了项圈，戴在了自己的脖子上，[驯服]转为[宠物]\n"
         ).format(target_data.name)
     else:
         if behavior_id == constant.Behavior.CONFESSION_FAILED:
-            now_draw.text = _(
-                "\n告白失败，需要[恋慕]、信赖≥200%、且满足实行值\n"
-            )
+            text = _("\n告白失败，需要[恋慕]、信赖≥200%、且满足实行值\n")
         else:
-            now_draw.text = _(
-                "\n戴上项圈失败，需要[驯服]、信赖≥200%、且满足实行值\n"
-            )
-        now_draw.draw()
+            text = _("\n戴上项圈失败，需要[驯服]、信赖≥200%、且满足实行值\n")
+        ui_hooks.emit_notice(text, wait=True, use_text_width=True)
         return
     abilities.talent(target_id)[old] = 0
     abilities.talent(target_id)[new] = 1
@@ -1470,11 +1462,11 @@ def _give_token(who: int, chosen: intent.Intent) -> None:
     abilities.talent(target_id)[mark] = 1
     abilities.talent(target_id)[411] = 1
     player_collection.set_token(target_id, True)
-    now_draw.text += _("\n获得了{0}的信物：{1}\n").format(
+    text += _("\n获得了{0}的信物：{1}\n").format(
         target_data.name, target_data.token_text
     )
-    now_draw.text += _("\n可以在[角色属性]-[角色设置]修改对彼此的称呼了\n")
-    now_draw.draw()
+    text += _("\n可以在[角色属性]-[角色设置]修改对彼此的称呼了\n")
+    ui_hooks.emit_notice(text, wait=True, use_text_width=True)
 
 
 @add_instruct(constant.Instruct.DRINK_ALCOHOL)
@@ -1538,8 +1530,6 @@ def _start_do_h(who: int, chosen: intent.Intent) -> None:
     if place:
         h_state.set(who, **{place: True})
         h_state.set(chosen["target"], **{place: True})
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
     now_draw_text = "\n"
     now_scene_str = map_handle.get_map_system_path_str_for_list(
         activity.position(who)
@@ -1553,9 +1543,9 @@ def _start_do_h(who: int, chosen: intent.Intent) -> None:
     flags.set(target_data.cid, is_follow=0)
     action_info.set(target_data.cid, "last_conscious_h_time", game_time.now())
     now_draw_text += _("进入H模式\n\n")
-    now_draw.text = now_draw_text
-    now_draw.style = "gold_enrod"
-    now_draw.draw()
+    ui_hooks.emit_notice(
+        now_draw_text, wait=True, style="gold_enrod", use_text_width=True
+    )
 
 
 @start_part(constant.Behavior.DO_H_FAIL)
@@ -1566,11 +1556,12 @@ def _start_do_h_fail(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n进入H模式失败\n\n")
-    now_draw.style = "warning"
-    now_draw.draw()
+    ui_hooks.emit_notice(
+        _("\n进入H模式失败\n\n"),
+        wait=True,
+        style="warning",
+        use_text_width=True,
+    )
 
 
 @add_instruct(constant.Instruct.DO_H_IN_LOVE_HOTEL)
@@ -1602,7 +1593,7 @@ def handle_prepare_training() -> None:
 @add_instruct(constant.Instruct.SWITCH_TO_H_INTERFACE)
 def handle_switch_to_h_interface() -> None:
     """处理切换到H指令"""
-    view.show_non_h_in_hidden_sex = False
+    instruct_hooks.show_non_h(False)
 
 
 @add_instruct(constant.Instruct.SLEEP_OBSCENITY)
@@ -1617,10 +1608,9 @@ def handle_sleep_obscenity() -> None:
         if door:
             _close_door(0, bool(door[CLOSE_DOOR]))
     flags.set(target_data.cid, unconscious_h=1)
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n进入睡眠猥亵模式\n")
-    now_draw.draw()
+    ui_hooks.emit_notice(
+        _("\n进入睡眠猥亵模式\n"), wait=True, use_text_width=True
+    )
     # 虽然在无意识奸中会刷新该数值，但是为了防止仅睡奸猥亵不H，在这里也初始化一下
     achievement.put("sleep_sex_record", {1: 0, 2: 0, 3: 0})
 
@@ -1632,10 +1622,9 @@ def handle_stop_sleep_obscenity() -> None:
 
     target_data = identity.of(activity.target(0))
     flags.set(target_data.cid, unconscious_h=0)
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n退出睡眠猥亵模式\n")
-    now_draw.draw()
+    ui_hooks.emit_notice(
+        _("\n退出睡眠猥亵模式\n"), wait=True, use_text_width=True
+    )
     default.handle_door_close_reset(
         0, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1)
     )
@@ -1682,27 +1671,25 @@ def _start_unconscious_h(who: int, chosen: intent.Intent) -> None:
     type_name = chosen["args"]["type"]
     action_info.set(target_id, "last_unconscious_h_time", game_time.now())
     flags.set(target_id, is_follow=0)
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
     if type_name == "sleep":
-        now_draw.text = _("\n进入睡奸模式\n")
+        text = _("\n进入睡奸模式\n")
         default.handle_unconscious_flag_to_1(
             target_id, 1, game_type.CharacterStatusChange(), game_time.now()
         )
         achievement.put("sleep_sex_record", {1: 0, 2: 0, 3: 0})
     elif type_name == "drunk":
-        now_draw.text = _("\n进入醉奸模式\n")
+        text = _("\n进入醉奸模式\n")
         default.handle_unconscious_flag_to_2(
             target_id, 1, game_type.CharacterStatusChange(), game_time.now()
         )
         achievement.put("drunk_sex_record", {1: 0, 2: 0, 3: 0})
     elif type_name == "time_stop":
-        now_draw.text = _("\n进入时停奸模式\n")
+        text = _("\n进入时停奸模式\n")
     elif type_name == "hypnosis":
-        now_draw.text = _("\n进入催眠奸模式\n")
+        text = _("\n进入催眠奸模式\n")
     else:
-        now_draw.text = _("\n进入无意识奸模式\n")
-    now_draw.draw()
+        text = _("\n进入无意识奸模式\n")
+    ui_hooks.emit_notice(text, wait=True, use_text_width=True)
 
 
 @add_instruct(constant.Instruct.SLEEP_H)
@@ -1732,13 +1719,13 @@ def handle_hypnosis_h() -> None:
 @add_instruct(constant.Instruct.ASK_HIDDEN_SEX)
 def handle_ask_hidden_sex() -> None:
     """处理邀请隐奸指令"""
-    view.now_panel_id = constant.Panel.ASK_HIDDEN_SEX
+    ui_hooks.switch_panel(constant.Panel.ASK_HIDDEN_SEX)
 
 
 @add_instruct(constant.Instruct.ASK_EXHIBITIONISM_SEX)
 def handle_ask_exhibitionism_sex() -> None:
     """处理邀请露出指令"""
-    view.now_panel_id = constant.Panel.ASK_EXHIBITIONISM_SEX
+    ui_hooks.switch_panel(constant.Panel.ASK_EXHIBITIONISM_SEX)
 
 
 @start_part(constant.Behavior.ASK_HIDDEN_SEX_FAIL)
@@ -1749,9 +1736,7 @@ def _start_ask_hidden_sex_fail(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    now_draw = draw.WaitDraw()
-    now_draw.text = _("\n邀请隐奸失败\n")
-    now_draw.draw()
+    ui_hooks.emit_notice(_("\n邀请隐奸失败\n"), wait=True)
 
 
 @start_part(constant.Behavior.ASK_EXHIBITIONISM_SEX_FAIL)
@@ -1762,9 +1747,7 @@ def _start_ask_exhibitionism_sex_fail(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    now_draw = draw.WaitDraw()
-    now_draw.text = _("\n邀请露出失败\n")
-    now_draw.draw()
+    ui_hooks.emit_notice(_("\n邀请露出失败\n"), wait=True)
 
 
 @add_instruct(constant.Instruct.ASK_GROUP_SEX)
@@ -1805,10 +1788,7 @@ def _start_ask_group_sex(who: int, chosen: intent.Intent) -> None:
     """
     from Script.Modules.gameplay_resolution import plan_queue
 
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n进入群交模式\n")
-    now_draw.draw()
+    ui_hooks.emit_notice(_("\n进入群交模式\n"), wait=True, use_text_width=True)
     for chara_id in _group_members(who):
         plan_queue.plan_next(
             chara_id,
@@ -1828,12 +1808,10 @@ def _start_ask_group_sex_fail(who: int, chosen: intent.Intent) -> None:
     """
     from Script.Modules.gameplay_resolution import plan_queue
 
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n进入群交模式失败\n")
+    text = _("\n进入群交模式失败\n")
     for chara_id in action_info.get(who, "ask_group_sex_refuse_chara_id_list"):
-        now_draw.text += _("{0}拒绝了群交\n").format(identity.of(chara_id).name)
-    now_draw.draw()
+        text += _("{0}拒绝了群交\n").format(identity.of(chara_id).name)
+    ui_hooks.emit_notice(text, wait=True, use_text_width=True)
     for chara_id in _group_members(who):
         plan_queue.plan_next(
             chara_id,
@@ -1938,10 +1916,7 @@ def _draw_end_text(text: str) -> None:
     Keyword arguments:
     text -- 提示文本
     """
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = text
-    now_draw.draw()
+    ui_hooks.emit_notice(text, wait=True, use_text_width=True)
 
 
 def _planned_end(
@@ -2101,10 +2076,9 @@ def handle_start_sex_class() -> None:
 
     student_list = sex_class_handle.get_scene_student_list()
     if not student_list:
-        now_draw = draw.WaitDraw()
-        now_draw.width = width
-        now_draw.text = _("\n这里没有可以上课的学生。\n")
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n这里没有可以上课的学生。\n"), wait=True, use_text_width=True
+        )
         return
     # 选主修科目：预约的那节课已经定好了（提前几分钟开讲的也算，Plan 26 §3.5），当场开课则现选一门
     classroom = sex_class_handle.get_scene_name(activity.position(0))
@@ -2385,7 +2359,7 @@ def handle_play_water() -> None:
 @add_instruct(constant.Instruct.PLAY_GOMOKU)
 def handle_play_gomoku() -> None:
     """处理下五子棋指令"""
-    view.now_panel_id = constant.Panel.PLAY_GOMOKU
+    ui_hooks.switch_panel(constant.Panel.PLAY_GOMOKU)
 
 
 @add_instruct(constant.Instruct.PLAY_CHESS)
@@ -2439,7 +2413,7 @@ def handle_swimming() -> None:
 @add_instruct(constant.Instruct.TASTE_WINE)
 def handle_taste_wine() -> None:
     """处理品酒指令"""
-    view.now_panel_id = constant.Panel.FOOD_BAG
+    ui_hooks.switch_panel(constant.Panel.FOOD_BAG)
 
 
 @add_instruct(constant.Instruct.TASTE_TEA)
@@ -2515,7 +2489,7 @@ def handle_onsen_bath() -> None:
 @add_instruct(constant.Instruct.AROMATHERAPY)
 def handle_aromatherapy() -> None:
     """处理香薰疗愈指令"""
-    view.now_panel_id = constant.Panel.AROMATHERAPY
+    ui_hooks.switch_panel(constant.Panel.AROMATHERAPY)
 
 
 # 以下为工作#
@@ -2557,37 +2531,37 @@ def handle_battle_command() -> None:
 @add_instruct(constant.Instruct.ASSISTANT_ADJUSTMENTS)
 def handle_ASSISTANT_ADJUSTMENTS() -> None:
     """处理助理相关调整指令"""
-    view.now_panel_id = constant.Panel.ASSISTANT
+    ui_hooks.switch_panel(constant.Panel.ASSISTANT)
 
 
 @add_instruct(constant.Instruct.BUILDING)
 def handle_building() -> None:
     """处理基建系统指令"""
-    view.now_panel_id = constant.Panel.BUILDING
+    ui_hooks.switch_panel(constant.Panel.BUILDING)
 
 
 @add_instruct(constant.Instruct.EQUIPMENT_MAINTAIN)
 def handle_equipment_maintain() -> None:
     """处理管理装备维护指令"""
-    view.now_panel_id = constant.Panel.EQUIPMENT_MAINTAIN
+    ui_hooks.switch_panel(constant.Panel.EQUIPMENT_MAINTAIN)
 
 
 @add_instruct(constant.Instruct.RECRUITMENT)
 def handle_recruiment() -> None:
     """处理招募情况指令"""
-    view.now_panel_id = constant.Panel.RECRUITMENT
+    ui_hooks.switch_panel(constant.Panel.RECRUITMENT)
 
 
 @add_instruct(constant.Instruct.VISITOR_SYSTEM)
 def handle_visitor_system() -> None:
     """处理访客系统指令"""
-    view.now_panel_id = constant.Panel.VISITOR
+    ui_hooks.switch_panel(constant.Panel.VISITOR)
 
 
 @add_instruct(constant.Instruct.NATION_DIPLOMACY)
 def handle_nation_diplomacy() -> None:
     """处理势力与外交指令"""
-    view.now_panel_id = constant.Panel.NATION_DIPLOMACY
+    ui_hooks.switch_panel(constant.Panel.NATION_DIPLOMACY)
 
 
 @add_instruct(constant.Instruct.INVITE_VISITOR)
@@ -2601,7 +2575,7 @@ def handle_invite_visitor() -> None:
 @add_instruct(constant.Instruct.PRTS)
 def handle_prts() -> None:
     """处理普瑞赛斯指令"""
-    view.now_panel_id = constant.Panel.PRTS
+    ui_hooks.switch_panel(constant.Panel.PRTS)
 
 
 @add_instruct(constant.Instruct.TRAINING)
@@ -2625,18 +2599,17 @@ def handle_cure_patient() -> None:
     """处理诊疗病人指令"""
     # 如果当前没有病人，输出提示并返回
     if not handle_premise.handle_patient_wait(0):
-        now_draw = draw.WaitDraw()
-        now_draw.width = width
-        now_draw.text = _("\n当前没有需要诊疗的病人\n")
-        now_draw.draw()
+        ui_hooks.emit_notice(
+            _("\n当前没有需要诊疗的病人\n"), wait=True, use_text_width=True
+        )
         return
-    view.now_panel_id = constant.Panel.CURE_PATIENT
+    ui_hooks.switch_panel(constant.Panel.CURE_PATIENT)
 
 
 @add_instruct(constant.Instruct.MANAGE_DEDICAL_DEPARTMENT)
 def handle_manage_dedical_department() -> None:
     """处理管理医疗系统指令"""
-    view.now_panel_id = constant.Panel.MANAGE_DEDICAL_DEPARTMENT
+    ui_hooks.switch_panel(constant.Panel.MANAGE_DEDICAL_DEPARTMENT)
 
 
 @add_instruct(constant.Instruct.RECRUIT)
@@ -2688,7 +2661,7 @@ def handle_manage_facility_power() -> None:
 @add_instruct(constant.Instruct.MANAGE_POWER_SYSTEM)
 def handle_manage_power_system() -> None:
     """处理管理能源系统指令"""
-    view.now_panel_id = constant.Panel.MANAGE_POWER_SYSTEM
+    ui_hooks.switch_panel(constant.Panel.MANAGE_POWER_SYSTEM)
 
 
 @add_instruct(constant.Instruct.REPAIR_EQUIPMENT)
@@ -3574,7 +3547,7 @@ def handle_remote_all_set_sex_toy_strong_in_h() -> None:
 @add_instruct(constant.Instruct.BONDAGE)
 def handle_bondage() -> None:
     """处理绳艺指令"""
-    view.now_panel_id = constant.Panel.BONDAGE
+    ui_hooks.switch_panel(constant.Panel.BONDAGE)
 
 
 @add_instruct(constant.Instruct.PATCH_ON)
@@ -4495,7 +4468,7 @@ def handle_try_pl_active_h() -> None:
 @add_instruct(constant.Instruct.UNDRESS)
 def handle_undress() -> None:
     """处理脱衣服指令"""
-    view.now_panel_id = constant.Panel.UNDRESS
+    ui_hooks.switch_panel(constant.Panel.UNDRESS)
 
 
 @add_instruct(constant.Instruct.ORGASM_EDGE_ON)
@@ -4525,13 +4498,13 @@ def handle_run_all_group_sex_temple() -> None:
 @add_instruct(constant.Instruct.EDIT_GROUP_SEX_TEMPLE)
 def handle_edit_group_sex_temple() -> None:
     """处理编辑群交行动指令"""
-    view.now_panel_id = constant.Panel.EDIT_GROUP_SEX_TEMPLE
+    ui_hooks.switch_panel(constant.Panel.EDIT_GROUP_SEX_TEMPLE)
 
 
 @add_instruct(constant.Instruct.SWITCH_TO_NON_H_INTERFACE)
 def handle_switch_to_non_h_interface() -> None:
     """处理切换到非H指令"""
-    view.show_non_h_in_hidden_sex = True
+    instruct_hooks.show_non_h(True)
 
 
 @add_instruct(constant.Instruct.PULL_OUT_PENIS)
