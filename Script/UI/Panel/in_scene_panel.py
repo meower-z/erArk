@@ -334,7 +334,7 @@ class InScenePanel:
 
             # ↓以下为群交栏的内容↓#
             if modes.group_sex():
-                from Script.System.Sex_System import group_sex_panel
+                from Script.UI.Panel import group_sex_panel
 
                 character_group_sex_draw = group_sex_panel.SeeGroupSexInfoPanel(
                     pl_character_data.cid, self.width, 9, 0, False
@@ -343,7 +343,7 @@ class InScenePanel:
 
             # ↓以下为隐奸栏的内容↓#
             if handle_premise.handle_hidden_sex_mode_ge_1(0):
-                from Script.System.Sex_System import hidden_sex_panel
+                from Script.UI.Panel import hidden_sex_panel
 
                 character_hidden_sex_draw = (
                     hidden_sex_panel.See_Hidden_Sex_InfoPanel(

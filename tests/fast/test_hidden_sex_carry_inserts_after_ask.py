@@ -19,7 +19,7 @@ from Script.Kernel import core
 from Script.Modules.gameplay_resolution import intent, plan_queue
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
-from Script.System.Sex_System import hidden_sex_panel
+from Script.UI.Panel import hidden_sex_panel
 from tests import kernel_data
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase

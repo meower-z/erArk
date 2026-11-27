@@ -1,7 +1,7 @@
 """露出H模式选择面板 Select_Exhibitionism_Sex_Mode_Panel。"""
 
 from types import FunctionType
-from Script.System.Sex_System.hidden_sex_panel import _settle_instruct
+from Script.UI.Panel.hidden_sex_panel import _settle_instruct
 from Script.UI.Moudle import draw, view
 from Script.Core import get_text, flow_handle, constant
 from Script.Config import normal_config

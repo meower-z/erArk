@@ -33,8 +33,7 @@ REGISTERED = list(hidden_sex_service._on_discovered)
 """ 模块导入完成后，hidden_sex_service._on_discovered 中已登记的被发现通知回调副本。 """
 BLOCKED_RUN = """
 import importlib.abc, sys
-PANELS = ("Script.UI.Panel", "Script.System.Sex_System.hidden_sex_panel",
-    "Script.System.Sex_System.exhibitionism_sex_panel")
+PANELS = ("Script.UI.Panel",)
 def blocked(name):
     return any(name == root or name.startswith(root + ".") for root in PANELS)
 class Block(importlib.abc.MetaPathFinder):
@@ -215,9 +214,9 @@ class PanelImportBoundaryTest(FastTestCase):
         path = f"{PACKAGE}/npc_starters.py"
         source = "\n".join(
             (
-                "import Script.System.Sex_System.hidden_sex_panel",
+                "import Script.UI.Panel.hidden_sex_panel",
                 "from ...UI.Panel import sex_be_discovered_panel",
-                "from Script.System.Sex_System import handle, exhibitionism_sex_panel",
+                "from Script.UI.Panel import handle, exhibitionism_sex_panel",
                 "def f():",
                 "    from Script.UI.Panel.see_panel import x",
                 "from . import panel_starters",
@@ -226,9 +225,9 @@ class PanelImportBoundaryTest(FastTestCase):
         self.assertEqual(
             panel_imports(source, path),
             [
-                "Script.System.Sex_System.hidden_sex_panel",
+                "Script.UI.Panel.hidden_sex_panel",
                 "Script.UI.Panel.sex_be_discovered_panel",
-                "Script.System.Sex_System.exhibitionism_sex_panel",
+                "Script.UI.Panel.exhibitionism_sex_panel",
                 "Script.UI.Panel.see_panel",
                 "Script.UI.Panel.see_panel.x",
             ],

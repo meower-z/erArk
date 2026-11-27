@@ -837,7 +837,7 @@ file = "tests/fast/test_group_sex_service.py"
 symbol = "ImportBoundaryTest"
 mechanism = "ast"
 reads = "读取 Script/Modules/gameplay_resolution/group_sex_service.py 与 CALLERS 中五个后端调用方文件的源码字节，交由 imported 和 forbidden 解析其中的导入语句"
-used_for = "测试：group_sex_service.py 与五个后端调用方共六个文件均不导入 Script.System.Sex_System.group_sex_panel 及其成员"
+used_for = "测试：group_sex_service.py 与五个后端调用方共六个文件均不导入 Script.UI.Panel.group_sex_panel 及其成员"
 when = "test"
 capture = "suite"
 

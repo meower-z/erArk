@@ -19,8 +19,8 @@ from Script.Kernel import core
 from Script.Modules.domains import activity, flags, h_state
 from Script.Modules.gameplay_resolution import hidden_sex_service, working
 from Script.Settle import Second_effect
-from Script.System.Sex_System import exhibitionism_sex_panel
-from Script.System.Sex_System import hidden_sex_panel
+from Script.UI.Panel import exhibitionism_sex_panel
+from Script.UI.Panel import hidden_sex_panel
 from Script.UI.Panel import sex_be_discovered_panel
 from tests import chara_abilities
 from tests.chara_activity import aim, behave
@@ -45,8 +45,8 @@ CALLER_PATHS = (
 )
 """ 需要校验导入边界的两处后端调用方相对路径元组。 """
 PANELS = (
-    "Script.System.Sex_System.hidden_sex_panel",
-    "Script.System.Sex_System.exhibitionism_sex_panel",
+    "Script.UI.Panel.hidden_sex_panel",
+    "Script.UI.Panel.exhibitionism_sex_panel",
 )
 """ 边界测试禁止后端调用方导入的两处性行为面板模块全名。 """
 MOVED = """handle_hidden_sex_flow get_hidden_level get_hidden_sex_targets
@@ -63,8 +63,7 @@ EXPOSED_ORGASMS = (
 """ Second_effect 中四项隐奸高潮暴露效果函数及预期被发现度增量。 """
 BLOCKED_RUN = """
 import importlib.abc, sys
-PANELS = ("Script.UI.Panel", "Script.System.Sex_System.hidden_sex_panel",
-    "Script.System.Sex_System.exhibitionism_sex_panel")
+PANELS = ("Script.UI.Panel",)
 def blocked(name):
     return any(name == root or name.startswith(root + ".") for root in PANELS)
 class Block(importlib.abc.MetaPathFinder):
@@ -468,7 +467,7 @@ class BoundaryTest(FastTestCase):
 
     def test_checker_self_test(self) -> None:
         """验证导入检查函数能解析相对导入，并在一条语句导入多个名称时识别其中的违规导入。"""
-        source = "from ..System.Sex_System import hidden_sex_panel\n"
+        source = "from ..UI.Panel import hidden_sex_panel\n"
         self.assertIn(PANELS[0], imported_modules(source, CALLER_PATHS[1]))
         source = "from Script import Core, UI\n"
         self.assertEqual(

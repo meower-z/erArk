@@ -145,7 +145,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         """
         from Script.Config import game_config
         from Script.Core import flow_handle
-        from Script.System.Sex_System import group_sex_panel
+        from Script.UI.Panel import group_sex_panel
         from tests import kernel_data
 
         panel = group_sex_panel.Edit_Group_Sex_Temple_Panel(120)
