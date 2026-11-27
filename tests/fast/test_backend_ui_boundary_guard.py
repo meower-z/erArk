@@ -27,10 +27,12 @@ BACKEND_UI_FREE_DIRS = (
     "Script/System/Education_System",
     "Script/System/Field_Commission_System",
     "Script/System/First_Record_System",
+    "Script/System/Instruct_System",
     "Script/System/Item_System",
     "Script/System/Medical_System",
     "Script/System/Official_Event_System",
     "Script/System/Pregnancy_System",
+    "Script/System/Sex_System",
     "Script/Test",
 )
 """ 禁止导入界面与输入输出模块的后端目录 """
