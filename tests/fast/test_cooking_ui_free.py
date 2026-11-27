@@ -14,7 +14,8 @@ from unittest import mock
 from Script.Config import config_def, game_config
 from Script.Core import constant, flow_handle, get_text
 from Script.Modules.domains import inventory
-from Script.System.Cooking_System import cooking, make_food_panel
+from Script.System.Cooking_System import cooking
+from Script.UI.Panel import make_food_panel
 from Script.UI.Moudle import view
 from tests import chara_abilities as ca, kernel_data
 from tests.fast.base import FastTestCase

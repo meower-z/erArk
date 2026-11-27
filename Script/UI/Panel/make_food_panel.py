@@ -9,7 +9,7 @@ from types import FunctionType
 from Script.Core import get_text, flow_handle, constant, py_cmd
 from Script.Modules.gameplay_resolution import make_food_service as service
 from Script.System.Cooking_System import cooking
-from Script.System.Cooking_System.make_food_confirm_panel import (
+from Script.UI.Panel.make_food_confirm_panel import (
     SeeFoodListByFoodNameDraw,
     add_button,
     draw_quality,
