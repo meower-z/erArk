@@ -4,7 +4,7 @@
 ================
 InstructHooksUiFreeTest 在无界面子进程中验证 instruct_hooks 的默认行为、槽位登记与界面模块隔离。
 InstructCallbacksTest 验证 stash_filter 与 stashed_filter 经 instruct_callbacks 读写 view.instruct_type_filter_cache。
-HandleInstructHooksTest 验证 handle_instruct 经 ui_hooks 切换面板与发出提示，并经 instruct_hooks 调用界面回调。
+HandleInstructHooksTest 验证 handle_instruct 经 ui_hooks 发出提示，并经 instruct_hooks 调用界面回调。
 """
 
 from unittest import mock
@@ -101,13 +101,10 @@ class InstructCallbacksTest(FastTestCase):
 
 
 class HandleInstructHooksTest(FastTestCase):
-    """handle_instruct 经 ui_hooks 切换面板与发出提示，并经 instruct_hooks 调用界面回调的测试。"""
+    """handle_instruct 经 ui_hooks 发出提示，并经 instruct_hooks 调用界面回调的测试。"""
 
     def setUp(self) -> None:
-        """
-        调用父类准备，创建角色 0 与角色 1，并临时替换 view 的面板编号与两个指令界面状态。
-        随后在 ui_hooks 已登记的提示与面板切换回调末尾追加记录回调，同时保留原有 Tk 回调。
-        """
+        """调用父类准备，创建角色 0 与 1，临时替换 view 三项状态，并在 ui_hooks._notices 末尾追加 self.record。"""
         super().setUp()
         self.world.chara(0, "博士")
         self.world.chara(1, "阿米娅")
@@ -118,17 +115,9 @@ class HandleInstructHooksTest(FastTestCase):
         ):
             self.enterContext(mock.patch.object(view, name, value))
         self.notices: list[Notice] = []
-        self.panels: list[int] = []
         self.enterContext(
             mock.patch.object(
                 ui_hooks, "_notices", [*ui_hooks._notices, self.record]
-            )
-        )
-        self.enterContext(
-            mock.patch.object(
-                ui_hooks,
-                "_panel_switches",
-                [*ui_hooks._panel_switches, self.panels.append],
             )
         )
 
@@ -147,17 +136,6 @@ class HandleInstructHooksTest(FastTestCase):
         """
         self.notices.append((text, wait, style, use_text_width))
 
-    def test_panel_instruct_switches_panel(self) -> None:
-        """
-        验证执行 EDIT_GROUP_SEX_TEMPLE 指令会经 ui_hooks.switch_panel 切换到对应面板。
-        同时断言 view.now_panel_id 更新为 Panel.EDIT_GROUP_SEX_TEMPLE。
-        """
-        handle_instruct.handle_instruct(constant.Instruct.EDIT_GROUP_SEX_TEMPLE)
-        self.assertEqual(self.panels, [constant.Panel.EDIT_GROUP_SEX_TEMPLE])
-        self.assertEqual(
-            view.now_panel_id, constant.Panel.EDIT_GROUP_SEX_TEMPLE
-        )
-
     def test_class_without_student_notices(self) -> None:
         """
         验证无学生时执行 START_SEX_CLASS 指令会发出一条等待确认且按文本宽度排版的提示，且不切换面板。
@@ -167,7 +145,7 @@ class HandleInstructHooksTest(FastTestCase):
         text = _("\n这里没有可以上课的学生。\n")
         self.assertEqual(self.notices, [(text, True, None, True)])
         self.assertEqual(self.world.wait_texts, [text])
-        self.assertEqual(self.panels, [])
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
 
     def test_start_parts_notice(self) -> None:
         """

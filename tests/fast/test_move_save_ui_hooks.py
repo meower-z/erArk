@@ -1,7 +1,7 @@
 """
 角色移动与读档界面回调测试
 ==========================
-- 寻路面板：验证主角寻路选定首段、抵达目标与遇锁时经 ui_hooks 切换面板。
+- 寻路面板：验证 see_map_panel.pick_route 在可走时选定首段，在已抵达或遇锁时更新 view.now_panel_id。
 - 开门与私密房间：验证开门提示与私密房间结算提示经 ui_hooks 发出并由 Tk 回调绘制。
 - 读档提示：验证读档检测、地图更新与设置补全提示经 ui_hooks 发出并由 Tk 回调绘制。
 """
@@ -46,10 +46,10 @@ _ = get_text._
 
 
 class HookCase(FastTestCase):
-    """界面回调测试基类，记录提示、分隔线、面板切换以及回调内外的绘制与直接输出。"""
+    """界面回调测试基类，记录提示、分隔线以及回调内外的绘制与直接输出。"""
 
     def setUp(self) -> None:
-        """初始化无钥匙玩家与地图面板，接管提示、分隔线、面板切换、全部绘制类与 era_print。"""
+        """初始化无钥匙玩家与地图面板，接管提示、分隔线、draw 模块绘制类与 era_print。"""
         super().setUp()
         self.world.chara(0, "博士", position=CORRIDOR)
         for item_id in (COPY_KEY, MASTER_KEY):
@@ -58,7 +58,6 @@ class HookCase(FastTestCase):
         self.dividers: list[str] = []
         self.drawn: list[Drawn] = []
         self.direct: list[Drawn] = []
-        self.panels: list[int] = []
         self.inside = False
         self.hooks = list(ui_hooks._notices)
         self.divider_hooks = list(ui_hooks._dividers)
@@ -67,13 +66,6 @@ class HookCase(FastTestCase):
         )
         self.enterContext(
             mock.patch.object(ui_hooks, "_dividers", [self.forward_divider])
-        )
-        self.enterContext(
-            mock.patch.object(
-                ui_hooks,
-                "_panel_switches",
-                [*ui_hooks._panel_switches, self.panels.append],
-            )
         )
         self.enterContext(
             mock.patch.object(view, "now_panel_id", constant.Panel.SEE_MAP)
@@ -171,35 +163,30 @@ class HookCase(FastTestCase):
             ],
         )
 
-    def assert_panel(self, panel_id: int) -> None:
-        """核对面板切换记录为单元素列表 [panel_id]，且 view.now_panel_id 等于 panel_id。"""
-        self.assertEqual(self.panels, [panel_id])
-        self.assertEqual(view.now_panel_id, panel_id)
-
 
 class RoutePanelTest(HookCase):
-    """主角寻路触发面板切换的测试。"""
+    """see_map_panel.pick_route 选定首段移动与更新当前面板的测试。"""
 
-    def test_first_leg_is_chosen_from_scene_panel(self) -> None:
-        """验证寻路可走第一段时抛出 player_pick.Chosen，并经回调切至场景面板。"""
+    def test_first_leg_is_chosen(self) -> None:
+        """验证寻路存在可走首段时，see_map_panel.pick_route 抛出 player_pick.Chosen。"""
         with self.assertRaises(player_pick.Chosen):
             kernel_data.written(see_map_panel.pick_route, list(OFFICE))
-        self.assert_panel(constant.Panel.IN_SCENE)
 
     def test_arrived_route_returns_to_scene_panel(self) -> None:
-        """验证玩家已在目标位置时切至场景面板，并将已设定的交互目标清零。"""
+        """验证玩家已在目标位置时，pick_route 将 view.now_panel_id 设为场景面板并将交互目标清零。"""
         self.world.chara(1, "干员", position=CORRIDOR)
         kernel_data.put(activity.set_target, 0, 1)
         self.assertEqual(activity.target(0), 1)
-        kernel_data.written(character_move.own_charcter_move, list(CORRIDOR))
-        self.assert_panel(constant.Panel.IN_SCENE)
+        kernel_data.written(see_map_panel.pick_route, list(CORRIDOR))
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
         self.assertEqual(activity.target(0), 0)
 
-    def test_locked_door_keeps_map_panel(self) -> None:
-        """验证目标宿舍上锁且玩家无钥匙时切至地图面板。"""
+    def test_locked_door_opens_map_panel(self) -> None:
+        """验证目标宿舍上锁且玩家无钥匙时，pick_route 将 view.now_panel_id 设为地图面板。"""
         lock(DORM)
-        kernel_data.written(character_move.own_charcter_move, list(DORM))
-        self.assert_panel(constant.Panel.SEE_MAP)
+        view.now_panel_id = constant.Panel.IN_SCENE
+        kernel_data.written(see_map_panel.pick_route, list(DORM))
+        self.assertEqual(view.now_panel_id, constant.Panel.SEE_MAP)
 
 
 class DoorNoticeTest(HookCase):
