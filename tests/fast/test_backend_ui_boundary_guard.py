@@ -22,6 +22,7 @@ BACKEND_UI_FREE_DIRS = (
     "Script/Protocol",
     "Script/Settle",
     "Script/StateMachine",
+    "Script/System/Cooking_System",
     "Script/System/Dormitory_System",
     "Script/System/Education_System",
     "Script/System/Field_Commission_System",
