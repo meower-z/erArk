@@ -8,13 +8,14 @@ accept 忽略空字符串，把非空输入按先后暂存在 _unsettled 中。
 玩家选行动时与一步之外，输入留在 _unsettled 中等待写入。
 kernel.StartAction 输入钩子 settle_on_start 在行动开始前调用 settle，把暂存输入写入当前写缓冲区。
 kernel.Reset 输入钩子 drop_on_load 在读档（cause 为 "load"）时清空 _unsettled，其余原因时保留。
-存档时 kernel_state.write 调用 settled，在不清空 _unsettled 的前提下得到带上暂存输入的 GameState。
+导入时经 kernel_state.on_settled 登记 settled，存档时由 kernel_state.write 调用，合并 _unsettled 且不清空。
 """
 
 from collections.abc import Mapping
 
 from Script.Kernel import core
 from Script.Modules.domains import history
+from Script.Modules.save_load import kernel_state
 
 _unsettled: list[str] = []
 """ 尚未写入 GameState 的非空玩家输入，旧的在前 """
@@ -44,6 +45,7 @@ def settle() -> None:
         _unsettled.clear()
 
 
+@kernel_state.on_settled
 def settled(game: core.GameState) -> core.GameState:
     """
     返回在 game 的 log.inputs 末尾接上 _unsettled 后的 GameState，不清空 _unsettled

@@ -51,33 +51,18 @@ BANNED = (
     "PIL.ImageTk",
 )
 """ 禁止后端目录导入的界面、输入输出与 Tk（窗口、事件、图像、适配）模块（含子模块） """
-ALLOWED = frozenset(
-    {
-        (
-            "Script/Modules/save_load/kernel_state.py",
-            "Script.Modules.tk_ui.orders",
-        ),
-    }
-)
-""" 免于报出的 (仓库相对路径, 模块全名) 集合，对指定文件放行该模块及其成员 """
 
 
-def _under(name: str, root: str) -> bool:
-    return name == root or name.startswith(root + ".")
-
-
-def _reported(name: str, path: str) -> bool:
-    return any(_under(name, root) for root in BANNED) and not any(
-        path == file and _under(name, module) for file, module in ALLOWED
-    )
+def _reported(name: str) -> bool:
+    return any(name == root or name.startswith(root + ".") for root in BANNED)
 
 
 def banned_imports(source: str | bytes, path: str) -> list[tuple[int, str]]:
     """
-    解析源码语法树，找出命中 BANNED 且未在 ALLOWED 中放行的导入语句。
+    解析源码语法树，找出命中 BANNED 的导入语句。
     Keyword arguments:
     source -- 待检查的 Python 源码
-    path -- 文件的仓库相对路径，用于解析相对导入与匹配 ALLOWED
+    path -- 文件的仓库相对路径，用于解析相对导入
     Return arguments:
     list -- 排序后的 (行号, 首个报出的解析后模块全名) 列表，每条语句至多一项
     """
@@ -91,7 +76,7 @@ def banned_imports(source: str | bytes, path: str) -> list[tuple[int, str]]:
             names = [f"{base}.{alias.name}" for alias in node.names]
         else:
             continue
-        hits = [name for name in names if _reported(name, path)]
+        hits = [name for name in names if _reported(name)]
         if hits:
             found.append((node.lineno, hits[0]))
     return sorted(found)
@@ -186,36 +171,4 @@ class BackendUiBoundaryGuardTest(FastTestCase):
         self.assertEqual(
             banned_imports(source, "Script/Kernel/__init__.py"),
             [(1, "Script.UI.Moudle.draw")],
-        )
-
-    def test_allowed_import_is_narrow(self) -> None:
-        """验证对 kernel_state.py 放行 orders 及其成员并报出其余 tk_ui 项，对 reset.py 报出含 orders 的六项"""
-        source = "\n".join(
-            (
-                "from Script.Modules.tk_ui import orders",
-                "from ..tk_ui import orders",
-                "from Script.Modules.tk_ui import callbacks",
-                "import Script.Modules.tk_ui",
-                "from Script.Modules.tk_ui.orders import settled",
-                "from Script.Modules.tk_ui import orders_extra",
-            )
-        )
-        self.assertEqual(
-            banned_imports(source, "Script/Modules/save_load/kernel_state.py"),
-            [
-                (3, "Script.Modules.tk_ui.callbacks"),
-                (4, "Script.Modules.tk_ui"),
-                (6, "Script.Modules.tk_ui.orders_extra"),
-            ],
-        )
-        self.assertEqual(
-            banned_imports(source, "Script/Modules/save_load/reset.py"),
-            [
-                (1, "Script.Modules.tk_ui.orders"),
-                (2, "Script.Modules.tk_ui.orders"),
-                (3, "Script.Modules.tk_ui.callbacks"),
-                (4, "Script.Modules.tk_ui"),
-                (5, "Script.Modules.tk_ui.orders.settled"),
-                (6, "Script.Modules.tk_ui.orders_extra"),
-            ],
         )

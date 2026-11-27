@@ -488,7 +488,7 @@ file = "tests/fast/test_backend_ui_boundary_guard.py"
 symbol = "violations"
 mechanism = "ast"
 reads = "Script/Config、Script/Design、Script/Kernel、Script/Modules/domains、Script/Modules/gameplay_resolution、Script/Modules/save_load、Script/Protocol、Script/Settle、Script/StateMachine、Script/System/Cooking_System、Script/System/Dormitory_System、Script/System/Education_System、Script/System/Field_Commission_System、Script/System/First_Record_System、Script/System/Instruct_System、Script/System/Item_System、Script/System/Medical_System、Script/System/Official_Event_System、Script/System/Pregnancy_System、Script/System/Sex_System 与 Script/Test 下全部 .py 文件中的 import 与 from ... import 语句"
-used_for = "测试：这二十一个后端目录不导入 BANNED 中的界面、Tk 适配与输入输出模块（ALLOWED 放行项除外）"
+used_for = "测试：这二十一个后端目录不导入 BANNED 中的界面、Tk 适配与输入输出模块"
 when = "test"
 capture = "suite"
 
