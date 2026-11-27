@@ -1,9 +1,10 @@
 """
 公务事件决断面板交互测试
 ========================
-本测试验证 Script.UI.Panel.official_event_panel 的选项决断、结算与事件抬头获取。
-测试替换事件配置、抬头注册表与洗牌函数，并拦截 LeftButton.draw、NormalDraw.draw 与 askfor_all 来驱动选择。
-用例覆盖洗牌选项与原序号返回、不可决断事件跳过、空队列返回、结算效果与提示、抬头提供者回退。
+本测试经 handle_instruct.choose_official_option 与 settle_official_option 验证公务事件面板的决断与结算交互。
+同时测试 official_event_panel.get_event_title 的事件抬头获取逻辑。
+测试替换事件配置、抬头注册表与洗牌函数，并拦截 LeftButton.draw、NormalDraw.draw 与 askfor_all 驱动选择。
+用例覆盖洗牌选项与原序号返回、不可决断事件跳过、空队列返回、结算效果与提示以及抬头提供者回退。
 """
 
 from types import SimpleNamespace
@@ -13,14 +14,13 @@ from Script.Config import game_config
 from Script.Core import flow_handle, text_handle
 from Script.Modules.domains import official
 from Script.Modules.tk_ui import player_pick
+from Script.System.Instruct_System import handle_instruct
 from Script.System.Official_Event_System import official_event_handle, ri_value
 from Script.UI.Moudle import draw
 from Script.UI.Panel import official_event_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 
-WIDTH = 100
-""" 传给 choose_official_event_option 的测试绘制宽度。 """
 DEPARTMENT = 15
 """ 假公务事件使用的测试部门编号。 """
 LOCKED = "CVP_RI_R|1_G_100"
@@ -162,7 +162,7 @@ class OfficialEventPanelTest(FastTestCase):
         self, queue: list[dict[str, object]], choices: list[str]
     ) -> dict | None:
         """
-        写入公务事件队列与 self.choices，在 kernel_data.writing() 中以 WIDTH 调用 choose_official_event_option。
+        写入公务事件队列与 self.choices，在 kernel_data.writing() 中调用 handle_instruct.choose_official_option。
         调用结束后断言 self.choices 耗尽，并返回选定结果字典或 None。
         Keyword arguments:
         queue -- list[dict[str, object]]，写入内核状态的待决断公务事件队列
@@ -173,20 +173,20 @@ class OfficialEventPanelTest(FastTestCase):
         kernel_data.put(official.set_queue, queue)
         self.choices = list(choices)
         with kernel_data.writing():
-            option = official_event_panel.choose_official_event_option(WIDTH)
+            option = handle_instruct.choose_official_option()
         self.assertEqual(self.choices, [])
         return option
 
     def settle(self, option_index: int) -> None:
         """
-        在 kernel_data.writing() 中以测试乙和指定选项序号调用 official_event_panel.settle_chosen_option。
+        在 kernel_data.writing() 中以测试乙和指定选项序号调用 handle_instruct.settle_official_option。
         Keyword arguments:
         option_index -- int，传给测试乙结算调用的选项序号
         Return arguments:
         None -- 无返回值
         """
         with kernel_data.writing():
-            official_event_panel.settle_chosen_option(
+            handle_instruct.settle_official_option(
                 {**queued("测试乙"), "option": option_index}
             )
 
