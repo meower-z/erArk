@@ -13,10 +13,11 @@ tk_ui 的玩家选择
 
 import random
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from typing import NoReturn, cast
 
 from Script.Core import constant, py_cmd
+from Script.Design import handle_panel
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import (
     edits,
@@ -174,6 +175,21 @@ def drafting(origin: str) -> Iterator[None]:
     interrupts = plan_queue.take_since(mark)
     if interrupts or effects:
         raise Chosen(edits.edit_action(origin, interrupts, effects))
+
+
+@handle_panel.on_panel_run
+def panel_draft(panel: int) -> AbstractContextManager[None]:
+    """
+    为 handle_panel 提供面板运行上下文。该函数在本模块导入时经 handle_panel.on_panel_run 登记。
+    当 panel 属于 UNDRAFTED 时返回 nullcontext()，否则返回 drafting(f"panel {panel}")。
+    Keyword arguments:
+    panel -- int，面板 id
+    Return arguments:
+    AbstractContextManager[None] -- 面板运行所用的上下文管理器
+    """
+    if panel in UNDRAFTED:
+        return nullcontext()
+    return drafting(f"panel {panel}")
 
 
 def commit_edit(name: str, args: Mapping[str, core.JSON]) -> NoReturn:
