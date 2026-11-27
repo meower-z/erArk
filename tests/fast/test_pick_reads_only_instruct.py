@@ -22,7 +22,7 @@ from Script.Modules.domains import modes
 from Script.Modules.gameplay_resolution import intent, start_gate
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
-from Script.System.Sex_System import sex_position_panel
+from Script.UI.Panel import sex_position_panel
 from Script.UI.Panel import bondage_panel
 from tests import chara_abilities as ca, kernel_data, pick_guard
 from tests import world as world_module
