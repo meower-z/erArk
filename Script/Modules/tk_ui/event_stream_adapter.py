@@ -10,11 +10,14 @@ summary_text 非 None 时用作段落文本，为 None 时按变化项逐行生�
 pause 为真时，适配器在最后一段非空文本使用 WaitDraw，各段均为空时在末段使用 WaitDraw。
 """
 
+from typing import Unpack
+
 from Script.Config import game_config, normal_config
 from Script.Core import io_init
 from Script.Kernel import core
 from Script.Protocol.delta_events import DeltaEntry, DeltaEvent, DeltaValue
 from Script.Protocol.narrative_events import (
+    EventFacts,
     EventMeta,
     NarrativeEvent,
     SceneBreak,
@@ -142,15 +145,16 @@ class EventStreamAdapter:
         """初始化适配器并将事件序号计数器置为 0。"""
         self._seq = 0
 
-    def meta(self, source: str) -> EventMeta:
+    def meta(self, source: str, **facts: Unpack[EventFacts]) -> EventMeta:
         """
-        用当前序号、内核时钟与来源标识构造 EventMeta，并将内部序号加一。
+        用当前序号、内核时钟、来源标识与可选事件事实构造 EventMeta，并将内部序号加一。
         Keyword arguments:
         source -- str，事件来源标识
+        facts -- EventFacts，可选事件事实关键字参数，未传入的字段取 EventMeta 默认值
         Return arguments:
         EventMeta -- 新生成的不可变事件元数据
         """
-        meta = EventMeta(self._seq, core.state().clock, source)
+        meta = EventMeta(self._seq, core.state().clock, source, **facts)
         self._seq += 1
         return meta
 

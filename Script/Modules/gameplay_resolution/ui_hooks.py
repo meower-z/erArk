@@ -13,52 +13,11 @@ emit_line_wait_text、emit_flush、switch_panel 与 choose_route_leg 不执行�
 """
 
 from collections.abc import Callable
-from typing import Protocol
+from typing import Protocol, Unpack
 
 from Script.Protocol.delta_events import DeltaEntry
-
-
-class Notice(Protocol):
-    """提示文本回调的函数签名协议。"""
-
-    def __call__(
-        self, text: str, *, wait: bool, style: str | None, use_text_width: bool
-    ) -> None:
-        """
-        接收一条提示文本及其显示选项并完成输出。
-        Keyword arguments:
-        text -- str，要输出的提示文本
-        wait -- bool，为真时等待玩家确认
-        style -- str | None，文本样式名，为 None 时使用默认样式
-        use_text_width -- bool，为真时按配置的文本宽度排版
-        Return arguments:
-        None -- 无返回值
-        """
-
-
-class Delta(Protocol):
-    """数值变化回调的函数签名协议。"""
-
-    def __call__(
-        self,
-        entries: tuple[DeltaEntry, ...],
-        *,
-        source: str,
-        summary_text: str | None,
-        wait: bool,
-        use_text_width: bool,
-    ) -> None:
-        """
-        接收一组数值变化项及其显示选项并完成输出。
-        Keyword arguments:
-        entries -- tuple[DeltaEntry, ...]，数值变化项元组
-        source -- str，事件来源标识
-        summary_text -- str | None，整段显示文本，无摘要文本时为 None
-        wait -- bool，为真时等待玩家确认
-        use_text_width -- bool，为真时按配置的文本宽度排版
-        Return arguments:
-        None -- 无返回值
-        """
+from Script.Protocol.narrative_events import EventFacts
+from Script.Protocol.ports import Delta, Notice
 
 
 class RichTalk(Protocol):
@@ -169,6 +128,7 @@ def emit_notice(
     wait: bool = False,
     style: str | None = None,
     use_text_width: bool = False,
+    **facts: Unpack[EventFacts],
 ) -> None:
     """
     按登记顺序调用已登记的提示文本回调，未登记时不执行操作。
@@ -177,11 +137,12 @@ def emit_notice(
     wait -- bool，为真时等待玩家确认，默认为 False
     style -- str | None，文本样式名，默认为 None
     use_text_width -- bool，为真时按配置的文本宽度排版，默认为 False
+    facts -- EventFacts，可选事件事实关键字参数，将调用方传入的键值原样转发给已登记回调
     Return arguments:
     None -- 无返回值
     """
     for fn in _notices:
-        fn(text, wait=wait, style=style, use_text_width=use_text_width)
+        fn(text, wait=wait, style=style, use_text_width=use_text_width, **facts)
 
 
 def on_delta(fn: Delta) -> Delta:
@@ -203,6 +164,7 @@ def emit_delta(
     summary_text: str | None = None,
     wait: bool = False,
     use_text_width: bool = False,
+    **facts: Unpack[EventFacts],
 ) -> None:
     """
     按登记顺序调用已登记的数值变化回调，未登记时不执行操作。
@@ -212,6 +174,7 @@ def emit_delta(
     summary_text -- str | None，整段显示文本，默认为 None
     wait -- bool，为真时等待玩家确认，默认为 False
     use_text_width -- bool，为真时按配置的文本宽度排版，默认为 False
+    facts -- EventFacts，可选事件事实关键字参数，将调用方传入的键值原样转发给已登记回调
     Return arguments:
     None -- 无返回值
     """
@@ -222,6 +185,7 @@ def emit_delta(
             summary_text=summary_text,
             wait=wait,
             use_text_width=use_text_width,
+            **facts,
         )
 
 

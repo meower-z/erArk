@@ -15,6 +15,7 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 """
 
 from collections.abc import Mapping
+from typing import Unpack
 
 from Script.Config import normal_config
 from Script.Core import constant, flow_handle, get_text, io_init
@@ -28,7 +29,13 @@ from Script.Modules.save_load import reset, style_hooks
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
 from Script.Protocol.delta_events import DeltaEntry, DeltaEvent
-from Script.Protocol.narrative_events import NarrativeEvent, TextBlock, TextSpan
+from Script.Protocol.narrative_events import (
+    EventFacts,
+    NarrativeEvent,
+    SceneBreak,
+    TextBlock,
+    TextSpan,
+)
 from Script.UI.Moudle import draw, rich_text_draw, view
 
 _ = get_text._
@@ -74,7 +81,12 @@ def back_to_scene(
 
 @ui_hooks.on_notice
 def draw_notice(
-    text: str, *, wait: bool, style: str | None, use_text_width: bool
+    text: str,
+    *,
+    wait: bool,
+    style: str | None,
+    use_text_width: bool,
+    **facts: Unpack[EventFacts],
 ) -> None:
     """
     将提示文本包装为单段落 NarrativeEvent 并交由 STREAM 绘制。
@@ -83,12 +95,13 @@ def draw_notice(
     wait -- bool，为真时使用 WaitDraw 等待玩家确认，否则使用 NormalDraw
     style -- str | None，文本样式名，为 None 时保留绘制类默认样式
     use_text_width -- bool，为真时将绘制宽度设为 normal_config.config_normal.text_width
+    facts -- EventFacts，可选事件事实关键字参数，传给 STREAM.meta 写入事件元数据
     Return arguments:
     None -- 无返回值
     """
     STREAM.render(
         NarrativeEvent(
-            STREAM.meta("ui_hooks.notice"),
+            STREAM.meta("ui_hooks.notice", **facts),
             (TextBlock("paragraph", (TextSpan(text),)),),
             pause=wait,
             style=style,
@@ -105,6 +118,7 @@ def draw_delta(
     summary_text: str | None,
     wait: bool,
     use_text_width: bool,
+    **facts: Unpack[EventFacts],
 ) -> None:
     """
     将数值变化项包装为 DeltaEvent 并交由 STREAM 绘制。
@@ -114,12 +128,13 @@ def draw_delta(
     summary_text -- str | None，整段显示文本，为 None 时由适配器按变化项生成
     wait -- bool，为真时使用 WaitDraw 等待玩家确认，否则使用 NormalDraw
     use_text_width -- bool，为真时将绘制宽度设为 normal_config.config_normal.text_width
+    facts -- EventFacts，可选事件事实关键字参数，传给 STREAM.meta 写入事件元数据
     Return arguments:
     None -- 无返回值
     """
     STREAM.render(
         DeltaEvent(
-            STREAM.meta(source),
+            STREAM.meta(source, **facts),
             entries,
             pause=wait,
             use_text_width=use_text_width,
@@ -143,13 +158,13 @@ def draw_image(img_name: str) -> None:
 @ui_hooks.on_divider
 def draw_divider(char: str = "-") -> None:
     """
-    按当前配置文本宽度使用 draw.LineDraw 绘制分隔线。
+    将分隔字符包装为 SceneBreak 并交由 STREAM 绘制。
     Keyword arguments:
     char -- str，分隔线平铺字符，默认为 "-"
     Return arguments:
     None -- 无返回值
     """
-    draw.LineDraw(char, normal_config.config_normal.text_width).draw()
+    STREAM.render(SceneBreak(STREAM.meta("ui_hooks.divider"), char))
 
 
 ui_hooks.on_flush(io_init.flush)
