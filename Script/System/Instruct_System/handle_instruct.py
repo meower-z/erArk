@@ -838,14 +838,12 @@ def handle_wait() -> None:
 @add_instruct(constant.Instruct.WAIT_1_HOUR)
 def handle_wait_1_hour() -> None:
     """处理等待一个小时指令"""
-    instruct_hooks.skip_pauses(True)
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=60)
 
 
 @add_instruct(constant.Instruct.WAIT_6_HOUR)
 def handle_wait_6_hour() -> None:
     """处理等待六个小时指令"""
-    instruct_hooks.skip_pauses(True)
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=360)
 
 
@@ -1417,8 +1415,7 @@ def handle_prepare_training() -> None:
 
 @add_instruct(constant.Instruct.SWITCH_TO_H_INTERFACE)
 def handle_switch_to_h_interface() -> None:
-    """处理切换到H指令"""
-    instruct_hooks.show_non_h(False)
+    """切换到H指令的空处理函数。未受幼年阶段拦截时，SeeInstructPanel 在派发前关闭隐奸中显示非H指令开关。"""
 
 
 @add_instruct(constant.Instruct.SLEEP_OBSCENITY)
@@ -4162,8 +4159,7 @@ def handle_run_all_group_sex_temple() -> None:
 
 @add_instruct(constant.Instruct.SWITCH_TO_NON_H_INTERFACE)
 def handle_switch_to_non_h_interface() -> None:
-    """处理切换到非H指令"""
-    instruct_hooks.show_non_h(True)
+    """切换到非H指令的空处理函数。未受幼年阶段拦截时，SeeInstructPanel 在派发前开启隐奸中显示非H指令开关。"""
 
 
 @add_instruct(constant.Instruct.PULL_OUT_PENIS)

@@ -2,9 +2,16 @@
 
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
-from Script.UI.Moudle import draw, panel
-from Script.Core import get_text, text_handle, value_handle, constant, py_cmd
-from Script.Design import handle_premise, talk
+from Script.UI.Moudle import draw, panel, view
+from Script.Core import (
+    get_text,
+    text_handle,
+    value_handle,
+    constant,
+    py_cmd,
+    flow_handle,
+)
+from Script.Design import child_stage_gate, handle_premise, talk
 from Script.Config import config_def, game_config, normal_config
 from Script.Modules.domains import activity, history
 from Script.Modules.domains import identity
@@ -17,6 +24,15 @@ line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
+SKIPS_PAUSES = frozenset(
+    {constant.Instruct.WAIT_1_HOUR, constant.Instruct.WAIT_6_HOUR}
+)
+""" WAIT_1_HOUR 与 WAIT_6_HOUR 集合。未受幼年阶段拦截时，SeeInstructPanel.handle_instruct 派发前开启跳过暂停。 """
+SHOWS_NON_H: dict[str, bool] = {
+    constant.Instruct.SWITCH_TO_NON_H_INTERFACE: True,
+    constant.Instruct.SWITCH_TO_H_INTERFACE: False,
+}
+""" 切换指令到隐奸中显示非H开关值的映射。未受幼年阶段拦截时，SeeInstructPanel.handle_instruct 派发前写入该开关。 """
 
 
 class SeeInstructPanel:
@@ -354,6 +370,11 @@ class SeeInstructPanel:
         line = draw.LineDraw("-", self.width)
         line.draw()
         # 指令结算
+        if not child_stage_gate.blocks_instruct(instruct_id):
+            if instruct_id in SKIPS_PAUSES:
+                flow_handle.set_skip_pauses(True)
+            if instruct_id in SHOWS_NON_H:
+                view.show_non_h_in_hidden_sex = SHOWS_NON_H[instruct_id]
         handle_instruct.handle_instruct(instruct_id)
 
     def handle_chara_diy_instruct(self, event_id: str) -> None:
