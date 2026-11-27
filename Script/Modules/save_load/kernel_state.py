@@ -1,7 +1,7 @@
 """
 save_load 的内核状态：存档写入 save.json，读档、新游戏与新周目换掉内核的 GameState
 ==================================================================================
-当前存档 save.json 存 orders.settled(core.state()) 的 JSON（版本、时钟、各角色行动与数据、全局数据）
+当前存档 save.json 存 _settled(core.state()) 的 JSON（版本、时钟、各角色行动与数据、全局数据）
 以及存档头 head。Fraction 写成 {"$frac": str(分数)}，例如 Fraction(7, 72) 写成 "7/72"，
 Fraction(3, 1) 写成 "3"。
 旧存档（版本 0 至 27）只读：版本 0 没有存档标记；版本 1 至 27 在文件 "0" 与文件 "2" 记着同一个标记，
@@ -19,7 +19,7 @@ import datetime
 import contextlib
 import json
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from fractions import Fraction
 from types import MappingProxyType
 from typing import Any
@@ -28,7 +28,6 @@ from Script.Config import normal_config
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.save_load import index, upgrade
-from Script.Modules.tk_ui import orders
 
 LEGACY_FILE = "2"
 """ 旧存档（版本 1 至 27）的内核状态文件名 """
@@ -38,6 +37,37 @@ FRAC = "$frac"
 """ 存档里 Fraction 的标签 """
 JSON_SINCE = 28
 """ 以 save.json 写出的最低存档版本 """
+type Settled = Callable[[core.GameState], core.GameState]
+""" 存档前整理 GameState 的函数类型别名 """
+
+
+def _as_is(game: core.GameState) -> core.GameState:
+    """
+    默认的存档前整理函数，原样返回传入的 GameState
+    Keyword arguments:
+    game -- 待存档的 GameState
+    Return arguments:
+    GameState -- 原样返回的 game
+    """
+    return game
+
+
+_settled: Settled = _as_is
+""" 当前生效的存档前状态整理槽，默认为 _as_is """
+
+
+def on_settled(fn: Settled) -> Settled:
+    """
+    登记存档前整理 GameState 的函数，将 _settled 设为 fn。
+    可作为装饰器使用，后续登记会替换先前的函数
+    Keyword arguments:
+    fn -- 要登记的存档前整理函数
+    Return arguments:
+    Settled -- 原样返回传入的 fn
+    """
+    global _settled
+    _settled = fn
+    return fn
 
 
 def _plain(value: core.JSON) -> object:
@@ -154,14 +184,14 @@ def decode(data: dict[str, Any], tagged: bool) -> core.GameState:
 
 def write(save_id: str, head: Mapping[str, core.JSON]) -> None:
     """
-    把 orders.settled(core.state()) 与 head 原子写入 save.json：先写临时文件并 flush、os.fsync，
+    把 _settled(core.state()) 与 head 原子写入 save.json：先写临时文件并 flush、os.fsync，
     再经 os.replace 替换 save.json（出错时删掉临时文件，原 save.json 不变）；
     替换后删除该槽位残留的旧文件 "0"、"1" 与 "2"
     Keyword arguments:
     save_id -- 存档id
     head -- 存档头字段，值为 JSON 类型
     """
-    data = {**encode(orders.settled(core.state())), "head": dict(head)}
+    data = {**encode(_settled(core.state())), "head": dict(head)}
     os.makedirs(index.path(save_id), exist_ok=True)
     file_path = index.file(save_id, index.SAVE_FILE)
     temporary = file_path + ".tmp"
