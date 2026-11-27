@@ -12,6 +12,7 @@ from Script.Protocol.messages import (
     BackendEvent,
     ClearTarget,
     Continue,
+    Exit,
     ExitReason,
     PanelMode,
     RenderOp,
@@ -74,8 +75,10 @@ class UiPort(Protocol):
 
     def set_skip_pauses(self, enabled: bool) -> None:
         """
-        设置后续可跳过暂停的自动跳过开关，不刷出缓冲且不阻塞。
-        会话非开放态时抛出 SessionCancelled。
+        设置后续可跳过暂停的自动跳过开关，会话非开放态时抛出 SessionCancelled。
+        新值与当前开关相同时不做处理。
+        否则先刷出已缓冲的渲染指令，再发布 SkipPauses 事件，
+        传输队列满且有控制器接入时阻塞等待空位，等待期间关闭则抛出 SessionCancelled。
 
         参数：
         enabled (bool) -- 为 True 时启用跳过可跳过暂停，为 False 时关闭
@@ -168,14 +171,15 @@ class SessionPort(Protocol):
         """
         校验令牌并接管当前会话控制权，不阻塞。
         令牌不匹配时抛出 PermissionError。
-        校验通过后递增 controller_epoch 并使旧控制器失效，唤醒旧控制器的阻塞读取使其返回 None。
+        校验通过后递增 controller_epoch 并使旧控制器失效，
+        唤醒旧控制器的阻塞读取使其返回 None。
         同时清空待读队列、重标挂起请求代次，并在会话已有退出事件时将其重新入队。
         前端收到快照后先清空自身屏幕，按序重放 projection 后再处理后续实时事件。
 
         参数：
         auth_token (str) -- 前端提供的会话认证令牌
 
-        返回值：AttachmentSnapshot -- 包含新代次、水位序号、屏幕投影与挂起请求的接入快照
+        返回值：AttachmentSnapshot -- 含新代次、水位序号、屏幕投影、挂起请求与跳过标志的接入快照
         """
 
     def detach(self, controller_epoch: int) -> None:
@@ -204,6 +208,18 @@ class SessionPort(Protocol):
         max_events (int) -- 本次最多取出的事件条数，默认为 64
 
         返回值：list[BackendEvent] -- 先进先出取出的事件列表，无权读取或队空时返回空列表
+        """
+
+    def pending_exit(self, controller_epoch: int) -> Exit | None:
+        """
+        非阻塞地查询当前会话是否已产生退出事件，不消费待读队列且不抛出 SessionCancelled。
+        仅当控制器在线且 controller_epoch 为当前代次、会话已结束或被关闭取消时返回该 Exit，
+        即使工作线程仍在等待满队列空位入队也能立即读到；其余情况返回 None。
+
+        参数：
+        controller_epoch (int) -- 调用方持有的控制器代次编号
+
+        返回值：Exit | None -- 待处理的会话退出事件，无权查询或会话尚未退出时为 None
         """
 
     def receive(

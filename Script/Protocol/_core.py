@@ -24,6 +24,7 @@ from Script.Protocol.messages import (
     RenderChunk,
     RenderOp,
     SessionCancelled,
+    SkipPauses,
     SubmitChoice,
     SubmitText,
     SyncPanel,
@@ -148,7 +149,13 @@ class PortCore(UiPort):
     def set_skip_pauses(self, enabled: bool) -> None:
         with self._cond:
             self._require_open()
+            if enabled == self._skip:
+                return
+            self._flush()
             self._skip = enabled
+            self._publish(
+                SkipPauses(self._session_id, self._next_seq(), enabled)
+            )
 
     @override
     def pause(

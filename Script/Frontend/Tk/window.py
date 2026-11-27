@@ -4,7 +4,6 @@ import sys
 import time
 from collections.abc import Callable
 from tkinter import (
-    END,
     VERTICAL,
     E,
     Entry,
@@ -231,7 +230,8 @@ class Window:
 
     def see_end(self) -> None:
         """
-        将文本框滚动到底部，延迟模式下仅记录标记，启用性能埋点时记录滚动耗时
+        将文本框滚至末尾内容字符（"end-2c"）可见，
+        延迟模式下仅记录标记，启用性能埋点时记录滚动耗时
 
         参数：无
 
@@ -242,7 +242,7 @@ class Window:
             return
         if perf_hook.enabled:
             start = time.perf_counter()
-            self.textbox.see(END)
+            self.textbox.see("end-2c")
             perf_hook.hook_time("gui.see_end", time.perf_counter() - start)
             return
-        self.textbox.see(END)
+        self.textbox.see("end-2c")

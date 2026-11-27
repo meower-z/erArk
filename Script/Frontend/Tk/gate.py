@@ -134,6 +134,16 @@ class InputGate:
         if self.request is None or isinstance(self.request, Pause):
             self.skip_requested = True
 
+    def clear_skip(self) -> None:
+        """
+        清除已预排的右键跳过状态，将 `skip_requested` 重置为 False
+
+        参数：无
+
+        返回值类型：None
+        """
+        self.skip_requested = False
+
     def accepted(self, response: UiResponse) -> None:
         """
         应答被端口接受后清空挂起请求与就绪状态，若接受的是带跳过标记的 `Continue` 则同步清除跳过预排

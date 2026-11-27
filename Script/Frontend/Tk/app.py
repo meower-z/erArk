@@ -1,6 +1,7 @@
 """Tk 前端主控模块，连接 `SessionPort` 消费后端渲染与控制事件并将键鼠操作回传为协议应答。"""
 
 import time
+from collections import deque
 from tkinter import Event
 from typing import Literal
 
@@ -9,6 +10,7 @@ from Script.Core import perf_hook
 from Script.Frontend.Tk import image_cache, warmup
 from Script.Frontend.Tk.gate import InputGate
 from Script.Frontend.Tk.history import InputHistory
+from Script.Frontend.Tk.pager import Pager
 from Script.Frontend.Tk.render import Renderer
 from Script.Frontend.Tk.tooltip import Tooltip
 from Script.Frontend.Tk.window import Window
@@ -16,17 +18,22 @@ from Script.Protocol import (
     BackendEvent,
     Cancel,
     Clear,
+    Continue,
     Exit,
     FrontendInitConfig,
     RenderChunk,
     SessionPort,
+    SkipPauses,
     SyncPanel,
     UiRequest,
     UiResponse,
 )
 
 DRAIN_BATCH = 256
-"""事件泵每次调用 `port.drain` 最多拉取的后端事件条数。"""
+"""
+事件泵每次调用 `port.drain` 最多拉取的后端事件条数，
+也是分页暂停期间本地积压队列保留的事件条数上限。
+"""
 
 
 class TkFrontend:
@@ -34,7 +41,7 @@ class TkFrontend:
 
     def __init__(self, port: SessionPort, auth_token: str) -> None:
         """
-        创建主窗口、提示浮窗、渲染器与输入历史，设置图片字体缩放并附着到会话端口
+        创建主窗口、提示浮窗、渲染器、输入历史、输入门控与分页器，设置图片字体缩放并附着到会话端口
 
         参数：
         port (SessionPort) -- 前端侧会话端口
@@ -60,13 +67,20 @@ class TkFrontend:
         self._epoch = self._attachment.controller_epoch
         self.gate = InputGate(self._epoch)
         """管理当前挂起请求、输入就绪门控与右键跳过预排的 `InputGate` 实例。"""
+        self.pager = Pager()
+        """管理输出超屏暂停与跳过状态的 `Pager` 实例。"""
+        self._backlog: deque[BackendEvent] = deque()
+        self._scanned = 0
+        self._fenced = False
         self._arm_id: str | None = None
         self._closed = False
         self.window.on_close(self.close)
 
     def run(self) -> None:
         """
-        执行常用字符预热、绑定键鼠事件、回放附着投影与挂起请求并启动事件泵与 Tk 主循环
+        执行常用字符预热并绑定键鼠事件，回放附着投影后解除暂停、
+        将投影文本计为已读、滚至末尾并恢复附着快照中的跳过开关，
+        随后派发挂起请求并启动事件泵与 Tk 主循环
 
         参数：无
 
@@ -86,6 +100,11 @@ class TkFrontend:
         root.bind("<Down>", self._newer)
         for event in self._attachment.projection:
             self._dispatch(event)
+        self.pager.release()
+        self.renderer.reveal()
+        self.renderer.anchor_to_end()
+        self.window.see_end()
+        self.pager.skip = self._attachment.skip_pauses
         if self._attachment.pending_request is not None:
             self._dispatch(self._attachment.pending_request)
         root.after(1, self._pump)
@@ -129,12 +148,17 @@ class TkFrontend:
             self._answer(response)
 
     def _press(self, command_id: str) -> None:
+        if self.pager.hold != "none" or not self.gate.armed:
+            return
         self.window.order.set(command_id)
         self.submit_input("button")
 
     def _answer(self, response: UiResponse) -> None:
         if self._port.submit(response):
             self.gate.accepted(response)
+            self.renderer.anchor_to_end()
+            if isinstance(response, Continue) and response.skip_pauses:
+                self.pager.skip = True
         else:
             self.gate.rejected()
 
@@ -144,30 +168,61 @@ class TkFrontend:
         perf = perf_hook.enabled
         start = time.perf_counter() if perf else 0.0
         count = 0
+        dispatched = False
         self.window.defer_see_end()
         try:
             while not self._closed:
-                events = self._port.drain(self._epoch, DRAIN_BATCH)
-                if not events:
+                if self.pager.hold != "none":
+                    count += self._drain_held()
                     break
-                count += len(events)
-                for event in events:
-                    self._dispatch(event)
+                if not self._backlog:
+                    events = self._port.drain(self._epoch, DRAIN_BATCH)
+                    if not events:
+                        break
+                    count += len(events)
+                    self._backlog.extend(events)
+                self._scanned, self._fenced = 0, False
+                self._dispatch(self._backlog.popleft())
+                dispatched = True
         finally:
             if not self._closed:
                 self.window.flush_see_end()
+                if dispatched and self.pager.hold != "none":
+                    self.renderer.pin()
         if perf and count:
             perf_hook.hook_time("gui.drain_batch", time.perf_counter() - start)
             perf_hook.hook_count("gui.msg_total", count)
         if not self._closed:
             self.window.root.after(1, self._pump)
 
+    def _drain_held(self) -> int:
+        exit_event = self._port.pending_exit(self._epoch)
+        if exit_event is not None:
+            self._dispatch(exit_event)
+            return 0
+        room = DRAIN_BATCH - len(self._backlog)
+        events = self._port.drain(self._epoch, room) if room > 0 else []
+        self._backlog.extend(events)
+        while not self._fenced and self._scanned < len(self._backlog):
+            event = self._backlog[self._scanned]
+            self._scanned += 1
+            match event:
+                case Clear() | SyncPanel():
+                    self._fenced = True
+                case SkipPauses(enabled=True):
+                    self.pager.skip = True
+                    self._release()
+                    break
+        return len(events)
+
     def _dispatch(self, event: BackendEvent) -> None:
         match event:
             case RenderChunk():
                 self._disarm()
+                self.renderer.mark_unit()
                 for op in event.ops:
                     self.renderer.render(op)
+                self._settle()
             case Clear(target="screen"):
                 self._disarm()
                 self.renderer.clear_screen()
@@ -178,7 +233,12 @@ class TkFrontend:
                 self._disarm()
                 self.window.order.set("")
             case SyncPanel():
-                pass
+                self.pager.synced()
+                self.gate.clear_skip()
+            case SkipPauses():
+                self.pager.skip = event.enabled
+                if not event.enabled:
+                    self.gate.clear_skip()
             case Exit():
                 self._closed = True
                 self._tooltip.hide()
@@ -186,7 +246,33 @@ class TkFrontend:
             case _:
                 self._on_request(event)
 
+    def _settle(self) -> None:
+        if self.pager.skip:
+            self.renderer.anchor_to_end()
+        elif self.pager.settle(self.renderer.fit()) == "unit":
+            self.renderer.hide_unit()
+
+    def _release(self) -> bool:
+        hold = self.pager.release()
+        if hold == "none":
+            return False
+        renderer = self.renderer
+        renderer.reveal()
+        if self.pager.skip:
+            renderer.anchor_to_end()
+        elif hold == "unit":
+            renderer.anchor_to_unit()
+        else:
+            renderer.advance_page()
+        self._settle()
+        if self.pager.hold == "none":
+            self.window.see_end()
+        else:
+            renderer.pin()
+        return True
+
     def _on_request(self, request: UiRequest) -> None:
+        self.pager.asked(request)
         answer = self.gate.offer(request)
         if answer is None:
             self._arm_later()
@@ -241,7 +327,7 @@ class TkFrontend:
         return True
 
     def _left_click(self, event: Event) -> None:
-        if not self.gate.armed:
+        if self._release() or not self.gate.armed:
             return
         self.window.focus_input()
         if self._continue_pause(False):
@@ -250,8 +336,9 @@ class TkFrontend:
             self.submit_input()
 
     def _right_click(self, event: Event) -> None:
+        self.pager.right_click(self.gate.request)
         self.gate.right_click()
-        if not self.gate.armed:
+        if self._release() or not self.gate.armed:
             return
         if self._continue_pause(True):
             return
@@ -259,7 +346,8 @@ class TkFrontend:
             self.submit_input()
 
     def _enter(self, event: Event | None = None) -> None:
-        self.submit_input()
+        if not self._release():
+            self.submit_input()
 
     def _older(self, event: Event | None = None) -> None:
         text = self.history.older(self.window.order.get())

@@ -32,6 +32,7 @@ from Script.Protocol import (
     Responder,
     ScriptedUiPort,
     SessionCancelled,
+    SkipPauses,
     StyleDefOp,
     SubmitChoice,
     SubmitText,
@@ -201,8 +202,13 @@ class ProtocolPortsTest(FastTestCase):
             threaded.flush()
 
     def test_skip_pauses_until_choose_input_or_sync(self) -> None:
-        """验证可跳过暂停受跳过开关与 Continue 跳过标记控制，并在选择、文本输入或面板同步后关闭跳过。"""
+        """
+        断言暂停跳过受开关与 `Continue` 控制并在选择、文本输入或面板同步后关闭，
+        且 `set_skip_pauses` 仅在变值时先刷出缓冲再发布 `SkipPauses`。
+        """
         port = ScriptedUiPort(script("", "a", _skip, "t", "", ""))
+        port.emit_op(TextOp("before"))
+        port.set_skip_pauses(True)
         port.set_skip_pauses(True)
         self.assertEqual(port.pause(), Continue(1, 0, skip_pauses=True))
         self.assertEqual(port.pause(skippable=False), Continue(1, 1))
@@ -214,6 +220,32 @@ class ProtocolPortsTest(FastTestCase):
         port.set_skip_pauses(True)
         port.sync_panel(1, "pick")
         self.assertEqual(port.pause(), Continue(1, 6))
+        skips = [e for e in port.events if isinstance(e, SkipPauses)]
+        self.assertEqual([skip.enabled for skip in skips], [True, True])
+        self.assertIsInstance(port.events[0], RenderChunk)
+        self.assertEqual(port.events[1], skips[0])
+
+    def test_attach_reports_skip_and_exit_behind_a_full_queue(self) -> None:
+        """
+        断言 `attach` 快照如实反映 `skip_pauses` 开关，
+        且队列满致 `finish` 阻塞时 `pending_exit` 仅向当前代次返回 `Exit`、
+        排空队列后该退出事件正常出队。
+        """
+        port = ThreadedUiPort(TOKEN, capacity=1)
+        self.assertFalse(port.attach(TOKEN).skip_pauses)
+        port.set_skip_pauses(True)
+        snapshot = port.attach(TOKEN)
+        self.assertTrue(snapshot.skip_pauses)
+        epoch = snapshot.controller_epoch
+        port.clear("input")
+        self.assertIsNone(port.pending_exit(epoch))
+        worker = _start(lambda: port.finish("normal"))
+        self.assertTrue(_blocked(worker))
+        self.assertEqual(port.pending_exit(epoch), Exit("session", 3, "normal"))
+        self.assertIsNone(port.pending_exit(epoch - 1))
+        self.assertEqual(port.drain(epoch), [Clear("session", 2, "input")])
+        worker.result(5)
+        self.assertEqual(port.drain(epoch), [Exit("session", 3, "normal")])
 
     def test_default_first_option_answers_every_request(self) -> None:
         """验证 default_first_option 能按规则应答暂停、有或无候选项的选择以及文本输入请求。"""

@@ -183,7 +183,7 @@ def awaits_input(probe: dict[str, Any]) -> bool:
 def wait_for_probe_change(state, before, input_sent=True):
     """
     动作后每 POLL_INTERVAL_S 秒读一次探针，下列任一条件成立时返回：
-    - 探针内容（awaiting 与 buttons）与动作前不同过，当前内容已从 ts 不同的两份探针里连续读到，
+    - 探针内容（awaiting、buttons、page）与动作前不同过，当前内容已从不同 ts 的两份探针连续读到，
       并且 input_sent 为 False 或当前内容通过 awaits_input
     - 超过 CHANGE_LIMIT_S 秒仍没读到与动作前不同的内容
     - 超过 SETTLE_LIMIT_S 秒
@@ -199,12 +199,9 @@ def wait_for_probe_change(state, before, input_sent=True):
     first_seen: dict[str, Any] | None = None
     while True:
         now = read_probe(state)
-        view = (now["awaiting"], now["buttons"])
-        changed = changed or view != (before["awaiting"], before["buttons"])
-        if first_seen is None or view != (
-            first_seen["awaiting"],
-            first_seen["buttons"],
-        ):
+        view = _view(now)
+        changed = changed or view != _view(before)
+        if first_seen is None or view != _view(first_seen):
             first_seen = now
         elif (
             changed
@@ -218,6 +215,17 @@ def wait_for_probe_change(state, before, input_sent=True):
         ):
             return
         time.sleep(POLL_INTERVAL_S)
+
+
+def _view(probe: dict[str, Any]) -> tuple[Any, Any, Any]:
+    """
+    提取探针中用于比较界面是否变化的三项字段，缺省 page 时取 None
+    参数：
+        probe (dict): 探针内容
+    返回：
+        tuple: 由 awaiting、buttons 与 page 组成的三元组
+    """
+    return probe["awaiting"], probe["buttons"], probe.get("page")
 
 
 def describe_keys(probe):

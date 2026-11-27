@@ -124,6 +124,15 @@ class SyncPanel:
 
 
 @dataclass(frozen=True, slots=True)
+class SkipPauses:
+    """游戏逻辑发出的跳过暂停状态同步事件，通知前端将跳过模式设为 enabled。"""
+
+    session_id: str
+    seq: int
+    enabled: bool
+
+
+@dataclass(frozen=True, slots=True)
 class Pause:
     """游戏逻辑发出的暂停等待请求。skippable 为 True 时允许跳过模式略过本次等待，line_mode 标记行级暂停。"""
 
@@ -172,7 +181,9 @@ class Exit:
     save_slot: str | None = None
 
 
-type BackendEvent = RenderChunk | Clear | SyncPanel | UiRequest | Exit
+type BackendEvent = (
+    RenderChunk | Clear | SyncPanel | SkipPauses | UiRequest | Exit
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,8 +228,10 @@ type UiResponse = Continue | SubmitChoice | SubmitText | Cancel
 @dataclass(frozen=True, slots=True)
 class AttachmentSnapshot:
     """
-    端口在前端调用 SessionPort.attach 时返回的接入快照。watermark_seq 是接入时会话已用过的最后事件序号，
+    端口在前端调用 SessionPort.attach 时返回的接入快照。
+    watermark_seq 是接入时会话已用过的最后事件序号，
     此后新投递的事件仅在 seq 严格大于该值时入队。
+    skip_pauses 记录接入时刻会话的暂停跳过开关状态。
     """
 
     session_id: str
@@ -226,6 +239,7 @@ class AttachmentSnapshot:
     watermark_seq: int
     projection: tuple[RenderChunk | Clear | SyncPanel, ...]
     pending_request: UiRequest | None
+    skip_pauses: bool
 
 
 @dataclass(frozen=True, slots=True)

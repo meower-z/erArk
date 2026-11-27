@@ -75,6 +75,7 @@ class ThreadedUiPort(PortCore, SessionPort):
                 self._watermark,
                 self._projection.snapshot(),
                 self._pending,
+                self._skip,
             )
 
     @override
@@ -97,6 +98,11 @@ class ThreadedUiPort(PortCore, SessionPort):
             if events:
                 self._cond.notify_all()
             return events
+
+    @override
+    def pending_exit(self, controller_epoch: int) -> Exit | None:
+        with self._cond:
+            return self._exit if self._controls(controller_epoch) else None
 
     @override
     def receive(

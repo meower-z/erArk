@@ -75,6 +75,44 @@ class TkAdvance(unittest.TestCase):
         ]
         self.assertEqual(moves, [probe["input"]])
 
+    def test_next_page_with_same_buttons(self) -> None:
+        """按钮不变但探针 page 翻页递增时，wait_for_probe_change 在 CHANGE_LIMIT_S 前返回"""
+        clock = [0.0]
+
+        def read(state: dict) -> dict:
+            """
+            代替 read_probe，按假时钟在 0.3 秒后把探针的 page 从 1 切到 2
+            参数：
+                state (dict): 实例状态
+            返回：
+                dict: 含 awaiting、buttons、page、input 与 ts 的模拟探针
+            """
+            return {
+                "awaiting": "wait",
+                "buttons": {"1": [8, 750]},
+                "page": 2 if clock[0] >= 0.3 else 1,
+                "input": [619, 1066],
+                "ts": int(clock[0] / 0.3) * 0.3,
+            }
+
+        def sleep(seconds: float) -> None:
+            """
+            代替 time.sleep，直接推进假时钟而不实际等待
+            参数：
+                seconds (float): 本次推进的秒数
+            返回：
+                None: 无返回值
+            """
+            clock[0] += seconds
+
+        fake_time = mock.Mock(monotonic=lambda: clock[0], sleep=sleep)
+        with (
+            mock.patch.object(tk, "read_probe", read),
+            mock.patch.object(tk, "time", fake_time),
+        ):
+            tk.wait_for_probe_change({}, read({}))
+        self.assertLess(clock[0], tk.CHANGE_LIMIT_S)
+
 
 if __name__ == "__main__":
     unittest.main()
