@@ -46,15 +46,23 @@ class ChoicePrompt:
     """
     一次选项提示的不可变数据类。
     prompt_id 为非空字符串提示标识。
-    options 为非空 ChoiceOption 元组，且各选项的 option_id 互不重复。
+    options 为非空 ChoiceOption 元组。
+    options 中各选项的 option_id 互不重复。
+    text 为前端显示在选项上方的提问或正文字符串，默认为空字符串。
     """
 
     prompt_id: str
     options: tuple[ChoiceOption, ...]
+    text: str = ""
 
     def __post_init__(self) -> None:
-        """校验 prompt_id 与 options，类型不符抛 TypeError，空值或重复 option_id 抛 ValueError。"""
+        """
+        校验 prompt_id、text 与 options 的字段类型和取值约束。字段类型不符时抛出 TypeError。
+        prompt_id 为空、options 为空或 option_id 重复时抛出 ValueError。
+        """
         _require_id(self.prompt_id, "prompt_id")
+        if not isinstance(self.text, str):
+            raise TypeError(f"text must be str, got {type(self.text).__name__}")
         if not isinstance(self.options, tuple):
             raise TypeError(
                 f"options must be tuple, got {type(self.options).__name__}"

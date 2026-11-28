@@ -1,11 +1,11 @@
 """
 指令实行值界面回调测试
 ======================
-- ConfirmHookTest：确认提问回调的登记、顺序与返回值约定。
-- TkConfirmTest：经 Tk 回调绘制确认提问的顺序与玩家选择结果。
-- CalculationNoticeTest：实行值计算文本与合意获得文本的提示派发。
-- AskJudgeTest：选择指令时经确认回调派发提问与早返回。
-- ImportBoundaryTest：在无界面子进程中加载 ui_hooks 并派发确认提问。
+- ConfirmHookTest：测试 emit_confirm 未登记处理函数时的异常、提示构造与返回值映射。
+- TkConfirmTest：测试经 Tk 确认渲染函数绘制提问的顺序与玩家选择结果。
+- CalculationNoticeTest：测试实行值计算文本与合意获得文本的提示派发。
+- AskJudgeTest：测试 ask_judge 经 emit_confirm 派发确认提问与早返回。
+- ImportBoundaryTest：测试在无界面子进程中导入 modal_hooks 与 ui_hooks 并派发确认提问。
 """
 
 import json
@@ -18,8 +18,13 @@ from Script.Core import flow_handle, get_text
 from Script.Design import instuct_judege
 from Script.Kernel import core
 from Script.Modules.domains import abilities, modes
-from Script.Modules.gameplay_resolution import ui_hooks, working
+from Script.Modules.gameplay_resolution import modal_hooks, ui_hooks, working
 from Script.Modules.tk_ui import callbacks
+from Script.Protocol.modal_prompts import (
+    ChoiceOption,
+    ChoicePrompt,
+    ChoiceResult,
+)
 from Script.UI.Moudle import draw
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT
@@ -30,9 +35,13 @@ NAME = "测试干员"
 """ 测试使用的目标角色名称。 """
 CLEAN_RUN = """
 import json, sys
-from Script.Modules.gameplay_resolution import ui_hooks
+from Script.Modules.gameplay_resolution import modal_hooks, ui_hooks
+from Script.Protocol.modal_prompts import ChoiceResult
 asked = []
-ui_hooks.on_confirm(lambda text: asked.append(text) or False)
+def back(prompt):
+    asked.append([prompt.prompt_id, prompt.text, [[o.option_id, o.label] for o in prompt.options]])
+    return ChoiceResult(prompt.prompt_id, "back")
+modal_hooks.on_choice(back)
 answer = ui_hooks.emit_confirm("问")
 loaded = sorted(
     name
@@ -43,7 +52,10 @@ loaded = sorted(
 )
 print(json.dumps({"asked": asked, "answer": answer, "loaded": loaded}))
 """
-""" 子进程脚本源码：只导入 ui_hooks 并派发一次确认提问，以 JSON 输出提问记录、返回值与已加载的界面模块。 """
+"""
+子进程脚本源码：导入 modal_hooks 与 ui_hooks，登记选择处理函数并调用 emit_confirm，
+以 JSON 输出提问记录、返回值与已加载的界面模块。
+"""
 
 type Drawn = tuple[str, object, object, object]
 """ 一次绘制的记录元组类型，依次为绘制类名、文本、宽度，以及按钮的响应文本或文本的样式名。 """
@@ -95,58 +107,55 @@ class DrawCase(FastTestCase):
 
 
 class ConfirmHookTest(FastTestCase):
-    """确认提问回调的登记、派发顺序与返回值测试。"""
+    """测试 ui_hooks.emit_confirm 在 modal_hooks 槽上的异常处理、提示构造与返回值映射。"""
 
     def setUp(self) -> None:
-        """将 ui_hooks._confirms 暂时替换为空列表。"""
+        """将 modal_hooks._ask 暂时替换为 None，保证每项测试从空槽开始。"""
         super().setUp()
-        self.enterContext(mock.patch.object(ui_hooks, "_confirms", []))
+        self.enterContext(mock.patch.object(modal_hooks, "_ask", None))
 
-    def test_unregistered_confirm_is_true(self) -> None:
-        """验证未登记回调时 ui_hooks.emit_confirm 返回 True。"""
-        self.assertIs(ui_hooks.emit_confirm("问"), True)
+    def test_unregistered_confirm_raises(self) -> None:
+        """验证 modal_hooks 未登记处理函数时，调用 ui_hooks.emit_confirm 抛出 RuntimeError。"""
+        with self.assertRaises(RuntimeError):
+            ui_hooks.emit_confirm("问")
 
-    def test_registered_answer_is_returned(self) -> None:
-        """验证 on_confirm 原样返回传入回调，并验证 emit_confirm 转发提问文本且返回回调的布尔答复。"""
-        confirm = mock.Mock(return_value=True)
-        self.assertIs(ui_hooks.on_confirm(confirm), confirm)
+    def test_confirm_asks_one_prompt(self) -> None:
+        """
+        验证登记处理函数后，emit_confirm 按序构造 instruct_confirm 提示，
+        并将 confirm 与 back 结果映射为 True 与 False。
+        """
+        answers = iter(["confirm", "back"])
+        prompts: list[ChoicePrompt] = []
+
+        def answer(prompt: ChoicePrompt) -> ChoiceResult:
+            """
+            记录收到的 ChoicePrompt 并按预设顺序返回对应的 ChoiceResult。
+            Keyword arguments:
+            prompt -- ChoicePrompt，emit_confirm 传入的确认选项提示
+            Return arguments:
+            ChoiceResult -- 使用下一个预设选项标识构造的选择结果
+            """
+            prompts.append(prompt)
+            return ChoiceResult(prompt.prompt_id, next(answers))
+
+        modal_hooks.on_choice(answer)
         self.assertIs(ui_hooks.emit_confirm("问"), True)
-        confirm.return_value = False
         self.assertIs(ui_hooks.emit_confirm("再问"), False)
-        self.assertEqual(
-            confirm.call_args_list, [mock.call("问"), mock.call("再问")]
+        options = (
+            ChoiceOption("confirm", _("确定")),
+            ChoiceOption("back", _("返回")),
         )
-
-    def test_callbacks_run_in_order_until_refused(self) -> None:
-        """
-        验证多个回调按登记顺序收到提问，遇到首个返回假值的回调时返回 False 并停止调用后续回调，
-        全部返回真值时依次执行全部回调并返回 True。
-        """
-        calls = mock.Mock()
-        calls.first.return_value = True
-        calls.second.return_value = False
-        calls.third.return_value = True
-        for fn in (calls.first, calls.second, calls.third):
-            ui_hooks.on_confirm(fn)
-        self.assertIs(ui_hooks.emit_confirm("问"), False)
         self.assertEqual(
-            calls.mock_calls, [mock.call.first("问"), mock.call.second("问")]
-        )
-        calls.reset_mock()
-        calls.second.return_value = True
-        self.assertIs(ui_hooks.emit_confirm("问"), True)
-        self.assertEqual(
-            calls.mock_calls,
+            prompts,
             [
-                mock.call.first("问"),
-                mock.call.second("问"),
-                mock.call.third("问"),
+                ChoicePrompt("instruct_confirm", options, "问"),
+                ChoicePrompt("instruct_confirm", options, "再问"),
             ],
         )
 
 
 class TkConfirmTest(DrawCase):
-    """经已登记 Tk 回调执行确认提问的绘制顺序与玩家选择测试。"""
+    """测试经已登记的 Tk 确认渲染函数执行确认提问时的绘制顺序与玩家选择结果。"""
 
     def setUp(self) -> None:
         """为目标角色设置初吻素质，并准备亲吻指令对应的预期提问文本。"""
@@ -174,10 +183,6 @@ class TkConfirmTest(DrawCase):
             ("NormalDraw", "\n", 1, "standard"),
         ]
 
-    def test_tk_callback_registered(self) -> None:
-        """验证测试世界载入后 callbacks.draw_confirm 已登记到 ui_hooks._confirms。"""
-        self.assertIn(callbacks.draw_confirm, ui_hooks._confirms)
-
     def test_confirm_draws_and_returns_true(self) -> None:
         """验证玩家选择[确定]时 ask_judge 按预期顺序绘制提问与按钮、以两按钮响应文本调用 askfor_all 并返回 True。"""
         self.ask.side_effect = None
@@ -194,11 +199,14 @@ class TkConfirmTest(DrawCase):
         self.assertEqual(self.drawn, self.expected())
         self.ask.assert_called_once_with([_("确定"), _("返回")])
 
-    def test_callback_answers_directly(self) -> None:
-        """验证直接调用 callbacks.draw_confirm 按同一顺序绘制，并在选择[确定]或[返回]时分别返回 True 或 False。"""
+    def test_emit_confirm_draws_through_tk(self) -> None:
+        """
+        验证调用 ui_hooks.emit_confirm 经已登记的 Tk 渲染函数按预期顺序绘制，
+        并在选择[确定]与[返回]时分别返回 True 与 False。
+        """
         self.ask.side_effect = [_("确定"), _("返回")]
-        self.assertIs(callbacks.draw_confirm(self.text), True)
-        self.assertIs(callbacks.draw_confirm(self.text), False)
+        self.assertIs(ui_hooks.emit_confirm(self.text), True)
+        self.assertIs(ui_hooks.emit_confirm(self.text), False)
         self.assertEqual(self.drawn, self.expected() * 2)
 
 
@@ -297,12 +305,15 @@ class AskJudgeTest(DrawCase):
     """ask_judge 经 ui_hooks.emit_confirm 派发确认提问与早返回的测试。"""
 
     def setUp(self) -> None:
-        """将 ui_hooks._confirms 暂时替换为只含模拟回调 self.confirm 的列表。"""
+        """将 modal_hooks._ask 暂时替换为返回 self.answer 对应 ChoiceResult 的模拟处理函数 self.confirm。"""
         super().setUp()
-        self.confirm = mock.Mock(return_value=True)
-        self.enterContext(
-            mock.patch.object(ui_hooks, "_confirms", [self.confirm])
+        self.answer = "confirm"
+        self.confirm = mock.Mock(
+            side_effect=lambda prompt: ChoiceResult(
+                prompt.prompt_id, self.answer
+            )
         )
+        self.enterContext(mock.patch.object(modal_hooks, "_ask", self.confirm))
 
     def test_player_target_skips_question(self) -> None:
         """验证目标角色为玩家时 ask_judge 返回 True，且不调用确认回调也不触发绘制。"""
@@ -328,10 +339,11 @@ class AskJudgeTest(DrawCase):
             + _("接受)\n")
         )
         self.assertIs(instuct_judege.ask_judge(0, TARGET, _("亲吻")), True)
-        self.confirm.return_value = False
+        self.answer = "back"
         self.assertIs(instuct_judege.ask_judge(0, TARGET, _("亲吻")), False)
         self.assertEqual(
-            self.confirm.call_args_list, [mock.call(text), mock.call(text)]
+            [call.args[0].text for call in self.confirm.call_args_list],
+            [text, text],
         )
         self.assertEqual(self.drawn, [])
         self.ask.assert_not_called()
@@ -341,7 +353,10 @@ class ImportBoundaryTest(FastTestCase):
     """ui_hooks 的无界面子进程加载与确认提问派发测试。"""
 
     def test_ui_hooks_loads_without_ui(self) -> None:
-        """验证独立子进程只导入 ui_hooks 即可登记并派发确认提问，且不加载 Script.UI、tkinter 或 _tkinter。"""
+        """
+        验证独立子进程导入 modal_hooks 与 ui_hooks 即可登记处理函数并派发确认提问，
+        且不加载 Script.UI、tkinter 或 _tkinter。
+        """
         result = subprocess.run(
             [sys.executable, "-c", CLEAN_RUN],
             cwd=ROOT,
@@ -353,5 +368,16 @@ class ImportBoundaryTest(FastTestCase):
         self.assertEqual(result.returncode, 0, result.stderr[-2000:])
         report = json.loads(result.stdout.splitlines()[-1])
         self.assertEqual(
-            report, {"asked": ["问"], "answer": False, "loaded": []}
+            report,
+            {
+                "asked": [
+                    [
+                        "instruct_confirm",
+                        "问",
+                        [["confirm", _("确定")], ["back", _("返回")]],
+                    ]
+                ],
+                "answer": False,
+                "loaded": [],
+            },
         )

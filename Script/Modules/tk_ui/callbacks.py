@@ -5,8 +5,9 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 - playthrough：设定表补齐提示。
 - save_load.reset：new_round 与 panel 界面实现。
 - save_load.style_hooks：文本样式初始化（io_init.init_style）。
-- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、逐行等待文本、面板切换、确认提问、隐奸非H开关查询、
+- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、逐行等待文本、面板切换、隐奸非H开关查询、
   文本AI处理与主角寻路首段选定。
+- choice_prompts：ui_hooks.CONFIRM_PROMPT_ID 确认渲染。
 - achievement_service：新达成成就提示。
 - ejaculation_service：射精文本、忍耐询问与射精面板。
 - hidden_sex_service：隐奸被发现面板。
@@ -18,7 +19,7 @@ from collections.abc import Mapping
 from typing import Unpack
 
 from Script.Config import normal_config
-from Script.Core import constant, flow_handle, get_text, io_init
+from Script.Core import constant, flow_handle, io_init
 from Script.Kernel import core
 from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import achievement_service
@@ -26,9 +27,10 @@ from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Modules.gameplay_resolution import hidden_sex_service
 from Script.Modules.gameplay_resolution import pregnancy_hooks, settle_hooks
 from Script.Modules.save_load import reset, style_hooks
-from Script.Modules.tk_ui import player_pick
+from Script.Modules.tk_ui import choice_prompts, player_pick
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
 from Script.Protocol.delta_events import DeltaEntry, DeltaEvent
+from Script.Protocol.modal_prompts import ChoicePrompt
 from Script.Protocol.narrative_events import (
     EventFacts,
     NarrativeEvent,
@@ -37,9 +39,6 @@ from Script.Protocol.narrative_events import (
     TextSpan,
 )
 from Script.UI.Moudle import draw, rich_text_draw, view
-
-_ = get_text._
-""" 文本翻译函数，指向 get_text._。 """
 
 
 @playthrough.on_filled
@@ -265,35 +264,33 @@ def show_non_h_in_hidden_sex() -> bool:
     return bool(view.show_non_h_in_hidden_sex)
 
 
-@ui_hooks.on_confirm
-def draw_confirm(text: str) -> bool:
+@choice_prompts.renderer(ui_hooks.CONFIRM_PROMPT_ID)
+def draw_confirm(prompt: ChoicePrompt) -> str:
     """
-    依次使用 WaitDraw 绘制提问文本，并绘制两次换行、[确定]与[返回]两个居中按钮及一次换行。
-    两个居中按钮的宽度均取 int(normal_config.config_normal.text_width / 2)。
-    绘制完成后调用 flow_handle.askfor_all 等待玩家在两个按钮间选择。
+    依次使用 WaitDraw 绘制 prompt.text、两次换行、prompt.options 对应的居中按钮及一次换行。
+    每个按钮显示 "[{option.label}]"，响应文本为 option.label，宽度为 int(normal_config.config_normal.text_width / 2)。
+    绘制完成后调用 flow_handle.askfor_all 等待玩家选择，并返回选中按钮对应的 option_id。
     Keyword arguments:
-    text -- str，要向玩家提问的文本
+    prompt -- ChoicePrompt，待绘制的确认选项提示
     Return arguments:
-    bool -- 选中结果等于[确定]按钮响应文本时返回 True，否则返回 False
+    str -- 玩家所选选项的 option_id
     """
     line_feed = draw.NormalDraw()
     line_feed.text = "\n"
     line_feed.width = 1
     ask_draw = draw.WaitDraw()
-    ask_draw.text = text
+    ask_draw.text = prompt.text
     ask_draw.draw()
     line_feed.draw()
     line_feed.draw()
-    width = normal_config.config_normal.text_width
-    yes_draw = draw.CenterButton(_("[确定]"), _("确定"), int(width / 2))
-    yes_draw.draw()
-    back_draw = draw.CenterButton(_("[返回]"), _("返回"), int(width / 2))
-    back_draw.draw()
+    width = int(normal_config.config_normal.text_width / 2)
+    option_ids = {}
+    for option in prompt.options:
+        button = draw.CenterButton(f"[{option.label}]", option.label, width)
+        button.draw()
+        option_ids[button.return_text] = option.option_id
     line_feed.draw()
-    answer = flow_handle.askfor_all(
-        [yes_draw.return_text, back_draw.return_text]
-    )
-    return answer == yes_draw.return_text
+    return option_ids[flow_handle.askfor_all(list(option_ids))]
 
 
 @ui_hooks.on_text_ai
