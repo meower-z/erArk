@@ -1,13 +1,13 @@
 """
 指令界面钩子（instruct_hooks）
 ==============================
-本模块提供指令界面入口与两组槽位登记函数。本模块不导入界面模块。
-on_prompts 登记 ask_close_door、select_condom、ask_official_option 与 show_official_result。
-未登记时前三个抛出 RuntimeError。未登记时第四个无操作。
+本模块提供指令界面入口与两组槽位登记函数，不导入界面模块。
+on_prompts 登记 select_condom、ask_official_option 与 show_official_result。
+未登记时前两者抛出 RuntimeError。未登记时第三者无操作。
 on_sex_position 登记 choose_sex_position。未登记时抛出 RuntimeError。
-confirm_poor_music 与 ask_sex_class_ability 构造 ChoicePrompt 并经 modal_hooks.ask 发起提问。
-未在 modal_hooks 登记选择处理函数时，这两个入口抛出 RuntimeError。
-Script.Modules.tk_ui.instruct_callbacks 导入时调用上述两个登记函数填入两组槽位。
+confirm_poor_music、ask_sex_class_ability 与需要询问时的 ask_close_door 经 modal_hooks.ask 发送 ChoicePrompt。
+未登记选择处理函数时，modal_hooks.ask 抛出 RuntimeError。
+Script.Modules.tk_ui.instruct_callbacks 导入时调用上述两个登记函数填入槽位。
 """
 
 from collections.abc import Callable, Sequence
@@ -15,17 +15,18 @@ from typing import Any, NoReturn
 
 from Script.Config import game_config
 from Script.Core import get_text
-from Script.Modules.gameplay_resolution import modal_hooks
+from Script.Modules.gameplay_resolution import modal_hooks, pick_hooks
+from Script.Modules.gameplay_resolution import normal_panel_service
 from Script.Protocol.modal_prompts import ChoiceOption, ChoicePrompt
 
 _ = get_text._
 """ 文本翻译函数，指向 get_text._。 """
+CLOSE_DOOR_PROMPT_ID = "close_door"
+""" 关门询问使用的 ChoicePrompt 标识（"close_door"）。 """
 POOR_MUSIC_PROMPT_ID = "poor_music"
 """ 音乐能力偏低确认提问使用的 ChoicePrompt 标识（"poor_music"）。 """
 SEX_CLASS_ABILITY_PROMPT_ID = "sex_class_ability"
 """ 实操课主修科目提问使用的 ChoicePrompt 标识（"sex_class_ability"）。 """
-type AskDoor = Callable[[], bool | None]
-""" 询问玩家是否关门的函数类型别名，返回布尔值或在当前地点已问过时返回 None。 """
 type AskCondom = Callable[[str], dict[str, object] | None]
 """ 打开避孕套选择面板的函数类型别名，接收操作类型并返回选择字典或 None。 """
 type AskOfficial = Callable[[dict[str, Any]], int]
@@ -65,8 +66,6 @@ def _unregistered(*args: Any, **kwargs: Any) -> NoReturn:
     )
 
 
-_ask_close_door: AskDoor = _unregistered
-""" 当前生效的关门询问槽位，默认为 _unregistered。 """
 _select_condom: AskCondom = _unregistered
 """ 当前生效的避孕套选择询问槽位，默认为 _unregistered。 """
 _ask_official_option: AskOfficial = _unregistered
@@ -78,25 +77,21 @@ _choose_sex_position: ChooseSexPosition = _unregistered
 
 
 def on_prompts(
-    ask_close_door: AskDoor,
     select_condom: AskCondom,
     ask_official_option: AskOfficial,
     show_official_result: ShowOfficial,
 ) -> None:
     """
-    同时登记四个指令询问与结果显示槽位的处理函数。
+    同时登记三个指令询问与结果显示槽位的处理函数。
     后续调用会替换先前登记的处理函数。
     Keyword arguments:
-    ask_close_door -- AskDoor，询问玩家是否关门的函数
     select_condom -- AskCondom，打开避孕套选择面板的函数
     ask_official_option -- AskOfficial，询问单条公务事件选项的函数
     show_official_result -- ShowOfficial，显示公务事件结算后果的函数
     Return arguments:
     None -- 无返回值
     """
-    global _ask_close_door
     global _select_condom, _ask_official_option, _show_official_result
-    _ask_close_door = ask_close_door
     _select_condom = select_condom
     _ask_official_option = ask_official_option
     _show_official_result = show_official_result
@@ -104,12 +99,30 @@ def on_prompts(
 
 def ask_close_door() -> bool | None:
     """
-    在调用时读取当前 _ask_close_door 槽位，询问玩家是否关门。
-    未登记时抛出 RuntimeError。
+    调用 normal_panel_service.door_ask 读取当前地点的关门询问结果。
+    读取结果为 None 时直接返回 None，不调用 modal_hooks.ask。
+    否则构造标识为 CLOSE_DOOR_PROMPT_ID、正文为该结果 prompt、选项依次为 "yes"（是）与 "no"（否）的 ChoicePrompt，
+    并经 modal_hooks.ask 发起提问。
+    未在 modal_hooks 登记选择处理函数时，modal_hooks.ask 抛出 RuntimeError。
+    所选选项标识为 "yes" 时返回 True。
+    所选选项标识为 "no" 且该结果 cancel_on_no 为真时调用 pick_hooks.back 取消选择。
+    所选选项标识为 "no" 且该结果 cancel_on_no 为假时返回 False。
     Return arguments:
-    bool | None -- 关门为 True，不关为 False，当前地点已问过时为 None
+    bool | None -- 无需询问时返回 None，选 "yes" 返回 True，选 "no" 且不取消时返回 False
     """
-    return _ask_close_door()
+    ask = normal_panel_service.door_ask()
+    if ask is None:
+        return None
+    prompt = ChoicePrompt(
+        CLOSE_DOOR_PROMPT_ID,
+        (ChoiceOption("yes", _("是")), ChoiceOption("no", _("否"))),
+        ask.prompt,
+    )
+    if modal_hooks.ask(prompt).selected_option_id == "yes":
+        return True
+    if ask.cancel_on_no:
+        pick_hooks.back()
+    return False
 
 
 def ask_sex_class_ability(ability_ids: Sequence[int]) -> int:
