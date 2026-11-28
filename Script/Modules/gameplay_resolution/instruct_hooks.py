@@ -1,12 +1,12 @@
 """
 指令界面钩子（instruct_hooks）
 ==============================
-本模块提供指令界面入口与两组槽位登记函数，不导入界面模块。
-on_prompts 登记 select_condom、ask_official_option 与 show_official_result。
-未登记时前两者抛出 RuntimeError。未登记时第三者无操作。
+本模块不导入界面模块。
+on_prompts 登记 select_condom 与 ask_official_option。未登记时抛出 RuntimeError。
 on_sex_position 登记 choose_sex_position。未登记时抛出 RuntimeError。
 confirm_poor_music、ask_sex_class_ability 与需要询问时的 ask_close_door 经 modal_hooks.ask 发送 ChoicePrompt。
 未登记选择处理函数时，modal_hooks.ask 抛出 RuntimeError。
+show_official_result 调用 official_prompt.result_text，非 None 时经 ui_hooks.emit_notice 发出。
 Script.Modules.tk_ui.instruct_callbacks 导入时调用上述两个登记函数填入槽位。
 """
 
@@ -17,6 +17,7 @@ from Script.Config import game_config
 from Script.Core import get_text
 from Script.Modules.gameplay_resolution import modal_hooks, pick_hooks
 from Script.Modules.gameplay_resolution import normal_panel_service
+from Script.Modules.gameplay_resolution import official_prompt, ui_hooks
 from Script.Protocol.modal_prompts import ChoiceOption, ChoicePrompt
 
 _ = get_text._
@@ -31,25 +32,8 @@ type AskCondom = Callable[[str], dict[str, object] | None]
 """ 打开避孕套选择面板的函数类型别名，接收操作类型并返回选择字典或 None。 """
 type AskOfficial = Callable[[dict[str, Any]], int]
 """ 展示单条公务事件并询问选项的函数类型别名，接收队列项字典并返回选项序号或 0。 """
-type ShowOfficial = Callable[[str, int, int, int], None]
-""" 展示公务事件结算后果的函数类型别名，接收事件 uid、主体角色编号、互动对象编号与选项序号。 """
 type ChooseSexPosition = Callable[[int, bool], None]
 """ 打开性交体位选择面板的函数类型别名，接收性交类型编号与换体位标记且无返回值。 """
-
-
-def _ignore_result(
-    uid: str, character_id: int, partner_id: int, option_index: int
-) -> None:
-    """
-    未登记公务结果显示实现时的默认槽位函数，不执行操作。
-    Keyword arguments:
-    uid -- str，公务事件 uid，此默认实现不使用
-    character_id -- int，主体角色编号，此默认实现不使用
-    partner_id -- int，互动对象角色编号，此默认实现不使用
-    option_index -- int，选定的选项序号，此默认实现不使用
-    Return arguments:
-    None -- 无返回值
-    """
 
 
 def _unregistered(*args: Any, **kwargs: Any) -> NoReturn:
@@ -70,31 +54,25 @@ _select_condom: AskCondom = _unregistered
 """ 当前生效的避孕套选择询问槽位，默认为 _unregistered。 """
 _ask_official_option: AskOfficial = _unregistered
 """ 当前生效的公务事件选项询问槽位，默认为 _unregistered。 """
-_show_official_result: ShowOfficial = _ignore_result
-""" 当前生效的公务事件后果显示槽位，默认为 _ignore_result。 """
 _choose_sex_position: ChooseSexPosition = _unregistered
 """ 当前生效的性交体位选择面板槽位，默认为未登记时抛出 RuntimeError 的 _unregistered。 """
 
 
 def on_prompts(
-    select_condom: AskCondom,
-    ask_official_option: AskOfficial,
-    show_official_result: ShowOfficial,
+    select_condom: AskCondom, ask_official_option: AskOfficial
 ) -> None:
     """
-    同时登记三个指令询问与结果显示槽位的处理函数。
+    同时登记两个指令询问槽位的处理函数。
     后续调用会替换先前登记的处理函数。
     Keyword arguments:
     select_condom -- AskCondom，打开避孕套选择面板的函数
     ask_official_option -- AskOfficial，询问单条公务事件选项的函数
-    show_official_result -- ShowOfficial，显示公务事件结算后果的函数
     Return arguments:
     None -- 无返回值
     """
-    global _select_condom, _ask_official_option, _show_official_result
+    global _select_condom, _ask_official_option
     _select_condom = select_condom
     _ask_official_option = ask_official_option
-    _show_official_result = show_official_result
 
 
 def ask_close_door() -> bool | None:
@@ -196,8 +174,10 @@ def show_official_result(
     uid: str, character_id: int, partner_id: int, option_index: int
 ) -> None:
     """
-    在调用时读取当前 _show_official_result 槽位，显示公务事件选项的结算后果。
-    未登记时不执行操作。
+    调用 official_prompt.result_text 构造公务事件选项的结算结果文本。
+    文本非 None 时，以 wait=True 与 use_text_width=True 经 ui_hooks.emit_notice 发出提示。
+    文本为 None 时不发出提示。
+    未在 ui_hooks 登记提示回调时，ui_hooks.emit_notice 不执行操作。
     Keyword arguments:
     uid -- str，公务事件 uid
     character_id -- int，主体角色编号
@@ -206,7 +186,11 @@ def show_official_result(
     Return arguments:
     None -- 无返回值
     """
-    _show_official_result(uid, character_id, partner_id, option_index)
+    text = official_prompt.result_text(
+        uid, character_id, partner_id, option_index
+    )
+    if text is not None:
+        ui_hooks.emit_notice(text, wait=True, use_text_width=True)
 
 
 def on_sex_position(choose_sex_position: ChooseSexPosition) -> None:

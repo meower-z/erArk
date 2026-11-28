@@ -132,7 +132,7 @@ TEXT_PLACEHOLDER = {
     "SocName",
 }
 """ 事件正文允许使用的占位符：与 Script/Design/talk.py code_text_to_draw_text() 末尾 .format() 的关键字一致。
-    事件正文在绘制前会经 official_event_panel.get_code_text() → code_text_to_draw_text() 替换这些占位符
+    事件正文在绘制前会经 official_prompt.get_code_text() → code_text_to_draw_text() 替换这些占位符
        （「事件点名」就靠 {Name} / {TargetName}），所以它们不是"裸花括号"；
        除此之外的花括号才会在 .format() 时抛 KeyError """
 PLACEHOLDER_RE = re.compile(r"\{([A-Za-z_]+)\}")
