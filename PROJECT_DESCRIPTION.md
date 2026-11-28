@@ -671,7 +671,7 @@ Script/
 | 成就/蚀刻章 | `UI/Panel/achievement_panel.py`, `Modules/domains/achievement.py` | `Achievement.csv` |
 | 身体信息 | `UI/Panel/body_info_panel.py`, `dirty_panel.py` | `BodyPart.csv` |
 | 性行为履历 | `System/First_Record_System/*`, `UI/Panel/first_record_panel.py`, `Modules/gameplay_resolution/first_record_text.py`, `Modules/gameplay_resolution/first_record_service.py`, `Modules/domains/first_record.py` | `FirstRecordSpecial.csv` |
-| 射精面板 | `UI/Panel/ejaculation_panel.py` | `Semen_Shoot_Amount.csv` |
+| 射精面板 | `Modules/gameplay_resolution/ejaculation_service.py`, `Modules/tk_ui/ejaculation_callbacks.py` | `Semen_Shoot_Amount.csv` |
 | 怀孕总览 | `UI/Panel/pregnancy_panel.py`, `Modules/gameplay_resolution/pregnancy_overview_service.py` | 怀孕阶段总览、生育谱系图与异常女儿排查 |
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
 | 教育管理 | `System/Education_System/*`, `Modules/gameplay_resolution/class_schedule_service.py`, `Modules/gameplay_resolution/sex_class_plan_service.py`, `Modules/gameplay_resolution/course_select_service.py`, `Modules/gameplay_resolution/class_tip_service.py`, `Modules/gameplay_resolution/student_select_service.py`, `Modules/tk_ui/student_select.py`, `UI/Panel/course_select_panel.py`, `UI/Panel/schedule_template_panel.py`, `UI/Panel/sex_class_plan_panel.py`, `UI/Panel/class_schedule_panel.py` | 全局课表、个人课表、日程模板与养成总览 |
