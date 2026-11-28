@@ -1,23 +1,31 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供十一类回调的登记与调用入口。
-十一类回调分别用于输出提示文本、数值变化、图片、分隔线、富文本口上、逐行等待文本、
-切换面板、确认提问、查询隐奸中显示非H指令的开关、调用文本AI处理与主角寻路首段选定。
+本模块提供十类回调的登记与调用入口，另提供经 modal_hooks 派发的确认提问入口 emit_confirm。
+十类回调分别用于输出提示文本、数值变化、图片、分隔线、富文本口上、逐行等待文本、
+切换面板、查询隐奸中显示非H指令的开关、调用文本AI处理与主角寻路首段选定。
 本模块不直接导入界面、Tk 或输入输出模块。
 未登记回调时，emit_notice、emit_delta、emit_image、emit_divider、emit_rich_talk、
 emit_line_wait_text、switch_panel 与 choose_route_leg 不执行操作。
-未登记回调时，emit_confirm 返回 True。
 未登记回调时，hidden_sex_show_non_h 返回 False。
 未登记回调时，apply_text_ai 原样返回传入文本。
+未在 modal_hooks 登记选择处理函数时，emit_confirm 抛出 RuntimeError。
 """
 
 from collections.abc import Callable
 from typing import Protocol, Unpack
 
+from Script.Core import get_text
+from Script.Modules.gameplay_resolution import modal_hooks
 from Script.Protocol.delta_events import DeltaEntry
+from Script.Protocol.modal_prompts import ChoiceOption, ChoicePrompt
 from Script.Protocol.narrative_events import EventFacts
 from Script.Protocol.ports import Delta, Notice
+
+_ = get_text._
+""" 文本翻译函数，指向 get_text._。 """
+CONFIRM_PROMPT_ID = "instruct_confirm"
+""" 指令确认提问使用的 ChoicePrompt 标识（"instruct_confirm"）。 """
 
 
 class RichTalk(Protocol):
@@ -92,10 +100,6 @@ type ToggleQuery = Callable[[], bool]
 """ 只读开关查询回调函数类型，不接收参数并返回布尔值。 """
 _show_non_h_queries: list[ToggleQuery] = []
 """ 按登记顺序保存的回调列表，用于只读查询隐奸中显示非H指令的开关。 """
-type Confirm = Callable[[str], bool]
-""" 确认提问回调函数类型，接收提问文本，返回布尔值表示是否确认。 """
-_confirms: list[Confirm] = []
-""" 按登记顺序保存的确认提问回调列表。 """
 _text_ais: list[TextAi] = []
 """ 按登记顺序保存的文本AI处理回调列表。 """
 type RouteLeg = Callable[
@@ -254,27 +258,22 @@ def hidden_sex_show_non_h() -> bool:
     return any(fn() for fn in _show_non_h_queries)
 
 
-def on_confirm(fn: Confirm) -> Confirm:
-    """
-    登记一个确认提问回调，可作为装饰器使用。
-    Keyword arguments:
-    fn -- Confirm，要登记的确认提问回调函数
-    Return arguments:
-    Confirm -- 原样返回传入的 fn
-    """
-    _confirms.append(fn)
-    return fn
-
-
 def emit_confirm(text: str) -> bool:
     """
-    按登记顺序将提问文本传给已登记的确认提问回调，并在首个回调返回假值时停止。
+    构造标识为 CONFIRM_PROMPT_ID、包含 confirm（确定）与 back（返回）两项的 ChoicePrompt，
+    并经 modal_hooks.ask 发起确认提问。
+    未在 modal_hooks 登记选择处理函数时抛出 RuntimeError。
     Keyword arguments:
-    text -- str，要向玩家提问的文本
+    text -- str，要向玩家展示的提问文本
     Return arguments:
-    bool -- 未登记回调时返回 True，全部已登记回调返回真值时也返回 True，任一回调返回假值时返回 False
+    bool -- 所选选项标识为 "confirm" 时返回 True，否则返回 False
     """
-    return all(fn(text) for fn in _confirms)
+    prompt = ChoicePrompt(
+        CONFIRM_PROMPT_ID,
+        (ChoiceOption("confirm", _("确定")), ChoiceOption("back", _("返回"))),
+        text,
+    )
+    return modal_hooks.ask(prompt).selected_option_id == "confirm"
 
 
 def on_divider(fn: Divider) -> Divider:

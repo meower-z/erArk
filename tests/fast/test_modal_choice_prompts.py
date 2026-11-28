@@ -112,6 +112,17 @@ class ChoiceTypesTest(FastTestCase):
         with self.assertRaises(ValueError):
             ChoicePrompt("pick", (option, ChoiceOption("a", "乙")))
 
+    def test_prompt_text_defaults_empty_and_is_kept(self) -> None:
+        """验证 ChoicePrompt.text 省略时默认为空字符串，传入字符串时原样保留。"""
+        option = ChoiceOption("a", "甲")
+        self.assertEqual(ChoicePrompt("pick", (option,)).text, "")
+        self.assertEqual(ChoicePrompt("pick", (option,), "问").text, "问")
+
+    def test_prompt_rejects_non_str_text(self) -> None:
+        """验证 ChoicePrompt 在 text 不是 str 时抛出 TypeError。"""
+        option = ChoiceOption("a", "甲")
+        self.assertRaises(TypeError, ChoicePrompt, "pick", (option,), None)
+
     def test_result_rejects_empty_ids(self) -> None:
         """验证 ChoiceResult 拒绝空标识字符串及非字符串标识字段。"""
         self.assertRaises(ValueError, ChoiceResult, "", "a")
