@@ -4,13 +4,14 @@ Tk 取证启动器与只读探针。不要直接运行，由 tk_game.py 调用�
 
 固定随机种子，记录游戏当前等待的输入，然后运行当前目录（erArk checkout 根目录）的 game.py。
 每 300ms 把下列内容原子地写到 ERARK_PROBE_JSON：
-  buttons   可见按钮 {返回值: [x, y]}，取按钮首字符的中心，换算成游戏窗口内坐标
-  awaiting  游戏当前等待的输入：askfor_all 与 askfor_int 的选项列表、
-            askfor_wait 时为 "wait"、askfor_str 时为 "text"、
-            当前没有记录到等待输入时为 null（包括首次等待之前和两次等待之间）
-  input     输入框中心的窗口内坐标
-  ts        写入时间
-探针只读取控件位置和等待列表，不改动任何游戏状态；同一种子下，有探针与没有探针的运行仍可对照。
+  buttons     可见按钮 {返回值: [x, y]}，取按钮首字符中心并换算为窗口内坐标
+  awaiting    当前等待状态：窗口分页停顿时为 "wait"，否则为游戏当前等待的输入，
+              含 askfor_all 与 askfor_int 的选项列表、askfor_wait 的 "wait"、
+              askfor_str 的 "text"，以及无等待记录时的 null
+  page_turns  通过分页释放结束停顿的累计次数
+  input       输入框中心的窗口内坐标
+  ts          写入时间
+探针仅读取控件位置、分页状态与等待列表，不改动游戏状态。同一种子下，有无探针的运行仍可对照。
 """
 
 import importlib.abc
@@ -27,9 +28,6 @@ from pathlib import Path
 from typing import Any
 
 import numpy
-
-PROBE_JSON = os.environ["ERARK_PROBE_JSON"]
-SEED = int(os.environ["ERARK_SEED"])
 
 _awaiting = None
 _dump_failed = False
@@ -173,14 +171,16 @@ class _ModuleHook(importlib.abc.MetaPathFinder):
         return spec
 
 
-def _dump(root):
+def _dump(root, path):
     """
-    写一次 probe.json，并安排 300ms 后再写；首次失败时把堆栈打到 stderr
+    原子地写一次 probe.json 并安排 300ms 后再写，首次失败时将堆栈输出到 stderr
     参数：
         root (tkinter.Misc): Tk 根窗口
+        path (str): probe.json 的输出路径
     """
     global _dump_failed
     try:
+        pager = _frontend.pager
         tb = _frontend.window.textbox
         ox, oy = (
             tb.winfo_rootx() - root.winfo_rootx(),
@@ -205,25 +205,26 @@ def _dump(root):
             box.winfo_rootx() - root.winfo_rootx() + box.winfo_width() // 2,
             box.winfo_rooty() - root.winfo_rooty() + box.winfo_height() // 2,
         ]
-        tmp = PROBE_JSON + ".tmp"
+        tmp = path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(
                 {
                     "ts": time.time(),
                     "buttons": buttons,
-                    "awaiting": _awaiting,
+                    "awaiting": "wait" if pager.hold != "none" else _awaiting,
+                    "page_turns": pager.turns,
                     "input": entry,
                 },
                 f,
                 ensure_ascii=False,
             )
-        os.replace(tmp, PROBE_JSON)
+        os.replace(tmp, path)
     except Exception:
         if not _dump_failed:
             _dump_failed = True
             print("tk_probe: 写 probe.json 失败", file=sys.stderr)
             traceback.print_exc()
-    root.after(300, lambda: _dump(root))
+    root.after(300, lambda: _dump(root, path))
 
 
 _real_mainloop = tkinter.Misc.mainloop
@@ -237,16 +238,25 @@ def _mainloop(self, *args, **kwargs):
     返回：
         原 mainloop 的返回值
     """
-    self.after(600, lambda: _dump(self))
+    self.after(600, lambda: _dump(self, os.environ["ERARK_PROBE_JSON"]))
     return _real_mainloop(self, *args, **kwargs)
 
 
-sys.meta_path.insert(
-    0, _ModuleHook("Script.Core.flow_handle", _record_awaiting)
-)
-sys.meta_path.insert(0, _ModuleHook("Script.Frontend.Tk.app", _record_frontend))
-tkinter.Misc.mainloop = _mainloop
-random.seed(SEED)
-numpy.random.seed(SEED)
-sys.path.insert(0, str(Path.cwd()))
-runpy.run_path("game.py", run_name="__main__")
+def main():
+    """注册等待记录、前端捕获与主循环探针钩子，按 ERARK_SEED 固定随机种子后运行当前目录的 game.py"""
+    seed = int(os.environ["ERARK_SEED"])
+    sys.meta_path.insert(
+        0, _ModuleHook("Script.Core.flow_handle", _record_awaiting)
+    )
+    sys.meta_path.insert(
+        0, _ModuleHook("Script.Frontend.Tk.app", _record_frontend)
+    )
+    tkinter.Misc.mainloop = _mainloop
+    random.seed(seed)
+    numpy.random.seed(seed)
+    sys.path.insert(0, str(Path.cwd()))
+    runpy.run_path("game.py", run_name="__main__")
+
+
+if __name__ == "__main__":
+    main()

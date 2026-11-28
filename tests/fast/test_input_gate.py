@@ -1,4 +1,4 @@
-"""`InputGate` 输入门控单元测试：验证右键预排跳过、聚焦判定、不可跳过暂停处理及各类请求的提交应答规则。"""
+"""`InputGate` 输入门控单元测试，验证显式跳过标志、输入框聚焦判定、不可跳过暂停处理及各类请求的提交应答规则。"""
 
 from Script.Frontend.Tk.gate import InputGate
 from Script.Protocol import (
@@ -24,30 +24,24 @@ TEXT = InputText("s", 4, EPOCH, 10, 8)
 
 
 class InputGateTest(FastTestCase):
-    """验证 `InputGate` 在跳过预排、输入框聚焦与应答构造场景下行为正确的测试类。"""
+    """验证 `InputGate` 在跳过判定、输入框聚焦与应答构造场景下行为正确的测试类。"""
 
-    def test_right_click_before_arming_skips_the_pending_pause(self) -> None:
-        """断言就绪前右键会在 `arm()` 时对挂起的可跳过暂停返回跳过应答，接受后清除预排并不跳过下一次暂停。"""
+    def test_skip_turned_on_before_arming_answers_the_pause(self) -> None:
+        """断言在 `arm` 传入跳过开启标志时，挂起的可跳过暂停会直接返回带跳过的 `Continue` 应答且门控保持未就绪。"""
         gate = InputGate(EPOCH)
-        self.assertIsNone(gate.offer(PAUSE))
-        gate.right_click()
-        answer = gate.arm()
+        self.assertIsNone(gate.offer(PAUSE, False))
+        answer = gate.arm(True)
         self.assertEqual(answer, Continue(EPOCH, 7, skip_pauses=True))
         self.assertFalse(gate.armed)
-        assert answer is not None
-        gate.accepted(answer)
-        self.assertFalse(gate.skip_requested)
-        self.assertIsNone(gate.offer(PAUSE))
 
-    def test_right_click_during_choice_or_text_queues_no_skip(self) -> None:
-        """断言在 `Choose` 或 `InputText` 请求期间右键不会预排跳过，且 `continue_pause` 返回 `None`。"""
+    def test_skip_leaves_choice_and_text_waiting(self) -> None:
+        """断言跳过开启时 `Choose` 与 `InputText` 请求仍进入就绪等待，`continue_pause` 返回 `None`。"""
         for request in (CHOOSE, TEXT):
             with self.subTest(type(request).__name__):
                 gate = InputGate(EPOCH)
-                gate.offer(request)
-                self.assertIsNone(gate.arm())
-                gate.right_click()
-                self.assertFalse(gate.skip_requested)
+                self.assertIsNone(gate.offer(request, True))
+                self.assertIsNone(gate.arm(True))
+                self.assertTrue(gate.armed)
                 self.assertIsNone(gate.continue_pause(True))
 
     def test_arming_focuses_choice_and_text_prompts(self) -> None:
@@ -56,22 +50,19 @@ class InputGateTest(FastTestCase):
         for request, focus in expected.items():
             with self.subTest(type(request).__name__):
                 gate = InputGate(EPOCH)
-                gate.offer(request)
-                gate.arm()
+                gate.offer(request, False)
+                gate.arm(False)
                 self.assertTrue(gate.armed)
                 self.assertEqual(gate.wants_focus(), focus)
 
-    def test_queued_skip_waits_for_a_skippable_pause(self) -> None:
-        """断言预排的跳过会越过不可跳过暂停并留待下一个可跳过暂停生效，遇到 `Choose` 请求时被清除。"""
+    def test_skip_waits_for_a_skippable_pause(self) -> None:
+        """断言跳过开启时不可跳过暂停保持等待，继续后再收到可跳过暂停会直接返回带跳过的 `Continue` 应答。"""
         gate = InputGate(EPOCH)
-        gate.right_click()
-        self.assertIsNone(gate.offer(LOCKED))
-        self.assertIsNone(gate.arm())
+        self.assertIsNone(gate.offer(LOCKED, True))
+        self.assertIsNone(gate.arm(True))
         self.assertEqual(gate.continue_pause(False), Continue(EPOCH, 8))
-        skip = gate.offer(PAUSE)
+        skip = gate.offer(PAUSE, True)
         self.assertEqual(skip, Continue(EPOCH, 7, skip_pauses=True))
-        gate.offer(CHOOSE)
-        self.assertFalse(gate.skip_requested)
 
     def test_submit_answers_by_request_kind(self) -> None:
         """断言未就绪时提交返回 `None`，就绪后按 `Pause`、`Choose`、`InputText` 规则返回应答或拒绝并解除就绪。"""
@@ -86,8 +77,8 @@ class InputGateTest(FastTestCase):
         for request, text, expected in cases:
             with self.subTest(f"{type(request).__name__} {text!r}"):
                 gate = InputGate(EPOCH)
-                gate.offer(request)
+                gate.offer(request, False)
                 self.assertIsNone(gate.submit(text, "button"))
-                gate.arm()
+                gate.arm(False)
                 self.assertEqual(gate.submit(text, "button"), expected)
                 self.assertFalse(gate.armed)
