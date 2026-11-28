@@ -13141,7 +13141,7 @@ def handle_prenatal_add_adjust(
     """
     （胎教用）给交互对象（孕妇）的妊娠期胎教累积值 +0.5（Plan 22 四期 §3.27）
 
-    只累积不转写：孩子此时还不存在，出生时由 born_event_panel 逐个全额转写给每个新生儿。
+    只累积不转写：孩子此时还不存在，出生时由 born_service 逐个全额转写给每个新生儿。
     Keyword arguments:
     character_id -- 角色id
     add_time -- 结算时间

@@ -20,7 +20,7 @@ from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config
 from Script.Modules.domains import activity, dirty, h_state, hypnosis
-from Script.Modules.gameplay_resolution import pregnancy_hooks, working
+from Script.Modules.gameplay_resolution import born_service, working
 from Script.Modules.domains import abilities, chara_life, growth, npc_template
 from Script.Modules.domains import pregnancy, relations, roster, work
 from Script.Modules.domains import identity
@@ -613,7 +613,7 @@ def check_born(character_id: int) -> None:
         # 每过一天+20%几率判断是否生产
         now_rate = past_day * 20
         if random.randint(1, 100) <= now_rate:
-            pregnancy_hooks.emit_born(character_id)
+            born_service.resolve_born(character_id)
 
 
 def check_rearing(character_id: int) -> None:

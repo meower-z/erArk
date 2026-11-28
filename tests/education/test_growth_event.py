@@ -411,7 +411,7 @@ section(
     "Plan 28 §3.1：走真实出生路径的婴儿（character_handle.born_new_character）"
 )
 real_baby_id = kernel_data.born(102, "新生儿")
-# 生产面板随后会写出生时刻（born_event_panel），这里照做
+# 生产结算随后会写出生时刻（born_service），这里照做
 pregnancy.update(
     real_baby_id, born_time=(game_time.now() - datetime.timedelta(days=20))
 )

@@ -2,6 +2,7 @@
 模态选项提示槽（modal_hooks）
 =============================
 本模块维护单个模态选项提示处理函数槽，供前端登记处理函数并供后端发起选项提问。
+has_handler 用于查询当前是否已登记处理函数。
 未登记处理函数时，ask 抛出 RuntimeError。
 ask 会校验处理函数返回的 ChoiceResult，要求 prompt_id 一致且 selected_option_id 指向可用状态为 "open" 的选项。
 本模块仅导入标准库 Callable 与 Script.Protocol.modal_prompts，不导入界面或 Tk 模块。
@@ -28,6 +29,15 @@ def on_choice(fn: AskChoice) -> AskChoice:
     global _ask
     _ask = fn
     return fn
+
+
+def has_handler() -> bool:
+    """
+    返回当前是否已登记模态选项提示处理函数。
+    Return arguments:
+    bool -- 已登记处理函数时返回 True，否则返回 False
+    """
+    return _ask is not None
 
 
 def ask(prompt: ChoicePrompt) -> ChoiceResult:

@@ -9,7 +9,6 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
   隐奸非H开关查询、文本AI处理与主角寻路首段选定。
 - choice_prompts：确认提示、忍耐提问、H中被发现选择、普通子事件与多层嵌套子事件的选项渲染。
 - hidden_sex_discovered：隐奸与露出模式选择面板邀请。
-- pregnancy_hooks：生产与破壳面板。
 - settle_hooks：行为结算文本。
 """
 
@@ -22,7 +21,7 @@ from Script.Kernel import core
 from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
 from Script.Modules.gameplay_resolution import hidden_sex_discovered
-from Script.Modules.gameplay_resolution import pregnancy_hooks, settle_hooks
+from Script.Modules.gameplay_resolution import settle_hooks
 from Script.Modules.save_load import reset, style_hooks
 from Script.Modules.tk_ui import choice_prompts, player_pick
 from Script.Modules.tk_ui.event_stream_adapter import STREAM
@@ -418,29 +417,6 @@ def draw_discovered_invite(mode: hidden_sex_discovered.InviteMode) -> bool:
     )
     shown.draw()
     return shown.invite_failed
-
-
-@pregnancy_hooks.on_born
-def draw_born_event(
-    character_id: int,
-    *,
-    egg_mode: bool = False,
-    egg_id_list: list[int] | None = None,
-) -> None:
-    """
-    按传入参数构造 born_event_panel.Born_Panel 并调用其 draw 方法绘制生产或破壳事件面板。
-    Keyword arguments:
-    character_id -- int，母亲角色编号
-    egg_mode -- bool，为 True 时表示卵生破壳模式，默认为 False
-    egg_id_list -- list[int] | None，本次破壳的卵编号列表，默认为 None
-    Return arguments:
-    None -- 无返回值
-    """
-    from Script.UI.Panel import born_event_panel
-
-    born_event_panel.Born_Panel(
-        character_id, egg_mode=egg_mode, egg_id_list=egg_id_list
-    ).draw()
 
 
 @settle_hooks.on_settle_text
