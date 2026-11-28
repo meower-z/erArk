@@ -3,7 +3,7 @@
 =============================
 本模块维护单个模态选项提示处理函数槽，供前端登记处理函数并供后端发起选项提问。
 未登记处理函数时，ask 抛出 RuntimeError。
-已登记处理函数返回的 ChoiceResult 会由 ask 校验 prompt_id 与 selected_option_id。
+ask 会校验处理函数返回的 ChoiceResult，要求 prompt_id 一致且 selected_option_id 指向可用状态为 "open" 的选项。
 本模块仅导入标准库 Callable 与 Script.Protocol.modal_prompts，不导入界面或 Tk 模块。
 """
 
@@ -35,7 +35,7 @@ def ask(prompt: ChoicePrompt) -> ChoiceResult:
     调用已登记的模态选项提示处理函数，并校验返回结果的提示标识与所选选项标识。
     未登记处理函数时抛出 RuntimeError。
     返回的 prompt_id 与 prompt 不一致时抛出 ValueError。
-    返回的 selected_option_id 不在 prompt.options 中时抛出 ValueError。
+    返回的 selected_option_id 不属于 prompt.options 中 availability 为 "open" 的选项时抛出 ValueError。
     Keyword arguments:
     prompt -- ChoicePrompt，待向玩家展示的选项提示
     Return arguments:
@@ -48,7 +48,13 @@ def ask(prompt: ChoicePrompt) -> ChoiceResult:
         raise ValueError(
             f"result for {result.prompt_id} answers {prompt.prompt_id}"
         )
-    offered = [option.option_id for option in prompt.options]
+    offered = [
+        option.option_id
+        for option in prompt.options
+        if option.availability == "open"
+    ]
     if result.selected_option_id not in offered:
-        raise ValueError(f"{result.selected_option_id} is not one of {offered}")
+        raise ValueError(
+            f"{result.selected_option_id} is not one of the open {offered}"
+        )
     return result

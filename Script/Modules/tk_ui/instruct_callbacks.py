@@ -1,21 +1,20 @@
 """
 tk_ui 的指令界面回调
 ====================
-本模块导入时经 instruct_hooks.on_prompts 登记 2 个槽位，并经 instruct_hooks.on_sex_position 登记 1 个槽位。
-本模块导入时经 choice_prompts.renderer 登记 ask_close_door、ask_sex_class_ability 与 confirm_poor_music
-三个选项渲染函数。
+本模块导入时经 instruct_hooks.on_prompts 登记 select_condom 槽位，
+并经 instruct_hooks.on_sex_position 登记 choose_sex_position 槽位。
+本模块导入时经 choice_prompts.renderer 登记 ask_close_door、ask_sex_class_ability、confirm_poor_music
+与 ask_official_option 四个选项渲染函数。
 select_condom 在调用时导入 condom_panel。
 choose_sex_position 在调用时导入 sex_position_panel。
-ask_official_option 在调用时导入 official_event_panel。
 """
 
 from types import FunctionType
-from typing import Any
 
 from Script.Config import normal_config
-from Script.Core import flow_handle, get_text
+from Script.Core import flow_handle, get_text, py_cmd, text_handle
 from Script.Modules.gameplay_resolution import instruct_hooks
-from Script.Modules.tk_ui import choice_prompts
+from Script.Modules.tk_ui import choice_prompts, player_pick
 from Script.Protocol.modal_prompts import ChoicePrompt
 from Script.UI.Moudle import draw, panel
 
@@ -104,6 +103,57 @@ def confirm_poor_music(prompt: ChoicePrompt) -> str:
     return option_ids[flow_handle.askfor_all(list(option_ids))]
 
 
+@choice_prompts.renderer(instruct_hooks.OFFICIAL_OPTION_PROMPT_ID)
+def ask_official_option(prompt: ChoicePrompt) -> str:
+    """
+    绘制公务事件选项界面并读取玩家选择。
+    依次绘制宽度为 1 的换行、prompt.title 小标题线与 prompt.text 正文，
+    再复制 prompt.options 并以 player_pick.ui_random.shuffle 洗牌。
+    洗牌包含置灰的不可选项，以免选项位置泄露配置表原序。
+    非 "open" 项以 deep_gray 绘制无编号文本并附带非空 note。
+    "open" 项依次绘制 LeftButton 与换行，按钮编号仅作显示序号。
+    末尾绘制 "-" 分隔线，经 flow_handle.askfor_all 读取选择并调用 py_cmd.clr_cmd，返回所选项的 option_id。
+    Keyword arguments:
+    prompt -- ChoicePrompt，公务事件选项提示
+    Return arguments:
+    str -- 玩家所选选项的 option_id
+    """
+    line_feed = draw.NormalDraw()
+    line_feed.text = "\n"
+    line_feed.width = 1
+    line_feed.draw()
+    draw.LittleTitleLineDraw(prompt.title, width, count_title_width=True).draw()
+    text_draw = draw.NormalDraw()
+    text_draw.width = width
+    text_draw.text = prompt.text
+    text_draw.draw()
+    shown = list(prompt.options)
+    player_pick.ui_random.shuffle(shown)
+    option_ids = {}
+    for option in shown:
+        if option.availability != "open":
+            gray_draw = draw.NormalDraw()
+            gray_draw.width = width
+            gray_draw.style = "deep_gray"
+            gray_draw.text = _("   ○ {0}").format(option.label)
+            if option.note:
+                gray_draw.text += _("（{0}）").format(option.note)
+            gray_draw.text += "\n"
+            gray_draw.draw()
+            continue
+        button_text = text_handle.id_index(len(option_ids) + 1) + option.label
+        now_draw = draw.LeftButton(
+            button_text, f"\nOEVENT_{option.option_id}", width
+        )
+        now_draw.draw()
+        line_feed.draw()
+        option_ids[now_draw.return_text] = option.option_id
+    draw.LineDraw("-", width).draw()
+    answer = flow_handle.askfor_all(list(option_ids))
+    py_cmd.clr_cmd()
+    return option_ids[answer]
+
+
 def select_condom(mode: str) -> dict[str, object] | None:
     """
     在调用时导入 condom_panel，并以当前文本宽度和 mode 调用 Condom_Select_Panel.draw。
@@ -115,19 +165,6 @@ def select_condom(mode: str) -> dict[str, object] | None:
     from Script.UI.Panel import condom_panel
 
     return condom_panel.Condom_Select_Panel(width, mode).draw()
-
-
-def ask_official_option(queue_data: dict[str, Any]) -> int:
-    """
-    在调用时导入 official_event_panel，并以 queue_data 和当前文本宽度调用 Official_Event_Draw.draw。
-    Keyword arguments:
-    queue_data -- dict[str, Any]，待决断队列中的单条公务事件字典
-    Return arguments:
-    int -- 玩家选定的选项配置序号，无可用选项时为 0
-    """
-    from Script.UI.Panel import official_event_panel
-
-    return official_event_panel.Official_Event_Draw(queue_data, width).draw()
 
 
 def choose_sex_position(sex_type: int, change_position: bool) -> None:
@@ -148,5 +185,5 @@ def choose_sex_position(sex_type: int, change_position: bool) -> None:
     ).draw()
 
 
-instruct_hooks.on_prompts(select_condom, ask_official_option)
+instruct_hooks.on_prompts(select_condom)
 instruct_hooks.on_sex_position(choose_sex_position)

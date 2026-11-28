@@ -2,10 +2,10 @@
 """
 指令询问钩子测试
 ================
-InstructPromptHooksUiFreeTest 在无界面子进程中验证 instruct_hooks.on_prompts 两个入口的未登记行为与登记转发。
+InstructPromptHooksUiFreeTest 在无界面子进程中验证 instruct_hooks.on_prompts 登记的 select_condom 槽位与界面模块隔离。
 InstructPromptCallbacksTest 验证 ask_sex_class_ability 与 confirm_poor_music 经 modal_hooks
 由 instruct_callbacks 绘制按钮。
-InstructPromptCallbacksTest 还验证两个槽位入口经 instruct_callbacks 调用面板。
+该测试类同时验证 select_condom 在调用时按宽度与模式调用 condom_panel。
 HandleInstructPromptsTest 验证 handle_instruct 指令与 instruct_hooks 交互后按回答定下或放弃行动。
 """
 
@@ -24,7 +24,7 @@ from Script.System.Education_System import sex_class_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Official_Event_System import official_event_handle, ri_value
 from Script.UI.Moudle import draw
-from Script.UI.Panel import condom_panel, official_event_panel
+from Script.UI.Panel import condom_panel
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
@@ -60,41 +60,32 @@ payload["error"] = None
 try:
     from Script.Modules.gameplay_resolution import instruct_hooks
 
-    entries = [
-        ("select_condom", ("hang",)),
-        ("ask_official_option", ({"uid": "u"},)),
-    ]
+    def run():
+        try:
+            return ["returned", instruct_hooks.select_condom("hang")]
+        except RuntimeError as error:
+            return ["RuntimeError", str(error)]
 
-    def run_all():
-        results = []
-        for name, args in entries:
-            try:
-                results.append(["returned", getattr(instruct_hooks, name)(*args)])
-            except RuntimeError as error:
-                results.append(["RuntimeError", str(error)])
-        return results
-
-    payload["unregistered"] = run_all()
+    payload["unregistered"] = run()
     calls = []
     instruct_hooks.on_prompts(
-        lambda mode: calls.append(["condom", mode]) or {"op": mode},
-        lambda queue_data: calls.append(["official", queue_data]) or 2,
+        lambda mode: calls.append(["condom", mode]) or {"op": mode}
     )
-    payload["registered"] = run_all()
+    payload["registered"] = run()
     payload["calls"] = calls
 except Exception as error:
     payload["error"] = repr(error)
 """
-""" 无界面子进程脚本，依次调用 instruct_hooks.on_prompts 两个入口的未登记与登记后版本，并向 payload 记录结果。 """
+""" 无界面子进程脚本，依次调用未登记与经 instruct_hooks.on_prompts 登记后的 select_condom，并向 payload 记录结果。 """
 
 
 class InstructPromptHooksUiFreeTest(FastTestCase):
-    """无界面子进程中 instruct_hooks.on_prompts 两个入口的未登记行为、登记转发与界面模块隔离测试。"""
+    """无界面子进程中 instruct_hooks.select_condom 槽位的未登记行为、登记转发与界面模块隔离测试。"""
 
     def test_prompts_without_ui(self) -> None:
         """
-        验证未登记时 select_condom 与 ask_official_option 均抛出 RuntimeError。
-        验证经 on_prompts 登记后，两个入口将参数转发给对应函数并返回其结果。
+        验证未登记时 select_condom 抛出 RuntimeError。
+        验证经 on_prompts 登记后，select_condom 将参数转发给已登记函数并返回其结果。
         验证子进程未尝试导入也未载入受拦截模块。
         """
         from tests.ui_free_subprocess import run_ui_free
@@ -103,15 +94,11 @@ class InstructPromptHooksUiFreeTest(FastTestCase):
         self.assertIsNone(child.payload["error"])
         unregistered = child.payload["unregistered"]
         assert isinstance(unregistered, list)
-        self.assertEqual([row[0] for row in unregistered], ["RuntimeError"] * 2)
+        self.assertEqual(unregistered[0], "RuntimeError")
         self.assertEqual(
-            child.payload["registered"],
-            [["returned", answer] for answer in ({"op": "hang"}, 2)],
+            child.payload["registered"], ["returned", {"op": "hang"}]
         )
-        self.assertEqual(
-            child.payload["calls"],
-            [["condom", "hang"], ["official", {"uid": "u"}]],
-        )
+        self.assertEqual(child.payload["calls"], [["condom", "hang"]])
         self.assertEqual(child.attempted, [])
         self.assertEqual(child.loaded, [])
 
@@ -119,7 +106,7 @@ class InstructPromptHooksUiFreeTest(FastTestCase):
 class InstructPromptCallbacksTest(FastTestCase):
     """
     载入 load_order 后，验证 ask_sex_class_ability 与 confirm_poor_music 经 modal_hooks 由 instruct_callbacks 绘制按钮。
-    同时验证 select_condom 与 ask_official_option 经 instruct_callbacks 调用面板。
+    同时验证 select_condom 经 instruct_callbacks 调用避孕套选择面板。
     """
 
     def setUp(self) -> None:
@@ -234,8 +221,8 @@ class InstructPromptCallbacksTest(FastTestCase):
 
     def test_panels_are_looked_up_at_call_time(self) -> None:
         """
-        替换 condom_panel.Condom_Select_Panel.draw 与 official_event_panel.Official_Event_Draw。
-        验证 select_condom 与 ask_official_option 按 WIDTH 与传入参数调用替换对象并返回其结果。
+        替换 condom_panel.Condom_Select_Panel.draw。
+        验证 select_condom 按 WIDTH 与传入的 mode 调用替换后的面板并返回其结果。
         """
         condom = self.enterContext(
             mock.patch.object(
@@ -245,15 +232,9 @@ class InstructPromptCallbacksTest(FastTestCase):
                 return_value=SELECTION,
             )
         )
-        official = self.enterContext(
-            mock.patch.object(official_event_panel, "Official_Event_Draw")
-        )
-        official.return_value.draw.return_value = 2
         self.assertIs(instruct_hooks.select_condom("drink"), SELECTION)
         panel = condom.call_args.args[0]
         self.assertEqual((panel.width, panel.mode), (WIDTH, "drink"))
-        self.assertEqual(instruct_hooks.ask_official_option(QUEUED), 2)
-        official.assert_called_once_with(QUEUED, WIDTH)
 
 
 class HandleInstructPromptsTest(FastTestCase):
@@ -418,7 +399,7 @@ class HandleInstructPromptsTest(FastTestCase):
         kernel_data.put(
             official.set_queue, [{**QUEUED, "uid": SKIPPED}, QUEUED]
         )
-        asked = self.answer("_ask_official_option", 0, 2)
+        asked = self.answer("ask_official_option", 0, 2)
         with kernel_data.writing():
             data, args = self.chosen(constant.Instruct.OFFICIAL_WORK)
         uids = [a[0]["uid"] for a in asked if isinstance(a[0], dict)]
@@ -442,7 +423,7 @@ class HandleInstructPromptsTest(FastTestCase):
     def test_empty_official_queue_asks_nothing(self) -> None:
         """待决断队列为空时处理公务不询问，行动不带开始代码。"""
         kernel_data.put(official.set_queue, [])
-        asked = self.answer("_ask_official_option")
+        asked = self.answer("ask_official_option")
         _data, args = self.chosen(constant.Instruct.OFFICIAL_WORK)
         self.assertNotIn(handle_instruct.START, args)
         self.assertEqual(asked, [])

@@ -2,12 +2,13 @@
 指令界面钩子（instruct_hooks）
 ==============================
 本模块不导入界面模块。
-on_prompts 登记 select_condom 与 ask_official_option。未登记时抛出 RuntimeError。
-on_sex_position 登记 choose_sex_position。未登记时抛出 RuntimeError。
-confirm_poor_music、ask_sex_class_ability 与需要询问时的 ask_close_door 经 modal_hooks.ask 发送 ChoicePrompt。
+on_prompts 登记 select_condom，未登记时抛出 RuntimeError。
+on_sex_position 登记 choose_sex_position，未登记时抛出 RuntimeError。
+confirm_poor_music、ask_sex_class_ability、需询问的 ask_close_door 与有可选项的 ask_official_option
+经 modal_hooks.ask 发送 ChoicePrompt。
 未登记选择处理函数时，modal_hooks.ask 抛出 RuntimeError。
-show_official_result 调用 official_prompt.result_text，非 None 时经 ui_hooks.emit_notice 发出。
-Script.Modules.tk_ui.instruct_callbacks 导入时调用上述两个登记函数填入槽位。
+无可选项的 ask_official_option 与结果非 None 的 show_official_result 经 ui_hooks 发出提示。
+Script.Modules.tk_ui.instruct_callbacks 导入时调用上述登记函数填入槽位。
 """
 
 from collections.abc import Callable, Sequence
@@ -28,10 +29,10 @@ POOR_MUSIC_PROMPT_ID = "poor_music"
 """ 音乐能力偏低确认提问使用的 ChoicePrompt 标识（"poor_music"）。 """
 SEX_CLASS_ABILITY_PROMPT_ID = "sex_class_ability"
 """ 实操课主修科目提问使用的 ChoicePrompt 标识（"sex_class_ability"）。 """
+OFFICIAL_OPTION_PROMPT_ID = "official_option"
+""" 公务事件选项决断使用的 ChoicePrompt 标识（"official_option"）。 """
 type AskCondom = Callable[[str], dict[str, object] | None]
 """ 打开避孕套选择面板的函数类型别名，接收操作类型并返回选择字典或 None。 """
-type AskOfficial = Callable[[dict[str, Any]], int]
-""" 展示单条公务事件并询问选项的函数类型别名，接收队列项字典并返回选项序号或 0。 """
 type ChooseSexPosition = Callable[[int, bool], None]
 """ 打开性交体位选择面板的函数类型别名，接收性交类型编号与换体位标记且无返回值。 """
 
@@ -52,27 +53,21 @@ def _unregistered(*args: Any, **kwargs: Any) -> NoReturn:
 
 _select_condom: AskCondom = _unregistered
 """ 当前生效的避孕套选择询问槽位，默认为 _unregistered。 """
-_ask_official_option: AskOfficial = _unregistered
-""" 当前生效的公务事件选项询问槽位，默认为 _unregistered。 """
 _choose_sex_position: ChooseSexPosition = _unregistered
 """ 当前生效的性交体位选择面板槽位，默认为未登记时抛出 RuntimeError 的 _unregistered。 """
 
 
-def on_prompts(
-    select_condom: AskCondom, ask_official_option: AskOfficial
-) -> None:
+def on_prompts(select_condom: AskCondom) -> None:
     """
-    同时登记两个指令询问槽位的处理函数。
+    登记避孕套选择询问槽位的处理函数。
     后续调用会替换先前登记的处理函数。
     Keyword arguments:
     select_condom -- AskCondom，打开避孕套选择面板的函数
-    ask_official_option -- AskOfficial，询问单条公务事件选项的函数
     Return arguments:
     None -- 无返回值
     """
-    global _select_condom, _ask_official_option
+    global _select_condom
     _select_condom = select_condom
-    _ask_official_option = ask_official_option
 
 
 def ask_close_door() -> bool | None:
@@ -160,14 +155,34 @@ def select_condom(mode: str) -> dict[str, object] | None:
 
 def ask_official_option(queue_data: dict[str, Any]) -> int:
     """
-    在调用时读取当前 _ask_official_option 槽位，为单条公务事件询问玩家选定的选项。
-    未登记时抛出 RuntimeError。
+    向玩家展示单条公务事件并获取所选选项配置序号。
+    调用 official_prompt.event_title、event_text 与 event_options 拼装抬头、正文与选项。
+    存在 availability 为 "open" 的选项时，构造标识为 OFFICIAL_OPTION_PROMPT_ID 的 ChoicePrompt，
+    经 modal_hooks.ask 发起提问并返回所选配置序号。
+    未登记选择处理函数时，modal_hooks.ask 抛出 RuntimeError。
+    无可选选项时，依次经 ui_hooks.emit_notice 输出换行、sontitle 抬头、正文与 deep_gray 跳过提示，
+    再经 ui_hooks.emit_divider 输出分隔线并返回 0。
     Keyword arguments:
-    queue_data -- dict[str, Any]，待决断队列中弹出的单条公务事件字典
+    queue_data -- dict[str, Any]，公务事件队列项
     Return arguments:
-    int -- 选定的选项配置序号，无可用选项时为 0
+    int -- 所选选项配置序号，无可选选项时返回 0
     """
-    return _ask_official_option(queue_data)
+    title = _("【公务事件】{0}").format(official_prompt.event_title(queue_data))
+    text = official_prompt.event_text(queue_data)
+    options = official_prompt.event_options(queue_data)
+    if any(option.availability == "open" for option in options):
+        prompt = ChoicePrompt(OFFICIAL_OPTION_PROMPT_ID, options, text, title)
+        return int(modal_hooks.ask(prompt).selected_option_id)
+    ui_hooks.emit_notice("\n")
+    ui_hooks.emit_notice(title + "\n", style="sontitle", use_text_width=True)
+    ui_hooks.emit_notice(text, use_text_width=True)
+    ui_hooks.emit_notice(
+        _("  （这件事已经不需要你来决定了）\n"),
+        style="deep_gray",
+        use_text_width=True,
+    )
+    ui_hooks.emit_divider()
+    return 0
 
 
 def show_official_result(

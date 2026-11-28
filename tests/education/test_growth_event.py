@@ -1366,10 +1366,6 @@ clear_schedules()
 section(
     "Plan 32 §8.2（追加调整）：公务事件的后果不写在选项上，玩家选定、结算之后单独用一个 WaitDraw 显示"
 )
-from Script.UI.Panel import (
-    official_event_panel,
-)  # noqa: E402
-
 kernel_data.put(official.set_queue, [])
 set_time(period_time(0))
 _od_uid = "期末1"
@@ -1393,18 +1389,29 @@ check(
     and all(_od_tip),
     _od_tip,
 )
+
+
+def od_shown() -> list[int]:
+    """
+    按绘制顺序将 _boot.drawn_text 中包含 _od_text 项的文本映射为最长匹配项的 1 起配置序号。
+    Return arguments:
+    list[int] -- 本次已绘制选项对应的 1 起配置序号列表
+    """
+    return [
+        max((len(t), i) for i, t in enumerate(_od_text, 1) if t in one)[1]
+        for one in _boot.drawn_text
+        if any(t in one for t in _od_text)
+    ]
+
+
 _boot.drawn_text.clear()
-_od = official_event_panel.Official_Event_Draw(_od_queue_data, 120)
-_od_pick = _od.draw()
-_od_button = [
-    one for one in _boot.drawn_text if any(text in one for text in _od_text)
-]
+_od_pick = instruct_hooks.ask_official_option(_od_queue_data)
 check(
     "§8.2 选项按钮只写选项本身：四个选项都画出来了，画面上任何一处都没有后果提示（此前按钮是「选项文本（后果提示）」）",
-    _od_pick == _od.draw_option_list[0]["index"]
-    and len(_od_button) == 4
+    _od_pick == od_shown()[0]
+    and sorted(od_shown()) == [1, 2, 3, 4]
     and not any(tip in one for one in _boot.drawn_text for tip in _od_tip),
-    (_od_pick, _od_button),
+    (_od_pick, od_shown()),
 )
 # 界面口径 4（用户要求）：选项的出现顺序每次随机，画面上的编号只是显示序，结算认 CSV 原序号
 _od_order = set()
@@ -1412,11 +1419,10 @@ _od_order = set()
 _od_pick_list = []
 """ 每次决断（桩固定选第一个按钮）返回的选项原序号，应当等于该次显示顺序的第一项 """
 for _round in range(60):
-    _od_shuffle = official_event_panel.Official_Event_Draw(_od_queue_data, 120)
-    _od_order.add(tuple(one["index"] for one in _od_shuffle.draw_option_list))
-    _od_pick_list.append(
-        (_od_shuffle.draw(), _od_shuffle.draw_option_list[0]["index"])
-    )
+    _boot.drawn_text.clear()
+    _od_pick = instruct_hooks.ask_official_option(_od_queue_data)
+    _od_order.add(tuple(od_shown()))
+    _od_pick_list.append((_od_pick, od_shown()[0]))
 check(
     "界面口径4 选项顺序每次随机：连续弹出同一条事件 60 次出现了多种显示顺序，每次都不重不漏地画出原有的四个选项",
     len(_od_order) > 1
@@ -1428,11 +1434,6 @@ check(
     all(one[0] == one[1] for one in _od_pick_list)
     and len({one[0] for one in _od_pick_list}) > 1,
     _od_pick_list[:8],
-)
-check(
-    "界面口径4 option_list 保持原序：洗牌洗的是 draw_option_list 的副本，原列表仍是 1~4 的顺序",
-    [one["index"] for one in _od.option_list] == [1, 2, 3, 4],
-    [one["index"] for one in _od.option_list],
 )
 _od_wait: list[str] = []
 """ 本段记下的 WaitDraw 文本 """
@@ -1524,15 +1525,14 @@ relations.trust.set(loli.cid, 0)
 _gray_option = official_event_handle.get_option_list(_gray_uid, 201, 0)
 _gray_off = [one for one in _gray_option if not one["can_use"]]
 _boot.drawn_text.clear()
-official_event_panel.Official_Event_Draw(
+instruct_hooks.ask_official_option(
     {
         "uid": _gray_uid,
         "department": E.GROWTH_EVENT_DEPARTMENT,
         "chara_id": 201,
         "partner_id": 0,
-    },
-    120,
-).draw()
+    }
+)
 _gray_line = [one for one in _boot.drawn_text if "○" in one]
 check(
     "§8.2 置灰的选项照旧画出来并写着原因（好感、信赖不够的两项），同样不写后果提示",

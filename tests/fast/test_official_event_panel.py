@@ -1,8 +1,8 @@
 """
-公务事件决断面板交互测试
-========================
-本测试经 handle_instruct.choose_official_option 与 settle_official_option 验证公务事件面板的决断与结算交互。
-同时测试 official_event_panel.get_event_title 的事件抬头获取逻辑。
+公务事件决断交互测试
+====================
+本测试经 handle_instruct.choose_official_option 与 settle_official_option 验证公务事件的决断与结算交互。
+同时测试 official_prompt.event_title 的事件抬头获取逻辑。
 测试替换事件配置、抬头注册表与洗牌函数，并拦截 LeftButton.draw、NormalDraw.draw 与 askfor_all 驱动选择。
 用例覆盖洗牌选项与原序号返回、不可决断事件跳过、空队列返回、结算效果与提示以及抬头提供者回退。
 """
@@ -13,11 +13,11 @@ from unittest import mock
 from Script.Config import game_config
 from Script.Core import flow_handle, text_handle
 from Script.Modules.domains import official
+from Script.Modules.gameplay_resolution import official_prompt
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Official_Event_System import official_event_handle, ri_value
 from Script.UI.Moudle import draw
-from Script.UI.Panel import official_event_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 
@@ -267,15 +267,11 @@ class OfficialEventPanelTest(FastTestCase):
         """验证未注册抬头提供者时返回部门名，注册提供者时使用其返回值，提供者异常时回退部门名。"""
         name = official_event_handle.get_department_name(DEPARTMENT)
         self.assertNotEqual(name, "")
-        self.assertEqual(
-            official_event_panel.get_event_title(queued("测试乙")), name
-        )
+        self.assertEqual(official_prompt.event_title(queued("测试乙")), name)
         titles = official_event_handle.EVENT_TITLE
         titles[DEPARTMENT] = lambda queue_data: f"抬头{queue_data['uid']}"
         self.assertEqual(
-            official_event_panel.get_event_title(queued("测试乙")), "抬头测试乙"
+            official_prompt.event_title(queued("测试乙")), "抬头测试乙"
         )
         titles[DEPARTMENT] = lambda queue_data: queue_data["title"]
-        self.assertEqual(
-            official_event_panel.get_event_title(queued("测试乙")), name
-        )
+        self.assertEqual(official_prompt.event_title(queued("测试乙")), name)
