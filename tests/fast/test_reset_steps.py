@@ -2,7 +2,8 @@
 """
 Reset 的步骤：save_load.reset 的输入钩子按 why["cause"] 依次运行步骤
 ====================================================================
-- 读档：装存档、换精确值、投影角色、修补、回到场景面板；新周目：建新周目、投影角色、回到场景面板；新游戏：投影角色。
+- 读档：装存档、换精确值、投影角色、修补、重定玩家交互对象、回到场景面板；
+  新周目：建新周目、投影角色、回到场景面板；新游戏：投影角色。
 - 启动、改时钟与其他原因不运行任何步骤，换入的 GameState 原样交给内核。
 """
 
@@ -11,6 +12,7 @@ from types import MappingProxyType, SimpleNamespace
 from unittest import mock
 
 from Script.Core import constant, save_handle
+from Script.Design import character_behavior
 from Script.Kernel import core
 from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions
@@ -39,6 +41,7 @@ class ResetStepsTest(FastTestCase):
             (save_handle, "exact_stats"),
             (save_handle, "repair_installed"),
             (actions, "project"),
+            (character_behavior, "settle_player_target"),
         ):
             self.enterContext(mock.patch.object(module, name, record(name)))
         panel = SimpleNamespace(setup=record("setup"))
@@ -69,7 +72,13 @@ class ResetStepsTest(FastTestCase):
         cases: list[tuple[core.Data, list[str]]] = [
             (
                 {"cause": "load", "save": "1"},
-                ["install_save", "exact_stats", "project", "repair_installed"],
+                [
+                    "install_save",
+                    "exact_stats",
+                    "project",
+                    "repair_installed",
+                    "settle_player_target",
+                ],
             ),
             (
                 {"cause": "new_round", "inherit": {}},

@@ -136,6 +136,16 @@ def _reconcile_roster_data(
     return working.reconcile(new)
 
 
+def _settle_player_target(
+    new: core.GameState, why: Mapping[str, core.JSON]
+) -> core.GameState:
+    """读档时按当前场景在场角色重定玩家的交互对象（character_behavior.settle_player_target）"""
+    from Script.Design import character_behavior
+
+    character_behavior.settle_player_target()
+    return new
+
+
 STEPS: tuple[ResetStep, ...] = (
     ResetStep("install_save", frozenset({"load"}), _install_save),
     ResetStep("exact_stats", frozenset({"load"}), _exact_stats),
@@ -154,6 +164,9 @@ STEPS: tuple[ResetStep, ...] = (
         "reconcile_roster_data",
         frozenset({"load", "new_round", "new_game"}),
         _reconcile_roster_data,
+    ),
+    ResetStep(
+        "settle_player_target", frozenset({"load"}), _settle_player_target
     ),
     ResetStep(
         "panel", frozenset({"load", "new_round"}), _FrontendStep("panel")
