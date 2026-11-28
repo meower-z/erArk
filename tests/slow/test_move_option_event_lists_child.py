@@ -19,6 +19,7 @@ from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from Script.Design.event import EventText
+    from Script.Protocol.modal_prompts import ChoicePrompt, ChoiceResult
 
 PARENT_ID = "da8a5d84-014c-41ef-a755-c65c765867e0"
 """ 抵达男士止步地点、在场者都至少二级陷落时的选项父事件 """
@@ -64,16 +65,16 @@ class MoveOptionEventListsChildTest(SlowTestCase):
 
     def _record(self) -> tuple[list[str], list[str], list[list[str]]]:
         """
-        包装事件判定与子事件选项的绘制，照常执行并记下事件id
+        包装事件判定与选项询问，照常执行并记下事件 id 与普通子事件选项 id
         Keyword arguments:
         无
         Return arguments:
-        list -- 博士触发的事件id
-        list -- 选项面板列出的子事件id
-        list -- 父事件触发时博士移动记录里最近的、不同于所在地的场景（未触发时为空）
+        list[str] -- 博士触发的事件 id
+        list[str] -- 普通子事件选项提示列出的子事件 id，每个只记一次
+        list[list[str]] -- 父事件触发时博士移动记录里最近的、不同于所在地的场景（未触发时为空）
         """
         from Script.Design import event
-        from Script.UI.Panel import event_option_panel
+        from Script.Modules.gameplay_resolution import modal_hooks, settle_hooks
 
         fired: list[str] = []
         offered: list[str] = []
@@ -105,33 +106,24 @@ class MoveOptionEventListsChildTest(SlowTestCase):
                     ][-1:]
             return result
 
-        class RecordedSonEventDraw(event_option_panel.SonEventDraw):
-            """照常绘制子事件选项，并把子事件id收进 offered"""
+        real_ask = modal_hooks.ask
 
-            def __init__(
-                self,
-                value_list: list,
-                width: int,
-                is_button: bool,
-                num_button: bool,
-                button_id: int,
-            ) -> None:
-                """
-                Keyword arguments:
-                value_list -- 事件id,人物id
-                width -- 最大宽度
-                is_button -- 绘制按钮
-                num_button -- 绘制数字按钮
-                button_id -- 数字按钮id
-                """
-                if value_list[0] not in offered:
-                    offered.append(value_list[0])
-                super().__init__(
-                    value_list, width, is_button, num_button, button_id
-                )
+        def record_ask(prompt: "ChoicePrompt") -> "ChoiceResult":
+            """
+            对普通子事件选项提示记下其中各选项的 option_id（每个只记一次），再执行真实的 modal_hooks.ask
+            Keyword arguments:
+            prompt -- ChoicePrompt，本次派发的选项提示
+            Return arguments:
+            ChoiceResult -- real_ask 返回的选择结果
+            """
+            if prompt.prompt_id == settle_hooks.SON_EVENT_PROMPT_ID:
+                for option in prompt.options:
+                    if option.option_id not in offered:
+                        offered.append(option.option_id)
+            return real_ask(prompt)
 
         event.handle_event = record_event
-        setattr(event_option_panel, "SonEventDraw", RecordedSonEventDraw)
+        setattr(modal_hooks, "ask", record_ask)
         return fired, offered, previous
 
     def test_child_offered_and_settled(self) -> None:

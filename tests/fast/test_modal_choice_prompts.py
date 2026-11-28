@@ -2,8 +2,8 @@
 子事件纯数据选项协议与选项面板测试
 ==================================
 - 协议类型（ChoiceTypesTest）：校验 ChoiceOption、ChoicePrompt 与 ChoiceResult 的约束与不可变性。
-- 后端服务（EventOptionServiceTest）：覆盖两类子事件构建、重复标识去重与选择写回。
-- 选项面板（EventOptionPanelTest）：覆盖两类面板按钮绘制、回调写回与无选项跳过。
+- 后端服务（EventOptionServiceTest）：覆盖两类子事件提示构建、标签转换、去重与选择写回。
+- 选项询问（EventOptionAskTest）：验证两类子事件经 settle_hooks 与 Tk 渲染路径完成绘制、翻页与结果写入。
 - 模块边界（ModalPromptsBoundaryTest）：验证 modal_prompts.py 仅导入 Python 标准库。
 """
 
@@ -16,14 +16,16 @@ from unittest import mock
 from Script.Config import game_config
 from Script.Core import flow_handle, game_type, text_handle
 from Script.Modules.domains import activity
-from Script.Modules.gameplay_resolution import event_option_service
+from Script.Modules.gameplay_resolution import (
+    event_option_service,
+    settle_hooks,
+)
 from Script.Protocol.modal_prompts import (
     ChoiceOption,
     ChoicePrompt,
     ChoiceResult,
 )
 from Script.UI.Moudle import draw
-from Script.UI.Panel import event_option_panel
 from tests import kernel_data, world
 from tests.fast.base import FastTestCase
 
@@ -62,7 +64,9 @@ EVENTS = {
         event("opt_a", "选项甲|甲的正文", "option_son", IS_PLAYER),
         event("opt_b", "选项乙", "option_son"),
         event("opt_c", "选项丙", IS_PLAYER),
-        event("opt_d", "选项丁", "option_son", IS_PLAYER, NO_PLAYER),
+        event(
+            "opt_d", "选项丁给{TargetName}", "option_son", IS_PLAYER, NO_PLAYER
+        ),
         event("son_bare", "嵌套甲", SON_KEY),
         event("son_player", "嵌套乙|正文", SON_KEY, IS_PLAYER),
         event("son_not_player", "嵌套丙", SON_KEY, NO_PLAYER),
@@ -145,7 +149,7 @@ class ChoiceTypesTest(FastTestCase):
 
 
 class EventChoiceCase(FastTestCase):
-    """子事件服务与面板测试基类，注入虚构事件配置并准备玩家与目标角色。"""
+    """子事件服务与选项询问测试基类，注入虚构事件配置并准备玩家与目标角色。"""
 
     def setUp(self) -> None:
         """补丁事件配置表并创建测试用玩家角色、目标角色及当前行为与父事件。"""
@@ -184,11 +188,17 @@ class EventOptionServiceTest(EventChoiceCase):
     """测试 event_option_service 的提示构建、子事件筛选与选择写回逻辑。"""
 
     def test_son_event_prompt_lists_matching_options(self) -> None:
-        """验证 build_son_event_prompt 仅保留含 option_son 且涵盖父事件前提的子事件。"""
+        """
+        验证 build_son_event_prompt 仅保留含 option_son 且涵盖父事件前提键的子事件。
+        同时断言标签中的 {TargetName} 转为目标名，且提示标识为 settle_hooks.SON_EVENT_PROMPT_ID。
+        """
         prompt = event_option_service.build_son_event_prompt(PLAYER)
         self.assertEqual(
-            self.options(prompt), [("opt_a", "选项甲"), ("opt_d", "选项丁")]
+            self.options(prompt),
+            [("opt_a", "选项甲"), ("opt_d", "选项丁给干员")],
         )
+        assert prompt is not None
+        self.assertEqual(prompt.prompt_id, settle_hooks.SON_EVENT_PROMPT_ID)
 
     def test_son_event_prompt_lists_repeated_event_once(self) -> None:
         """验证行为事件表中重复出现的事件标识在 build_son_event_prompt 结果中只列一次。"""
@@ -198,7 +208,8 @@ class EventOptionServiceTest(EventChoiceCase):
         ):
             prompt = event_option_service.build_son_event_prompt(PLAYER)
         self.assertEqual(
-            self.options(prompt), [("opt_a", "选项甲"), ("opt_d", "选项丁")]
+            self.options(prompt),
+            [("opt_a", "选项甲"), ("opt_d", "选项丁给干员")],
         )
 
     def test_son_event_prompt_is_none_without_options(self) -> None:
@@ -225,7 +236,10 @@ class EventOptionServiceTest(EventChoiceCase):
         )
 
     def test_multi_layer_prompt_joins_actor_and_target_events(self) -> None:
-        """验证 build_multi_layer_event_prompt 按角色后目标顺序汇总匹配子事件，无匹配返回 None。"""
+        """
+        验证 build_multi_layer_event_prompt 按角色后目标顺序汇总匹配子事件。
+        断言提示标识为 settle_hooks.NESTED_EVENT_PROMPT_ID，无匹配子事件时返回 None。
+        """
         prompt = event_option_service.build_multi_layer_event_prompt(
             PLAYER, 2, 1
         )
@@ -237,6 +251,8 @@ class EventOptionServiceTest(EventChoiceCase):
                 ("son_target", "嵌套戊"),
             ],
         )
+        assert prompt is not None
+        self.assertEqual(prompt.prompt_id, settle_hooks.NESTED_EVENT_PROMPT_ID)
         self.assertIsNone(
             event_option_service.build_multi_layer_event_prompt(PLAYER, 3, 1)
         )
@@ -276,94 +292,159 @@ class EventOptionServiceTest(EventChoiceCase):
         self.assertEqual(activity.event(PLAYER).son_event_id, "")
 
 
-class EventOptionPanelTest(EventChoiceCase):
-    """测试两类子事件选项面板的按钮绘制、交互回调与空选项处理。"""
+class EventOptionAskTest(EventChoiceCase):
+    """测试经 settle_hooks 与已登记的 Tk 渲染函数完成普通与多层嵌套子事件选项绘制、翻页与选择写回。"""
 
     def setUp(self) -> None:
-        """初始化绘制与询问记录列表，并打桩 SonEventDraw.draw 以收集绘制的按钮对象。"""
+        """初始化绘制与询问记录列表，并拦截 NormalDraw、CenterButton 与 LeftButton 的 draw 方法交由 self.drawn 记录。"""
         super().setUp()
-        self.drawn: list[event_option_panel.SonEventDraw] = []
-        """每次 SonEventDraw.draw 被调用时收集的绘制对象列表。"""
-        self.offered: list[list[tuple[str, str]]] = []
-        """每次调用 askfor_all 时面板绘制的 (按钮文本, 返回值) 列表记录。"""
+        self.screen: list[tuple[str, ...]] = []
+        """ 按绘制顺序记录的非空文本项与按钮元组列表。 """
+        self.buttons: list[draw.CenterButton] = []
+        """ 当前页已绘制、等待下一次询问消费的按钮实例列表。 """
+        self.offered: list[list[str]] = []
+        """ 每次调用 askfor_all 时屏幕上可见按钮文本列表的记录。 """
         self.asked: list[list[str]] = []
-        """每次调用 askfor_all 时传入的合法返回值列表记录。"""
-        self.enterContext(
-            mock.patch.object(
-                event_option_panel.SonEventDraw,
-                "draw",
-                autospec=True,
-                side_effect=self.drawn.append,
+        """ 每次调用 askfor_all 时传入的候选返回标识列表记录。 """
+        for drawable in (draw.NormalDraw, draw.CenterButton, draw.LeftButton):
+            self.enterContext(
+                mock.patch.object(
+                    drawable, "draw", autospec=True, side_effect=self.drawn
+                )
             )
-        )
 
-    def click(self, label: str) -> None:
-        """打桩 flow_handle.askfor_all，从已绘制按钮中触发文本含 label 的按钮回调。"""
+    def drawn(self, now: draw.NormalDraw | draw.CenterButton) -> None:
+        """
+        记录按钮对象及其文本与返回值，或记录非空 NormalDraw 的文本。
+        Keyword arguments:
+        now -- draw.NormalDraw | draw.CenterButton，被调用 draw 的绘制对象
+        Return arguments:
+        None -- 无返回值
+        """
+        if isinstance(now, draw.CenterButton):
+            self.buttons.append(now)
+            self.screen.append((now.text, now.return_text))
+        elif now.text:
+            self.screen.append((now.text,))
+
+    def press(self, *labels: str) -> None:
+        """
+        在当前用例期间用模拟函数拦截 flow_handle.askfor_all，按传入顺序匹配按钮文本片段并执行按钮回调。
+        Keyword arguments:
+        labels -- str，按询问顺序用于匹配按钮文本的子串序列
+        Return arguments:
+        None -- 无返回值
+        """
+        answers = list(labels)
 
         def askfor_all(return_list: list[str], *args: object) -> str:
-            """读取本次已绘制的按钮列表并执行匹配 label 按钮的回调函数。"""
-            buttons = [
-                drawn.now_draw
-                for drawn in self.drawn
-                if isinstance(drawn.now_draw, draw.LeftButton)
-            ]
-            self.assertEqual(len(buttons), len(self.drawn))
-            self.drawn.clear()
-            self.offered.append([(b.text, b.return_text) for b in buttons])
+            """
+            按队首文本片段查找当前页按钮并记录本轮 offered 与 asked。
+            清空 self.buttons 后断言该按钮返回值在 return_list 中，执行其非空 cmd_func 并返回 return_text。
+            Keyword arguments:
+            return_list -- list[str]，本次允许返回的按钮标识列表
+            args -- object，其余位置参数，本函数不使用
+            Return arguments:
+            str -- 所选按钮的 return_text
+            """
+            chosen = next(b for b in self.buttons if answers[0] in b.text)
+            answers.pop(0)
+            self.offered.append([b.text for b in self.buttons])
             self.asked.append(list(return_list))
-            chosen = next(b for b in buttons if label in b.text)
-            assert chosen.cmd_func is not None
-            self.assertEqual(chosen.args, ())
-            chosen.cmd_func()
+            self.buttons.clear()
+            self.assertIn(chosen.return_text, return_list)
+            if chosen.cmd_func is not None:
+                chosen.cmd_func()
             return chosen.return_text
 
         self.enterContext(
             mock.patch.object(flow_handle, "askfor_all", askfor_all)
         )
 
-    def buttons(self, *texts: str) -> list[tuple[str, str]]:
-        """按索引生成面板数字按钮预期的 (带序号文本, 序号字符串) 列表。"""
-        return [
-            (f"{text_handle.id_index(index)}{text}", str(index))
-            for index, text in enumerate(texts)
-        ]
+    def page(self, *labels: str) -> list[tuple[str, ...]]:
+        """
+        按选项标签序列构造单页绘制结果的预期记录列表。
+        每个标签生成一条带编号前缀的按钮元组与一次换行，列表末尾追加一次换行。
+        Keyword arguments:
+        labels -- str，当前页依次显示的选项标签文本
+        Return arguments:
+        list[tuple[str, ...]] -- 预期的屏幕绘制记录列表
+        """
+        rows: list[tuple[str, ...]] = []
+        for index, label in enumerate(labels):
+            rows.append((f"{text_handle.id_index(index)}{label}", str(index)))
+            rows.append(("\n",))
+        return [*rows, ("\n",)]
 
-    def test_option_panel_offers_options_and_records_choice(self) -> None:
-        """验证 Event_option_Panel 绘制普通子事件按钮并在点击后写入对应 son_event_id。"""
-        self.click("选项丁")
+    def test_son_options_are_drawn_and_choice_recorded(self) -> None:
+        """验证普通子事件选项先绘制两次换行再绘制当前页，询问候选 ["0", "1"] 并将所选 opt_d 写入 son_event_id。"""
+        self.press("选项丁")
         with kernel_data.writing():
-            event_option_panel.Event_option_Panel(PLAYER, 60).draw()
-        self.assertEqual(self.offered, [self.buttons("选项甲", "选项丁")])
+            settle_hooks.emit_event_options(PLAYER)
+        self.assertEqual(
+            self.screen,
+            [("\n",), ("\n",), *self.page("选项甲", "选项丁给干员")],
+        )
         self.assertEqual(self.asked, [["0", "1"]])
         self.assertEqual(activity.event(PLAYER).son_event_id, "opt_d")
 
-    def test_multi_layer_panel_offers_options_and_records_choice(self) -> None:
-        """验证 multi_layer_event_option_Panel 绘制多层子事件按钮并在点击后写入对应 son_event_id。"""
-        self.click("嵌套戊")
+    def test_nested_options_are_drawn_and_choice_recorded(self) -> None:
+        """
+        验证多层嵌套子事件选项先绘制一次换行再绘制当前页。
+        断言询问候选为 ["0", "1", "2"]，且所选 son_target 写入 son_event_id。
+        """
+        self.press("嵌套戊")
         with kernel_data.writing():
-            event_option_panel.multi_layer_event_option_Panel(
-                PLAYER, 60, 2, 1
-            ).draw()
+            settle_hooks.emit_nested_event_options(PLAYER, 2, 1)
         self.assertEqual(
-            self.offered, [self.buttons("嵌套甲", "嵌套乙", "嵌套戊")]
+            self.screen, [("\n",), *self.page("嵌套甲", "嵌套乙", "嵌套戊")]
         )
         self.assertEqual(self.asked, [["0", "1", "2"]])
         self.assertEqual(activity.event(PLAYER).son_event_id, "son_target")
 
-    def test_panels_skip_asking_without_options(self) -> None:
-        """验证两类面板在无匹配子事件时不绘制按钮、不调用 askfor_all 且不写入 son_event_id。"""
+    def test_no_options_skip_asking(self) -> None:
+        """验证多层嵌套子事件与普通子事件在无候选项时均不绘制、不调用 askfor_all，且 son_event_id 保持为空。"""
         askfor_all = self.enterContext(
             mock.patch.object(flow_handle, "askfor_all")
         )
         with kernel_data.writing():
-            event_option_panel.multi_layer_event_option_Panel(
-                PLAYER, 60, 3, 1
-            ).draw()
+            settle_hooks.emit_nested_event_options(PLAYER, 3, 1)
             activity.update_behavior(PLAYER, behavior_id="none")
-            event_option_panel.Event_option_Panel(PLAYER, 60).draw()
+            settle_hooks.emit_event_options(PLAYER)
         askfor_all.assert_not_called()
-        self.assertEqual(self.drawn, [])
+        self.assertEqual(self.screen, [])
         self.assertEqual(activity.event(PLAYER).son_event_id, "")
+
+    def test_pages_turn_until_an_option_is_chosen(self) -> None:
+        """
+        验证 25 个子事件分页时，连续点击下一页、上一页、下一页后页面往返切换并持续等待选择。
+        最终选中选项23后，断言当前事件的 son_event_id 写入 many_23。
+        """
+        many = {
+            f"many_{index:02d}": event(
+                f"many_{index:02d}", f"选项{index:02d}", "option_son", IS_PLAYER
+            )
+            for index in range(25)
+        }
+        self.enterContext(mock.patch.dict(game_config.config_event, many))
+        self.enterContext(
+            mock.patch.dict(
+                game_config.config_event_status_data, {BEHAVIOR: list(many)}
+            )
+        )
+        self.press("下一页", "上一页", "下一页", "选项23")
+        with kernel_data.writing():
+            settle_hooks.emit_event_options(PLAYER)
+        first_page = [str(index) for index in range(22)]
+        second_page = [str(index) for index in range(7)]
+        self.assertEqual(
+            self.asked, [first_page, second_page, first_page, second_page]
+        )
+        self.assertEqual(
+            [texts[0] for texts in self.offered],
+            ["[000]选项00", "[000]选项20", "[000]选项00", "[000]选项20"],
+        )
+        self.assertEqual(activity.event(PLAYER).son_event_id, "many_23")
 
 
 class ModalPromptsBoundaryTest(FastTestCase):
