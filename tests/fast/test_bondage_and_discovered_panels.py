@@ -1,10 +1,10 @@
 """
-绳艺与H中被发现面板交互测试
-===========================
-本测试从 Script.UI.Panel 导入 bondage_panel 与 sex_be_discovered_panel。
+绳艺面板与H中被发现选择交互测试
+===============================
+本测试从 Script.UI.Panel 导入 bondage_panel，并调用 hidden_sex_discovered.resolve。
 测试替换 draw.CenterButton 与 draw.LeftButton 的 draw 方法，经 flow_handle.bind_cmd 注册按钮回调。
 Clicks.answer 替换 flow_handle.askfor_all，按预设应答执行对应命令并记录各页按钮文本与返回值列表。
-用例覆盖绳艺面板的[指技]与调教室限制及捆绑提交，也覆盖H中被发现面板各模式选项展示与结束H排程。
+用例覆盖绳艺面板的[指技]与调教室限制及捆绑提交，也覆盖H中被发现选择的各模式选项展示与结束H排程。
 """
 
 import unittest
@@ -18,10 +18,11 @@ from Script.Modules.domains import (
     flags,
     modes,
 )
+from Script.Modules.gameplay_resolution import hidden_sex_discovered
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw, view
-from Script.UI.Panel import bondage_panel, sex_be_discovered_panel
+from Script.UI.Panel import bondage_panel
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
@@ -211,36 +212,26 @@ class BondagePanelTest(PanelCase):
 
 
 class SexBeDiscoveredPanelTest(PanelCase):
-    """H中被发现面板（Sex_Be_Discovered_Panel）的选项展示与结束H排程测试。"""
+    """H中被发现选择（hidden_sex_discovered.resolve）经 Tk 渲染器绘制选项与结束H排程的测试。"""
 
     def setUp(self) -> None:
         """在基类夹具基础上将对方角色的 is_h 标记设为 True。"""
         super().setUp()
         kernel_data.put(flags.set, PARTNER, is_h=True)
 
-    def panel(
-        self, **kwargs: bool
-    ) -> sex_be_discovered_panel.Sex_Be_Discovered_Panel:
+    def first_page(self, from_hidden_sex_flag: bool = False) -> list[str]:
         """
-        以 WIDTH 宽度与 FINDER 发现者编号构造 Sex_Be_Discovered_Panel 实例。
+        经 run_panel 运行 hidden_sex_discovered.resolve 并选择 "5"，
+        断言首页按钮编号与返回键列表一致后返回按钮文本列表。
         Keyword arguments:
-        kwargs -- dict[str, bool]，透传给面板构造函数的布尔关键字参数
+        from_hidden_sex_flag -- bool，是否由隐奸被发现触发，默认 False
         Return arguments:
-        Sex_Be_Discovered_Panel -- 新建的H中被发现面板实例
+        list[str] -- 首页绘制的选项按钮显示文本列表
         """
-        return sex_be_discovered_panel.Sex_Be_Discovered_Panel(
-            WIDTH, FINDER, **kwargs
+        self.run_panel(
+            lambda: hidden_sex_discovered.resolve(FINDER, from_hidden_sex_flag),
+            "5",
         )
-
-    def first_page(self, **kwargs: bool) -> list[str]:
-        """
-        绘制H中被发现面板并以返回值 "5" 退出，断言首页各按钮文本第二位字符与可选返回值列表一致。
-        Keyword arguments:
-        kwargs -- dict[str, bool]，透传给 panel 方法的布尔关键字参数
-        Return arguments:
-        list[str] -- 首页绘制的按钮文本列表
-        """
-        self.run_panel(self.panel(**kwargs).draw, "5")
         page = self.clicks.pages[0]
         self.assertEqual([text[1] for text in page], self.clicks.offers[0])
         return page
@@ -272,8 +263,8 @@ class SexBeDiscoveredPanelTest(PanelCase):
 
     def test_end_h_plans_interrupts(self) -> None:
         """
-        先将发现者目标设为对方并断言打开前目标为对方，see_pl_h、h_interrupt、记录名、双方队列与结算标记均为初值。
-        普通H下选择「[5]尴尬地结束H」，断言结算标记、发现者目标 0、see_pl_h、对方 h_interrupt 与记录名已写入。
+        先将发现者目标设为对方并断言结算前目标为对方，see_pl_h、h_interrupt、记录名与双方队列均为初值。
+        普通H下选择「[5]尴尬地结束H」，断言发现者目标 0、see_pl_h、对方 h_interrupt 与记录名已写入。
         测试同时断言发现者队列为 [SEE_H_AND_INTERRUPT]，并断言玩家队列为 [H_INTERRUPT]。
         """
         aim(FINDER, PARTNER)
@@ -288,10 +279,9 @@ class SexBeDiscoveredPanelTest(PanelCase):
             ),
             (PARTNER, False, 0, "", [], []),
         )
-        panel = self.panel()
-        self.assertFalse(panel.discoverer_reaction_settled)
-        self.run_panel(panel.draw, "5")
-        self.assertTrue(panel.discoverer_reaction_settled)
+        self.run_panel(
+            lambda: hidden_sex_discovered.resolve(FINDER, False), "5"
+        )
         self.assertEqual(activity.target(FINDER), 0)
         self.assertTrue(flags.get(FINDER, "see_pl_h"))
         self.assertEqual(action_info.get(PARTNER, "h_interrupt"), 1)
@@ -308,7 +298,9 @@ class SexBeDiscoveredPanelTest(PanelCase):
         """
         kernel_data.put(modes.set_group_sex, True)
         self.assertEqual((queued(FINDER), queued(0)), ([], []))
-        self.run_panel(self.panel().draw, "5")
+        self.run_panel(
+            lambda: hidden_sex_discovered.resolve(FINDER, False), "5"
+        )
         self.assertEqual(queued(0), [constant.Behavior.GROUP_SEX_END])
         self.assertEqual(
             queued(FINDER), [constant.Behavior.SEE_H_AND_INTERRUPT]

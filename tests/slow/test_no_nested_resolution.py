@@ -309,7 +309,7 @@ class NoNestedResolutionTest(SlowTestCase):
         """目睹H后发现者的反应与博士的结束H各一次，「结束H模式」只显示一次"""
         from Script.Core import constant
         from Script.Kernel import core
-        from Script.UI.Panel import sex_be_discovered_panel
+        from Script.Modules.gameplay_resolution import hidden_sex_discovered
 
         partner_id = self.start_h()
         finder_id = next(
@@ -318,20 +318,21 @@ class NoNestedResolutionTest(SlowTestCase):
             if cid not in (0, partner_id)
         )
         opened: list[tuple[int, int]] = []
-        real_panel_draw = sex_be_discovered_panel.Sex_Be_Discovered_Panel.draw
+        real_resolve = hidden_sex_discovered.resolve
 
-        def panel_draw(panel: "Any") -> None:
+        def resolve(discoverer_id: int, from_hidden_sex_flag: bool) -> None:
             """
-            记下打开被发现面板时的内核时钟与博士当前行动的结束时刻
+            记录调用 hidden_sex_discovered.resolve 时的内核时钟与博士当前行动结束时刻，随后调用原实现。
             Keyword arguments:
-            panel -- 面板
+            discoverer_id -- int，发现者的角色编号
+            from_hidden_sex_flag -- bool，是否由隐奸被发现触发
             Return arguments:
-            无
+            None -- 无返回值
             """
             game = core.state()
             act = game.characters["0"].action
             opened.append((game.clock, act.start + act.duration))
-            real_panel_draw(panel)
+            real_resolve(discoverer_id, from_hidden_sex_flag)
 
         def discovery() -> None:
             """状态机：旁人目睹H，选出的行动排进发现者的计划队列并打断她"""
@@ -342,7 +343,7 @@ class NoNestedResolutionTest(SlowTestCase):
             ](finder_id)
 
         with self.watching(), mock.patch.object(
-            sex_be_discovered_panel.Sex_Be_Discovered_Panel, "draw", panel_draw
+            hidden_sex_discovered, "resolve", resolve
         ):
             self.wait_running(discovery)
         self.world.player.check_done()
