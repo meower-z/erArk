@@ -5,34 +5,21 @@
 PregnancySystemUiFreeTest 在无界面子进程中验证 Script/System/Pregnancy_System 各模块可无界面导入。
 PanelCase 拦截 CenterButton 与 LeftButton 的 draw 方法以及 flow_handle.askfor_all，按预设应答驱动面板。
 PregnancyOverviewPanelTest 覆盖怀孕总览面板的排序、阶段筛选与点选角色名跳入生育谱系图。
-BornPanelTest 覆盖生育事件面板的胎生生产与带壳卵生破壳流程。
 """
 
 from pathlib import Path
 from unittest import mock
 
 from Script.Core import constant, flow_handle
-from Script.Design import map_handle
 from Script.Kernel import core
-from Script.Modules.domains import abilities, activity, identity, pregnancy
-from Script.Modules.domains import relations
 from Script.Modules.gameplay_resolution import working
-from Script.System.Pregnancy_System import egg_handle, pregnancy_constant
+from Script.System.Pregnancy_System import pregnancy_constant
 from Script.UI.Moudle import draw, view
-from Script.UI.Panel import born_event_panel, input_name_panel
 from Script.UI.Panel import pregnancy_panel
 from tests import chara_abilities as ca
 from tests.fast.base import FastTestCase
 from tests.ui_free_subprocess import ChildRun, run_ui_free
 
-MOTHER = 1
-""" 测试使用的母亲角色编号 1。 """
-HARD_EGG_RACE = 6
-""" 带壳卵生种族编号 6。 """
-CHILD_NAME = "小宝"
-""" 测试赋予每名新生孩子的名字「小宝」。 """
-INPATIENT = "Inpatient_Department"
-""" 医疗部住院区的场景标签名 Inpatient_Department。 """
 PACKAGE = "Script.System.Pregnancy_System"
 """ 待测妊娠系统目录对应的点分包名。 """
 MODULES = tuple(
@@ -195,99 +182,3 @@ class PregnancyOverviewPanelTest(PanelCase):
         )
         self.assertEqual((panel.now_page, panel.tree_center_id), (1, 2))
         self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
-
-
-class BornPanelTest(PanelCase):
-    """Born_Panel 胎生生产与带壳卵生破壳流程的交互测试。"""
-
-    def setUp(self) -> None:
-        """
-        调用父类 setUp，并将 input_name_panel.input_name_func 打桩为固定返回 CHILD_NAME。
-        Return arguments:
-        None -- 无返回值
-        """
-        super().setUp()
-        self.enterContext(
-            mock.patch.object(
-                input_name_panel, "input_name_func", return_value=CHILD_NAME
-            )
-        )
-
-    def mother(self, race: int = 0) -> None:
-        """
-        以指定种族创建母亲角色并打开工作集，断言母亲初始场景不含 INPATIENT 标签，并将预设应答设为焦急等待按钮的返回值。
-        Keyword arguments:
-        race -- int，母亲角色的种族编号，默认为 0
-        Return arguments:
-        None -- 无返回值
-        """
-        self.world.chara(MOTHER, "母亲", race=race)
-        self.enterContext(working.based_on(core.state()))
-        self.assertNotIn(INPATIENT, self.scene_tag(MOTHER))
-        self.answers = ["\n"]
-
-    def scene_tag(self, cid: int) -> list[str]:
-        """
-        返回指定角色当前所在场景的 scene_tag 列表。
-        Keyword arguments:
-        cid -- int，目标角色编号
-        Return arguments:
-        list[str] -- 目标角色当前场景的标签名列表
-        """
-        path = map_handle.get_map_system_path_str_for_list(
-            activity.position(cid)
-        )
-        return constant.scene_data[path].scene_tag
-
-    def children(self) -> list[str]:
-        """
-        断言玩家与母亲的子女编号列表一致，并返回母亲名下各子女的名字列表。
-        Return arguments:
-        list[str] -- 母亲子女的角色名列表
-        """
-        self.assertEqual(
-            relations.child_id_list(0), relations.child_id_list(MOTHER)
-        )
-        return [
-            identity.of(cid).name for cid in relations.child_id_list(MOTHER)
-        ]
-
-    def test_live_birth(self) -> None:
-        """
-        为母亲设置临盆（22）、孕肚（26）与单胎后绘制 Born_Panel，断言素质 22/23（产后）/26 变为 0/1/0。
-        断言妊娠经验（86）为 1、fetus_count 为 0 且子女名为 [CHILD_NAME]。
-        同时断言母亲位于住院区、玩家与母亲同处一场景，且面板仅给出一次仅含焦急等待按钮的选项列表。
-        """
-        self.mother()
-        talent = ca.talent(MOTHER)
-        talent[22] = 1
-        talent[26] = 1
-        pregnancy.update(MOTHER, fetus_count=1)
-        born_event_panel.Born_Panel(MOTHER).draw()
-        talent = abilities.talent(MOTHER)
-        self.assertEqual((talent[22], talent[23], talent[26]), (0, 1, 0))
-        self.assertEqual(abilities.experience(MOTHER)[86], 1)
-        self.assertEqual(pregnancy.of(MOTHER).fetus_count, 0)
-        self.assertEqual(self.children(), [CHILD_NAME])
-        self.assertIn(INPATIENT, self.scene_tag(MOTHER))
-        self.assertEqual(activity.position(0), activity.position(MOTHER))
-        self.assertEqual(self.offers, [["\n"]])
-
-    def test_hard_egg_hatch(self) -> None:
-        """
-        为带壳卵生母亲添加一枚受精卵并断言其写入 eggs，再以破壳模式绘制 Born_Panel。
-        断言素质 22（临盆）/24（育儿）/27（泌乳）为 0/1/1，且母亲 eggs 清空、妊娠经验（86）为 1。
-        同时断言子女名为 [CHILD_NAME]，且母亲处于含 INPATIENT 标签的住院区场景。
-        """
-        self.mother(HARD_EGG_RACE)
-        egg_id = egg_handle.add_egg(MOTHER, True)
-        self.assertIn(egg_id, pregnancy.of(MOTHER).eggs)
-        born_event_panel.Born_Panel(
-            MOTHER, egg_mode=True, egg_id_list=[egg_id]
-        ).draw()
-        talent = abilities.talent(MOTHER)
-        self.assertEqual((talent[22], talent[24], talent[27]), (0, 1, 1))
-        self.assertEqual(pregnancy.of(MOTHER).eggs, {})
-        self.assertEqual(abilities.experience(MOTHER)[86], 1)
-        self.assertEqual(self.children(), [CHILD_NAME])
-        self.assertIn(INPATIENT, self.scene_tag(MOTHER))

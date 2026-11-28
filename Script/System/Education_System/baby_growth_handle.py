@@ -85,7 +85,7 @@ def clear_prenatal_point(mother_id: int) -> None:
 
 def get_prenatal_count(mother_id: int) -> int:
     """
-    把母亲的胎教累积值折回做过的次数（供身体信息面板与生产面板共用一个算口）
+    把母亲的胎教累积值折回做过的次数（供身体信息面板与生产破壳流程共用一个算口）
     Keyword arguments:
     mother_id -- 母亲的角色id
     Return arguments:
@@ -112,7 +112,7 @@ def get_prenatal_juel_value(prenatal_point: float) -> int:
 
 def get_learn_juel_name() -> str:
     """
-    取习得珠的显示名（生产面板、身体信息面板、养成总览共用）
+    取习得珠的显示名（生产破壳流程、身体信息面板、养成总览共用）
     Keyword arguments:
     无
     Return arguments:
@@ -128,7 +128,7 @@ def settle_prenatal_to_child(mother_id: int, child_id: int) -> str:
     """
     把母亲累积的胎教值转写给一个新生儿：记到 child_growth.prenatal_point，并折成习得珠（Plan 26 §3.2）
 
-    这里**不清零母亲侧**——多胎要逐个全额转写，清零由生产面板在全部孩子创建完之后统一做。
+    这里不清零母亲侧，多胎逐个全额转写，全部孩子创建完后由 born_service._name_children 清零。
     珠直接写 juel 字典而不走结算：出生时既没有行为，也不该刷一屏变更记录。
        婴儿与幼女都不在 npc_id_got 里、不进睡眠结算的自动升级，这些珠在这两个阶段都不会被花掉，
        长成学员上线后才进睡眠结算，随着各门课攒下的经验兑现成等级
@@ -136,7 +136,7 @@ def settle_prenatal_to_child(mother_id: int, child_id: int) -> str:
     mother_id -- 母亲的角色id
     child_id -- 新生儿的角色id
     Return arguments:
-    str -- 给生产面板显示的说明文本，没有胎教累积时为空串
+    str -- born_service 生产破壳说明文本，无胎教累积时为空串
     """
     juel = abilities.juel(child_id)
     prenatal_point = get_prenatal_point(mother_id)

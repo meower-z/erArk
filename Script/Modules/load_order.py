@@ -66,7 +66,8 @@ from Script.Modules.gameplay_resolution import (
 )
 from Script.Modules.npc_action_choice import choose, npc_hook
 from Script.Modules.save_load import autosave, reset, settings
-from Script.Modules.tk_ui import callbacks, ejaculation_callbacks
+from Script.Modules.tk_ui import born_callbacks, callbacks
+from Script.Modules.tk_ui import ejaculation_callbacks
 from Script.Modules.tk_ui import instruct_callbacks, orders
 from Script.Modules.tk_ui import choice_prompts, player_hook, player_pick
 
@@ -141,6 +142,7 @@ LOAD_ORDER: tuple[ModuleType, ...] = (
     player_hook,
     orders,
     callbacks,
+    born_callbacks,
     ejaculation_callbacks,
     instruct_callbacks,
     choice_prompts,

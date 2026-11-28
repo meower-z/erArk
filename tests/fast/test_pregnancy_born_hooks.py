@@ -1,70 +1,82 @@
 """
-生产与破壳事件回调测试
-======================
-- HookContractTest：回调登记与派发约定，以及 Tk 回调打开生育事件面板。
-- CheckBornTest：check_born 的胎生生产判定与回调派发。
-- CheckHardEggBornTest：带壳卵生 check_egg_born 的到期卵判定与回调派发。
-- CheckSoftEggBornTest：无壳卵生 check_egg_born 的到期卵判定与回调派发。
-- ImportBoundaryTest：屏蔽两个妊娠面板后胎生生产与无壳卵破壳的独立运行。
+生产与破壳触发入口及无界面子进程测试
+====================================
+BornCase 与 EggCase 提供共用的角色初始化、回调打桩与产卵辅助方法。
+CheckBornTest 验证 check_born 按过期天数与掷骰几率触发胎生生产。
+CheckHardEggBornTest 验证带壳卵生单次检查仅孵化首枚到期受精卵。
+CheckSoftEggBornTest 验证无壳卵生一次孵化全部到期受精卵。
+UiFreeTest 在无界面子进程中验证未登记报错、胎生生产、无壳卵孵化与界面模块隔离，
+并在流程中运行真实的 talk.must_show_talk_check 必显对话检查。
 """
 
 import datetime
-import json
-import subprocess
-import sys
 from unittest import mock
 
 from Script.Design import game_time
 from Script.Kernel import core
-from Script.Modules.domains import pregnancy
+from Script.Modules.domains import abilities, pregnancy, relations
+from Script.Modules.gameplay_resolution import achievement_service, modal_hooks
 from Script.Modules.gameplay_resolution import pregnancy_hooks, working
-from Script.Modules.tk_ui import callbacks
+from Script.Protocol.modal_prompts import ChoicePrompt, ChoiceResult
 from Script.System.Pregnancy_System import egg_handle
 from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
-from Script.UI.Moudle import draw
-from Script.UI.Panel import born_event_panel
 from tests import chara_abilities as ca
 from tests.fast.base import FastTestCase
-from tests.fast.test_backend_ui_boundary_guard import ROOT
+from tests.ui_free_subprocess import run_ui_free
 
 MOTHER = 1
 """ 测试使用的母亲角色编号（1）。 """
 HARD_EGG_RACE = 6
-""" 带壳卵生种族编号（6）。 """
+""" 测试使用的带壳卵生种族编号（6）。 """
 SOFT_EGG_RACE = 11
-""" 无壳卵生种族编号（11）。 """
-BLOCKED_RUN = """
-import datetime, importlib.abc, json, sys
-BLOCKED = (
-    "Script.UI.Panel.born_event_panel",
-    "Script.UI.Panel.pregnancy_panel",
-)
-def blocked(name):
-    return any(name == root or name.startswith(root + ".") for root in BLOCKED)
-class Block(importlib.abc.MetaPathFinder):
-    def find_spec(self, fullname, path, target=None):
-        if blocked(fullname):
-            raise ImportError(fullname)
-        return None
-sys.meta_path.insert(0, Block())
-from tests import chara_abilities as ca
-from tests.fast import WORLD
-from Script.Design import game_time
-from Script.Kernel import core
-from Script.Modules.domains import pregnancy
-from Script.Modules.gameplay_resolution import pregnancy_hooks, working
-from Script.System.Pregnancy_System import egg_handle, pregnancy_constant, pregnancy_handle
-WORLD.reset()
-WORLD.chara(0, "0")
-WORLD.chara(1, "1")
-WORLD.chara(2, "2", race=11)
-born = []
-pregnancy_hooks._on_born[:] = [lambda cid, **options: born.append([cid, options])]
+""" 测试使用的无壳卵生种族编号（11）。 """
+UI_FREE_RUN = """
+import datetime
+from Script.Config import map_config, normal_config
+from Script.Design import attr_calculation, game_time, talk
+from Script.Modules.domains import abilities, activity, identity, pregnancy
+from Script.Modules.domains import relations, roster, warehouse
+from Script.Modules.gameplay_resolution import modal_hooks, pregnancy_hooks
+from Script.Protocol.modal_prompts import ChoiceResult
+from Script.System.Pregnancy_System import egg_handle, pregnancy_constant
+from Script.System.Pregnancy_System import pregnancy_handle
+from tests import chara_abilities, chara_data, kernel_data
+from tests.chara_activity import place
+from tests.world import DEFAULT_SCENE, start_time
+map_config.init_map_data()
+normal_config.system_setting = attr_calculation.get_system_setting_zero()
+real_check = talk.must_show_talk_check
+shown = []
+def check(cid):
+    shown.append([cid, list(activity.must_show(cid))])
+    real_check(cid)
+talk.must_show_talk_check = check
+kernel_data.reset_clock(start_time(), {})
+kernel_data.written(warehouse.start, {})
+for cid, race in ((0, 0), (1, 0), (2, 11)):
+    kernel_data.put(identity.put, identity.Identity(cid, name=f"c{cid}", sex=1, race=race))
+    chara_abilities.zero_tables(cid)
+    chara_data.seed(cid, {})
+    place(cid, DEFAULT_SCENE)
 days = datetime.timedelta(days=pregnancy_constant.PARTURIENT_DAY + 5)
 hatch = datetime.timedelta(days=pregnancy_constant.HATCH_TOTAL_DAY)
-with working.based_on(core.state()):
-    ca.talent(1)[22] = 1
-    pregnancy.update(1, fertilization_time=game_time.now() - days)
+try:
+    pregnancy_hooks.ask_name("x")
+except RuntimeError as error:
+    payload["unnamed"] = str(error)
+asked = []
+with kernel_data.writing():
+    roster.add(1)
+    roster.add(2)
+    abilities.talent(1)[22] = 1
+    pregnancy.update(1, fertilization_time=game_time.now() - days, fetus_count=1)
+    try:
+        pregnancy_handle.check_born(1)
+    except RuntimeError as error:
+        payload["unasked"] = str(error)
+    modal_hooks.on_choice(lambda prompt: asked.append(prompt.prompt_id) or ChoiceResult(prompt.prompt_id, "wait"))
+    names = iter(["kid1", "kid2", "kid3"])
+    pregnancy_hooks.on_name_input(lambda text: next(names))
     pregnancy_handle.check_born(1)
     for _ in range(2):
         egg_id = egg_handle.add_egg(2, True, soft=True)
@@ -72,171 +84,65 @@ with working.based_on(core.state()):
             preg.eggs[egg_id]["identified"] = True
             preg.eggs[egg_id]["lay_time"] -= hatch
     egg_handle.check_egg_born(2)
-loaded = sorted(name for name in sys.modules if blocked(name))
-print(json.dumps({"born": born, "loaded": loaded}))
+    payload["children"] = [[identity.of(c).name for c in relations.child_id_list(m)] for m in (1, 2)]
+    payload["eggs"] = len(pregnancy.of(2).eggs)
+    behaviors = ("born", "postpartum", "soft_egg_born")
+    payload["left"] = [[activity.must_show(c), [activity.second_behavior(c, b) for b in behaviors]] for c in (1, 2)]
+payload["shown"] = shown
+payload["asked"] = asked
 """
-"""
-子进程脚本源码：屏蔽两个妊娠面板后运行一次生产与一次无壳卵破壳，并以 JSON 输出回调参数与受屏蔽模块的加载列表。
-"""
-
-type Born = tuple[int, bool, list[int] | None]
-""" 一次生产或破壳回调派发的记录元组类型，依次为母亲角色编号、是否卵生破壳与卵编号列表。 """
+""" 在无界面子进程中验证未登记报错、真实必显对话检查、生产与无壳卵孵化及隔离的脚本源码。 """
 
 
 class BornCase(FastTestCase):
-    """生产与破壳测试基类，接管回调列表、Born_Panel 与 draw 中的绘制类以记录派发和绘制行为。"""
+    """生产与破壳入口进程内测试的共用基类。"""
 
     race = 0
-    """ 测试母亲角色的种族编号。 """
 
     def setUp(self) -> None:
-        """
-        初始化玩家与测试母亲并打开工作集，
-        接管回调列表、Born_Panel 与 Script.UI.Moudle.draw 中所有带 draw 方法的类。
-        """
+        """初始化玩家与母亲角色、工作集，并打桩选项提示、取名与成就回调。"""
         super().setUp()
         self.world.chara(0, "博士")
         self.world.chara(MOTHER, "测试母亲", race=self.race)
         self.enterContext(working.based_on(core.state()))
-        self.emitted: list[Born] = []
-        self.enterContext(
-            mock.patch.object(pregnancy_hooks, "_on_born", [self.record])
-        )
-        self.panel = self.enterContext(
-            mock.patch.object(born_event_panel, "Born_Panel")
-        )
-        self.drawn: list[str] = []
-        for cls in vars(draw).values():
-            if isinstance(cls, type) and hasattr(cls, "draw"):
-                self.enterContext(
-                    mock.patch.object(
-                        cls, "draw", autospec=True, side_effect=self.keep
-                    )
-                )
+        self.asked: list[str] = []
+        self.named = 0
+        for owner, name, value in (
+            (modal_hooks, "_ask", self.answer),
+            (pregnancy_hooks, "_name_input", self.name),
+            (achievement_service, "settle_and_notify", mock.Mock()),
+        ):
+            self.enterContext(mock.patch.object(owner, name, value))
 
-    def record(
-        self,
-        character_id: int,
-        *,
-        egg_mode: bool = False,
-        egg_id_list: list[int] | None = None,
-    ) -> None:
-        """
-        记录一次回调派发收到的参数。
-        Keyword arguments:
-        character_id -- int，母亲角色编号
-        egg_mode -- bool，为 True 时表示卵生破壳模式，默认为 False
-        egg_id_list -- list[int] | None，本次破壳的卵编号列表，默认为 None
-        """
-        self.emitted.append((character_id, egg_mode, egg_id_list))
+    def answer(self, prompt: ChoicePrompt) -> ChoiceResult:
+        """记录提示标识并返回首项对应的 ChoiceResult。"""
+        self.asked.append(prompt.prompt_id)
+        return ChoiceResult(prompt.prompt_id, prompt.options[0].option_id)
 
-    def keep(self, now: object) -> None:
-        """
-        记录被调用 draw 方法的绘制对象类名。
-        Keyword arguments:
-        now -- object，被调用 draw 方法的绘制对象实例
-        """
-        self.drawn.append(type(now).__name__)
+    def name(self, ask_text: str) -> str:
+        """按调用顺序依次返回不重复的新生儿测试名「小宝1」「小宝2」等。"""
+        self.named += 1
+        return f"小宝{self.named}"
 
-    def with_tk(self) -> None:
-        """在当前测试回调之后追加登记 Tk 回调 callbacks.draw_born_event。"""
-        pregnancy_hooks._on_born.append(callbacks.draw_born_event)
-
-    def unregister(self) -> None:
-        """清空回调列表，模拟未登记回调的无界面运行环境。"""
-        pregnancy_hooks._on_born.clear()
-
-    def assert_panel(self, *calls: Born) -> None:
-        """
-        断言 Born_Panel 按 calls 顺序以对应参数构造，且每次构造后调用 draw 一次。
-        Keyword arguments:
-        calls -- tuple[Born, ...]，预期依次发生的 Born_Panel 构造参数记录
-        """
-        self.assertEqual(
-            self.panel.call_args_list,
-            [mock.call(c, egg_mode=m, egg_id_list=e) for c, m, e in calls],
-        )
-        self.assertEqual(
-            self.panel.return_value.draw.call_args_list,
-            [mock.call()] * len(calls),
-        )
-
-    def assert_silent(self) -> None:
-        """断言未派发回调、未构造 Born_Panel 且未触发任何 draw 调用。"""
-        self.assertEqual(self.emitted, [])
-        self.panel.assert_not_called()
-        self.assertEqual(self.drawn, [])
-
-
-class HookContractTest(FastTestCase):
-    """回调登记、派发顺序与 Tk 回调行为的单元测试。"""
-
-    def test_emit_calls_in_registration_order(self) -> None:
-        """验证未登记回调时 emit_born 不执行操作。同时验证 on_born 原样返回回调，以及多个回调按登记顺序收到相同参数。"""
-        calls = mock.Mock()
-        first, second = calls.first, calls.second
-        self.enterContext(mock.patch.object(pregnancy_hooks, "_on_born", []))
-        pregnancy_hooks.emit_born(MOTHER)
-        self.assertIs(pregnancy_hooks.on_born(first), first)
-        self.assertIs(pregnancy_hooks.on_born(second), second)
-        self.assertEqual(calls.mock_calls, [])
-        pregnancy_hooks.emit_born(5, egg_mode=True, egg_id_list=[3, 4])
-        pregnancy_hooks.emit_born(6)
-        self.assertEqual(
-            calls.mock_calls,
-            [
-                mock.call.first(5, egg_mode=True, egg_id_list=[3, 4]),
-                mock.call.second(5, egg_mode=True, egg_id_list=[3, 4]),
-                mock.call.first(6, egg_mode=False, egg_id_list=None),
-                mock.call.second(6, egg_mode=False, egg_id_list=None),
-            ],
-        )
-
-    def test_tk_callback_registered(self) -> None:
-        """验证测试小世界载入后 callbacks.draw_born_event 已登记到 pregnancy_hooks._on_born。"""
-        self.assertIn(callbacks.draw_born_event, pregnancy_hooks._on_born)
-
-    def test_tk_callback_opens_panel(self) -> None:
-        """验证 Tk 回调在收到胎生与破壳派发时均按对应参数构造 Born_Panel 并各绘制一次。"""
-        self.enterContext(
-            mock.patch.object(
-                pregnancy_hooks, "_on_born", [callbacks.draw_born_event]
-            )
-        )
-        panel = self.enterContext(
-            mock.patch.object(born_event_panel, "Born_Panel")
-        )
-        pregnancy_hooks.emit_born(MOTHER)
-        pregnancy_hooks.emit_born(MOTHER, egg_mode=True, egg_id_list=[2, 3])
-        self.assertEqual(
-            panel.call_args_list,
-            [
-                mock.call(MOTHER, egg_mode=False, egg_id_list=None),
-                mock.call(MOTHER, egg_mode=True, egg_id_list=[2, 3]),
-            ],
-        )
-        self.assertEqual(
-            panel.return_value.draw.call_args_list, [mock.call()] * 2
-        )
+    def children(self) -> int:
+        """返回母亲名下当前子女数量。"""
+        return len(relations.child_id_list(MOTHER))
 
 
 class CheckBornTest(BornCase):
-    """pregnancy_handle.check_born 胎生生产判定的单元测试。"""
+    """pregnancy_handle.check_born 触发条件与掷骰边界的测试。"""
 
     def pregnant(self, parturient: bool, extra_days: int) -> None:
-        """
-        设置测试母亲的临盆素质，并将受精时间设为当前游戏时间之前 PARTURIENT_DAY + extra_days 天。
-        Keyword arguments:
-        parturient -- bool，是否赋予临盆素质（22）
-        extra_days -- int，超出 PARTURIENT_DAY 的天数，每日增加 20% 生产几率
-        """
-        ca.talent(MOTHER)[22] = int(parturient)
+        """按临盆标记与超期天数设置母亲素质（22、23）及受精时间。"""
+        talent = ca.talent(MOTHER)
+        talent[22] = int(parturient)
+        talent[23] = 0
         past = pregnancy_constant.PARTURIENT_DAY + extra_days
         when = game_time.now() - datetime.timedelta(days=past)
         pregnancy.update(MOTHER, fertilization_time=when)
 
-    def test_no_birth_is_silent(self) -> None:
-        """验证未临盆，或临盆但掷骰结果大于当日几率时，不派发回调也不触发绘制。"""
+    def test_no_birth_without_winning_roll(self) -> None:
+        """验证未临盆、未超期或掷骰高于几率时 check_born 不触发生产且保留原临盆素质。"""
         for parturient, extra_days, roll in (
             (False, 5, 1),
             (True, 0, 1),
@@ -248,53 +154,30 @@ class CheckBornTest(BornCase):
                     pregnancy_handle.random, "randint", return_value=roll
                 ):
                     pregnancy_handle.check_born(MOTHER)
-                self.assert_silent()
+                self.assertEqual((self.asked, self.children()), ([], 0))
+                self.assertEqual(abilities.talent(MOTHER)[22], int(parturient))
 
-    def test_birth_emits_live_birth(self) -> None:
-        """验证临盆且掷骰结果不大于当日几率时，派发一次胎生回调且不直接构造或绘制面板。"""
-        for extra_days, roll in ((2, 40), (5, 100)):
+    def test_winning_roll_gives_birth(self) -> None:
+        """验证掷骰等于触发几率（含临界 40 与 100）时 check_born 触发生产并转为产后。"""
+        for count, (extra_days, roll) in enumerate(((2, 40), (5, 100)), 1):
             with self.subTest(extra_days=extra_days, roll=roll):
-                self.emitted.clear()
                 self.pregnant(True, extra_days)
                 with mock.patch.object(
                     pregnancy_handle.random, "randint", return_value=roll
                 ):
                     pregnancy_handle.check_born(MOTHER)
-                self.assertEqual(self.emitted, [(MOTHER, False, None)])
-        self.panel.assert_not_called()
-        self.assertEqual(self.drawn, [])
-
-    def test_tk_callback_opens_live_birth_panel(self) -> None:
-        """验证登记 Tk 回调后，生产判定成立时以胎生参数构造 Born_Panel 并绘制一次。"""
-        self.with_tk()
-        self.pregnant(True, 5)
-        pregnancy_handle.check_born(MOTHER)
-        self.assertEqual(self.emitted, [(MOTHER, False, None)])
-        self.assert_panel((MOTHER, False, None))
-
-    def test_unregistered_birth_is_silent(self) -> None:
-        """验证未登记任何回调时，生产判定成立也不构造 Born_Panel 且不触发绘制。"""
-        self.unregister()
-        self.pregnant(True, 5)
-        pregnancy_handle.check_born(MOTHER)
-        self.assert_silent()
+                self.assertEqual(self.children(), count)
+                talent = abilities.talent(MOTHER)
+                self.assertEqual((talent[22], talent[23]), (0, 1))
 
 
 class EggCase(BornCase):
-    """卵生破壳测试基类，提供造卵、读取孵化阶段与无到期卵静默断言的辅助方法。"""
+    """卵生破壳入口测试基类，提供产卵、读取孵化阶段与未到期断言辅助。"""
 
     def lay(
         self, days_ago: int, identified: bool = True, fertilized: bool = True
     ) -> int:
-        """
-        为测试母亲新增一枚卵，设置鉴定状态并将排出时间前移 days_ago 天。
-        Keyword arguments:
-        days_ago -- int，排出时间早于当前游戏时间的天数
-        identified -- bool，是否已鉴定，默认为 True
-        fertilized -- bool，是否受精，默认为 True
-        Return arguments:
-        int -- 新增卵的编号
-        """
+        """为母亲添加一枚指定产卵天数、鉴定状态与受精状态的卵并返回其编号。"""
         egg_id = egg_handle.add_egg(
             MOTHER, fertilized, soft=self.race == SOFT_EGG_RACE
         )
@@ -305,27 +188,20 @@ class EggCase(BornCase):
         return egg_id
 
     def stages(self) -> dict[int, int]:
-        """
-        返回测试母亲每枚卵当前的 hatch_stage 映射。
-        Return arguments:
-        dict[int, int] -- 以卵编号为键、hatch_stage 为值的字典
-        """
+        """返回母亲当前全部卵编号到 hatch_stage 的映射字典。"""
         return {
             egg_id: egg["hatch_stage"]
             for egg_id, egg in pregnancy.of(MOTHER).eggs.items()
         }
 
-    def assert_no_due_egg_is_silent(self) -> None:
-        """
-        断言仅有未鉴定、未受精或未满孵化总天数的卵时不派发回调也不绘制。
-        同时断言受精且已鉴定的未到期卵写入对应 hatch_stage。
-        """
+    def assert_no_due_egg_hatches(self) -> None:
+        """断言未鉴定、未受精与未满孵化天数的卵均不触发破壳且阶段计数符合预期。"""
         total = pregnancy_constant.HATCH_TOTAL_DAY
         unidentified = self.lay(total, identified=False)
         unfertilized = self.lay(total, fertilized=False)
         young = self.lay(total - 1)
         egg_handle.check_egg_born(MOTHER)
-        self.assert_silent()
+        self.assertEqual((self.asked, self.children()), ([], 0))
         self.assertEqual(
             self.stages(),
             {unidentified: 0, unfertilized: 0, young: total - 1},
@@ -333,103 +209,69 @@ class EggCase(BornCase):
 
 
 class CheckHardEggBornTest(EggCase):
-    """带壳卵生 egg_handle.check_egg_born 的单元测试。"""
+    """egg_handle.check_egg_born 在带壳卵生种族下的触发测试。"""
 
     race = HARD_EGG_RACE
 
-    def test_no_due_egg_is_silent(self) -> None:
-        """验证带壳卵生没有到期卵时不派发回调也不触发绘制。"""
-        self.assert_no_due_egg_is_silent()
+    def test_no_due_egg_hatches(self) -> None:
+        """验证带壳卵生没有到期已鉴定受精卵时不触发破壳。"""
+        self.assert_no_due_egg_hatches()
 
-    def test_emits_first_due_egg_only(self) -> None:
-        """验证带壳卵生有多枚到期卵时仅派发首枚到期卵。排在其后的卵保持孵化阶段 0。"""
+    def test_hatches_first_due_egg_only(self) -> None:
+        """验证带壳卵生存在多枚到期卵时仅孵化首枚到期卵，其余到期卵暂留且保持原孵化阶段。"""
         total = pregnancy_constant.HATCH_TOTAL_DAY
         young = self.lay(total - 1)
-        first = self.lay(total + 1)
+        self.lay(total + 1)
         second = self.lay(total)
         egg_handle.check_egg_born(MOTHER)
-        self.assertEqual(self.emitted, [(MOTHER, True, [first])])
-        self.assertEqual(
-            self.stages(), {young: total - 1, first: total + 1, second: 0}
-        )
-        self.panel.assert_not_called()
-        self.assertEqual(self.drawn, [])
-
-    def test_tk_callback_opens_egg_panel(self) -> None:
-        """验证登记 Tk 回调后，带壳卵生破壳以破壳参数与首枚到期卵构造 Born_Panel 并绘制一次。"""
-        self.with_tk()
-        total = pregnancy_constant.HATCH_TOTAL_DAY
-        first = self.lay(total)
-        self.lay(total)
-        egg_handle.check_egg_born(MOTHER)
-        self.assert_panel((MOTHER, True, [first]))
-
-    def test_unregistered_egg_is_silent(self) -> None:
-        """验证未登记任何回调时，带壳卵生存在到期卵也不构造 Born_Panel 且不触发绘制。"""
-        self.unregister()
-        self.lay(pregnancy_constant.HATCH_TOTAL_DAY)
-        egg_handle.check_egg_born(MOTHER)
-        self.assert_silent()
+        self.assertEqual(self.children(), 1)
+        self.assertEqual(self.stages(), {young: total - 1, second: 0})
 
 
 class CheckSoftEggBornTest(EggCase):
-    """无壳卵生 egg_handle.check_egg_born 的单元测试。"""
+    """egg_handle.check_egg_born 在无壳卵生种族下的触发测试。"""
 
     race = SOFT_EGG_RACE
 
-    def test_no_due_egg_is_silent(self) -> None:
-        """验证无壳卵生没有到期卵时不派发回调也不触发绘制。"""
-        self.assert_no_due_egg_is_silent()
+    def test_no_due_egg_hatches(self) -> None:
+        """验证无壳卵生没有到期已鉴定受精卵时不触发破壳。"""
+        self.assert_no_due_egg_hatches()
 
-    def test_emits_all_due_eggs(self) -> None:
-        """验证无壳卵生有多枚到期卵时一次派发全部到期卵，并更新每枚受精已鉴定卵的孵化阶段。"""
+    def test_hatches_all_due_eggs(self) -> None:
+        """验证无壳卵生一次孵化全部到期卵且仅发起一次等待提示，未到期卵保留原状。"""
         total = pregnancy_constant.HATCH_TOTAL_DAY
-        first = self.lay(total + 1)
+        self.lay(total + 1)
         young = self.lay(total - 1)
-        second = self.lay(total)
+        self.lay(total)
         egg_handle.check_egg_born(MOTHER)
-        self.assertEqual(self.emitted, [(MOTHER, True, [first, second])])
-        self.assertEqual(
-            self.stages(),
-            {first: total + 1, young: total - 1, second: total},
-        )
-        self.panel.assert_not_called()
-        self.assertEqual(self.drawn, [])
-
-    def test_tk_callback_opens_egg_panel(self) -> None:
-        """验证登记 Tk 回调后，无壳卵生破壳以破壳参数与全部到期卵构造 Born_Panel 并绘制一次。"""
-        self.with_tk()
-        total = pregnancy_constant.HATCH_TOTAL_DAY
-        first = self.lay(total)
-        second = self.lay(total)
-        egg_handle.check_egg_born(MOTHER)
-        self.assert_panel((MOTHER, True, [first, second]))
+        self.assertEqual(self.children(), 2)
+        self.assertEqual(self.stages(), {young: total - 1})
+        self.assertEqual(self.asked, ["born_wait"])
 
 
-class ImportBoundaryTest(FastTestCase):
-    """屏蔽两个妊娠面板后胎生生产与无壳卵破壳独立运行的单元测试。"""
+class UiFreeTest(FastTestCase):
+    """无界面子进程中生产与破壳链路及模块隔离测试。"""
 
-    def test_birth_and_hatch_run_without_panels(self) -> None:
+    def test_birth_and_hatch_run_without_ui(self) -> None:
         """
-        验证在屏蔽两个妊娠面板的子进程中，一次胎生生产与一次无壳卵破壳均可向回调派发预期参数且不加载受屏蔽面板。
+        验证无界面子进程中未登记报错、胎生与无壳卵孵化结果及零界面模块加载。
+        同时验证真实 talk.must_show_talk_check 依次消费必显队列并清零对应二段行为。
         """
-        result = subprocess.run(
-            [sys.executable, "-c", BLOCKED_RUN],
-            cwd=ROOT,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr[-2000:])
-        report = json.loads(result.stdout.splitlines()[-1])
+        child = run_ui_free(UI_FREE_RUN, boot=True)
         self.assertEqual(
-            report,
+            child.payload,
             {
-                "born": [
-                    [1, {"egg_mode": False, "egg_id_list": None}],
-                    [2, {"egg_mode": True, "egg_id_list": [0, 1]}],
+                "unnamed": "no name input handler for 'x'",
+                "unasked": "born flow needs choice and name input handlers",
+                "children": [["kid1"], ["kid2", "kid3"]],
+                "eggs": 0,
+                "asked": ["born_wait", "born_wait"],
+                "shown": [
+                    [1, ["born"]],
+                    [1, ["postpartum"]],
+                    [2, ["soft_egg_born"]],
                 ],
-                "loaded": [],
+                "left": [[[], [0, 0, 0]], [[], [0, 0, 0]]],
             },
         )
+        self.assertEqual((child.attempted, child.loaded), ([], []))
