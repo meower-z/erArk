@@ -1,68 +1,38 @@
 """
 隐奸结算服务（hidden_sex_service）
 ==================================
-提供隐奸流程、隐蔽等级判定、同场景角色筛选、隐蔽值结算、被发现判定与结算、露出模式更新、被发现回调登记，以及目睹H发现行动的排队与开始。
+提供隐奸流程、隐蔽等级判定、同场景角色筛选、隐蔽值结算、被发现判定与结算、露出模式更新，
+以及目睹H发现行动的排队与开始。
 本模块不直接导入界面面板模块。
-被发现结算与发现行动开始均通过 emit_discovered 派发被发现通知。
-emit_discovered 按登记顺序调用 _on_discovered 中的回调。
-未登记回调时，emit_discovered 不调用任何回调，也不绘制界面。
+被发现结算与发现行动开始均调用 hidden_sex_discovered.resolve 结算「H中被发现」选择。
 """
 
 import random
-from collections.abc import Callable
 
 from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import handle_ability, handle_premise, map_handle
 from Script.Modules.domains import abilities, activity, flags, h_state
 from Script.Modules.domains import identity, scene_state
+from Script.Modules.gameplay_resolution import hidden_sex_discovered
 from Script.Modules.gameplay_resolution import plan_queue, starts
 from Script.Modules.gameplay_resolution.intent import Intent
 
-type DiscoveredCallback = Callable[[int, bool], None]
-""" 隐奸被发现通知回调函数类型，接收发现者角色编号与是否来自隐奸模式标志。 """
-_on_discovered: list[DiscoveredCallback] = []
-""" 按登记顺序保存的隐奸被发现通知回调列表。 """
 DISCOVERY = "Discovery"
 """ 目睹H发现行动的种类标识。 """
-
-
-def on_discovered(fn: DiscoveredCallback) -> DiscoveredCallback:
-    """
-    登记一个隐奸被发现通知回调，可作为装饰器使用。
-    Keyword arguments:
-    fn -- DiscoveredCallback，接收发现者角色编号与是否来自隐奸模式标志的回调函数
-    Return arguments:
-    DiscoveredCallback -- 原样返回传入的 fn
-    """
-    _on_discovered.append(fn)
-    return fn
-
-
-def emit_discovered(discoverer_id: int, from_hidden_sex_flag: bool) -> None:
-    """
-    按登记顺序逐个调用 _on_discovered 中的被发现通知回调。
-    Keyword arguments:
-    discoverer_id -- int，发现者的角色编号
-    from_hidden_sex_flag -- bool，是否来自隐奸模式被发现的标志
-    Return arguments:
-    None -- 无返回值
-    """
-    for fn in _on_discovered:
-        fn(discoverer_id, from_hidden_sex_flag)
 
 
 @starts.starter(DISCOVERY)
 def start_discovery(who: int, intent: Intent) -> None:
     """
-    作为 DISCOVERY 行动的开始函数，调用 emit_discovered(who, False) 派发被发现通知。
+    作为 DISCOVERY 行动的开始函数，调用 hidden_sex_discovered.resolve(who, False) 结算发现选择。
     Keyword arguments:
     who -- int，发现者的角色编号
     intent -- Intent，内核传入的行动意图，本函数不读取该参数
     Return arguments:
     None -- 无返回值
     """
-    emit_discovered(who, False)
+    hidden_sex_discovered.resolve(who, False)
 
 
 def plan_discovery(character_id: int) -> None:
@@ -262,12 +232,12 @@ def check_hidden_sex_discovery(now_degree: int) -> bool:
 
 def settle_discovered(character_id: int) -> None:
     """
-    结算角色隐奸被发现后的状态并派发发现通知。
+    结算角色隐奸被发现后的状态并在有旁观者时发起发现选择结算。
     先记录该角色 hidden_sex_mode 是否大于 0，并获取隐奸对象，
     以及同场景中不在隐奸中、有意识、未睡眠且 see_pl_h 为假的旁观者。
     随后清零该角色与各隐奸对象的 hidden_sex_mode。
     存在隐奸对象时将角色交互目标设为首位隐奸对象，否则打印调试信息并返回。
-    若存在剩余旁观者，按登记顺序以首位旁观者编号与前述标志调用 _on_discovered 中的回调。
+    若存在剩余旁观者，以首位旁观者编号与前述标志调用 hidden_sex_discovered.resolve。
     Keyword arguments:
     character_id -- int，被发现的角色编号
     Return arguments:
@@ -292,7 +262,9 @@ def settle_discovered(character_id: int) -> None:
         print(f"debug : 隐奸被发现时未找到隐奸对象，角色id:{character_id}")
         return
     if len(interrupt_chara_list):
-        emit_discovered(interrupt_chara_list[0], from_hidden_sex_flag)
+        hidden_sex_discovered.resolve(
+            interrupt_chara_list[0], from_hidden_sex_flag
+        )
 
 
 def update_exhibiionism_sex_mode() -> None:

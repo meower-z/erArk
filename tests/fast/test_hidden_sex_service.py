@@ -1,7 +1,8 @@
 """
 隐奸结算服务测试
 ================
-覆盖隐蔽等级与发现概率、同场景角色筛选、隐蔽值结算、被发现结算与回调、隐奸总流程、露出模式更新及模块导入边界。
+覆盖隐蔽等级与发现概率、同场景角色筛选、隐蔽值结算与被发现结算，
+以及隐奸总流程、露出模式更新和模块导入边界。
 """
 
 import ast
@@ -13,15 +14,15 @@ from importlib.util import resolve_name
 from pathlib import PurePosixPath
 from unittest import mock
 
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Core import constant, game_type
 from Script.Kernel import core
 from Script.Modules.domains import activity, flags, h_state
+from Script.Modules.gameplay_resolution import hidden_sex_discovered
 from Script.Modules.gameplay_resolution import hidden_sex_service, working
 from Script.Settle import Second_effect
 from Script.UI.Panel import exhibitionism_sex_panel
 from Script.UI.Panel import hidden_sex_panel
-from Script.UI.Panel import sex_be_discovered_panel
 from tests import chara_abilities
 from tests.chara_activity import aim, behave
 from tests.fast.base import FastTestCase
@@ -75,6 +76,7 @@ from tests.fast.base import FastTestCase
 from tests import kernel_data
 from tests.chara_activity import aim
 from Script.Modules.domains import flags, h_state
+from Script.Modules.gameplay_resolution import hidden_sex_discovered
 from Script.Modules.gameplay_resolution import hidden_sex_service as service
 case = FastTestCase()
 case.setUp()
@@ -82,7 +84,7 @@ for cid in (0, 1, 2):
     case.world.chara(cid, str(cid))
 aim(0, 1)
 seen = []
-service._on_discovered[:] = [lambda cid, flag: seen.append((cid, flag))]
+hidden_sex_discovered.resolve = lambda cid, flag: seen.append((cid, flag))
 with kernel_data.writing():
     flags.set(0, hidden_sex_mode=2, exhibitionism_sex_mode=1)
     flags.set(1, hidden_sex_mode=2)
@@ -96,8 +98,6 @@ print(service.get_hidden_level(70)[0], degree, seen, mode)
 print(sorted(name for name in sys.modules if blocked(name)))
 """
 """ 在拦截面板导入的子进程中运行隐奸结算服务各项函数的测试脚本。 """
-REGISTERED = list(hidden_sex_service._on_discovered)
-""" 模块加载后已登记在 hidden_sex_service._on_discovered 的回调快照。 """
 
 
 def imported_modules(source: str | bytes, path: str) -> set[str]:
@@ -122,10 +122,10 @@ def imported_modules(source: str | bytes, path: str) -> set[str]:
 
 
 class HiddenSexCase(FastTestCase):
-    """隐奸结算测试基类，初始化角色、工作集与被发现回调记录器。"""
+    """隐奸结算测试基类，初始化角色、工作集与发现选择结算调用记录器。"""
 
     def setUp(self) -> None:
-        """创建主角、对象与旁观者，打开工作集并将被发现回调替换为记录函数。"""
+        """创建主角、对象与旁观者，打开工作集并将 hidden_sex_discovered.resolve 替换为记录函数。"""
         super().setUp()
         self.world.chara(0, "博士")
         self.world.chara(PARTNER, "对象")
@@ -134,14 +134,12 @@ class HiddenSexCase(FastTestCase):
         self.enterContext(working.based_on(core.state()))
         self.seen: list[tuple[int, bool]] = []
         self.enterContext(
-            mock.patch.object(
-                hidden_sex_service, "_on_discovered", [self.record]
-            )
+            mock.patch.object(hidden_sex_discovered, "resolve", self.record)
         )
 
     def record(self, discoverer_id: int, from_hidden_sex_flag: bool) -> None:
         """
-        记录一次被发现通知回调收到的参数。
+        记录一次调用 hidden_sex_discovered.resolve 时收到的参数。
         Keyword arguments:
         discoverer_id -- int，发现者角色编号
         from_hidden_sex_flag -- bool，是否由隐奸被发现触发
@@ -298,7 +296,7 @@ class HiddenValueTest(HiddenSexCase):
 
 
 class SettleDiscoveredTest(HiddenSexCase):
-    """验证隐奸被发现结算的状态清零、目标设置与回调触发。"""
+    """验证隐奸被发现结算的状态清零、目标设置与发现选择结算调用。"""
 
     def setUp(self) -> None:
         """将主角与对象置入隐奸模式 2 并将主角目标设为旁观者。"""
@@ -308,7 +306,7 @@ class SettleDiscoveredTest(HiddenSexCase):
         aim(0, WITNESS)
 
     def test_clears_both_and_reports_witness(self) -> None:
-        """验证被发现结算清零双方隐奸模式、切回对象并向回调报告旁观者。"""
+        """验证被发现结算清零双方隐奸模式、切回对象并以首位旁观者调用发现选择结算。"""
         hidden_sex_service.settle_discovered(0)
         self.assertEqual(flags.get(0, "hidden_sex_mode"), 0)
         self.assertEqual(flags.get(PARTNER, "hidden_sex_mode"), 0)
@@ -316,7 +314,7 @@ class SettleDiscoveredTest(HiddenSexCase):
         self.assertEqual(self.seen, [(WITNESS, True)])
 
     def test_flag_false_when_player_not_hidden(self) -> None:
-        """验证主角隐奸模式为 0 时回调收到的标志为 False。"""
+        """验证主角隐奸模式为 0 时传给发现选择结算的标志为 False。"""
         flags.set(0, hidden_sex_mode=0)
         hidden_sex_service.settle_discovered(0)
         self.assertEqual(self.seen, [(WITNESS, False)])
@@ -328,22 +326,16 @@ class SettleDiscoveredTest(HiddenSexCase):
         hidden_sex_service.settle_discovered(0)
         self.assertEqual(self.seen, [(EXTRA, True)])
 
-    def test_no_witness_or_no_hook(self) -> None:
-        """验证无可用旁观者或未登记回调时不调用回调但仍清零标记。"""
+    def test_no_witness(self) -> None:
+        """验证无可用旁观者时不调用发现选择结算，同时清零对象的隐奸模式并切回对象。"""
         flags.set(WITNESS, see_pl_h=1)
         hidden_sex_service.settle_discovered(0)
         self.assertEqual(self.seen, [])
         self.assertEqual(activity.target(0), PARTNER)
-        flags.set(0, hidden_sex_mode=2)
-        flags.set(PARTNER, hidden_sex_mode=2)
-        flags.set(WITNESS, see_pl_h=0)
-        with mock.patch.object(hidden_sex_service, "_on_discovered", []):
-            hidden_sex_service.settle_discovered(0)
         self.assertEqual(flags.get(PARTNER, "hidden_sex_mode"), 0)
-        self.assertEqual(self.seen, [])
 
     def test_no_partner_stops_after_clearing(self) -> None:
-        """验证无隐奸对象时清零主角模式、输出调试信息、维持交互目标且不触发回调。"""
+        """验证无隐奸对象时清零主角模式、输出调试信息、维持交互目标且不调用发现选择结算。"""
         flags.set(PARTNER, hidden_sex_mode=0)
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
@@ -352,22 +344,6 @@ class SettleDiscoveredTest(HiddenSexCase):
         self.assertEqual(flags.get(0, "hidden_sex_mode"), 0)
         self.assertEqual(activity.target(0), WITNESS)
         self.assertEqual(self.seen, [])
-
-    def test_tk_callback_opens_discovered_panel(self) -> None:
-        """验证加载时登记的 Tk 回调按配置文本宽度构造并绘制被发现面板。"""
-        with (
-            mock.patch.object(hidden_sex_service, "_on_discovered", REGISTERED),
-            mock.patch.object(
-                sex_be_discovered_panel, "Sex_Be_Discovered_Panel"
-            ) as panel,
-        ):
-            hidden_sex_service.settle_discovered(0)
-        panel.assert_called_once_with(
-            normal_config.config_normal.text_width,
-            WITNESS,
-            from_hidden_sex_flag=True,
-        )
-        panel.return_value.draw.assert_called_once_with()
 
 
 class FlowTest(HiddenSexCase):

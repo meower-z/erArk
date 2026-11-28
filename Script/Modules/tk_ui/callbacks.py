@@ -7,9 +7,9 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 - save_load.style_hooks：文本样式初始化（io_init.init_style）。
 - ui_hooks：提示、数值变化、图片、分隔线、富文本口上、逐行等待文本、面板切换、隐奸非H开关查询、
   文本AI处理与主角寻路首段选定。
-- choice_prompts：确认提示、忍耐提问、普通子事件与多层嵌套子事件的选项渲染。
+- choice_prompts：确认提示、忍耐提问、H中被发现选择、普通子事件与多层嵌套子事件的选项渲染。
 - ejaculation_service：射精面板。
-- hidden_sex_service：隐奸被发现面板。
+- hidden_sex_discovered：隐奸与露出模式选择面板邀请。
 - pregnancy_hooks：生产与破壳面板。
 - settle_hooks：行为结算文本。
 """
@@ -22,7 +22,7 @@ from Script.Core import constant, flow_handle, io_init
 from Script.Kernel import core
 from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
-from Script.Modules.gameplay_resolution import hidden_sex_service
+from Script.Modules.gameplay_resolution import hidden_sex_discovered
 from Script.Modules.gameplay_resolution import pregnancy_hooks, settle_hooks
 from Script.Modules.save_load import reset, style_hooks
 from Script.Modules.tk_ui import choice_prompts, player_pick
@@ -370,25 +370,59 @@ def draw_ejaculation_panel() -> None:
     draw.LineDraw("-", width).draw()
 
 
-@hidden_sex_service.on_discovered
-def draw_hidden_sex_discovered(
-    discoverer_id: int, from_hidden_sex_flag: bool
-) -> None:
+@choice_prompts.renderer(hidden_sex_discovered.DISCOVERED_PROMPT_ID)
+def draw_discovered_choice(prompt: ChoicePrompt) -> str:
     """
-    按配置文本宽度创建并绘制 sex_be_discovered_panel.Sex_Be_Discovered_Panel 面板。
+    按配置文本宽度绘制「H中被发现」标题栏、正文、换行及各选项左对齐按钮与换行。
+    随后调用 flow_handle.askfor_all 读取并返回玩家选中的 option_id。
     Keyword arguments:
-    discoverer_id -- int，发现者角色编号
-    from_hidden_sex_flag -- bool，是否由隐奸被发现触发
+    prompt -- ChoicePrompt，待绘制的「H中被发现」选项提示
     Return arguments:
-    None -- 无返回值
+    str -- 玩家所选选项的 option_id
     """
-    from Script.UI.Panel import sex_be_discovered_panel
+    width = normal_config.config_normal.text_width
+    line_feed = draw.NormalDraw()
+    line_feed.text = "\n"
+    line_feed.width = 1
+    draw.TitleLineDraw(prompt.title, width).draw()
+    info_draw = draw.NormalDraw()
+    info_draw.text = prompt.text
+    info_draw.draw()
+    line_feed.draw()
+    for option in prompt.options:
+        draw.LeftButton(option.label, option.option_id, width).draw()
+        line_feed.draw()
+    return flow_handle.askfor_all(
+        [option.option_id for option in prompt.options]
+    )
 
-    sex_be_discovered_panel.Sex_Be_Discovered_Panel(
-        normal_config.config_normal.text_width,
-        discoverer_id,
-        from_hidden_sex_flag=from_hidden_sex_flag,
-    ).draw()
+
+@hidden_sex_discovered.on_invite
+def draw_discovered_invite(mode: hidden_sex_discovered.InviteMode) -> bool:
+    """
+    按 mode 在调用时导入并绘制隐奸或露出模式选择面板，传入配置文本宽度与被发现标志。
+    返回对应面板的 invite_failed 属性。
+    Keyword arguments:
+    mode -- hidden_sex_discovered.InviteMode，"hidden" 打开隐奸面板，其余打开露出面板
+    Return arguments:
+    bool -- 面板记录的邀请是否失败标志
+    """
+    width = normal_config.config_normal.text_width
+    if mode == "hidden":
+        from Script.UI.Panel import hidden_sex_panel
+
+        hidden = hidden_sex_panel.Select_Hidden_Sex_Mode_Panel(
+            width, sex_be_discovered_flag=True
+        )
+        hidden.draw()
+        return hidden.invite_failed
+    from Script.UI.Panel import exhibitionism_sex_panel
+
+    shown = exhibitionism_sex_panel.Select_Exhibitionism_Sex_Mode_Panel(
+        width, sex_be_discovered_flag=True
+    )
+    shown.draw()
+    return shown.invite_failed
 
 
 @pregnancy_hooks.on_born

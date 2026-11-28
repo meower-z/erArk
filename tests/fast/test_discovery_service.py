@@ -1,7 +1,7 @@
 """
 旁人目睹H的发现行动测试
 =======================
-验证发现行动的排队、开始时的通知派发、Tk 回调打开被发现面板，以及拦截面板导入时的运行。
+验证发现行动的排队、开始时调用 hidden_sex_discovered.resolve，以及拦截面板导入时的运行。
 同时检查 Script/Modules/gameplay_resolution 目录不导入面板模块。
 """
 
@@ -13,12 +13,11 @@ from importlib.util import resolve_name
 from pathlib import PurePosixPath
 from unittest import mock
 
-from Script.Config import normal_config
 from Script.Core import constant
 from Script.Kernel import core
+from Script.Modules.gameplay_resolution import hidden_sex_discovered
 from Script.Modules.gameplay_resolution import hidden_sex_service, intent
 from Script.Modules.gameplay_resolution import npc_starters, plan_queue
-from Script.UI.Panel import sex_be_discovered_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT
@@ -29,8 +28,6 @@ PACKAGE = "Script/Modules/gameplay_resolution"
 """ 禁止导入面板模块的后端目录相对路径。 """
 SEEN = intent.Intent(behavior_id=constant.Behavior.SHARE_BLANKLY, minutes=1)
 """ 传给开始函数的占位行动意图，被测函数不读取其字段。 """
-REGISTERED = list(hidden_sex_service._on_discovered)
-""" 模块导入完成后，hidden_sex_service._on_discovered 中已登记的被发现通知回调副本。 """
 BLOCKED_RUN = """
 import importlib.abc, sys
 PANELS = ("Script.UI.Panel",)
@@ -44,6 +41,7 @@ sys.meta_path.insert(0, Block())
 from tests.fast.base import FastTestCase
 from tests import kernel_data
 from Script.Kernel import core
+from Script.Modules.gameplay_resolution import hidden_sex_discovered
 from Script.Modules.gameplay_resolution import hidden_sex_service as service
 from Script.Modules.gameplay_resolution import intent, npc_starters, plan_queue
 case = FastTestCase()
@@ -51,7 +49,7 @@ case.setUp()
 for cid in (0, 2):
     case.world.chara(cid, str(cid))
 seen = []
-service._on_discovered[:] = [lambda cid, flag: seen.append((cid, flag))]
+hidden_sex_discovered.resolve = lambda cid, flag: seen.append((cid, flag))
 kernel_data.written(npc_starters.see_h, 2, intent.Intent(behavior_id="wait", minutes=1))
 act = plan_queue.queue_head("2").value
 service.start_discovery(2, intent.Intent(**act.action_data))
@@ -134,7 +132,7 @@ class PlanDiscoveryTest(FastTestCase):
 
 
 class StartDiscoveryTest(FastTestCase):
-    """验证发现行动登记、开始时的通知派发以及拦截面板导入时的运行。"""
+    """验证发现行动登记、开始时调用发现选择结算以及拦截面板导入时的运行。"""
 
     def test_kind_is_registered(self) -> None:
         """验证发现行动种类已在内核中登记开始函数与结束函数。"""
@@ -144,46 +142,22 @@ class StartDiscoveryTest(FastTestCase):
             core.has_end(core.Action(str(FINDER), action_id, None, 0, 1))
         )
 
-    def test_notifies_callbacks(self) -> None:
-        """验证 start_discovery 会以 (FINDER, False) 调用已登记的通知回调。"""
+    def test_start_resolves_discovery(self) -> None:
+        """验证 start_discovery 会以发现者编号与 False 调用 hidden_sex_discovered.resolve。"""
         seen: list[tuple[int, bool]] = []
         with mock.patch.object(
-            hidden_sex_service,
-            "_on_discovered",
-            [lambda cid, flag: seen.append((cid, flag))],
+            hidden_sex_discovered,
+            "resolve",
+            lambda cid, flag: seen.append((cid, flag)),
         ):
             hidden_sex_service.start_discovery(FINDER, SEEN)
         self.assertEqual(seen, [(FINDER, False)])
 
-    def test_tk_callback_opens_panel(self) -> None:
-        """验证保留已登记的 Tk 回调时，start_discovery 会按配置文本宽度构造并绘制被发现面板一次。"""
-        with (
-            mock.patch.object(hidden_sex_service, "_on_discovered", REGISTERED),
-            mock.patch.object(
-                sex_be_discovered_panel, "Sex_Be_Discovered_Panel"
-            ) as panel,
-        ):
-            hidden_sex_service.start_discovery(FINDER, SEEN)
-        panel.assert_called_once_with(
-            normal_config.config_normal.text_width,
-            FINDER,
-            from_hidden_sex_flag=False,
-        )
-        panel.return_value.draw.assert_called_once_with()
-
-    def test_no_callback_draws_nothing(self) -> None:
-        """验证未登记通知回调时，start_discovery 不调用被发现面板构造方法。"""
-        with (
-            mock.patch.object(hidden_sex_service, "_on_discovered", []),
-            mock.patch.object(
-                sex_be_discovered_panel, "Sex_Be_Discovered_Panel"
-            ) as panel,
-        ):
-            hidden_sex_service.start_discovery(FINDER, SEEN)
-        panel.assert_not_called()
-
     def test_runs_with_panels_blocked(self) -> None:
-        """验证在拦截面板模块导入的子进程中，目睹H能排入并开始发现行动、触发回调，且不载入被拦截的面板模块。"""
+        """
+        验证在拦截面板导入的子进程中，目睹H能排入并开始发现行动、调用发现选择结算，
+        且不载入被拦截的面板模块。
+        """
         result = subprocess.run(
             [sys.executable, "-c", BLOCKED_RUN],
             cwd=ROOT,
