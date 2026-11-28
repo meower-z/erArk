@@ -3,12 +3,11 @@
 ==============================
 本模块不导入界面模块。
 on_prompts 登记 select_condom，未登记时抛出 RuntimeError。
-on_sex_position 登记 choose_sex_position，未登记时抛出 RuntimeError。
-confirm_poor_music、ask_sex_class_ability、需询问的 ask_close_door 与有可选项的 ask_official_option
-经 modal_hooks.ask 发送 ChoicePrompt。
+confirm_poor_music、ask_sex_class_ability、需询问的 ask_close_door、
+有可选项的 ask_official_option 与 choose_sex_position 经 modal_hooks.ask 发送 ChoicePrompt。
 未登记选择处理函数时，modal_hooks.ask 抛出 RuntimeError。
 无可选项的 ask_official_option 与结果非 None 的 show_official_result 经 ui_hooks 发出提示。
-Script.Modules.tk_ui.instruct_callbacks 导入时调用上述登记函数填入槽位。
+Script.Modules.tk_ui.instruct_callbacks 导入时调用 on_prompts 填入槽位。
 """
 
 from collections.abc import Callable, Sequence
@@ -19,6 +18,7 @@ from Script.Core import get_text
 from Script.Modules.gameplay_resolution import modal_hooks, pick_hooks
 from Script.Modules.gameplay_resolution import normal_panel_service
 from Script.Modules.gameplay_resolution import official_prompt, ui_hooks
+from Script.Modules.gameplay_resolution import sex_position_prompt
 from Script.Protocol.modal_prompts import ChoiceOption, ChoicePrompt
 
 _ = get_text._
@@ -31,10 +31,10 @@ SEX_CLASS_ABILITY_PROMPT_ID = "sex_class_ability"
 """ 实操课主修科目提问使用的 ChoicePrompt 标识（"sex_class_ability"）。 """
 OFFICIAL_OPTION_PROMPT_ID = "official_option"
 """ 公务事件选项决断使用的 ChoicePrompt 标识（"official_option"）。 """
+SEX_POSITION_PROMPT_ID = "sex_position"
+""" 性交体位选择使用的 ChoicePrompt 标识（"sex_position"）。 """
 type AskCondom = Callable[[str], dict[str, object] | None]
 """ 打开避孕套选择面板的函数类型别名，接收操作类型并返回选择字典或 None。 """
-type ChooseSexPosition = Callable[[int, bool], None]
-""" 打开性交体位选择面板的函数类型别名，接收性交类型编号与换体位标记且无返回值。 """
 
 
 def _unregistered(*args: Any, **kwargs: Any) -> NoReturn:
@@ -53,8 +53,6 @@ def _unregistered(*args: Any, **kwargs: Any) -> NoReturn:
 
 _select_condom: AskCondom = _unregistered
 """ 当前生效的避孕套选择询问槽位，默认为 _unregistered。 """
-_choose_sex_position: ChooseSexPosition = _unregistered
-""" 当前生效的性交体位选择面板槽位，默认为未登记时抛出 RuntimeError 的 _unregistered。 """
 
 
 def on_prompts(select_condom: AskCondom) -> None:
@@ -208,27 +206,40 @@ def show_official_result(
         ui_hooks.emit_notice(text, wait=True, use_text_width=True)
 
 
-def on_sex_position(choose_sex_position: ChooseSexPosition) -> None:
-    """
-    登记性交体位选择面板槽位的处理函数。
-    后续调用会替换先前登记的处理函数。
-    Keyword arguments:
-    choose_sex_position -- ChooseSexPosition，打开性交体位选择面板的函数
-    Return arguments:
-    None -- 无返回值
-    """
-    global _choose_sex_position
-    _choose_sex_position = choose_sex_position
-
-
 def choose_sex_position(sex_type: int, change_position: bool) -> None:
     """
-    在调用时读取当前 _choose_sex_position 槽位，打开性交体位选择面板。
-    未登记时抛出 RuntimeError。
+    构造标识为 SEX_POSITION_PROMPT_ID、标题为 _("性交体位") 的 ChoicePrompt，
+    经 modal_hooks.ask 询问性交体位。
+    选项由 position_options 结果与末尾 "back"（返回）项组成。
+    未登记选择处理器时抛出 RuntimeError。
+    选 "back" 时直接返回 None。
+    选定体位时按需导入 handle_instruct 以避开循环导入。
+    随后查出行为标识与判定名并调用 chara_handle_instruct_common_settle，
+    定下行动时抛出 player_pick.Chosen。
     Keyword arguments:
-    sex_type -- int，性交类型编号（1 阴道、2 子宫口、3 子宫、4 肛门、5 尿道）
-    change_position -- bool，是否为切换体位
+    sex_type -- int，性交类型（1 阴道、2 子宫口、3 子宫、4 肛门、5 尿道）
+    change_position -- bool，是否切换体位
     Return arguments:
-    None -- 无返回值
+    None -- 选 "back" 返回 None，定下行动时不正常返回
     """
-    _choose_sex_position(sex_type, change_position)
+    prompt = ChoicePrompt(
+        SEX_POSITION_PROMPT_ID,
+        (
+            *sex_position_prompt.position_options(),
+            ChoiceOption("back", _("返回")),
+        ),
+        title=_("性交体位"),
+    )
+    answer = modal_hooks.ask(prompt).selected_option_id
+    if answer == "back":
+        return
+    from Script.System.Instruct_System import handle_instruct
+
+    behavior_id, judge = sex_position_prompt.behavior(int(answer), sex_type)
+    handle_instruct.chara_handle_instruct_common_settle(
+        behavior_id,
+        judge=judge,
+        force_taget_wait=True,
+        start="sex_position",
+        args={"change_position": change_position},
+    )

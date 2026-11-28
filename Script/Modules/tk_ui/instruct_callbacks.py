@@ -1,22 +1,20 @@
 """
 tk_ui 的指令界面回调
 ====================
-本模块导入时经 instruct_hooks.on_prompts 登记 select_condom 槽位，
-并经 instruct_hooks.on_sex_position 登记 choose_sex_position 槽位。
-本模块导入时经 choice_prompts.renderer 登记 ask_close_door、ask_sex_class_ability、confirm_poor_music
-与 ask_official_option 四个选项渲染函数。
+本模块导入时仅经 instruct_hooks.on_prompts 登记 select_condom 槽位。
+本模块导入时经 choice_prompts.renderer 登记 ask_close_door、ask_sex_class_ability、
+confirm_poor_music、ask_official_option 与 choose_sex_position 五个选项渲染函数。
 select_condom 在调用时导入 condom_panel。
-choose_sex_position 在调用时导入 sex_position_panel。
 """
 
 from types import FunctionType
 
 from Script.Config import normal_config
-from Script.Core import flow_handle, get_text, py_cmd, text_handle
+from Script.Core import constant, flow_handle, get_text, py_cmd, text_handle
 from Script.Modules.gameplay_resolution import instruct_hooks
 from Script.Modules.tk_ui import choice_prompts, player_pick
 from Script.Protocol.modal_prompts import ChoicePrompt
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -154,6 +152,54 @@ def ask_official_option(prompt: ChoicePrompt) -> str:
     return option_ids[answer]
 
 
+@choice_prompts.renderer(instruct_hooks.SEX_POSITION_PROMPT_ID)
+def choose_sex_position(prompt: ChoicePrompt) -> str:
+    """
+    绘制性交体位选择界面并读取玩家选择。
+    以 width 绘制 prompt.title 标题栏与换行，再按 prompt.options 顺序逐项绘制。
+    "back" 项先绘两次换行，再绘显示为 f"[{option.label}]"、
+    返回键为 option.label 的 CenterButton。
+    其余 "open" 项绘返回键为 option_id 的 LeftButton。
+    "current" 与 "blocked" 项分别以 gold_enrod 与 deep_gray 样式绘 NormalDraw 文本。
+    每项末尾绘一次换行。
+    经 askfor_all 读取选择后，两条退出路径均将 view.now_panel_id 置为 IN_SCENE
+    并返回 option_id。
+    Keyword arguments:
+    prompt -- ChoicePrompt，性交体位选项提示
+    Return arguments:
+    str -- 玩家所选选项的 option_id
+    """
+    line_feed = draw.NormalDraw()
+    line_feed.text = "\n"
+    line_feed.width = 1
+    draw.TitleLineDraw(prompt.title, width).draw()
+    line_feed.draw()
+    styles = {"current": "gold_enrod", "blocked": "deep_gray"}
+    option_ids = {}
+    for option in prompt.options:
+        if option.option_id == "back":
+            line_feed.draw()
+            line_feed.draw()
+            back_draw = draw.CenterButton(
+                f"[{option.label}]", option.label, width
+            )
+            back_draw.draw()
+            option_ids[back_draw.return_text] = option.option_id
+        elif option.availability == "open":
+            button_draw = draw.LeftButton(option.label, option.option_id, width)
+            button_draw.draw()
+            option_ids[button_draw.return_text] = option.option_id
+        else:
+            text_draw = draw.NormalDraw()
+            text_draw.text = option.label
+            text_draw.style = styles[option.availability]
+            text_draw.draw()
+        line_feed.draw()
+    answer = flow_handle.askfor_all(list(option_ids))
+    view.now_panel_id = constant.Panel.IN_SCENE
+    return option_ids[answer]
+
+
 def select_condom(mode: str) -> dict[str, object] | None:
     """
     在调用时导入 condom_panel，并以当前文本宽度和 mode 调用 Condom_Select_Panel.draw。
@@ -167,23 +213,4 @@ def select_condom(mode: str) -> dict[str, object] | None:
     return condom_panel.Condom_Select_Panel(width, mode).draw()
 
 
-def choose_sex_position(sex_type: int, change_position: bool) -> None:
-    """
-    在调用时导入 sex_position_panel。
-    以导入时读取的模块全局 width、sex_type 与 change_position 构造 Sex_Position_Panel。
-    随后无参调用该实例的 draw 方法。
-    Keyword arguments:
-    sex_type -- int，性交类型编号（1 阴道、2 子宫口、3 子宫、4 肛门、5 尿道）
-    change_position -- bool，是否为切换体位
-    Return arguments:
-    None -- 无返回值
-    """
-    from Script.UI.Panel import sex_position_panel
-
-    sex_position_panel.Sex_Position_Panel(
-        width, sex_type, change_position
-    ).draw()
-
-
 instruct_hooks.on_prompts(select_condom)
-instruct_hooks.on_sex_position(choose_sex_position)

@@ -12,6 +12,7 @@
 
 import json
 from collections.abc import Callable
+from functools import partial
 from typing import cast
 from unittest import mock
 
@@ -19,10 +20,10 @@ from Script.Config import game_config
 from Script.Core import constant, flow_handle
 from Script.Kernel import core
 from Script.Modules.domains import modes
+from Script.Modules.gameplay_resolution import instruct_hooks
 from Script.Modules.gameplay_resolution import intent, start_gate
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
-from Script.UI.Panel import sex_position_panel
 from Script.UI.Panel import bondage_panel
 from tests import chara_abilities as ca, kernel_data, pick_guard
 from tests import world as world_module
@@ -183,7 +184,7 @@ class InstructSubMenuTest(FastTestCase):
         self.assertEqual(h_state.get(NPC, "bondage"), bondage_id)
 
     def test_sex_position(self) -> None:
-        """换体位：处女的询问能取消；确定后换之前的体位在行动开始时才记下"""
+        """换体位：体位菜单与处女询问两层都能取消。确定后，原体位在行动开始时才记下。"""
         kernel_data.put(modes.set_debug, True)
         ca.talent(self.npc)[0] = 1
         kernel_data.put(
@@ -193,16 +194,14 @@ class InstructSubMenuTest(FastTestCase):
         position_id = next(
             key
             for key, data in game_config.config_sex_position_data.items()
-            if getattr(data, "vaginal_sex_behavior_id", "")
+            if key > 0 and key != 3 and data.skill_req == 0
         )
-        panel = sex_position_panel.Sex_Position_Panel(
-            width=1, change_position=True
-        )
-        self.assert_backs_out(
-            lambda: panel.select_sex_position(position_id), NO
-        )
+        self.world.scene(activity.position(0)).have_furniture = 3
+        change = partial(instruct_hooks.choose_sex_position, 1, True)
+        self.assert_backs_out(change, "返回")
+        self.assert_backs_out(change, str(position_id), NO)
         self.assertEqual(h_state.get(0, "pre_sex_position"), -1)
-        self.assert_commits(lambda: panel.select_sex_position(position_id), YES)
+        self.assert_commits(change, str(position_id), YES)
         self.assertEqual(h_state.get(0, "pre_sex_position"), 3)
 
     def test_diy_event(self) -> None:
