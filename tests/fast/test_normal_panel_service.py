@@ -14,18 +14,22 @@ from typing import Any
 from unittest import mock
 
 from Script.Config import game_config
-from Script.Core import constant, flow_handle
+from Script.Core import constant, flow_handle, get_text
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.domains import abilities, action_info, activity
 from Script.Modules.domains import entertainment, fridge, inventory
 from Script.Modules.domains import npc_template, playthrough, warehouse
+from Script.Modules.gameplay_resolution import instruct_hooks, modal_hooks
 from Script.Modules.gameplay_resolution import normal_panel_service as svc
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.tk_ui import player_pick
+from Script.UI.Moudle import draw
 from Script.UI.Panel import normal_panel
 from tests.fast.base import FastTestCase
 from tests.fast.test_backend_ui_boundary_guard import ROOT
+
+_ = get_text._
 
 CANNOT_CLOSE = "\n当前地点无法关门，要继续吗："
 """ 无法关门场景对应的本地化提示文本常量。 """
@@ -128,7 +132,7 @@ class NormalPanelCase(FastTestCase):
 
 
 class DoorAskTest(NormalPanelCase):
-    """关门询问服务与 Close_Door_Panel 交互行为测试。"""
+    """关门询问服务与 instruct_hooks.ask_close_door 交互行为测试。"""
 
     def test_prompt_and_cancel_follow_close_type(self) -> None:
         """验证 close_type 为 0、1、2 时 door_ask 返回对应提示前缀与取消标志。"""
@@ -146,15 +150,21 @@ class DoorAskTest(NormalPanelCase):
                 self.assertEqual(ask.cancel_on_no, cancel)
 
     def test_asked_scene_is_skipped(self) -> None:
-        """验证 ask_close_door_flag 置位时 door_ask 与面板均返回 None 且不弹出询问。"""
+        """
+        验证 ask_close_door_flag 置位时 door_ask 与 instruct_hooks.ask_close_door 均返回 None。
+        验证该情形下不调用 modal_hooks._ask。
+        """
         action_info.set(0, "ask_close_door_flag", True)
         self.assertIsNone(svc.door_ask())
-        with mock.patch.object(flow_handle, "askfor_all") as ask:
-            self.assertIsNone(normal_panel.Close_Door_Panel(80).draw())
+        with mock.patch.object(modal_hooks, "_ask") as ask:
+            self.assertIsNone(instruct_hooks.ask_close_door())
         ask.assert_not_called()
 
-    def test_panel_answers(self) -> None:
-        """验证不同关门类型下选择是与否的返回值，以及类型 0 选择否时抛出 Back。"""
+    def test_answers(self) -> None:
+        """
+        验证不同 close_type 下经界面回调选择是或否时 instruct_hooks.ask_close_door 返回对应布尔值。
+        验证 close_type 为 0 且选择否时抛出 player_pick.Back。
+        """
         cases = ((1, 0, True), (1, 1, False), (0, 0, True), (2, 1, False))
         for close_type, pick, answer in cases:
             with self.subTest(close_type=close_type, pick=pick):
@@ -164,18 +174,52 @@ class DoorAskTest(NormalPanelCase):
         with self.assertRaises(player_pick.Back):
             self.answer(1)
 
+    def test_draws_title_question_and_buttons(self) -> None:
+        """
+        在 close_type 为 0 的场景中拦截 TitleLineDraw、NormalDraw 与 Button 的 draw 方法，并模拟选择首项。
+        验证 ask_close_door 返回 True。
+        验证绘制序列依次为标题 _("关门")、正文 _(CANNOT_CLOSE)、
+        文本为 "[000]" + _("是") 且返回文本为 "0" 的按钮，
+        以及文本为 "[001]" + _("否") 且返回文本为 "1" 的按钮。
+        """
+        self.scene_type(0)
+        drawn: list[tuple[str, ...]] = []
+        for cls, record in (
+            (draw.TitleLineDraw, lambda title: ("title", title.title)),
+            (draw.NormalDraw, lambda text: ("text", text.text)),
+            (draw.Button, lambda b: ("button", b.text, b.return_text)),
+        ):
+            self.enterContext(
+                mock.patch.object(
+                    cls,
+                    "draw",
+                    autospec=True,
+                    side_effect=lambda obj, rec=record: drawn.append(rec(obj)),
+                )
+            )
+        self.assertIs(self.answer(0), True)
+        self.assertEqual(
+            drawn,
+            [
+                ("title", _("关门")),
+                ("text", _(CANNOT_CLOSE)),
+                ("button", "[000]" + _("是"), "0"),
+                ("button", "[001]" + _("否"), "1"),
+            ],
+        )
+
     def answer(self, pick: int) -> bool | None:
         """
-        以固定按钮下标模拟输入并运行 Close_Door_Panel.draw。
+        以固定按钮下标模拟 flow_handle.askfor_all 的返回并调用 instruct_hooks.ask_close_door。
         Keyword arguments:
         pick -- int，从返回键列表中选取的选项下标
         Return arguments:
-        bool | None -- 面板绘制调用的返回值
+        bool | None -- instruct_hooks.ask_close_door 的返回值
         """
         with mock.patch.object(
             flow_handle, "askfor_all", lambda keys: keys[pick]
         ):
-            return normal_panel.Close_Door_Panel(80).draw()
+            return instruct_hooks.ask_close_door()
 
 
 class BabyCareTest(NormalPanelCase):

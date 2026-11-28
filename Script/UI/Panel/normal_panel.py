@@ -1,7 +1,7 @@
-"""关门、照顾婴儿、初始奖励能力选择、冰箱与预订房间等日常小面板"""
+"""照顾婴儿、初始奖励能力选择、冰箱与预订房间四个日常小面板。"""
 
 from types import FunctionType
-from Script.UI.Moudle import draw, panel, view
+from Script.UI.Moudle import draw, view
 from Script.Core import constant, flow_handle
 from Script.Core import get_text
 from Script.Config import normal_config
@@ -17,70 +17,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
-
-
-class Close_Door_Panel:
-    """
-    用于关门的面板对象
-    Keyword arguments:
-    width -- 绘制宽度
-    """
-
-    def __init__(self, width: int) -> None:
-        """初始化绘制对象"""
-        self.width: int = width
-        """ 绘制的最大宽度 """
-        self.now_panel = _("关门")
-        """ 当前绘制的页面 """
-        self.draw_list: list[draw.Drawable] = []
-        """ 绘制的文本列表 """
-
-    def draw(self) -> bool | None:
-        """
-        问玩家关不关门，只读数据：回答由指令带进行动，开始时生效（handle_instruct._close_door）。
-        无法关门的地点回答否时退出选择（player_pick.back）
-        Return arguments:
-        bool | None -- 关门为真，不关为假；当前地点已问过（移动前不问第二次）时为 None
-        """
-
-        ask = svc.door_ask()
-        if ask is None:
-            return None
-
-        title_text = _("关门")
-
-        title_draw = draw.TitleLineDraw(title_text, self.width)
-        while 1:
-            return_list: list[str] = []
-            title_draw.draw()
-            now_draw_list: list[draw.Drawable] = []
-
-            askfor_panel = panel.OneMessageAndSingleColumnButton()
-            askfor_list = [_("是"), _("否")]
-            askfor_panel.set(askfor_list, _(ask.prompt), 0)
-            askfor_panel_return_list = askfor_panel.get_return_list()
-            return_list.extend(askfor_panel_return_list.keys())
-            now_draw_list.append(askfor_panel)
-
-            self.draw_list = []
-            """ 绘制的文本列表 """
-            self.draw_list.extend(now_draw_list)
-
-            for label in self.draw_list:
-                if isinstance(label, list):
-                    for value in label:
-                        value.draw()
-                    line_feed.draw()
-                else:
-                    label.draw()
-
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn in return_list:
-                if askfor_panel_return_list[yrn] == askfor_list[0]:
-                    return True
-                if ask.cancel_on_no:
-                    player_pick.back()
-                return False
 
 
 class Take_Care_Baby_Panel:

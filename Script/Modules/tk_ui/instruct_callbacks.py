@@ -1,10 +1,12 @@
 """
 tk_ui 的指令界面回调
 ====================
-导入时经 instruct_hooks.on_prompts 与 instruct_hooks.on_sex_position 登记 5 个槽位。
-导入时另经 choice_prompts.renderer 登记 ask_sex_class_ability 与 confirm_poor_music 两个选项渲染函数。
-ask_close_door、select_condom 与 choose_sex_position 调用时分别导入 normal_panel、condom_panel 与 sex_position_panel。
-ask_official_option 与 show_official_result 调用时导入 official_event_panel。
+本模块导入时经 instruct_hooks.on_prompts 登记 3 个槽位，并经 instruct_hooks.on_sex_position 登记 1 个槽位。
+本模块导入时经 choice_prompts.renderer 登记 ask_close_door、ask_sex_class_ability 与 confirm_poor_music
+三个选项渲染函数。
+select_condom 在调用时导入 condom_panel。
+choose_sex_position 在调用时导入 sex_position_panel。
+ask_official_option 与 show_official_result 在调用时导入 official_event_panel。
 """
 
 from types import FunctionType
@@ -15,7 +17,7 @@ from Script.Core import flow_handle, get_text
 from Script.Modules.gameplay_resolution import instruct_hooks
 from Script.Modules.tk_ui import choice_prompts
 from Script.Protocol.modal_prompts import ChoicePrompt
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, panel
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -23,15 +25,25 @@ width: int = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
 
-def ask_close_door() -> bool | None:
+@choice_prompts.renderer(instruct_hooks.CLOSE_DOOR_PROMPT_ID)
+def ask_close_door(prompt: ChoicePrompt) -> str:
     """
-    在调用时导入 normal_panel，以当前文本宽度创建 Close_Door_Panel 并调用其 draw 询问玩家是否关门。
+    以模块 width 用 draw.TitleLineDraw 绘制 _("关门") 标题栏。
+    用 panel.OneMessageAndSingleColumnButton 按 prompt.options 顺序填入各选项标签与 prompt.text 并绘制。
+    将面板返回键与 prompt.options 按顺序一一对应。
+    调用 flow_handle.askfor_all 读取选择，并返回对应选项的 option_id。
+    Keyword arguments:
+    prompt -- ChoicePrompt，待绘制的关门询问选项提示
     Return arguments:
-    bool | None -- 关门为 True，不关为 False，当前地点已问过时为 None
+    str -- 玩家所选选项的 option_id
     """
-    from Script.UI.Panel import normal_panel
-
-    return normal_panel.Close_Door_Panel(width).draw()
+    draw.TitleLineDraw(_("关门"), width).draw()
+    askfor_panel = panel.OneMessageAndSingleColumnButton()
+    askfor_panel.set([option.label for option in prompt.options], prompt.text)
+    askfor_panel.draw()
+    returns = askfor_panel.get_return_list()
+    option_ids = dict(zip(returns, prompt.options, strict=True))
+    return option_ids[flow_handle.askfor_all(list(option_ids))].option_id
 
 
 @choice_prompts.renderer(instruct_hooks.SEX_CLASS_ABILITY_PROMPT_ID)
@@ -162,6 +174,6 @@ def choose_sex_position(sex_type: int, change_position: bool) -> None:
 
 
 instruct_hooks.on_prompts(
-    ask_close_door, select_condom, ask_official_option, show_official_result
+    select_condom, ask_official_option, show_official_result
 )
 instruct_hooks.on_sex_position(choose_sex_position)

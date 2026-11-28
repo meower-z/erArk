@@ -2,10 +2,11 @@
 """
 指令询问钩子测试
 ================
-InstructPromptHooksUiFreeTest 在无界面子进程中验证 instruct_hooks.on_prompts 四个入口的未登记行为与登记转发。
-InstructPromptCallbacksTest 验证两个选项入口经 modal_hooks 由 instruct_callbacks 绘制按钮，
-以及四个槽位入口由 instruct_callbacks 调用面板。
-HandleInstructPromptsTest 验证 handle_instruct 的指令经 instruct_hooks 询问，并按回答定下或放弃行动。
+InstructPromptHooksUiFreeTest 在无界面子进程中验证 instruct_hooks.on_prompts 三个入口的未登记行为与登记转发。
+InstructPromptCallbacksTest 验证 ask_sex_class_ability 与 confirm_poor_music 经 modal_hooks
+由 instruct_callbacks 绘制按钮。
+InstructPromptCallbacksTest 还验证三个槽位入口经 instruct_callbacks 调用面板。
+HandleInstructPromptsTest 验证 handle_instruct 指令与 instruct_hooks 交互后按回答定下或放弃行动。
 """
 
 from collections.abc import Callable, Mapping
@@ -23,7 +24,7 @@ from Script.System.Education_System import sex_class_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Official_Event_System import official_event_handle, ri_value
 from Script.UI.Moudle import draw
-from Script.UI.Panel import condom_panel, normal_panel, official_event_panel
+from Script.UI.Panel import condom_panel, official_event_panel
 from tests import chara_abilities as ca, kernel_data
 from tests.chara_activity import aim
 from tests.fast.base import FastTestCase
@@ -60,7 +61,6 @@ try:
     from Script.Modules.gameplay_resolution import instruct_hooks
 
     entries = [
-        ("ask_close_door", ()),
         ("select_condom", ("hang",)),
         ("ask_official_option", ({"uid": "u"},)),
         ("show_official_result", ("u", 0, 0, 1)),
@@ -78,7 +78,6 @@ try:
     payload["unregistered"] = run_all()
     calls = []
     instruct_hooks.on_prompts(
-        lambda: calls.append(["door"]) or True,
         lambda mode: calls.append(["condom", mode]) or {"op": mode},
         lambda queue_data: calls.append(["official", queue_data]) or 2,
         lambda *result: calls.append(["result", list(result)]),
@@ -88,17 +87,17 @@ try:
 except Exception as error:
     payload["error"] = repr(error)
 """
-""" 无界面子进程脚本，依次调用 instruct_hooks.on_prompts 四个入口的未登记与登记后版本，并向 payload 记录结果。 """
+""" 无界面子进程脚本，依次调用 instruct_hooks.on_prompts 三个入口的未登记与登记后版本，并向 payload 记录结果。 """
 
 
 class InstructPromptHooksUiFreeTest(FastTestCase):
-    """无界面子进程中 instruct_hooks.on_prompts 四个入口的未登记行为、登记转发与界面模块隔离测试。"""
+    """无界面子进程中 instruct_hooks.on_prompts 三个入口的未登记行为、登记转发与界面模块隔离测试。"""
 
     def test_prompts_without_ui(self) -> None:
         """
-        验证未登记时三个询问入口抛出 RuntimeError。
-        验证未登记时显示公务结果的入口返回 None 且不执行操作。
-        验证登记后四个入口按顺序把参数交给登记函数并返回其结果。
+        验证未登记时 select_condom 与 ask_official_option 抛出 RuntimeError。
+        验证未登记时 show_official_result 返回 None。
+        验证经 on_prompts 登记后，三个入口将参数转发给对应函数并返回其结果。
         验证子进程未尝试导入也未载入受拦截模块。
         """
         from tests.ui_free_subprocess import run_ui_free
@@ -109,20 +108,16 @@ class InstructPromptHooksUiFreeTest(FastTestCase):
         assert isinstance(unregistered, list)
         self.assertEqual(
             [row[0] for row in unregistered],
-            ["RuntimeError"] * 3 + ["returned"],
+            ["RuntimeError"] * 2 + ["returned"],
         )
         self.assertIsNone(unregistered[-1][1])
         self.assertEqual(
             child.payload["registered"],
-            [
-                ["returned", answer]
-                for answer in (True, {"op": "hang"}, 2, None)
-            ],
+            [["returned", answer] for answer in ({"op": "hang"}, 2, None)],
         )
         self.assertEqual(
             child.payload["calls"],
             [
-                ["door"],
                 ["condom", "hang"],
                 ["official", {"uid": "u"}],
                 ["result", ["u", 0, 0, 1]],
@@ -134,8 +129,8 @@ class InstructPromptHooksUiFreeTest(FastTestCase):
 
 class InstructPromptCallbacksTest(FastTestCase):
     """
-    载入 load_order 后，验证两个选项入口经 modal_hooks 由 instruct_callbacks 绘制按钮，
-    以及四个槽位入口由 instruct_callbacks 调用面板。
+    载入 load_order 后，验证 ask_sex_class_ability 与 confirm_poor_music 经 modal_hooks 由 instruct_callbacks 绘制按钮。
+    同时验证 select_condom、ask_official_option 与 show_official_result 经 instruct_callbacks 调用面板。
     """
 
     def setUp(self) -> None:
@@ -250,17 +245,10 @@ class InstructPromptCallbacksTest(FastTestCase):
 
     def test_panels_are_looked_up_at_call_time(self) -> None:
         """
-        替换关门、避孕套与公务事件面板入口后调用对应钩子入口。
-        验证各入口以界面宽度与原样参数调用替换对象，并返回其结果。
+        替换 condom_panel.Condom_Select_Panel.draw 与 official_event_panel.Official_Event_Draw。
+        验证 select_condom 与 ask_official_option 按 WIDTH 与传入参数调用替换对象并返回其结果。
+        验证 show_official_result 按事件字典与 WIDTH 构造面板对象，并向 draw_result 传入选项序号。
         """
-        door = self.enterContext(
-            mock.patch.object(
-                normal_panel.Close_Door_Panel,
-                "draw",
-                autospec=True,
-                return_value=False,
-            )
-        )
         condom = self.enterContext(
             mock.patch.object(
                 condom_panel.Condom_Select_Panel,
@@ -273,8 +261,6 @@ class InstructPromptCallbacksTest(FastTestCase):
             mock.patch.object(official_event_panel, "Official_Event_Draw")
         )
         official.return_value.draw.return_value = 2
-        self.assertIs(instruct_hooks.ask_close_door(), False)
-        self.assertEqual(door.call_args.args[0].width, WIDTH)
         self.assertIs(instruct_hooks.select_condom("drink"), SELECTION)
         panel = condom.call_args.args[0]
         self.assertEqual((panel.width, panel.mode), (WIDTH, "drink"))
@@ -400,7 +386,7 @@ class HandleInstructPromptsTest(FastTestCase):
         """门未关时催眠询问关门，回答关门时行动参数记下关门，回答 None 时不含关门。"""
         scene = self.world.scene(activity.position(0))
         kernel_data.put(scene_state.set_close_flag, scene.scene_path, 0)
-        asked = self.answer("_ask_close_door", True, None)
+        asked = self.answer("ask_close_door", True, None)
         _data, args = self.chosen(constant.Instruct.HYPNOSIS_ONE)
         self.assertIs(args[handle_instruct.CLOSE_DOOR], True)
         _data, args = self.chosen(constant.Instruct.HYPNOSIS_ONE)
