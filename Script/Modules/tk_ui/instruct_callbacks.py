@@ -1,19 +1,20 @@
 """
 tk_ui 的指令界面回调
 ====================
-导入时经 instruct_hooks.on_prompts 与 instruct_hooks.on_sex_position 登记 7 个槽位。
-ask_sex_class_ability 与 confirm_poor_music 用 draw 画提示与按钮，经 flow_handle.askfor_all 读回答。
+导入时经 instruct_hooks.on_prompts 与 instruct_hooks.on_sex_position 登记 5 个槽位。
+导入时另经 choice_prompts.renderer 登记 ask_sex_class_ability 与 confirm_poor_music 两个选项渲染函数。
 ask_close_door、select_condom 与 choose_sex_position 调用时分别导入 normal_panel、condom_panel 与 sex_position_panel。
 ask_official_option 与 show_official_result 调用时导入 official_event_panel。
 """
 
-from collections.abc import Sequence
 from types import FunctionType
 from typing import Any
 
-from Script.Config import game_config, normal_config
+from Script.Config import normal_config
 from Script.Core import flow_handle, get_text
 from Script.Modules.gameplay_resolution import instruct_hooks
+from Script.Modules.tk_ui import choice_prompts
+from Script.Protocol.modal_prompts import ChoicePrompt
 from Script.UI.Moudle import draw
 
 _: FunctionType = get_text._
@@ -33,59 +34,62 @@ def ask_close_door() -> bool | None:
     return normal_panel.Close_Door_Panel(width).draw()
 
 
-def ask_sex_class_ability(ability_ids: Sequence[int]) -> int:
+@choice_prompts.renderer(instruct_hooks.SEX_CLASS_ABILITY_PROMPT_ID)
+def ask_sex_class_ability(prompt: ChoicePrompt) -> str:
     """
-    绘制性技实操课主修科目提示、各科目按钮与返回按钮，并经 flow_handle.askfor_all 等待选择。
-    按钮宽度均为 int(width / 4)。
+    以模块 width 用 draw.NormalDraw 绘制 prompt.text，再按 prompt.options 顺序绘制居中按钮。
+    遇到 option_id 为 "back" 的选项时，先用 draw.NormalDraw 绘制一次换行。
+    每个 CenterButton 使用 _("[{0}]").format(option.label) 作为显示文本、
+    option.label 作为响应文本与 int(width / 4) 作为宽度。
+    绘制完成后调用 flow_handle.askfor_all 读取选择，并返回对应选项的 option_id。
     Keyword arguments:
-    ability_ids -- Sequence[int]，可供选择的能力编号序列
+    prompt -- ChoicePrompt，待绘制的实操课主修科目选项提示
     Return arguments:
-    int -- 选中按钮对应的能力编号，选择返回按钮时为 -1
+    str -- 玩家所选选项的 option_id
     """
     now_draw = draw.NormalDraw()
     now_draw.width = width
-    now_draw.text = _(
-        "\n这节实操课主要练哪一门？\n（其他动作照样可以做，只是不会有本门的加成）\n\n"
-    )
+    now_draw.text = prompt.text
     now_draw.draw()
-    return_list = []
-    id_to_return = {}
-    for ability_id in ability_ids:
-        ability_name = game_config.config_ability[ability_id].name
+    option_ids = {}
+    for option in prompt.options:
+        if option.option_id == "back":
+            line_draw = draw.NormalDraw()
+            line_draw.text = "\n"
+            line_draw.draw()
         now_button = draw.CenterButton(
-            _("[{0}]").format(ability_name), ability_name, int(width / 4)
+            _("[{0}]").format(option.label), option.label, int(width / 4)
         )
         now_button.draw()
-        return_list.append(now_button.return_text)
-        id_to_return[now_button.return_text] = ability_id
-    line_draw = draw.NormalDraw()
-    line_draw.text = "\n"
-    line_draw.draw()
-    back_draw = draw.CenterButton(_("[返回]"), _("返回"), int(width / 4))
-    back_draw.draw()
-    return_list.append(back_draw.return_text)
-    yrn = flow_handle.askfor_all(return_list)
-    return id_to_return.get(yrn, -1)
+        option_ids[now_button.return_text] = option.option_id
+    return option_ids[flow_handle.askfor_all(list(option_ids))]
 
 
-def confirm_poor_music() -> bool:
+@choice_prompts.renderer(instruct_hooks.POOR_MUSIC_PROMPT_ID)
+def confirm_poor_music(prompt: ChoicePrompt) -> str:
     """
-    使用 draw.WaitDraw 显示低音乐能力提示，并绘制宽度为 int(width / 3) 的取消与确定按钮等待确认。
+    以模块 width 用 draw.WaitDraw 绘制 prompt.text，再按 prompt.options 顺序绘制居中按钮。
+    每个 CenterButton 使用 f"[{option.label}]" 作为显示文本、int(width / 3) 作为宽度，
+    并使用 "cancel" 与 "confirm" 各自对应的带前导换行译文作为响应文本。
+    绘制完成后调用 flow_handle.askfor_all 读取选择，并返回对应选项的 option_id。
+    Keyword arguments:
+    prompt -- ChoicePrompt，待绘制的音乐能力偏低确认提示
     Return arguments:
-    bool -- 玩家选择确定按钮时为 True，选择取消按钮时为 False
+    str -- 玩家所选选项的 option_id
     """
     now_draw = draw.WaitDraw()
     now_draw.width = width
-    now_draw.text = _(
-        "\n当前音乐能力小于等于2，可能会让对方感觉不适，确认要继续吗\n\n"
-    )
+    now_draw.text = prompt.text
     now_draw.draw()
-    back_draw = draw.CenterButton(_("[取消]"), _("\n取消"), int(width / 3))
-    back_draw.draw()
-    yes_draw = draw.CenterButton(_("[确定]"), _("\n确定"), int(width / 3))
-    yes_draw.draw()
-    yrn = flow_handle.askfor_all([back_draw.return_text, yes_draw.return_text])
-    return yrn == yes_draw.return_text
+    returns = {"cancel": _("\n取消"), "confirm": _("\n确定")}
+    option_ids = {}
+    for option in prompt.options:
+        now_button = draw.CenterButton(
+            f"[{option.label}]", returns[option.option_id], int(width / 3)
+        )
+        now_button.draw()
+        option_ids[now_button.return_text] = option.option_id
+    return option_ids[flow_handle.askfor_all(list(option_ids))]
 
 
 def select_condom(mode: str) -> dict[str, object] | None:
@@ -158,11 +162,6 @@ def choose_sex_position(sex_type: int, change_position: bool) -> None:
 
 
 instruct_hooks.on_prompts(
-    ask_close_door,
-    ask_sex_class_ability,
-    confirm_poor_music,
-    select_condom,
-    ask_official_option,
-    show_official_result,
+    ask_close_door, select_condom, ask_official_option, show_official_result
 )
 instruct_hooks.on_sex_position(choose_sex_position)
