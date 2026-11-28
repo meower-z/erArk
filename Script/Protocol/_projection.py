@@ -50,7 +50,8 @@ class Projection:
     def record(self, event: BackendEvent) -> None:
         """
         按后端事件增量更新屏幕投影，并按文本与非文本上限分别裁剪旧指令。
-        清屏清空留存块，清按钮移除对应留存按钮，忽略 Clear("input")、输入请求与退出事件。
+        本方法在收到清屏事件时清空留存块，在收到清按钮事件时移除对应留存按钮，在收到 SyncPanel 时记录最新面板状态。
+        本方法忽略 Clear("input")、SkipPauses、输入请求与退出事件。
 
         参数：
         event (BackendEvent) -- 刚发布的后端事件

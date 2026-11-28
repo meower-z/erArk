@@ -32,6 +32,7 @@ from Script.Protocol import (
     Responder,
     ScriptedUiPort,
     SessionCancelled,
+    SkipPauses,
     StyleDefOp,
     SubmitChoice,
     SubmitText,
@@ -159,10 +160,11 @@ class ProtocolPortsTest(FastTestCase):
             self.assertEqual(port.events, expected)
 
     def test_buffered_ops_flush_before_every_barrier(self) -> None:
-        """验证清屏、面板同步、暂停、选择、文本输入与结束调用前会先刷出已缓冲的渲染指令。"""
+        """验证清屏、面板同步、设置跳过开关、暂停、选择、文本输入与结束调用前会先刷出已缓冲的渲染指令。"""
         barriers: list[tuple[Callable[[ScriptedUiPort], object], type]] = [
             (lambda port: port.clear("buttons"), Clear),
             (lambda port: port.sync_panel(1, "pick"), SyncPanel),
+            (lambda port: port.set_skip_pauses(True), SkipPauses),
             (lambda port: port.pause(), Pause),
             (lambda port: port.choose(("a",)), Choose),
             (lambda port: port.input_text(4, allow_empty=True), InputText),
@@ -214,6 +216,55 @@ class ProtocolPortsTest(FastTestCase):
         port.set_skip_pauses(True)
         port.sync_panel(1, "pick")
         self.assertEqual(port.pause(), Continue(1, 6))
+
+    def test_every_skip_pauses_call_publishes_its_state(self) -> None:
+        """
+        验证在 ScriptedUiPort 上连续调用 set_skip_pauses 时，
+        即使状态未变化也会逐次发布递增序号的 SkipPauses 事件。
+        """
+        port = ScriptedUiPort(default_first_option())
+        for enabled in (False, True, True, False, False):
+            port.set_skip_pauses(enabled)
+        expected = [
+            SkipPauses("scripted", 1, False),
+            SkipPauses("scripted", 2, True),
+            SkipPauses("scripted", 3, True),
+            SkipPauses("scripted", 4, False),
+            SkipPauses("scripted", 5, False),
+        ]
+        self.assertEqual(port.events, expected)
+
+    def test_attach_snapshot_reports_skip_until_it_resets(self) -> None:
+        """
+        验证 ThreadedUiPort 的接入快照准确反映暂停跳过状态，
+        并在 set_skip_pauses(False)、sync_panel、choose 或 input_text 执行后复位为 False。
+        """
+        port = ThreadedUiPort(TOKEN)
+        snapshot = port.attach(TOKEN)
+        self.assertFalse(snapshot.skip_pauses)
+        epoch = snapshot.controller_epoch
+        worker = _start(port.pause)
+        self.assertIsInstance(_next(port, epoch), Pause)
+        self.assertTrue(port.submit(Continue(epoch, 1, skip_pauses=True)))
+        worker.result(5)
+        self.assertTrue(port.attach(TOKEN).skip_pauses)
+        resets: dict[str, Callable[[], object]] = {
+            "set_skip_pauses": lambda: port.set_skip_pauses(False),
+            "sync_panel": lambda: port.sync_panel(1, "pick"),
+            "choose": lambda: port.choose(("a",)),
+            "input_text": lambda: port.input_text(4),
+        }
+        for name, reset in resets.items():
+            with self.subTest(name):
+                port.set_skip_pauses(True)
+                epoch = port.attach(TOKEN).controller_epoch
+                worker = _start(reset)
+                _next(port, epoch)
+                snapshot = port.attach(TOKEN)
+                self.assertFalse(snapshot.skip_pauses)
+                if snapshot.pending_request is not None:
+                    port.submit(reply(snapshot.pending_request, "a"))
+                worker.result(5)
 
     def test_default_first_option_answers_every_request(self) -> None:
         """验证 default_first_option 能按规则应答暂停、有或无候选项的选择以及文本输入请求。"""

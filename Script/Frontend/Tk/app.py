@@ -20,6 +20,7 @@ from Script.Protocol import (
     FrontendInitConfig,
     RenderChunk,
     SessionPort,
+    SkipPauses,
     SyncPanel,
     UiRequest,
     UiResponse,
@@ -177,7 +178,7 @@ class TkFrontend:
             case Clear():
                 self._disarm()
                 self.window.order.set("")
-            case SyncPanel():
+            case SyncPanel() | SkipPauses():
                 pass
             case Exit():
                 self._closed = True

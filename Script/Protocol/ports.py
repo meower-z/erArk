@@ -12,6 +12,7 @@ from Script.Protocol.messages import (
     BackendEvent,
     ClearTarget,
     Continue,
+    Exit,
     ExitReason,
     PanelMode,
     RenderOp,
@@ -74,8 +75,10 @@ class UiPort(Protocol):
 
     def set_skip_pauses(self, enabled: bool) -> None:
         """
-        设置后续可跳过暂停的自动跳过开关，不刷出缓冲且不阻塞。
-        会话非开放态时抛出 SessionCancelled。
+        先刷出已缓冲的渲染指令，再更新暂停跳过开关并发布 SkipPauses 事件。
+        会话处于开放态时每次调用都会发布该事件，即使 enabled 与当前开关状态相同。
+        传输队列满且有控制器接入时，本方法会阻塞等待队列空位。
+        会话非开放态或在等待投递期间关闭时，本方法抛出 SessionCancelled。
 
         参数：
         enabled (bool) -- 为 True 时启用跳过可跳过暂停，为 False 时关闭
@@ -132,10 +135,13 @@ class UiPort(Protocol):
 
     def finish(self, reason: ExitReason, save_slot: str | None = None) -> None:
         """
-        先刷出已缓冲指令再发出 Exit 事件，并将当前会话标记为已正常结束。
-        传输队列满且有控制器接入时阻塞等待空位。
-        会话非开放态或等待期间关闭时抛出 SessionCancelled，
-        正常结束后再调用除 close 以外的工作侧方法都会抛出 SessionCancelled。
+        打包已缓冲的渲染指令并生成保存 Exit 事件，随后发布末尾渲染块（若有）与 Exit 事件，
+        并将仍处于开放态的会话标记为已结束。
+        在末尾渲染块与 Exit 事件投递完成前，该 Exit 事件已对 SessionPort.pending_exit 可见。
+        传输队列满且有控制器接入时，本方法阻塞等待队列空位。
+        等待期间若有控制器重连，本方法不等待队列空位而直接正常返回，即使随后会话关闭也不抛出异常。
+        会话初始非开放态，或在未发生重连的等待期间关闭时，本方法抛出 SessionCancelled。
+        会话结束后，再调用除 close 以外的 UiPort 方法都会抛出 SessionCancelled。
 
         参数：
         reason (ExitReason) -- 退出原因，取值为 "normal"、"error" 或 "cancelled"
@@ -147,9 +153,10 @@ class UiPort(Protocol):
     def close(self, reason: str = "closed") -> None:
         """
         立即关闭会话，不阻塞且不抛出 SessionCancelled。
-        若会话仍处于开放态，丢弃已缓冲指令与未送达事件，
-        向在线控制器发出取消 Exit 并以 SessionCancelled 唤醒等待中的工作线程。
-        若已结束则保留队列内事件，重复调用不会发出多余 Exit。
+        会话处于开放态时，本方法丢弃已缓冲指令与未送达事件，并以 SessionCancelled 唤醒等待中的工作线程。
+        若 finish 已生成 Exit 事件、仍在等待投递且期间尚无控制器重连，本方法向在线控制器发送该已有 Exit 事件。
+        会话处于开放态且尚未生成 Exit 事件时，本方法向在线控制器发送新的取消 Exit 事件。
+        会话已结束或已关闭时，本方法保留队列内事件且不发出多余 Exit 事件。
 
         参数：
         reason (str) -- 记录在取消异常中的关闭原因，默认为 "closed"
@@ -167,15 +174,16 @@ class SessionPort(Protocol):
     def attach(self, auth_token: str) -> AttachmentSnapshot:
         """
         校验令牌并接管当前会话控制权，不阻塞。
-        令牌不匹配时抛出 PermissionError。
-        校验通过后递增 controller_epoch 并使旧控制器失效，唤醒旧控制器的阻塞读取使其返回 None。
-        同时清空待读队列、重标挂起请求代次，并在会话已有退出事件时将其重新入队。
+        令牌不匹配时，本方法抛出 PermissionError。
+        校验通过后，本方法递增 controller_epoch 并使旧控制器失效，同时唤醒旧控制器的阻塞读取使其返回 None。
+        本方法随后清空待读队列、重标挂起请求代次，并在会话已有退出事件时将其重新入队。
+        若 finish 仍在等待投递，本方法同时将当前会话标记为已结束，使该 finish 不等待队列空位而直接返回。
         前端收到快照后先清空自身屏幕，按序重放 projection 后再处理后续实时事件。
 
         参数：
         auth_token (str) -- 前端提供的会话认证令牌
 
-        返回值：AttachmentSnapshot -- 包含新代次、水位序号、屏幕投影与挂起请求的接入快照
+        返回值：AttachmentSnapshot -- 包含新代次、水位序号、屏幕投影、挂起请求与当前暂停跳过状态的接入快照
         """
 
     def detach(self, controller_epoch: int) -> None:
@@ -220,6 +228,19 @@ class SessionPort(Protocol):
         timeout (float | None) -- 最长等待秒数，为 None 时不设时限，默认为 None
 
         返回值：BackendEvent | None -- 取出的下一条事件，失去控制权、超时或已关闭且队空时为 None
+        """
+
+    def pending_exit(self, controller_epoch: int) -> Exit | None:
+        """
+        非阻塞地查询当前会话是否已产生退出事件，不消费待读队列中的事件且不抛出 SessionCancelled。
+        仅在控制器在线且 controller_epoch 为当前代次时返回已记录的 Exit 事件，
+        包括 finish 仍在等待队列空位时已生成的 Exit。
+        会话尚未产生退出事件、当前未接入或 controller_epoch 不是当前代次时返回 None。
+
+        参数：
+        controller_epoch (int) -- 调用方持有的控制器代次编号
+
+        返回值：Exit | None -- 已记录的会话退出事件，无退出事件或调用方无控制权时为 None
         """
 
     def submit(self, response: UiResponse) -> bool:

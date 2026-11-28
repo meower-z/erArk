@@ -24,6 +24,7 @@ from Script.Protocol.messages import (
     RenderChunk,
     RenderOp,
     SessionCancelled,
+    SkipPauses,
     SubmitChoice,
     SubmitText,
     SyncPanel,
@@ -148,7 +149,11 @@ class PortCore(UiPort):
     def set_skip_pauses(self, enabled: bool) -> None:
         with self._cond:
             self._require_open()
+            self._flush()
             self._skip = enabled
+            self._publish(
+                SkipPauses(self._session_id, self._next_seq(), enabled)
+            )
 
     @override
     def pause(
@@ -209,13 +214,16 @@ class PortCore(UiPort):
     def finish(self, reason: ExitReason, save_slot: str | None = None) -> None:
         with self._cond:
             self._require_open()
-            self._flush()
+            chunk = self._take_chunk()
             exit_event = Exit(
                 self._session_id, self._next_seq(), reason, save_slot
             )
             self._exit = exit_event
+            if chunk is not None:
+                self._publish(chunk)
             self._publish(exit_event)
-            self._phase = Phase.FINISHED
+            if self._phase is Phase.OPEN:
+                self._phase = Phase.FINISHED
 
     @override
     def close(self, reason: str = "closed") -> None:
@@ -228,7 +236,10 @@ class PortCore(UiPort):
             self._ops_bytes = 0
             self._close_reason = reason
             self._pending = None
-            self._exit = Exit(self._session_id, self._next_seq(), "cancelled")
+            if self._exit is None:
+                self._exit = Exit(
+                    self._session_id, self._next_seq(), "cancelled"
+                )
             self._cancelled(self._exit)
         self._phase = Phase.CLOSED
         self._cond.notify_all()
@@ -274,12 +285,17 @@ class PortCore(UiPort):
             raise SessionCancelled(self._close_reason or self._phase.name)
 
     def _flush(self) -> None:
+        chunk = self._take_chunk()
+        if chunk is not None:
+            self._publish(chunk)
+
+    def _take_chunk(self) -> RenderChunk | None:
         if not self._ops:
-            return
+            return None
         ops = tuple(self._ops)
         self._ops.clear()
         self._ops_bytes = 0
-        self._publish(RenderChunk(self._session_id, self._next_seq(), ops))
+        return RenderChunk(self._session_id, self._next_seq(), ops)
 
     def _publish(self, event: BackendEvent) -> None:
         self._projection.record(event)
