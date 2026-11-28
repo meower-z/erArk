@@ -1,10 +1,18 @@
 """
 纯数据选项提示协议类型定义模块。
-定义选项项 ChoiceOption、选项提示 ChoicePrompt 与选择结果 ChoiceResult 三个不可变数据类。
+定义选项可用状态类型别名 OptionAvailability，
+以及选项项 ChoiceOption、选项提示 ChoicePrompt 与选择结果 ChoiceResult 三个不可变数据类。
 本模块仅导入 Python 标准库。
 """
 
 from dataclasses import dataclass
+from typing import Literal, get_args
+
+type OptionAvailability = Literal["open", "blocked", "current"]
+"""
+选项可用状态字面量类型。"open" 表示玩家可选。"blocked" 表示展示但不可选。
+"current" 表示当前所处状态且展示但不可选。
+"""
 
 
 def _require_id(value: object, field: str) -> None:
@@ -25,20 +33,33 @@ def _require_id(value: object, field: str) -> None:
 @dataclass(frozen=True, slots=True)
 class ChoiceOption:
     """
-    单个可选项的不可变数据类。
-    option_id 为非空字符串选项标识。label 为字符串显示文本，允许为空字符串。
+    单个选项的不可变数据类。
+    option_id 为非空字符串选项标识。
+    label 为字符串显示文本，允许为空字符串。
+    availability 为选项可用状态，默认为 "open"。
+    note 为前端在不可选项旁展示的说明文本，默认为空字符串。
     """
 
     option_id: str
     label: str
+    availability: OptionAvailability = "open"
+    note: str = ""
 
     def __post_init__(self) -> None:
-        """校验 option_id 与 label：非 str 抛 TypeError，option_id 为空抛 ValueError。"""
+        """
+        校验 option_id、label、note 与 availability 的字段类型和取值。
+        option_id、label 或 note 不是 str 时抛出 TypeError。
+        option_id 为空或 availability 不在 OptionAvailability 允许取值中时抛出 ValueError。
+        """
         _require_id(self.option_id, "option_id")
-        if not isinstance(self.label, str):
-            raise TypeError(
-                f"label must be str, got {type(self.label).__name__}"
-            )
+        for field in ("label", "note"):
+            value = getattr(self, field)
+            if not isinstance(value, str):
+                raise TypeError(
+                    f"{field} must be str, got {type(value).__name__}"
+                )
+        if self.availability not in get_args(OptionAvailability.__value__):
+            raise ValueError(f"unknown availability {self.availability!r}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,21 +69,29 @@ class ChoicePrompt:
     prompt_id 为非空字符串提示标识。
     options 为非空 ChoiceOption 元组。
     options 中各选项的 option_id 互不重复。
-    text 为前端显示在选项上方的提问或正文字符串，默认为空字符串。
+    options 中至少包含一项 availability 为 "open" 的选项。
+    text 为前端显示在选项上方的正文字符串，默认为空字符串。
+    title 为前端显示在正文上方的标题字符串，默认为空字符串。
     """
 
     prompt_id: str
     options: tuple[ChoiceOption, ...]
     text: str = ""
+    title: str = ""
 
     def __post_init__(self) -> None:
         """
-        校验 prompt_id、text 与 options 的字段类型和取值约束。字段类型不符时抛出 TypeError。
-        prompt_id 为空、options 为空或 option_id 重复时抛出 ValueError。
+        校验 prompt_id、text、title 与 options 的字段类型和取值约束。
+        字段类型不符或 options 元素不是 ChoiceOption 时抛出 TypeError。
+        prompt_id 为空、options 为空、option_id 重复或 options 中不含 availability 为 "open" 的选项时抛出 ValueError。
         """
         _require_id(self.prompt_id, "prompt_id")
-        if not isinstance(self.text, str):
-            raise TypeError(f"text must be str, got {type(self.text).__name__}")
+        for field in ("text", "title"):
+            value = getattr(self, field)
+            if not isinstance(value, str):
+                raise TypeError(
+                    f"{field} must be str, got {type(value).__name__}"
+                )
         if not isinstance(self.options, tuple):
             raise TypeError(
                 f"options must be tuple, got {type(self.options).__name__}"
@@ -77,6 +106,8 @@ class ChoicePrompt:
         ids = [option.option_id for option in self.options]
         if len(set(ids)) != len(ids):
             raise ValueError(f"option_id values must be unique: {ids}")
+        if all(option.availability != "open" for option in self.options):
+            raise ValueError(f"no open option among {ids}")
 
 
 @dataclass(frozen=True, slots=True)
