@@ -1,4 +1,4 @@
-"""射精界面面板：忍耐射精询问与射精目标、部位选择面板。"""
+"""射精界面面板：提供射精目标与部位选择面板（Ejaculation_Panel）。"""
 
 from types import FunctionType
 from Script.Core import constant, flow_handle
@@ -9,7 +9,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 
 from Script.Modules.gameplay_resolution import ejaculation_service
-from Script.Modules.domains import abilities, activity, h_meters, h_state
+from Script.Modules.domains import activity, h_state
 from Script.Modules.domains import modes, wardrobe
 from Script.Modules.domains import identity, scene_state
 
@@ -18,100 +18,6 @@ _: FunctionType = get_text._
 line_feed = draw.NormalDraw()
 line_feed.text = "\n"
 line_feed.width = 1
-window_width: int = normal_config.config_normal.text_width
-""" 窗体宽度 """
-
-
-def show_endure_ejaculation_panel() -> bool:
-    """
-    进行是否忍住射精的判断
-    return
-    bool -- 是否忍住 True为忍住 False为射出
-    """
-    character_data: identity.Identity = identity.of(0)
-    now_lv = abilities.ability(0)[30]
-    now_count = h_state.get(0, "endure_not_shot_count")
-    line = draw.LineDraw("-", window_width)
-
-    # 判断忍耐几率
-    if now_count <= now_lv:
-        now_rate = 100
-        endure_text = _("必定忍住")
-    else:
-        # 超出的次数
-        over_count = now_count - now_lv
-        # 下降的动态几率
-        down_rate = 50 - now_lv * 5
-        # 当前忍耐几率
-        now_rate = 100 - over_count * down_rate
-        now_rate = max(0, now_rate)
-        if now_rate >= 75:
-            endure_text = _("高")
-        elif now_rate >= 50:
-            endure_text = _("中")
-        elif now_rate >= 25:
-            endure_text = _("低")
-        else:
-            endure_text = _("无")
-
-    return_flag = ejaculation_service.judge_endure_ejaculation(now_rate)
-
-    # 如果系统设置中选择了手动选择是否忍耐
-    if normal_config.system_setting.base_setting.get(11, 2) == 2:
-        while 1:
-            line.draw()
-            line_feed.draw()
-            return_list = []
-
-            # 询问是否要忍住
-            now_draw = draw.NormalDraw()
-            now_draw_text = _(
-                "要射精了，是否要忍住射精，忍耐次数越多则射精量越多（当前已忍住{0}次，忍耐几率 {1}）\n"
-            ).format(now_count, endure_text)
-            now_draw.text = now_draw_text
-            now_draw.width = window_width
-            now_draw.draw()
-            line_feed.draw()
-
-            # 选择是否忍住
-            yes_draw = draw.CenterButton(
-                _("[忍住]"), _("忍住"), int(window_width / 3)
-            )
-            yes_draw.draw()
-            return_list.append(yes_draw.return_text)
-            no_draw = draw.CenterButton(
-                _("[射出]"), _("射出"), int(window_width / 3)
-            )
-            no_draw.draw()
-            return_list.append(no_draw.return_text)
-
-            line_feed.draw()
-
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn in return_list:
-                # 如果是射出，则返回False
-                if yrn == _("射出"):
-                    return_flag = False
-                break
-    # 如果系统设置中选择了一定忍耐
-    elif normal_config.system_setting.base_setting.get(11, 2) == 1:
-        pass
-    # 如果系统设置中选择了不忍耐直接射出
-    else:
-        return_flag = False
-
-    # 忍住的结算
-    if return_flag:
-        h_state.set(0, endure_not_shot_count=now_count + 1)
-        h_meters.set(0, eja=0)
-        endure_text = _("\n{0}忍住了射精\n").format(character_data.name)
-        now_draw = draw.NormalDraw()
-        now_draw.text = endure_text
-        now_draw.width = window_width
-        now_draw.draw()
-        line.draw()
-
-    return return_flag
 
 
 class Ejaculation_Panel:

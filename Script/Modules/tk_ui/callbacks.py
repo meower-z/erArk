@@ -7,8 +7,8 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 - save_load.style_hooks：文本样式初始化（io_init.init_style）。
 - ui_hooks：提示、数值变化、图片、分隔线、富文本口上、逐行等待文本、面板切换、隐奸非H开关查询、
   文本AI处理与主角寻路首段选定。
-- choice_prompts：ui_hooks.CONFIRM_PROMPT_ID 确认渲染。
-- ejaculation_service：忍耐询问与射精面板。
+- choice_prompts：ui_hooks.CONFIRM_PROMPT_ID 确认提示与 ejaculation_service.ENDURE_PROMPT_ID 忍耐提问渲染。
+- ejaculation_service：射精面板。
 - hidden_sex_service：隐奸被发现面板。
 - pregnancy_hooks：生产与破壳面板。
 - settle_hooks：行为结算文本、嵌套事件选项面板与事件选项面板。
@@ -322,16 +322,38 @@ def use_text_ai(
     )
 
 
-@ejaculation_service.on_endure_panel
-def draw_endure_ejaculation_panel() -> bool:
+@choice_prompts.renderer(ejaculation_service.ENDURE_PROMPT_ID)
+def draw_endure_choice(prompt: ChoicePrompt) -> str:
     """
-    调用 ejaculation_panel.show_endure_ejaculation_panel 询问并结算是否忍住射精。
+    依次绘制配置文本宽度的 "-" 分隔线、一次换行、同宽 NormalDraw 文本 prompt.text、一次换行、各选项居中按钮与一次换行。
+    每个 CenterButton 的显示文本为 "[{option.label}]"，响应文本为 option.label，
+    宽度为 int(normal_config.config_normal.text_width / 3)。
+    绘制完成后调用 flow_handle.askfor_all 等待玩家选择，并返回选中按钮对应的 option_id。
+    Keyword arguments:
+    prompt -- ChoicePrompt，待绘制的忍耐射精选项提示
     Return arguments:
-    bool -- 原样返回 show_endure_ejaculation_panel 的结果，True 为忍住
+    str -- 玩家所选选项的 option_id
     """
-    from Script.UI.Panel import ejaculation_panel
-
-    return ejaculation_panel.show_endure_ejaculation_panel()
+    width = normal_config.config_normal.text_width
+    line_feed = draw.NormalDraw()
+    line_feed.text = "\n"
+    line_feed.width = 1
+    draw.LineDraw("-", width).draw()
+    line_feed.draw()
+    ask_draw = draw.NormalDraw()
+    ask_draw.text = prompt.text
+    ask_draw.width = width
+    ask_draw.draw()
+    line_feed.draw()
+    option_ids = {}
+    for option in prompt.options:
+        button = draw.CenterButton(
+            f"[{option.label}]", option.label, int(width / 3)
+        )
+        button.draw()
+        option_ids[button.return_text] = option.option_id
+    line_feed.draw()
+    return option_ids[flow_handle.askfor_all(list(option_ids))]
 
 
 @ejaculation_service.on_ejaculation_panel

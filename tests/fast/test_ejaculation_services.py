@@ -427,7 +427,7 @@ class ModuleBoundaryTest(FastTestCase):
 
     def test_panel_keeps_only_panel_code(self) -> None:
         """
-        验证射精面板顶层只定义 show_endure_ejaculation_panel 与 Ejaculation_Panel，
+        验证射精面板顶层只定义 Ejaculation_Panel，
         且任意作用域不绑定五个服务函数名。
         """
         tree = ast.parse(inspect.getsource(ejaculation_panel))
@@ -436,9 +436,7 @@ class ModuleBoundaryTest(FastTestCase):
             for node in tree.body
             if isinstance(node, (ast.FunctionDef, ast.ClassDef))
         }
-        self.assertEqual(
-            defined, {"show_endure_ejaculation_panel", "Ejaculation_Panel"}
-        )
+        self.assertEqual(defined, {"Ejaculation_Panel"})
         bound = {
             alias.asname or alias.name
             for node in ast.walk(tree)

@@ -1,57 +1,92 @@
 """
 射精结算服务（ejaculation_service）
 ===================================
-本模块提供忍耐射精判定、通用射精结算、射精总流程，以及忍耐询问与射精面板回调的登记与触发入口。
-射精文本经 ui_hooks 的提示与分隔线接口输出。
+本模块提供忍耐射精判定、通用射精结算、射精总流程与射精面板回调槽位（on_ejaculation_panel、emit_ejaculation_panel）。
+emit_endure_panel 负责计算忍耐几率、掷骰、按系统设置 11 分支并在忍住时写回状态。
+需要询问玩家时，emit_endure_panel 经 modal_hooks 发出「忍住」与「射出」选项提示。
+忍耐结果与射精文本经 ui_hooks 的提示与分隔线接口输出。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，emit_ejaculation_panel 不执行操作。
-未登记回调时，emit_endure_panel 返回 False。
+未登记射精面板回调时，emit_ejaculation_panel 不执行操作。
+未在 modal_hooks 登记选择处理函数时，emit_endure_panel 仅在需要询问时由 modal_hooks.ask 抛出 RuntimeError。
 """
 
 import random
 from collections.abc import Callable
 from types import FunctionType
 
-from Script.Config import game_config
+from Script.Config import game_config, normal_config
 from Script.Core import get_text, num
 from Script.Design import handle_ability, handle_premise
 from Script.Modules.domains import abilities, achievement, action_info
 from Script.Modules.domains import activity, dirty, flags, h_meters, h_state
 from Script.Modules.domains import identity, pregnancy, tallies
-from Script.Modules.gameplay_resolution import achievement_service
+from Script.Modules.gameplay_resolution import achievement_service, modal_hooks
 from Script.Modules.gameplay_resolution import semen_dirty_service, ui_hooks
+from Script.Protocol.modal_prompts import ChoiceOption, ChoicePrompt
 
 _: FunctionType = get_text._
 """ 翻译api """
 
-type EndurePanel = Callable[[], bool]
-""" 忍耐射精询问回调函数类型，返回 True 表示忍住射精。 """
-_endure_panel: EndurePanel | None = None
-""" 当前登记的忍耐射精询问回调，未登记时为 None。 """
-
-
-def on_endure_panel(fn: EndurePanel) -> EndurePanel:
-    """
-    登记忍耐射精询问回调，可作为装饰器使用，后登记的回调覆盖先前的回调。
-    Keyword arguments:
-    fn -- EndurePanel，询问是否忍住射精并返回结果的回调函数
-    Return arguments:
-    EndurePanel -- 原样返回传入的 fn
-    """
-    global _endure_panel
-    _endure_panel = fn
-    return fn
+ENDURE_PROMPT_ID = "ejaculation_endure"
+""" 忍耐射精提问使用的 ChoicePrompt 标识（"ejaculation_endure"）。 """
 
 
 def emit_endure_panel() -> bool:
     """
-    调用当前登记的忍耐射精询问回调。
+    判定玩家本次是否忍住射精，并在忍住时写回状态与输出结果。
+    函数先按玩家能力 30 等级与当前忍耐次数计算几率并调用 judge_endure_ejaculation 掷骰，
+    再按系统设置 11（缺省为 2）分支。
+    设为 2 或缺省时，函数经 modal_hooks.ask 询问「忍住」或「射出」。
+    玩家选「射出」则判定未忍住，选「忍住」则采用掷骰结果。
+    未在 modal_hooks 登记选择处理函数时，该分支的 modal_hooks.ask 抛出 RuntimeError。
+    设为 1 时不提问并直接采用掷骰结果。
+    设为 0 或其他非 1、2 值时不提问并判定未忍住。
+    忍住时将 h_state 的 endure_not_shot_count 加 1 且将 h_meters 的 eja 清零，
+    再经 ui_hooks 输出按文本宽度排版的忍耐提示与分隔线。
     Return arguments:
-    bool -- 已登记时返回回调的布尔结果，未登记时返回 False
+    bool -- 忍住射精返回 True，否则返回 False
     """
-    if _endure_panel is None:
-        return False
-    return bool(_endure_panel())
+    now_lv = abilities.ability(0)[30]
+    now_count = h_state.get(0, "endure_not_shot_count")
+    if now_count <= now_lv:
+        now_rate = 100
+        endure_text = _("必定忍住")
+    else:
+        now_rate = max(0, 100 - (now_count - now_lv) * (50 - now_lv * 5))
+        if now_rate >= 75:
+            endure_text = _("高")
+        elif now_rate >= 50:
+            endure_text = _("中")
+        elif now_rate >= 25:
+            endure_text = _("低")
+        else:
+            endure_text = _("无")
+    endured = judge_endure_ejaculation(now_rate)
+    setting = normal_config.system_setting.base_setting.get(11, 2)
+    if setting == 2:
+        prompt = ChoicePrompt(
+            ENDURE_PROMPT_ID,
+            (
+                ChoiceOption("endure", _("忍住")),
+                ChoiceOption("release", _("射出")),
+            ),
+            _(
+                "要射精了，是否要忍住射精，忍耐次数越多则射精量越多（当前已忍住{0}次，忍耐几率 {1}）\n"
+            ).format(now_count, endure_text),
+        )
+        if modal_hooks.ask(prompt).selected_option_id == "release":
+            endured = False
+    elif setting != 1:
+        endured = False
+    if endured:
+        h_state.set(0, endure_not_shot_count=now_count + 1)
+        h_meters.set(0, eja=0)
+        name = identity.of(0).name
+        ui_hooks.emit_notice(
+            _("\n{0}忍住了射精\n").format(name), use_text_width=True
+        )
+        ui_hooks.emit_divider()
+    return endured
 
 
 type EjaculationPanel = Callable[[], None]
