@@ -73,7 +73,7 @@ from Script.Kernel import core
 from Script.Modules.domains import abilities, action_info, activity, chara_life
 from Script.Modules.domains import dirty, h_meters, identity, player_collection
 from Script.Modules.domains import roster, wardrobe, warehouse
-from Script.Modules.gameplay_resolution import edits, ejaculation_service
+from Script.Modules.gameplay_resolution import edits, ui_hooks
 from Script.Modules.gameplay_resolution import locker_service as svc
 from Script.Modules.gameplay_resolution import working
 pan, sock = int(sys.argv[1]), int(sys.argv[2])
@@ -111,7 +111,10 @@ with working.based_on(core.state()):
     before = list(dirty.view(1).cloth_locker_semen[9][1:])
     semen_before = h_meters.of(0)["semen"]
     banners = []
-    ejaculation_service.on_banner(banners.append)
+    def note(text, *, style, **_kw):
+        if style == "semen":
+            banners.append(text)
+    ui_hooks.on_notice(note)
     args = json.loads(json.dumps(svc.shoot_args(9, locker_type, 1)))
     act = edits.edit_action(svc.SHOOT_EDIT, name=svc.SHOOT_EDIT, args=args)
     core._bodies[edits.EDIT](act)

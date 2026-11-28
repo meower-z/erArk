@@ -1,11 +1,11 @@
 """
 成就结算服务（achievement_service）
 ===================================
-提供按数值判定、按类型结算成就以及新达成通知回调的登记与派发逻辑。
-本模块不直接导入界面模块，供成就面板与各业务结算入口调用。
+提供按数值判定成就、按类型结算成就、拼装成就获得提示文本，以及经 ui_hooks 发出新达成提示的入口。
+本模块不直接导入界面模块。
+成就面板与各业务结算入口调用本模块。
 """
 
-from collections.abc import Callable
 from types import FunctionType
 from typing import Any
 
@@ -15,26 +15,27 @@ from Script.Modules.domains import achievement, chara_life, commission, needs
 from Script.Modules.domains import playthrough, prison, relations, warehouse
 from Script.Modules.gameplay_resolution import achievement_h_rules
 from Script.Modules.gameplay_resolution import achievement_rules
+from Script.Modules.gameplay_resolution import ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
 
-type Unlocked = Callable[[list[int]], None]
-""" 新达成成就的通知回调函数类型，接收新达成成就编号列表。 """
-_unlocked: list[Unlocked] = []
-""" 按登记顺序保存的新达成成就通知回调列表。 """
 
-
-def on_unlocked(fn: Unlocked) -> Unlocked:
+def unlocked_text(achievement_id: int) -> str:
     """
-    登记一个新达成成就通知回调，可作为装饰器使用。
+    按成就编号读取 game_config.config_achievement 中的名称与说明，拼装成就获得提示文本。
     Keyword arguments:
-    fn -- Unlocked，接收新达成成就编号列表的回调函数
+    achievement_id -- int，成就编号
     Return arguments:
-    Unlocked -- 原样返回传入的 fn
+    str -- 含成就名称与说明的成就获得提示文本
     """
-    _unlocked.append(fn)
-    return fn
+    achievement_data = game_config.config_achievement[achievement_id]
+    text = _("\n\n   ○ 获得蚀刻章：{name} ○\n").format(
+        name=achievement_data.name
+    )
+    return text + _("      （{description}）\n\n\n").format(
+        description=achievement_data.description
+    )
 
 
 def settle_and_notify(
@@ -42,7 +43,9 @@ def settle_and_notify(
 ) -> list[int]:
     """
     调用 settle_by_type 结算指定类型的成就。
-    结果非空时，按登记顺序将新达成成就编号列表传入已登记的通知回调。
+    对返回列表中的每个新达成成就编号，按顺序经 ui_hooks.emit_notice 发出由 unlocked_text 生成的提示
+    （wait=True、style="gold_enrod"）。
+    无新达成成就时不发出提示。
     Keyword arguments:
     achievement_type -- str，成就类型名
     achievement_id -- int，非 0 时强制结算该成就编号，默认为 0
@@ -50,9 +53,10 @@ def settle_and_notify(
     list[int] -- 本次新达成的成就编号列表
     """
     new_ids = settle_by_type(achievement_type, achievement_id)
-    if new_ids:
-        for fn in _unlocked:
-            fn(new_ids)
+    for new_id in new_ids:
+        ui_hooks.emit_notice(
+            unlocked_text(new_id), wait=True, style="gold_enrod"
+        )
     return new_ids
 
 

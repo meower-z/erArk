@@ -24,7 +24,8 @@ from Script.Modules.domains import wardrobe
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import ejaculation_service
 from Script.Modules.gameplay_resolution import locker_service
-from Script.Modules.gameplay_resolution import semen_dirty_service, working
+from Script.Modules.gameplay_resolution import semen_dirty_service, ui_hooks
+from Script.Modules.gameplay_resolution import working
 from Script.Settle import default as settle_default
 from Script.Settle import realtime_settle
 from Script.System.Cooking_System import cooking
@@ -237,17 +238,14 @@ class EjaculationFlowTest(FastTestCase):
     """射精总流程（ejaculation_flow）各分支与回调派发的单元测试。"""
 
     def setUp(self) -> None:
-        """准备测试角色并替身化射精文本回调、通用射精结算与成就结算接口。"""
+        """准备测试角色并替身化 ui_hooks 提示与分隔线回调、通用射精结算与成就结算接口。"""
         super().setUp()
         self.world.chara(0, "博士")
         self.world.chara(TARGET, "测试干员")
         self.enterContext(working.based_on(core.state()))
         self.banners: list[str] = []
-        self.enterContext(
-            mock.patch.object(
-                ejaculation_service, "_banners", [self.banners.append]
-            )
-        )
+        self.enterContext(mock.patch.object(ui_hooks, "_notices", [self.note]))
+        self.enterContext(mock.patch.object(ui_hooks, "_dividers", []))
         self.shot = self.enterContext(
             mock.patch.object(
                 ejaculation_service, "common_ejaculation", return_value=SHOT
@@ -261,6 +259,19 @@ class EjaculationFlowTest(FastTestCase):
         self.settle = self.enterContext(
             mock.patch.object(achievement_service, "settle_and_notify")
         )
+
+    def note(self, text: str, *, style: str | None, **_kw: object) -> None:
+        """
+        收集样式为 semen 的提示文本并追加到 self.banners。
+        Keyword arguments:
+        text -- str，提示文本
+        style -- str | None，文本样式名
+        _kw -- object，其余未使用的提示选项关键字参数
+        Return arguments:
+        None -- 无返回值
+        """
+        if style == "semen":
+            self.banners.append(text)
 
     def assert_settled(self) -> None:
         """断言本次流程各调用一次成就 1201 数值判定与射精类成就结算。"""
@@ -327,7 +338,7 @@ class EjaculationFlowTest(FastTestCase):
         self.assert_settled()
 
     def test_draw_flag_off_emits_no_banner(self) -> None:
-        """验证 draw_flag 为 False 时不触发射精文本回调，但仍写入目标部位污浊并结算成就。"""
+        """验证 draw_flag 为 False 时不发出 semen 样式射精提示，但仍写入目标部位污浊并结算成就。"""
         ejaculation_service.ejaculation_flow(MOUTH, 0, TARGET, draw_flag=False)
         self.assertEqual(self.banners, [])
         self.assertEqual(dirty.view(TARGET).body_semen[MOUTH][1], SHOT[1])
@@ -335,7 +346,7 @@ class EjaculationFlowTest(FastTestCase):
 
 
 class TkBannerTest(FastTestCase):
-    """经 load_order 登记 Tk 射精文本回调后的六步绘制测试。"""
+    """经 load_order 登记 Tk 提示与分隔线回调后的射精文本六步绘制测试。"""
 
     def setUp(self) -> None:
         """载入启动顺序以登记 Tk 回调，准备测试角色并拦截绘制类的 draw 调用。"""
@@ -378,7 +389,7 @@ class TkBannerTest(FastTestCase):
             game_config.config_body_part[MOUTH].name,
             SHOT[0],
         )
-        feed = ("NormalDraw", "\n", 1, draw.NormalDraw().style)
+        feed = ("NormalDraw", "\n", 0, draw.NormalDraw().style)
         self.assertEqual(
             self.drawn,
             [

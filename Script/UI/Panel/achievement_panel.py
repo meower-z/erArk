@@ -33,21 +33,9 @@ def draw_achievement_notice(achievement_id_list: list[int]) -> None:
     输入：\n
     - achievement_id_list: 成就ID列表
     """
-    if not achievement_id_list:
-        return
-    # 遍历成就
     for achievement_id in achievement_id_list:
-        # 获取成就信息
-        achievement_data = game_config.config_achievement[achievement_id]
-        name = achievement_data.name
-        description = achievement_data.description
-        # 绘制成就获得提示
         now_draw = draw.WaitDraw()
-        draw_text = _("\n\n   ○ 获得蚀刻章：{name} ○\n").format(name=name)
-        draw_text += _("      （{description}）\n\n\n").format(
-            description=description
-        )
-        now_draw.text = draw_text
+        now_draw.text = achievement_service.unlocked_text(achievement_id)
         now_draw.style = "gold_enrod"
         now_draw.draw()
 

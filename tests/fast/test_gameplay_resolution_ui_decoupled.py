@@ -2,8 +2,9 @@
 gameplay_resolution 界面回调与成就结算测试
 ==========================================
 - 界面回调（ui_hooks）：无已登记回调时不触发绘制也不改动当前面板，有回调时按参数转发提示与目标面板编号。
-- 成就结算服务（achievement_service）：按数值阈值判定、按类型读取计数结算，以及仅在存在新达成编号时通知回调。
-- Tk 界面回调（tk_ui.callbacks）：经 load_order 登记后按调用点参数绘制提示、更新当前面板并绘制一次新达成成就提示。
+- 成就结算服务（achievement_service）：验证提示文本拼装、按数值阈值判定、按类型结算，
+  以及逐条经 ui_hooks 发出新达成提示。
+- Tk 界面回调（tk_ui.callbacks）：验证经 load_order 登记后的提示绘制、面板切换、成就单次绘制以及与成就面板绘制一致。
 """
 
 from unittest import mock
@@ -16,12 +17,29 @@ from Script.Modules.domains import achievement
 from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
 from Script.Modules.gameplay_resolution import working
 from Script.UI.Moudle import draw, view
+from Script.UI.Panel import achievement_panel
 from tests.fast.base import FastTestCase
 
 POWER_ID = 821
 """ 测试用的能源类成就编号（821） """
 AROMA_IDS = (1061, 1062)
 """ 测试用的调香类成就编号元组（1061 与 1062） """
+
+
+def unlocked_notice(achievement_id: int) -> tuple[str, bool, str, bool]:
+    """
+    构造指定成就编号对应的预期 ui_hooks 提示参数四元组。
+    Keyword arguments:
+    achievement_id -- int，成就编号
+    Return arguments:
+    tuple[str, bool, str, bool] -- 依次为成就获得提示文本、wait（True）、style（"gold_enrod"）与 use_text_width（False）
+    """
+    return (
+        achievement_service.unlocked_text(achievement_id),
+        True,
+        "gold_enrod",
+        False,
+    )
 
 
 class UiHooksTest(FastTestCase):
@@ -79,18 +97,38 @@ class UiHooksTest(FastTestCase):
 
 
 class AchievementServiceTest(FastTestCase):
-    """成就结算服务（achievement_service）的阈值判定、按类型结算与通知测试"""
+    """成就结算服务（achievement_service）的提示文本、阈值判定、按类型结算与提示发送测试"""
 
     def setUp(self) -> None:
-        """创建玩家角色、打开工作集上下文并将新达成通知回调替换为记录列表"""
+        """创建玩家角色、打开工作集上下文并将 ui_hooks._notices 替换为记录方法 self.note"""
         super().setUp()
         self.world.chara(0, "博士")
         self.enterContext(working.based_on(core.state()))
-        self.unlocked: list[list[int]] = []
-        self.enterContext(
-            mock.patch.object(
-                achievement_service, "_unlocked", [self.unlocked.append]
-            )
+        self.notices: list[tuple[str, bool, str | None, bool]] = []
+        self.enterContext(mock.patch.object(ui_hooks, "_notices", [self.note]))
+
+    def note(
+        self, text: str, *, wait: bool, style: str | None, use_text_width: bool
+    ) -> None:
+        """
+        记录一次提示回调收到的参数四元组。
+        Keyword arguments:
+        text -- str，提示文本
+        wait -- bool，是否等待玩家确认
+        style -- str | None，文本样式名
+        use_text_width -- bool，是否按配置文本宽度排版
+        Return arguments:
+        None -- 无返回值，将四元组追加到 self.notices
+        """
+        self.notices.append((text, wait, style, use_text_width))
+
+    def test_unlocked_text_shows_name_and_description(self) -> None:
+        """验证 unlocked_text 返回的成就获得提示文本按固定格式包含配置中的名称与说明"""
+        data = game_config.config_achievement[POWER_ID]
+        self.assertEqual(
+            achievement_service.unlocked_text(POWER_ID),
+            f"\n\n   ○ 获得蚀刻章：{data.name} ○\n"
+            f"      （{data.description}）\n\n\n",
         )
 
     def test_judge_by_value_settles_at_threshold(self) -> None:
@@ -99,11 +137,11 @@ class AchievementServiceTest(FastTestCase):
         judge = achievement_service.get_achievement_judge_by_value
         self.assertFalse(judge(POWER_ID, need - 1))
         self.assertFalse(achievement.done(POWER_ID))
-        self.assertEqual(self.unlocked, [])
+        self.assertEqual(self.notices, [])
         self.assertTrue(judge(POWER_ID, need))
         self.assertTrue(achievement.done(POWER_ID))
         self.assertFalse(judge(POWER_ID, need))
-        self.assertEqual(self.unlocked, [[POWER_ID]])
+        self.assertEqual(self.notices, [unlocked_notice(POWER_ID)])
 
     def test_settle_by_type_uses_type_value(self) -> None:
         """验证按类型结算按调香计数返回达标成就编号，重复调用返回空列表且不触发通知"""
@@ -120,16 +158,28 @@ class AchievementServiceTest(FastTestCase):
         aroma = get_text._("调香")
         self.assertEqual(achievement_service.settle_by_type(aroma), expected)
         self.assertEqual(achievement_service.settle_by_type(aroma), [])
-        self.assertEqual(self.unlocked, [])
+        self.assertEqual(self.notices, [])
 
     def test_settle_and_notify_only_reports_new_ids(self) -> None:
-        """验证 settle_and_notify 仅在出现新达成成就编号时通知回调，重复或无新达成时不通知"""
+        """验证 settle_and_notify 仅在存在新达成成就编号时经 ui_hooks 发出金色等待提示，重复或无新达成时不发出提示"""
         kind = game_config.config_achievement[POWER_ID].type
         settle = achievement_service.settle_and_notify
         self.assertEqual(settle(kind, POWER_ID), [POWER_ID])
         self.assertEqual(settle(kind, POWER_ID), [])
         self.assertEqual(settle(get_text._("调香")), [])
-        self.assertEqual(self.unlocked, [[POWER_ID]])
+        self.assertEqual(self.notices, [unlocked_notice(POWER_ID)])
+
+    def test_each_new_id_gets_one_notice(self) -> None:
+        """验证一次 settle_and_notify 同时达成多个成就时返回全部编号，并按顺序逐条发出对应的金色等待提示"""
+        count = max(
+            game_config.config_achievement[cid].value for cid in AROMA_IDS
+        )
+        achievement.put("aromatherapy_count", count)
+        settled = achievement_service.settle_and_notify(get_text._("调香"))
+        self.assertEqual(settled, list(AROMA_IDS))
+        self.assertEqual(
+            self.notices, [unlocked_notice(cid) for cid in AROMA_IDS]
+        )
 
 
 class TkUiCallbacksTest(FastTestCase):
@@ -187,10 +237,41 @@ class TkUiCallbacksTest(FastTestCase):
             self.assertEqual(view.now_panel_id, panel_id)
 
     def test_new_achievement_draws_one_notice(self) -> None:
-        """验证同一成就连续调用两次 settle_and_notify 时仅绘制一次 gold_enrod 样式的 WaitDraw 提示且不触发 NormalDraw"""
+        """
+        验证同一成就连续调用两次 settle_and_notify 时仅绘制一次宽度为 0、gold_enrod 样式
+        且文本为 unlocked_text 的 WaitDraw，不触发 NormalDraw
+        """
         kind = game_config.config_achievement[POWER_ID].type
         achievement_service.settle_and_notify(kind, POWER_ID)
         achievement_service.settle_and_notify(kind, POWER_ID)
-        styles = [style for _name, _w, style, _t in self.shown(self.wait)]
-        self.assertEqual(styles, ["gold_enrod"])
+        self.assertEqual(
+            self.shown(self.wait),
+            [
+                (
+                    "WaitDraw",
+                    0,
+                    "gold_enrod",
+                    achievement_service.unlocked_text(POWER_ID),
+                )
+            ],
+        )
+        self.normal.assert_not_called()
+
+    def test_panel_notice_draws_like_the_service(self) -> None:
+        """
+        验证 settle_and_notify 与 achievement_panel.draw_achievement_notice
+        对相同成就列表绘出一致的 WaitDraw 记录且不触发 NormalDraw
+        """
+        ids = [POWER_ID, AROMA_IDS[0]]
+        for achievement_id in ids:
+            kind = game_config.config_achievement[achievement_id].type
+            achievement_service.settle_and_notify(kind, achievement_id)
+        backend = self.shown(self.wait)
+        self.wait.reset_mock()
+        achievement_panel.draw_achievement_notice(ids)
+        self.assertEqual(self.shown(self.wait), backend)
+        self.assertEqual(
+            [text for _name, _w, _style, text in backend],
+            [achievement_service.unlocked_text(cid) for cid in ids],
+        )
         self.normal.assert_not_called()
