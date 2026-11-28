@@ -1,4 +1,4 @@
-"""不依赖 Tk 的纯状态输入门控模块，负责跟踪挂起请求、输入就绪状态与右键跳过预排并生成协议应答。"""
+"""不依赖 Tk 的纯状态输入门控模块，负责跟踪挂起请求与输入就绪状态，并按调用方传入的跳过状态生成协议应答。"""
 
 from typing import Literal
 
@@ -15,11 +15,11 @@ from Script.Protocol import (
 
 
 class InputGate:
-    """管理单个控制器代次下的挂起请求、就绪门控与右键跳过预排，并将键鼠提交转换为 `UiResponse`。"""
+    """管理单个控制器代次下的挂起请求与输入就绪状态，并将键鼠提交转换为 `UiResponse`。"""
 
     def __init__(self, epoch: int) -> None:
         """
-        按控制器代次初始化无挂起请求、未就绪且未预排跳过的输入门控
+        按控制器代次初始化无挂起请求且未就绪的输入门控
 
         参数：
         epoch (int) -- 当前附着连接的控制器代次编号
@@ -32,33 +32,32 @@ class InputGate:
         """当前等待应答的后端输入请求，空闲时为 `None`。"""
         self.armed = False
         """输入门控当前是否已就绪并允许提交玩家操作。"""
-        self.skip_requested = False
-        """是否已通过右键预排跳过下一次可跳过暂停。"""
 
-    def offer(self, request: UiRequest) -> Continue | None:
+    def offer(self, request: UiRequest, skip: bool) -> Continue | None:
         """
-        登记新的后端输入请求并解除就绪，非暂停请求会清除跳过预排，已预排跳过且遇可跳过暂停时直接返回跳过应答
+        登记新的后端输入请求并解除就绪，跳过开启且请求为可跳过 `Pause` 时返回跳过应答
 
         参数：
         request (UiRequest) -- 后端发来的新输入请求
+        skip (bool) -- 调用方传入的当前跳过开关状态
 
-        返回值类型：Continue | None -- 命中预排跳过时返回带跳过的 `Continue`，否则返回 `None`
+        返回值类型：Continue | None -- 命中可跳过暂停时返回带跳过的 `Continue`，否则返回 None
         """
         self.request = request
         self.armed = False
-        if not isinstance(request, Pause):
-            self.skip_requested = False
-        return self._queued_skip()
+        return self._queued_skip(skip)
 
-    def arm(self) -> Continue | None:
+    def arm(self, skip: bool) -> Continue | None:
         """
-        尝试开启输入就绪门控，若命中预排的可跳过暂停则直接返回跳过应答而不就绪，否则仅在有挂起请求时置为就绪
+        尝试开启输入就绪门控，跳过开启且挂起请求为可跳过 `Pause` 时直接返回跳过应答，
+        否则在存在挂起请求时置为就绪
 
-        参数：无
+        参数：
+        skip (bool) -- 调用方传入的当前跳过开关状态
 
-        返回值类型：Continue | None -- 命中预排跳过时返回 `Continue`，否则返回 `None`
+        返回值类型：Continue | None -- 命中可跳过暂停时返回带跳过的 `Continue`，否则返回 None
         """
-        answer = self._queued_skip()
+        answer = self._queued_skip(skip)
         self.armed = answer is None and self.request is not None
         return answer
 
@@ -123,34 +122,9 @@ class InputGate:
         self.armed = False
         return Continue(self.epoch, request.request_id, skip_pauses=skip_pauses)
 
-    def right_click(self) -> None:
+    def drop(self) -> None:
         """
-        记录右键跳过预排，仅在无挂起请求或当前请求为 `Pause` 时生效
-
-        参数：无
-
-        返回值类型：None
-        """
-        if self.request is None or isinstance(self.request, Pause):
-            self.skip_requested = True
-
-    def accepted(self, response: UiResponse) -> None:
-        """
-        应答被端口接受后清空挂起请求与就绪状态，若接受的是带跳过标记的 `Continue` 则同步清除跳过预排
-
-        参数：
-        response (UiResponse) -- 已被端口接受的应答对象
-
-        返回值类型：None
-        """
-        self.request = None
-        self.armed = False
-        if isinstance(response, Continue) and response.skip_pauses:
-            self.skip_requested = False
-
-    def rejected(self) -> None:
-        """
-        应答被端口拒绝时丢弃过期的挂起请求并解除就绪状态
+        清空当前挂起请求并解除输入就绪状态
 
         参数：无
 
@@ -159,13 +133,9 @@ class InputGate:
         self.request = None
         self.armed = False
 
-    def _queued_skip(self) -> Continue | None:
+    def _queued_skip(self, skip: bool) -> Continue | None:
         request = self.request
-        if (
-            self.skip_requested
-            and isinstance(request, Pause)
-            and request.skippable
-        ):
+        if skip and isinstance(request, Pause) and request.skippable:
             return Continue(self.epoch, request.request_id, skip_pauses=True)
         return None
 

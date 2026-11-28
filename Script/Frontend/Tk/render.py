@@ -3,11 +3,12 @@
 import time
 import uuid
 from collections.abc import Callable
-from tkinter import END, Event
+from tkinter import END, Event, Text
 
 from Script.Config import normal_config
 from Script.Core import perf_hook
 from Script.Frontend.Tk import image_cache
+from Script.Frontend.Tk.pager import Fit
 from Script.Frontend.Tk.tooltip import TAG_PREFIX, Tooltip
 from Script.Frontend.Tk.window import Window
 from Script.Protocol import (
@@ -22,19 +23,26 @@ from Script.Protocol import (
     TextOp,
 )
 
+ANCHOR = "pager.anchor"
+"""标记尚未确认阅读的输出起始位置的 Tk 文本框标记名。"""
+UNIT = "pager.unit"
+"""标记最近一个输出块起始位置的 Tk 文本框标记名。"""
+HIDDEN = "pager.hidden"
+"""用于通过 `elide=True` 隐藏溢出输出块的 Tk 文本标签名。"""
+
 
 def _timed(key: str, start: float) -> None:
     perf_hook.hook_time(key, time.perf_counter() - start)
 
 
 class Renderer:
-    """Tk 文本框渲染器，负责分发 `RenderOp`、管理按钮标签映射、绑定提示并在超行时裁剪旧文本。"""
+    """Tk 文本框渲染器，负责执行 `RenderOp`、维护按钮与提示、管理分页标记测量与视图滚动，并在超行时裁剪旧文本。"""
 
     def __init__(
         self, window: Window, tooltip: Tooltip, press: Callable[[str], None]
     ) -> None:
         """
-        初始化渲染器并关联主窗口、悬停提示管理器与按钮点击回调
+        初始化渲染器并关联窗口、提示与按钮回调，同时在文本框中建立分页标记与隐藏标签
 
         参数：
         window (Window) -- Tk 主窗口对象
@@ -49,6 +57,12 @@ class Renderer:
         self._press = press
         self.cmd_tag_map: dict[str, str] = {}
         """当前活跃命令编号到 Tk 文本框按钮标签名的映射。"""
+        for mark in (ANCHOR, UNIT):
+            self._textbox.mark_set(mark, "1.0")
+            self._textbox.mark_gravity(mark, "left")
+        self._textbox.tag_configure(HIDDEN, elide=True)
+        self._offset = 0
+        self._seen = 0
 
     def render(self, op: RenderOp) -> None:
         """
@@ -103,6 +117,7 @@ class Renderer:
         self.clear_buttons(None)
         start = time.perf_counter()
         self._textbox.delete("1.0", END)
+        self._offset = 0
         self._tooltip.drop_stale_tags()
         if perf_hook.enabled:
             _timed("gui.clear_screen_delete", start)
@@ -154,6 +169,164 @@ class Renderer:
         point_tags = set(textbox.tag_names(f"@{x},{y}"))
         return bool(point_tags & set(self.cmd_tag_map.values()))
 
+    def mark_unit(self) -> None:
+        """
+        将输出块起始标记 `UNIT` 移至当前文本末尾 `"end-1c"`
+
+        参数：无
+
+        返回值类型：None
+        """
+        self._textbox.mark_set(UNIT, "end-1c")
+
+    def fit(self) -> Fit:
+        """
+        用 Tk 布局像素统计测量未读高度、块前高度与视口高度，并在行高变化时归零页内偏移
+
+        参数：无
+
+        返回值类型：Fit -- 扣除页内偏移后的当前分页高度测量结果
+        """
+        if self._offset and self._line()[1] != self._seen:
+            self._offset = 0
+        return Fit(
+            _ypixels(self._textbox, ANCHOR, self._end()) - self._offset,
+            _ypixels(self._textbox, ANCHOR, UNIT) - self._offset,
+            self._viewport(),
+        )
+
+    def hide_unit(self) -> None:
+        """
+        为 `UNIT` 到文本末尾的范围添加隐藏标签 `HIDDEN`
+
+        参数：无
+
+        返回值类型：None
+        """
+        self._textbox.tag_add(HIDDEN, UNIT, "end")
+
+    def reveal(self) -> None:
+        """
+        移除文本框全部范围内的隐藏标签 `HIDDEN`
+
+        参数：无
+
+        返回值类型：None
+        """
+        self._textbox.tag_remove(HIDDEN, "1.0", "end")
+
+    def anchor_to_end(self) -> None:
+        """
+        将未读锚点 `ANCHOR` 移至文本末尾 `"end-1c"`、归零页内偏移并裁剪超出上限的旧行
+
+        参数：无
+
+        返回值类型：None
+        """
+        self._anchor("end-1c")
+        self._trim()
+
+    def anchor_to_unit(self) -> None:
+        """
+        将未读锚点 `ANCHOR` 移至输出块标记 `UNIT` 并归零页内偏移
+
+        参数：无
+
+        返回值类型：None
+        """
+        self._anchor(UNIT)
+
+    def advance_page(self) -> None:
+        """
+        定位到当前锚点后向下推进一页。底行位于锚点之后时，若该行完整落在可视区内且存在下一显示行，
+        将锚点移至下一显示行，否则移至该底行。底行不晚于锚点时，按视口高度递增页内偏移，
+        偏移达到该行完整高度后将锚点移至下一显示行或文末。
+
+        参数：无
+
+        返回值类型：None
+        """
+        textbox = self._textbox
+        self._pin()
+        bottom = textbox.index(
+            f"@0,{textbox.winfo_height() - 1} display linestart"
+        )
+        if textbox.compare(bottom, ">", ANCHOR):
+            following, height = self._line(bottom)
+            line = textbox.dlineinfo(bottom)
+            edge = textbox.winfo_height() - self._inset()
+            if following and line and line[1] + height <= edge:
+                bottom = following
+            self._anchor(bottom)
+            return
+        following, height = self._line()
+        self._offset += self._viewport()
+        self._seen = height
+        if self._offset < height:
+            return
+        if following is None:
+            self.anchor_to_end()
+        else:
+            self._anchor(following)
+
+    def ready(self) -> bool:
+        """
+        判断文本框可视区域像素高度是否大于 0
+
+        参数：无
+
+        返回值类型：bool -- 可视区域像素高度大于 0 时返回 True，否则返回 False
+        """
+        return self._viewport() > 0
+
+    def sync_view(self, held: bool) -> None:
+        """
+        停顿中或存在页内偏移时，将视图对齐到未读锚点与页内偏移处。
+        否则先滚至文末，再按末尾换行所生空行的像素高度向上回退。
+
+        参数：
+        held (bool) -- 当前是否处于分页停顿状态
+
+        返回值类型：None
+        """
+        if held or self._offset > 0:
+            self._pin()
+            return
+        textbox = self._textbox
+        textbox.yview_moveto(1.0)
+        textbox.yview_scroll(-_ypixels(textbox, self._end(), "end"), "pixels")
+
+    def _pin(self) -> None:
+        self._textbox.yview(ANCHOR)
+        if self._offset:
+            self._textbox.yview_scroll(self._offset, "pixels")
+
+    def _line(self, start: str = ANCHOR) -> tuple[str | None, int]:
+        textbox = self._textbox
+        following = textbox.index(f"{start} +1 display lines")
+        height = _ypixels(textbox, start, following)
+        if height:
+            return following, height
+        return None, _ypixels(textbox, start, "end")
+
+    def _anchor(self, index: str) -> None:
+        self._textbox.mark_set(ANCHOR, index)
+        self._offset = 0
+
+    def _end(self) -> str:
+        newline = self._textbox.get("end-2c", "end-1c") == "\n"
+        return "end-1c" if newline else "end"
+
+    def _inset(self) -> int:
+        textbox = self._textbox
+        return sum(
+            textbox.winfo_pixels(textbox.cget(option))
+            for option in ("borderwidth", "highlightthickness", "pady")
+        )
+
+    def _viewport(self) -> int:
+        return self._textbox.winfo_height() - 2 * self._inset()
+
     def _print_text(
         self, text: str, style: tuple[str, ...], tooltip: str
     ) -> None:
@@ -176,7 +349,6 @@ class Renderer:
                 perf_hook.hook_count("gui.tooltip_tag_created")
         if not text and tooltip:
             self._tooltip.hide()
-        self._window.see_end()
 
     def _bind_tooltip(self, tag_name: str, tooltip: str) -> None:
         textbox = self._textbox
@@ -262,7 +434,6 @@ class Renderer:
 
         self._bind_command(tag_name, op.command_id, op.tooltip, hover)
         textbox.insert("end", op.label, (tag_name, *normal_tags))
-        self._window.see_end()
 
     def _print_image_button(self, op: ImageButtonOp) -> None:
         if op.asset_id not in image_cache.image_data:
@@ -273,7 +444,6 @@ class Renderer:
         index = textbox.index("end -1c")
         textbox.image_create(index, image=image_cache.image_data[op.asset_id])
         textbox.tag_add(tag_name, index, f"{index} + 1 char")
-        self._window.see_end()
 
     def _image(self, asset_id: str) -> None:
         self._textbox.image_create(
@@ -304,10 +474,23 @@ class Renderer:
         if int(self._textbox.index("end-1c").split(".")[0]) > limit * 10:
             if perf:
                 perf_hook.hook_count("gui.line_trim_delete")
-            self._textbox.delete("1.0", f"{limit * 5}.0")
+            end = self._textbox.index(f"{limit * 5}.0")
+            if self._textbox.compare(ANCHOR, "<", end):
+                end = self._textbox.index(f"{ANCHOR} linestart")
+            self._textbox.delete("1.0", end)
             self._tooltip.drop_stale_tags()
         if perf:
             _timed("gui.line_trim_scan", start)
+
+
+def _ypixels(textbox: Text, start: str, end: str) -> int:
+    match textbox.count(start, end, "update", "ypixels"):
+        case int() as pixels:
+            return pixels
+        case (int() as pixels, *_):
+            return pixels
+        case _:
+            return 0
 
 
 def _tags(style: tuple[str, ...]) -> tuple[str, ...]:

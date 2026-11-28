@@ -124,12 +124,29 @@ def read_probe(state):
     参数：
         state (dict): 实例状态
     返回：
-        dict: 含 buttons、awaiting、input、ts；读不到时各项为空
+        dict: 含 buttons、awaiting、page_turns、input 与 ts，读取失败时返回各项默认值
     """
     try:
         return json.loads(Path(state["probe"]).read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return {"buttons": {}, "awaiting": None, "input": None, "ts": 0}
+        return {
+            "buttons": {},
+            "awaiting": None,
+            "page_turns": 0,
+            "input": None,
+            "ts": 0,
+        }
+
+
+def probe_view(probe):
+    """
+    提取探针内容中用于判定画面变化的三项字段
+    参数：
+        probe (dict): 探针内容
+    返回：
+        tuple: 由 awaiting、buttons 与 page_turns 组成的三元组，缺少 page_turns 时取 0
+    """
+    return probe["awaiting"], probe["buttons"], probe.get("page_turns", 0)
 
 
 def shot(state, label):
@@ -183,8 +200,8 @@ def awaits_input(probe: dict[str, Any]) -> bool:
 def wait_for_probe_change(state, before, input_sent=True):
     """
     动作后每 POLL_INTERVAL_S 秒读一次探针，下列任一条件成立时返回：
-    - 探针内容（awaiting 与 buttons）与动作前不同过，当前内容已从 ts 不同的两份探针里连续读到，
-      并且 input_sent 为 False 或当前内容通过 awaits_input
+    - 探针内容（awaiting、buttons 与 page_turns）与动作前不同过，当前内容已从 ts 不同的两份探针里
+      连续读到，并且 input_sent 为 False 或当前内容通过 awaits_input
     - 超过 CHANGE_LIMIT_S 秒仍没读到与动作前不同的内容
     - 超过 SETTLE_LIMIT_S 秒
     参数：
@@ -199,12 +216,9 @@ def wait_for_probe_change(state, before, input_sent=True):
     first_seen: dict[str, Any] | None = None
     while True:
         now = read_probe(state)
-        view = (now["awaiting"], now["buttons"])
-        changed = changed or view != (before["awaiting"], before["buttons"])
-        if first_seen is None or view != (
-            first_seen["awaiting"],
-            first_seen["buttons"],
-        ):
+        view = probe_view(now)
+        changed = changed or view != probe_view(before)
+        if first_seen is None or view != probe_view(first_seen):
             first_seen = now
         elif (
             changed
@@ -359,6 +373,10 @@ def main():
         xdo(state, "key", "Return")
         act(state, f"type {args.key}", f"type-{args.key}", probe)
     elif args.action == "click":
+        if probe["awaiting"] == "wait":
+            sys.exit(
+                f"当前处于等待提示，不能点击按钮，用 advance 推进。{describe_keys(probe)}"
+            )
         if args.key not in probe["buttons"]:
             sys.exit(
                 f"按钮 {args.key} 不在当前画面上。滚动后用 keys 重新查看；一直找不到说明它的前提没满足。"

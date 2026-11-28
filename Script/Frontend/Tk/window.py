@@ -1,14 +1,13 @@
-"""Tk 主窗口创建与控件装配模块，负责根窗口、本地字体、缩放设置、文本框、滚动条与指令输入框。"""
+"""Tk 主窗口创建与控件装配模块，负责根窗口、本地字体、缩放设置、文本框、滚动条、指令输入框与停顿提示。"""
 
 import sys
-import time
 from collections.abc import Callable
 from tkinter import (
-    END,
     VERTICAL,
     E,
     Entry,
     Event,
+    Label,
     N,
     PhotoImage,
     S,
@@ -21,12 +20,14 @@ from tkinter import (
 )
 
 from Script.Config import game_config
-from Script.Core import game_type, perf_hook, text_handle
+from Script.Core import game_type, text_handle
 from Script.Frontend.Tk import fonts, screen
 from Script.Protocol import FrontendInitConfig
 
 CURSOR_TEXT = "~$"
 """指令输入框左侧显示的命令提示符文本。"""
+HOLD_CUE = "▼"
+"""分页停顿期间显示在指令输入框右侧的继续提示符。"""
 
 
 def _enable_dpi_awareness() -> None:
@@ -54,7 +55,7 @@ def _order_font(normal: game_type.NormalConfig, font_size: int) -> dict:
 
 
 class Window:
-    """封装 Tk 根窗口、输出文本框、指令输入框及批量滚底控制的主窗口类。"""
+    """封装 Tk 根窗口、输出文本框、指令输入框与停顿提示标签的主窗口类。"""
 
     def __init__(self, normal: game_type.NormalConfig) -> None:
         """
@@ -99,12 +100,10 @@ class Window:
         self.textbox = self._textbox(frame, normal)
         order_style = _order_font(normal, self.config.font_size)
         self.order = StringVar()
-        self.inputbox = self._inputbox(frame, normal, order_style)
+        self.inputbox, self.cue = self._input_bar(frame, normal, order_style)
         self.normal_font = font.Font(
             family=order_style["font"], size=self.config.font_size
         )
-        self._defer_see_end = False
-        self._see_end_pending = False
 
     def _textbox(
         self, frame: ttk.Frame, normal: game_type.NormalConfig
@@ -130,9 +129,9 @@ class Window:
         textbox.bind("<FocusIn>", self._return_focus)
         return textbox
 
-    def _inputbox(
+    def _input_bar(
         self, frame: ttk.Frame, normal: game_type.NormalConfig, style: dict
-    ) -> Entry:
+    ) -> tuple[Entry, Label]:
         holder = Text(
             frame,
             highlightbackground=normal.background,
@@ -151,6 +150,7 @@ class Window:
         cursor.grid(column=0, row=0, sticky=(W, E, S))
         cursor.insert("end", CURSOR_TEXT)
         cursor.config(foreground=style["foreground"])
+        order_font = font.Font(family=style["font"], size=style["font_size"])
         inputbox = Entry(
             holder,
             borderwidth=0,
@@ -161,11 +161,23 @@ class Window:
             foreground=style["foreground"],
             selectbackground=style["selectbackground"],
             textvariable=self.order,
-            font=font.Font(family=style["font"], size=style["font_size"]),
+            font=order_font,
             width=normal.inputbox_width,
         )
         inputbox.grid(column=1, row=0, sticky=(N, E, S))
-        return inputbox
+        cue = Label(
+            holder,
+            width=len(HOLD_CUE) + 1,
+            bd=0,
+            padx=0,
+            pady=0,
+            highlightthickness=0,
+            bg=style["background"],
+            fg=style["foreground"],
+            font=order_font,
+        )
+        cue.grid(column=2, row=0, sticky=(N, W, S))
+        return inputbox, cue
 
     def _return_focus(self, event: Event | None = None) -> None:
         self.inputbox.focus_set()
@@ -194,6 +206,17 @@ class Window:
         except Exception:
             return
 
+    def set_hold_cue(self, active: bool) -> None:
+        """
+        按 `active` 更新停顿提示标签文本，为 True 时显示 `HOLD_CUE`，否则设为空字符串
+
+        参数：
+        active (bool) -- 为 True 时显示 `HOLD_CUE`，为 False 时清空标签文本
+
+        返回值类型：None
+        """
+        self.cue.configure(text=HOLD_CUE if active else "")
+
     def set_background(self, color: str) -> None:
         """
         设置文本框的背景色、选中背景色与光标背景色
@@ -205,44 +228,3 @@ class Window:
         """
         self.textbox.config(insertbackground=color)
         self.textbox.configure(background=color, selectbackground=color)
-
-    def defer_see_end(self) -> None:
-        """
-        开启延迟滚底模式，使后续 `see_end` 调用只做标记而不立即滚动
-
-        参数：无
-
-        返回值类型：None
-        """
-        self._defer_see_end = True
-
-    def flush_see_end(self) -> None:
-        """
-        关闭延迟滚底模式并在期间存在待滚底标记时执行一次滚底
-
-        参数：无
-
-        返回值类型：None
-        """
-        self._defer_see_end = False
-        if self._see_end_pending:
-            self._see_end_pending = False
-            self.see_end()
-
-    def see_end(self) -> None:
-        """
-        将文本框滚动到底部，延迟模式下仅记录标记，启用性能埋点时记录滚动耗时
-
-        参数：无
-
-        返回值类型：None
-        """
-        if self._defer_see_end:
-            self._see_end_pending = True
-            return
-        if perf_hook.enabled:
-            start = time.perf_counter()
-            self.textbox.see(END)
-            perf_hook.hook_time("gui.see_end", time.perf_counter() - start)
-            return
-        self.textbox.see(END)
