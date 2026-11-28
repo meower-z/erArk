@@ -68,6 +68,8 @@ class ThreadedUiPort(PortCore, SessionPort):
                 )
             if self._exit is not None:
                 self._out.append(self._exit)
+                if self._phase is Phase.OPEN:
+                    self._phase = Phase.FINISHED
             self._cond.notify_all()
             return AttachmentSnapshot(
                 self._session_id,
@@ -75,6 +77,7 @@ class ThreadedUiPort(PortCore, SessionPort):
                 self._watermark,
                 self._projection.snapshot(),
                 self._pending,
+                self._skip,
             )
 
     @override
@@ -116,6 +119,11 @@ class ThreadedUiPort(PortCore, SessionPort):
             return event
 
     @override
+    def pending_exit(self, controller_epoch: int) -> Exit | None:
+        with self._cond:
+            return self._exit if self._controls(controller_epoch) else None
+
+    @override
     def submit(self, response: UiResponse) -> bool:
         with self._cond:
             return self._accept(response)
@@ -126,13 +134,16 @@ class ThreadedUiPort(PortCore, SessionPort):
     @override
     def _deliver(self, event: BackendEvent) -> None:
         self._cond.wait_for(
-            lambda: self._phase is Phase.CLOSED
+            lambda: event.seq <= self._watermark
+            or self._phase is Phase.CLOSED
             or not self._attached
             or len(self._out) < self._capacity
         )
+        if event.seq <= self._watermark:
+            return
         if self._phase is Phase.CLOSED:
             raise SessionCancelled(self._close_reason)
-        if self._attached and event.seq > self._watermark:
+        if self._attached:
             self._out.append(event)
             self._cond.notify_all()
 

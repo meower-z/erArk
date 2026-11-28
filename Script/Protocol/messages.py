@@ -163,6 +163,15 @@ type UiRequest = Pause | Choose | InputText
 
 
 @dataclass(frozen=True, slots=True)
+class SkipPauses:
+    """游戏逻辑发出的暂停跳过状态事件，以 enabled 通知前端当前可跳过暂停的自动跳过开关状态。"""
+
+    session_id: str
+    seq: int
+    enabled: bool
+
+
+@dataclass(frozen=True, slots=True)
 class Exit:
     """游戏逻辑正常结束或端口取消关闭时发出的会话退出事件。save_slot 可选记录关联存档槽位。"""
 
@@ -172,7 +181,9 @@ class Exit:
     save_slot: str | None = None
 
 
-type BackendEvent = RenderChunk | Clear | SyncPanel | UiRequest | Exit
+type BackendEvent = (
+    RenderChunk | Clear | SyncPanel | UiRequest | SkipPauses | Exit
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,8 +228,10 @@ type UiResponse = Continue | SubmitChoice | SubmitText | Cancel
 @dataclass(frozen=True, slots=True)
 class AttachmentSnapshot:
     """
-    端口在前端调用 SessionPort.attach 时返回的接入快照。watermark_seq 是接入时会话已用过的最后事件序号，
-    此后新投递的事件仅在 seq 严格大于该值时入队。
+    端口在前端调用 SessionPort.attach 时返回的接入快照。
+    watermark_seq 是接入时会话已用过的最后事件序号。
+    接入后新投递的事件仅在 seq 严格大于 watermark_seq 时入队。
+    skip_pauses 记录接入时会话当前的暂停跳过开关状态。
     """
 
     session_id: str
@@ -226,6 +239,7 @@ class AttachmentSnapshot:
     watermark_seq: int
     projection: tuple[RenderChunk | Clear | SyncPanel, ...]
     pending_request: UiRequest | None
+    skip_pauses: bool = False
 
 
 @dataclass(frozen=True, slots=True)
