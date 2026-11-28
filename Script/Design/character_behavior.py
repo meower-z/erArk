@@ -140,10 +140,12 @@ def scene_characters(scene_data: game_type.Scene) -> list[int]:
 
 def settle_player_target() -> None:
     """
-    玩家的行动结束时（寻路途中的各段之间除外，走到目标或寻路结束时照常）重定交互对象：
-    交互对象不是自己也不在场景里，或刚移动到这里而交互对象不在场景里时，设为场景里的第一个角色；
-    场景里没有别的角色时设为自己。
-    主界面（in_scene_panel）只读不写，绘制时用的就是这里定下的交互对象
+    在玩家行动结束时（寻路各段之间除外，走到目标或寻路结束时照常），以及每次读档的 Reset 步骤中，
+    重定玩家的交互对象。
+    场景里没有别的角色时，交互对象不是自己则设为自己（0），已是自己时不写入。
+    场内有别的角色且交互对象不在场时，若交互对象不是自己或上一条行动记录为移动（MOVE），
+    则设为场内第一个角色，其余情况保留原对象。
+    主界面（in_scene_panel）只读不写，绘制时用的就是这里定下的交互对象。
     """
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         activity.position(0)
@@ -151,7 +153,8 @@ def settle_player_target() -> None:
     character_list = scene_characters(constant.scene_data[scene_path_str])
     target = activity.target(0)
     if not character_list:
-        activity.set_target(0, 0)
+        if target != 0:
+            activity.set_target(0, 0)
     elif target not in character_list and (
         target != 0
         or (history.recent() and history.recent()[-1] == constant.Behavior.MOVE)
