@@ -7,11 +7,11 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 - save_load.style_hooks：文本样式初始化（io_init.init_style）。
 - ui_hooks：提示、数值变化、图片、分隔线、富文本口上、逐行等待文本、面板切换、隐奸非H开关查询、
   文本AI处理与主角寻路首段选定。
-- choice_prompts：ui_hooks.CONFIRM_PROMPT_ID 确认提示与 ejaculation_service.ENDURE_PROMPT_ID 忍耐提问渲染。
+- choice_prompts：确认提示、忍耐提问、普通子事件与多层嵌套子事件的选项渲染。
 - ejaculation_service：射精面板。
 - hidden_sex_service：隐奸被发现面板。
 - pregnancy_hooks：生产与破壳面板。
-- settle_hooks：行为结算文本、嵌套事件选项面板与事件选项面板。
+- settle_hooks：行为结算文本。
 """
 
 from collections.abc import Mapping
@@ -426,42 +426,30 @@ def draw_settle_text(text: str) -> None:
     rich_text_draw.get_rich_text_draw_panel(text).draw()
 
 
-@settle_hooks.on_nested_event_options
-def draw_nested_event_options(
-    character_id: int, parent_child_id: int, parent_value: int
-) -> None:
+@choice_prompts.renderer(settle_hooks.SON_EVENT_PROMPT_ID)
+def ask_son_event(prompt: ChoicePrompt) -> str:
     """
-    按配置文本宽度创建并绘制 event_option_panel.multi_layer_event_option_Panel 面板。
+    在调用时导入 event_option_panel，先绘制一次换行，再调用 ask_event_option 完成普通子事件选项询问。
     Keyword arguments:
-    character_id -- int，触发嵌套事件的角色编号
-    parent_child_id -- int，嵌套父子事件的序号（非事件编号）
-    parent_value -- int，该嵌套父子事件的对应数值
+    prompt -- ChoicePrompt，待绘制的普通子事件选项提示
     Return arguments:
-    None -- 无返回值
-    """
-    from Script.UI.Panel import event_option_panel
-
-    event_option_panel.multi_layer_event_option_Panel(
-        character_id,
-        normal_config.config_normal.text_width,
-        parent_child_id,
-        parent_value,
-    ).draw()
-
-
-@settle_hooks.on_event_options
-def draw_event_options(character_id: int) -> None:
-    """
-    先调用 event_option_panel.line_feed.draw 绘制一次换行。
-    再按配置文本宽度创建并绘制 event_option_panel.Event_option_Panel 面板。
-    Keyword arguments:
-    character_id -- int，需要展示事件选项的角色编号
-    Return arguments:
-    None -- 无返回值
+    str -- 玩家所选选项的 option_id
     """
     from Script.UI.Panel import event_option_panel
 
     event_option_panel.line_feed.draw()
-    event_option_panel.Event_option_Panel(
-        character_id, normal_config.config_normal.text_width
-    ).draw()
+    return event_option_panel.ask_event_option(prompt)
+
+
+@choice_prompts.renderer(settle_hooks.NESTED_EVENT_PROMPT_ID)
+def ask_nested_event(prompt: ChoicePrompt) -> str:
+    """
+    在调用时导入 event_option_panel，并调用 ask_event_option 完成多层嵌套子事件选项询问。
+    Keyword arguments:
+    prompt -- ChoicePrompt，待绘制的多层嵌套子事件选项提示
+    Return arguments:
+    str -- 玩家所选选项的 option_id
+    """
+    from Script.UI.Panel import event_option_panel
+
+    return event_option_panel.ask_event_option(prompt)

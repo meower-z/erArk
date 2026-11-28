@@ -20,6 +20,7 @@ from tests.kernel_project import identity
 
 if TYPE_CHECKING:
     from Script.Design.event import EventText
+    from Script.Protocol.modal_prompts import ChoicePrompt, ChoiceResult
 
 PARENT_ID = "110b756a-bd81-4fb8-b86a-4e749a2b34fa"
 """ 星熊的选项父事件：行为是聊天，效果 10001 打开选项面板 """
@@ -85,7 +86,7 @@ class OptionEventListsChildTest(SlowTestCase):
         list[str] -- 选项面板列出过的子事件 id，每个只记一次
         """
         from Script.Design import event
-        from Script.UI.Panel import event_option_panel
+        from Script.Modules.gameplay_resolution import modal_hooks, settle_hooks
 
         fired: list[str] = []
         offered: list[str] = []
@@ -107,35 +108,24 @@ class OptionEventListsChildTest(SlowTestCase):
                 fired.append(result.event_id)
             return result
 
-        class RecordedSonEventDraw(event_option_panel.SonEventDraw):
-            """选项按钮：画按钮之前记下它的子事件 id"""
+        real_ask = modal_hooks.ask
 
-            def __init__(
-                self,
-                value_list: list,
-                width: int,
-                is_button: bool,
-                num_button: bool,
-                button_id: int,
-            ) -> None:
-                """
-                Keyword arguments:
-                value_list -- 事件id,人物id
-                width -- 最大宽度
-                is_button -- 绘制按钮
-                num_button -- 绘制数字按钮
-                button_id -- 数字按钮id
-                Return arguments:
-                无
-                """
-                if value_list[0] not in offered:
-                    offered.append(value_list[0])
-                super().__init__(
-                    value_list, width, is_button, num_button, button_id
-                )
+        def record_ask(prompt: "ChoicePrompt") -> "ChoiceResult":
+            """
+            对普通子事件选项提示记下其中各选项的 option_id（每个只记一次），再执行真实的 modal_hooks.ask
+            Keyword arguments:
+            prompt -- ChoicePrompt，本次派发的选项提示
+            Return arguments:
+            ChoiceResult -- real_ask 返回的选择结果
+            """
+            if prompt.prompt_id == settle_hooks.SON_EVENT_PROMPT_ID:
+                for option in prompt.options:
+                    if option.option_id not in offered:
+                        offered.append(option.option_id)
+            return real_ask(prompt)
 
         event.handle_event = record_event
-        setattr(event_option_panel, "SonEventDraw", RecordedSonEventDraw)
+        setattr(modal_hooks, "ask", record_ask)
         return fired, offered
 
     def test_child_offered_and_settled(self) -> None:

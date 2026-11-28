@@ -18,7 +18,6 @@ from Script.UI.Panel import (
     see_item_info_panel,
     see_map_panel,
     cloth_panel,
-    event_option_panel,
     check_locker_panel,
     borrow_book_panel,
     manage_library,
@@ -188,13 +187,6 @@ def manage_dormitory_flow() -> None:
 #     """指令过滤面板"""
 #     now_panel = instruct_filter_panel.Instruct_filter_Panel(width)
 #     now_panel.draw()
-
-
-@handle_panel.add_panel(constant.Panel.EVENT_OPTION)
-def event_option_flow() -> None:
-    """事件选项面板"""
-    now_panel = event_option_panel.Event_option_Panel(0, width)
-    now_panel.draw()
 
 
 @handle_panel.add_panel(constant.Panel.CHECK_LOCKER)

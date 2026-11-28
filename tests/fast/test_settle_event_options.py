@@ -1,18 +1,13 @@
 """
-Script.Settle.default 事件选项无界面与回调测试
-==============================================
+Script.Settle.default 事件选项无界面测试
+========================================
 OptionFatherUiFreeTest 在独立无界面子进程中测试 BehaviorEffect.OPTION_FATER 结算效果。
-该子进程放行 Script.Settle 并拦截其余默认受禁模块。子进程失败时，setUpClass 抛出 RuntimeError。
-测试核对无受禁模块加载或尝试导入记录，以及 add_time 为 0 与 5 时的事件选项回调结果。
-EventOptionsTkAdapterTest 在本进程验证 tk_ui/callbacks.py 向 settle_hooks 登记的事件选项绘制回调。
+该子进程放行 Script.Settle 并拦截其余默认受禁模块，校验未加载受禁模块及时间推进后才调用 emit_event_options。
+子进程失败时，setUpClass 抛出 RuntimeError。
 """
 
 from typing import Any, cast
-from unittest import mock
 
-from Script.Config import normal_config
-from Script.Modules.gameplay_resolution import settle_hooks
-from Script.UI.Panel import event_option_panel
 from tests.fast.base import FastTestCase
 from tests.ui_free_subprocess import BLOCKED, run_ui_free
 
@@ -31,8 +26,10 @@ event = game_type.Event()
 event.uid = {EVENT!r}
 event.effect = [str(constant_effect.BehaviorEffect.OPTION_FATER)]
 opened = []
-settle_hooks.on_event_options(opened.append)
-with mock.patch.dict(game_config.config_event, {{{EVENT!r}: event}}):
+with (
+    mock.patch.dict(game_config.config_event, {{{EVENT!r}: event}}),
+    mock.patch.object(settle_hooks, "emit_event_options", opened.append),
+):
     for add_time in (0, 5):
         opened.clear()
         settle_behavior.handle_event_data(
@@ -64,38 +61,6 @@ class OptionFatherUiFreeTest(FastTestCase):
         self.assertEqual((self.child.loaded, self.child.attempted), ([], []))
 
     def test_option_effect_asks_options_once_time_passes(self) -> None:
-        """
-        断言 add_time 为 0 时未触发事件选项回调（opened_0 为 []）。
-        断言 add_time 为 5 时以角色编号 3 触发一次事件选项回调（opened_5 为 [3]）。
-        """
+        """断言 add_time 为 0 时不调用 settle_hooks.emit_event_options，为 5 时以角色编号 3 调用一次。"""
         self.assertEqual(self.payload["opened_0"], [])
         self.assertEqual(self.payload["opened_5"], [3])
-
-
-class EventOptionsTkAdapterTest(FastTestCase):
-    """tk_ui/callbacks.py 向 settle_hooks 登记的事件选项 Tk 绘制适配回调测试。"""
-
-    def test_event_options_draw_line_then_panel(self) -> None:
-        """
-        断言 emit_event_options(3) 按序调用 line_feed.draw()、Event_option_Panel(3, width) 及其 draw()。
-        其中 width 取自 normal_config.config_normal.text_width。
-        """
-        calls = mock.Mock()
-        with (
-            mock.patch.object(event_option_panel, "line_feed") as line_feed,
-            mock.patch.object(
-                event_option_panel, "Event_option_Panel"
-            ) as panel,
-        ):
-            calls.attach_mock(line_feed, "line_feed")
-            calls.attach_mock(panel, "panel")
-            settle_hooks.emit_event_options(3)
-        width = normal_config.config_normal.text_width
-        self.assertEqual(
-            calls.mock_calls,
-            [
-                mock.call.line_feed.draw(),
-                mock.call.panel(3, width),
-                mock.call.panel().draw(),
-            ],
-        )

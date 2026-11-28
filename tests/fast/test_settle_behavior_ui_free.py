@@ -2,25 +2,25 @@
 Script.Design.settle_behavior 无界面与回调测试
 ==============================================
 SettleBehaviorUiFreeTest 在放行 Script.Settle 的独立无界面子进程中运行结算用例，拦截其余默认受禁模块。
-子进程导入 Script.Design.settle_behavior，记录子事件、变化文本与 Father 效果输出并校验无受禁模块加载。
+子进程导入 Script.Design.settle_behavior，验证子事件、变化文本与 Father 效果的嵌套选项询问，并校验无受禁模块加载。
 子进程失败时，setUpClass 抛出 RuntimeError。
-SettleHooksTkAdapterTest 在本进程验证 tk_ui/callbacks.py 向 settle_hooks 登记的两项绘制适配回调。
-两项测试分别核对富文本分段绘制顺序与嵌套事件选项面板的构造参数及 draw 调用。
+SettleHooksTkAdapterTest 在本进程验证 tk_ui/callbacks.py 向 settle_hooks 登记的结算文本绘制回调。
 """
 
 from typing import Any, cast
 from unittest import mock
 
-from Script.Config import game_config, normal_config
+from Script.Config import game_config
 from Script.Core import get_text, io_init
 from Script.Modules.gameplay_resolution import settle_hooks
 from Script.UI.Moudle import draw
-from Script.UI.Panel import event_option_panel
 from tests.fast.base import FastTestCase
 from tests.ui_free_subprocess import BLOCKED, run_ui_free
 
 SON = "settle-ui-free-son"
 """ 测试用合成子事件的事件编号。 """
+NESTED = "settle-ui-free-nested"
+""" 测试用合成多层嵌套子事件的事件编号。 """
 CHILD_RUN = f"""
 import datetime
 from unittest import mock
@@ -29,7 +29,8 @@ from Script.Core import game_type
 from Script.Design import settle_behavior
 from Script.Kernel import core
 from Script.Modules.domains import activity, identity, status
-from Script.Modules.gameplay_resolution import settle_hooks, ui_hooks, working
+from Script.Modules.gameplay_resolution import modal_hooks, ui_hooks, working
+from Script.Protocol.modal_prompts import ChoiceResult
 from tests import chara_abilities, chara_data, kernel_data
 from tests.chara_activity import aim, place, stand
 from tests.world import DEFAULT_SCENE, STANDARD_OUTFIT, start_time
@@ -47,6 +48,9 @@ core.reset_state(kernel_data.reprojected(core.state()))
 now_time = start_time() + datetime.timedelta(minutes=5)
 son = game_type.Event()
 son.uid, son.type, son.text = {SON!r}, 1, "子事件正文"
+nested = game_type.Event()
+nested.uid, nested.text = {NESTED!r}, "嵌套给{{TargetName}}|嵌套正文"
+nested.premise = {{"CVP_A1_Son|7_E_3": 1}}
 shown, options, settled = [], [], []
 
 
@@ -55,9 +59,12 @@ def keep_line(text, style):
     shown.append([text, style])
 
 
-@settle_hooks.on_nested_event_options
-def keep_options(character_id, parent_child_id, parent_value):
-    options.append([character_id, parent_child_id, parent_value])
+@modal_hooks.on_choice
+def answer(prompt):
+    options.append(
+        [prompt.prompt_id, [[o.option_id, o.label] for o in prompt.options]]
+    )
+    return ChoiceResult(prompt.prompt_id, prompt.options[0].option_id)
 
 
 def no_change(event_id, character_id, add_time, change_data, now_time):
@@ -67,7 +74,13 @@ def no_change(event_id, character_id, add_time, change_data, now_time):
 
 with (
     working.based_on(core.state()),
-    mock.patch.dict(game_config.config_event, {{{SON!r}: son}}),
+    mock.patch.dict(
+        game_config.config_event, {{{SON!r}: son, {NESTED!r}: nested}}
+    ),
+    mock.patch.dict(
+        game_config.config_event_status_data_by_chara_adv,
+        {{"share_blankly": {{0: [{NESTED!r}]}}}},
+    ),
     mock.patch.object(settle_behavior, "handle_event_data", no_change),
 ):
     activity.update_event(0, son_event_id={SON!r})
@@ -90,6 +103,7 @@ with (
         0, ["A1", "Father|7", "E", "3"], game_type.CharacterStatusChange()
     )
     payload["options"] = list(options)
+    payload["nested_son"] = activity.event(0).son_event_id
 """
 """ 在无界面子进程中初始化测试状态并运行 Script.Design.settle_behavior 结算用例的代码片段。 """
 
@@ -139,13 +153,20 @@ class SettleBehaviorUiFreeTest(FastTestCase):
         )
 
     def test_father_effect_asks_nested_options(self) -> None:
-        """断言 Father 效果经嵌套事件选项回调传出 [0, 7, 3]。断言该调用返回 1。"""
-        self.assertEqual(self.payload["options"], [[0, 7, 3]])
+        """
+        断言 Father 效果经 modal_hooks 发出标识为 nested_event、选项为 (NESTED, "嵌套给c1") 的单次提示。
+        同时断言当前事件的 son_event_id 等于 NESTED，且效果返回 1。
+        """
+        self.assertEqual(
+            self.payload["options"],
+            [["nested_event", [[NESTED, "嵌套给c1"]]]],
+        )
+        self.assertEqual(self.payload["nested_son"], NESTED)
         self.assertEqual(self.payload["father"], 1)
 
 
 class SettleHooksTkAdapterTest(FastTestCase):
-    """tk_ui/callbacks.py 向 settle_hooks 登记的两项 Tk 绘制适配回调测试。"""
+    """tk_ui/callbacks.py 向 settle_hooks 登记的结算文本绘制回调测试。"""
 
     def test_settle_text_draws_rich_text_pieces(self) -> None:
         """
@@ -183,17 +204,3 @@ class SettleHooksTkAdapterTest(FastTestCase):
                 ("\n", "print"),
             ],
         )
-
-    def test_nested_options_open_option_panel(self) -> None:
-        """
-        断言 emit_nested_event_options 以 (0, text_width, 7, 3) 构造一次 multi_layer_event_option_Panel。
-        同时断言该面板的 draw 方法被调用一次。
-        """
-        with mock.patch.object(
-            event_option_panel, "multi_layer_event_option_Panel"
-        ) as option_panel:
-            settle_hooks.emit_nested_event_options(0, 7, 3)
-        option_panel.assert_called_once_with(
-            0, normal_config.config_normal.text_width, 7, 3
-        )
-        option_panel.return_value.draw.assert_called_once_with()
