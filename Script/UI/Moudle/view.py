@@ -11,8 +11,6 @@ now_panel_id: int = 0
 """ 当前游戏面板id """
 show_non_h_in_hidden_sex: bool = False
 """ 是否在隐奸中显示非H类指令 """
-instruct_type_filter_cache: dict[int, bool] = {}
-""" （已弃用）玩家操作指令面板指令过滤状态数据_的缓存 指令类型:是否展示"""
 makefood_filter_type: list[int] = []
 """ 做饭筛选：菜谱类型列表，空列表表示不筛选 """
 makefood_filter_difficulty: int = -1

@@ -1,22 +1,16 @@
 """
 指令界面钩子（instruct_hooks）
 ==============================
-本模块提供三组指令界面入口与登记函数。本模块不导入界面模块。
-on_instruct 登记 stash_filter 与 stashed_filter。
-未登记时 stash_filter 无操作。未登记时 stashed_filter 返回新空字典。
+本模块提供两组指令界面入口与登记函数。本模块不导入界面模块。
 on_prompts 登记 ask_close_door、ask_sex_class_ability、confirm_poor_music、select_condom、
 ask_official_option 与 show_official_result。未登记时前五个抛出 RuntimeError。未登记时第六个无操作。
 on_sex_position 登记 choose_sex_position。未登记时抛出 RuntimeError。
-Script.Modules.tk_ui.instruct_callbacks 导入时调用上述三个登记函数填入三组槽位。
+Script.Modules.tk_ui.instruct_callbacks 导入时调用上述两个登记函数填入两组槽位。
 """
 
 from collections.abc import Callable, Sequence
 from typing import Any, NoReturn
 
-type FilterStash = Callable[[dict[int, bool]], None]
-""" 接收指令类型过滤状态字典并暂存的函数类型别名。 """
-type FilterStashed = Callable[[], dict[int, bool]]
-""" 返回暂存的指令类型过滤状态字典的函数类型别名。 """
 type AskDoor = Callable[[], bool | None]
 """ 询问玩家是否关门的函数类型别名，返回布尔值或在当前地点已问过时返回 None。 """
 type AskAbility = Callable[[Sequence[int]], int]
@@ -31,25 +25,6 @@ type ShowOfficial = Callable[[str, int, int, int], None]
 """ 展示公务事件结算后果的函数类型别名，接收事件 uid、主体角色编号、互动对象编号与选项序号。 """
 type ChooseSexPosition = Callable[[int, bool], None]
 """ 打开性交体位选择面板的函数类型别名，接收性交类型编号与换体位标记且无返回值。 """
-
-
-def _ignore(value: object) -> None:
-    """
-    未登记时的默认写入函数，不执行操作。
-    Keyword arguments:
-    value -- object，写入值，此默认实现不使用
-    Return arguments:
-    None -- 无返回值
-    """
-
-
-def _nothing_stashed() -> dict[int, bool]:
-    """
-    未登记时的默认暂存读取函数，返回新的空字典。
-    Return arguments:
-    dict[int, bool] -- 空字典
-    """
-    return {}
 
 
 def _ignore_result(
@@ -81,10 +56,6 @@ def _unregistered(*args: Any, **kwargs: Any) -> NoReturn:
     )
 
 
-_stash_filter: FilterStash = _ignore
-""" 当前生效的指令类型过滤状态暂存槽位，默认为 _ignore。 """
-_stashed_filter: FilterStashed = _nothing_stashed
-""" 当前生效的指令类型过滤状态读取槽位，默认为 _nothing_stashed。 """
 _ask_close_door: AskDoor = _unregistered
 """ 当前生效的关门询问槽位，默认为 _unregistered。 """
 _ask_sex_class_ability: AskAbility = _unregistered
@@ -99,42 +70,6 @@ _show_official_result: ShowOfficial = _ignore_result
 """ 当前生效的公务事件后果显示槽位，默认为 _ignore_result。 """
 _choose_sex_position: ChooseSexPosition = _unregistered
 """ 当前生效的性交体位选择面板槽位，默认为未登记时抛出 RuntimeError 的 _unregistered。 """
-
-
-def on_instruct(
-    stash_filter: FilterStash, stashed_filter: FilterStashed
-) -> None:
-    """
-    同时登记两个指令类型过滤状态槽位的处理函数。
-    后续调用会替换先前登记的处理函数。
-    Keyword arguments:
-    stash_filter -- FilterStash，暂存指令类型过滤状态的函数
-    stashed_filter -- FilterStashed，读取暂存的指令类型过滤状态的函数
-    Return arguments:
-    None -- 无返回值
-    """
-    global _stash_filter, _stashed_filter
-    _stash_filter, _stashed_filter = stash_filter, stashed_filter
-
-
-def stash_filter(filters: dict[int, bool]) -> None:
-    """
-    在调用时读取当前 _stash_filter 槽位，暂存指令类型过滤状态。
-    Keyword arguments:
-    filters -- dict[int, bool]，指令类型到是否展示的映射
-    Return arguments:
-    None -- 无返回值
-    """
-    _stash_filter(filters)
-
-
-def stashed_filter() -> dict[int, bool]:
-    """
-    在调用时读取当前 _stashed_filter 槽位，返回暂存的指令类型过滤状态。
-    Return arguments:
-    dict[int, bool] -- 暂存的指令类型到是否展示的映射
-    """
-    return _stashed_filter()
 
 
 def on_prompts(
