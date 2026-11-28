@@ -538,7 +538,7 @@ file = "tests/fast/test_ejaculation_services.py"
 symbol = "ModuleBoundaryTest.test_panel_keeps_only_panel_code"
 mechanism = "getsource"
 reads = "Script/UI/Panel/ejaculation_panel.py 源码中的顶层函数与类定义、导入绑定及名称赋值"
-used_for = "测试：射精面板顶层只定义 show_endure_ejaculation_panel 与 Ejaculation_Panel，且任意作用域不绑定五个服务函数名"
+used_for = "测试：射精面板顶层只定义 Ejaculation_Panel，且任意作用域不绑定五个服务函数名"
 when = "test"
 capture = "suite"
 

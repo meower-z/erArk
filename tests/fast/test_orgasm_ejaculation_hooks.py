@@ -1,12 +1,12 @@
 """
 高潮与射精结算界面回调测试
 ==========================
-- EjaculationHookTest：忍耐询问与射精面板单槽位回调的登记、覆盖与返回值约定。
-- TkEjaculationPanelTest：正常启动流程登记 Tk 回调及两类回调的委托与绘制顺序。
-- OrgasmJudgeTest：玩家射精时 orgasm_judge 对两类回调的派发。
+- EjaculationHookTest：射精面板单槽位回调的登记、覆盖与未登记行为。
+- TkEjaculationPanelTest：正常启动流程登记忍耐渲染函数与射精面板回调，以及射精面板的绘制顺序。
+- OrgasmJudgeTest：玩家射精时 orgasm_judge 对忍耐判定与射精面板回调的调用。
 - EdgeNoticeTest：寸止判定结果经提示回调派发。
 - ClimaxPanelTest：玩家 P 部位绝顶时 base_chara_climix_common_settle 派发射精面板。
-- ImportBoundaryTest：独立子进程中派发射精服务回调并加载两个结算模块，断言不加载射精面板与 Tk。
+- ImportBoundaryTest：独立子进程中派发射精面板回调并加载两个结算模块，断言不加载射精面板与 Tk。
 """
 
 import json
@@ -37,14 +37,14 @@ from Script.Config import normal_config
 normal_config.init_normal_config()
 from Script.Modules.gameplay_resolution import ejaculation_service
 before = [
-    ejaculation_service._endure_panel is not None,
     ejaculation_service._ejaculation_panel is not None,
     "Script.Modules.tk_ui.callbacks" in sys.modules,
 ]
 from Script.Kernel import core
 from Script.Modules import load_order
 core.load(load_order.LOAD_ORDER)
-endure = ejaculation_service._endure_panel
+from Script.Modules.tk_ui import choice_prompts
+endure = choice_prompts.RENDERERS.get(ejaculation_service.ENDURE_PROMPT_ID)
 panel = ejaculation_service._ejaculation_panel
 print(json.dumps({
     "before": before,
@@ -52,18 +52,15 @@ print(json.dumps({
     "panel": None if panel is None else [panel.__module__, panel.__name__],
 }))
 """
-""" 子进程脚本源码：不直接导入 callbacks，经正常启动加载顺序完成内核装载并输出两类回调的登记结果。 """
+""" 子进程脚本源码：不直接导入 callbacks，经正常启动加载顺序完成内核装载并输出忍耐渲染函数与射精面板回调的登记结果。 """
 CLEAN_RUN = """
 import json, sys
 from Script.Config import normal_config
 normal_config.init_normal_config()
 from Script.Modules.gameplay_resolution import ejaculation_service
 shown = []
-ejaculation_service.on_endure_panel(lambda: False)
-ejaculation_service.on_endure_panel(lambda: True)
 ejaculation_service.on_ejaculation_panel(lambda: shown.append("first"))
 ejaculation_service.on_ejaculation_panel(lambda: shown.append("panel"))
-endured = ejaculation_service.emit_endure_panel()
 ejaculation_service.emit_ejaculation_panel()
 from Script.Settle import common_default, orgasm_settle
 loaded = sorted(
@@ -72,9 +69,9 @@ loaded = sorted(
     if name.split(".")[0] in ("tkinter", "_tkinter")
     or name == "Script.UI.Panel.ejaculation_panel"
 )
-print(json.dumps({"endured": endured, "shown": shown, "loaded": loaded}))
+print(json.dumps({"shown": shown, "loaded": loaded}))
 """
-""" 子进程脚本源码：登记两类回调并各派发一次，再导入两个结算模块，以 JSON 输出派发结果与已加载的射精面板或 Tk 模块。 """
+""" 子进程脚本源码：登记并派发射精面板回调，再导入两个结算模块，以 JSON 输出派发结果与已加载的射精面板或 Tk 模块。 """
 
 type Drawn = tuple[str, object, object, object]
 """ 一次绘制的记录元组类型，依次为绘制类名、文本、宽度与样式名。 """
@@ -134,41 +131,18 @@ class DrawCase(FastTestCase):
 
 
 class EjaculationHookTest(FastTestCase):
-    """忍耐询问与射精面板单槽位回调的登记、覆盖与返回值测试。"""
+    """射精面板单槽位回调的登记、覆盖与未登记行为测试。"""
 
     def setUp(self) -> None:
-        """将两类回调槽位暂时重置为 None，并在结束后恢复原值。"""
+        """将射精面板回调槽位暂时重置为 None，并在结束后恢复原值。"""
         super().setUp()
-        self.enterContext(
-            mock.patch.object(ejaculation_service, "_endure_panel", None)
-        )
         self.enterContext(
             mock.patch.object(ejaculation_service, "_ejaculation_panel", None)
         )
 
     def test_unregistered_hooks(self) -> None:
-        """验证未登记回调时 emit_endure_panel 返回 False，emit_ejaculation_panel 不执行操作。"""
-        self.assertIs(ejaculation_service.emit_endure_panel(), False)
+        """验证未登记射精面板回调时 emit_ejaculation_panel 不执行操作并返回 None。"""
         self.assertIsNone(ejaculation_service.emit_ejaculation_panel())
-
-    def test_endure_answer_is_returned(self) -> None:
-        """验证 on_endure_panel 原样返回传入回调，emit_endure_panel 返回回调的 True 或 False。"""
-        endure = mock.Mock(return_value=True)
-        self.assertIs(ejaculation_service.on_endure_panel(endure), endure)
-        self.assertIs(ejaculation_service.emit_endure_panel(), True)
-        endure.return_value = False
-        self.assertIs(ejaculation_service.emit_endure_panel(), False)
-        self.assertEqual(endure.call_args_list, [mock.call(), mock.call()])
-
-    def test_endure_replaces_previous_handler(self) -> None:
-        """验证后登记的忍耐询问回调覆盖先前的回调，派发时只调用最新登记的回调。"""
-        calls = mock.Mock()
-        calls.first.return_value = True
-        calls.second.return_value = False
-        ejaculation_service.on_endure_panel(calls.first)
-        ejaculation_service.on_endure_panel(calls.second)
-        self.assertIs(ejaculation_service.emit_endure_panel(), False)
-        self.assertEqual(calls.mock_calls, [mock.call.second()])
 
     def test_panel_replaces_previous_handler(self) -> None:
         """验证 on_ejaculation_panel 原样返回回调且后登记者覆盖先登记者，派发时只调用最新回调一次。"""
@@ -184,10 +158,13 @@ class EjaculationHookTest(FastTestCase):
 
 
 class TkEjaculationPanelTest(DrawCase):
-    """正常启动登记与 Tk 回调对忍耐询问、射精面板的委托与绘制顺序测试。"""
+    """正常启动登记忍耐渲染函数与射精面板回调，以及射精面板绘制顺序的测试。"""
 
     def test_startup_registers_tk_callbacks(self) -> None:
-        """验证独立子进程在不直接导入 callbacks 时，执行正常启动加载顺序后会登记两个 Tk 回调。"""
+        """
+        验证独立子进程在不直接导入 callbacks 时，
+        执行正常启动加载顺序后会登记 draw_endure_choice 与 draw_ejaculation_panel。
+        """
         result = subprocess.run(
             [sys.executable, "-c", STARTUP_CHECK],
             cwd=ROOT,
@@ -201,10 +178,10 @@ class TkEjaculationPanelTest(DrawCase):
         self.assertEqual(
             report,
             {
-                "before": [False, False, False],
+                "before": [False, False],
                 "endure": [
                     "Script.Modules.tk_ui.callbacks",
-                    "draw_endure_ejaculation_panel",
+                    "draw_endure_choice",
                 ],
                 "panel": [
                     "Script.Modules.tk_ui.callbacks",
@@ -213,19 +190,6 @@ class TkEjaculationPanelTest(DrawCase):
             },
         )
 
-    def test_endure_callback_returns_panel_answer(self) -> None:
-        """验证 draw_endure_ejaculation_panel 无参调用 show_endure_ejaculation_panel 并原样返回 True 或 False。"""
-        show = self.enterContext(
-            mock.patch.object(
-                ejaculation_panel,
-                "show_endure_ejaculation_panel",
-                side_effect=[True, False],
-            )
-        )
-        self.assertIs(callbacks.draw_endure_ejaculation_panel(), True)
-        self.assertIs(callbacks.draw_endure_ejaculation_panel(), False)
-        self.assertEqual(show.call_args_list, [mock.call(), mock.call()])
-
     def test_panel_callback_draws_panel_then_line(self) -> None:
         """验证 draw_ejaculation_panel 先按配置文本宽度绘制射精面板，再绘制同宽分隔线。"""
         callbacks.draw_ejaculation_panel()
@@ -233,19 +197,21 @@ class TkEjaculationPanelTest(DrawCase):
 
 
 class OrgasmJudgeTest(DrawCase):
-    """玩家射精槽满时 orgasm_judge 对忍耐询问与射精面板回调的派发测试。"""
+    """玩家射精槽满时 orgasm_judge 对忍耐判定与射精面板回调的调用测试。"""
 
     def setUp(self) -> None:
         """
         将玩家射精槽设为已满、精液量设为 100，
-        并把两类回调槽位替换为模拟忍耐回调与射精面板记录回调。
+        并将 emit_endure_panel 与射精面板回调槽位分别替换为模拟函数 self.endure 与 self.panels。
         """
         super().setUp()
         h_meters.set(0, eja=1000, eja_max=1000, semen=100, extra_semen=0)
         self.endure = mock.Mock(return_value=False)
         self.panels = mock.Mock()
         self.enterContext(
-            mock.patch.object(ejaculation_service, "_endure_panel", self.endure)
+            mock.patch.object(
+                ejaculation_service, "emit_endure_panel", self.endure
+            )
         )
         self.enterContext(
             mock.patch.object(
@@ -255,7 +221,7 @@ class OrgasmJudgeTest(DrawCase):
         self.change = game_type.CharacterStatusChange()
 
     def test_endured_skips_panel(self) -> None:
-        """验证忍耐回调返回 True 时 orgasm_judge 直接返回，不登记射精二段行为也不派发射精面板。"""
+        """验证 emit_endure_panel 返回 True 时 orgasm_judge 直接返回，不登记射精二段行为也不派发射精面板。"""
         self.endure.return_value = True
         orgasm_settle.orgasm_judge(0, self.change)
         self.endure.assert_called_once_with()
@@ -264,7 +230,7 @@ class OrgasmJudgeTest(DrawCase):
         self.assertEqual(self.drawn, [])
 
     def test_not_endured_shows_panel(self) -> None:
-        """验证忍耐回调返回 False 时登记 p_orgasm_small、清空射精槽并派发一次射精面板。"""
+        """验证 emit_endure_panel 返回 False 时登记 p_orgasm_small、清空射精槽并派发一次射精面板。"""
         orgasm_settle.orgasm_judge(0, self.change)
         self.endure.assert_called_once_with()
         self.panels.assert_called_once_with()
@@ -273,7 +239,7 @@ class OrgasmJudgeTest(DrawCase):
         self.assertEqual(self.drawn, [])
 
     def test_skip_endure_shows_panel(self) -> None:
-        """验证 skip_undure 为真时不调用忍耐回调，按忍住次数登记 p_orgasm_strong 并派发一次射精面板。"""
+        """验证 skip_undure 为真时不调用 emit_endure_panel，按忍住次数登记 p_orgasm_strong 并派发一次射精面板。"""
         h_state.set(0, endure_not_shot_count=4)
         orgasm_settle.orgasm_judge(0, self.change, skip_undure=True)
         self.endure.assert_not_called()
@@ -293,22 +259,8 @@ class OrgasmJudgeTest(DrawCase):
         self.enterContext(
             mock.patch.object(
                 ejaculation_service,
-                "_endure_panel",
-                callbacks.draw_endure_ejaculation_panel,
-            )
-        )
-        self.enterContext(
-            mock.patch.object(
-                ejaculation_service,
                 "_ejaculation_panel",
                 callbacks.draw_ejaculation_panel,
-            )
-        )
-        self.enterContext(
-            mock.patch.object(
-                ejaculation_panel,
-                "show_endure_ejaculation_panel",
-                return_value=False,
             )
         )
         orgasm_settle.orgasm_judge(0, self.change)
@@ -431,10 +383,10 @@ class ClimaxPanelTest(DrawCase):
 
 
 class ImportBoundaryTest(FastTestCase):
-    """射精服务与两个结算模块在独立子进程中不加载射精面板与 Tk 模块的测试。"""
+    """射精面板回调派发与两个结算模块加载在独立子进程中不加载射精面板与 Tk 模块的测试。"""
 
     def test_settles_load_without_panel(self) -> None:
-        """验证独立子进程中两类单槽位回调按约定派发，且导入两个结算模块后不加载射精面板模块与 Tk 模块。"""
+        """验证独立子进程中射精面板单槽位回调按约定覆盖与派发，且导入两个结算模块后不加载射精面板模块与 Tk 模块。"""
         result = subprocess.run(
             [sys.executable, "-c", CLEAN_RUN],
             cwd=ROOT,
@@ -445,6 +397,4 @@ class ImportBoundaryTest(FastTestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr[-2000:])
         report = json.loads(result.stdout.splitlines()[-1])
-        self.assertEqual(
-            report, {"endured": True, "shown": ["panel"], "loaded": []}
-        )
+        self.assertEqual(report, {"shown": ["panel"], "loaded": []})
