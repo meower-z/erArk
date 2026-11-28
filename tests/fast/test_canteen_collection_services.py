@@ -134,18 +134,11 @@ class CanteenServiceTest(NoticeCase):
 class CollapseCollectionTest(NoticeCase):
     """收藏品收起逻辑（collapse_collection）的单元测试"""
 
-    def setUp(self) -> None:
-        """在父类初始化基础上接管新达成成就的通知回调列表"""
-        super().setUp()
-        self.unlocked: list[list[int]] = []
-        self.enterContext(
-            mock.patch.object(
-                achievement_service, "_unlocked", [self.unlocked.append]
-            )
-        )
-
     def test_temp_items_join_the_collection(self) -> None:
-        """验证临时内裤与袜子跳过角色 0 和缺失编号后进入永久收藏、清空临时表、按序发出五条提示并触发成就 221 通知"""
+        """
+        验证临时内裤与袜子跳过角色 0 和缺失编号后进入永久收藏、清空临时表、
+        按序发出六条提示（末条为成就 221 的金色等待提示）并调用收藏服装成就结算
+        """
         panty, sock, missing = clothing_ids()
         player_collection.update(
             npc_panties_tem={0: [panty], OPERATOR: [panty, missing]},
@@ -185,10 +178,15 @@ class CollapseCollectionTest(NoticeCase):
                     True,
                 ),
                 (get_text._("\n摆放藏品结束\n"), True, None, True),
+                (
+                    achievement_service.unlocked_text(CLOTHING_ACHIEVEMENT),
+                    True,
+                    "gold_enrod",
+                    False,
+                ),
             ],
         )
         settle.assert_called_once_with(get_text._("收藏服装"))
-        self.assertEqual(self.unlocked, [[CLOTHING_ACHIEVEMENT]])
 
     def test_empty_temp_lists_still_notify(self) -> None:
         """验证临时藏品字典为空时按序发出开始、空汇总与结束三条提示且不触发成就解锁"""
@@ -201,7 +199,6 @@ class CollapseCollectionTest(NoticeCase):
                 (get_text._("\n摆放藏品结束\n"), True, None, True),
             ],
         )
-        self.assertEqual(self.unlocked, [])
 
 
 class CollapseCollectionTkTest(FastTestCase):

@@ -1,9 +1,11 @@
 """
 射精结算服务（ejaculation_service）
 ===================================
-提供忍耐射精判定、通用射精结算、射精总流程，以及射精文本、忍耐询问与射精面板回调的登记与触发入口。
+本模块提供忍耐射精判定、通用射精结算、射精总流程，以及忍耐询问与射精面板回调的登记与触发入口。
+射精文本经 ui_hooks 的提示与分隔线接口输出。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，射精文本与射精面板触发函数不执行操作，忍耐询问触发函数返回 False。
+未登记回调时，emit_ejaculation_panel 不执行操作。
+未登记回调时，emit_endure_panel 返回 False。
 """
 
 import random
@@ -17,40 +19,10 @@ from Script.Modules.domains import abilities, achievement, action_info
 from Script.Modules.domains import activity, dirty, flags, h_meters, h_state
 from Script.Modules.domains import identity, pregnancy, tallies
 from Script.Modules.gameplay_resolution import achievement_service
-from Script.Modules.gameplay_resolution import semen_dirty_service
+from Script.Modules.gameplay_resolution import semen_dirty_service, ui_hooks
 
 _: FunctionType = get_text._
 """ 翻译api """
-
-type Banner = Callable[[str], None]
-""" 射精文本回调函数类型，接收待输出的射精文本。 """
-_banners: list[Banner] = []
-""" 按登记顺序保存的射精文本回调列表。 """
-
-
-def on_banner(fn: Banner) -> Banner:
-    """
-    登记一个射精文本回调，可作为装饰器使用。
-    Keyword arguments:
-    fn -- Banner，接收射精文本的回调函数
-    Return arguments:
-    Banner -- 原样返回传入的 fn
-    """
-    _banners.append(fn)
-    return fn
-
-
-def emit_banner(text: str) -> None:
-    """
-    按登记顺序调用已登记的射精文本回调，未登记时不执行操作。
-    Keyword arguments:
-    text -- str，要输出的射精文本
-    Return arguments:
-    None -- 无返回值
-    """
-    for fn in _banners:
-        fn(text)
-
 
 type EndurePanel = Callable[[], bool]
 """ 忍耐射精询问回调函数类型，返回 True 表示忍住射精。 """
@@ -231,12 +203,13 @@ def ejaculation_flow(
     soft_egg_id: int = -1,
 ) -> None:
     """
-    执行射精结算总流程，完成精液去向、状态更新、文本回调派发与成就结算。
+    执行射精结算总流程，完成精液去向、状态更新、提示输出与成就结算。
     Keyword arguments:
     part_cid -- int，部位编号（cid）
     part_type -- int，部位类型，0 为身体，1 为穿着服装，2 为浴场衣柜，3 为宿舍衣柜
     target_character_id -- int，目标角色编号，默认为 0（为 0 时取当前交互对象）
-    draw_flag -- bool，为真时将射精文本发送给已登记的射精文本回调，默认为 True
+    draw_flag -- bool，为真时经 ui_hooks 的提示与分隔线接口输出换行、分隔线、换行、
+    按文本宽度排版的 semen 样式等待射精文本与两次换行，默认为 True
     soft_egg_id -- int，射在体外无壳卵上时的卵编号，默认为 -1（不射在卵上），
     未戴避孕套且非负时精液全部加到该卵并跳过部位污浊、精液流动、受精概率与射精部位记录
     Return arguments:
@@ -318,7 +291,14 @@ def ejaculation_flow(
         now_text = character_data.name + semen_text
 
     if draw_flag:
-        emit_banner(now_text)
+        ui_hooks.emit_notice("\n")
+        ui_hooks.emit_divider()
+        ui_hooks.emit_notice("\n")
+        ui_hooks.emit_notice(
+            now_text, wait=True, style="semen", use_text_width=True
+        )
+        ui_hooks.emit_notice("\n")
+        ui_hooks.emit_notice("\n")
 
     achievement_service.get_achievement_judge_by_value(1201, 1)
     achievement_service.settle_and_notify(_("射精"))

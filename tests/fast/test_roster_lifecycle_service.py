@@ -20,7 +20,6 @@ from Script.Kernel import core
 from Script.Modules.domains import activity, diplomacy, dirty, flags, h_state
 from Script.Modules.domains import location, needs, prison, relations, roster
 from Script.Modules.domains import status
-from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import navigation_service, plan_queue
 from Script.Modules.gameplay_resolution import prison_service, ui_hooks
 from Script.Modules.gameplay_resolution import roster_lifecycle_service as svc
@@ -169,14 +168,13 @@ def run_lifecycle() -> dict[str, Any]:
 
 
 def run_callers() -> dict[str, Any]:
-    """打桩委托写入、提示与成就回调后执行越狱与抵达结算，返回抵达标志、观测结果与打断列表。"""
+    """打桩委托写入与提示回调后执行越狱与抵达结算，返回抵达标志、观测结果与打断列表。"""
     fresh_world()
     now = game_time.now()
     with (
         kernel_data.writing(),
         mock.patch.object(field_commission_function, "create_temp_commission"),
         mock.patch.object(ui_hooks, "_notices", []),
-        mock.patch.object(achievement_service, "_unlocked", []),
     ):
         prison.imprison(PRISONER, now, 90)
         flags.set(PRISONER, imprisonment=True)

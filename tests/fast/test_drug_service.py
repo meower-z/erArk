@@ -15,6 +15,7 @@ from Script.Core import game_type, get_text
 from Script.Design import game_time, handle_talent
 from Script.Kernel import core
 from Script.Modules.domains import abilities, activity, inventory, pregnancy
+from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import drug_service, ui_hooks, working
 from Script.System.Pregnancy_System import egg_handle, pregnancy_constant
 from Script.System.Pregnancy_System import pregnancy_handle
@@ -33,6 +34,8 @@ CHILD_NAME = "测试孩子"
 """ 成长加速测试使用的婴儿角色名称。 """
 GIFT_DRUG = 33
 """ 送礼结算测试使用的 11 类药物礼物编号（33）。 """
+GIFT_ACHIEVEMENT = 1031
+""" 送礼结算测试中首次送礼达成的成就编号（Achievement.csv 编号 1031）。 """
 EGG = 7
 """ 孵化加速测试使用的卵编号（7）。 """
 START = datetime.datetime(2025, 2, 14, 8, 30)
@@ -385,7 +388,10 @@ class GiftSettlementTest(DrugCase):
     """送礼行为结算经 handle_give_gift_add_adjust 调用药物服务的测试。"""
 
     def test_drug_gift_calls_service(self) -> None:
-        """验证送礼结算扣除 33 号道具、调用 handle_drug_use_effect、开启素质 27 并发出等待提示。"""
+        """
+        验证送礼结算扣除 33 号道具、调用 handle_drug_use_effect 并开启素质 27。
+        同时验证依次发出药物金色等待提示与成就 1031 金色等待提示。
+        """
         activity.set_target(0, TARGET)
         activity.update_behavior(0, gift_id=GIFT_DRUG)
         inventory.set_item(0, GIFT_DRUG, 1)
@@ -401,7 +407,18 @@ class GiftSettlementTest(DrugCase):
         self.assertEqual(abilities.talent(TARGET)[27], 1)
         self.assertEqual(inventory.items(0)[GIFT_DRUG], 0)
         text = "\n  " + _("{0}获得了【泌乳】\n").format(NAME)
-        self.assertEqual(self.notices, [(text, True, "gold_enrod", False)])
+        self.assertEqual(
+            self.notices,
+            [
+                (text, True, "gold_enrod", False),
+                (
+                    achievement_service.unlocked_text(GIFT_ACHIEVEMENT),
+                    True,
+                    "gold_enrod",
+                    False,
+                ),
+            ],
+        )
 
 
 class ImportBoundaryTest(FastTestCase):

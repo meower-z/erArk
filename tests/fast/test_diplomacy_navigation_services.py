@@ -122,10 +122,10 @@ def bound_names(name: str) -> set[str]:
 
 
 class NoticeCase(FastTestCase):
-    """创建测试角色并记录提示、数值变化与成就解锁回调的测试基类"""
+    """创建测试角色并记录提示与数值变化回调的测试基类"""
 
     def setUp(self) -> None:
-        """创建角色 0 与两名外交官，并接管提示回调、数值变化回调与成就解锁回调列表"""
+        """创建角色 0 与两名外交官，并接管提示回调与数值变化回调列表"""
         super().setUp()
         self.world.chara(0, "博士")
         self.world.chara(DIPLOMAT, "外交官")
@@ -134,12 +134,6 @@ class NoticeCase(FastTestCase):
         self.enterContext(mock.patch.object(ui_hooks, "_notices", [self.note]))
         self.deltas: list[tuple[str | None, bool, bool]] = []
         self.enterContext(mock.patch.object(ui_hooks, "_deltas", [self.delta]))
-        self.unlocked: list[list[int]] = []
-        self.enterContext(
-            mock.patch.object(
-                achievement_service, "_unlocked", [self.unlocked.append]
-            )
-        )
 
     def note(
         self, text: str, *, wait: bool, style: str | None, use_text_width: bool
@@ -376,16 +370,26 @@ class JudgeArriveTest(NoticeCase):
         arrived = get_text._("\n罗德岛已抵达目的地：{0}\n").format(
             game_config.config_birthplace[AEGIR].name
         )
-        self.assertEqual(self.notices, [(arrived, True, "gold_enrod", True)])
+        self.assertEqual(
+            self.notices,
+            [
+                (arrived, True, "gold_enrod", True),
+                (
+                    achievement_service.unlocked_text(NAVIGATION_FIRST),
+                    True,
+                    "gold_enrod",
+                    False,
+                ),
+            ],
+        )
         settle.assert_called_once_with(get_text._("导航"))
-        self.assertEqual(self.unlocked, [[NAVIGATION_FIRST]])
 
     def test_arrival_home_records_it_once(self) -> None:
         """验证已访问列表为空且抵达国家 17 时只记录一次 17，不达成导航成就"""
         location.set_move(location.START, game_time.now())
         self.assertTrue(navigation_service.judge_arrive())
         self.assertEqual(achievement.get("visited_nation_list"), [17])
-        self.assertEqual(self.unlocked, [])
+        self.assertFalse(achievement.done(NAVIGATION_FIRST))
 
 
 class TkNoticeTest(FastTestCase):

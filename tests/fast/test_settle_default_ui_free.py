@@ -12,9 +12,16 @@ from typing import Any, cast
 
 from Script.Config import game_config
 from Script.Core import get_text
+from Script.Modules.gameplay_resolution import achievement_service
 from tests.fast.base import FastTestCase
 from tests.ui_free_subprocess import BLOCKED, run_ui_free
 
+unlocked_text = achievement_service.unlocked_text
+""" achievement_service.unlocked_text 的别名，用于构造预期成就获得提示文本。 """
+GIFT_ACHIEVEMENT = 1031
+""" 首次送礼达成的成就编号（Achievement.csv 编号 1031）。 """
+READ_ACHIEVEMENT = 1011
+""" 首次读书达成的成就编号（Achievement.csv 编号 1011）。 """
 CHILD_RUN = """
 import datetime
 import random
@@ -143,19 +150,24 @@ class SettleDefaultUiFreeTest(FastTestCase):
 
     def test_apology_gift_waits_in_gold(self) -> None:
         """
-        断言传入类型为 2 的礼物时，handle_give_gift_add_adjust 发出一则预期提示。该提示
-        等待确认、样式为 gold_enrod 且不启用文本宽度。
+        断言传入类型为 2 的礼物时，handle_give_gift_add_adjust 依次发出两则提示。
+        第一则为预期礼物提示，第二则为成就 1031 的获得提示。
+        两则提示均等待确认、样式为 gold_enrod 且不启用文本宽度。
         """
         text = get_text._("\n  {0}的反发刻印从1级降为了0\n\n").format("c1")
         self.assertEqual(
-            self.payload["apology_gift"], [[text, True, "gold_enrod", False]]
+            self.payload["apology_gift"],
+            [
+                [text, True, "gold_enrod", False],
+                [unlocked_text(GIFT_ACHIEVEMENT), True, "gold_enrod", False],
+            ],
         )
 
     def test_reading_reports_progress_in_gold(self) -> None:
         """
         断言 handle_read_add_adjust 使角色 0 的 read_progress 严格介于 0 与 100 之间。
-        同时断言该函数发出一则包含所读书名与实测进度的预期提示。该提示不等待、样式为
-        gold_enrod 且不启用文本宽度。
+        同时断言该函数依次发出两则样式为 gold_enrod 且不启用文本宽度的提示。
+        第一则包含所读书名与实测进度且不等待确认，第二则为成就 1011 的等待确认提示。
         """
         progress = self.payload["read_progress"]
         self.assertTrue(0 < progress < 100)
@@ -165,7 +177,11 @@ class SettleDefaultUiFreeTest(FastTestCase):
             progress, 0, progress
         )
         self.assertEqual(
-            self.payload["read"], [[text + "。\n", False, "gold_enrod", False]]
+            self.payload["read"],
+            [
+                [text + "。\n", False, "gold_enrod", False],
+                [unlocked_text(READ_ACHIEVEMENT), True, "gold_enrod", False],
+            ],
         )
 
     def test_sanity_out_ends_hypnosis(self) -> None:

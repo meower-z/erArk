@@ -24,12 +24,13 @@ from Script.Modules.gameplay_resolution import achievement_service, ui_hooks
 from Script.Modules.gameplay_resolution import recruit_service, visitor_service
 from Script.Modules.gameplay_resolution import working
 from Script.UI.Moudle import draw
-from Script.UI.Panel import achievement_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 _ = get_text._
 """ 文本翻译函数 """
+unlocked_text = achievement_service.unlocked_text
+""" achievement_service.unlocked_text 的别名，用于构造预期成就获得提示文本 """
 ROOT = Path(__file__).resolve().parents[2]
 """ 仓库根目录路径 """
 MOVED = {
@@ -105,7 +106,7 @@ class ServiceCase(FastTestCase):
     """招募与访客服务测试基类，准备测试角色、工作集缓冲区及提示与成就记录桩。"""
 
     def setUp(self) -> None:
-        """创建博士与五名非女儿测试角色，开启工作集缓冲区并替换提示与成就回调及成就结算桩。"""
+        """创建博士与五名非女儿测试角色，开启工作集缓冲区，替换 ui_hooks._notices 并打桩成就结算函数。"""
         super().setUp()
         kernel_data.written(warehouse.start, {})
         self.world.chara(0, "博士")
@@ -120,12 +121,6 @@ class ServiceCase(FastTestCase):
         self.notices: list[tuple[str, bool, str | None, bool]] = []
         self.enterContext(
             mock.patch.object(ui_hooks, "_notices", [self.notice])
-        )
-        self.unlocked: list[list[int]] = []
-        self.enterContext(
-            mock.patch.object(
-                achievement_service, "_unlocked", [self.unlocked.append]
-            )
         )
         self.settle = self.enterContext(
             mock.patch.object(
@@ -161,7 +156,10 @@ class RecruitServiceTest(ServiceCase):
         )
 
     def test_recruit_new_chara_hires_pending(self) -> None:
-        """断言有待确认时返回 True、角色入编、待确认清空、发出成功提示并以招募类型调用成就结算与解锁回调。"""
+        """
+        断言有待确认时返回 True、角色入编、待确认清空，
+        依次发出招募成功提示与成就 101 金色等待提示，并以招募类型调用成就结算。
+        """
         cid = self.candidate(1)
         recruit.set_pending({cid})
         self.settle.return_value = [RECRUIT_ID]
@@ -169,10 +167,13 @@ class RecruitServiceTest(ServiceCase):
         self.assertTrue(roster.has(cid))
         self.assertEqual(recruit.pending(), set())
         self.assertEqual(
-            self.notices, [(hired_text("角色1"), True, "gold_enrod", True)]
+            self.notices,
+            [
+                (hired_text("角色1"), True, "gold_enrod", True),
+                (unlocked_text(RECRUIT_ID), True, "gold_enrod", False),
+            ],
         )
         self.settle.assert_called_once_with(_("招募"), 0)
-        self.assertEqual(self.unlocked, [[RECRUIT_ID]])
 
     def test_recruit_new_chara_refuses_full_dorms(self) -> None:
         """断言宿舍上限为 0 时返回 False、保留待确认且不入编、发出满员提示且不调用成就结算。"""
@@ -291,16 +292,19 @@ class VisitorServiceTest(ServiceCase):
         self.assertFalse(visitor_service.get_empty_guest_room_id())
 
     def test_settle_visitor_arrivals_takes_given_visitor(self) -> None:
-        """断言接待指定访客返回 1、角色成为访客、发出金色抵达提示并以访客类型调用成就结算与解锁回调。"""
+        """断言接待指定访客返回 1、角色成为访客，依次发出抵达提示与成就 111 金色等待提示，并以访客类型调用成就结算。"""
         cid = self.candidate(1)
         self.settle.return_value = [VISITOR_ID]
         self.assertEqual(visitor_service.settle_visitor_arrivals(cid), 1)
         self.assertTrue(visitor.is_visitor(cid))
         self.assertEqual(
-            self.notices, [(arrived_text("角色1"), True, "gold_enrod", True)]
+            self.notices,
+            [
+                (arrived_text("角色1"), True, "gold_enrod", True),
+                (unlocked_text(VISITOR_ID), True, "gold_enrod", False),
+            ],
         )
         self.settle.assert_called_once_with(_("访客"), 0)
-        self.assertEqual(self.unlocked, [[VISITOR_ID]])
 
     def test_settle_visitor_arrivals_without_room(self) -> None:
         """断言无开放客房时返回 0、角色未成为访客、发出无空闲客房金色提示且不调用成就结算。"""
@@ -379,10 +383,13 @@ class VisitorServiceTest(ServiceCase):
 
 
 class TkCallbackTest(FastTestCase):
-    """验证启动阶段登记的 Tk 回调正确绘制招募提示与成就通知。"""
+    """验证启动阶段登记的 Tk 回调以 WaitDraw 绘制招募入职提示与新达成成就提示。"""
 
     def test_tk_draws_notices_and_achievements(self) -> None:
-        """断言保留启动登记回调运行招募入职时，WaitDraw 按配置文本宽度与金色样式绘出提示且成就通知收到 [101]。"""
+        """
+        断言保留启动登记回调运行招募入职时，WaitDraw 依次以配置文本宽度绘出金色入职提示，
+        再以宽度 0 绘出成就 101 金色提示。
+        """
         kernel_data.written(warehouse.start, {})
         self.world.chara(0, "博士")
         cid = min(
@@ -397,9 +404,6 @@ class TkCallbackTest(FastTestCase):
         waited = self.enterContext(
             mock.patch.object(draw.WaitDraw, "draw", autospec=True)
         )
-        unlocked = self.enterContext(
-            mock.patch.object(achievement_panel, "draw_achievement_notice")
-        )
         self.enterContext(
             mock.patch.object(
                 achievement_service, "settle_by_type", return_value=[RECRUIT_ID]
@@ -412,9 +416,11 @@ class TkCallbackTest(FastTestCase):
                 (now.width, now.style, now.text)
                 for (now,), _kw in waited.call_args_list
             ],
-            [(width, "gold_enrod", hired_text("新干员"))],
+            [
+                (width, "gold_enrod", hired_text("新干员")),
+                (0, "gold_enrod", unlocked_text(RECRUIT_ID)),
+            ],
         )
-        unlocked.assert_called_once_with([RECRUIT_ID])
 
 
 class BoundaryTest(FastTestCase):

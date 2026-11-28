@@ -21,7 +21,6 @@ from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.domains import abilities, achievement, activity, chara_life
 from Script.Modules.domains import maintenance, wardrobe
-from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import equipment_service, ui_hooks
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import default as settle_default
@@ -65,10 +64,10 @@ def maintained(target: int, name: str, value: float) -> str:
 
 
 class EquipmentCase(FastTestCase):
-    """装备维护测试基类，准备玩家、铁匠与两名测试干员，并记录提示、成就通知与绘制调用。"""
+    """装备维护测试基类，准备玩家、铁匠与两名测试干员，并记录提示回调与绘制调用。"""
 
     def setUp(self) -> None:
-        """创建测试角色、打开工作集并固定随机倍率为 1.0，接管提示与成就回调并拦截全部绘制类。"""
+        """创建测试角色、打开工作集并固定随机倍率为 1.0，接管提示回调并拦截全部绘制类。"""
         super().setUp()
         self.world.chara(0, "博士")
         for cid, name in NAMES.items():
@@ -80,22 +79,13 @@ class EquipmentCase(FastTestCase):
             mock.patch.object(random, "uniform", return_value=1.0)
         )
         self.notices: list[tuple[str, bool, str | None, bool]] = []
-        self.unlocked: list[list[int]] = []
         self.drawn: list[Drawn] = []
         self.direct: list[Drawn] = []
         self.inside = False
         notice_hooks = list(ui_hooks._notices)
-        unlock_hooks = list(achievement_service._unlocked)
         self.enterContext(
             mock.patch.object(
                 ui_hooks, "_notices", [self.relay(notice_hooks, self.note)]
-            )
-        )
-        self.enterContext(
-            mock.patch.object(
-                achievement_service,
-                "_unlocked",
-                [self.relay(unlock_hooks, self.unlocked.append)],
             )
         )
         for cls in vars(draw).values():
@@ -158,13 +148,13 @@ class EquipmentCase(FastTestCase):
         self.assertEqual(self.direct, [])
 
     def assert_badge(self, achievement_id: int) -> None:
-        """核对成就通知收到 [achievement_id]、回调绘出 gold_enrod 样式 WaitDraw 且无直接绘制。"""
+        """核对提示回调收到指定成就的金色等待提示、回调绘出同文本的零宽 gold_enrod 样式 WaitDraw 且无直接绘制。"""
         data = game_config.config_achievement[achievement_id]
         text = _("\n\n   ○ 获得蚀刻章：{name} ○\n").format(name=data.name)
         text += _("      （{description}）\n\n\n").format(
             description=data.description
         )
-        self.assertEqual(self.unlocked, [[achievement_id]])
+        self.assertEqual(self.notices, [(text, True, "gold_enrod", False)])
         self.assertEqual(self.drawn, [("WaitDraw", 0, "gold_enrod", text)])
         self.assertEqual(self.direct, [])
 
@@ -180,7 +170,7 @@ class RepairTest(EquipmentCase):
         self.assertEqual(self.conditions(), {ALPHA: -1.2, BETA: 0})
         self.assertEqual(maintenance.repairs(), {SMITH: ALPHA})
         self.assertEqual(achievement.get("equipment_repair_count"), 0)
-        self.assertEqual(self.unlocked, [])
+        self.assertEqual(self.notices, [])
 
     def test_auto_target_follows_priority(self) -> None:
         """验证维修优先度为 0 时自动选状态最低的 BETA，为 1 时选最高的 ALPHA。"""
@@ -225,7 +215,7 @@ class MaintainTest(EquipmentCase):
         self.assertEqual(result, (True, maintained(ALPHA, "正常状态", 0.4)))
         self.assertEqual(self.conditions(), {ALPHA: 0.4, BETA: 0})
         self.assertEqual(maintenance.repairs(), {SMITH: ALPHA})
-        self.assertEqual(self.unlocked, [])
+        self.assertEqual(self.notices, [])
 
     def test_auto_target_follows_scope(self) -> None:
         """验证保养范围为 0 时选在队最低者 BETA，为 1 时只在指定名单内选 ALPHA。"""
@@ -376,16 +366,15 @@ from tests import kernel_data
 from tests.fast import WORLD
 from Script.Kernel import core
 from Script.Modules.domains import abilities, chara_life, maintenance, wardrobe, warehouse
-from Script.Modules.gameplay_resolution import achievement_service, ui_hooks, working
+from Script.Modules.gameplay_resolution import ui_hooks, working
 from Script.Modules.gameplay_resolution import equipment_service
 
 WORLD.reset()
 kernel_data.written(warehouse.start, {})
 for cid in range(3):
     WORLD.chara(cid, str(cid))
-notices, unlocked = [], []
-ui_hooks._notices[:] = [lambda text, **_: notices.append(text)]
-achievement_service._unlocked[:] = [unlocked.append]
+notices = []
+ui_hooks._notices[:] = [lambda text, *, style, **_: notices.append(style)]
 with working.based_on(core.state()):
     chara_life.work_type.set(1, 22)
     abilities.ability(1).merge({48: 4})
@@ -393,7 +382,7 @@ with working.based_on(core.state()):
     maintenance.set_repair(1, 2)
     done = equipment_service.smith_maintain_equipment_once(1, True)
 panels = sorted(m for m in sys.modules if m.startswith("Script.UI.Panel"))
-print(json.dumps([done, len(notices), unlocked, panels]))
+print(json.dumps([done, notices, panels]))
 """
 """ 子进程脚本：屏蔽 Script.UI.Panel 后导入装备服务，执行一次完成维修收尾的维护并输出结果。 """
 
@@ -413,5 +402,5 @@ class ImportBoundaryTest(FastTestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr[-2000:])
         self.assertEqual(
-            result.stdout.splitlines()[-1], "[true, 1, [[321]], []]"
+            result.stdout.splitlines()[-1], '[true, ["gold_enrod", null], []]'
         )

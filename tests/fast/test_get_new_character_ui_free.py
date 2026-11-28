@@ -134,7 +134,7 @@ class GetNewCharacterUiFreeTest(FastTestCase):
         """
         验证各编码子进程中角色 2 招募入编后的返回值为 True，停留天数为 0 且 vistor 标记为 0。
         同时断言该角色已在编、体力与气力恢复至上限 [100, 90]、位于 OFFICE 且未分入客房。
-        用例还断言其关联设施已开放，且累计收集的提示为 2 条。
+        用例还断言其关联设施已开放，且累计收集的提示为 4 条。
         Return arguments:
         None -- 无返回值
         """
@@ -153,4 +153,4 @@ class GetNewCharacterUiFreeTest(FastTestCase):
                     },
                 )
                 self.assertTrue(run.payload["smithy_open"])
-                self.assertEqual(run.payload["notices"], 2)
+                self.assertEqual(run.payload["notices"], 4)
