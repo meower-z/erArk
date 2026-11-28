@@ -2,8 +2,9 @@
 """
 指令询问钩子测试
 ================
-InstructPromptHooksUiFreeTest 在无界面子进程中验证 instruct_hooks 六个询问与显示入口的未登记行为与登记转发。
-InstructPromptCallbacksTest 验证 instruct_callbacks 登记的六个入口按约定绘制按钮或调用面板。
+InstructPromptHooksUiFreeTest 在无界面子进程中验证 instruct_hooks.on_prompts 四个入口的未登记行为与登记转发。
+InstructPromptCallbacksTest 验证两个选项入口经 modal_hooks 由 instruct_callbacks 绘制按钮，
+以及四个槽位入口由 instruct_callbacks 调用面板。
 HandleInstructPromptsTest 验证 handle_instruct 的指令经 instruct_hooks 询问，并按回答定下或放弃行动。
 """
 
@@ -60,8 +61,6 @@ try:
 
     entries = [
         ("ask_close_door", ()),
-        ("ask_sex_class_ability", ([70, 71],)),
-        ("confirm_poor_music", ()),
         ("select_condom", ("hang",)),
         ("ask_official_option", ({"uid": "u"},)),
         ("show_official_result", ("u", 0, 0, 1)),
@@ -80,8 +79,6 @@ try:
     calls = []
     instruct_hooks.on_prompts(
         lambda: calls.append(["door"]) or True,
-        lambda ids: calls.append(["ability", list(ids)]) or 71,
-        lambda: calls.append(["music"]) or False,
         lambda mode: calls.append(["condom", mode]) or {"op": mode},
         lambda queue_data: calls.append(["official", queue_data]) or 2,
         lambda *result: calls.append(["result", list(result)]),
@@ -91,16 +88,18 @@ try:
 except Exception as error:
     payload["error"] = repr(error)
 """
-""" 无界面子进程脚本，依次调用六个入口的未登记与登记后版本，并向 payload 记录结果。 """
+""" 无界面子进程脚本，依次调用 instruct_hooks.on_prompts 四个入口的未登记与登记后版本，并向 payload 记录结果。 """
 
 
 class InstructPromptHooksUiFreeTest(FastTestCase):
-    """无界面子进程中 instruct_hooks 六个入口的未登记行为、登记转发与界面模块隔离测试。"""
+    """无界面子进程中 instruct_hooks.on_prompts 四个入口的未登记行为、登记转发与界面模块隔离测试。"""
 
     def test_prompts_without_ui(self) -> None:
         """
-        验证未登记时五个询问入口抛出 RuntimeError，显示公务结果的入口返回 None 且不执行操作。
-        登记后六个入口按顺序把参数交给登记函数并返回其结果，且子进程未尝试导入也未载入受拦截模块。
+        验证未登记时三个询问入口抛出 RuntimeError。
+        验证未登记时显示公务结果的入口返回 None 且不执行操作。
+        验证登记后四个入口按顺序把参数交给登记函数并返回其结果。
+        验证子进程未尝试导入也未载入受拦截模块。
         """
         from tests.ui_free_subprocess import run_ui_free
 
@@ -110,22 +109,20 @@ class InstructPromptHooksUiFreeTest(FastTestCase):
         assert isinstance(unregistered, list)
         self.assertEqual(
             [row[0] for row in unregistered],
-            ["RuntimeError"] * 5 + ["returned"],
+            ["RuntimeError"] * 3 + ["returned"],
         )
         self.assertIsNone(unregistered[-1][1])
         self.assertEqual(
             child.payload["registered"],
             [
                 ["returned", answer]
-                for answer in (True, 71, False, {"op": "hang"}, 2, None)
+                for answer in (True, {"op": "hang"}, 2, None)
             ],
         )
         self.assertEqual(
             child.payload["calls"],
             [
                 ["door"],
-                ["ability", [70, 71]],
-                ["music"],
                 ["condom", "hang"],
                 ["official", {"uid": "u"}],
                 ["result", ["u", 0, 0, 1]],
@@ -136,7 +133,10 @@ class InstructPromptHooksUiFreeTest(FastTestCase):
 
 
 class InstructPromptCallbacksTest(FastTestCase):
-    """载入 load_order 后，instruct_hooks 的六个入口经 instruct_callbacks 绘制按钮或调用面板的测试。"""
+    """
+    载入 load_order 后，验证两个选项入口经 modal_hooks 由 instruct_callbacks 绘制按钮，
+    以及四个槽位入口由 instruct_callbacks 调用面板。
+    """
 
     def setUp(self) -> None:
         """
@@ -299,9 +299,9 @@ class HandleInstructPromptsTest(FastTestCase):
 
     def answer(self, slot: str, *replies: object) -> list[tuple[object, ...]]:
         """
-        把 instruct_hooks 的一个槽位换成依次返回 replies 的记录函数。
+        把 instruct_hooks 的一个槽位或公开入口换成依次返回 replies 的记录函数。
         Keyword arguments:
-        slot -- str，instruct_hooks 的槽位名
+        slot -- str，instruct_hooks 的槽位名或公开入口名
         replies -- object，按调用顺序排列的返回值
         Return arguments:
         list[tuple[object, ...]] -- 每次调用收到的参数元组列表
@@ -363,7 +363,7 @@ class HandleInstructPromptsTest(FastTestCase):
             ),
         ):
             with self.subTest(instruct=instruct_id):
-                asked = self.answer("_confirm_poor_music", False, True)
+                asked = self.answer("confirm_poor_music", False, True)
                 self.assertIsNone(self.pick(instruct_id))
                 data, _args = self.chosen(instruct_id)
                 self.assertEqual(data["behavior_id"], behavior_id)
@@ -372,7 +372,7 @@ class HandleInstructPromptsTest(FastTestCase):
     def test_skilled_music_does_not_ask(self) -> None:
         """音乐能力为 3 时唱歌不询问，直接定下唱歌行为。"""
         ca.ability(0)[44] = 3
-        asked = self.answer("_confirm_poor_music")
+        asked = self.answer("confirm_poor_music")
         data, _args = self.chosen(constant.Instruct.SINGING)
         self.assertEqual(data["behavior_id"], constant.Behavior.SINGING)
         self.assertEqual(asked, [])
@@ -388,7 +388,7 @@ class HandleInstructPromptsTest(FastTestCase):
             )
         )
         offered = education_constant.SEX_CLASS_ABILITY_LIST
-        asked = self.answer("_ask_sex_class_ability", -1, offered[0])
+        asked = self.answer("ask_sex_class_ability", -1, offered[0])
         self.assertIsNone(self.pick(constant.Instruct.START_SEX_CLASS))
         data, args = self.chosen(constant.Instruct.START_SEX_CLASS)
         self.assertEqual(asked, [(offered,), (offered,)])

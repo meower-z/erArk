@@ -1,22 +1,31 @@
 """
 指令界面钩子（instruct_hooks）
 ==============================
-本模块提供两组指令界面入口与登记函数。本模块不导入界面模块。
-on_prompts 登记 ask_close_door、ask_sex_class_ability、confirm_poor_music、select_condom、
-ask_official_option 与 show_official_result。未登记时前五个抛出 RuntimeError。未登记时第六个无操作。
+本模块提供指令界面入口与两组槽位登记函数。本模块不导入界面模块。
+on_prompts 登记 ask_close_door、select_condom、ask_official_option 与 show_official_result。
+未登记时前三个抛出 RuntimeError。未登记时第四个无操作。
 on_sex_position 登记 choose_sex_position。未登记时抛出 RuntimeError。
+confirm_poor_music 与 ask_sex_class_ability 构造 ChoicePrompt 并经 modal_hooks.ask 发起提问。
+未在 modal_hooks 登记选择处理函数时，这两个入口抛出 RuntimeError。
 Script.Modules.tk_ui.instruct_callbacks 导入时调用上述两个登记函数填入两组槽位。
 """
 
 from collections.abc import Callable, Sequence
 from typing import Any, NoReturn
 
+from Script.Config import game_config
+from Script.Core import get_text
+from Script.Modules.gameplay_resolution import modal_hooks
+from Script.Protocol.modal_prompts import ChoiceOption, ChoicePrompt
+
+_ = get_text._
+""" 文本翻译函数，指向 get_text._。 """
+POOR_MUSIC_PROMPT_ID = "poor_music"
+""" 音乐能力偏低确认提问使用的 ChoicePrompt 标识（"poor_music"）。 """
+SEX_CLASS_ABILITY_PROMPT_ID = "sex_class_ability"
+""" 实操课主修科目提问使用的 ChoicePrompt 标识（"sex_class_ability"）。 """
 type AskDoor = Callable[[], bool | None]
 """ 询问玩家是否关门的函数类型别名，返回布尔值或在当前地点已问过时返回 None。 """
-type AskAbility = Callable[[Sequence[int]], int]
-""" 询问性技实操课主修科目的函数类型别名，接收可选能力编号序列并返回选定编号或 -1。 """
-type Confirm = Callable[[], bool]
-""" 弹出确认询问并返回玩家是否同意的函数类型别名。 """
 type AskCondom = Callable[[str], dict[str, object] | None]
 """ 打开避孕套选择面板的函数类型别名，接收操作类型并返回选择字典或 None。 """
 type AskOfficial = Callable[[dict[str, Any]], int]
@@ -58,10 +67,6 @@ def _unregistered(*args: Any, **kwargs: Any) -> NoReturn:
 
 _ask_close_door: AskDoor = _unregistered
 """ 当前生效的关门询问槽位，默认为 _unregistered。 """
-_ask_sex_class_ability: AskAbility = _unregistered
-""" 当前生效的性技实操课主修科目询问槽位，默认为 _unregistered。 """
-_confirm_poor_music: Confirm = _unregistered
-""" 当前生效的低音乐能力继续确认槽位，默认为 _unregistered。 """
 _select_condom: AskCondom = _unregistered
 """ 当前生效的避孕套选择询问槽位，默认为 _unregistered。 """
 _ask_official_option: AskOfficial = _unregistered
@@ -74,30 +79,24 @@ _choose_sex_position: ChooseSexPosition = _unregistered
 
 def on_prompts(
     ask_close_door: AskDoor,
-    ask_sex_class_ability: AskAbility,
-    confirm_poor_music: Confirm,
     select_condom: AskCondom,
     ask_official_option: AskOfficial,
     show_official_result: ShowOfficial,
 ) -> None:
     """
-    同时登记六个指令询问与结果显示槽位的处理函数。
+    同时登记四个指令询问与结果显示槽位的处理函数。
     后续调用会替换先前登记的处理函数。
     Keyword arguments:
     ask_close_door -- AskDoor，询问玩家是否关门的函数
-    ask_sex_class_ability -- AskAbility，询问性技实操课主修科目的函数
-    confirm_poor_music -- Confirm，确认低音乐能力下是否继续的函数
     select_condom -- AskCondom，打开避孕套选择面板的函数
     ask_official_option -- AskOfficial，询问单条公务事件选项的函数
     show_official_result -- ShowOfficial，显示公务事件结算后果的函数
     Return arguments:
     None -- 无返回值
     """
-    global _ask_close_door, _ask_sex_class_ability, _confirm_poor_music
+    global _ask_close_door
     global _select_condom, _ask_official_option, _show_official_result
     _ask_close_door = ask_close_door
-    _ask_sex_class_ability = ask_sex_class_ability
-    _confirm_poor_music = confirm_poor_music
     _select_condom = select_condom
     _ask_official_option = ask_official_option
     _show_official_result = show_official_result
@@ -115,24 +114,45 @@ def ask_close_door() -> bool | None:
 
 def ask_sex_class_ability(ability_ids: Sequence[int]) -> int:
     """
-    在调用时读取当前 _ask_sex_class_ability 槽位，询问性技实操课的主修科目。
-    未登记时抛出 RuntimeError。
+    构造标识为 SEX_CLASS_ABILITY_PROMPT_ID 的 ChoicePrompt，并经 modal_hooks.ask 询问实操课主修科目。
+    提示选项依次包含 ability_ids 各能力编号对应的科目项与末尾的 back（返回）项。
+    未在 modal_hooks 登记选择处理函数时抛出 RuntimeError。
     Keyword arguments:
-    ability_ids -- Sequence[int]，可供选择的能力编号序列
+    ability_ids -- Sequence[int]，可供选择的主修科目能力编号序列
     Return arguments:
-    int -- 选中的能力编号，选择返回时为 -1
+    int -- 所选选项标识为 "back" 时返回 -1，否则返回该选项标识转换后的能力编号
     """
-    return _ask_sex_class_ability(ability_ids)
+    subjects = tuple(
+        ChoiceOption(
+            str(ability_id), game_config.config_ability[ability_id].name
+        )
+        for ability_id in ability_ids
+    )
+    prompt = ChoicePrompt(
+        SEX_CLASS_ABILITY_PROMPT_ID,
+        (*subjects, ChoiceOption("back", _("返回"))),
+        _(
+            "\n这节实操课主要练哪一门？\n（其他动作照样可以做，只是不会有本门的加成）\n\n"
+        ),
+    )
+    answer = modal_hooks.ask(prompt).selected_option_id
+    return -1 if answer == "back" else int(answer)
 
 
 def confirm_poor_music() -> bool:
     """
-    在调用时读取当前 _confirm_poor_music 槽位，在音乐能力偏低时询问玩家是否继续。
-    未登记时抛出 RuntimeError。
+    构造标识为 POOR_MUSIC_PROMPT_ID、包含 cancel（取消）与 confirm（确定）两项的 ChoicePrompt，
+    并经 modal_hooks.ask 发起音乐能力偏低时的继续确认提问。
+    未在 modal_hooks 登记选择处理函数时抛出 RuntimeError。
     Return arguments:
-    bool -- 玩家确认继续时为 True，取消时为 False
+    bool -- 所选选项标识为 "confirm" 时返回 True，否则返回 False
     """
-    return _confirm_poor_music()
+    prompt = ChoicePrompt(
+        POOR_MUSIC_PROMPT_ID,
+        (ChoiceOption("cancel", _("取消")), ChoiceOption("confirm", _("确定"))),
+        _("\n当前音乐能力小于等于2，可能会让对方感觉不适，确认要继续吗\n\n"),
+    )
+    return modal_hooks.ask(prompt).selected_option_id == "confirm"
 
 
 def select_condom(mode: str) -> dict[str, object] | None:
