@@ -6,8 +6,8 @@
 四条界面口径：
    1. 后果提示**写方向不写数值**（"倾向：坚强"而不是"坚强+2"）——写了数值，决断就变成算数题了
    2. 前提不满足的选项**置灰并标明原因**而不是隐藏——让玩家看见"这里本来有更好的选择，但我没养到"
-   3. 后果提示**不写在选项上**（Plan 32 §8.2，用户要求）：选项只写选项本身，玩家选定、结算之后，
-      才用一个 WaitDraw 单独写出选了什么、结果如何（Official_Event_Draw.draw_result）
+   3. 后果提示**不写在选项上**：选项行只写选项本身。
+      玩家选定并结算后，一条等待文本显示所选选项与结果。该文本由 official_prompt.result_text 构造
    4. 选项的**出现顺序每次随机**（用户要求）：CSV 里的选项顺序是固定写死的（养成事件大多是
       「严厉 / 温和 / 放任」这类同一组倾向），照原序画的话玩家几条之后就按位置选而不再读选项，
       养成倾向于是变成按键顺序的产物。序号只是画面上的编号，结算与履历一律认 CSV 里的原序号
@@ -17,12 +17,10 @@ from types import FunctionType
 
 from Script.Core import flow_handle, get_text, py_cmd, text_handle
 from Script.Config import game_config
-from Script.Design import talk
+from Script.Modules.gameplay_resolution import official_prompt
 from Script.System.Official_Event_System import official_event_handle
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw
-from Script.Modules.domains import activity
-from Script.Modules.domains import identity
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -30,27 +28,6 @@ line_feed = draw.NormalDraw()
 """ 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
-
-
-def get_code_text(raw_text: str, character_id: int, partner_id: int) -> str:
-    """
-    把事件文本里的口上代码转成可显示的文本
-
-    转换期间主体的交互对象读作 partner_id（activity.target_as，不写状态），使文本里的交互对象代码
-    指向本次事件的互动对象（无互动对象时为博士）
-    Keyword arguments:
-    raw_text -- 原始文本
-    character_id -- 主体角色id（无主体为0，即博士）
-    partner_id -- 互动对象角色id
-    Return arguments:
-    str -- 转换后的文本
-    """
-    if not raw_text:
-        return ""
-    if not identity.exists(character_id):
-        return raw_text
-    with activity.target_as(character_id, partner_id):
-        return talk.code_text_to_draw_text(raw_text, character_id)
 
 
 def get_event_title(queue_data: dict) -> str:
@@ -101,7 +78,7 @@ class Official_Event_Draw:
         self.option_list: list[dict] = official_event_handle.get_option_list(
             self.uid, self.character_id, self.partner_id
         )
-        """ 本条事件的选项列表，按 CSV 原序（结算、履历与 draw_result 都认这个序） """
+        """ 本条事件的选项列表，按 CSV 原序排列，结算与履历均使用此顺序 """
         self.draw_option_list: list[dict] = list(self.option_list)
         """ 本条事件的选项显示顺序，每次弹出时重新洗牌（界面口径 4）。
             置灰的选项一起参与洗牌——只洗可选项的话，置灰项固定在原位，位置仍然泄露了原序 """
@@ -128,7 +105,7 @@ class Official_Event_Draw:
         text_draw = draw.NormalDraw()
         text_draw.width = self.width
         text_draw.text = "\n  {}\n\n".format(
-            get_code_text(
+            official_prompt.get_code_text(
                 event_data.get("text", ""), self.character_id, self.partner_id
             )
         )
@@ -145,12 +122,12 @@ class Official_Event_Draw:
         return_list = []
         button_index = 0
         for option in self.draw_option_list:
-            option_text = get_code_text(
+            option_text = official_prompt.get_code_text(
                 option["text"], self.character_id, self.partner_id
             )
             # 前提不满足：置灰保留，并把原因写在后面
             if not option["can_use"]:
-                reason_text = get_code_text(
+                reason_text = official_prompt.get_code_text(
                     option["reason"], self.character_id, self.partner_id
                 )
                 gray_draw = draw.NormalDraw()
@@ -163,7 +140,6 @@ class Official_Event_Draw:
                 gray_draw.draw()
                 continue
             button_index += 1
-            # 选项上只写选项本身，不写后果提示（Plan 32 §8.2）：后果在玩家选定之后由 draw_result 单独显示
             button_text = f"{text_handle.id_index(button_index)}{option_text}"
             return_text = f"\nOEVENT_{option['index']}"
             now_draw = draw.LeftButton(button_text, return_text, self.width)
@@ -177,32 +153,3 @@ class Official_Event_Draw:
             if yrn == f"\nOEVENT_{option['index']}":
                 return option["index"]
         return 0
-
-    def draw_result(self, option_index: int) -> None:
-        """
-        玩家选定并结算之后，单独显示这个选项带来的后果（Plan 32 §8.2）
-        Keyword arguments:
-        option_index -- 玩家选定的选项序号（1~4）
-        Return arguments:
-        无
-        功能: 后果提示不写在选项上，选定之后才用一个 WaitDraw 写出选了什么、结果如何，等玩家按键再弹下一条；
-                 提示照旧写方向不写数值（界面口径 1）。这个选项没写提示、或序号对不上时什么都不画
-        """
-        for option in self.option_list:
-            if option["index"] != option_index:
-                continue
-            tip_text = get_code_text(
-                option["tip"], self.character_id, self.partner_id
-            )
-            if not tip_text:
-                return
-            option_text = get_code_text(
-                option["text"], self.character_id, self.partner_id
-            )
-            result_draw = draw.WaitDraw()
-            result_draw.width = self.width
-            result_draw.text = _("\n  你选择了「{0}」\n  结果：{1}\n").format(
-                option_text, tip_text
-            )
-            result_draw.draw()
-            return

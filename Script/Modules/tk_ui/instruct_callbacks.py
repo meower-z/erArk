@@ -1,12 +1,12 @@
 """
 tk_ui 的指令界面回调
 ====================
-本模块导入时经 instruct_hooks.on_prompts 登记 3 个槽位，并经 instruct_hooks.on_sex_position 登记 1 个槽位。
+本模块导入时经 instruct_hooks.on_prompts 登记 2 个槽位，并经 instruct_hooks.on_sex_position 登记 1 个槽位。
 本模块导入时经 choice_prompts.renderer 登记 ask_close_door、ask_sex_class_ability 与 confirm_poor_music
 三个选项渲染函数。
 select_condom 在调用时导入 condom_panel。
 choose_sex_position 在调用时导入 sex_position_panel。
-ask_official_option 与 show_official_result 在调用时导入 official_event_panel。
+ask_official_option 在调用时导入 official_event_panel。
 """
 
 from types import FunctionType
@@ -130,31 +130,6 @@ def ask_official_option(queue_data: dict[str, Any]) -> int:
     return official_event_panel.Official_Event_Draw(queue_data, width).draw()
 
 
-def show_official_result(
-    uid: str, character_id: int, partner_id: int, option_index: int
-) -> None:
-    """
-    在调用时导入 official_event_panel，构造事件字典并调用 Official_Event_Draw.draw_result 显示结算后果。
-    Keyword arguments:
-    uid -- str，公务事件 uid
-    character_id -- int，主体角色编号
-    partner_id -- int，互动对象角色编号
-    option_index -- int，已结算的选项配置序号
-    Return arguments:
-    None -- 无返回值
-    """
-    from Script.UI.Panel import official_event_panel
-
-    queue_data = {
-        "uid": uid,
-        "chara_id": character_id,
-        "partner_id": partner_id,
-    }
-    official_event_panel.Official_Event_Draw(queue_data, width).draw_result(
-        option_index
-    )
-
-
 def choose_sex_position(sex_type: int, change_position: bool) -> None:
     """
     在调用时导入 sex_position_panel。
@@ -173,7 +148,5 @@ def choose_sex_position(sex_type: int, change_position: bool) -> None:
     ).draw()
 
 
-instruct_hooks.on_prompts(
-    select_condom, ask_official_option, show_official_result
-)
+instruct_hooks.on_prompts(select_condom, ask_official_option)
 instruct_hooks.on_sex_position(choose_sex_position)

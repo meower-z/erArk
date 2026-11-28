@@ -2,10 +2,10 @@
 """
 指令询问钩子测试
 ================
-InstructPromptHooksUiFreeTest 在无界面子进程中验证 instruct_hooks.on_prompts 三个入口的未登记行为与登记转发。
+InstructPromptHooksUiFreeTest 在无界面子进程中验证 instruct_hooks.on_prompts 两个入口的未登记行为与登记转发。
 InstructPromptCallbacksTest 验证 ask_sex_class_ability 与 confirm_poor_music 经 modal_hooks
 由 instruct_callbacks 绘制按钮。
-InstructPromptCallbacksTest 还验证三个槽位入口经 instruct_callbacks 调用面板。
+InstructPromptCallbacksTest 还验证两个槽位入口经 instruct_callbacks 调用面板。
 HandleInstructPromptsTest 验证 handle_instruct 指令与 instruct_hooks 交互后按回答定下或放弃行动。
 """
 
@@ -63,7 +63,6 @@ try:
     entries = [
         ("select_condom", ("hang",)),
         ("ask_official_option", ({"uid": "u"},)),
-        ("show_official_result", ("u", 0, 0, 1)),
     ]
 
     def run_all():
@@ -80,24 +79,22 @@ try:
     instruct_hooks.on_prompts(
         lambda mode: calls.append(["condom", mode]) or {"op": mode},
         lambda queue_data: calls.append(["official", queue_data]) or 2,
-        lambda *result: calls.append(["result", list(result)]),
     )
     payload["registered"] = run_all()
     payload["calls"] = calls
 except Exception as error:
     payload["error"] = repr(error)
 """
-""" 无界面子进程脚本，依次调用 instruct_hooks.on_prompts 三个入口的未登记与登记后版本，并向 payload 记录结果。 """
+""" 无界面子进程脚本，依次调用 instruct_hooks.on_prompts 两个入口的未登记与登记后版本，并向 payload 记录结果。 """
 
 
 class InstructPromptHooksUiFreeTest(FastTestCase):
-    """无界面子进程中 instruct_hooks.on_prompts 三个入口的未登记行为、登记转发与界面模块隔离测试。"""
+    """无界面子进程中 instruct_hooks.on_prompts 两个入口的未登记行为、登记转发与界面模块隔离测试。"""
 
     def test_prompts_without_ui(self) -> None:
         """
-        验证未登记时 select_condom 与 ask_official_option 抛出 RuntimeError。
-        验证未登记时 show_official_result 返回 None。
-        验证经 on_prompts 登记后，三个入口将参数转发给对应函数并返回其结果。
+        验证未登记时 select_condom 与 ask_official_option 均抛出 RuntimeError。
+        验证经 on_prompts 登记后，两个入口将参数转发给对应函数并返回其结果。
         验证子进程未尝试导入也未载入受拦截模块。
         """
         from tests.ui_free_subprocess import run_ui_free
@@ -106,22 +103,14 @@ class InstructPromptHooksUiFreeTest(FastTestCase):
         self.assertIsNone(child.payload["error"])
         unregistered = child.payload["unregistered"]
         assert isinstance(unregistered, list)
-        self.assertEqual(
-            [row[0] for row in unregistered],
-            ["RuntimeError"] * 2 + ["returned"],
-        )
-        self.assertIsNone(unregistered[-1][1])
+        self.assertEqual([row[0] for row in unregistered], ["RuntimeError"] * 2)
         self.assertEqual(
             child.payload["registered"],
-            [["returned", answer] for answer in ({"op": "hang"}, 2, None)],
+            [["returned", answer] for answer in ({"op": "hang"}, 2)],
         )
         self.assertEqual(
             child.payload["calls"],
-            [
-                ["condom", "hang"],
-                ["official", {"uid": "u"}],
-                ["result", ["u", 0, 0, 1]],
-            ],
+            [["condom", "hang"], ["official", {"uid": "u"}]],
         )
         self.assertEqual(child.attempted, [])
         self.assertEqual(child.loaded, [])
@@ -130,7 +119,7 @@ class InstructPromptHooksUiFreeTest(FastTestCase):
 class InstructPromptCallbacksTest(FastTestCase):
     """
     载入 load_order 后，验证 ask_sex_class_ability 与 confirm_poor_music 经 modal_hooks 由 instruct_callbacks 绘制按钮。
-    同时验证 select_condom、ask_official_option 与 show_official_result 经 instruct_callbacks 调用面板。
+    同时验证 select_condom 与 ask_official_option 经 instruct_callbacks 调用面板。
     """
 
     def setUp(self) -> None:
@@ -247,7 +236,6 @@ class InstructPromptCallbacksTest(FastTestCase):
         """
         替换 condom_panel.Condom_Select_Panel.draw 与 official_event_panel.Official_Event_Draw。
         验证 select_condom 与 ask_official_option 按 WIDTH 与传入参数调用替换对象并返回其结果。
-        验证 show_official_result 按事件字典与 WIDTH 构造面板对象，并向 draw_result 传入选项序号。
         """
         condom = self.enterContext(
             mock.patch.object(
@@ -266,10 +254,6 @@ class InstructPromptCallbacksTest(FastTestCase):
         self.assertEqual((panel.width, panel.mode), (WIDTH, "drink"))
         self.assertEqual(instruct_hooks.ask_official_option(QUEUED), 2)
         official.assert_called_once_with(QUEUED, WIDTH)
-        official.reset_mock()
-        instruct_hooks.show_official_result(EVENT, 0, 0, 2)
-        official.assert_called_once_with(QUEUED, WIDTH)
-        official.return_value.draw_result.assert_called_once_with(2)
 
 
 class HandleInstructPromptsTest(FastTestCase):
@@ -447,7 +431,7 @@ class HandleInstructPromptsTest(FastTestCase):
         self.assertEqual(
             {k: args[k] for k in (*QUEUED, "option")}, {**QUEUED, "option": 2}
         )
-        shown = self.answer("_show_official_result", None)
+        shown = self.answer("show_official_result", None)
         self.assertEqual(ri_value.get_ri_value("R|1"), 0)
         with kernel_data.writing():
             handle_instruct.start_instruct(0, cast(intent.Intent, data))

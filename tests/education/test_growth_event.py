@@ -9,6 +9,7 @@ from _bootstrap import handle_premise, make_character, open_all_classroom
 from _bootstrap import period_time, random, remove_character
 from _bootstrap import schedule_handle, schedule_template_handle, section
 from _bootstrap import semester_handle, set_time, activity
+from Script.Modules.gameplay_resolution import instruct_hooks, official_prompt
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Official_Event_System import official_event_handle
 from typing import Any
@@ -1380,11 +1381,10 @@ _od_queue_data = {
 }
 _od_option = official_event_handle.get_option_list(_od_uid, 201, 0)
 _od_tip = [
-    official_event_panel.get_code_text(one["tip"], 201, 0) for one in _od_option
+    official_prompt.get_code_text(one["tip"], 201, 0) for one in _od_option
 ]
 _od_text = [
-    official_event_panel.get_code_text(one["text"], 201, 0)
-    for one in _od_option
+    official_prompt.get_code_text(one["text"], 201, 0) for one in _od_option
 ]
 check(
     "§8.2 前提：期末 1 的四个选项都可选、都写了后果提示（校验工具要求每个选项都有）",
@@ -1443,14 +1443,14 @@ setattr(
     lambda self, *args, **kwargs: _od_wait.append(self.text),
 )
 try:
-    _od.draw_result(2)
-    _od.draw_result(9)
+    instruct_hooks.show_official_result(_od_uid, 201, 0, 2)
+    instruct_hooks.show_official_result(_od_uid, 201, 0, 9)
 finally:
     setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
 check(
     (
-        "§8.2 draw_result：选定第 2 个选项后画一个 WaitDraw，写出选了什么（选项文本）与它的后果提示；"
-        "序号对不上时什么都不画"
+        "instruct_hooks.show_official_result：传入第 2 个选项序号时画一个包含选项文本与后果提示的 WaitDraw，"
+        "传入对不上的序号时不绘制"
     ),
     len(_od_wait) == 1
     and _od_text[1] in _od_wait[0]
@@ -1499,7 +1499,7 @@ finally:
 # 选项顺序随机之后，桩选中的「画面上第一个」不再固定是原序号 1，改为按实际结算到的那一项来对照
 _od_choice = _od_seq[0][1] if _od_seq and _od_seq[0][0] == "settle" else 0
 _od_choice_tip = {
-    one["index"]: official_event_panel.get_code_text(one["tip"], 201, 0)
+    one["index"]: official_prompt.get_code_text(one["tip"], 201, 0)
     for one in _od_option
 }.get(_od_choice, "")
 check(
@@ -1539,12 +1539,12 @@ check(
     len(_gray_off) == 2
     and len(_gray_line) == 2
     and all(
-        official_event_panel.get_code_text(one["reason"], 201, 0)
+        official_prompt.get_code_text(one["reason"], 201, 0)
         in "".join(_gray_line)
         for one in _gray_off
     )
     and not any(
-        official_event_panel.get_code_text(one["tip"], 201, 0) in text
+        official_prompt.get_code_text(one["tip"], 201, 0) in text
         for one in _gray_option
         for text in _boot.drawn_text
     ),
