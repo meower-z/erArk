@@ -5,10 +5,9 @@ load_order 导入本模块时完成以下登记，本模块不登记内核钩子
 - playthrough：设定表补齐提示。
 - save_load.reset：new_round 与 panel 界面实现。
 - save_load.style_hooks：文本样式初始化（io_init.init_style）。
-- ui_hooks：提示、数值变化、图片、分隔线、富文本口上、逐行等待文本、面板切换、隐奸非H开关查询、
-  文本AI处理与主角寻路首段选定。
+- ui_hooks：提示、数值变化、图片、分隔线、清理按钮、富文本口上、逐行等待文本、面板切换、
+  隐奸非H开关查询、文本AI处理与主角寻路首段选定。
 - choice_prompts：确认提示、忍耐提问、H中被发现选择、普通子事件与多层嵌套子事件的选项渲染。
-- ejaculation_service：射精面板。
 - hidden_sex_discovered：隐奸与露出模式选择面板邀请。
 - pregnancy_hooks：生产与破壳面板。
 - settle_hooks：行为结算文本。
@@ -18,7 +17,7 @@ from collections.abc import Mapping
 from typing import Unpack
 
 from Script.Config import normal_config
-from Script.Core import constant, flow_handle, io_init
+from Script.Core import constant, flow_handle, io_init, py_cmd
 from Script.Kernel import core
 from Script.Modules.domains import playthrough
 from Script.Modules.gameplay_resolution import ejaculation_service, ui_hooks
@@ -165,6 +164,16 @@ def draw_divider(char: str = "-") -> None:
 
 
 style_hooks.on_styles_changed(io_init.init_style)
+
+
+@ui_hooks.on_clear_buttons
+def clear_buttons() -> None:
+    """
+    调用 py_cmd.clr_cmd 清理全部已绑定命令与默认流程处理函数。
+    Return arguments:
+    None -- 无返回值
+    """
+    py_cmd.clr_cmd()
 
 
 @ui_hooks.on_route_leg
@@ -354,20 +363,6 @@ def draw_endure_choice(prompt: ChoicePrompt) -> str:
         option_ids[button.return_text] = option.option_id
     line_feed.draw()
     return option_ids[flow_handle.askfor_all(list(option_ids))]
-
-
-@ejaculation_service.on_ejaculation_panel
-def draw_ejaculation_panel() -> None:
-    """
-    按配置文本宽度绘制 ejaculation_panel.Ejaculation_Panel 面板，随后绘制同宽的分隔线。
-    Return arguments:
-    None -- 无返回值
-    """
-    from Script.UI.Panel import ejaculation_panel
-
-    width = normal_config.config_normal.text_width
-    ejaculation_panel.Ejaculation_Panel(width).draw()
-    draw.LineDraw("-", width).draw()
 
 
 @choice_prompts.renderer(hidden_sex_discovered.DISCOVERED_PROMPT_ID)

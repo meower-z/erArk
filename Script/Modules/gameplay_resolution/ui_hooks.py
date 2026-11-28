@@ -1,12 +1,12 @@
 """
 玩法结算界面回调（ui_hooks）
 ============================
-本模块提供十类回调的登记与调用入口，另提供经 modal_hooks 派发的确认提问入口 emit_confirm。
-十类回调分别用于输出提示文本、数值变化、图片、分隔线、富文本口上、逐行等待文本、
-切换面板、查询隐奸中显示非H指令的开关、调用文本AI处理与主角寻路首段选定。
+本模块提供十一类回调的登记与调用入口，另提供经 modal_hooks 派发的确认提问入口 emit_confirm。
+十一类回调用于输出提示文本、数值变化、图片、分隔线、富文本口上与逐行等待文本，
+以及清理按钮、切换面板、查询隐奸中显示非H指令开关、调用文本AI处理与主角寻路首段选定。
 本模块不直接导入界面、Tk 或输入输出模块。
-未登记回调时，emit_notice、emit_delta、emit_image、emit_divider、emit_rich_talk、
-emit_line_wait_text、switch_panel 与 choose_route_leg 不执行操作。
+未登记回调时，emit_notice、emit_delta、emit_image、emit_divider、clear_buttons、
+emit_rich_talk、emit_line_wait_text、switch_panel 与 choose_route_leg 不执行操作。
 未登记回调时，hidden_sex_show_non_h 返回 False。
 未登记回调时，apply_text_ai 原样返回传入文本。
 未在 modal_hooks 登记选择处理函数时，emit_confirm 抛出 RuntimeError。
@@ -88,6 +88,10 @@ type Divider = Callable[[str], None]
 """ 分隔线绘制回调函数类型，接收用于平铺的分隔字符。 """
 _dividers: list[Divider] = []
 """ 按登记顺序保存的分隔线绘制回调列表。 """
+type ButtonClear = Callable[[], None]
+""" 按钮清理回调函数类型，不接收参数且无返回值。 """
+_button_clears: list[ButtonClear] = []
+""" 按登记顺序保存的按钮清理回调列表。 """
 _rich_talks: list[RichTalk] = []
 """ 按登记顺序保存的富文本口上回调列表。 """
 type LineWaitText = Callable[[str, str], None]
@@ -298,6 +302,28 @@ def emit_divider(char: str = "-") -> None:
     """
     for fn in _dividers:
         fn(char)
+
+
+def on_clear_buttons(fn: ButtonClear) -> ButtonClear:
+    """
+    登记一个按钮清理回调，可作为装饰器使用。
+    Keyword arguments:
+    fn -- ButtonClear，要登记的按钮清理回调函数
+    Return arguments:
+    ButtonClear -- 原样返回传入的 fn
+    """
+    _button_clears.append(fn)
+    return fn
+
+
+def clear_buttons() -> None:
+    """
+    按登记顺序调用已登记的按钮清理回调，未登记时不执行操作。
+    Return arguments:
+    None -- 无返回值
+    """
+    for fn in _button_clears:
+        fn()
 
 
 def on_rich_talk(fn: RichTalk) -> RichTalk:

@@ -1,25 +1,27 @@
 """
 射精结算服务（ejaculation_service）
 ===================================
-本模块提供忍耐射精判定、通用射精结算、射精总流程与射精面板回调槽位（on_ejaculation_panel、emit_ejaculation_panel）。
-emit_endure_panel 负责计算忍耐几率、掷骰、按系统设置 11 分支并在忍住时写回状态。
-需要询问玩家时，emit_endure_panel 经 modal_hooks 发出「忍住」与「射出」选项提示。
-忍耐结果与射精文本经 ui_hooks 的提示与分隔线接口输出。
-本模块不直接导入界面、Tk 或输入输出模块。
-未登记射精面板回调时，emit_ejaculation_panel 不执行操作。
-未在 modal_hooks 登记选择处理函数时，emit_endure_panel 仅在需要询问时由 modal_hooks.ask 抛出 RuntimeError。
+本模块提供忍耐判定、射精目标与部位决策、通用射精结算与射精总流程。
+emit_endure_panel 按系统设置 11 分支，需要询问时经 modal_hooks 发出忍耐选项提示。
+resolve_ejaculation 按当前对象、群交状态、场景无壳卵与系统设置 3 决定射精去向。
+resolve_ejaculation 在需要询问时经 modal_hooks 发出对象或部位选项提示。
+忍耐结果、射精文本与分隔线经 ui_hooks 输出。
+射精前的按钮清理与部位选择后的面板切换同样经 ui_hooks 派发。
+本模块不导入界面、Tk 或输入输出模块。
+未在 modal_hooks 登记处理函数时，需要询问的分支由 modal_hooks.ask 抛出 RuntimeError。
 """
 
 import random
-from collections.abc import Callable
 from types import FunctionType
 
 from Script.Config import game_config, normal_config
-from Script.Core import get_text, num
-from Script.Design import handle_ability, handle_premise
+from Script.Core import constant, get_text, num
+from Script.Design import clothing, handle_ability, handle_premise
+from Script.Design import instuct_judege, map_handle
 from Script.Modules.domains import abilities, achievement, action_info
 from Script.Modules.domains import activity, dirty, flags, h_meters, h_state
-from Script.Modules.domains import identity, pregnancy, tallies
+from Script.Modules.domains import identity, modes, pregnancy, scene_state
+from Script.Modules.domains import tallies, wardrobe
 from Script.Modules.gameplay_resolution import achievement_service, modal_hooks
 from Script.Modules.gameplay_resolution import semen_dirty_service, ui_hooks
 from Script.Protocol.modal_prompts import ChoiceOption, ChoicePrompt
@@ -89,33 +91,183 @@ def emit_endure_panel() -> bool:
     return endured
 
 
-type EjaculationPanel = Callable[[], None]
-""" 射精面板回调函数类型，不接收参数。 """
-_ejaculation_panel: EjaculationPanel | None = None
-""" 当前登记的射精面板回调，未登记时为 None。 """
+TARGET_PROMPT_ID = "ejaculation_target"
+""" 群交时选择射精对象使用的 ChoicePrompt 标识（"ejaculation_target"）。 """
+PART_PROMPT_ID = "ejaculation_part"
+""" 选择射精部位使用的 ChoicePrompt 标识（"ejaculation_part"）。 """
+INSERTED_PARTS = {
+    6: ("handle_penis_in_t_vagina", "handle_penis_in_t_womb"),
+    7: ("handle_penis_in_t_womb",),
+    8: ("handle_penis_in_t_anal",),
+    9: ("handle_penis_in_t_nrethral",),
+    15: ("handle_penis_in_t_deep_throat",),
+}
+""" 需要满足插入前提才可选的身体部位编号到 handle_premise 前提函数名元组的映射。 """
 
 
-def on_ejaculation_panel(fn: EjaculationPanel) -> EjaculationPanel:
+def resolve_ejaculation() -> None:
     """
-    登记射精面板回调，可作为装饰器使用，后登记的回调覆盖先前的回调。
-    Keyword arguments:
-    fn -- EjaculationPanel，绘制射精面板的回调函数
-    Return arguments:
-    EjaculationPanel -- 原样返回传入的 fn
-    """
-    global _ejaculation_panel
-    _ejaculation_panel = fn
-    return fn
-
-
-def emit_ejaculation_panel() -> None:
-    """
-    调用当前登记的射精面板回调，未登记时不执行操作。
+    决定本次射精的目标与部位并执行射精流程，结束后经 ui_hooks.emit_divider 输出分隔线。
+    对象为 0 时，有场景无壳卵则进入自身模式部位提问，否则直接射向部位 6。
+    群交模式下依次提问射精对象与部位。
+    场景有无壳卵或系统设置 3 为真时直接提问射精部位。
+    其余情况按目标的 insert_position 自动决定部位，为 -1 时提问部位。
     Return arguments:
     None -- 无返回值
     """
-    if _ejaculation_panel is not None:
-        _ejaculation_panel()
+    from Script.System.Pregnancy_System import soft_egg_handle
+
+    target_id = activity.target(0)
+    eggs = soft_egg_handle.get_soft_eggs_in_scene(activity.position(0))
+    if target_id == 0:
+        if eggs:
+            _choose_part(self_mode=True)
+        else:
+            _shoot_here(6, 0)
+    elif modes.group_sex():
+        _choose_target()
+        _choose_part()
+    elif eggs or normal_config.system_setting.base_setting[3]:
+        _choose_part()
+    else:
+        position = h_state.get(target_id, "insert_position")
+        if position == -1:
+            _choose_part()
+        elif position < 20:
+            _shoot_here(position, 0)
+        else:
+            _shoot_here(position - 20, 1)
+    ui_hooks.emit_divider()
+
+
+def _choose_target() -> None:
+    """
+    收集玩家所在场景内除自身外的角色，经 modal_hooks.ask 发起 TARGET_PROMPT_ID 提问。
+    各选项以角色编号字符串为 option_id，以 "[{adv}]{name}" 为标签。
+    将玩家选中角色的编号经 activity.set_target 设为玩家当前交互目标。
+    Return arguments:
+    None -- 无返回值
+    """
+    scene_path = map_handle.get_map_system_path_str_for_list(
+        activity.position(0)
+    )
+    options = []
+    for chara_id in scene_state.occupants(scene_path):
+        if chara_id == 0:
+            continue
+        chara = identity.of(chara_id)
+        options.append(
+            ChoiceOption(str(chara_id), f"[{chara.adv}]{chara.name}")
+        )
+    prompt = ChoicePrompt(
+        TARGET_PROMPT_ID, tuple(options), title=_("选择射精对象")
+    )
+    activity.set_target(0, int(modal_hooks.ask(prompt).selected_option_id))
+
+
+def _part_can_choose(body_part_cid: int) -> bool:
+    """
+    判断身体部位编号是否可选。
+    对 INSERTED_PARTS 中的部位，
+    函数在调用时按名在 handle_premise 查找前提函数并传入 0 执行。
+    上述前提全部返回假值时返回 False。
+    编号为 2 时以 not_draw_flag=True 对目标调用口交指令判定。
+    该判定各路径均返回三元素列表。部位 2 是否可选由随后的暴露检查决定。
+    最后检查该编号是否位于忽略内裤后目标的暴露身体部位中。
+    Keyword arguments:
+    body_part_cid -- int，待检查的身体部位编号
+    Return arguments:
+    bool -- 可选返回 True，否则返回 False
+    """
+    premises = INSERTED_PARTS.get(body_part_cid)
+    if premises is not None and not any(
+        getattr(handle_premise, name)(0) for name in premises
+    ):
+        return False
+    if body_part_cid == 2 and not instuct_judege.calculation_instuct_judege(
+        0, activity.target(0), _("口交"), not_draw_flag=True
+    ):
+        return False
+    return body_part_cid in clothing.get_exposed_body_parts(
+        activity.target(0), ignore_panties=True
+    )
+
+
+def _choose_part(self_mode: bool = False) -> None:
+    """
+    构造 PART_PROMPT_ID 选项并经 modal_hooks.ask 提问，按结果执行射精并切回 IN_SCENE。
+    非自身模式按配置顺序加入身体与服装选项，不可选者标为 blocked。
+    随后附加场景无壳卵选项。自身模式追加 normal 选项。
+    选中卵块选项时，在调用 ejaculation_flow 前经 ui_hooks.clear_buttons 清理按钮。
+    Keyword arguments:
+    self_mode -- bool，为真时仅列出无壳卵与照常射出选项，默认为 False
+    Return arguments:
+    None -- 无返回值
+    """
+    from Script.System.Pregnancy_System import soft_egg_handle
+
+    options = []
+    if not self_mode:
+        for cid, part in game_config.config_body_part.items():
+            options.append(
+                ChoiceOption(
+                    f"body_{cid}",
+                    f"[{cid}]{part.name}",
+                    "open" if _part_can_choose(cid) else "blocked",
+                )
+            )
+        worn = wardrobe.of(activity.target(0)).cloth_wear
+        for kind, cloth in game_config.config_clothing_type.items():
+            options.append(
+                ChoiceOption(
+                    f"cloth_{kind}",
+                    f"[{kind}]{cloth.name}",
+                    "open" if worn[kind] else "blocked",
+                )
+            )
+    eggs = soft_egg_handle.get_soft_eggs_in_scene(activity.position(0))
+    for egg_id, egg in eggs.items():
+        label = _("[卵块{0}]{1}（{2}ml）").format(
+            egg_id,
+            soft_egg_handle.get_soft_egg_name(egg_id),
+            int(egg["semen_count"]),
+        )
+        options.append(ChoiceOption(f"egg_{egg_id}", label))
+    if self_mode:
+        options.append(ChoiceOption("normal", _("[照常射出]")))
+    prompt = ChoicePrompt(
+        PART_PROMPT_ID, tuple(options), title=_("选择射精部位")
+    )
+    kind, _sep, key = modal_hooks.ask(prompt).selected_option_id.partition("_")
+    if kind == "egg":
+        ui_hooks.clear_buttons()
+        ejaculation_flow(-1, 0, soft_egg_id=int(key))
+    elif kind == "normal":
+        _shoot_here(6, 0)
+    else:
+        _shoot_here(int(key), 0 if kind == "body" else 1)
+    ui_hooks.switch_panel(constant.Panel.IN_SCENE)
+
+
+def _shoot_here(part_cid: int, part_type: int) -> None:
+    """
+    将玩家与当前目标的 insert_position 写为所选位置，
+    再经 ui_hooks.clear_buttons 清理按钮并立即调用 ejaculation_flow。
+    服装类型写入 part_cid + 20。身体类型且上一指令为深喉时，传入部位 15 执行射精。
+    Keyword arguments:
+    part_cid -- int，身体部位编号或服装类型编号
+    part_type -- int，部位类型，0 表示身体，1 表示服装
+    Return arguments:
+    None -- 无返回值
+    """
+    target_id = activity.target(0)
+    position = part_cid if part_type == 0 else part_cid + 20
+    h_state.set(0, insert_position=position)
+    h_state.set(target_id, insert_position=position)
+    if part_type == 0 and handle_premise.handle_last_cmd_deep_throat(0):
+        part_cid = 15
+    ui_hooks.clear_buttons()
+    ejaculation_flow(part_cid, part_type)
 
 
 def judge_endure_ejaculation(endure_rate: int) -> bool:

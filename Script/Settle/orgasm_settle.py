@@ -67,7 +67,7 @@ def orgasm_judge(
                         0, "p_orgasm_normal"
                     )
             h_meters.set(0, eja=0)
-            ejaculation_service.emit_ejaculation_panel()
+            ejaculation_service.resolve_ejaculation()
     else:
         normal_orgasm_dict = {}  # 高潮结算字典
         extra_orgasm_dict = {}  # 额外高潮结算字典

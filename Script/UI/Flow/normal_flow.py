@@ -12,7 +12,6 @@ from Script.UI.Panel import (
     assistant_panel,
     building_panel,
     collection_panel,
-    ejaculation_panel,
     food_shop_panel,
     manage_basement_panel,
     see_item_info_panel,
@@ -78,13 +77,6 @@ def building_flow() -> None:
 def collection_flow() -> None:
     """收藏品面板"""
     now_panel = collection_panel.Collection_Panel(width)
-    now_panel.draw()
-
-
-@handle_panel.add_panel(constant.Panel.EJACULATION)
-def ejaculation_flow() -> None:
-    """射精面板"""
-    now_panel = ejaculation_panel.Ejaculation_Panel(width)
     now_panel.draw()
 
 

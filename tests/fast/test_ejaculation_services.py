@@ -1,10 +1,12 @@
 """
 射精与精液污浊服务测试
 ======================
-- 精液污浊与流动（semen_dirty_service）：验证部位污浊累计、扣减保底、缺位跳过、穿着服装污浊与满溢流动记录。
+- 精液污浊与流动（semen_dirty_service）：验证部位污浊累计、扣减保底、缺位跳过、
+  穿着服装污浊与满溢流动记录。
 - 通用射精与忍耐（ejaculation_service）：验证忍耐掷骰、额外精液优先扣减与无精液返回。
-- 射精总流程（ejaculation_flow）：验证目标部位、避孕套、体外无壳卵、无精液与关闭回调五个分支及成就调用。
-- Tk 回调与模块边界：验证 load_order 登记后的六步绘制顺序、调用方导入服务，以及射精面板的定义边界。
+- 射精总流程（ejaculation_flow）：验证目标部位、避孕套、体外无壳卵、无精液与关闭回调
+  五个分支及成就调用。
+- Tk 回调与模块边界：验证 load_order 登记后的六步绘制顺序与调用方导入服务边界。
 """
 
 import ast
@@ -32,7 +34,6 @@ from Script.System.Cooking_System import cooking
 from Script.System.Item_System import condom_handle
 from Script.System.Pregnancy_System import soft_egg_handle
 from Script.UI.Moudle import draw
-from Script.UI.Panel import ejaculation_panel
 from tests import chara_abilities as ca
 from tests.fast.base import FastTestCase
 
@@ -42,18 +43,6 @@ MOUTH = 2
 """ 测试使用的身体部位编号（部位 2）。 """
 SHOT = ("射精文本", 120)
 """ 射精总流程测试替身返回的固定文本与射精量元组。 """
-PANEL = "Script.UI.Panel.ejaculation_panel"
-""" 射精面板模块的完整导入路径字符串。 """
-MOVED = frozenset(
-    {
-        "judge_endure_ejaculation",
-        "common_ejaculation",
-        "update_semen_dirty",
-        "calculate_semen_flow",
-        "ejaculation_flow",
-    }
-)
-""" 由射精与精液污浊服务提供的五个函数名集合。 """
 CALLERS = (
     settle_default,
     realtime_settle,
@@ -404,7 +393,7 @@ class TkBannerTest(FastTestCase):
 
 
 class ModuleBoundaryTest(FastTestCase):
-    """调用方与射精面板模块边界的语法树测试。"""
+    """调用方导入射精或精液污浊服务的语法树边界测试。"""
 
     def test_callers_import_services(self) -> None:
         """验证五个调用方模块均导入射精或精液污浊服务。"""
@@ -418,34 +407,3 @@ class ModuleBoundaryTest(FastTestCase):
                 & imports,
                 module.__name__,
             )
-
-    def test_relative_import_of_panel_is_caught(self) -> None:
-        """验证 imports_in 能按所属包名解析函数内对射精面板的相对导入并检出面板路径。"""
-        source = "def f():\n    from ..UI.Panel import ejaculation_panel\n"
-        package = settle_default.__package__ or ""
-        self.assertIn(PANEL, imports_in(source, package))
-
-    def test_panel_keeps_only_panel_code(self) -> None:
-        """
-        验证射精面板顶层只定义 Ejaculation_Panel，
-        且任意作用域不绑定五个服务函数名。
-        """
-        tree = ast.parse(inspect.getsource(ejaculation_panel))
-        defined = {
-            node.name
-            for node in tree.body
-            if isinstance(node, (ast.FunctionDef, ast.ClassDef))
-        }
-        self.assertEqual(defined, {"Ejaculation_Panel"})
-        bound = {
-            alias.asname or alias.name
-            for node in ast.walk(tree)
-            if isinstance(node, (ast.Import, ast.ImportFrom))
-            for alias in node.names
-        }
-        assigned = {
-            node.id
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)
-        }
-        self.assertFalse(MOVED & (bound | assigned))

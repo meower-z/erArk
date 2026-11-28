@@ -1137,7 +1137,7 @@ def base_chara_climix_common_settle(
     # 触发射精面板
     if part_id == 3:
         h_meters.set(character_id, eja=0)
-        ejaculation_service.emit_ejaculation_panel()
+        ejaculation_service.resolve_ejaculation()
 
 
 def base_chara_experience_common_settle(

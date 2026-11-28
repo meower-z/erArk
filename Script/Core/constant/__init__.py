@@ -50,8 +50,6 @@ class Panel:
     """ 做饭面板 """
     ALL_NPC_POSITION = 8
     """ 查询与召集面板 """
-    EJACULATION = 9
-    """ 射精面板 """
     DIRTY = 10
     """ 脏污面板 """
     ITEM = 11
