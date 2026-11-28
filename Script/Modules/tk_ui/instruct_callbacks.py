@@ -1,10 +1,9 @@
 """
 tk_ui 的指令界面回调
 ====================
-导入时经 on_instruct、on_prompts 与 on_sex_position 登记 9 个槽位。
-stash_filter 写入 view.instruct_type_filter_cache。stashed_filter 读取 view.instruct_type_filter_cache。
+导入时经 instruct_hooks.on_prompts 与 instruct_hooks.on_sex_position 登记 7 个槽位。
 ask_sex_class_ability 与 confirm_poor_music 用 draw 画提示与按钮，经 flow_handle.askfor_all 读回答。
-ask_close_door、select_condom、choose_sex_position调用时分别导入normal_panel、condom_panel、sex_position_panel。
+ask_close_door、select_condom 与 choose_sex_position 调用时分别导入 normal_panel、condom_panel 与 sex_position_panel。
 ask_official_option 与 show_official_result 调用时导入 official_event_panel。
 """
 
@@ -15,32 +14,12 @@ from typing import Any
 from Script.Config import game_config, normal_config
 from Script.Core import flow_handle, get_text
 from Script.Modules.gameplay_resolution import instruct_hooks
-from Script.UI.Moudle import draw, view
+from Script.UI.Moudle import draw
 
 _: FunctionType = get_text._
 """ 翻译api """
 width: int = normal_config.config_normal.text_width
 """ 屏幕宽度 """
-
-
-def stash_filter(filters: dict[int, bool]) -> None:
-    """
-    将 view.instruct_type_filter_cache 设为 filters。
-    Keyword arguments:
-    filters -- dict[int, bool]，指令类型到是否展示的映射
-    Return arguments:
-    None -- 无返回值
-    """
-    view.instruct_type_filter_cache = filters
-
-
-def stashed_filter() -> dict[int, bool]:
-    """
-    返回 view.instruct_type_filter_cache 当前引用的字典。
-    Return arguments:
-    dict[int, bool] -- view.instruct_type_filter_cache 当前引用的字典
-    """
-    return view.instruct_type_filter_cache
 
 
 def ask_close_door() -> bool | None:
@@ -178,7 +157,6 @@ def choose_sex_position(sex_type: int, change_position: bool) -> None:
     ).draw()
 
 
-instruct_hooks.on_instruct(stash_filter, stashed_filter)
 instruct_hooks.on_prompts(
     ask_close_door,
     ask_sex_class_ability,

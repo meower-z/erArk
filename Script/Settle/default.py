@@ -3142,50 +3142,6 @@ def handle_target_to_player(
 
 
 @settle_behavior.add_settle_behavior_effect(
-    constant_effect.BehaviorEffect.OPEN_INSTRUCT_FILTER_H
-)
-def handle_open_instruct_filter_h(
-    character_id: int,
-    add_time: int,
-    change_data: game_type.CharacterStatusChange,
-    now_time: datetime.datetime,
-) -> None:
-    """
-    开启H面板过滤器（已弃用）
-    Keyword arguments:
-    character_id -- 角色id
-    add_time -- 结算时间
-    change_data -- 状态变更信息记录对象
-    now_time -- 结算的时间
-    """
-    from Script.System.Instruct_System import handle_instruct
-
-    handle_instruct.instruct_filter_H_change(True)
-
-
-@settle_behavior.add_settle_behavior_effect(
-    constant_effect.BehaviorEffect.CLOSE_INSTRUCT_FILTER_H
-)
-def handle_close_instruct_filter_h(
-    character_id: int,
-    add_time: int,
-    change_data: game_type.CharacterStatusChange,
-    now_time: datetime.datetime,
-) -> None:
-    """
-    关闭H面板过滤器（已弃用）
-    Keyword arguments:
-    character_id -- 角色id
-    add_time -- 结算时间
-    change_data -- 状态变更信息记录对象
-    now_time -- 结算的时间
-    """
-    from Script.System.Instruct_System import handle_instruct
-
-    handle_instruct.instruct_filter_H_change(False)
-
-
-@settle_behavior.add_settle_behavior_effect(
     constant_effect.BehaviorEffect.ADD_THIS_EVENT_TO_TRIGGERED_RECORD
 )
 def handle_add_this_event_to_already_triggered(

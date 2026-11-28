@@ -14,7 +14,7 @@ from Script.Core import (
 from Script.Design import handle_ability, map_handle, instuct_judege
 from Script.Design import handle_npc_ai_in_h, handle_premise, child_stage_gate
 from Script.Kernel import core
-from Script.Config import normal_config, game_config
+from Script.Config import game_config
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import achievement_service
 from Script.Modules.gameplay_resolution import group_sex_service
@@ -341,23 +341,6 @@ CARRY_MOVE 与 MOVE 共用地图面板（SEE_MAP）：选定地点后，
 
 for _instruct_id, _panel_id in PANEL_INSTRUCTS.items():
     add_instruct(_instruct_id)(_open_panel(_panel_id))
-
-
-def instruct_filter_H_change(on_off_flag: bool) -> None:
-    """
-    指令类型过滤器进出H变更（已弃用）
-    Keyword arguments:
-    on_off_flag -- true:进入H false:退出H
-    """
-    setting = normal_config.system_setting
-    if on_off_flag:
-        instruct_hooks.stash_filter(setting.instruct_type_filter.copy())
-        # 自动开启性爱面板并关闭其他面板
-        setting.instruct_type_filter[6] = True
-        for i in {1, 2, 3, 4, 5}:
-            setting.instruct_type_filter[i] = False
-    elif len(instruct_hooks.stashed_filter()):
-        setting.instruct_type_filter = instruct_hooks.stashed_filter().copy()
 
 
 TARGET_WAIT = "target_wait"
